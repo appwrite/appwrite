@@ -1,0 +1,1412 @@
+[
+    {
+        "provider": "amazon",
+        "secret": "plain-secret",
+        "scopes": [],
+        "url": "https://www.amazon.com/ap/oa?response_type=code&client_id=appid&scope=profile&state=%257B%2522success%2522%253A%2522http%253A%255C%252F%255C%252Flocalhost%255C%252Fs%253Fa%253D1%2522%252C%2522failure%2522%253A%2522http%253A%255C%252F%255C%252Flocalhost%255C%252Ff%2522%252C%2522token%2522%253Afalse%252C%2522nonce%2522%253A%25220123456789abcdef0123456789abcdef%2522%252C%2522state%2522%253A%2522app%2522%257D&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Famazon%2Fp1"
+    },
+    {
+        "provider": "amazon",
+        "secret": "plain-secret",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://www.amazon.com/ap/oa?response_type=code&client_id=appid&scope=profile+extra&state=%257B%2522success%2522%253A%2522http%253A%255C%252F%255C%252Flocalhost%255C%252Fs%253Fa%253D1%2522%252C%2522failure%2522%253A%2522http%253A%255C%252F%255C%252Flocalhost%255C%252Ff%2522%252C%2522token%2522%253Afalse%252C%2522nonce%2522%253A%25220123456789abcdef0123456789abcdef%2522%252C%2522state%2522%253A%2522app%2522%257D&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Famazon%2Fp1"
+    },
+    {
+        "provider": "amazon",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [],
+        "url": "https://www.amazon.com/ap/oa?response_type=code&client_id=appid&scope=profile&state=%257B%2522success%2522%253A%2522http%253A%255C%252F%255C%252Flocalhost%255C%252Fs%253Fa%253D1%2522%252C%2522failure%2522%253A%2522http%253A%255C%252F%255C%252Flocalhost%255C%252Ff%2522%252C%2522token%2522%253Afalse%252C%2522nonce%2522%253A%25220123456789abcdef0123456789abcdef%2522%252C%2522state%2522%253A%2522app%2522%257D&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Famazon%2Fp1"
+    },
+    {
+        "provider": "amazon",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://www.amazon.com/ap/oa?response_type=code&client_id=appid&scope=profile+extra&state=%257B%2522success%2522%253A%2522http%253A%255C%252F%255C%252Flocalhost%255C%252Fs%253Fa%253D1%2522%252C%2522failure%2522%253A%2522http%253A%255C%252F%255C%252Flocalhost%255C%252Ff%2522%252C%2522token%2522%253Afalse%252C%2522nonce%2522%253A%25220123456789abcdef0123456789abcdef%2522%252C%2522state%2522%253A%2522app%2522%257D&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Famazon%2Fp1"
+    },
+    {
+        "provider": "apple",
+        "secret": "plain-secret",
+        "scopes": [],
+        "url": "https://appleid.apple.com/auth/authorize?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fapple%2Fp1&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D&response_type=code&response_mode=form_post&scope=name+email"
+    },
+    {
+        "provider": "apple",
+        "secret": "plain-secret",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://appleid.apple.com/auth/authorize?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fapple%2Fp1&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D&response_type=code&response_mode=form_post&scope=name+email+extra+profile"
+    },
+    {
+        "provider": "apple",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [],
+        "url": "https://appleid.apple.com/auth/authorize?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fapple%2Fp1&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D&response_type=code&response_mode=form_post&scope=name+email"
+    },
+    {
+        "provider": "apple",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://appleid.apple.com/auth/authorize?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fapple%2Fp1&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D&response_type=code&response_mode=form_post&scope=name+email+extra+profile"
+    },
+    {
+        "provider": "auth0",
+        "secret": "plain-secret",
+        "scopes": [],
+        "url": "ERROR"
+    },
+    {
+        "provider": "auth0",
+        "secret": "plain-secret",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "ERROR"
+    },
+    {
+        "provider": "auth0",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [],
+        "url": "https://a.auth0.com/authorize?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fauth0%2Fp1&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D&scope=openid+profile+email+offline_access&response_type=code&prompt=consent+login"
+    },
+    {
+        "provider": "auth0",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://a.auth0.com/authorize?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fauth0%2Fp1&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D&scope=openid+profile+email+offline_access+extra&response_type=code&prompt=consent+login"
+    },
+    {
+        "provider": "authentik",
+        "secret": "plain-secret",
+        "scopes": [],
+        "url": "ERROR"
+    },
+    {
+        "provider": "authentik",
+        "secret": "plain-secret",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "ERROR"
+    },
+    {
+        "provider": "authentik",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [],
+        "url": "https://auth.example.com/application/o/authorize/?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fauthentik%2Fp1&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D&scope=openid+profile+email+offline_access&response_type=code"
+    },
+    {
+        "provider": "authentik",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://auth.example.com/application/o/authorize/?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fauthentik%2Fp1&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D&scope=openid+profile+email+offline_access+extra&response_type=code"
+    },
+    {
+        "provider": "autodesk",
+        "secret": "plain-secret",
+        "scopes": [],
+        "url": "https://developer.api.autodesk.com/authentication/v1/authorize?client_id=appid&scope=user-profile%3Aread&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fautodesk%2Fp1&response_type=code"
+    },
+    {
+        "provider": "autodesk",
+        "secret": "plain-secret",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://developer.api.autodesk.com/authentication/v1/authorize?client_id=appid&scope=user-profile%3Aread+extra+profile&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fautodesk%2Fp1&response_type=code"
+    },
+    {
+        "provider": "autodesk",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [],
+        "url": "https://developer.api.autodesk.com/authentication/v1/authorize?client_id=appid&scope=user-profile%3Aread&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fautodesk%2Fp1&response_type=code"
+    },
+    {
+        "provider": "autodesk",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://developer.api.autodesk.com/authentication/v1/authorize?client_id=appid&scope=user-profile%3Aread+extra+profile&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fautodesk%2Fp1&response_type=code"
+    },
+    {
+        "provider": "bitbucket",
+        "secret": "plain-secret",
+        "scopes": [],
+        "url": "https://bitbucket.org/site/oauth2/authorize?response_type=code&client_id=appid&scope=&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "bitbucket",
+        "secret": "plain-secret",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://bitbucket.org/site/oauth2/authorize?response_type=code&client_id=appid&scope=extra+profile&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "bitbucket",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [],
+        "url": "https://bitbucket.org/site/oauth2/authorize?response_type=code&client_id=appid&scope=&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "bitbucket",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://bitbucket.org/site/oauth2/authorize?response_type=code&client_id=appid&scope=extra+profile&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "bitly",
+        "secret": "plain-secret",
+        "scopes": [],
+        "url": "https://bitly.com/oauth/authorize?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fbitly%2Fp1&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "bitly",
+        "secret": "plain-secret",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://bitly.com/oauth/authorize?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fbitly%2Fp1&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "bitly",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [],
+        "url": "https://bitly.com/oauth/authorize?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fbitly%2Fp1&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "bitly",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://bitly.com/oauth/authorize?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fbitly%2Fp1&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "box",
+        "secret": "plain-secret",
+        "scopes": [],
+        "url": "https://account.box.com/api/oauth2/authorize?response_type=code&client_id=appid&scope=manage_app_users&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fbox%2Fp1&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "box",
+        "secret": "plain-secret",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://account.box.com/api/oauth2/authorize?response_type=code&client_id=appid&scope=manage_app_users%2Cextra%2Cprofile&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fbox%2Fp1&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "box",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [],
+        "url": "https://account.box.com/api/oauth2/authorize?response_type=code&client_id=appid&scope=manage_app_users&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fbox%2Fp1&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "box",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://account.box.com/api/oauth2/authorize?response_type=code&client_id=appid&scope=manage_app_users%2Cextra%2Cprofile&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fbox%2Fp1&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "dailymotion",
+        "secret": "plain-secret",
+        "scopes": [],
+        "url": "https://www.dailymotion.com/oauth/authorize?response_type=code&client_id=appid&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fdailymotion%2Fp1&scope=userinfo+email"
+    },
+    {
+        "provider": "dailymotion",
+        "secret": "plain-secret",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://www.dailymotion.com/oauth/authorize?response_type=code&client_id=appid&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fdailymotion%2Fp1&scope=userinfo+email+extra+profile"
+    },
+    {
+        "provider": "dailymotion",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [],
+        "url": "https://www.dailymotion.com/oauth/authorize?response_type=code&client_id=appid&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fdailymotion%2Fp1&scope=userinfo+email"
+    },
+    {
+        "provider": "dailymotion",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://www.dailymotion.com/oauth/authorize?response_type=code&client_id=appid&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fdailymotion%2Fp1&scope=userinfo+email+extra+profile"
+    },
+    {
+        "provider": "discord",
+        "secret": "plain-secret",
+        "scopes": [],
+        "url": "https://discordapp.com/api/oauth2/authorize?response_type=code&client_id=appid&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D&scope=identify+email&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fdiscord%2Fp1"
+    },
+    {
+        "provider": "discord",
+        "secret": "plain-secret",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://discordapp.com/api/oauth2/authorize?response_type=code&client_id=appid&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D&scope=identify+email+extra+profile&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fdiscord%2Fp1"
+    },
+    {
+        "provider": "discord",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [],
+        "url": "https://discordapp.com/api/oauth2/authorize?response_type=code&client_id=appid&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D&scope=identify+email&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fdiscord%2Fp1&prompt=consent+login"
+    },
+    {
+        "provider": "discord",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://discordapp.com/api/oauth2/authorize?response_type=code&client_id=appid&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D&scope=identify+email+extra+profile&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fdiscord%2Fp1&prompt=consent+login"
+    },
+    {
+        "provider": "disqus",
+        "secret": "plain-secret",
+        "scopes": [],
+        "url": "https://disqus.com/api/oauth/2.0/authorize/?response_type=code&client_id=appid&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fdisqus%2Fp1&scope=read%2Cemail"
+    },
+    {
+        "provider": "disqus",
+        "secret": "plain-secret",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://disqus.com/api/oauth/2.0/authorize/?response_type=code&client_id=appid&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fdisqus%2Fp1&scope=read%2Cemail%2Cextra%2Cprofile"
+    },
+    {
+        "provider": "disqus",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [],
+        "url": "https://disqus.com/api/oauth/2.0/authorize/?response_type=code&client_id=appid&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fdisqus%2Fp1&scope=read%2Cemail"
+    },
+    {
+        "provider": "disqus",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://disqus.com/api/oauth/2.0/authorize/?response_type=code&client_id=appid&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fdisqus%2Fp1&scope=read%2Cemail%2Cextra%2Cprofile"
+    },
+    {
+        "provider": "dropbox",
+        "secret": "plain-secret",
+        "scopes": [],
+        "url": "https://www.dropbox.com/oauth2/authorize?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fdropbox%2Fp1&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D&response_type=code"
+    },
+    {
+        "provider": "dropbox",
+        "secret": "plain-secret",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://www.dropbox.com/oauth2/authorize?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fdropbox%2Fp1&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D&response_type=code"
+    },
+    {
+        "provider": "dropbox",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [],
+        "url": "https://www.dropbox.com/oauth2/authorize?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fdropbox%2Fp1&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D&response_type=code"
+    },
+    {
+        "provider": "dropbox",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://www.dropbox.com/oauth2/authorize?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fdropbox%2Fp1&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D&response_type=code"
+    },
+    {
+        "provider": "facebook",
+        "secret": "plain-secret",
+        "scopes": [],
+        "url": "https://www.facebook.com/v2.8/dialog/oauth?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Ffacebook%2Fp1&scope=email&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "facebook",
+        "secret": "plain-secret",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://www.facebook.com/v2.8/dialog/oauth?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Ffacebook%2Fp1&scope=email+extra+profile&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "facebook",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [],
+        "url": "https://www.facebook.com/v2.8/dialog/oauth?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Ffacebook%2Fp1&scope=email&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "facebook",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://www.facebook.com/v2.8/dialog/oauth?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Ffacebook%2Fp1&scope=email+extra+profile&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "figma",
+        "secret": "plain-secret",
+        "scopes": [],
+        "url": "https://www.figma.com/oauth?response_type=code&client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Ffigma%2Fp1&scope=current_user%3Aread&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "figma",
+        "secret": "plain-secret",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://www.figma.com/oauth?response_type=code&client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Ffigma%2Fp1&scope=current_user%3Aread+extra+profile&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "figma",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [],
+        "url": "https://www.figma.com/oauth?response_type=code&client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Ffigma%2Fp1&scope=current_user%3Aread&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "figma",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://www.figma.com/oauth?response_type=code&client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Ffigma%2Fp1&scope=current_user%3Aread+extra+profile&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "fusionauth",
+        "secret": "plain-secret",
+        "scopes": [],
+        "url": "ERROR"
+    },
+    {
+        "provider": "fusionauth",
+        "secret": "plain-secret",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "ERROR"
+    },
+    {
+        "provider": "fusionauth",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [],
+        "url": "https://fa.example.com/oauth2/authorize?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Ffusionauth%2Fp1&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D&scope=openid+profile+email+offline_access&response_type=code"
+    },
+    {
+        "provider": "fusionauth",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://fa.example.com/oauth2/authorize?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Ffusionauth%2Fp1&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D&scope=openid+profile+email+offline_access+extra&response_type=code"
+    },
+    {
+        "provider": "github",
+        "secret": "plain-secret",
+        "scopes": [],
+        "url": "https://github.com/login/oauth/authorize?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fgithub%2Fp1&scope=user%3Aemail&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "github",
+        "secret": "plain-secret",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://github.com/login/oauth/authorize?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fgithub%2Fp1&scope=user%3Aemail+extra+profile&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "github",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [],
+        "url": "https://github.com/login/oauth/authorize?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fgithub%2Fp1&scope=user%3Aemail&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D&prompt=consent+login"
+    },
+    {
+        "provider": "github",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://github.com/login/oauth/authorize?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fgithub%2Fp1&scope=user%3Aemail+extra+profile&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D&prompt=consent+login"
+    },
+    {
+        "provider": "gitlab",
+        "secret": "plain-secret",
+        "scopes": [],
+        "url": "https://gitlab.com/oauth/authorize?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fgitlab%2Fp1&scope=read_user+openid+email&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D&response_type=code"
+    },
+    {
+        "provider": "gitlab",
+        "secret": "plain-secret",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://gitlab.com/oauth/authorize?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fgitlab%2Fp1&scope=read_user+openid+email+extra+profile&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D&response_type=code"
+    },
+    {
+        "provider": "gitlab",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [],
+        "url": "https://git.example.com/oauth/authorize?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fgitlab%2Fp1&scope=read_user+openid+email&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D&response_type=code"
+    },
+    {
+        "provider": "gitlab",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://git.example.com/oauth/authorize?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fgitlab%2Fp1&scope=read_user+openid+email+extra+profile&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D&response_type=code"
+    },
+    {
+        "provider": "google",
+        "secret": "plain-secret",
+        "scopes": [],
+        "url": "https://accounts.google.com/o/oauth2/v2/auth?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fgoogle%2Fp1&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.profile+openid&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D&response_type=code&access_type=offline&prompt=consent"
+    },
+    {
+        "provider": "google",
+        "secret": "plain-secret",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://accounts.google.com/o/oauth2/v2/auth?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fgoogle%2Fp1&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.profile+openid+extra+profile&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D&response_type=code&access_type=offline&prompt=consent"
+    },
+    {
+        "provider": "google",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [],
+        "url": "https://accounts.google.com/o/oauth2/v2/auth?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fgoogle%2Fp1&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.profile+openid&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D&response_type=code&access_type=offline&prompt=consent+login"
+    },
+    {
+        "provider": "google",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://accounts.google.com/o/oauth2/v2/auth?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fgoogle%2Fp1&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.profile+openid+extra+profile&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D&response_type=code&access_type=offline&prompt=consent+login"
+    },
+    {
+        "provider": "huggingface",
+        "secret": "plain-secret",
+        "scopes": [],
+        "url": "https://huggingface.co/oauth/authorize?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fhuggingface%2Fp1&response_type=code&scope=openid+profile+email&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "huggingface",
+        "secret": "plain-secret",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://huggingface.co/oauth/authorize?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fhuggingface%2Fp1&response_type=code&scope=openid+profile+email+extra&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "huggingface",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [],
+        "url": "https://huggingface.co/oauth/authorize?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fhuggingface%2Fp1&response_type=code&scope=openid+profile+email&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "huggingface",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://huggingface.co/oauth/authorize?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fhuggingface%2Fp1&response_type=code&scope=openid+profile+email+extra&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "kakao",
+        "secret": "plain-secret",
+        "scopes": [],
+        "url": "https://kauth.kakao.com/oauth/authorize?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fkakao%2Fp1&response_type=code&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "kakao",
+        "secret": "plain-secret",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://kauth.kakao.com/oauth/authorize?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fkakao%2Fp1&response_type=code&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D&scope=extra%2Cprofile"
+    },
+    {
+        "provider": "kakao",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [],
+        "url": "https://kauth.kakao.com/oauth/authorize?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fkakao%2Fp1&response_type=code&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D&prompt=consent%2Clogin"
+    },
+    {
+        "provider": "kakao",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://kauth.kakao.com/oauth/authorize?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fkakao%2Fp1&response_type=code&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D&prompt=consent%2Clogin&scope=extra%2Cprofile"
+    },
+    {
+        "provider": "keycloak",
+        "secret": "plain-secret",
+        "scopes": [],
+        "url": "ERROR"
+    },
+    {
+        "provider": "keycloak",
+        "secret": "plain-secret",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "ERROR"
+    },
+    {
+        "provider": "keycloak",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [],
+        "url": "https://kc.example.com/realms/my%20realm/protocol/openid-connect/auth?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fkeycloak%2Fp1&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D&scope=openid+profile+email+offline_access&response_type=code"
+    },
+    {
+        "provider": "keycloak",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://kc.example.com/realms/my%20realm/protocol/openid-connect/auth?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fkeycloak%2Fp1&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D&scope=openid+profile+email+offline_access+extra&response_type=code"
+    },
+    {
+        "provider": "linkedin",
+        "secret": "plain-secret",
+        "scopes": [],
+        "url": "https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Flinkedin%2Fp1&scope=openid+profile+email&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "linkedin",
+        "secret": "plain-secret",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Flinkedin%2Fp1&scope=openid+profile+email+extra&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "linkedin",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [],
+        "url": "https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Flinkedin%2Fp1&scope=openid+profile+email&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "linkedin",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Flinkedin%2Fp1&scope=openid+profile+email+extra&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "microsoft",
+        "secret": "plain-secret",
+        "scopes": [],
+        "url": "ERROR"
+    },
+    {
+        "provider": "microsoft",
+        "secret": "plain-secret",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "ERROR"
+    },
+    {
+        "provider": "microsoft",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [],
+        "url": "https://login.microsoftonline.com/common/oauth2/v2.0/authorize?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fmicrosoft%2Fp1&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D&scope=offline_access+user.read&response_type=code&response_mode=query&prompt=consent+login"
+    },
+    {
+        "provider": "microsoft",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://login.microsoftonline.com/common/oauth2/v2.0/authorize?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fmicrosoft%2Fp1&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D&scope=offline_access+user.read+extra+profile&response_type=code&response_mode=query&prompt=consent+login"
+    },
+    {
+        "provider": "notion",
+        "secret": "plain-secret",
+        "scopes": [],
+        "url": "https://api.notion.com/v1/oauth/authorize?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fnotion%2Fp1&response_type=code&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D&owner=user"
+    },
+    {
+        "provider": "notion",
+        "secret": "plain-secret",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://api.notion.com/v1/oauth/authorize?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fnotion%2Fp1&response_type=code&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D&owner=user"
+    },
+    {
+        "provider": "notion",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [],
+        "url": "https://api.notion.com/v1/oauth/authorize?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fnotion%2Fp1&response_type=code&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D&owner=user"
+    },
+    {
+        "provider": "notion",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://api.notion.com/v1/oauth/authorize?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fnotion%2Fp1&response_type=code&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D&owner=user"
+    },
+    {
+        "provider": "oidc",
+        "secret": "plain-secret",
+        "scopes": [],
+        "url": "ERROR"
+    },
+    {
+        "provider": "oidc",
+        "secret": "plain-secret",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "ERROR"
+    },
+    {
+        "provider": "oidc",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [],
+        "url": "https://oidc.example.com/auth?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Foidc%2Fp1&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D&scope=openid+profile+email&response_type=code&prompt=consent+login&max_age=300"
+    },
+    {
+        "provider": "oidc",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://oidc.example.com/auth?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Foidc%2Fp1&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D&scope=openid+profile+email+extra&response_type=code&prompt=consent+login&max_age=300"
+    },
+    {
+        "provider": "okta",
+        "secret": "plain-secret",
+        "scopes": [],
+        "url": "ERROR"
+    },
+    {
+        "provider": "okta",
+        "secret": "plain-secret",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "ERROR"
+    },
+    {
+        "provider": "okta",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [],
+        "url": "https://dev.okta.com/oauth2/aus1/v1/authorize?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fokta%2Fp1&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D&scope=openid+profile+email+offline_access&response_type=code&prompt=consent+login"
+    },
+    {
+        "provider": "okta",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://dev.okta.com/oauth2/aus1/v1/authorize?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fokta%2Fp1&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D&scope=openid+profile+email+offline_access+extra&response_type=code&prompt=consent+login"
+    },
+    {
+        "provider": "paypal",
+        "secret": "plain-secret",
+        "scopes": [],
+        "url": "https://www.paypal.com/connect/?flowEntry=static&response_type=code&client_id=appid&scope=openid+profile+email&redirect_uri=http%3A%2F%2F127.0.0.1%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fpaypal%2Fp1&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "paypal",
+        "secret": "plain-secret",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://www.paypal.com/connect/?flowEntry=static&response_type=code&client_id=appid&scope=openid+profile+email+extra&redirect_uri=http%3A%2F%2F127.0.0.1%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fpaypal%2Fp1&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "paypal",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [],
+        "url": "https://www.paypal.com/connect/?flowEntry=static&response_type=code&client_id=appid&scope=openid+profile+email&redirect_uri=http%3A%2F%2F127.0.0.1%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fpaypal%2Fp1&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "paypal",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://www.paypal.com/connect/?flowEntry=static&response_type=code&client_id=appid&scope=openid+profile+email+extra&redirect_uri=http%3A%2F%2F127.0.0.1%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fpaypal%2Fp1&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "paypalSandbox",
+        "secret": "plain-secret",
+        "scopes": [],
+        "url": "https://www.paypal.com/connect/?flowEntry=static&response_type=code&client_id=appid&scope=openid+profile+email&redirect_uri=http%3A%2F%2F127.0.0.1%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2FpaypalSandbox%2Fp1&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "paypalSandbox",
+        "secret": "plain-secret",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://www.paypal.com/connect/?flowEntry=static&response_type=code&client_id=appid&scope=openid+profile+email+extra&redirect_uri=http%3A%2F%2F127.0.0.1%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2FpaypalSandbox%2Fp1&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "paypalSandbox",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [],
+        "url": "https://www.paypal.com/connect/?flowEntry=static&response_type=code&client_id=appid&scope=openid+profile+email&redirect_uri=http%3A%2F%2F127.0.0.1%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2FpaypalSandbox%2Fp1&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "paypalSandbox",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://www.paypal.com/connect/?flowEntry=static&response_type=code&client_id=appid&scope=openid+profile+email+extra&redirect_uri=http%3A%2F%2F127.0.0.1%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2FpaypalSandbox%2Fp1&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "podio",
+        "secret": "plain-secret",
+        "scopes": [],
+        "url": "https://podio.com/oauth/authorize?client_id=appid&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fpodio%2Fp1"
+    },
+    {
+        "provider": "podio",
+        "secret": "plain-secret",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://podio.com/oauth/authorize?client_id=appid&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fpodio%2Fp1"
+    },
+    {
+        "provider": "podio",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [],
+        "url": "https://podio.com/oauth/authorize?client_id=appid&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fpodio%2Fp1"
+    },
+    {
+        "provider": "podio",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://podio.com/oauth/authorize?client_id=appid&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fpodio%2Fp1"
+    },
+    {
+        "provider": "salesforce",
+        "secret": "plain-secret",
+        "scopes": [],
+        "url": "https://login.salesforce.com/services/oauth2/authorize?response_type=code&client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fsalesforce%2Fp1&scope=openid+profile&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "salesforce",
+        "secret": "plain-secret",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://login.salesforce.com/services/oauth2/authorize?response_type=code&client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fsalesforce%2Fp1&scope=openid+profile+extra&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "salesforce",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [],
+        "url": "https://login.salesforce.com/services/oauth2/authorize?response_type=code&client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fsalesforce%2Fp1&scope=openid+profile&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D&prompt=consent+login"
+    },
+    {
+        "provider": "salesforce",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://login.salesforce.com/services/oauth2/authorize?response_type=code&client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fsalesforce%2Fp1&scope=openid+profile+extra&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D&prompt=consent+login"
+    },
+    {
+        "provider": "slack",
+        "secret": "plain-secret",
+        "scopes": [],
+        "url": "https://slack.com/oauth/v2/authorize?client_id=appid&user_scope=openid+email+profile&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fslack%2Fp1&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "slack",
+        "secret": "plain-secret",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://slack.com/oauth/v2/authorize?client_id=appid&user_scope=openid+email+profile+extra&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fslack%2Fp1&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "slack",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [],
+        "url": "https://slack.com/oauth/v2/authorize?client_id=appid&user_scope=openid+email+profile&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fslack%2Fp1&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "slack",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://slack.com/oauth/v2/authorize?client_id=appid&user_scope=openid+email+profile+extra&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fslack%2Fp1&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "spotify",
+        "secret": "plain-secret",
+        "scopes": [],
+        "url": "https://accounts.spotify.com/authorize?response_type=code&client_id=appid&scope=user-read-email&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fspotify%2Fp1&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "spotify",
+        "secret": "plain-secret",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://accounts.spotify.com/authorize?response_type=code&client_id=appid&scope=user-read-email+extra+profile&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fspotify%2Fp1&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "spotify",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [],
+        "url": "https://accounts.spotify.com/authorize?response_type=code&client_id=appid&scope=user-read-email&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fspotify%2Fp1&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "spotify",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://accounts.spotify.com/authorize?response_type=code&client_id=appid&scope=user-read-email+extra+profile&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fspotify%2Fp1&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "stripe",
+        "secret": "plain-secret",
+        "scopes": [],
+        "url": "https://connect.stripe.com/oauth/authorize?response_type=code&client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fstripe%2Fp1&scope=read_write&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "stripe",
+        "secret": "plain-secret",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://connect.stripe.com/oauth/authorize?response_type=code&client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fstripe%2Fp1&scope=read_write+extra+profile&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "stripe",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [],
+        "url": "https://connect.stripe.com/oauth/authorize?response_type=code&client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fstripe%2Fp1&scope=read_write&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "stripe",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://connect.stripe.com/oauth/authorize?response_type=code&client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fstripe%2Fp1&scope=read_write+extra+profile&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "tiktok",
+        "secret": "plain-secret",
+        "scopes": [],
+        "url": "https://www.tiktok.com/v2/auth/authorize/?client_key=appid&response_type=code&scope=user.info.basic&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Ftiktok%2Fp1&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "tiktok",
+        "secret": "plain-secret",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://www.tiktok.com/v2/auth/authorize/?client_key=appid&response_type=code&scope=user.info.basic%2Cextra%2Cprofile&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Ftiktok%2Fp1&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "tiktok",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [],
+        "url": "https://www.tiktok.com/v2/auth/authorize/?client_key=appid&response_type=code&scope=user.info.basic&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Ftiktok%2Fp1&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "tiktok",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://www.tiktok.com/v2/auth/authorize/?client_key=appid&response_type=code&scope=user.info.basic%2Cextra%2Cprofile&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Ftiktok%2Fp1&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "tradeshift",
+        "secret": "plain-secret",
+        "scopes": [],
+        "url": "https://api.tradeshift.com/tradeshift/auth/login?response_type=code&client_id=appid&scope=openid+offline&redirect_uri=http%3A%2F%2F127.0.0.1%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Ftradeshift%2Fp1&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "tradeshift",
+        "secret": "plain-secret",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://api.tradeshift.com/tradeshift/auth/login?response_type=code&client_id=appid&scope=openid+offline+extra+profile&redirect_uri=http%3A%2F%2F127.0.0.1%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Ftradeshift%2Fp1&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "tradeshift",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [],
+        "url": "https://api.tradeshift.com/tradeshift/auth/login?response_type=code&client_id=appid&scope=openid+offline&redirect_uri=http%3A%2F%2F127.0.0.1%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Ftradeshift%2Fp1&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "tradeshift",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://api.tradeshift.com/tradeshift/auth/login?response_type=code&client_id=appid&scope=openid+offline+extra+profile&redirect_uri=http%3A%2F%2F127.0.0.1%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Ftradeshift%2Fp1&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "tradeshiftBox",
+        "secret": "plain-secret",
+        "scopes": [],
+        "url": "https://api.tradeshift.com/tradeshift/auth/login?response_type=code&client_id=appid&scope=openid+offline&redirect_uri=http%3A%2F%2F127.0.0.1%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2FtradeshiftBox%2Fp1&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "tradeshiftBox",
+        "secret": "plain-secret",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://api.tradeshift.com/tradeshift/auth/login?response_type=code&client_id=appid&scope=openid+offline+extra+profile&redirect_uri=http%3A%2F%2F127.0.0.1%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2FtradeshiftBox%2Fp1&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "tradeshiftBox",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [],
+        "url": "https://api.tradeshift.com/tradeshift/auth/login?response_type=code&client_id=appid&scope=openid+offline&redirect_uri=http%3A%2F%2F127.0.0.1%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2FtradeshiftBox%2Fp1&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "tradeshiftBox",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://api.tradeshift.com/tradeshift/auth/login?response_type=code&client_id=appid&scope=openid+offline+extra+profile&redirect_uri=http%3A%2F%2F127.0.0.1%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2FtradeshiftBox%2Fp1&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "twitch",
+        "secret": "plain-secret",
+        "scopes": [],
+        "url": "https://id.twitch.tv/oauth2/authorize?response_type=code&client_id=appid&scope=user%3Aread%3Aemail&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Ftwitch%2Fp1&force_verify=1&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "twitch",
+        "secret": "plain-secret",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://id.twitch.tv/oauth2/authorize?response_type=code&client_id=appid&scope=user%3Aread%3Aemail+extra+profile&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Ftwitch%2Fp1&force_verify=1&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "twitch",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [],
+        "url": "https://id.twitch.tv/oauth2/authorize?response_type=code&client_id=appid&scope=user%3Aread%3Aemail&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Ftwitch%2Fp1&force_verify=1&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "twitch",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://id.twitch.tv/oauth2/authorize?response_type=code&client_id=appid&scope=user%3Aread%3Aemail+extra+profile&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Ftwitch%2Fp1&force_verify=1&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "webflow",
+        "secret": "plain-secret",
+        "scopes": [],
+        "url": "https://webflow.com/oauth/authorize?response_type=code&client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fwebflow%2Fp1&scope=authorized_user%3Aread&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "webflow",
+        "secret": "plain-secret",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://webflow.com/oauth/authorize?response_type=code&client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fwebflow%2Fp1&scope=authorized_user%3Aread+extra+profile&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "webflow",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [],
+        "url": "https://webflow.com/oauth/authorize?response_type=code&client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fwebflow%2Fp1&scope=authorized_user%3Aread&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "webflow",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://webflow.com/oauth/authorize?response_type=code&client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fwebflow%2Fp1&scope=authorized_user%3Aread+extra+profile&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "wordpress",
+        "secret": "plain-secret",
+        "scopes": [],
+        "url": "https://public-api.wordpress.com/oauth2/authorize?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fwordpress%2Fp1&response_type=code&scope%5B0%5D=auth&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "wordpress",
+        "secret": "plain-secret",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://public-api.wordpress.com/oauth2/authorize?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fwordpress%2Fp1&response_type=code&scope%5B0%5D=auth&scope%5B1%5D=extra&scope%5B2%5D=profile&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "wordpress",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [],
+        "url": "https://public-api.wordpress.com/oauth2/authorize?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fwordpress%2Fp1&response_type=code&scope%5B0%5D=auth&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "wordpress",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://public-api.wordpress.com/oauth2/authorize?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fwordpress%2Fp1&response_type=code&scope%5B0%5D=auth&scope%5B1%5D=extra&scope%5B2%5D=profile&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "yahoo",
+        "secret": "plain-secret",
+        "scopes": [],
+        "url": "https://api.login.yahoo.com/oauth2/request_auth?response_type=code&client_id=appid&scope=openid+profile+email&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fyahoo%2Fp1&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "yahoo",
+        "secret": "plain-secret",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://api.login.yahoo.com/oauth2/request_auth?response_type=code&client_id=appid&scope=openid+profile+email+extra&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fyahoo%2Fp1&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "yahoo",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [],
+        "url": "https://api.login.yahoo.com/oauth2/request_auth?response_type=code&client_id=appid&scope=openid+profile+email&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fyahoo%2Fp1&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "yahoo",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://api.login.yahoo.com/oauth2/request_auth?response_type=code&client_id=appid&scope=openid+profile+email+extra&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fyahoo%2Fp1&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "yammer",
+        "secret": "plain-secret",
+        "scopes": [],
+        "url": "https://www.yammer.com/oauth2/oauth2/authorize?client_id=appid&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fyammer%2Fp1&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "yammer",
+        "secret": "plain-secret",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "ERROR"
+    },
+    {
+        "provider": "yammer",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [],
+        "url": "https://www.yammer.com/oauth2/oauth2/authorize?client_id=appid&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fyammer%2Fp1&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "yammer",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "ERROR"
+    },
+    {
+        "provider": "yandex",
+        "secret": "plain-secret",
+        "scopes": [],
+        "url": "https://oauth.yandex.com/authorize?response_type=code&client_id=appid&scope=&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "yandex",
+        "secret": "plain-secret",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://oauth.yandex.com/authorize?response_type=code&client_id=appid&scope=extra+profile&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "yandex",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [],
+        "url": "https://oauth.yandex.com/authorize?response_type=code&client_id=appid&scope=&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "yandex",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://oauth.yandex.com/authorize?response_type=code&client_id=appid&scope=extra+profile&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "zoho",
+        "secret": "plain-secret",
+        "scopes": [],
+        "url": "https://accounts.zoho.com/oauth/v2/auth?response_type=code&client_id=appid&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fzoho%2Fp1&scope=email+profile"
+    },
+    {
+        "provider": "zoho",
+        "secret": "plain-secret",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://accounts.zoho.com/oauth/v2/auth?response_type=code&client_id=appid&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fzoho%2Fp1&scope=email+profile+extra"
+    },
+    {
+        "provider": "zoho",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [],
+        "url": "https://accounts.zoho.com/oauth/v2/auth?response_type=code&client_id=appid&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fzoho%2Fp1&scope=email+profile&prompt=consent+login"
+    },
+    {
+        "provider": "zoho",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://accounts.zoho.com/oauth/v2/auth?response_type=code&client_id=appid&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fzoho%2Fp1&scope=email+profile+extra&prompt=consent+login"
+    },
+    {
+        "provider": "zoom",
+        "secret": "plain-secret",
+        "scopes": [],
+        "url": "https://zoom.us/oauth/authorize?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fzoom%2Fp1&response_type=code&scope=user_info%3Aread&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "zoom",
+        "secret": "plain-secret",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://zoom.us/oauth/authorize?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fzoom%2Fp1&response_type=code&scope=user_info%3Aread+extra+profile&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "zoom",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [],
+        "url": "https://zoom.us/oauth/authorize?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fzoom%2Fp1&response_type=code&scope=user_info%3Aread&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "zoom",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "https://zoom.us/oauth/authorize?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fzoom%2Fp1&response_type=code&scope=user_info%3Aread+extra+profile&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "mock",
+        "secret": "plain-secret",
+        "scopes": [],
+        "url": "http://localhost/v1/mock/tests/general/oauth2?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fmock%2Fp1&scope=email&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "mock",
+        "secret": "plain-secret",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "http://localhost/v1/mock/tests/general/oauth2?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fmock%2Fp1&scope=email+extra+profile&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "mock",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [],
+        "url": "http://localhost/v1/mock/tests/general/oauth2?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fmock%2Fp1&scope=email&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "mock",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "http://localhost/v1/mock/tests/general/oauth2?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fmock%2Fp1&scope=email+extra+profile&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "mock-unverified",
+        "secret": "plain-secret",
+        "scopes": [],
+        "url": "http://localhost/v1/mock/tests/general/oauth2?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fmock-unverified%2Fp1&scope=email&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "mock-unverified",
+        "secret": "plain-secret",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "http://localhost/v1/mock/tests/general/oauth2?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fmock-unverified%2Fp1&scope=email+extra+profile&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "mock-unverified",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [],
+        "url": "http://localhost/v1/mock/tests/general/oauth2?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fmock-unverified%2Fp1&scope=email&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "mock-unverified",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "http://localhost/v1/mock/tests/general/oauth2?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fmock-unverified%2Fp1&scope=email+extra+profile&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "mock-no-email",
+        "secret": "plain-secret",
+        "scopes": [],
+        "url": "http://localhost/v1/mock/tests/general/oauth2?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fmock-no-email%2Fp1&scope=email&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "mock-no-email",
+        "secret": "plain-secret",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "http://localhost/v1/mock/tests/general/oauth2?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fmock-no-email%2Fp1&scope=email+extra+profile&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "mock-no-email",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [],
+        "url": "http://localhost/v1/mock/tests/general/oauth2?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fmock-no-email%2Fp1&scope=email&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    },
+    {
+        "provider": "mock-no-email",
+        "secret": "{\"clientSecret\":\"cs\",\"auth0Domain\":\"a.auth0.com\",\"authentikDomain\":\"auth.example.com\",\"fusionAuthDomain\":\"fa.example.com\",\"keycloakDomain\":\"kc.example.com\",\"keycloakRealm\":\"my realm\",\"tenantID\":\"common\",\"oktaDomain\":\"dev.okta.com\",\"authorizationServerId\":\"aus1\",\"authorizationEndpoint\":\"https:\\/\\/oidc.example.com\\/auth\",\"endpoint\":\"https:\\/\\/git.example.com\\/\",\"prompt\":[\"consent\",\"login\"],\"maxAge\":\"300\"}",
+        "scopes": [
+            "extra",
+            "profile"
+        ],
+        "url": "http://localhost/v1/mock/tests/general/oauth2?client_id=appid&redirect_uri=http%3A%2F%2Flocalhost%3A9501%2Fv1%2Faccount%2Fsessions%2Foauth2%2Fcallback%2Fmock-no-email%2Fp1&scope=email+extra+profile&state=%7B%22success%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Fs%3Fa%3D1%22%2C%22failure%22%3A%22http%3A%5C%2F%5C%2Flocalhost%5C%2Ff%22%2C%22token%22%3Afalse%2C%22nonce%22%3A%220123456789abcdef0123456789abcdef%22%2C%22state%22%3A%22app%22%7D"
+    }
+]

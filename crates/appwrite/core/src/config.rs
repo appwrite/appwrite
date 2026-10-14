@@ -91,6 +91,26 @@ pub struct Config {
     pub queue_deletes: String,
     pub queue_usage: String,
     pub queue_audits: String,
+    /// `_APP_MAILS_QUEUE_NAME`.
+    pub queue_mails: String,
+    /// `_APP_MESSAGING_QUEUE_NAME`.
+    pub queue_messaging: String,
+    /// `_APP_SMTP_HOST` is set: emails can be sent.
+    pub smtp: bool,
+    /// `_APP_SMS_PROVIDER` is set: SMS can be sent.
+    pub sms: bool,
+    /// `_APP_SYSTEM_EMAIL_ADDRESS` (`APP_EMAIL_TEAM` by default).
+    pub system_email_address: String,
+    /// `_APP_SYSTEM_EMAIL_NAME` (`Appwrite Server` by default).
+    pub system_email_name: String,
+    /// `_APP_CONSOLE_URL` is set explicitly (it then carries its own port).
+    pub console_url_explicit: bool,
+    /// The scheme the OAuth2 and magic URL links use: `http` when
+    /// `_APP_OPTIONS_FORCE_HTTPS` is `disabled`, else `https`.
+    pub link_scheme: &'static str,
+    /// `_APP_CONSOLE_ROOT_SESSION=enabled`: console cookies go on the
+    /// registrable domain.
+    pub console_root_session: bool,
     pub console_trusted_projects: Vec<String>,
     /// `_APP_OPTIONS_ABUSE_INCREASED_LIMIT_PROJECTS`: projects whose limits
     /// are a hundred times higher.
@@ -194,6 +214,15 @@ impl Config {
             queue_deletes: env_or("_APP_DELETE_QUEUE_NAME", "v1-deletes").into_owned(),
             queue_usage: env_or("_APP_STATS_USAGE_QUEUE_NAME", "v1-stats-usage").into_owned(),
             queue_audits: env_or("_APP_AUDITS_QUEUE_NAME", "v1-audits").into_owned(),
+            queue_mails: env_or("_APP_MAILS_QUEUE_NAME", "v1-mails").into_owned(),
+            queue_messaging: env_or("_APP_MESSAGING_QUEUE_NAME", "v1-messaging").into_owned(),
+            smtp: env("_APP_SMTP_HOST").is_some(),
+            sms: env("_APP_SMS_PROVIDER").is_some(),
+            system_email_address: env_or("_APP_SYSTEM_EMAIL_ADDRESS", "team@localhost.test").into_owned(),
+            system_email_name: env_or("_APP_SYSTEM_EMAIL_NAME", "Appwrite Server").into_owned(),
+            console_url_explicit: env("_APP_CONSOLE_URL").is_some(),
+            link_scheme: if env("_APP_OPTIONS_FORCE_HTTPS").as_deref() == Some("disabled") { "http" } else { "https" },
+            console_root_session: env_or("_APP_CONSOLE_ROOT_SESSION", "disabled") == "enabled",
             console_trusted_projects: list(env("_APP_CONSOLE_TRUSTED_PROJECTS")),
             rules_md5: env_or("_APP_RULES_FORMAT", "") == "md5",
             abuse_increased_projects: list(env("_APP_OPTIONS_ABUSE_INCREASED_LIMIT_PROJECTS")),

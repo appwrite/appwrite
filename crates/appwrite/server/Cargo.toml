@@ -14,6 +14,7 @@ path = "src/main.rs"
 [dependencies]
 appwrite-core.workspace = true
 appwrite-users.workspace = true
+appwrite-account.workspace = true
 mimalloc.workspace = true
 serde_json.workspace = true
 tokio.workspace = true

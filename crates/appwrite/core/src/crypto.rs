@@ -65,6 +65,30 @@ pub fn decrypt(stored: &str, keys: impl Fn(&str) -> Option<String>) -> Option<St
     String::from_utf8(buffer).ok()
 }
 
+/// `openssl_encrypt($plain, 'aes-128-gcm', $key, OPENSSL_RAW_DATA, $iv, $tag)`
+/// with a random IV: the raw ciphertext, the IV and the tag.
+pub fn seal(key: &str, plain: &[u8]) -> (Vec<u8>, [u8; 12], [u8; 16]) {
+    let mut iv = [0u8; 12];
+    utopia_auth::random_bytes(&mut iv);
+    let mut buffer = plain.to_vec();
+    let tag = cipher(key)
+        .encrypt_in_place_detached(Nonce::from_slice(&iv), b"", &mut buffer)
+        .expect("AES-GCM encryption cannot fail for in-memory buffers");
+    let mut tag_bytes = [0u8; 16];
+    tag_bytes.copy_from_slice(&tag);
+    (buffer, iv, tag_bytes)
+}
+
+/// `openssl_decrypt()` of [`seal`]'s output; `None` when it does not open.
+pub fn open(key: &str, data: &[u8], iv: &[u8], tag: &[u8]) -> Option<Vec<u8>> {
+    if iv.len() != 12 || tag.len() != 16 {
+        return None;
+    }
+    let mut buffer = data.to_vec();
+    cipher(key).decrypt_in_place_detached(Nonce::from_slice(iv), b"", &mut buffer, Tag::from_slice(tag)).ok()?;
+    Some(buffer)
+}
+
 /// The cipher of `key`, kept: expanding a key costs more than decrypting
 /// the short values stored with it (every listed user's password).
 fn cipher(key: &str) -> Aes128Gcm {

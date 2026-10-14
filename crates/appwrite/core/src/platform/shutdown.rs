@@ -47,8 +47,11 @@ struct Job {
     has_user: bool,
     privileged: bool,
     params: Vec<(String, String)>,
+    /// The event an action set (`setEvent()`), over the route's.
+    event: Option<String>,
     payload: Bytes,
     created_users: Vec<(String, Bytes)>,
+    queued: Vec<(String, Vec<u8>)>,
     /// An API key's disabled metrics: suffixes of the metric keys left out.
     disabled_metrics: Vec<String>,
     /// The user whose session the request created (the session limit).
@@ -121,7 +124,7 @@ const ONBOARDING: &[&str] = &[
     "sites.updateSiteDeployment",
 ];
 
-pub(super) fn schedule(ctx: Context, status: StatusCode, body: Bytes, response_size: usize) {
+pub(super) fn schedule(mut ctx: Context, status: StatusCode, body: Bytes, response_size: usize) {
     let request = &ctx.request;
     let origin_host = request.header("origin").and_then(crate::network::url_host);
     let info = RequestInfo {
@@ -147,10 +150,11 @@ pub(super) fn schedule(ctx: Context, status: StatusCode, body: Bytes, response_s
     };
     // PHP's events carry the `user` resource's context: empty for a project
     // or an organization key, the account for an account key.
-    let actor = match (&ctx.key, ctx.roles_user()) {
-        (Some(key), Some(u)) if key.kind == KeyType::Account => u.message_payload(),
-        (Some(_), _) | (None, None) => event::empty_user(),
-        (None, Some(u)) => u.message_payload(),
+    let actor = match (ctx.events.actor.take(), &ctx.key, ctx.roles_user()) {
+        (Some(actor), _, _) => actor,
+        (None, Some(key), Some(u)) if key.kind == KeyType::Account => u.message_payload(),
+        (None, Some(_), _) | (None, None, None) => event::empty_user(),
+        (None, None, Some(u)) => u.message_payload(),
     };
     // The `session` group's session limit: the user of the session created.
     let session_user = if ctx.route.has_group("session") && status.is_success() {
@@ -184,8 +188,10 @@ pub(super) fn schedule(ctx: Context, status: StatusCode, body: Bytes, response_s
         has_user: ctx.user.is_some(),
         privileged: roles::is_privileged(&ctx.roles),
         params: ctx.events.params,
+        event: ctx.events.event,
         payload,
         created_users,
+        queued: listened.queued,
         functions_changed: listened.functions,
         session_user,
         abuse_params: ctx.abuse_params,
@@ -249,7 +255,11 @@ impl Job {
             }
         }
 
-        if let Some(pattern) = self.route.event {
+        for (queue, message) in &self.queued {
+            self.publish(queue, &raw(&Bytes::from(message.clone()))).await;
+        }
+
+        if let Some(pattern) = self.event.as_deref().or(self.route.event) {
             match event::generate_events(pattern, &self.params) {
                 Ok(events) => self.trigger(&events, &project_payload, &trimmed).await,
                 Err(e) => tracing::warn!(error = %e, pattern, "event generation failed"),
@@ -442,13 +452,16 @@ impl Job {
             "--" => String::new(),
             code => code.to_lowercase(),
         };
+        // `$parts[1] ?? $parts[0]` of the URI's segments.
+        let parts: Vec<&str> = self.request.path.trim_matches('/').split('/').collect();
+        let service = parts.get(1).or(parts.first()).copied().unwrap_or("").to_owned();
         let base = |key: &str, value: i64| Metric {
             key: key.to_owned(),
             value,
             path: self.request.path.clone(),
             method: self.request.method.clone(),
             status: self.status.as_u16(),
-            service: self.route.namespace.to_owned(),
+            service: service.clone(),
             resource_type: "project".to_owned(),
             resource_id: self.project.id.clone(),
             resource_internal_id: self.project.sequence.clone(),

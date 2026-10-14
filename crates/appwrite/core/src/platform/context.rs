@@ -26,14 +26,30 @@ pub enum Mode {
     Admin,
 }
 
+/// The session store a request carries (`Utopia\Auth\Store` as the `user`
+/// resource decodes it from the cookie, `X-Appwrite-Session` or
+/// `X-Fallback-Cookies`).
+#[derive(Debug, Clone, Default)]
+pub struct Store {
+    /// `a_session_<projectId>` (the console's in admin mode).
+    pub key: String,
+    pub id: String,
+    pub secret: String,
+}
+
 /// Event state filled by actions (`$queueForEvents`).
 #[derive(Debug, Default)]
 pub struct EventState {
+    /// `setEvent()`: replaces the route's event pattern.
+    pub event: Option<String>,
     pub params: Vec<(String, String)>,
     /// Explicit payload (`setPayload`); defaults to the response body.
     pub payload: Option<Bytes>,
     /// Extra delete messages to publish.
     pub deletes: Vec<Value>,
+    /// The `user` resource after the action replaced its attributes
+    /// (`$user->setAttributes($profile)`): the events' user.
+    pub actor: Option<Value>,
 }
 
 /// Request context.
@@ -84,6 +100,12 @@ pub struct Context {
     pub abuse_params: Vec<(String, String)>,
     /// The keys of the account API key's user (see the `user` resource).
     pub account_keys: Vec<crate::database::project::Key>,
+    /// The action answered and then failed (PHP sends a redirect, then
+    /// throws): the error hook runs instead of the shutdown hooks.
+    pub failed: bool,
+    /// The session store the request carries (`$store`): its key
+    /// (`a_session_<project>`) and the decoded `id` and `secret`.
+    pub store: Store,
     db: Option<Database>,
     platform_db: OnceLock<Database>,
 }
@@ -116,6 +138,8 @@ impl Context {
             rule_domain: None,
             abuse_params: Vec::new(),
             account_keys: Vec::new(),
+            failed: false,
+            store: Store::default(),
             mode: Mode::Default,
             locale,
             format: None,
@@ -286,6 +310,29 @@ impl Context {
         self.events.payload = Some(Bytes::from(crate::response::current(payload)));
     }
 
+    /// Publishes a message to a queue the PHP workers consume, now (as the
+    /// action's publishers do: `$publisherForMails->enqueue(...)`).
+    pub async fn enqueue<T: Serialize>(&self, queue: &str, message: &T) {
+        use utopia_queue::Publisher as _;
+        {
+            let mut listened = self.listened.lock().unwrap_or_else(|e| e.into_inner());
+            if !listened.users.is_empty() {
+                match serde_json::to_vec(message) {
+                    Ok(bytes) => listened.queued.push((queue.to_owned(), bytes)),
+                    Err(e) => tracing::warn!(error = %e, queue, "queue message encoding failed"),
+                }
+                return;
+            }
+        }
+        let published = match (utopia_queue::Queue::new(queue), utopia_queue::payload(message)) {
+            (Ok(queue), Ok(payload)) => self.state.publisher.publish(&queue, payload).await.map(|_| ()),
+            (Err(e), _) | (_, Err(e)) => Err(e),
+        };
+        if let Err(e) = published {
+            tracing::warn!(error = %e, queue, "queue publish failed");
+        }
+    }
+
     /// Records a usage metric (database listener equivalent).
     pub fn metric(&mut self, key: &str, value: i64) {
         self.listened.lock().unwrap_or_else(|e| e.into_inner()).metrics.push((key.to_owned(), value));
@@ -328,6 +375,22 @@ impl Context {
         self.state.translations.text(&self.locale, key, default)
     }
 
+    /// The `allowedHostnames` resource (CORS, origins and redirects).
+    pub fn allowed_hostnames(&self) -> Vec<String> {
+        super::lifecycle::allowed_hostnames(
+            &self.state,
+            &self.project,
+            self.project_found,
+            &self.request,
+            self.rule_domain.as_deref(),
+        )
+    }
+
+    /// The `allowedSchemes` resource.
+    pub fn allowed_schemes(&self) -> Vec<String> {
+        super::lifecycle::allowed_schemes(&self.state, &self.project, self.project_found)
+    }
+
     /// Plan flags (`$plan`); empty in CE.
     pub fn plan_allows(&self, flag: &str) -> bool {
         if self.project.is_console() {
@@ -365,6 +428,9 @@ pub struct Listened {
     /// A function was created, updated or deleted
     /// (`purge-function-events-cache`).
     pub functions: bool,
+    /// Messages published after a user was created: PHP's listener sends
+    /// the user's create events first, so these wait for them.
+    pub queued: Vec<(String, Vec<u8>)>,
 }
 
 /// Registers PHP's listeners on a project database.

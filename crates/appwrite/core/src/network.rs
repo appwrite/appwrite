@@ -199,6 +199,35 @@ pub fn validate_origin(origin: &str, allowed_hosts: &[String], allowed_schemes: 
     }
 }
 
+/// `Appwrite\Network\Validator\Redirect`: a redirect URL must go to an
+/// allowed hostname (web schemes) or an allowed scheme; the description is
+/// the PHP validator's.
+pub fn validate_redirect(url: &str, allowed_hosts: &[String], allowed_schemes: &[String]) -> Result<(), String> {
+    if url.is_empty() {
+        return Err("Invalid URI.".to_owned());
+    }
+    let scheme = url_scheme(url);
+    let host = url_host(url).unwrap_or_default();
+    if let Some(s) = &scheme {
+        if WEB_SCHEMES.contains(&s.as_str()) {
+            let validator = Hostname::new(allowed_hosts.to_vec());
+            if host_allowed(&validator, &host) {
+                return Ok(());
+            }
+        } else if allowed_schemes.iter().any(|a| a == s) {
+            return Ok(());
+        }
+    }
+    if host.is_empty() && scheme.is_none() {
+        return Err("Invalid URI.".to_owned());
+    }
+    let platform = scheme.as_deref().and_then(platform_name).unwrap_or("");
+    let host = if host.is_empty() { String::new() } else { format!("({host})") };
+    Err(format!(
+        "Invalid URI. Register your new client {host} as a new {platform} platform on your project console dashboard"
+    ))
+}
+
 /// Parses an IPv4/IPv6 CIDR or single address.
 fn in_range(ip: &IpAddr, range: &str) -> bool {
     let (net, bits) = match range.split_once('/') {

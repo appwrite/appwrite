@@ -55,16 +55,45 @@ pub(super) async fn run(platform: &Platform, request: Request) -> Response {
     };
     let mut ctx = Context::new(state.clone(), request, route, params);
     let result = async {
-        authenticate(&mut ctx).await?;
-        state.hooks.init(&mut ctx).await?;
+        // Every init hook is bound to a group (`api`, `web`, ...): a route
+        // outside them (the OAuth2 callbacks) runs its action alone.
+        if ctx.route.has_group("api") {
+            authenticate(&mut ctx).await?;
+            state.hooks.init(&mut ctx).await?;
+        }
         let action = ctx.route.action;
         action(&mut ctx).await
     }
     .await;
+    // The error hook still resolves the project (its name titles the error page).
+    if result.is_err() && !ctx.route.has_group("api") {
+        resolve_project(&mut ctx).await;
+    }
     finalize(ctx, result)
 }
 
-fn allowed_hostnames(
+/// The `project` resource alone (for routes outside the `api` group).
+async fn resolve_project(ctx: &mut Context) {
+    let Ok(platform_db) = ctx.platform_db() else { return };
+    let project_id = match ctx.request.params().get("project") {
+        Some(Value::String(s)) => s.clone(),
+        _ => ctx.request.header_or_empty("x-appwrite-project").to_owned(),
+    };
+    let project_id =
+        if project_id.is_empty() { ctx.request.query_value("project").unwrap_or("").to_owned() } else { project_id };
+    if project_id.is_empty() || project_id == Project::CONSOLE {
+        return;
+    }
+    match ctx.state.projects.get(&platform_db, &project_id).await {
+        Ok(Some(p)) => ctx.project = p,
+        _ => {
+            ctx.project = Arc::new(Project::empty());
+            ctx.project_found = false;
+        }
+    }
+}
+
+pub(super) fn allowed_hostnames(
     ctx_state: &super::State,
     project: &Project,
     project_found: bool,
@@ -91,6 +120,24 @@ fn allowed_hostnames(
     for h in allowed {
         if !unique.contains(&h) {
             unique.push(h);
+        }
+    }
+    unique
+}
+
+/// The `allowedSchemes` resource: the console's schemes, and for a project
+/// `exp`, its callback scheme and its platforms' schemes.
+pub(super) fn allowed_schemes(state: &super::State, project: &Project, project_found: bool) -> Vec<String> {
+    let mut schemes = state.config.console_schemas.clone();
+    if project_found && !project.is_console() {
+        schemes.push("exp".to_owned());
+        schemes.push(format!("appwrite-callback-{}", project.id));
+        schemes.extend(network::platform_schemes(&project.platforms));
+    }
+    let mut unique: Vec<String> = Vec::with_capacity(schemes.len());
+    for s in schemes {
+        if !unique.contains(&s) {
+            unique.push(s);
         }
     }
     unique
@@ -263,15 +310,10 @@ pub(super) async fn authenticate(ctx: &mut Context) -> Result<()> {
 
     // -- CORS / origin (I4) ----------------------------------------------------
     let origin = ctx.request.header_or_empty("origin").to_owned();
-    if !origin.is_empty() && key_header.is_empty() {
+    if !origin.is_empty() && key_header.is_empty() && !ctx.route.labels.any_origin {
         let allowed =
             allowed_hostnames(&state, &ctx.project, ctx.project_found, &ctx.request, ctx.rule_domain.as_deref());
-        let mut schemes = state.config.console_schemas.clone();
-        if ctx.project_found && !ctx.project.is_console() {
-            schemes.push("exp".to_owned());
-            schemes.push(format!("appwrite-callback-{}", ctx.project.id));
-            schemes.extend(network::platform_schemes(&ctx.project.platforms));
-        }
+        let schemes = allowed_schemes(&state, &ctx.project, ctx.project_found);
         if let Err(description) = network::validate_origin(&origin, &allowed, &schemes) {
             return Err(Error::with_message(ErrorType::GeneralUnknownOrigin, description));
         }
@@ -405,6 +447,17 @@ pub(super) async fn authenticate(ctx: &mut Context) -> Result<()> {
     }
 
     track_access(ctx);
+
+    // Impersonation shows the target's account without letting the
+    // impersonator change it: account writes are refused unless the route
+    // allows them, and `deny` refuses a route on any method.
+    if ctx.target_user.is_some() && !ctx.route.namespace.is_empty() {
+        let impersonation = ctx.route.labels.impersonation;
+        let account_write = ctx.route.namespace == "account" && ctx.request.method() != Method::GET;
+        if impersonation == "deny" || (account_write && impersonation != "allow") {
+            return Err(Error::new(ErrorType::UserImpersonationReadOnly));
+        }
+    }
 
     // Service and API toggles.
     let privileged_or_key = roles::is_privileged(&ctx.roles) || roles::is_key(&ctx.roles);
@@ -571,6 +624,9 @@ fn session_from_request(ctx: &mut Context) -> (String, String) {
 async fn resolve_user(ctx: &mut Context) -> Result<()> {
     let state = ctx.state.clone();
     let store = session_from_request(ctx);
+    let key =
+        if ctx.mode == Mode::Admin { "a_session_console".to_owned() } else { format!("a_session_{}", ctx.project.id) };
+    ctx.store = super::context::Store { key, id: store.0.clone(), secret: store.1.clone() };
 
     // An unknown project has no users (PHP: an empty `User`), but the
     // fallback headers above are already sent, and an account key still
@@ -824,11 +880,41 @@ pub(super) fn finalize(ctx: Context, result: Result<Response>) -> Response {
 
     let mut response = match result {
         Ok(response) => response,
+        // Routes labelled `error` show browsers the error page; SDKs send
+        // `accept: text/html` too, so only requests without `x-sdk-name`.
+        Err(error) if ctx.route.labels.error_page && ctx.request.header_or_empty("x-sdk-name").is_empty() => {
+            if error.status() >= 500 {
+                tracing::error!(error = %error, location = %error.location, "request failed");
+            }
+            let url = if state.config.development {
+                format!("{}://localhost", state.config.link_scheme)
+            } else {
+                let host = state.config.platform.get("consoleHostname").and_then(Value::as_str).unwrap_or("");
+                format!("{}://{host}", state.config.link_scheme)
+            };
+            let html = super::error_page::render(
+                &ctx.project.name,
+                error.public_message(),
+                error.kind.name(),
+                error.status(),
+                state.config.development,
+                &url,
+            );
+            Response::with_body(
+                StatusCode::from_u16(error.status()).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR),
+                "text/html; charset=UTF-8",
+                html,
+            )
+        }
         Err(error) => error_response(&state, &error),
     };
     let is_error = response.status().as_u16() >= 400;
-    for (k, v) in &cors {
-        response.add(k, v);
+    // CORS headers come from the `api` group's init hook, and the error hook.
+    let api = ctx.route.has_group("api");
+    if api || is_error {
+        for (k, v) in &cors {
+            response.add(k, v);
+        }
     }
     if !ctx.secured {
         // Swoole's own header: PHP failed before `general.php` set it.
@@ -862,7 +948,7 @@ pub(super) fn finalize(ctx: Context, result: Result<Response>) -> Response {
     );
     response.flush();
 
-    if !is_error {
+    if !is_error && api && !ctx.failed {
         shutdown::schedule(ctx, response.status(), body, response.size());
     }
     response

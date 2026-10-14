@@ -76,6 +76,8 @@ pub struct Platform {
     pub kind: String,
     pub hostname: String,
     pub key: String,
+    /// Android signing certificate fingerprints (passkey origins).
+    pub fingerprints: Vec<String>,
 }
 
 /// A webhook (only what event fan-out needs).
@@ -106,6 +108,19 @@ pub struct Project {
     pub keys: Vec<Key>,
     pub platforms: Vec<Platform>,
     pub webhooks: Vec<Webhook>,
+    /// `oAuthProviders` (`<provider>Enabled`, `<provider>Appid`, ...).
+    pub oauth_providers: Value,
+    /// `smtp` (custom SMTP settings).
+    pub smtp: Value,
+    /// `smtpBaseTemplate` (`email-base` by default).
+    pub smtp_base_template: String,
+    /// `templates` (custom email and SMS templates by `email.<type>-<locale>`).
+    pub templates: Value,
+    /// `url`.
+    pub url: String,
+    /// `authWhitelistEmails` and `authWhitelistIPs` (console sign-up).
+    pub auth_whitelist_emails: Vec<String>,
+    pub auth_whitelist_ips: Vec<String>,
 }
 
 impl Project {
@@ -143,6 +158,48 @@ impl Project {
             auths.insert(key.into(), Value::Bool(false));
         }
         auths.insert("invalidateSessions".into(), Value::Bool(true));
+        // `PasskeyConsole::getAuths($platform['consoleUrl'], _APP_CONSOLE_PASSKEY_ORIGINS)`.
+        let domain = utopia_system::env_or("_APP_DOMAIN", "localhost").into_owned();
+        let console_domain = utopia_system::env_or("_APP_CONSOLE_DOMAIN", &domain).into_owned();
+        let scheme = if utopia_system::env("_APP_OPTIONS_FORCE_HTTPS").as_deref() == Some("disabled") {
+            "http"
+        } else {
+            "https"
+        };
+        let console_url = utopia_system::env_or("_APP_CONSOLE_URL", &format!("{scheme}://{console_domain}"))
+            .trim_end_matches('/')
+            .to_owned();
+        let (passkey, rp_id, origins) =
+            console_passkeys(&console_url, &utopia_system::env_or("_APP_CONSOLE_PASSKEY_ORIGINS", ""));
+        auths.insert("passkey".into(), Value::Bool(passkey));
+        auths.insert("passkeyRpId".into(), Value::String(rp_id));
+        auths.insert("passkeyOrigins".into(), Value::Array(origins.into_iter().map(Value::String).collect()));
+        let split = |name: &str| -> Vec<String> {
+            utopia_system::env(name).map(|v| v.split(',').map(str::to_owned).collect()).unwrap_or_default()
+        };
+        let mut oauth = Map::new();
+        for (provider, secret, app) in [
+            ("github", "_APP_CONSOLE_GITHUB_SECRET", "_APP_CONSOLE_GITHUB_APP_ID"),
+            ("gitlab", "_APP_CONSOLE_GITLAB_SECRET", "_APP_CONSOLE_GITLAB_APP_ID"),
+            ("bitbucket", "_APP_CONSOLE_BITBUCKET_SECRET", "_APP_CONSOLE_BITBUCKET_APP_ID"),
+            ("google", "_APP_CONSOLE_GOOGLE_SECRET", "_APP_CONSOLE_GOOGLE_APP_ID"),
+        ] {
+            let mut secret = utopia_system::env_or(secret, "").into_owned();
+            if provider == "gitlab" && !secret.is_empty() {
+                let mut gitlab = Map::new();
+                gitlab.insert("clientSecret".into(), Value::String(secret));
+                gitlab.insert(
+                    "endpoint".into(),
+                    Value::String(
+                        utopia_system::env_or("_APP_CONSOLE_GITLAB_ENDPOINT", "https://gitlab.com").into_owned(),
+                    ),
+                );
+                secret = crate::json::to_string(&Value::Object(gitlab));
+            }
+            oauth.insert(format!("{provider}Enabled"), Value::Bool(true));
+            oauth.insert(format!("{provider}Secret"), Value::String(secret));
+            oauth.insert(format!("{provider}Appid"), Value::String(utopia_system::env_or(app, "").into_owned()));
+        }
         Self {
             id: Self::CONSOLE.into(),
             sequence: Self::CONSOLE.into(),
@@ -159,9 +216,35 @@ impl Project {
             auths: Value::Object(auths),
             onboarding: Value::Array(Vec::new()),
             keys: Vec::new(),
-            platforms: vec![Platform { kind: "web".into(), hostname: "localhost".into(), key: String::new() }],
+            platforms: vec![Platform {
+                kind: "web".into(),
+                hostname: "localhost".into(),
+                key: String::new(),
+                fingerprints: Vec::new(),
+            }],
             webhooks: Vec::new(),
+            oauth_providers: Value::Object(oauth),
+            smtp: Value::Array(Vec::new()),
+            smtp_base_template: "email-base-styled".into(),
+            templates: Value::Array(Vec::new()),
+            url: String::new(),
+            auth_whitelist_emails: split("_APP_CONSOLE_WHITELIST_EMAILS"),
+            auth_whitelist_ips: split("_APP_CONSOLE_WHITELIST_IPS"),
         }
+    }
+
+    /// `oAuthProviders[key]` as a string (`''` when unset).
+    pub fn oauth_string(&self, key: &str) -> String {
+        match self.oauth_providers.get(key) {
+            Some(Value::String(s)) => s.clone(),
+            Some(v) => php::to_string(v).unwrap_or_default(),
+            None => String::new(),
+        }
+    }
+
+    /// `oAuthProviders[key] ?? false`, truthy.
+    pub fn oauth_flag(&self, key: &str) -> bool {
+        self.oauth_providers.get(key).is_some_and(php::truthy)
     }
 
     /// `auths[key]`.
@@ -282,6 +365,7 @@ impl From<&Document> for Project {
                     kind: p.string_or_empty("type"),
                     hostname: p.string_or_empty("hostname"),
                     key: p.string_or_empty("key"),
+                    fingerprints: p.strings("fingerprints"),
                 })
                 .collect(),
             webhooks: d
@@ -289,8 +373,37 @@ impl From<&Document> for Project {
                 .into_iter()
                 .map(|w| Webhook { enabled: w.boolean("enabled") == Some(true), events: w.strings("events") })
                 .collect(),
+            oauth_providers: json_or_empty("oAuthProviders"),
+            smtp: json_or_empty("smtp"),
+            smtp_base_template: d.string("smtpBaseTemplate").unwrap_or_else(|| "email-base".to_owned()),
+            templates: json_or_empty("templates"),
+            url: d.string_or_empty("url"),
+            auth_whitelist_emails: d.strings("authWhitelistEmails"),
+            auth_whitelist_ips: d.strings("authWhitelistIPs"),
         }
     }
+}
+
+/// `Appwrite\Auth\Passkey\Console::getAuths($url, $origins)`: whether the
+/// console signs in with passkeys, its relying party ID and its origins.
+fn console_passkeys(url: &str, origins: &str) -> (bool, String, Vec<String>) {
+    let rp_id = crate::network::url_host(url).unwrap_or_default();
+    let mut normalized: Vec<String> = Vec::new();
+    use utopia_validators::Validator as _;
+    let valid =
+        rp_id == "localhost" || utopia_domains::validator::RegistrableDomain.is_valid(&Value::String(rp_id.clone()));
+    if valid {
+        let origin = utopia_auth::passkeys::Origin::new(rp_id.clone());
+        for candidate in std::iter::once(url).chain(origins.split(',')) {
+            if let Some(value) = origin.normalize(candidate.trim().as_bytes())
+                && !normalized.contains(&value)
+            {
+                normalized.push(value);
+            }
+        }
+    }
+    let rp_id = if normalized.is_empty() { String::new() } else { rp_id };
+    (!normalized.is_empty(), rp_id, normalized)
 }
 
 /// `$authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId))`.
