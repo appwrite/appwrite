@@ -119,15 +119,13 @@ final class PresenceConsoleClientTest extends Scope
 
     public function testExpiredConsolePresenceDeletedByMaintenance(): void
     {
+        $headers = $this->getIsolatedConsoleUserHeaders();
         $presenceId = Id::unique();
 
         $upsert = $this->client->call(
             Client::METHOD_PUT,
             '/presences/' . $presenceId,
-            \array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => 'console',
-            ], $this->getHeaders()),
+            $headers,
             [
                 'status' => 'online',
                 'metadata' => ['case' => 'console-expiry'],
@@ -146,10 +144,7 @@ final class PresenceConsoleClientTest extends Scope
         $expire = $this->client->call(
             Client::METHOD_PATCH,
             '/presences/' . $presenceId,
-            \array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => 'console',
-            ], $this->getHeaders()),
+            $headers,
             [
                 'expiresAt' => $expiresAt,
             ]
@@ -162,14 +157,11 @@ final class PresenceConsoleClientTest extends Scope
 
         // The API hides expired presences (404) before maintenance runs, so poll for the
         // expiry to elapse instead of sleeping on a fixed timer.
-        $this->assertEventually(function () use ($presenceId) {
+        $this->assertEventually(function () use ($presenceId, $headers) {
             $get = $this->client->call(
                 Client::METHOD_GET,
                 '/presences/' . $presenceId,
-                \array_merge([
-                    'content-type' => 'application/json',
-                    'x-appwrite-project' => 'console',
-                ], $this->getHeaders())
+                $headers
             );
 
             $this->assertSame(404, $get['headers']['status-code']);
@@ -181,6 +173,22 @@ final class PresenceConsoleClientTest extends Scope
         $stderr = '';
         $code = Console::execute((new Command('docker'))->argument('exec')->argument('appwrite')->argument('maintenance')->argument('--type=trigger'), '', $stdout, $stderr);
         $this->assertSame(0, $code, "Maintenance command failed with code $code: $stderr ($stdout)");
+    }
+
+    private function getIsolatedConsoleUserHeaders(): array
+    {
+        $sharedUser = $this->getUser();
+        $isolatedUser = $this->getUser(true);
+        // Keep the shared user cached: its next upsert would refresh the expired row that
+        // queued maintenance is about to delete by id.
+        self::$user['console'] = $sharedUser;
+
+        return [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_console=' . $isolatedUser['session'],
+        ];
     }
 
     private function openConsolePresenceSocket(array $user, string $presenceId): WebSocketClient
