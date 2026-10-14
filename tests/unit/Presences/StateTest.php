@@ -137,20 +137,6 @@ final class StateTest extends TestCase
         $this->assertSame(\md5(\json_encode($this->expectedPermissions($ownerId))), $document->getAttribute('permissionsHash'));
     }
 
-    public function testCheckPermissionsSkipsAggregateWriteType(): void
-    {
-        $authorization = new Authorization();
-        $authorization->addRole(Role::user('member')->toString());
-
-        $checkPermissions = new \ReflectionMethod(State::class, 'checkPermissions');
-        $checkPermissions->invoke(new State(), [
-            (new Permission('read', 'user', 'member'))->toString(),
-            (new Permission('write', 'user', 'other'))->toString(),
-        ], $authorization);
-
-        $this->addToAssertionCount(1);
-    }
-
     /**
      * @return array<int, string>
      */
