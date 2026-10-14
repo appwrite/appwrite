@@ -1,7 +1,7 @@
 ---
 layout: changelog
 title: "Sign users in with Hugging Face, Resend, Cloudflare, TikTok, Kakao, and Webflow"
-date: 2026-10-13
+date: 2026-10-15
 cover: /images/blog/announcing-new-oauth2-providers/cover.avif
 description: "Appwrite Auth adds six OAuth2 login providers: Hugging Face, Resend, Cloudflare, TikTok, Kakao, and Webflow, each with its own OAuthProvider enum value."
 tags: auth, sdk

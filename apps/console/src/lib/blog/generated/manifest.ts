@@ -3,6 +3,20 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "announcing-new-oauth2-providers",
+    "href": "/blog/post/announcing-new-oauth2-providers",
+    "title": "Announcing six new OAuth2 login providers in Appwrite Auth",
+    "description": "Appwrite Auth now supports OAuth2 login with Hugging Face, Resend, Cloudflare, TikTok, Kakao, and Webflow. See what each returns and how to add it to a server-side app.",
+    "date": "2026-10-15",
+    "lastUpdated": "2026-10-15",
+    "timeToRead": 8,
+    "author": "aditya-oberai",
+    "category": "announcements",
+    "featured": false,
+    "cover": "/images/blog/announcing-new-oauth2-providers/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "tanstack-start-stable-appwrite-sites",
     "href": "/blog/post/tanstack-start-stable-appwrite-sites",
     "title": "TanStack Start is stable, and it runs on Appwrite Sites",
@@ -14,20 +28,6 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "category": "products",
     "featured": false,
     "cover": "/images/blog/tanstack-start-stable-appwrite-sites/cover.avif",
-    "hasCover": true
-  },
-  {
-    "slug": "announcing-new-oauth2-providers",
-    "href": "/blog/post/announcing-new-oauth2-providers",
-    "title": "Announcing six new OAuth2 login providers in Appwrite Auth",
-    "description": "Appwrite Auth now supports OAuth2 login with Hugging Face, Resend, Cloudflare, TikTok, Kakao, and Webflow. See what each returns and how to add it to a server-side app.",
-    "date": "2026-10-13",
-    "lastUpdated": "2026-10-13",
-    "timeToRead": 8,
-    "author": "aditya-oberai",
-    "category": "announcements",
-    "featured": false,
-    "cover": "/images/blog/announcing-new-oauth2-providers/cover.avif",
     "hasCover": true
   },
   {

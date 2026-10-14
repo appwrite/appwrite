@@ -2,7 +2,7 @@
 layout: post
 title: "Announcing six new OAuth2 login providers in Appwrite Auth"
 description: Appwrite Auth now supports OAuth2 login with Hugging Face, Resend, Cloudflare, TikTok, Kakao, and Webflow. See what each returns and how to add it to a server-side app.
-date: 2026-10-13
+date: 2026-10-15
 cover: /images/blog/announcing-new-oauth2-providers/cover.avif
 timeToRead: 8
 author: aditya-oberai
