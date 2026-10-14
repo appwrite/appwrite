@@ -815,6 +815,99 @@ trait DatabasesBase
         $this->assertEquals('ready', $response['body']['status']);
     }
 
+    public function testUpdateDatabaseDescription(): void
+    {
+        if ($this->getSide() === 'client') {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $keyword = ID::unique();
+
+        /**
+         * Test for SUCCESS
+         */
+        $database = $this->client->call(Client::METHOD_POST, $this->getDatabaseUrl(), $headers, [
+            'databaseId' => ID::unique(),
+            'name' => 'Orders',
+            'description' => 'Customer orders tagged ' . $keyword,
+        ]);
+
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $this->assertSame('Customer orders tagged ' . $keyword, $database['body']['description']);
+
+        $databaseId = $database['body']['$id'];
+
+        $database = $this->client->call(Client::METHOD_GET, $this->getDatabaseUrl($databaseId), $headers);
+
+        $this->assertEquals(200, $database['headers']['status-code']);
+        $this->assertSame('Customer orders tagged ' . $keyword, $database['body']['description']);
+
+        $databases = $this->client->call(Client::METHOD_GET, $this->getDatabaseUrl(), $headers, [
+            'search' => $keyword,
+        ]);
+
+        $this->assertEquals(200, $databases['headers']['status-code']);
+        $this->assertCount(1, $databases['body']['databases']);
+        $this->assertSame($databaseId, $databases['body']['databases'][0]['$id']);
+
+        $database = $this->client->call(Client::METHOD_PUT, $this->getDatabaseUrl($databaseId), $headers, [
+            'name' => 'Orders',
+            'description' => 'Invoices and refunds',
+        ]);
+
+        $this->assertEquals(200, $database['headers']['status-code']);
+        $this->assertSame('Invoices and refunds', $database['body']['description']);
+
+        $database = $this->client->call(Client::METHOD_PUT, $this->getDatabaseUrl($databaseId), $headers, [
+            'name' => 'Orders',
+        ]);
+
+        $this->assertEquals(200, $database['headers']['status-code']);
+        $this->assertSame('Invoices and refunds', $database['body']['description']);
+
+        $database = $this->client->call(Client::METHOD_PUT, $this->getDatabaseUrl($databaseId), $headers, [
+            'name' => 'Orders',
+            'description' => '',
+        ]);
+
+        $this->assertEquals(200, $database['headers']['status-code']);
+        $this->assertSame('', $database['body']['description']);
+
+        $plain = $this->client->call(Client::METHOD_POST, $this->getDatabaseUrl(), $headers, [
+            'databaseId' => ID::unique(),
+            'name' => 'Plain',
+        ]);
+
+        $this->assertEquals(201, $plain['headers']['status-code']);
+        $this->assertSame('', $plain['body']['description']);
+
+        /**
+         * Test for FAILURE
+         */
+        $database = $this->client->call(Client::METHOD_POST, $this->getDatabaseUrl(), $headers, [
+            'databaseId' => ID::unique(),
+            'name' => 'Too long',
+            'description' => \str_repeat('a', 1025),
+        ]);
+
+        $this->assertEquals(400, $database['headers']['status-code']);
+        $this->assertSame(Exception::GENERAL_ARGUMENT_INVALID, $database['body']['type']);
+
+        $database = $this->client->call(Client::METHOD_PUT, $this->getDatabaseUrl($databaseId), $headers, [
+            'name' => 'Orders',
+            'description' => \str_repeat('a', 1025),
+        ]);
+
+        $this->assertEquals(400, $database['headers']['status-code']);
+        $this->assertSame(Exception::GENERAL_ARGUMENT_INVALID, $database['body']['type']);
+    }
+
     public function testCreateCollection(): void
     {
         $data = $this->setupDatabase();
@@ -859,6 +952,101 @@ trait DatabasesBase
 
         $this->assertEquals(201, $actors['headers']['status-code']);
         $this->assertEquals($actors['body']['name'], 'Actors');
+    }
+
+    public function testUpdateCollectionDescription(): void
+    {
+        if ($this->getSide() === 'client') {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $data = $this->setupDatabase();
+        $databaseId = $data['databaseId'];
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $keyword = ID::unique();
+
+        /**
+         * Test for SUCCESS
+         */
+        $container = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'Catalog',
+            'description' => 'Movies tagged ' . $keyword,
+        ]);
+
+        $this->assertEquals(201, $container['headers']['status-code']);
+        $this->assertSame('Movies tagged ' . $keyword, $container['body']['description']);
+
+        $containerId = $container['body']['$id'];
+
+        $container = $this->client->call(Client::METHOD_GET, $this->getContainerUrl($databaseId, $containerId), $headers);
+
+        $this->assertEquals(200, $container['headers']['status-code']);
+        $this->assertSame('Movies tagged ' . $keyword, $container['body']['description']);
+
+        $containers = $this->client->call(Client::METHOD_GET, $this->getContainerUrl($databaseId), $headers, [
+            'search' => $keyword,
+        ]);
+
+        $this->assertEquals(200, $containers['headers']['status-code']);
+        $this->assertCount(1, $containers['body'][$this->getContainerResource()]);
+        $this->assertSame($containerId, $containers['body'][$this->getContainerResource()][0]['$id']);
+
+        $container = $this->client->call(Client::METHOD_PUT, $this->getContainerUrl($databaseId, $containerId), $headers, [
+            'name' => 'Catalog',
+            'description' => 'Series and movies',
+        ]);
+
+        $this->assertEquals(200, $container['headers']['status-code']);
+        $this->assertSame('Series and movies', $container['body']['description']);
+
+        $container = $this->client->call(Client::METHOD_PUT, $this->getContainerUrl($databaseId, $containerId), $headers, [
+            'name' => 'Catalog',
+        ]);
+
+        $this->assertEquals(200, $container['headers']['status-code']);
+        $this->assertSame('Series and movies', $container['body']['description']);
+
+        $container = $this->client->call(Client::METHOD_PUT, $this->getContainerUrl($databaseId, $containerId), $headers, [
+            'name' => 'Catalog',
+            'description' => '',
+        ]);
+
+        $this->assertEquals(200, $container['headers']['status-code']);
+        $this->assertSame('', $container['body']['description']);
+
+        $plain = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'Plain',
+        ]);
+
+        $this->assertEquals(201, $plain['headers']['status-code']);
+        $this->assertSame('', $plain['body']['description']);
+
+        /**
+         * Test for FAILURE
+         */
+        $container = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'Too long',
+            'description' => \str_repeat('a', 1025),
+        ]);
+
+        $this->assertEquals(400, $container['headers']['status-code']);
+        $this->assertSame(Exception::GENERAL_ARGUMENT_INVALID, $container['body']['type']);
+
+        $container = $this->client->call(Client::METHOD_PUT, $this->getContainerUrl($databaseId, $containerId), $headers, [
+            'name' => 'Catalog',
+            'description' => \str_repeat('a', 1025),
+        ]);
+
+        $this->assertEquals(400, $container['headers']['status-code']);
+        $this->assertSame(Exception::GENERAL_ARGUMENT_INVALID, $container['body']['type']);
     }
 
     public function testConsoleProject(): void
@@ -1392,6 +1580,83 @@ trait DatabasesBase
 
         $this->assertEquals(200, $schema['headers']['status-code']);
         $this->assertEquals(0, $schema['body']['total']);
+    }
+
+    public function testCreateCollectionInlineDescription(): void
+    {
+        if ($this->getSide() === 'client') {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        if (!$this->getSupportForAttributes()) {
+            $this->markTestSkipped('Attributes are not supported by this database adapter');
+        }
+
+        $data = $this->setupDatabase();
+        $databaseId = $data['databaseId'];
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $schemaResource = $this->getSchemaResource();
+
+        /**
+         * Test for SUCCESS
+         */
+        $container = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'Charts',
+            $schemaResource => [
+                ['key' => 'rank', 'type' => Database::VAR_INTEGER, 'description' => 'Position in the chart'],
+            ],
+            'indexes' => [
+                ['key' => 'rankIndex', 'type' => Database::INDEX_KEY, 'attributes' => ['rank'], 'description' => 'Sorts the chart by rank'],
+            ],
+        ]);
+
+        $this->assertEquals(201, $container['headers']['status-code']);
+
+        $containerId = $container['body']['$id'];
+
+        $schema = $this->client->call(Client::METHOD_GET, $this->getSchemaUrl($databaseId, $containerId), $headers);
+
+        $this->assertEquals(200, $schema['headers']['status-code']);
+        $this->assertSame('Position in the chart', \array_column($schema['body'][$schemaResource], 'description', 'key')['rank']);
+
+        $indexes = $this->client->call(Client::METHOD_GET, $this->getIndexUrl($databaseId, $containerId), $headers);
+
+        $this->assertEquals(200, $indexes['headers']['status-code']);
+        $this->assertSame('Sorts the chart by rank', \array_column($indexes['body']['indexes'], 'description', 'key')['rankIndex']);
+
+        /**
+         * Test for FAILURE
+         */
+        $container = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'Too long column',
+            $schemaResource => [
+                ['key' => 'rank', 'type' => Database::VAR_INTEGER, 'description' => \str_repeat('a', 1025)],
+            ],
+        ]);
+
+        $this->assertEquals(400, $container['headers']['status-code']);
+        $this->assertSame(Exception::GENERAL_ARGUMENT_INVALID, $container['body']['type']);
+
+        $container = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'Too long index',
+            $schemaResource => [
+                ['key' => 'rank', 'type' => Database::VAR_INTEGER],
+            ],
+            'indexes' => [
+                ['key' => 'rankIndex', 'type' => Database::INDEX_KEY, 'attributes' => ['rank'], 'description' => \str_repeat('a', 1025)],
+            ],
+        ]);
+
+        $this->assertEquals(400, $container['headers']['status-code']);
+        $this->assertSame(Exception::GENERAL_ARGUMENT_INVALID, $container['body']['type']);
     }
 
     public function testListAttributes(): void
@@ -2717,6 +2982,155 @@ trait DatabasesBase
         $this->assertEquals('Invalid `elements` param: Value must a valid array no longer than 100 items and Value must be a valid string and at least 1 chars and no longer than 255 chars', $badEnum['body']['message']);
     }
 
+    public function testUpdateAttributeDescription(): void
+    {
+        if ($this->getSide() === 'client') {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        if (!$this->getSupportForAttributes()) {
+            $this->markTestSkipped('Attributes are not supported by this database adapter');
+        }
+
+        $data = $this->setupDatabase();
+        $databaseId = $data['databaseId'];
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $container = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'Described columns',
+        ]);
+
+        $this->assertEquals(201, $container['headers']['status-code']);
+
+        $containerId = $container['body']['$id'];
+
+        $columns = [
+            'string' => [['size' => 64], []],
+            'varchar' => [['size' => 64], []],
+            'text' => [[], []],
+            'mediumtext' => [[], []],
+            'longtext' => [[], []],
+            'integer' => [[], []],
+            'bigint' => [[], []],
+            'float' => [[], []],
+            'boolean' => [[], []],
+            'datetime' => [[], []],
+            'email' => [[], []],
+            'ip' => [[], []],
+            'url' => [[], []],
+            'enum' => [['elements' => ['draft', 'published']], ['elements' => ['draft', 'published']]],
+        ];
+
+        if ($this->getSupportForSpatials()) {
+            $columns['point'] = [[], []];
+            $columns['line'] = [[], []];
+            $columns['polygon'] = [[], []];
+        }
+
+        /**
+         * Test for SUCCESS
+         */
+        foreach ($columns as $type => [$create]) {
+            $column = $this->createAttribute($databaseId, $containerId, $type, \array_merge([
+                'key' => $type,
+                'required' => false,
+                'description' => "Created {$type} column",
+            ], $create));
+
+            $this->assertEquals(202, $column['headers']['status-code'], $type);
+            $this->assertSame("Created {$type} column", $column['body']['description'], $type);
+        }
+
+        if ($this->getSupportForRelationships()) {
+            $related = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+                $this->getContainerIdParam() => ID::unique(),
+                'name' => 'Described related',
+            ]);
+
+            $this->assertEquals(201, $related['headers']['status-code']);
+
+            $column = $this->createAttribute($databaseId, $containerId, 'relationship', [
+                $this->getRelatedIdParam() => $related['body']['$id'],
+                'type' => Database::RELATION_MANY_TO_ONE,
+                'key' => 'relationship',
+                'description' => 'Created relationship column',
+            ]);
+
+            $this->assertEquals(202, $column['headers']['status-code']);
+            $this->assertSame('Created relationship column', $column['body']['description']);
+        }
+
+        $this->waitForAllAttributes($databaseId, $containerId);
+
+        foreach ($columns as $type => [, $update]) {
+            $column = $this->client->call(Client::METHOD_PATCH, $this->getSchemaUrl($databaseId, $containerId, $type, $type), $headers, \array_merge([
+                'required' => false,
+                'default' => null,
+                'description' => "Updated {$type} column",
+            ], $update));
+
+            $this->assertEquals(200, $column['headers']['status-code'], $type);
+            $this->assertSame("Updated {$type} column", $column['body']['description'], $type);
+        }
+
+        if ($this->getSupportForRelationships()) {
+            $column = $this->client->call(Client::METHOD_PATCH, $this->getSchemaUrl($databaseId, $containerId, 'relationship', 'relationship'), $headers, [
+                'onDelete' => Database::RELATION_MUTATE_CASCADE,
+                'description' => 'Updated relationship column',
+            ]);
+
+            $this->assertEquals(200, $column['headers']['status-code']);
+            $this->assertSame('Updated relationship column', $column['body']['description']);
+
+            $columns['relationship'] = [[], []];
+        }
+
+        $column = $this->client->call(Client::METHOD_PATCH, $this->getSchemaUrl($databaseId, $containerId, 'integer', 'integer'), $headers, [
+            'required' => false,
+            'default' => null,
+        ]);
+
+        $this->assertEquals(200, $column['headers']['status-code']);
+        $this->assertSame('Updated integer column', $column['body']['description']);
+
+        $schema = $this->client->call(Client::METHOD_GET, $this->getSchemaUrl($databaseId, $containerId), $headers);
+
+        $this->assertEquals(200, $schema['headers']['status-code']);
+
+        $descriptions = \array_column($schema['body'][$this->getSchemaResource()], 'description', 'key');
+
+        foreach (\array_keys($columns) as $type) {
+            $this->assertSame("Updated {$type} column", $descriptions[$type] ?? null, $type);
+        }
+
+        /**
+         * Test for FAILURE
+         */
+        $column = $this->createAttribute($databaseId, $containerId, 'boolean', [
+            'key' => 'tooLong',
+            'required' => false,
+            'description' => \str_repeat('a', 1025),
+        ]);
+
+        $this->assertEquals(400, $column['headers']['status-code']);
+        $this->assertSame(Exception::GENERAL_ARGUMENT_INVALID, $column['body']['type']);
+
+        $column = $this->client->call(Client::METHOD_PATCH, $this->getSchemaUrl($databaseId, $containerId, 'boolean', 'boolean'), $headers, [
+            'required' => false,
+            'default' => null,
+            'description' => \str_repeat('a', 1025),
+        ]);
+
+        $this->assertEquals(400, $column['headers']['status-code']);
+        $this->assertSame(Exception::GENERAL_ARGUMENT_INVALID, $column['body']['type']);
+    }
+
     public function testCreateIndexes(): void
     {
         // Use dedicated collection for index testing to avoid conflicts with setupIndexes()
@@ -3266,6 +3680,84 @@ trait DatabasesBase
         ]);
         $this->assertEquals(Exception::GENERAL_ARGUMENT_INVALID, $response['body']['type']);
         $this->assertEquals(400, $response['headers']['status-code']);
+    }
+
+    public function testCreateIndexDescription(): void
+    {
+        if ($this->getSide() === 'client') {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $data = $this->setupDatabase();
+        $databaseId = $data['databaseId'];
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $container = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'Described indexes',
+        ]);
+
+        $this->assertEquals(201, $container['headers']['status-code']);
+
+        $containerId = $container['body']['$id'];
+
+        if ($this->getSupportForAttributes()) {
+            foreach (['rank', 'score'] as $key) {
+                $column = $this->createAttribute($databaseId, $containerId, 'integer', [
+                    'key' => $key,
+                    'required' => false,
+                ]);
+
+                $this->assertEquals(202, $column['headers']['status-code']);
+            }
+
+            $this->waitForAllAttributes($databaseId, $containerId);
+        }
+
+        /**
+         * Test for SUCCESS
+         */
+        $index = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $containerId), $headers, [
+            'key' => 'rankIndex',
+            'type' => Database::INDEX_KEY,
+            $this->getIndexAttributesParam() => ['rank'],
+            'description' => 'Sorts the chart by rank',
+        ]);
+
+        $this->assertEquals(202, $index['headers']['status-code']);
+        $this->assertSame('Sorts the chart by rank', $index['body']['description']);
+
+        $index = $this->client->call(Client::METHOD_GET, $this->getIndexUrl($databaseId, $containerId, 'rankIndex'), $headers);
+
+        $this->assertEquals(200, $index['headers']['status-code']);
+        $this->assertSame('Sorts the chart by rank', $index['body']['description']);
+
+        $plain = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $containerId), $headers, [
+            'key' => 'scoreIndex',
+            'type' => Database::INDEX_KEY,
+            $this->getIndexAttributesParam() => ['score'],
+        ]);
+
+        $this->assertEquals(202, $plain['headers']['status-code']);
+        $this->assertSame('', $plain['body']['description']);
+
+        /**
+         * Test for FAILURE
+         */
+        $index = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $containerId), $headers, [
+            'key' => 'tooLong',
+            'type' => Database::INDEX_KEY,
+            $this->getIndexAttributesParam() => ['score'],
+            'description' => \str_repeat('a', 1025),
+        ]);
+
+        $this->assertEquals(400, $index['headers']['status-code']);
+        $this->assertSame(Exception::GENERAL_ARGUMENT_INVALID, $index['body']['type']);
     }
 
     public function testCreateDocumentWithCommasInStringArray(): void

@@ -18,6 +18,7 @@ use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Platform\Enum;
 use Utopia\Validator\Nullable;
+use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
 class Update extends Action
@@ -73,6 +74,7 @@ class Update extends Action
                 Database::RELATION_MUTATE_SET_NULL
             ], true), 'Delete constraint. Possible values are: cascade, restrict, setNull.', true, enum: new Enum(name: 'RelationMutate'))
             ->param('newKey', null, fn (Database $dbForProject) => new Nullable(new Key(false, $dbForProject->getAdapter()->getMaxUIDLength())), 'New Attribute Key.', true, ['dbForProject'])
+            ->param('description', null, new Nullable(new Text(1024, 0)), 'Optional description for the attribute.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('getDatabasesDB')
@@ -87,6 +89,7 @@ class Update extends Action
         string         $key,
         ?string        $onDelete,
         ?string        $newKey,
+        ?string        $description,
         UtopiaResponse $response,
         Database       $dbForProject,
         callable       $getDatabasesDB,
@@ -110,7 +113,8 @@ class Update extends Action
             options: [
                 'onDelete' => $onDelete
             ],
-            newKey: $newKey
+            newKey: $newKey,
+            description: $description
         );
 
         foreach ($attribute->getAttribute('options', []) as $k => $option) {

@@ -63,6 +63,7 @@ class Create extends Base
             ->param('key', null, new VariableKey(Database::LENGTH_KEY), 'Variable key. Letters, digits and underscores only, must not start with a digit. Max length: ' . Database::LENGTH_KEY  . ' chars.', false)
             ->param('value', null, new Text(8192, 0), 'Variable value. Max length: 8192 chars.', false)
             ->param('secret', true, new Boolean(), 'Secret variables can be updated or deleted, but only sites can read them during build and runtime.', true)
+            ->param('description', '', new Text(1024, 0), 'Optional description for the variable.', true)
             ->inject('response')
             ->inject('queueForEvents')
             ->inject('dbForProject')
@@ -70,7 +71,7 @@ class Create extends Base
             ->callback($this->action(...));
     }
 
-    public function action(string $siteId, string $variableId, string $key, string $value, bool $secret, Response $response, QueueEvent $queueForEvents, Database $dbForProject, Document $project)
+    public function action(string $siteId, string $variableId, string $key, string $value, bool $secret, string $description, Response $response, QueueEvent $queueForEvents, Database $dbForProject, Document $project)
     {
         $site = $dbForProject->getDocument('sites', $siteId);
 
@@ -90,6 +91,7 @@ class Create extends Base
             'key' => $key,
             'value' => $value,
             'secret' => $secret,
+            'description' => $description,
             'search' => implode(' ', [$variableId, $site->getId(), $key, 'site']),
         ]);
 

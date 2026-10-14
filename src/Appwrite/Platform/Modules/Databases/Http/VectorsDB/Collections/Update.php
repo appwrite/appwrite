@@ -67,6 +67,7 @@ class Update extends CollectionAction
             ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of permission strings. By default, the current permissions are inherited. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('documentSecurity', false, new Boolean(true), 'Enables configuring permissions for individual documents. A user needs one of document or collection level permissions to access a document. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('enabled', true, new Nullable(new Boolean()), 'Is collection enabled? When set to \'disabled\', users cannot access the collection but Server SDKs with and API key can still read and write to the collection. No data is lost when this is toggled.', true)
+            ->param('description', null, new Nullable(new Text(1024, 0)), 'Optional description for the collection.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('getDatabasesDB')
@@ -75,7 +76,7 @@ class Update extends CollectionAction
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, ?string $name, ?int $dimensions, ?array $permissions, bool $documentSecurity, ?bool $enabled, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Event $queueForEvents, Authorization $authorization): void
+    public function action(string $databaseId, string $collectionId, ?string $name, ?int $dimensions, ?array $permissions, bool $documentSecurity, ?bool $enabled, ?string $description, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Event $queueForEvents, Authorization $authorization): void
     {
         $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         if ($database->isEmpty() || $this->isDatabaseTypeMismatch($database)) {
@@ -93,6 +94,7 @@ class Update extends CollectionAction
         $permissions = Permission::aggregate($permissions);
 
         $enabled ??= $collection->getAttribute('enabled', true);
+        $description ??= $collection->getAttribute('description', '');
 
         $updated = $dbForProject->updateDocument(
             'database_' . $database->getSequence(),
@@ -103,7 +105,8 @@ class Update extends CollectionAction
                 ->setAttribute('$permissions', $permissions)
                 ->setAttribute('documentSecurity', $documentSecurity)
                 ->setAttribute('enabled', $enabled)
-                ->setAttribute('search', \implode(' ', [$collectionId, $name ?? $collection->getAttribute('name')]))
+                ->setAttribute('description', $description)
+                ->setAttribute('search', \implode(' ', [$collectionId, $name ?? $collection->getAttribute('name'), $description]))
         );
 
         $dbForDatabases = $getDatabasesDB($database);

@@ -81,6 +81,7 @@ class Create extends Action
             ->param('databaseId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
             ->param('name', '', new Text(128), 'Database name. Max length: 128 chars.')
             ->param('enabled', true, new Boolean(), 'Is the database enabled? When set to \'disabled\', users cannot access the database but Server SDKs with an API key can still read and write to the database. No data is lost when this is toggled.', true)
+            ->param('description', '', new Text(1024, 0), 'Optional description for the database.', true)
             ->inject('project')
             ->inject('response')
             ->inject('dbForProject')
@@ -89,7 +90,7 @@ class Create extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $name, bool $enabled, Document $project, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Event $queueForEvents): void
+    public function action(string $databaseId, string $name, bool $enabled, string $description, Document $project, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Event $queueForEvents): void
     {
         $databaseId = $databaseId == 'unique()' ? ID::unique() : $databaseId;
 
@@ -97,8 +98,9 @@ class Create extends Action
             $dbForProject->createDocument('databases', new Document([
                 '$id' => $databaseId,
                 'name' => $name,
+                'description' => $description,
                 'enabled' => $enabled,
-                'search' => implode(' ', [$databaseId, $name]),
+                'search' => implode(' ', [$databaseId, $name, $description]),
                 'type' => $this->getDatabaseType(),
                 'database' => $this->getDatabaseDSN($project),
                 'status' => 'ready',

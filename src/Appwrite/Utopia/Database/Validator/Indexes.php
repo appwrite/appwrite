@@ -4,6 +4,7 @@ namespace Appwrite\Utopia\Database\Validator;
 
 use Utopia\Database\Database;
 use Utopia\Database\Validator\Key;
+use Utopia\Validator\Text;
 use Utopia\Validator\Validator;
 
 class Indexes extends Validator
@@ -66,6 +67,7 @@ class Indexes extends Validator
         }
 
         $keyValidator = new Key();
+        $descriptionValidator = new Text(1024, 0);
         $keys = [];
 
         foreach ($value as $i => $index) {
@@ -106,6 +108,12 @@ class Indexes extends Validator
             // Validate type
             if (!in_array($index['type'], $this->supportedTypes)) {
                 $this->message = "Invalid type for index '" . $index['key'] . "': " . $index['type'];
+                return false;
+            }
+
+            // Validate description if provided
+            if (isset($index['description']) && !$descriptionValidator->isValid($index['description'])) {
+                $this->message = "Invalid 'description' value for index '" . $index['key'] . "': " . $descriptionValidator->getDescription();
                 return false;
             }
 
