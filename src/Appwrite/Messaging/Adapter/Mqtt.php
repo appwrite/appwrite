@@ -102,7 +102,6 @@ class Mqtt extends MessagingAdapter
         ]));
     }
 
-    /** Ask every broker to drop the user's live subscription to a topic (removed as a subscriber). */
     public function revokeTopic(string $projectId, string $userId, string $topic): void
     {
         $this->pubsub->publish(self::CHANNEL, (string) \json_encode([
