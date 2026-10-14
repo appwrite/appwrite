@@ -349,12 +349,30 @@ const ROUTES: &[Route] = &[
     Route { name: "users.delete.missing", method: "DELETE", path: "/users/missing", body: None },
 ];
 
+/// What else a request carries, beyond its identity and origin: the hooks
+/// those do not reach (preflight, response formats, locale).
+#[derive(Clone, Copy, Debug)]
+enum Variant {
+    Plain,
+    /// The browser's CORS preflight of the request (`OPTIONS`).
+    Preflight,
+    /// `X-Appwrite-Response-Format` of an older version (response filters).
+    OldFormat,
+    /// `X-Appwrite-Response-Format` of a newer version (the warning header).
+    NewFormat,
+    /// `X-Appwrite-Locale` (translated error messages).
+    Locale,
+}
+
+const VARIANTS: [Variant; 4] = [Variant::Preflight, Variant::OldFormat, Variant::NewFormat, Variant::Locale];
+
 struct Scenario {
     id: String,
     n: usize,
     route: &'static Route,
     identity: Identity,
     origin: Origin,
+    variant: Variant,
 }
 
 fn scenarios(filter: Option<&str>) -> Vec<Scenario> {
@@ -367,7 +385,22 @@ fn scenarios(filter: Option<&str>) -> Vec<Scenario> {
                 if filter.is_some_and(|f| !id.contains(&f.to_ascii_lowercase())) {
                     continue;
                 }
-                out.push(Scenario { id, n, route, identity, origin });
+                out.push(Scenario { id, n, route, identity, origin, variant: Variant::Plain });
+            }
+        }
+        // Each variant with a key from an allowed platform, and for the
+        // locale as a guest too (its error messages are translated).
+        for variant in VARIANTS {
+            let identities: &[Identity] =
+                if matches!(variant, Variant::Locale) { &[Identity::Key, Identity::Guest] } else { &[Identity::Key] };
+            for &identity in identities {
+                let n = out.len();
+                let id =
+                    format!("{} {identity:?} origin:platform variant:{variant:?}", route.name).to_ascii_lowercase();
+                if filter.is_some_and(|f| !id.contains(&f.to_ascii_lowercase())) {
+                    continue;
+                }
+                out.push(Scenario { id, n, route, identity, origin: Origin::Platform, variant });
             }
         }
     }
@@ -423,7 +456,27 @@ fn request(scenario: &Scenario, twin: &Twin, other: &Twin) -> (String, String, V
         Origin::Platform => headers.push(("origin".into(), "http://localhost".into())),
         Origin::Foreign => headers.push(("origin".into(), "https://foreign.example".into())),
     }
-    (route.method.to_owned(), format!("{}{path}", twin.endpoint), headers, body)
+    let mut method = route.method.to_owned();
+    let mut body = body;
+    match scenario.variant {
+        Variant::Plain => {}
+        Variant::Preflight => {
+            // A browser sends no credentials on a preflight, only what the
+            // request will carry.
+            headers.retain(|(name, _)| name == "origin");
+            headers.push(("access-control-request-method".into(), method.clone()));
+            headers.push((
+                "access-control-request-headers".into(),
+                "content-type,x-appwrite-project,x-appwrite-key".into(),
+            ));
+            method = "OPTIONS".to_owned();
+            body = None;
+        }
+        Variant::OldFormat => headers.push(("x-appwrite-response-format".into(), "1.4.0".into())),
+        Variant::NewFormat => headers.push(("x-appwrite-response-format".into(), "99.0.0".into())),
+        Variant::Locale => headers.push(("x-appwrite-locale".into(), "fr".into())),
+    }
+    (method, format!("{}{path}", twin.endpoint), headers, body)
 }
 
 /// Every command Redis receives, as `(client address, arguments)`, from a
@@ -646,6 +699,21 @@ impl Normalizer {
                 return "{datetime}".to_owned();
             }
             return self.number(out, kind);
+        }
+        // Lock keys name documents by their sequence, which differs between
+        // the twins when tables are shared: numbered like generated IDs.
+        if out.starts_with("lock:") {
+            let parts: Vec<String> = out
+                .split(':')
+                .map(|p| {
+                    if !p.is_empty() && p.bytes().all(|b| b.is_ascii_digit()) {
+                        self.number(p.to_owned(), "seq")
+                    } else {
+                        p.to_owned()
+                    }
+                })
+                .collect();
+            return parts.join(":");
         }
         // IDs inside a longer string (cache keys, paths): each run of 20
         // hexadecimal characters between other characters.

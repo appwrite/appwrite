@@ -10,7 +10,7 @@ use appwrite_core::auth::jwt;
 use appwrite_core::database::documents::{self, Session, Token, text};
 use appwrite_core::datetime;
 use appwrite_core::platform::Context;
-use appwrite_core::response::{JwtModel, SessionListModel, SessionModel, TokenModel, Version};
+use appwrite_core::response::{JwtModel, SessionListModel, SessionModel, TokenModel};
 use appwrite_core::validators::{CustomId, KeywordId, uid};
 use appwrite_core::{Error, ErrorType, Result};
 
@@ -175,14 +175,12 @@ pub async fn token(ctx: &mut Context) -> Result<Response> {
 /// `POST /v1/users/:userId/jwts`.
 pub async fn jwt(ctx: &mut Context) -> Result<Response> {
     let user_id = ctx.required_str("userId", &uid())?;
-    let mut session_id =
+    // Clients older than 2.0.0 send the bare `recent`: the V27 request
+    // filter rewrites it (`appwrite_core::request`).
+    let session_id =
         ctx.optional_str("sessionId", "recent()", &KeywordId("recent()"))?.unwrap_or_else(|| "recent()".to_owned());
     let duration = ctx.optional("duration", json!(900), &Range::new(0, 3600))?;
     let duration = Range::value(&duration).unwrap_or(900);
-    // Request filter for clients older than 2.0.0.
-    if session_id == "recent" && ctx.format.is_some_and(|f| f < Version(2, 0, 0)) {
-        session_id = "recent()".to_owned();
-    }
     let user = base::user_or_404(ctx, &user_id, &[base::SESSIONS]).await?;
     let session =
         if session_id == "recent()" { user.sessions.last() } else { user.sessions.iter().find(|s| s.id == session_id) };

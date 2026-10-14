@@ -35,6 +35,7 @@ pub mod locale;
 pub mod locking;
 pub mod network;
 pub mod platform;
+pub mod request;
 pub mod response;
 pub mod validators;
 

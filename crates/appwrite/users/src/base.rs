@@ -123,9 +123,10 @@ pub async fn resolve_cursor(db: &Database, collection: &str, queries: &mut [Quer
     Ok(())
 }
 
-/// JSON of the `user` model (used as event payload).
+/// JSON of the `user` model as the latest format renders it (an event
+/// payload, which PHP takes before the response's format filters).
 pub fn user_payload(ctx: &Context, user: &User) -> Bytes {
-    Bytes::from(appwrite_core::json::to_vec(&UserModel { user, render: ctx.render() }))
+    Bytes::from(appwrite_core::response::current(&UserModel { user, render: ctx.render() }))
 }
 
 /// `updateDocument('users', $id, $updates)`: the user as stored, decoded

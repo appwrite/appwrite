@@ -1,0 +1,2491 @@
+[
+    {
+        "query": "equal(\"name\", [\"x\"])",
+        "queries": [
+            "{\"method\":\"equal\",\"attribute\":\"name\",\"values\":[\"x\"]}"
+        ]
+    },
+    {
+        "query": "equal(\"name\", \"x\")",
+        "queries": [
+            "{\"method\":\"equal\",\"attribute\":\"name\",\"values\":[\"x\"]}"
+        ]
+    },
+    {
+        "query": "equal(\"name\", [\"x\", \"y\"])",
+        "queries": [
+            "{\"method\":\"equal\",\"attribute\":\"name\",\"values\":[\"x\",\"y\"]}"
+        ]
+    },
+    {
+        "query": "notEqual(\"name\", \"x\")",
+        "queries": [
+            "{\"method\":\"notEqual\",\"attribute\":\"name\",\"values\":[\"x\"]}"
+        ]
+    },
+    {
+        "query": "lessThan(\"age\", 5)",
+        "queries": [
+            "{\"method\":\"lessThan\",\"attribute\":\"age\",\"values\":[5]}"
+        ]
+    },
+    {
+        "query": "greaterThanEqual(\"age\", 1.5)",
+        "queries": [
+            "{\"method\":\"greaterThanEqual\",\"attribute\":\"age\",\"values\":[1.5]}"
+        ]
+    },
+    {
+        "query": "greaterThan(\"age\", 1e3)",
+        "queries": [
+            "{\"method\":\"greaterThan\",\"attribute\":\"age\",\"values\":[1000]}"
+        ]
+    },
+    {
+        "query": "lessThanEqual(\"a\", -2)",
+        "queries": [
+            "{\"method\":\"lessThanEqual\",\"attribute\":\"a\",\"values\":[-2]}"
+        ]
+    },
+    {
+        "query": "contains(\"tags\", [\"a\",\"b\"])",
+        "queries": [
+            "{\"method\":\"contains\",\"attribute\":\"tags\",\"values\":[\"a\",\"b\"]}"
+        ]
+    },
+    {
+        "query": "search(\"name\", \"john doe\")",
+        "queries": [
+            "{\"method\":\"search\",\"attribute\":\"name\",\"values\":[\"john doe\"]}"
+        ]
+    },
+    {
+        "query": "isNull(\"email\")",
+        "queries": [
+            "{\"method\":\"isNull\",\"attribute\":\"email\"}"
+        ]
+    },
+    {
+        "query": "isNotNull(\"email\")",
+        "queries": [
+            "{\"method\":\"isNotNull\",\"attribute\":\"email\"}"
+        ]
+    },
+    {
+        "query": "startsWith(\"name\", \"jo\")",
+        "queries": [
+            "{\"method\":\"startsWith\",\"attribute\":\"name\",\"values\":[\"jo\"]}"
+        ]
+    },
+    {
+        "query": "endsWith(\"name\", \"hn\")",
+        "queries": [
+            "{\"method\":\"endsWith\",\"attribute\":\"name\",\"values\":[\"hn\"]}"
+        ]
+    },
+    {
+        "query": "between(\"age\", 1, 10)",
+        "queries": [
+            "{\"method\":\"between\",\"attribute\":\"age\",\"values\":[1,10]}"
+        ]
+    },
+    {
+        "query": "between(\"age\", 1)",
+        "queries": [
+            "{\"method\":\"between\",\"attribute\":\"age\",\"values\":[1,null]}"
+        ]
+    },
+    {
+        "query": "select([\"name\", \"email\"])",
+        "queries": [
+            "{\"method\":\"select\",\"values\":[\"name\",\"email\"]}"
+        ]
+    },
+    {
+        "query": "select(\"name\")",
+        "error": {
+            "type": "general_query_invalid",
+            "message": "Utopia\\Database\\Query::__construct(): Argument #3 ($values) must be of type array, string given, called in /usr/src/code/src/Appwrite/Utopia/Request/Filters/V17.php on line 250"
+        }
+    },
+    {
+        "query": "select()",
+        "error": {
+            "type": "general_query_invalid",
+            "message": "Utopia\\Database\\Query::__construct(): Argument #3 ($values) must be of type array, null given, called in /usr/src/code/src/Appwrite/Utopia/Request/Filters/V17.php on line 250"
+        }
+    },
+    {
+        "query": "orderAsc(\"name\")",
+        "queries": [
+            "{\"method\":\"orderAsc\",\"attribute\":\"name\"}"
+        ]
+    },
+    {
+        "query": "orderDesc(\"\")",
+        "queries": [
+            "{\"method\":\"orderDesc\",\"attribute\":\"$sequence\"}"
+        ]
+    },
+    {
+        "query": "orderAsc()",
+        "queries": [
+            "{\"method\":\"orderAsc\",\"attribute\":\"$sequence\"}"
+        ]
+    },
+    {
+        "query": "orderDesc(5)",
+        "queries": [
+            "{\"method\":\"orderDesc\",\"attribute\":\"5\"}"
+        ]
+    },
+    {
+        "query": "limit(25)",
+        "queries": [
+            "{\"method\":\"limit\",\"values\":[25]}"
+        ]
+    },
+    {
+        "query": "limit()",
+        "queries": [
+            "{\"method\":\"limit\"}"
+        ]
+    },
+    {
+        "query": "offset(10)",
+        "queries": [
+            "{\"method\":\"offset\",\"values\":[10]}"
+        ]
+    },
+    {
+        "query": "cursorAfter(\"abc\")",
+        "queries": [
+            "{\"method\":\"cursorAfter\",\"values\":[\"abc\"]}"
+        ]
+    },
+    {
+        "query": "cursorBefore(\"abc\")",
+        "queries": [
+            "{\"method\":\"cursorBefore\",\"values\":[\"abc\"]}"
+        ]
+    },
+    {
+        "query": "cursorAfter()",
+        "queries": [
+            "{\"method\":\"cursorAfter\"}"
+        ]
+    },
+    {
+        "query": "unknown(\"x\")",
+        "queries": [
+            "{\"method\":\"unknown\"}"
+        ]
+    },
+    {
+        "query": "and([])",
+        "queries": [
+            "{\"method\":\"and\"}"
+        ]
+    },
+    {
+        "query": "or(\"a\")",
+        "queries": [
+            "{\"method\":\"or\"}"
+        ]
+    },
+    {
+        "query": "equal()",
+        "queries": [
+            "{\"method\":\"equal\"}"
+        ]
+    },
+    {
+        "query": "equal(\"0\", \"x\")",
+        "queries": [
+            "{\"method\":\"equal\",\"values\":[\"x\"]}"
+        ]
+    },
+    {
+        "query": "equal(true, \"x\")",
+        "queries": [
+            "{\"method\":\"equal\",\"attribute\":\"1\",\"values\":[\"x\"]}"
+        ]
+    },
+    {
+        "query": "equal([\"a\"], \"x\")",
+        "error": {
+            "type": "general_query_invalid",
+            "message": "Utopia\\Database\\Query::__construct(): Argument #2 ($attribute) must be of type string, array given, called in /usr/src/code/src/Appwrite/Utopia/Request/Filters/V17.php on line 245"
+        }
+    },
+    {
+        "query": "equal(null, \"x\")",
+        "queries": [
+            "{\"method\":\"equal\",\"values\":[\"x\"]}"
+        ]
+    },
+    {
+        "query": "equal(\"name\", null)",
+        "queries": [
+            "{\"method\":\"equal\",\"attribute\":\"name\",\"values\":[null]}"
+        ]
+    },
+    {
+        "query": "equal(\"name\", true)",
+        "queries": [
+            "{\"method\":\"equal\",\"attribute\":\"name\",\"values\":[true]}"
+        ]
+    },
+    {
+        "query": "equal(\"name\", \"0\")",
+        "queries": [
+            "{\"method\":\"equal\",\"attribute\":\"name\",\"values\":[\"0\"]}"
+        ]
+    },
+    {
+        "query": "equal(\"na\\\"me\", \"x\")",
+        "queries": [
+            "{\"method\":\"equal\",\"attribute\":\"na\\\"me\",\"values\":[\"x\"]}"
+        ]
+    },
+    {
+        "query": "equal('name', 'x')",
+        "queries": [
+            "{\"method\":\"equal\",\"attribute\":\"name\",\"values\":[\"x\"]}"
+        ]
+    },
+    {
+        "query": "equal(\"name\", \"a,b\")",
+        "queries": [
+            "{\"method\":\"equal\",\"attribute\":\"name\",\"values\":[\"a,b\"]}"
+        ]
+    },
+    {
+        "query": "equal(\"name\", \"a]b\")",
+        "queries": [
+            "{\"method\":\"equal\",\"attribute\":\"name\",\"values\":[\"a]b\"]}"
+        ]
+    },
+    {
+        "query": "equal(\"name\", \"a[b\")",
+        "queries": [
+            "{\"method\":\"equal\",\"attribute\":\"name\",\"values\":[\"a[b\"]}"
+        ]
+    },
+    {
+        "query": "equal(\"name\", [\"a]\", \"b\"])",
+        "queries": [
+            "{\"method\":\"equal\",\"attribute\":\"name\",\"values\":[\"a]\",\"b\"]}"
+        ]
+    },
+    {
+        "query": "equal(\"name\", \"a\\,b\")",
+        "queries": [
+            "{\"method\":\"equal\",\"attribute\":\"name\",\"values\":[\"a,b\"]}"
+        ]
+    },
+    {
+        "query": "equal(\"name\", \"a\\\\\")",
+        "queries": [
+            "{\"method\":\"equal\",\"attribute\":\"name\",\"values\":[\"a\\\\\\\\\"]}"
+        ]
+    },
+    {
+        "query": "equal(\"name\", [1, 2.5, true, null])",
+        "queries": [
+            "{\"method\":\"equal\",\"attribute\":\"name\",\"values\":[1,2.5,true,null]}"
+        ]
+    },
+    {
+        "query": "equal(\"name\", [])",
+        "queries": [
+            "{\"method\":\"equal\",\"attribute\":\"name\"}"
+        ]
+    },
+    {
+        "query": "equal(\"name\", [[1]])",
+        "queries": [
+            "{\"method\":\"equal\",\"attribute\":\"name\",\"values\":[1]}"
+        ]
+    },
+    {
+        "query": "equal (\"name\", \"x\")",
+        "queries": [
+            "{\"method\":\"equal \"}"
+        ]
+    },
+    {
+        "query": "equal(\"name\",\"x\" , \"y\")",
+        "queries": [
+            "{\"method\":\"equal\",\"attribute\":\"name\",\"values\":[\"x\"]}"
+        ]
+    },
+    {
+        "query": "equal( \"name\" , \"x\" )",
+        "queries": [
+            "{\"method\":\"equal\",\"attribute\":\"name\",\"values\":[\"x\"]}"
+        ]
+    },
+    {
+        "query": "equal(name, x)",
+        "queries": [
+            "{\"method\":\"equal\",\"attribute\":\"name\",\"values\":[\"x\"]}"
+        ]
+    },
+    {
+        "query": "equal(\"name\", \"x\"",
+        "queries": [
+            "{\"method\":\"equal\",\"attribute\":\"name\",\"values\":[\"\"]}"
+        ]
+    },
+    {
+        "query": "equal\"name\", \"x\")",
+        "error": {
+            "type": "general_query_invalid",
+            "message": "Invalid query"
+        }
+    },
+    {
+        "query": "users.equal(\"name\", \"x\")",
+        "error": {
+            "type": "general_query_invalid",
+            "message": "Invalid query method"
+        }
+    },
+    {
+        "query": "bogus",
+        "error": {
+            "type": "general_query_invalid",
+            "message": "Invalid query"
+        }
+    },
+    {
+        "query": "",
+        "error": {
+            "type": "general_query_invalid",
+            "message": "Invalid query"
+        }
+    },
+    {
+        "query": "()",
+        "queries": [
+            "[]"
+        ]
+    },
+    {
+        "query": "(x)",
+        "queries": [
+            "[]"
+        ]
+    },
+    {
+        "query": "equal(\"é\", \"ü\")",
+        "queries": [
+            "{\"method\":\"equal\",\"attribute\":\"\\u00e9\",\"values\":[\"\\u00fc\"]}"
+        ]
+    },
+    {
+        "query": "equal(\"name\", \"日本\")",
+        "queries": [
+            "{\"method\":\"equal\",\"attribute\":\"name\",\"values\":[\"\\u65e5\\u672c\"]}"
+        ]
+    },
+    {
+        "query": "limit(\"25\")",
+        "queries": [
+            "{\"method\":\"limit\",\"values\":[\"25\"]}"
+        ]
+    },
+    {
+        "query": "limit(2.5)",
+        "queries": [
+            "{\"method\":\"limit\",\"values\":[2.5]}"
+        ]
+    },
+    {
+        "query": "offset(-1)",
+        "queries": [
+            "{\"method\":\"offset\",\"values\":[-1]}"
+        ]
+    },
+    {
+        "query": "limit(0x1A)",
+        "queries": [
+            "{\"method\":\"limit\",\"values\":[\"0x1A\"]}"
+        ]
+    },
+    {
+        "query": "limit(1e2)",
+        "queries": [
+            "{\"method\":\"limit\",\"values\":[100]}"
+        ]
+    },
+    {
+        "query": "limit(\" 5 \")",
+        "queries": [
+            "{\"method\":\"limit\",\"values\":[\" 5 \"]}"
+        ]
+    },
+    {
+        "query": "equal(\"name\", 007)",
+        "queries": [
+            "{\"method\":\"equal\",\"attribute\":\"name\",\"values\":[7]}"
+        ]
+    },
+    {
+        "query": "between(\"a\", [1,2], [3])",
+        "queries": [
+            "{\"method\":\"between\",\"attribute\":\"a\",\"values\":[[1,2],[1,2,3]]}"
+        ]
+    },
+    {
+        "query": "equal(\"a\", [1], [2])",
+        "queries": [
+            "{\"method\":\"equal\",\"attribute\":\"a\",\"values\":[1]}"
+        ]
+    },
+    {
+        "query": "select([\"a\"], [\"b\"])",
+        "queries": [
+            "{\"method\":\"select\",\"values\":[\"a\"]}"
+        ]
+    },
+    {
+        "query": "equal(\"a\", \"x\\",
+        "queries": [
+            "{\"method\":\"equal\",\"attribute\":\"a\",\"values\":[\"\"]}"
+        ]
+    },
+    {
+        "query": "equal(\"a\", \"\\x\")",
+        "queries": [
+            "{\"method\":\"equal\",\"attribute\":\"a\",\"values\":[\"\\\\x\"]}"
+        ]
+    },
+    {
+        "query": "equal(\"a\", 'it\\'s')",
+        "queries": [
+            "{\"method\":\"equal\",\"attribute\":\"a\",\"values\":[\"it's\"]}"
+        ]
+    },
+    {
+        "query": "equal(\"a\", \"it's\")",
+        "queries": [
+            "{\"method\":\"equal\",\"attribute\":\"a\",\"values\":[\"it's\"]}"
+        ]
+    },
+    {
+        "query": "equal(\"a\", 'say \"hi\"')",
+        "queries": [
+            "{\"method\":\"equal\",\"attribute\":\"a\",\"values\":[\"say \\\"hi\\\"\"]}"
+        ]
+    },
+    {
+        "query": "contains(\"a\", [\"x\", [\"y\"]])",
+        "queries": [
+            "{\"method\":\"contains\",\"attribute\":\"a\",\"values\":[\"x\",\"y\"]}"
+        ]
+    },
+    {
+        "query": "equal(,)",
+        "queries": [
+            "{\"method\":\"equal\"}"
+        ]
+    },
+    {
+        "query": "equal(,\"x\")",
+        "queries": [
+            "{\"method\":\"equal\",\"attribute\":\"x\"}"
+        ]
+    },
+    {
+        "query": "equal(\"a\",)",
+        "queries": [
+            "{\"method\":\"equal\",\"attribute\":\"a\"}"
+        ]
+    },
+    {
+        "query": "search(\"a\", \"\")",
+        "queries": [
+            "{\"method\":\"search\",\"attribute\":\"a\",\"values\":[\"\"]}"
+        ]
+    },
+    {
+        "query": "search(\"a\", \"  \")",
+        "queries": [
+            "{\"method\":\"search\",\"attribute\":\"a\",\"values\":[\"  \"]}"
+        ]
+    },
+    {
+        "query": "limit(\"a,b\", '', 5)",
+        "queries": [
+            "{\"method\":\"limit\",\"values\":[\"a,b\"]}"
+        ]
+    },
+    {
+        "query": "search(\"q\\\"q\", \"\", \"a]b\")",
+        "queries": [
+            "{\"method\":\"search\",\"attribute\":\"q\\\"q\",\"values\":[\"\"]}"
+        ]
+    },
+    {
+        "query": "offset()",
+        "queries": [
+            "{\"method\":\"offset\"}"
+        ]
+    },
+    {
+        "query": "contains('')",
+        "queries": [
+            "{\"method\":\"contains\"}"
+        ]
+    },
+    {
+        "query": "or(5)",
+        "queries": [
+            "{\"method\":\"or\"}"
+        ]
+    },
+    {
+        "query": "and()",
+        "queries": [
+            "{\"method\":\"and\"}"
+        ]
+    },
+    {
+        "query": "lessThan (0, \"é\", [\"\",abc,\"name\"],  7 )",
+        "queries": [
+            "{\"method\":\"lessThan \"}"
+        ]
+    },
+    {
+        "query": "endsWith()",
+        "queries": [
+            "{\"method\":\"endsWith\"}"
+        ]
+    },
+    {
+        "query": "endsWith (\"a]b\", '', true, \"a,b\")",
+        "queries": [
+            "{\"method\":\"endsWith \"}"
+        ]
+    },
+    {
+        "query": "lessThan([false], \"a,b\")",
+        "error": {
+            "type": "general_query_invalid",
+            "message": "Utopia\\Database\\Query::__construct(): Argument #2 ($attribute) must be of type string, array given, called in /usr/src/code/src/Appwrite/Utopia/Request/Filters/V17.php on line 245"
+        }
+    },
+    {
+        "query": "startsWith()",
+        "queries": [
+            "{\"method\":\"startsWith\"}"
+        ]
+    },
+    {
+        "query": "cursorAfter('name', \"a,b\"",
+        "queries": [
+            "{\"method\":\"cursorAfter\",\"values\":[\"name\"]}"
+        ]
+    },
+    {
+        "query": "isNull(1e2, \"x y\", 0",
+        "queries": [
+            "{\"method\":\"isNull\",\"attribute\":\"100\",\"values\":[\"x y\"]}"
+        ]
+    },
+    {
+        "query": "cursorAfter(\"a]b\",  7 , 2.75, [-3,5])",
+        "queries": [
+            "{\"method\":\"cursorAfter\",\"values\":[\"a]b\"]}"
+        ]
+    },
+    {
+        "query": "notEqual(abc, 'name', [\"x y\",null,false], \"a]b\")",
+        "queries": [
+            "{\"method\":\"notEqual\",\"attribute\":\"abc\",\"values\":[\"name\"]}"
+        ]
+    },
+    {
+        "query": "offset()",
+        "queries": [
+            "{\"method\":\"offset\"}"
+        ]
+    },
+    {
+        "query": "search(false)",
+        "queries": [
+            "{\"method\":\"search\"}"
+        ]
+    },
+    {
+        "query": "isNotNull()",
+        "queries": [
+            "{\"method\":\"isNotNull\"}"
+        ]
+    },
+    {
+        "query": "orderDesc(0, \"q\\\"q\", \"0\", [1e2,true,0])",
+        "queries": [
+            "{\"method\":\"orderDesc\"}"
+        ]
+    },
+    {
+        "query": "contains ( 7 , \"q\\\"q\")",
+        "queries": [
+            "{\"method\":\"contains \"}"
+        ]
+    },
+    {
+        "query": "startsWith([\"é\"], 2.75, 1e2, \"a,b\")",
+        "error": {
+            "type": "general_query_invalid",
+            "message": "Utopia\\Database\\Query::__construct(): Argument #2 ($attribute) must be of type string, array given, called in /usr/src/code/src/Appwrite/Utopia/Request/Filters/V17.php on line 245"
+        }
+    },
+    {
+        "query": "lessThan([], [\"0\"], \"\", [\"0\",\"name\",null])",
+        "error": {
+            "type": "general_query_invalid",
+            "message": "Utopia\\Database\\Query::__construct(): Argument #2 ($attribute) must be of type string, array given, called in /usr/src/code/src/Appwrite/Utopia/Request/Filters/V17.php on line 245"
+        }
+    },
+    {
+        "query": "equal(abc, false, []",
+        "queries": [
+            "{\"method\":\"equal\",\"attribute\":\"abc\",\"values\":[false]}"
+        ]
+    },
+    {
+        "query": "orderDesc(5, \"name\")",
+        "queries": [
+            "{\"method\":\"orderDesc\",\"attribute\":\"5\"}"
+        ]
+    },
+    {
+        "query": "search()",
+        "queries": [
+            "{\"method\":\"search\"}"
+        ]
+    },
+    {
+        "query": "lessThanEqual('', [false,\"a,b\"], '')",
+        "queries": [
+            "{\"method\":\"lessThanEqual\",\"values\":[false,\"a,b\"]}"
+        ]
+    },
+    {
+        "query": "select(\"\", abc, [])",
+        "error": {
+            "type": "general_query_invalid",
+            "message": "Utopia\\Database\\Query::__construct(): Argument #3 ($values) must be of type array, string given, called in /usr/src/code/src/Appwrite/Utopia/Request/Filters/V17.php on line 250"
+        }
+    },
+    {
+        "query": "isNotNull(abc, [0])",
+        "queries": [
+            "{\"method\":\"isNotNull\",\"attribute\":\"abc\",\"values\":[0]}"
+        ]
+    },
+    {
+        "query": "orderAsc()",
+        "queries": [
+            "{\"method\":\"orderAsc\",\"attribute\":\"$sequence\"}"
+        ]
+    },
+    {
+        "query": "lessThan(1e2, -3,  7 )",
+        "queries": [
+            "{\"method\":\"lessThan\",\"attribute\":\"100\",\"values\":[-3]}"
+        ]
+    },
+    {
+        "query": "isNotNull()",
+        "queries": [
+            "{\"method\":\"isNotNull\"}"
+        ]
+    },
+    {
+        "query": "limit(\"é\", -3, -3)",
+        "queries": [
+            "{\"method\":\"limit\",\"values\":[\"\\u00e9\"]}"
+        ]
+    },
+    {
+        "query": "offset (null, \"q\\\"q\")",
+        "queries": [
+            "{\"method\":\"offset \"}"
+        ]
+    },
+    {
+        "query": "search(-3)",
+        "queries": [
+            "{\"method\":\"search\",\"attribute\":\"-3\"}"
+        ]
+    },
+    {
+        "query": "select(\"0\", -3, true, \"\")",
+        "error": {
+            "type": "general_query_invalid",
+            "message": "Utopia\\Database\\Query::__construct(): Argument #3 ($values) must be of type array, string given, called in /usr/src/code/src/Appwrite/Utopia/Request/Filters/V17.php on line 250"
+        }
+    },
+    {
+        "query": "equal()",
+        "queries": [
+            "{\"method\":\"equal\"}"
+        ]
+    },
+    {
+        "query": "lessThan([true,2.75,\"x y\"], \"x y\", \"0\")",
+        "error": {
+            "type": "general_query_invalid",
+            "message": "Utopia\\Database\\Query::__construct(): Argument #2 ($attribute) must be of type string, array given, called in /usr/src/code/src/Appwrite/Utopia/Request/Filters/V17.php on line 245"
+        }
+    },
+    {
+        "query": "greaterThan(abc, \"\")",
+        "queries": [
+            "{\"method\":\"greaterThan\",\"attribute\":\"abc\",\"values\":[\"\"]}"
+        ]
+    },
+    {
+        "query": "select()",
+        "error": {
+            "type": "general_query_invalid",
+            "message": "Utopia\\Database\\Query::__construct(): Argument #3 ($values) must be of type array, null given, called in /usr/src/code/src/Appwrite/Utopia/Request/Filters/V17.php on line 250"
+        }
+    },
+    {
+        "query": "and(1e2, \"a,b\")",
+        "queries": [
+            "{\"method\":\"and\"}"
+        ]
+    },
+    {
+        "query": "select(\"x y\", 1e2, \"name\"",
+        "error": {
+            "type": "general_query_invalid",
+            "message": "Utopia\\Database\\Query::__construct(): Argument #3 ($values) must be of type array, string given, called in /usr/src/code/src/Appwrite/Utopia/Request/Filters/V17.php on line 250"
+        }
+    },
+    {
+        "query": "cursorAfter([\"a]b\",\"q\\\"q\",\"é\"], null, 2.75, 1e2)",
+        "queries": [
+            "{\"method\":\"cursorAfter\",\"values\":[[\"a]b\",\"q\\\"q\",\"\\u00e9\"]]}"
+        ]
+    },
+    {
+        "query": "endsWith (\"a]b\")",
+        "queries": [
+            "{\"method\":\"endsWith \"}"
+        ]
+    },
+    {
+        "query": "or(\"\")",
+        "queries": [
+            "{\"method\":\"or\"}"
+        ]
+    },
+    {
+        "query": "cursorAfter(\"x y\", [\"a]b\",true,\"a]b\"], abc)",
+        "queries": [
+            "{\"method\":\"cursorAfter\",\"values\":[\"x y\"]}"
+        ]
+    },
+    {
+        "query": "foo(\"a]b\")",
+        "queries": [
+            "{\"method\":\"foo\"}"
+        ]
+    },
+    {
+        "query": "greaterThanEqual([], 0, [0]",
+        "error": {
+            "type": "general_query_invalid",
+            "message": "Utopia\\Database\\Query::__construct(): Argument #2 ($attribute) must be of type string, array given, called in /usr/src/code/src/Appwrite/Utopia/Request/Filters/V17.php on line 245"
+        }
+    },
+    {
+        "query": "orderDesc([-3,'name'])",
+        "error": {
+            "type": "general_query_invalid",
+            "message": "Utopia\\Database\\Query::__construct(): Argument #2 ($attribute) must be of type string, array given, called in /usr/src/code/src/Appwrite/Utopia/Request/Filters/V17.php on line 253"
+        }
+    },
+    {
+        "query": "isNotNull([\"é\",false], \"a]b\",  7 ",
+        "error": {
+            "type": "general_query_invalid",
+            "message": "Utopia\\Database\\Query::__construct(): Argument #2 ($attribute) must be of type string, array given, called in /usr/src/code/src/Appwrite/Utopia/Request/Filters/V17.php on line 245"
+        }
+    },
+    {
+        "query": "and()",
+        "queries": [
+            "{\"method\":\"and\"}"
+        ]
+    },
+    {
+        "query": "isNotNull(\"x y\", false, \"a,b\", 1e2)",
+        "queries": [
+            "{\"method\":\"isNotNull\",\"attribute\":\"x y\",\"values\":[false]}"
+        ]
+    },
+    {
+        "query": "lessThanEqual()",
+        "queries": [
+            "{\"method\":\"lessThanEqual\"}"
+        ]
+    },
+    {
+        "query": "orderDesc(0, true, [])",
+        "queries": [
+            "{\"method\":\"orderDesc\"}"
+        ]
+    },
+    {
+        "query": "greaterThan([], [5,\"0\",-3], '')",
+        "error": {
+            "type": "general_query_invalid",
+            "message": "Utopia\\Database\\Query::__construct(): Argument #2 ($attribute) must be of type string, array given, called in /usr/src/code/src/Appwrite/Utopia/Request/Filters/V17.php on line 245"
+        }
+    },
+    {
+        "query": "notEqual([], -3)",
+        "error": {
+            "type": "general_query_invalid",
+            "message": "Utopia\\Database\\Query::__construct(): Argument #2 ($attribute) must be of type string, array given, called in /usr/src/code/src/Appwrite/Utopia/Request/Filters/V17.php on line 245"
+        }
+    },
+    {
+        "query": "isNotNull(abc,\"q\\\"q\")",
+        "queries": [
+            "{\"method\":\"isNotNull\",\"attribute\":\"abc\",\"values\":[\"q\\\"q\"]}"
+        ]
+    },
+    {
+        "query": "equal(['',abc], 'name', \"x y\")",
+        "error": {
+            "type": "general_query_invalid",
+            "message": "Utopia\\Database\\Query::__construct(): Argument #2 ($attribute) must be of type string, array given, called in /usr/src/code/src/Appwrite/Utopia/Request/Filters/V17.php on line 245"
+        }
+    },
+    {
+        "query": "orderAsc(5,  7 )",
+        "queries": [
+            "{\"method\":\"orderAsc\",\"attribute\":\"5\"}"
+        ]
+    },
+    {
+        "query": "greaterThan()",
+        "queries": [
+            "{\"method\":\"greaterThan\"}"
+        ]
+    },
+    {
+        "query": "or()",
+        "queries": [
+            "{\"method\":\"or\"}"
+        ]
+    },
+    {
+        "query": "cursorAfter(\"q\\\"q\")",
+        "queries": [
+            "{\"method\":\"cursorAfter\",\"values\":[\"q\\\"q\"]}"
+        ]
+    },
+    {
+        "query": "lessThanEqual(0, \"q\\\"q\", false)",
+        "queries": [
+            "{\"method\":\"lessThanEqual\",\"values\":[\"q\\\"q\"]}"
+        ]
+    },
+    {
+        "query": "cursorAfter(\"é\", [abc], abc, 1e2)",
+        "queries": [
+            "{\"method\":\"cursorAfter\",\"values\":[\"\\u00e9\"]}"
+        ]
+    },
+    {
+        "query": "contains(\"0\", \"q\\\"q\", 1e2, true",
+        "queries": [
+            "{\"method\":\"contains\",\"values\":[\"q\\\"q\"]}"
+        ]
+    },
+    {
+        "query": "notEqual(\"a,b\", \"a]b\")",
+        "queries": [
+            "{\"method\":\"notEqual\",\"attribute\":\"a,b\",\"values\":[\"a]b\"]}"
+        ]
+    },
+    {
+        "query": "offset(\"name\", [ 7 ,abc], 2.75, \"a,b\")",
+        "queries": [
+            "{\"method\":\"offset\",\"values\":[\"name\"]}"
+        ]
+    },
+    {
+        "query": "or(false, \"0\")",
+        "queries": [
+            "{\"method\":\"or\"}"
+        ]
+    },
+    {
+        "query": "equal(-3)",
+        "queries": [
+            "{\"method\":\"equal\",\"attribute\":\"-3\"}"
+        ]
+    },
+    {
+        "query": "cursorAfter()",
+        "queries": [
+            "{\"method\":\"cursorAfter\"}"
+        ]
+    },
+    {
+        "query": "greaterThanEqual(\"a]b\", [1e2], [])",
+        "queries": [
+            "{\"method\":\"greaterThanEqual\",\"attribute\":\"a]b\",\"values\":[100]}"
+        ]
+    },
+    {
+        "query": "orderAsc([\"q\\\"q\"], false)",
+        "error": {
+            "type": "general_query_invalid",
+            "message": "Utopia\\Database\\Query::__construct(): Argument #2 ($attribute) must be of type string, array given, called in /usr/src/code/src/Appwrite/Utopia/Request/Filters/V17.php on line 253"
+        }
+    },
+    {
+        "query": "orderAsc([], true, false)",
+        "error": {
+            "type": "general_query_invalid",
+            "message": "Utopia\\Database\\Query::__construct(): Argument #2 ($attribute) must be of type string, array given, called in /usr/src/code/src/Appwrite/Utopia/Request/Filters/V17.php on line 253"
+        }
+    },
+    {
+        "query": "cursorAfter(false, \"name\")",
+        "queries": [
+            "{\"method\":\"cursorAfter\",\"values\":[false]}"
+        ]
+    },
+    {
+        "query": "isNull(1e2)",
+        "queries": [
+            "{\"method\":\"isNull\",\"attribute\":\"100\"}"
+        ]
+    },
+    {
+        "query": "notEqual([], [true,1e2])",
+        "error": {
+            "type": "general_query_invalid",
+            "message": "Utopia\\Database\\Query::__construct(): Argument #2 ($attribute) must be of type string, array given, called in /usr/src/code/src/Appwrite/Utopia/Request/Filters/V17.php on line 245"
+        }
+    },
+    {
+        "query": "greaterThanEqual(\"é\", [], \"0\", abc)",
+        "queries": [
+            "{\"method\":\"greaterThanEqual\",\"attribute\":\"\\u00e9\"}"
+        ]
+    },
+    {
+        "query": "orderAsc('name', [], null, \"a]b\")",
+        "queries": [
+            "{\"method\":\"orderAsc\",\"attribute\":\"name\"}"
+        ]
+    },
+    {
+        "query": "greaterThan([2.75,abc], abc)",
+        "error": {
+            "type": "general_query_invalid",
+            "message": "Utopia\\Database\\Query::__construct(): Argument #2 ($attribute) must be of type string, array given, called in /usr/src/code/src/Appwrite/Utopia/Request/Filters/V17.php on line 245"
+        }
+    },
+    {
+        "query": "cursorAfter(null, \"q\\\"q\",  7 )",
+        "queries": [
+            "{\"method\":\"cursorAfter\",\"values\":[null]}"
+        ]
+    },
+    {
+        "query": "isNotNull('name', \"\", -3)",
+        "queries": [
+            "{\"method\":\"isNotNull\",\"attribute\":\"name\",\"values\":[\"\"]}"
+        ]
+    },
+    {
+        "query": "startsWith(",
+        "queries": [
+            "{\"method\":\"startsWith\"}"
+        ]
+    },
+    {
+        "query": "isNotNull()",
+        "queries": [
+            "{\"method\":\"isNotNull\"}"
+        ]
+    },
+    {
+        "query": "cursorAfter()",
+        "queries": [
+            "{\"method\":\"cursorAfter\"}"
+        ]
+    },
+    {
+        "query": "lessThan([abc,-3,\"0\"], 0)",
+        "error": {
+            "type": "general_query_invalid",
+            "message": "Utopia\\Database\\Query::__construct(): Argument #2 ($attribute) must be of type string, array given, called in /usr/src/code/src/Appwrite/Utopia/Request/Filters/V17.php on line 245"
+        }
+    },
+    {
+        "query": "cursorBefore(\"q\\\"q\"",
+        "queries": [
+            "{\"method\":\"cursorBefore\",\"values\":[\"q\\\"\"]}"
+        ]
+    },
+    {
+        "query": "search(1e2, \"x y\", true,  7 )",
+        "queries": [
+            "{\"method\":\"search\",\"attribute\":\"100\",\"values\":[\"x y\"]}"
+        ]
+    },
+    {
+        "query": "greaterThanEqual(abc, false)",
+        "queries": [
+            "{\"method\":\"greaterThanEqual\",\"attribute\":\"abc\",\"values\":[false]}"
+        ]
+    },
+    {
+        "query": "orderDesc(\"a]b\", \"name\")",
+        "queries": [
+            "{\"method\":\"orderDesc\",\"attribute\":\"a]b\"}"
+        ]
+    },
+    {
+        "query": "greaterThanEqual(abc, [], 5)",
+        "queries": [
+            "{\"method\":\"greaterThanEqual\",\"attribute\":\"abc\"}"
+        ]
+    },
+    {
+        "query": "and(\"\", null)",
+        "queries": [
+            "{\"method\":\"and\"}"
+        ]
+    },
+    {
+        "query": "notEqual([])",
+        "error": {
+            "type": "general_query_invalid",
+            "message": "Utopia\\Database\\Query::__construct(): Argument #2 ($attribute) must be of type string, array given, called in /usr/src/code/src/Appwrite/Utopia/Request/Filters/V17.php on line 243"
+        }
+    },
+    {
+        "query": "notEqual(\"a,b\", \"é\", \"é\")",
+        "queries": [
+            "{\"method\":\"notEqual\",\"attribute\":\"a,b\",\"values\":[\"\\u00e9\"]}"
+        ]
+    },
+    {
+        "query": "isNull(null, '')",
+        "queries": [
+            "{\"method\":\"isNull\",\"values\":[\"\"]}"
+        ]
+    },
+    {
+        "query": "equal(\"a,b\", [''])",
+        "queries": [
+            "{\"method\":\"equal\",\"attribute\":\"a,b\",\"values\":[\"\"]}"
+        ]
+    },
+    {
+        "query": "or([\"x y\",\"é\"], \"a,b\", [\"\",false])",
+        "queries": [
+            "{\"method\":\"or\"}"
+        ]
+    },
+    {
+        "query": "contains([5,false, 7 ], '', \"a]b\", 1e2)",
+        "error": {
+            "type": "general_query_invalid",
+            "message": "Utopia\\Database\\Query::__construct(): Argument #2 ($attribute) must be of type string, array given, called in /usr/src/code/src/Appwrite/Utopia/Request/Filters/V17.php on line 245"
+        }
+    },
+    {
+        "query": "isNotNull()",
+        "queries": [
+            "{\"method\":\"isNotNull\"}"
+        ]
+    },
+    {
+        "query": "greaterThanEqual(null, [\"x y\"], [true])",
+        "queries": [
+            "{\"method\":\"greaterThanEqual\",\"values\":[\"x y\"]}"
+        ]
+    },
+    {
+        "query": "isNotNull(\"x y\", '', 2.75)",
+        "queries": [
+            "{\"method\":\"isNotNull\",\"attribute\":\"x y\",\"values\":[\"\"]}"
+        ]
+    },
+    {
+        "query": "startsWith(\"\", [\"0\",1e2,\"é\"], \"name\")",
+        "queries": [
+            "{\"method\":\"startsWith\",\"values\":[\"0\",100,\"\\u00e9\"]}"
+        ]
+    },
+    {
+        "query": "isNull(1e2, [\"a]b\"])",
+        "queries": [
+            "{\"method\":\"isNull\",\"attribute\":\"100\",\"values\":[\"a]b\"]}"
+        ]
+    },
+    {
+        "query": "lessThanEqual(1e2, -3)",
+        "queries": [
+            "{\"method\":\"lessThanEqual\",\"attribute\":\"100\",\"values\":[-3]}"
+        ]
+    },
+    {
+        "query": "or(null)",
+        "queries": [
+            "{\"method\":\"or\"}"
+        ]
+    },
+    {
+        "query": "lessThan('', \"q\\\"q\", abc)",
+        "queries": [
+            "{\"method\":\"lessThan\",\"values\":[\"q\\\"q\"]}"
+        ]
+    },
+    {
+        "query": "limit(false)",
+        "queries": [
+            "{\"method\":\"limit\",\"values\":[false]}"
+        ]
+    },
+    {
+        "query": "isNotNull(['',abc,true])",
+        "error": {
+            "type": "general_query_invalid",
+            "message": "Utopia\\Database\\Query::__construct(): Argument #2 ($attribute) must be of type string, array given, called in /usr/src/code/src/Appwrite/Utopia/Request/Filters/V17.php on line 243"
+        }
+    },
+    {
+        "query": "equal(\"a,b\")",
+        "queries": [
+            "{\"method\":\"equal\",\"attribute\":\"a,b\"}"
+        ]
+    },
+    {
+        "query": "isNotNull(\"\", 2.75, \"é\")",
+        "queries": [
+            "{\"method\":\"isNotNull\",\"values\":[2.75]}"
+        ]
+    },
+    {
+        "query": "cursorAfter(2.75, 0, true)",
+        "queries": [
+            "{\"method\":\"cursorAfter\",\"values\":[2.75]}"
+        ]
+    },
+    {
+        "query": "or(5)",
+        "queries": [
+            "{\"method\":\"or\"}"
+        ]
+    },
+    {
+        "query": "select('name', \"\")",
+        "error": {
+            "type": "general_query_invalid",
+            "message": "Utopia\\Database\\Query::__construct(): Argument #3 ($values) must be of type array, string given, called in /usr/src/code/src/Appwrite/Utopia/Request/Filters/V17.php on line 250"
+        }
+    },
+    {
+        "query": "isNull()",
+        "queries": [
+            "{\"method\":\"isNull\"}"
+        ]
+    },
+    {
+        "query": "endsWith(\"x y\", false, \"q\\\"q\")",
+        "queries": [
+            "{\"method\":\"endsWith\",\"attribute\":\"x y\",\"values\":[false]}"
+        ]
+    },
+    {
+        "query": "endsWith(-3)",
+        "queries": [
+            "{\"method\":\"endsWith\",\"attribute\":\"-3\"}"
+        ]
+    },
+    {
+        "query": "select ()",
+        "queries": [
+            "{\"method\":\"select \"}"
+        ]
+    },
+    {
+        "query": "select()",
+        "error": {
+            "type": "general_query_invalid",
+            "message": "Utopia\\Database\\Query::__construct(): Argument #3 ($values) must be of type array, null given, called in /usr/src/code/src/Appwrite/Utopia/Request/Filters/V17.php on line 250"
+        }
+    },
+    {
+        "query": "cursorAfter()",
+        "queries": [
+            "{\"method\":\"cursorAfter\"}"
+        ]
+    },
+    {
+        "query": "select(\"é\")",
+        "error": {
+            "type": "general_query_invalid",
+            "message": "Utopia\\Database\\Query::__construct(): Argument #3 ($values) must be of type array, string given, called in /usr/src/code/src/Appwrite/Utopia/Request/Filters/V17.php on line 250"
+        }
+    },
+    {
+        "query": "endsWith(\"name\", \"\")",
+        "queries": [
+            "{\"method\":\"endsWith\",\"attribute\":\"name\",\"values\":[\"\"]}"
+        ]
+    },
+    {
+        "query": "equal(\"é\", [])",
+        "queries": [
+            "{\"method\":\"equal\",\"attribute\":\"\\u00e9\"}"
+        ]
+    },
+    {
+        "query": "cursorBefore([])",
+        "queries": [
+            "{\"method\":\"cursorBefore\",\"values\":[[]]}"
+        ]
+    },
+    {
+        "query": "equal()",
+        "queries": [
+            "{\"method\":\"equal\"}"
+        ]
+    },
+    {
+        "query": "cursorAfter(abc)",
+        "queries": [
+            "{\"method\":\"cursorAfter\",\"values\":[\"abc\"]}"
+        ]
+    },
+    {
+        "query": "startsWith('name', \"é\", 2.75, \"q\\\"q\")",
+        "queries": [
+            "{\"method\":\"startsWith\",\"attribute\":\"name\",\"values\":[\"\\u00e9\"]}"
+        ]
+    },
+    {
+        "query": "limit()",
+        "queries": [
+            "{\"method\":\"limit\"}"
+        ]
+    },
+    {
+        "query": "startsWith(1e2)",
+        "queries": [
+            "{\"method\":\"startsWith\",\"attribute\":\"100\"}"
+        ]
+    },
+    {
+        "query": "cursorAfter('', 1e2, 1e2)",
+        "queries": [
+            "{\"method\":\"cursorAfter\",\"values\":[\"\"]}"
+        ]
+    },
+    {
+        "query": "greaterThan(0)",
+        "queries": [
+            "{\"method\":\"greaterThan\"}"
+        ]
+    },
+    {
+        "query": "or()",
+        "queries": [
+            "{\"method\":\"or\"}"
+        ]
+    },
+    {
+        "query": "greaterThanEqual(false, 'name', [\"\"], [2.75,2.75,-3])",
+        "queries": [
+            "{\"method\":\"greaterThanEqual\",\"values\":[\"name\"]}"
+        ]
+    },
+    {
+        "query": "greaterThanEqual('name', false",
+        "queries": [
+            "{\"method\":\"greaterThanEqual\",\"attribute\":\"name\",\"values\":[\"fals\"]}"
+        ]
+    },
+    {
+        "query": "and(null, \"\")",
+        "queries": [
+            "{\"method\":\"and\"}"
+        ]
+    },
+    {
+        "query": "search([], \"\", \"a,b\", \"q\\\"q\")",
+        "error": {
+            "type": "general_query_invalid",
+            "message": "Utopia\\Database\\Query::__construct(): Argument #2 ($attribute) must be of type string, array given, called in /usr/src/code/src/Appwrite/Utopia/Request/Filters/V17.php on line 245"
+        }
+    },
+    {
+        "query": "notEqual('name')",
+        "queries": [
+            "{\"method\":\"notEqual\",\"attribute\":\"name\"}"
+        ]
+    },
+    {
+        "query": "notEqual()",
+        "queries": [
+            "{\"method\":\"notEqual\"}"
+        ]
+    },
+    {
+        "query": "offset(['name',5], '', 1e2)",
+        "queries": [
+            "{\"method\":\"offset\",\"values\":[[\"name\",5]]}"
+        ]
+    },
+    {
+        "query": "limit(false, \"a,b\", 0, \"name\")",
+        "queries": [
+            "{\"method\":\"limit\",\"values\":[false]}"
+        ]
+    },
+    {
+        "query": "isNotNull(null, [\"\",true], \"\")",
+        "queries": [
+            "{\"method\":\"isNotNull\",\"values\":[\"\",true]}"
+        ]
+    },
+    {
+        "query": "greaterThan(\"x y\", \"x y\")",
+        "queries": [
+            "{\"method\":\"greaterThan\",\"attribute\":\"x y\",\"values\":[\"x y\"]}"
+        ]
+    },
+    {
+        "query": "or(null)",
+        "queries": [
+            "{\"method\":\"or\"}"
+        ]
+    },
+    {
+        "query": "or(1e2)",
+        "queries": [
+            "{\"method\":\"or\"}"
+        ]
+    },
+    {
+        "query": "or()",
+        "queries": [
+            "{\"method\":\"or\"}"
+        ]
+    },
+    {
+        "query": "between()",
+        "error": {
+            "type": "general_query_invalid",
+            "message": "Utopia\\Database\\Query::__construct(): Argument #2 ($attribute) must be of type string, null given, called in /usr/src/code/src/Appwrite/Utopia/Request/Filters/V17.php on line 248"
+        }
+    },
+    {
+        "query": "orderAsc(\"a]b\", -3, null, 'name')",
+        "queries": [
+            "{\"method\":\"orderAsc\",\"attribute\":\"a]b\"}"
+        ]
+    },
+    {
+        "query": "search('')",
+        "queries": [
+            "{\"method\":\"search\"}"
+        ]
+    },
+    {
+        "query": "notEqual()",
+        "queries": [
+            "{\"method\":\"notEqual\"}"
+        ]
+    },
+    {
+        "query": "select(1e2, \"a]b\")",
+        "error": {
+            "type": "general_query_invalid",
+            "message": "Utopia\\Database\\Query::__construct(): Argument #3 ($values) must be of type array, float given, called in /usr/src/code/src/Appwrite/Utopia/Request/Filters/V17.php on line 250"
+        }
+    },
+    {
+        "query": "select(true)",
+        "error": {
+            "type": "general_query_invalid",
+            "message": "Utopia\\Database\\Query::__construct(): Argument #3 ($values) must be of type array, true given, called in /usr/src/code/src/Appwrite/Utopia/Request/Filters/V17.php on line 250"
+        }
+    },
+    {
+        "query": "cursorAfter([1e2,2.75], 1e2, [2.75,null])",
+        "queries": [
+            "{\"method\":\"cursorAfter\",\"values\":[[100,2.75]]}"
+        ]
+    },
+    {
+        "query": "isNotNull(1e2, 'name', [\"0\",null,-3], abc)",
+        "queries": [
+            "{\"method\":\"isNotNull\",\"attribute\":\"100\",\"values\":[\"name\"]}"
+        ]
+    },
+    {
+        "query": "select([null,\"name\",\"q\\\"q\"])",
+        "queries": [
+            "{\"method\":\"select\",\"values\":[null,\"name\",\"q\\\"q\"]}"
+        ]
+    },
+    {
+        "query": "isNotNull(\"a,b\")",
+        "queries": [
+            "{\"method\":\"isNotNull\",\"attribute\":\"a,b\"}"
+        ]
+    },
+    {
+        "query": "contains()",
+        "queries": [
+            "{\"method\":\"contains\"}"
+        ]
+    },
+    {
+        "query": "cursorBefore(\"0\", 1e2)",
+        "queries": [
+            "{\"method\":\"cursorBefore\",\"values\":[\"0\"]}"
+        ]
+    },
+    {
+        "query": "select()",
+        "error": {
+            "type": "general_query_invalid",
+            "message": "Utopia\\Database\\Query::__construct(): Argument #3 ($values) must be of type array, null given, called in /usr/src/code/src/Appwrite/Utopia/Request/Filters/V17.php on line 250"
+        }
+    },
+    {
+        "query": "lessThanEqual([\"0\"], [\"a,b\",null, 7 ])",
+        "error": {
+            "type": "general_query_invalid",
+            "message": "Utopia\\Database\\Query::__construct(): Argument #2 ($attribute) must be of type string, array given, called in /usr/src/code/src/Appwrite/Utopia/Request/Filters/V17.php on line 245"
+        }
+    },
+    {
+        "query": "orderDesc()",
+        "queries": [
+            "{\"method\":\"orderDesc\",\"attribute\":\"$sequence\"}"
+        ]
+    },
+    {
+        "query": "greaterThanEqual()",
+        "queries": [
+            "{\"method\":\"greaterThanEqual\"}"
+        ]
+    },
+    {
+        "query": "lessThan()",
+        "queries": [
+            "{\"method\":\"lessThan\"}"
+        ]
+    },
+    {
+        "query": "select([false,\"0\",null], \"é\", false)",
+        "queries": [
+            "{\"method\":\"select\",\"values\":[false,\"0\",null]}"
+        ]
+    },
+    {
+        "query": "lessThanEqual(\"q\\\"q\", 5)",
+        "queries": [
+            "{\"method\":\"lessThanEqual\",\"attribute\":\"q\\\"q\",\"values\":[5]}"
+        ]
+    },
+    {
+        "query": "and(\"\", \"name\")",
+        "queries": [
+            "{\"method\":\"and\"}"
+        ]
+    },
+    {
+        "query": "orderAsc([\"name\",2.75,\"\"], abc,  7 , \"a,b\")",
+        "error": {
+            "type": "general_query_invalid",
+            "message": "Utopia\\Database\\Query::__construct(): Argument #2 ($attribute) must be of type string, array given, called in /usr/src/code/src/Appwrite/Utopia/Request/Filters/V17.php on line 253"
+        }
+    },
+    {
+        "query": "limit(abc)",
+        "queries": [
+            "{\"method\":\"limit\",\"values\":[\"abc\"]}"
+        ]
+    },
+    {
+        "query": "greaterThanEqual([], \"é\")",
+        "error": {
+            "type": "general_query_invalid",
+            "message": "Utopia\\Database\\Query::__construct(): Argument #2 ($attribute) must be of type string, array given, called in /usr/src/code/src/Appwrite/Utopia/Request/Filters/V17.php on line 245"
+        }
+    },
+    {
+        "query": "isNull (true, abc)",
+        "queries": [
+            "{\"method\":\"isNull \"}"
+        ]
+    },
+    {
+        "query": "lessThan('')",
+        "queries": [
+            "{\"method\":\"lessThan\"}"
+        ]
+    },
+    {
+        "query": "isNull( 7 , 5, \"\", \"a]b\")",
+        "queries": [
+            "{\"method\":\"isNull\",\"attribute\":\"7\",\"values\":[5]}"
+        ]
+    },
+    {
+        "query": "orderDesc()",
+        "queries": [
+            "{\"method\":\"orderDesc\",\"attribute\":\"$sequence\"}"
+        ]
+    },
+    {
+        "query": "or()",
+        "queries": [
+            "{\"method\":\"or\"}"
+        ]
+    },
+    {
+        "query": "equal(\"0\", 2.75",
+        "queries": [
+            "{\"method\":\"equal\",\"values\":[2.7]}"
+        ]
+    },
+    {
+        "query": "and([\"q\\\"q\", 7 ,'name'], \"q\\\"q\")",
+        "queries": [
+            "{\"method\":\"and\"}"
+        ]
+    },
+    {
+        "query": "lessThan(true, [\"\"])",
+        "queries": [
+            "{\"method\":\"lessThan\",\"attribute\":\"1\",\"values\":[\"\"]}"
+        ]
+    },
+    {
+        "query": "foo( 7 , \"q\\\"q\", 'name')",
+        "queries": [
+            "{\"method\":\"foo\"}"
+        ]
+    },
+    {
+        "query": "orderAsc()",
+        "queries": [
+            "{\"method\":\"orderAsc\",\"attribute\":\"$sequence\"}"
+        ]
+    },
+    {
+        "query": "search ()",
+        "queries": [
+            "{\"method\":\"search \"}"
+        ]
+    },
+    {
+        "query": "equal ()",
+        "queries": [
+            "{\"method\":\"equal \"}"
+        ]
+    },
+    {
+        "query": "orderDesc([false,\"q\\\"q\",2.75], 'name', [\"x y\"])",
+        "error": {
+            "type": "general_query_invalid",
+            "message": "Utopia\\Database\\Query::__construct(): Argument #2 ($attribute) must be of type string, array given, called in /usr/src/code/src/Appwrite/Utopia/Request/Filters/V17.php on line 253"
+        }
+    },
+    {
+        "query": "lessThan([\"a]b\",\"a]b\",abc], 'name', \"q\\\"q\")",
+        "error": {
+            "type": "general_query_invalid",
+            "message": "Utopia\\Database\\Query::__construct(): Argument #2 ($attribute) must be of type string, array given, called in /usr/src/code/src/Appwrite/Utopia/Request/Filters/V17.php on line 245"
+        }
+    },
+    {
+        "query": "or(\"x y\", \"a,b\", null, 2.75)",
+        "queries": [
+            "{\"method\":\"or\"}"
+        ]
+    },
+    {
+        "query": "orderDesc(\"x y\", \"\", 1e2)",
+        "queries": [
+            "{\"method\":\"orderDesc\",\"attribute\":\"x y\"}"
+        ]
+    },
+    {
+        "query": "orderDesc([true,5])",
+        "error": {
+            "type": "general_query_invalid",
+            "message": "Utopia\\Database\\Query::__construct(): Argument #2 ($attribute) must be of type string, array given, called in /usr/src/code/src/Appwrite/Utopia/Request/Filters/V17.php on line 253"
+        }
+    },
+    {
+        "query": "isNull('', [])",
+        "queries": [
+            "{\"method\":\"isNull\"}"
+        ]
+    },
+    {
+        "query": "select()",
+        "error": {
+            "type": "general_query_invalid",
+            "message": "Utopia\\Database\\Query::__construct(): Argument #3 ($values) must be of type array, null given, called in /usr/src/code/src/Appwrite/Utopia/Request/Filters/V17.php on line 250"
+        }
+    },
+    {
+        "query": "startsWith(2.75,  7 ,  7 )",
+        "queries": [
+            "{\"method\":\"startsWith\",\"attribute\":\"2.75\",\"values\":[7]}"
+        ]
+    },
+    {
+        "query": "search(2.75, -3, true, \"é\")",
+        "queries": [
+            "{\"method\":\"search\",\"attribute\":\"2.75\",\"values\":[-3]}"
+        ]
+    },
+    {
+        "query": "greaterThan([\"0\"], \"é\", 0, \"q\\\"q\")",
+        "error": {
+            "type": "general_query_invalid",
+            "message": "Utopia\\Database\\Query::__construct(): Argument #2 ($attribute) must be of type string, array given, called in /usr/src/code/src/Appwrite/Utopia/Request/Filters/V17.php on line 245"
+        }
+    },
+    {
+        "query": "or(1e2, 1e2, \"a,b\")",
+        "queries": [
+            "{\"method\":\"or\"}"
+        ]
+    },
+    {
+        "query": "search(0, \"name\", \"\")",
+        "queries": [
+            "{\"method\":\"search\",\"values\":[\"name\"]}"
+        ]
+    },
+    {
+        "query": "endsWith(\"0\", \"a]b\", [2.75], \"q\\\"q\")",
+        "queries": [
+            "{\"method\":\"endsWith\",\"values\":[\"a]b\"]}"
+        ]
+    },
+    {
+        "query": "greaterThanEqual(\"name\", \"x y\", 2.75)",
+        "queries": [
+            "{\"method\":\"greaterThanEqual\",\"attribute\":\"name\",\"values\":[\"x y\"]}"
+        ]
+    },
+    {
+        "query": "limit(0)",
+        "queries": [
+            "{\"method\":\"limit\",\"values\":[0]}"
+        ]
+    },
+    {
+        "query": "select(1e2, \"name\")",
+        "error": {
+            "type": "general_query_invalid",
+            "message": "Utopia\\Database\\Query::__construct(): Argument #3 ($values) must be of type array, float given, called in /usr/src/code/src/Appwrite/Utopia/Request/Filters/V17.php on line 250"
+        }
+    },
+    {
+        "query": "limit([2.75,-3,\"é\"])",
+        "queries": [
+            "{\"method\":\"limit\",\"values\":[[2.75,-3,\"\\u00e9\"]]}"
+        ]
+    },
+    {
+        "query": "limit()",
+        "queries": [
+            "{\"method\":\"limit\"}"
+        ]
+    },
+    {
+        "query": "endsWith(null, null)",
+        "queries": [
+            "{\"method\":\"endsWith\",\"values\":[null]}"
+        ]
+    },
+    {
+        "query": "between(-3",
+        "queries": [
+            "{\"method\":\"between\",\"attribute\":\"-\",\"values\":[null,null]}"
+        ]
+    },
+    {
+        "query": "isNotNull(0, \"a,b\", \"x y\"",
+        "queries": [
+            "{\"method\":\"isNotNull\",\"values\":[\"a,b\"]}"
+        ]
+    },
+    {
+        "query": "cursorAfter()",
+        "queries": [
+            "{\"method\":\"cursorAfter\"}"
+        ]
+    },
+    {
+        "query": "isNull(2.75, \"\", \"x y\", \"\")",
+        "queries": [
+            "{\"method\":\"isNull\",\"attribute\":\"2.75\",\"values\":[\"\"]}"
+        ]
+    },
+    {
+        "query": "orderAsc(\"a,b\", false)",
+        "queries": [
+            "{\"method\":\"orderAsc\",\"attribute\":\"a,b\"}"
+        ]
+    },
+    {
+        "query": "endsWith()",
+        "queries": [
+            "{\"method\":\"endsWith\"}"
+        ]
+    },
+    {
+        "query": "greaterThan(0, 1e2)",
+        "queries": [
+            "{\"method\":\"greaterThan\",\"values\":[100]}"
+        ]
+    },
+    {
+        "query": "greaterThanEqual(2.75, 1e2)",
+        "queries": [
+            "{\"method\":\"greaterThanEqual\",\"attribute\":\"2.75\",\"values\":[100]}"
+        ]
+    },
+    {
+        "query": "limit([\"\"], \"a,b\")",
+        "queries": [
+            "{\"method\":\"limit\",\"values\":[[\"\"]]}"
+        ]
+    },
+    {
+        "query": "startsWith(\"é\", \"\", true)",
+        "queries": [
+            "{\"method\":\"startsWith\",\"attribute\":\"\\u00e9\",\"values\":[\"\"]}"
+        ]
+    },
+    {
+        "query": "equal (5)",
+        "queries": [
+            "{\"method\":\"equal \"}"
+        ]
+    },
+    {
+        "query": "cursorAfter()",
+        "queries": [
+            "{\"method\":\"cursorAfter\"}"
+        ]
+    },
+    {
+        "query": "select('')",
+        "error": {
+            "type": "general_query_invalid",
+            "message": "Utopia\\Database\\Query::__construct(): Argument #3 ($values) must be of type array, string given, called in /usr/src/code/src/Appwrite/Utopia/Request/Filters/V17.php on line 250"
+        }
+    },
+    {
+        "query": "endsWith([-3], [true])",
+        "error": {
+            "type": "general_query_invalid",
+            "message": "Utopia\\Database\\Query::__construct(): Argument #2 ($attribute) must be of type string, array given, called in /usr/src/code/src/Appwrite/Utopia/Request/Filters/V17.php on line 245"
+        }
+    },
+    {
+        "query": "equal()",
+        "queries": [
+            "{\"method\":\"equal\"}"
+        ]
+    },
+    {
+        "query": "foo(\"q\\\"q\", \"x y\", null)",
+        "queries": [
+            "{\"method\":\"foo\"}"
+        ]
+    },
+    {
+        "query": "contains( 7 , \"x y\", 0, 1e2)",
+        "queries": [
+            "{\"method\":\"contains\",\"attribute\":\"7\",\"values\":[\"x y\"]}"
+        ]
+    },
+    {
+        "query": "cursorBefore()",
+        "queries": [
+            "{\"method\":\"cursorBefore\"}"
+        ]
+    },
+    {
+        "query": "offset()",
+        "queries": [
+            "{\"method\":\"offset\"}"
+        ]
+    },
+    {
+        "query": "lessThanEqual(0, \"é\")",
+        "queries": [
+            "{\"method\":\"lessThanEqual\",\"values\":[\"\\u00e9\"]}"
+        ]
+    },
+    {
+        "query": "greaterThan('', '')",
+        "queries": [
+            "{\"method\":\"greaterThan\",\"values\":[\"\"]}"
+        ]
+    },
+    {
+        "query": "orderDesc(\"name\")",
+        "queries": [
+            "{\"method\":\"orderDesc\",\"attribute\":\"name\"}"
+        ]
+    },
+    {
+        "query": "lessThan(\"q\\\"q\", \"name\")",
+        "queries": [
+            "{\"method\":\"lessThan\",\"attribute\":\"q\\\"q\",\"values\":[\"name\"]}"
+        ]
+    },
+    {
+        "query": "limit()",
+        "queries": [
+            "{\"method\":\"limit\"}"
+        ]
+    },
+    {
+        "query": "greaterThanEqual([], \"x y\")",
+        "error": {
+            "type": "general_query_invalid",
+            "message": "Utopia\\Database\\Query::__construct(): Argument #2 ($attribute) must be of type string, array given, called in /usr/src/code/src/Appwrite/Utopia/Request/Filters/V17.php on line 245"
+        }
+    },
+    {
+        "query": "cursorAfter()",
+        "queries": [
+            "{\"method\":\"cursorAfter\"}"
+        ]
+    },
+    {
+        "query": "and(null)",
+        "queries": [
+            "{\"method\":\"and\"}"
+        ]
+    },
+    {
+        "query": "and()",
+        "queries": [
+            "{\"method\":\"and\"}"
+        ]
+    },
+    {
+        "query": "and(0, [\"name\",null,'name'])",
+        "queries": [
+            "{\"method\":\"and\"}"
+        ]
+    },
+    {
+        "query": "or()",
+        "queries": [
+            "{\"method\":\"or\"}"
+        ]
+    },
+    {
+        "query": "between(['name', 7 ], \"q\\\"q\", 5)",
+        "error": {
+            "type": "general_query_invalid",
+            "message": "Utopia\\Database\\Query::__construct(): Argument #2 ($attribute) must be of type string, array given, called in /usr/src/code/src/Appwrite/Utopia/Request/Filters/V17.php on line 248"
+        }
+    },
+    {
+        "query": "foo(2.75)",
+        "queries": [
+            "{\"method\":\"foo\"}"
+        ]
+    },
+    {
+        "query": "greaterThan(1e2)",
+        "queries": [
+            "{\"method\":\"greaterThan\",\"attribute\":\"100\"}"
+        ]
+    },
+    {
+        "query": "and(\"q\\\"q\", ['',null,-3], [\"0\", 7 ])",
+        "queries": [
+            "{\"method\":\"and\"}"
+        ]
+    },
+    {
+        "query": "greaterThan()",
+        "queries": [
+            "{\"method\":\"greaterThan\"}"
+        ]
+    },
+    {
+        "query": "or()",
+        "queries": [
+            "{\"method\":\"or\"}"
+        ]
+    },
+    {
+        "query": "search(\"x y\", ['name',-3], [], true)",
+        "queries": [
+            "{\"method\":\"search\",\"attribute\":\"x y\",\"values\":[\"name\",-3]}"
+        ]
+    },
+    {
+        "query": "greaterThan('')",
+        "queries": [
+            "{\"method\":\"greaterThan\"}"
+        ]
+    },
+    {
+        "query": "notEqual(2.75, \"0\")",
+        "queries": [
+            "{\"method\":\"notEqual\",\"attribute\":\"2.75\",\"values\":[\"0\"]}"
+        ]
+    },
+    {
+        "query": "lessThanEqual (true, [\"0\"])",
+        "queries": [
+            "{\"method\":\"lessThanEqual \"}"
+        ]
+    },
+    {
+        "query": "orderDesc()",
+        "queries": [
+            "{\"method\":\"orderDesc\",\"attribute\":\"$sequence\"}"
+        ]
+    },
+    {
+        "query": "offset(\"name\", -3, \"\")",
+        "queries": [
+            "{\"method\":\"offset\",\"values\":[\"name\"]}"
+        ]
+    },
+    {
+        "query": "orderDesc (5, 5, 'name', 2.75)",
+        "queries": [
+            "{\"method\":\"orderDesc \"}"
+        ]
+    },
+    {
+        "query": "startsWith()",
+        "queries": [
+            "{\"method\":\"startsWith\"}"
+        ]
+    },
+    {
+        "query": "cursorBefore([\"a,b\"], \"q\\\"q\",  7 , [])",
+        "queries": [
+            "{\"method\":\"cursorBefore\",\"values\":[[\"a,b\"]]}"
+        ]
+    },
+    {
+        "query": "notEqual()",
+        "queries": [
+            "{\"method\":\"notEqual\"}"
+        ]
+    },
+    {
+        "query": "isNull(\"x y\", null, [])",
+        "queries": [
+            "{\"method\":\"isNull\",\"attribute\":\"x y\",\"values\":[null]}"
+        ]
+    },
+    {
+        "query": "between(-3)",
+        "queries": [
+            "{\"method\":\"between\",\"attribute\":\"-3\",\"values\":[null,null]}"
+        ]
+    },
+    {
+        "query": "or('', 2.75, 2.75, 1e2",
+        "queries": [
+            "{\"method\":\"or\"}"
+        ]
+    },
+    {
+        "query": "isNull(null, 2.75, 'name')",
+        "queries": [
+            "{\"method\":\"isNull\",\"values\":[2.75]}"
+        ]
+    },
+    {
+        "query": "isNull(5, \"a]b\")",
+        "queries": [
+            "{\"method\":\"isNull\",\"attribute\":\"5\",\"values\":[\"a]b\"]}"
+        ]
+    },
+    {
+        "query": "endsWith([abc,null], null)",
+        "error": {
+            "type": "general_query_invalid",
+            "message": "Utopia\\Database\\Query::__construct(): Argument #2 ($attribute) must be of type string, array given, called in /usr/src/code/src/Appwrite/Utopia/Request/Filters/V17.php on line 245"
+        }
+    },
+    {
+        "query": "or([\"a,b\"])",
+        "queries": [
+            "{\"method\":\"or\"}"
+        ]
+    },
+    {
+        "query": "foo([], 2.75)",
+        "queries": [
+            "{\"method\":\"foo\"}"
+        ]
+    },
+    {
+        "query": "foo ( 7 )",
+        "queries": [
+            "{\"method\":\"foo \"}"
+        ]
+    },
+    {
+        "query": "orderDesc()",
+        "queries": [
+            "{\"method\":\"orderDesc\",\"attribute\":\"$sequence\"}"
+        ]
+    },
+    {
+        "query": "lessThanEqual(5",
+        "queries": [
+            "{\"method\":\"lessThanEqual\"}"
+        ]
+    },
+    {
+        "query": "offset()",
+        "queries": [
+            "{\"method\":\"offset\"}"
+        ]
+    },
+    {
+        "query": "cursorBefore(\"\")",
+        "queries": [
+            "{\"method\":\"cursorBefore\",\"values\":[\"\"]}"
+        ]
+    },
+    {
+        "query": "greaterThanEqual()",
+        "queries": [
+            "{\"method\":\"greaterThanEqual\"}"
+        ]
+    },
+    {
+        "query": "offset()",
+        "queries": [
+            "{\"method\":\"offset\"}"
+        ]
+    },
+    {
+        "query": "search(\"x y\", [])",
+        "queries": [
+            "{\"method\":\"search\",\"attribute\":\"x y\"}"
+        ]
+    },
+    {
+        "query": "notEqual(\"\", '')",
+        "queries": [
+            "{\"method\":\"notEqual\",\"values\":[\"\"]}"
+        ]
+    },
+    {
+        "query": "contains()",
+        "queries": [
+            "{\"method\":\"contains\"}"
+        ]
+    },
+    {
+        "query": "and(\"name\")",
+        "queries": [
+            "{\"method\":\"and\"}"
+        ]
+    },
+    {
+        "query": "between(\"x y\",  7 , \"0\")",
+        "queries": [
+            "{\"method\":\"between\",\"attribute\":\"x y\",\"values\":[7,\"0\"]}"
+        ]
+    },
+    {
+        "query": "cursorBefore()",
+        "queries": [
+            "{\"method\":\"cursorBefore\"}"
+        ]
+    },
+    {
+        "query": "between([\"name\",5],  7 )",
+        "error": {
+            "type": "general_query_invalid",
+            "message": "Utopia\\Database\\Query::__construct(): Argument #2 ($attribute) must be of type string, array given, called in /usr/src/code/src/Appwrite/Utopia/Request/Filters/V17.php on line 248"
+        }
+    },
+    {
+        "query": "greaterThanEqual([]",
+        "queries": [
+            "{\"method\":\"greaterThanEqual\"}"
+        ]
+    },
+    {
+        "query": "isNull (\"x y\")",
+        "queries": [
+            "{\"method\":\"isNull \"}"
+        ]
+    },
+    {
+        "query": "greaterThan(\"a]b\")",
+        "queries": [
+            "{\"method\":\"greaterThan\",\"attribute\":\"a]b\"}"
+        ]
+    },
+    {
+        "query": "notEqual()",
+        "queries": [
+            "{\"method\":\"notEqual\"}"
+        ]
+    },
+    {
+        "query": "and(\"a,b\")",
+        "queries": [
+            "{\"method\":\"and\"}"
+        ]
+    },
+    {
+        "query": "isNull(null, true)",
+        "queries": [
+            "{\"method\":\"isNull\",\"values\":[true]}"
+        ]
+    },
+    {
+        "query": "select()",
+        "error": {
+            "type": "general_query_invalid",
+            "message": "Utopia\\Database\\Query::__construct(): Argument #3 ($values) must be of type array, null given, called in /usr/src/code/src/Appwrite/Utopia/Request/Filters/V17.php on line 250"
+        }
+    },
+    {
+        "query": "isNull([''], \"\",  7 , 5)",
+        "error": {
+            "type": "general_query_invalid",
+            "message": "Utopia\\Database\\Query::__construct(): Argument #2 ($attribute) must be of type string, array given, called in /usr/src/code/src/Appwrite/Utopia/Request/Filters/V17.php on line 245"
+        }
+    },
+    {
+        "query": "greaterThanEqual(5, false, 5)",
+        "queries": [
+            "{\"method\":\"greaterThanEqual\",\"attribute\":\"5\",\"values\":[false]}"
+        ]
+    },
+    {
+        "query": "limit( 7 , 1e2, [1e2,\"q\\\"q\",\"0\"], null)",
+        "queries": [
+            "{\"method\":\"limit\",\"values\":[7]}"
+        ]
+    },
+    {
+        "query": "equal(-3, [])",
+        "queries": [
+            "{\"method\":\"equal\",\"attribute\":\"-3\"}"
+        ]
+    },
+    {
+        "query": "greaterThan()",
+        "queries": [
+            "{\"method\":\"greaterThan\"}"
+        ]
+    },
+    {
+        "query": "and()",
+        "queries": [
+            "{\"method\":\"and\"}"
+        ]
+    },
+    {
+        "query": "foo(1e2)",
+        "queries": [
+            "{\"method\":\"foo\"}"
+        ]
+    },
+    {
+        "query": "offset([], \"a]b\", \"x y\", '')",
+        "queries": [
+            "{\"method\":\"offset\",\"values\":[[]]}"
+        ]
+    },
+    {
+        "query": "contains('name', \"é\")",
+        "queries": [
+            "{\"method\":\"contains\",\"attribute\":\"name\",\"values\":[\"\\u00e9\"]}"
+        ]
+    },
+    {
+        "query": "foo('name', \"q\\\"q\", \"é\")",
+        "queries": [
+            "{\"method\":\"foo\"}"
+        ]
+    },
+    {
+        "query": "and(-3, [\"a]b\",0], 5)",
+        "queries": [
+            "{\"method\":\"and\"}"
+        ]
+    },
+    {
+        "query": "startsWith(\"q\\\"q\", \"0\", 0, abc)",
+        "queries": [
+            "{\"method\":\"startsWith\",\"attribute\":\"q\\\"q\",\"values\":[\"0\"]}"
+        ]
+    },
+    {
+        "query": "limit(2.75, abc)",
+        "queries": [
+            "{\"method\":\"limit\",\"values\":[2.75]}"
+        ]
+    },
+    {
+        "query": "between( 7 )",
+        "queries": [
+            "{\"method\":\"between\",\"attribute\":\"7\",\"values\":[null,null]}"
+        ]
+    },
+    {
+        "query": "isNull(\"a,b\"",
+        "queries": [
+            "{\"method\":\"isNull\",\"attribute\":\"a,\"}"
+        ]
+    },
+    {
+        "query": "and(\"a,b\", [true,''], [])",
+        "queries": [
+            "{\"method\":\"and\"}"
+        ]
+    },
+    {
+        "query": "isNotNull(true,\"x y\", 7 , 7 )",
+        "queries": [
+            "{\"method\":\"isNotNull\",\"attribute\":\"1\",\"values\":[\"x y\"]}"
+        ]
+    },
+    {
+        "query": "foo(false, \"a,b\")",
+        "queries": [
+            "{\"method\":\"foo\"}"
+        ]
+    },
+    {
+        "query": "notEqual(\"a,b\", [true])",
+        "queries": [
+            "{\"method\":\"notEqual\",\"attribute\":\"a,b\",\"values\":[true]}"
+        ]
+    },
+    {
+        "query": "and(0, -3, \"q\\\"q\")",
+        "queries": [
+            "{\"method\":\"and\"}"
+        ]
+    },
+    {
+        "query": "orderDesc(\"\", true,  7 )",
+        "queries": [
+            "{\"method\":\"orderDesc\",\"attribute\":\"$sequence\"}"
+        ]
+    },
+    {
+        "query": "orderAsc()",
+        "queries": [
+            "{\"method\":\"orderAsc\",\"attribute\":\"$sequence\"}"
+        ]
+    },
+    {
+        "query": "equal(5, 2.75)",
+        "queries": [
+            "{\"method\":\"equal\",\"attribute\":\"5\",\"values\":[2.75]}"
+        ]
+    },
+    {
+        "query": "isNull(5, \"name\", 1e2, '')",
+        "queries": [
+            "{\"method\":\"isNull\",\"attribute\":\"5\",\"values\":[\"name\"]}"
+        ]
+    },
+    {
+        "query": "startsWith(\"a,b\", \"x y\", \"a,b\", abc)",
+        "queries": [
+            "{\"method\":\"startsWith\",\"attribute\":\"a,b\",\"values\":[\"x y\"]}"
+        ]
+    },
+    {
+        "query": "equal(\"a]b\", '')",
+        "queries": [
+            "{\"method\":\"equal\",\"attribute\":\"a]b\",\"values\":[\"\"]}"
+        ]
+    },
+    {
+        "query": "contains(null)",
+        "queries": [
+            "{\"method\":\"contains\"}"
+        ]
+    },
+    {
+        "query": "isNull(\"x y\",  7 )",
+        "queries": [
+            "{\"method\":\"isNull\",\"attribute\":\"x y\",\"values\":[7]}"
+        ]
+    },
+    {
+        "query": "isNotNull( 7 , [], 1e2, '')",
+        "queries": [
+            "{\"method\":\"isNotNull\",\"attribute\":\"7\"}"
+        ]
+    },
+    {
+        "query": "between(abc, \"\", [5], [\"x y\",abc])",
+        "queries": [
+            "{\"method\":\"between\",\"attribute\":\"abc\",\"values\":[\"\",[5]]}"
+        ]
+    },
+    {
+        "query": "notEqual(0)",
+        "queries": [
+            "{\"method\":\"notEqual\"}"
+        ]
+    },
+    {
+        "query": "select(5)",
+        "error": {
+            "type": "general_query_invalid",
+            "message": "Utopia\\Database\\Query::__construct(): Argument #3 ($values) must be of type array, int given, called in /usr/src/code/src/Appwrite/Utopia/Request/Filters/V17.php on line 250"
+        }
+    },
+    {
+        "query": "isNull([], [\"a]b\"])",
+        "error": {
+            "type": "general_query_invalid",
+            "message": "Utopia\\Database\\Query::__construct(): Argument #2 ($attribute) must be of type string, array given, called in /usr/src/code/src/Appwrite/Utopia/Request/Filters/V17.php on line 245"
+        }
+    },
+    {
+        "query": "offset(\"name\",  7 , 'name')",
+        "queries": [
+            "{\"method\":\"offset\",\"values\":[\"name\"]}"
+        ]
+    },
+    {
+        "query": "limit(null,  7 )",
+        "queries": [
+            "{\"method\":\"limit\",\"values\":[null]}"
+        ]
+    },
+    {
+        "query": "contains( 7 )",
+        "queries": [
+            "{\"method\":\"contains\",\"attribute\":\"7\"}"
+        ]
+    },
+    {
+        "query": "endsWith()",
+        "queries": [
+            "{\"method\":\"endsWith\"}"
+        ]
+    },
+    {
+        "query": "greaterThan(false)",
+        "queries": [
+            "{\"method\":\"greaterThan\"}"
+        ]
+    },
+    {
+        "query": "equal(-3, \"q\\\"q\", true)",
+        "queries": [
+            "{\"method\":\"equal\",\"attribute\":\"-3\",\"values\":[\"q\\\"q\"]}"
+        ]
+    },
+    {
+        "query": "isNull(abc, [], \"x y\"",
+        "queries": [
+            "{\"method\":\"isNull\",\"attribute\":\"abc\"}"
+        ]
+    },
+    {
+        "query": "select(['name',\"name\",\"x y\"], \"x y\")",
+        "queries": [
+            "{\"method\":\"select\",\"values\":[\"name\",\"name\",\"x y\"]}"
+        ]
+    },
+    {
+        "query": "orderDesc(\"0\", abc, '', abc)",
+        "queries": [
+            "{\"method\":\"orderDesc\"}"
+        ]
+    },
+    {
+        "query": "notEqual([\"name\"], \"a,b\", 'name', \"0\")",
+        "error": {
+            "type": "general_query_invalid",
+            "message": "Utopia\\Database\\Query::__construct(): Argument #2 ($attribute) must be of type string, array given, called in /usr/src/code/src/Appwrite/Utopia/Request/Filters/V17.php on line 245"
+        }
+    },
+    {
+        "query": "lessThan(\"q\\\"q\", 2.75)",
+        "queries": [
+            "{\"method\":\"lessThan\",\"attribute\":\"q\\\"q\",\"values\":[2.75]}"
+        ]
+    },
+    {
+        "query": "select(true,  7 )",
+        "error": {
+            "type": "general_query_invalid",
+            "message": "Utopia\\Database\\Query::__construct(): Argument #3 ($values) must be of type array, true given, called in /usr/src/code/src/Appwrite/Utopia/Request/Filters/V17.php on line 250"
+        }
+    },
+    {
+        "query": "limit(\"é\", \"q\\\"q\", -3)",
+        "queries": [
+            "{\"method\":\"limit\",\"values\":[\"\\u00e9\"]}"
+        ]
+    },
+    {
+        "query": "isNotNull(\"0\", abc, \"a]b\")",
+        "queries": [
+            "{\"method\":\"isNotNull\",\"values\":[\"abc\"]}"
+        ]
+    },
+    {
+        "query": "or()",
+        "queries": [
+            "{\"method\":\"or\"}"
+        ]
+    },
+    {
+        "query": "greaterThanEqual([\"q\\\"q\"], \"\", 'name', 'name')",
+        "error": {
+            "type": "general_query_invalid",
+            "message": "Utopia\\Database\\Query::__construct(): Argument #2 ($attribute) must be of type string, array given, called in /usr/src/code/src/Appwrite/Utopia/Request/Filters/V17.php on line 245"
+        }
+    }
+]

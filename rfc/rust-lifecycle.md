@@ -124,4 +124,10 @@ The first version of `appwrite diff` (identity × origin matrices over eight Use
 | The `encrypt` envelope escaped `/` (PHP writes it with `JSON_UNESCAPED_SLASHES`) | `crypto::encrypt` | `serde_json`, with a regression test |
 | Argon2 salts were 16 random bytes; PHP's `password_hash()` uses 16 characters of `./0-9A-Za-z` | `utopia-auth` | PHP's salt generation |
 
-It also needed declared masks: the development error fields (`file`, `line`, `trace`), `Content-Length`, `Date`, `X-Debug-Speed` and the `network.outbound` bytes it feeds, and the twins' generated values (IDs, sequences, secrets, salts, IVs, timestamps), which are aligned rather than ignored. All 240 scenarios are now identical.
+| A preflight lacked PHP's `Content-Type: text/html` and the user resource's `X-Debug-Fallback` headers | lifecycle | Added |
+| No request filters: a 1.4 client's query strings reached the validators unconverted | `appwrite_core::request` | V17 and V27, V17 proven on 405 queries PHP's own filter converted |
+| An action's explicit event payload followed the client's response format; PHP renders it before the format filters | `response::current` | Explicit payloads render with the latest format |
+
+A variants dimension (preflight, an older and a newer response format, a locale) brought the matrix to 280 scenarios.
+
+It also needed declared masks: the development error fields (`file`, `line`, `trace`), `Content-Length`, `Date`, `X-Debug-Speed` and the `network.outbound` bytes it feeds, and the twins' generated values (IDs, sequences, secrets, salts, IVs, timestamps), which are aligned rather than ignored. All 280 scenarios are now identical, in dedicated and shared tables.

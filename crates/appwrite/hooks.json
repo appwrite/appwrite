@@ -165,7 +165,7 @@
       "php": { "file": "app/controllers/general.php", "kind": "init", "anchor": "x-appwrite-response-format" },
       "rust": {
         "status": "partial",
-        "note": "Response formats, the warning and the locale are handled; Traefik never routes custom domains to Rust. Request filters for formats before 1.5.0 and forced HTTPS are not implemented.",
+        "note": "Response formats, the warning, the locale and the request filters of the routes Rust serves (V17's 1.4 queries, V27's keywords; `appwrite_core::request`, proven on PHP's own V17 output) are handled; Traefik never routes custom domains to Rust. Forced HTTPS is not implemented.",
         "where": [{ "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "// -- response format, locale" }]
       }
     },
@@ -202,7 +202,7 @@
       "php": { "file": "app/controllers/general.php", "kind": "options" },
       "rust": {
         "status": "partial",
-        "note": "Headers and status match; no usage is recorded for preflights.",
+        "note": "Headers (with the user resource's fallback headers) and status match, proven by `appwrite diff`; a preflight's usage (RequestCompleted for a project in the query string) is not recorded.",
         "where": [{ "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "fn preflight" }]
       }
     },

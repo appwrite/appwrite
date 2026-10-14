@@ -36,10 +36,31 @@ pub struct Render {
 }
 
 impl Render {
-    /// `true` when the client format is older than `version`.
+    /// `true` when the client format is older than `version` (never while
+    /// [`current`] renders).
     pub fn before(&self, major: u32, minor: u32, patch: u32) -> bool {
-        matches!(self.format, Some(v) if v < Version(major, minor, patch))
+        !CURRENT.with(std::cell::Cell::get) && matches!(self.format, Some(v) if v < Version(major, minor, patch))
     }
+}
+
+thread_local! {
+    /// Set while [`current`] serializes a model.
+    static CURRENT: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
+}
+
+/// `model` as the latest format renders it, whatever the client's: the
+/// event payload an action sets in PHP (`$response->output()`, before the
+/// format filters; without one, events carry the filtered response).
+pub fn current<T: serde::Serialize>(model: &T) -> Vec<u8> {
+    struct Reset;
+    impl Drop for Reset {
+        fn drop(&mut self) {
+            CURRENT.with(|c| c.set(false));
+        }
+    }
+    CURRENT.with(|c| c.set(true));
+    let _reset = Reset;
+    crate::json::to_vec(model)
 }
 
 /// Datetime field (`''` when unset).

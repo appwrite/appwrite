@@ -98,6 +98,22 @@ fn preflight(state: &Arc<super::State>, request: &Request) -> Response {
         response.add(k, &v);
     }
     response.set("server", "Appwrite");
+    // `noContent()` sends the default content type.
+    response.set("content-type", "text/html");
+    // The user resource the handler's injections resolve: a session from the
+    // project's cookie (the console's without one), else the fallback.
+    let project = request.query_value("project").filter(|p| !p.is_empty()).unwrap_or(Project::CONSOLE);
+    let cookie = format!("a_session_{project}");
+    let session = request
+        .cookie(&cookie)
+        .or_else(|| request.cookie(&format!("{cookie}_legacy")))
+        .or_else(|| request.header("x-appwrite-session"))
+        .map(session_store)
+        .is_some_and(|(id, secret)| !id.is_empty() || !secret.is_empty());
+    response.add("x-debug-fallback", "false");
+    if !session {
+        response.add("x-debug-fallback", "true");
+    }
     response
 }
 
@@ -192,6 +208,21 @@ pub(super) async fn authenticate(ctx: &mut Context) -> Result<()> {
         }
         ctx.key = Some(key);
     }
+    // Request filters for an older response format: `general.php` adds them,
+    // and the first read of the params runs them, before its headers.
+    if let Some(format) = ctx.format
+        && !ctx.route.namespace.is_empty()
+    {
+        let model = format!("{}.{}", ctx.route.namespace, ctx.route.sdk_method);
+        let mut params = ctx.request.params().clone();
+        crate::request::apply(format, &model, &mut params)?;
+        if matches!(ctx.request.method(), "POST" | "PUT" | "PATCH" | "DELETE") {
+            ctx.request.set_payload(params);
+        } else {
+            ctx.request.set_query(params);
+        }
+    }
+
     // `general.php` adds the security headers after the resources above.
     ctx.secured = true;
 
