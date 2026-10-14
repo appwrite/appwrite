@@ -143,8 +143,8 @@ package main
 
 import (
   "log"
-  "github.com/appwrite/sdk-for-go/appwrite"
-  operator "github.com/appwrite/sdk-for-go/operator"
+  "github.com/appwrite/sdk-for-go/v7/appwrite"
+  operator "github.com/appwrite/sdk-for-go/v7/operator"
 )
 
 func main() {
@@ -1270,8 +1270,8 @@ package main
 
 import (
   "log"
-  "github.com/appwrite/sdk-for-go/appwrite"
-  operator "github.com/appwrite/sdk-for-go/operator"
+  "github.com/appwrite/sdk-for-go/v7/appwrite"
+  operator "github.com/appwrite/sdk-for-go/v7/operator"
 )
 
 func main() {
@@ -1557,8 +1557,8 @@ package main
 
 import (
   "log"
-  "github.com/appwrite/sdk-for-go/appwrite"
-  operator "github.com/appwrite/sdk-for-go/operator"
+  "github.com/appwrite/sdk-for-go/v7/appwrite"
+  operator "github.com/appwrite/sdk-for-go/v7/operator"
 )
 
 func main() {
@@ -1844,8 +1844,8 @@ package main
 
 import (
   "log"
-  "github.com/appwrite/sdk-for-go/appwrite"
-  operator "github.com/appwrite/sdk-for-go/operator"
+  "github.com/appwrite/sdk-for-go/v7/appwrite"
+  operator "github.com/appwrite/sdk-for-go/v7/operator"
 )
 
 func main() {
@@ -2185,8 +2185,8 @@ package main
 
 import (
   "log"
-  "github.com/appwrite/sdk-for-go/appwrite"
-  operator "github.com/appwrite/sdk-for-go/operator"
+  "github.com/appwrite/sdk-for-go/v7/appwrite"
+  operator "github.com/appwrite/sdk-for-go/v7/operator"
 )
 
 func main() {
@@ -2686,8 +2686,8 @@ package main
 
 import (
   "log"
-  "github.com/appwrite/sdk-for-go/appwrite"
-  operator "github.com/appwrite/sdk-for-go/operator"
+  "github.com/appwrite/sdk-for-go/v7/appwrite"
+  operator "github.com/appwrite/sdk-for-go/v7/operator"
 )
 
 func main() {

@@ -149,7 +149,7 @@ let specifications = try await mysql.listSpecifications(
 package main
 
 import (
-    "github.com/appwrite/sdk-for-go/appwrite"
+    "github.com/appwrite/sdk-for-go/v7/appwrite"
 )
 
 func main() {
@@ -346,8 +346,8 @@ _ = try await mysql.update(
 package main
 
 import (
-    "github.com/appwrite/sdk-for-go/appwrite"
-    "github.com/appwrite/sdk-for-go/mysql"
+    "github.com/appwrite/sdk-for-go/v7/appwrite"
+    "github.com/appwrite/sdk-for-go/v7/mysql"
 )
 
 func main() {
@@ -574,8 +574,8 @@ _ = try await mysql.update(
 package main
 
 import (
-    "github.com/appwrite/sdk-for-go/appwrite"
-    "github.com/appwrite/sdk-for-go/mysql"
+    "github.com/appwrite/sdk-for-go/v7/appwrite"
+    "github.com/appwrite/sdk-for-go/v7/mysql"
 )
 
 func main() {

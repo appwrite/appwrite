@@ -180,8 +180,8 @@ _ = try await postgresql.createBranch(
 package main
 
 import (
-    "github.com/appwrite/sdk-for-go/appwrite"
-    "github.com/appwrite/sdk-for-go/postgresql"
+    "github.com/appwrite/sdk-for-go/v7/appwrite"
+    "github.com/appwrite/sdk-for-go/v7/postgresql"
 )
 
 func main() {
@@ -388,7 +388,7 @@ let branches = try await postgresql.listBranches(
 package main
 
 import (
-    "github.com/appwrite/sdk-for-go/appwrite"
+    "github.com/appwrite/sdk-for-go/v7/appwrite"
 )
 
 func main() {
@@ -591,7 +591,7 @@ _ = try await postgresql.deleteBranch(
 package main
 
 import (
-    "github.com/appwrite/sdk-for-go/appwrite"
+    "github.com/appwrite/sdk-for-go/v7/appwrite"
 )
 
 func main() {

@@ -54,7 +54,7 @@ composer init
 Install the PHP Appwrite SDK.
 
 ```sh
-composer require appwrite/appwrite:15.0.0
+composer require appwrite/appwrite:30.4.0
 ```
 {% /section %}
 {% section #step-4 step=4 title="Import Appwrite" %}

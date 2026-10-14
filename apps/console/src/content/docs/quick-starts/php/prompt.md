@@ -30,7 +30,7 @@ composer init
 
 ## Step 3: Install Appwrite SDK
 
-- Run: `composer require appwrite/appwrite:15.0.0`
+- Run: `composer require appwrite/appwrite:30.4.0`
 
 ## Step 4: Import Appwrite and initialize client (ask user for details; never assume)
 

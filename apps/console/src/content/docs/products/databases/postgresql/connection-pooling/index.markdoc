@@ -178,8 +178,8 @@ let pooler = try await postgresql.updatePooler(
 package main
 
 import (
-    "github.com/appwrite/sdk-for-go/appwrite"
-    "github.com/appwrite/sdk-for-go/postgresql"
+    "github.com/appwrite/sdk-for-go/v7/appwrite"
+    "github.com/appwrite/sdk-for-go/v7/postgresql"
 )
 
 func main() {

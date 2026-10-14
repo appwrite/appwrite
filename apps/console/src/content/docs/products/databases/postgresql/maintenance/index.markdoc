@@ -174,7 +174,7 @@ _ = try await postgresql.updateMaintenance(
 package main
 
 import (
-    "github.com/appwrite/sdk-for-go/appwrite"
+    "github.com/appwrite/sdk-for-go/v7/appwrite"
 )
 
 func main() {
@@ -377,7 +377,7 @@ _ = try await postgresql.createUpgrade(
 package main
 
 import (
-    "github.com/appwrite/sdk-for-go/appwrite"
+    "github.com/appwrite/sdk-for-go/v7/appwrite"
 )
 
 func main() {
@@ -586,8 +586,8 @@ _ = try await postgresql.update(
 package main
 
 import (
-    "github.com/appwrite/sdk-for-go/appwrite"
-    "github.com/appwrite/sdk-for-go/postgresql"
+    "github.com/appwrite/sdk-for-go/v7/appwrite"
+    "github.com/appwrite/sdk-for-go/v7/postgresql"
 )
 
 func main() {

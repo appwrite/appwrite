@@ -222,7 +222,7 @@ import (
     "fmt"
     "log"
 
-    "github.com/appwrite/sdk-for-go/v6/appwrite"
+    "github.com/appwrite/sdk-for-go/v7/appwrite"
 )
 
 func main() {

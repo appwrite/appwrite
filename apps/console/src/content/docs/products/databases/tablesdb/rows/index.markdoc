@@ -510,9 +510,9 @@ package main
 
 import (
     "fmt"
-    "github.com/appwrite/sdk-for-go/client"
-    "github.com/appwrite/sdk-for-go/tablesdb"
-    "github.com/appwrite/sdk-for-go/query"
+    "github.com/appwrite/sdk-for-go/v7/client"
+    "github.com/appwrite/sdk-for-go/v7/tablesdb"
+    "github.com/appwrite/sdk-for-go/v7/query"
 )
 
 func main() {
@@ -906,8 +906,8 @@ suspend fun main() {
 package main
 
 import (
-    "github.com/appwrite/sdk-for-go/client"
-    "github.com/appwrite/sdk-for-go/tablesdb"
+    "github.com/appwrite/sdk-for-go/v7/client"
+    "github.com/appwrite/sdk-for-go/v7/tablesdb"
 )
 
 func main() {

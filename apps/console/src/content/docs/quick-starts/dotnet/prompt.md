@@ -25,7 +25,7 @@ Do exactly these steps in order. Confirm each step succeeds before continuing. I
 
 ## Step 3: Install Appwrite SDK
 
-- Run: `dotnet add package Appwrite --version 0.13.0`
+- Run: `dotnet add package Appwrite --version 8.3.1`
 
 ## Step 4: Import Appwrite and initialize client (ask user for details; never assume)
 
