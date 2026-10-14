@@ -3,6 +3,7 @@
 namespace Executor;
 
 use Appwrite\Utopia\Fetch\BodyMultipart;
+use Appwrite\Utopia\Fetch\BodyMultipartStream;
 use Executor\Exception as ExecutorException;
 use Executor\Exception\Timeout as ExecutorTimeout;
 use Psr\Http\Client\ClientExceptionInterface;
@@ -20,6 +21,9 @@ class Executor
 
     // 0.9.0 is first version with array-based headers
     public const RESPONSE_FORMAT_ARRAY_HEADERS = '0.11.0';
+
+    // 0.12.0 is first version that flushes parts as they are produced
+    public const RESPONSE_FORMAT_STREAM = '0.12.0';
 
     public const METHOD_GET = 'GET';
     public const METHOD_POST = 'POST';
@@ -114,7 +118,8 @@ class Executor
         bool $logging,
         string $runtimeEntrypoint = '',
         ?int $requestTimeout = null,
-        string $responseFormat = self::RESPONSE_FORMAT_OBJECT_HEADERS
+        string $responseFormat = self::RESPONSE_FORMAT_OBJECT_HEADERS,
+        ?callable $onPart = null
     ) {
         $runtimeId = "$projectId-$deploymentId";
         $route = '/runtimes/' . $runtimeId . '/executions';
@@ -152,7 +157,67 @@ class Executor
             $requestTimeout = $timeout + 15;
         }
 
-        $response = $this->call($this->endpoint, self::METHOD_POST, $route, [ 'x-opr-runtime-id' => $runtimeId, 'content-type' => 'multipart/form-data', 'accept' => 'multipart/form-data', 'x-executor-response-format' => $responseFormat ], $params, true, $requestTimeout);
+        $parts = [];
+        $buffered = '';
+        $reader = null;
+        $onData = null;
+
+        if ($onPart !== null) {
+            $onData = function (string $data) use (&$parts, &$buffered, &$reader, $onPart): void {
+                if ($reader !== null) {
+                    $reader->feed($data);
+
+                    return;
+                }
+
+                $buffered .= $data;
+
+                // Response headers only arrive once the transfer ends, so the first part's headers
+                // tell the formats apart: only the streaming one marks its parts chunked.
+                $head = \strstr($buffered, "\r\n\r\n", true);
+
+                if ($head === false || \stripos($head, "\r\ncontent-transfer-encoding: chunked") === false) {
+                    return;
+                }
+
+                $reader = new BodyMultipartStream(
+                    \substr(\explode("\r\n", $head, 2)[0], 2),
+                    function (string $name, string $chunk, bool $isLast) use (&$parts, $onPart): void {
+                        if ($name !== 'body') {
+                            $parts[$name] = ($parts[$name] ?? '') . $chunk;
+                        }
+
+                        $onPart($name, $chunk, $isLast);
+                    }
+                );
+                $reader->feed($buffered);
+                $buffered = '';
+            };
+        }
+
+        $response = $this->call($this->endpoint, self::METHOD_POST, $route, [ 'x-opr-runtime-id' => $runtimeId, 'content-type' => 'multipart/form-data', 'accept' => 'multipart/form-data', 'x-executor-response-format' => $responseFormat ], $params, true, $requestTimeout, $onData);
+
+        if ($onPart !== null) {
+            if ($reader === null) {
+                // call() skips decoding for a callback, and executor failures arrive as JSON.
+                $contentType = $response['headers']['content-type'] ?? '';
+                $separator = \strpos($contentType, ';');
+                $mime = \substr($contentType, 0, \is_bool($separator) ? \strlen($contentType) : $separator);
+
+                if (\trim($mime) === 'application/json') {
+                    $parts = \json_decode($buffered, true);
+
+                    if (!\is_array($parts)) {
+                        throw new ExecutorException('Failed to parse response: ' . $buffered);
+                    }
+                } else {
+                    $boundary = \trim(\explode('boundary=', $contentType)[1] ?? '', '"');
+                    $parts = (new BodyMultipart($boundary))->load($buffered)->getParts();
+                }
+            }
+
+            $response['body'] = $parts;
+        }
 
         $status = $response['headers']['status-code'];
         if ($status >= 400) {
@@ -161,11 +226,16 @@ class Executor
             throw new ExecutorException($message, $status, type: $type);
         }
 
+        // A stream without its closing delimiter lost content, so it is not a complete execution.
+        if ($reader !== null && !$reader->isComplete()) {
+            throw new ExecutorException('Executor response ended before the envelope was complete');
+        }
+
         $headers = $response['body']['headers'] ?? [];
         if (is_string($headers)) {
             $headers = \json_decode($headers, true);
         }
-        $response['body']['headers'] = $headers;
+        $response['body']['headers'] = \is_array($headers) ? $headers : [];
         $response['body']['statusCode'] = \intval($response['body']['statusCode'] ?? 500);
         $response['body']['duration'] = \floatval($response['body']['duration'] ?? 0);
         $response['body']['startTime'] = \floatval($response['body']['startTime'] ?? \microtime(true));
@@ -186,7 +256,7 @@ class Executor
      * @return array
      * @throws Exception
      */
-    private function call(string $endpoint, string $method, string $path = '', array $headers = [], array $params = [], bool $decode = true, int $timeout = 15): array
+    private function call(string $endpoint, string $method, string $path = '', array $headers = [], array $params = [], bool $decode = true, int $timeout = 15, ?\Closure $onData = null): array
     {
         $headers            = array_merge($this->headers, $headers);
         $url                = $endpoint . $path . (($method == self::METHOD_GET && !empty($params)) ? '?' . http_build_query($params) : '');
@@ -233,7 +303,9 @@ class Executor
         }
 
         try {
-            $response = $client->sendRequest($request);
+            $response = $onData === null
+                ? $client->sendRequest($request)
+                : $client->stream($request, $onData);
         } catch (TimeoutException) {
             throw new ExecutorTimeout('Executor request timed out after ' . $timeout . ' seconds');
         } catch (ClientExceptionInterface $e) {
@@ -249,7 +321,8 @@ class Executor
         $responseStatus = $response->getStatusCode();
         $responseBody   = (string) $response->getBody();
 
-        if ($decode) {
+        // A callback consumed the body as it arrived, so there is nothing left to decode.
+        if ($decode && $onData === null) {
             $strpos = strpos($responseType, ';');
             $strpos = \is_bool($strpos) ? \strlen($responseType) : $strpos;
             switch (substr($responseType, 0, $strpos)) {

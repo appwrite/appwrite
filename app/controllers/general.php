@@ -538,6 +538,73 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             'headers' => [],
             'body' => '',
         ];
+        $streamed = null;
+        $streamParts = [];
+        $streamBody = '';
+        $canStreamResponse = $type === 'site'
+            && !$isPreview
+            && System::getEnv('_APP_SITES_STREAMING', 'disabled') === 'enabled';
+
+        $onExecutionPart = !$canStreamResponse ? null : function (string $name, string $chunk, bool $isLast) use (&$streamed, &$streamParts, &$streamBody, $response, $execution, $errorView): void {
+            if ($name !== 'body') {
+                // Only the parts read below, and only while they still can be.
+                if ($streamed === null) {
+                    $streamParts[$name] = ($streamParts[$name] ?? '') . $chunk;
+                }
+
+                return;
+            }
+
+            if ($streamed === null) {
+                $statusCode = \intval($streamParts['statusCode'] ?? 200);
+                $headers = \json_decode($streamParts['headers'] ?? '', true);
+
+                if (!\is_array($headers)) {
+                    throw new AppwriteException(AppwriteException::GENERAL_SERVER_ERROR, 'Executor response headers could not be decoded', view: $errorView);
+                }
+
+                // A failed response may be replaced by a branded page, which needs the whole body.
+                $streamed = $statusCode < 400;
+
+                if ($streamed) {
+                    $headers['x-appwrite-log-id'] = $execution->getId();
+
+                    $contentType = 'text/plain';
+
+                    foreach ($headers as $header => $values) {
+                        $lowercased = \strtolower($header);
+
+                        if ($lowercased === 'content-type') {
+                            $contentType = \is_array($values) ? ($values[0] ?? $contentType) : $values;
+                            continue;
+                        }
+
+                        // Length and framing describe the buffered response, not the chunked one.
+                        if ($lowercased === 'content-length' || $lowercased === 'transfer-encoding') {
+                            continue;
+                        }
+
+                        foreach ((array) $values as $value) {
+                            $response->addHeader($header, $value);
+                        }
+                    }
+
+                    $response
+                        ->setContentType($contentType)
+                        ->setStatusCode($statusCode);
+                }
+            }
+
+            if (!$streamed) {
+                $streamBody .= $chunk;
+
+                return;
+            }
+
+            if ($chunk !== '') {
+                $response->chunk($chunk);
+            }
+        };
 
         try {
             $version = match ($type) {
@@ -598,10 +665,20 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                     // Temporary mitigation for slow cold starts: 60s for all
                     // synchronous executions until cold starts are addressed.
                     requestTimeout: 60,
-                    responseFormat: Executor::RESPONSE_FORMAT_ARRAY_HEADERS
+                    responseFormat: $canStreamResponse ? Executor::RESPONSE_FORMAT_STREAM : Executor::RESPONSE_FORMAT_ARRAY_HEADERS,
+                    onPart: $onExecutionPart
                 );
             } catch (ExecutorTimeout $th) {
                 throw new AppwriteException(AppwriteException::FUNCTION_SYNCHRONOUS_TIMEOUT, previous: $th);
+            }
+
+            if ($streamed !== null) {
+                $executionResponse['body'] = $streamBody;
+            }
+
+            // Ended only here, once the executor has confirmed the rest of the envelope arrived.
+            if ($streamed === true) {
+                $response->chunk('', true);
             }
 
             $headerOverrides = [];
@@ -674,6 +751,10 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                 }
             }
 
+            if ($streamed === true) {
+                unset($executionResponse['headers']['content-length'], $executionResponse['headers']['Content-Length']);
+            }
+
             $headersFiltered = [];
             foreach ($executionResponse['headers'] as $key => $value) {
                 if (\in_array(\strtolower($key), FUNCTION_ALLOWLIST_HEADERS_RESPONSE)) {
@@ -709,6 +790,12 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             $execution->setAttribute('responseHeaders', $headersFiltered);
             $execution->setAttribute('duration', \microtime(true) - $durationStart);
         } catch (\Throwable $th) {
+            if ($streamed === true) {
+                // Content is already on the wire; a truncated response must not read as a complete one.
+                $response->getSwooleResponse()->close();
+                $response->setSent(true);
+            }
+
             $execution
                 ->setAttribute('duration', \microtime(true) - $durationStart)
                 ->setAttribute('responseStatusCode', 500);
@@ -745,30 +832,32 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
 
         $body = $execution['responseBody'];
 
-        $contentType = 'text/plain';
-        foreach ($executionResponse['headers'] as $name => $values) {
-            if (\strtolower($name) === 'content-type') {
-                $contentType = \is_array($values) ? $values[0] : $values;
-                continue;
-            }
-
-            if (\strtolower($name) === 'transfer-encoding') {
-                continue;
-            }
-
-            if (\is_array($values)) {
-                foreach ($values as $value) {
-                    $response->addHeader($name, $value);
+        if ($streamed !== true) {
+            $contentType = 'text/plain';
+            foreach ($executionResponse['headers'] as $name => $values) {
+                if (\strtolower($name) === 'content-type') {
+                    $contentType = \is_array($values) ? $values[0] : $values;
+                    continue;
                 }
-            } else {
-                $response->addHeader($name, $values);
-            }
-        }
 
-        $response
-            ->setContentType($contentType)
-            ->setStatusCode($execution['responseStatusCode'] ?? 200)
-            ->send($body);
+                if (\strtolower($name) === 'transfer-encoding') {
+                    continue;
+                }
+
+                if (\is_array($values)) {
+                    foreach ($values as $value) {
+                        $response->addHeader($name, $value);
+                    }
+                } else {
+                    $response->addHeader($name, $values);
+                }
+            }
+
+            $response
+                ->setContentType($contentType)
+                ->setStatusCode($execution['responseStatusCode'] ?? 200)
+                ->send($body);
+        }
 
         $bus->dispatch(new RequestCompleted(
             project: $project->getArrayCopy(),
