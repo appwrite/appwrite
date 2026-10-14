@@ -21,6 +21,10 @@ pub const DURATION_BUCKETS: [f64; 24] = [
     600.0, 1200.0, 1800.0, 3600.0, 7200.0,
 ];
 
+/// Bucket boundaries of the message size histogram, in bytes: 1 KiB to 256 MiB.
+pub const SIZE_BUCKETS: [f64; 10] =
+    [1024.0, 4096.0, 16384.0, 65536.0, 262_144.0, 1_048_576.0, 4_194_304.0, 16_777_216.0, 67_108_864.0, 268_435_456.0];
+
 /// Makes the consumer for one queue, overriding the adapter's.
 pub type ConsumerFactory = crate::adapter::ConsumerFactory;
 
@@ -84,6 +88,7 @@ pub struct Server {
     worker_stop: Vec<Hook>,
     wait_time: Arc<dyn Histogram>,
     process_duration: Arc<dyn Histogram>,
+    message_size: Arc<dyn Histogram>,
     publisher: Option<Arc<dyn Publisher>>,
     telemetry: Arc<dyn Telemetry>,
 }
@@ -111,6 +116,7 @@ impl Server {
             worker_stop: Vec::new(),
             wait_time: none.histogram("messaging.process.wait.duration", "s", None, &DURATION_BUCKETS),
             process_duration: none.histogram("messaging.process.duration", "s", None, &DURATION_BUCKETS),
+            message_size: none.histogram("messaging.process.message.size", "By", None, &SIZE_BUCKETS),
             publisher: None,
             telemetry: Arc::new(NoTelemetry),
         }
@@ -175,12 +181,13 @@ impl Server {
         self.adapter.resources()
     }
 
-    /// Reports wait time and processing duration histograms, and queue
+    /// Reports wait time, processing duration and consumed message size histograms, and queue
     /// depth gauges read through `publisher` (the consumer's own publisher
     /// side: the broker, when it can count).
     pub fn set_telemetry(&mut self, telemetry: Arc<dyn Telemetry>, publisher: Option<Arc<dyn Publisher>>) {
         self.wait_time = telemetry.histogram("messaging.process.wait.duration", "s", None, &DURATION_BUCKETS);
         self.process_duration = telemetry.histogram("messaging.process.duration", "s", None, &DURATION_BUCKETS);
+        self.message_size = telemetry.histogram("messaging.process.message.size", "By", None, &SIZE_BUCKETS);
         self.publisher = publisher;
         self.telemetry = telemetry;
         self.depth_gauge("messaging.queue.depth", "Number of pending messages in the queue.", false);
@@ -358,6 +365,9 @@ impl Server {
             Box::pin(async move {
                 let received = php_std::datetime::microtime_float();
                 server.wait_time.record((received - message.timestamp() as f64).max(0.0));
+                if let Some(size) = message.size() {
+                    server.message_size.record(size as f64);
+                }
                 let result = server.handle(&message, &context).await;
                 server.process_duration.record(php_std::datetime::microtime_float() - received);
                 result

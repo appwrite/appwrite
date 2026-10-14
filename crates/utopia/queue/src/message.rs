@@ -41,6 +41,7 @@ pub struct Message {
     attempts: i64,
     sequence: Option<i64>,
     receipt: Option<String>,
+    size: Option<i64>,
     // Shared by clones of one delivery, so a handler holding a copy can mark it.
     terminal: Arc<AtomicBool>,
 }
@@ -54,11 +55,16 @@ impl PartialEq for Message {
             && self.attempts == o.attempts
             && self.sequence == o.sequence
             && self.receipt == o.receipt
+            && self.size == o.size
             && self.is_terminal() == o.is_terminal()
     }
 }
 
 impl Message {
+    /// `Message::LARGE_SIZE`: a consumed message over this many bytes is logged
+    /// by [`Message::warn_if_large`].
+    pub const LARGE_SIZE: i64 = 1_048_576;
+
     /// A message with no attempts, no sequence and no receipt.
     pub fn new(pid: impl Into<Str>, queue: impl Into<Str>, timestamp: i64, payload: Array) -> Self {
         Self {
@@ -69,6 +75,7 @@ impl Message {
             attempts: 0,
             sequence: None,
             receipt: None,
+            size: None,
             terminal: Arc::default(),
         }
     }
@@ -96,7 +103,17 @@ impl Message {
             None | Some(Value::Null) => None,
             Some(v) => Some(int_field(Some(v), "sequence")?),
         };
-        Ok(Self { pid, queue, timestamp, payload, attempts, sequence, receipt: None, terminal: Arc::default() })
+        Ok(Self {
+            pid,
+            queue,
+            timestamp,
+            payload,
+            attempts,
+            sequence,
+            receipt: None,
+            size: None,
+            terminal: Arc::default(),
+        })
     }
 
     /// The message's identity, stable across every redelivery.
@@ -134,6 +151,12 @@ impl Message {
     /// The broker's proof of ownership of this delivery (Redis: the claim token).
     pub fn receipt(&self) -> Option<&str> {
         self.receipt.as_deref()
+    }
+
+    /// The encoded size in bytes of this delivery as the broker handed it
+    /// over, `None` when the message was not consumed from a broker.
+    pub fn size(&self) -> Option<i64> {
+        self.size
     }
 
     /// Whether the handler declared this failure permanent.
@@ -181,6 +204,26 @@ impl Message {
     pub fn set_receipt(&mut self, receipt: impl Into<String>) -> &mut Self {
         self.receipt = Some(receipt.into());
         self
+    }
+
+    /// Sets the encoded size of this delivery.
+    pub fn set_size(&mut self, size: Option<i64>) -> &mut Self {
+        self.size = size;
+        self
+    }
+
+    /// `Message::warnIfLarge()`: logs a consumed message larger than
+    /// [`Message::LARGE_SIZE`] to standard error, as PHP's `error_log()` does.
+    pub fn warn_if_large(queue: &str, size: i64) {
+        if let Some(warning) = Self::large_warning(queue, size) {
+            eprintln!("{warning}");
+        }
+    }
+
+    /// The line [`Message::warn_if_large`] logs for a message of `size`
+    /// bytes consumed from `queue`, `None` when it is not large.
+    pub fn large_warning(queue: &str, size: i64) -> Option<String> {
+        (size > Self::LARGE_SIZE).then(|| format!("Large queue message: {size} bytes on queue \"{queue}\""))
     }
 
     /// Declares that this message must not be delivered again: the payload
