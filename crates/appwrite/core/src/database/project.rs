@@ -34,6 +34,42 @@ pub struct Key {
     pub sdks: Vec<String>,
 }
 
+impl From<&Document> for Key {
+    fn from(k: &Document) -> Self {
+        Key {
+            id: k.id().to_owned(),
+            sequence: k.sequence_i64(),
+            name: k.string_or_empty("name"),
+            scopes: k.strings("scopes"),
+            secret: k.string_or_empty("secret"),
+            expire: k.datetime("expire"),
+            accessed_at: k.datetime("accessedAt"),
+            sdks: k.strings("sdks"),
+        }
+    }
+}
+
+/// The keys a user (account keys) or a team (organization keys) owns: the
+/// `subQueryAccountKeys` / `subQueryOrganizationKeys` filters' query, with
+/// authorization skipped. `resource_type` is `users` or `teams`.
+pub async fn owned_keys(platform: &Database, resource_type: &str, internal_id: &str) -> Result<Vec<Key>> {
+    let authorization = platform.authorization();
+    let documents = authorization
+        .skip(|| {
+            platform.find(
+                "keys",
+                vec![
+                    utopia_database::Query::equal("resourceType", [resource_type]),
+                    utopia_database::Query::equal("resourceInternalId", [internal_id]),
+                    utopia_database::Query::limit(super::filters::LIMIT_SUBQUERY),
+                ],
+                Database::PERMISSION_READ,
+            )
+        })
+        .await?;
+    Ok(documents.iter().map(Key::from).collect())
+}
+
 /// A client platform (only what CORS / origin checks need).
 #[derive(Debug, Clone)]
 pub struct Platform {
@@ -241,20 +277,7 @@ impl From<&Document> for Project {
             apis: json_or_empty("apis"),
             auths: json_or_empty("auths"),
             onboarding: json_or_empty("onboarding"),
-            keys: d
-                .documents("keys")
-                .into_iter()
-                .map(|k| Key {
-                    id: k.id().to_owned(),
-                    sequence: k.sequence_i64(),
-                    name: k.string_or_empty("name"),
-                    scopes: k.strings("scopes"),
-                    secret: k.string_or_empty("secret"),
-                    expire: k.datetime("expire"),
-                    accessed_at: k.datetime("accessedAt"),
-                    sdks: k.strings("sdks"),
-                })
-                .collect(),
+            keys: d.documents("keys").into_iter().map(Key::from).collect(),
             platforms: d
                 .documents("platforms")
                 .into_iter()

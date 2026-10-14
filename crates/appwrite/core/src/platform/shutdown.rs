@@ -75,9 +75,12 @@ pub(super) fn schedule(ctx: Context, status: StatusCode, body: Bytes, response_s
         // in both runtimes together).
         size: request.size(),
     };
+    // PHP's events carry the `user` resource: empty for a project or an
+    // organization key, the account for an account key.
     let actor = match (&ctx.key, ctx.roles_user()) {
+        (Some(key), Some(u)) if key.kind == KeyType::Account => u.message_payload(),
         (Some(_), _) | (None, None) => event::empty_user(),
-        (None, Some(u)) => event::actor(&u.id, u.email.as_deref(), u.name.as_deref()),
+        (None, Some(u)) => u.message_payload(),
     };
     let payload = ctx.events.payload.clone().unwrap_or(body);
     let job = Job {

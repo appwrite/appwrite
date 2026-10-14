@@ -14,8 +14,9 @@ use utopia_http::{Compression, Request, Response};
 
 use super::context::{Context, Mode};
 use super::{Platform, Route, shutdown};
-use crate::auth::{self, ApiKey, KeyType, roles};
+use crate::auth::{self, ApiKey, KeyType, Owners, roles};
 use crate::database::documents::{self, User};
+use crate::database::project;
 use crate::database::{Databases, Project, filters};
 use crate::error::{Error, ErrorType};
 use crate::response::{ErrorModel, Version};
@@ -202,9 +203,35 @@ pub(super) async fn authenticate(ctx: &mut Context) -> Result<()> {
     // -- API key ---------------------------------------------------------------
     let key_header = ctx.request.header_or_empty("x-appwrite-key").to_owned();
     if !key_header.is_empty() {
-        let key = ApiKey::decode(&ctx.project, &key_header, &state.config.openssl_key_v1);
+        // The project's organization (`$team`) and its keys, for an
+        // organization key.
+        let organization = if key_header.starts_with("organization_") {
+            match load_team_id(&platform_db, &ctx.project.team_internal_id).await? {
+                Some(id) => {
+                    let keys = project::owned_keys(&platform_db, "teams", &ctx.project.team_internal_id).await?;
+                    Some((id, keys))
+                }
+                None => None,
+            }
+        } else {
+            None
+        };
+        let account_user = ctx.user.as_ref().map(|u| u.id.clone()).unwrap_or_default();
+        let owners = Owners {
+            account: (!ctx.account_keys.is_empty()).then_some((account_user.as_str(), ctx.account_keys.as_slice())),
+            organization: organization.as_ref().map(|(id, keys)| (id.as_str(), keys.as_slice())),
+        };
+        let key = ApiKey::decode(&ctx.project, &key_header, &state.config.openssl_key_v1, &owners);
         if !key.project_id.is_empty() && (header_project.is_empty() || header_project != key.project_id) {
             return Err(Error::new(ErrorType::ProjectIdMissing));
+        }
+        let user_header = ctx.request.header_or_empty("x-appwrite-user");
+        if !key.user_id.is_empty() && (user_header.is_empty() || user_header != key.user_id) {
+            return Err(Error::new(ErrorType::UserIdMissing));
+        }
+        let organization_header = ctx.request.header_or_empty("x-appwrite-organization");
+        if !key.team_id.is_empty() && (organization_header.is_empty() || organization_header != key.team_id) {
+            return Err(Error::new(ErrorType::OrganizationIdMissing));
         }
         ctx.key = Some(key);
     }
@@ -270,11 +297,26 @@ pub(super) async fn authenticate(ctx: &mut Context) -> Result<()> {
             actor_email = Some(format!("app.{}@service.{}", ctx.project.id, ctx.hostname));
             key_actor = true;
         }
-        if key.kind == KeyType::Standard {
+        if matches!(key.kind, KeyType::Standard | KeyType::Organization | KeyType::Account) {
             let Some(stored) = key.stored.clone() else {
                 return Err(Error::new(ErrorType::UserUnauthorized));
             };
-            track_key_usage(ctx, stored);
+            let owner = if !key.project_id.is_empty() {
+                KeyOwner::Project
+            } else if !key.user_id.is_empty() {
+                KeyOwner::User {
+                    id: key.user_id.clone(),
+                    sequence: ctx.user.as_ref().map(|u| u.sequence.to_string()).unwrap_or_default(),
+                }
+            } else {
+                KeyOwner::Team { id: key.team_id.clone(), sequence: ctx.project.team_internal_id.clone() }
+            };
+            track_key_usage(ctx, owner, stored);
+        }
+        // An organization key acts as the organization's owner.
+        if key.kind == KeyType::Organization {
+            extra_roles.push(format!("team:{}", key.team_id));
+            extra_roles.push(format!("team:{}/owner", key.team_id));
         }
     } else if ctx.user.is_some() && ctx.mode == Mode::Admin && !ctx.project.is_console() {
         let team_id = load_team_id(&platform_db, &ctx.project.team_internal_id).await?;
@@ -480,9 +522,10 @@ async fn resolve_user(ctx: &mut Context) -> Result<()> {
     let store = session_from_request(ctx);
 
     // An unknown project has no users (PHP: an empty `User`), but the
-    // fallback headers above are already sent.
+    // fallback headers above are already sent, and an account key still
+    // names its user.
     if !ctx.project_found && ctx.mode != Mode::Admin {
-        return Ok(());
+        return account_key_user(ctx).await;
     }
     let users_db = if ctx.mode == Mode::Admin || ctx.project.is_console() { ctx.platform_db()? } else { ctx.db()? };
 
@@ -521,6 +564,8 @@ async fn resolve_user(ctx: &mut Context) -> Result<()> {
         }
     }
 
+    account_key_user(ctx).await?;
+
     // Impersonation.
     if let Some(user) = &ctx.user
         && user.impersonator == Some(true)
@@ -545,8 +590,48 @@ async fn resolve_user(ctx: &mut Context) -> Result<()> {
     Ok(())
 }
 
-/// Updates `accessedAt` / `sdks` of a standard key (once per 24h or new SDK).
-fn track_key_usage(ctx: &Context, key: crate::database::project::Key) {
+/// Who owns a key: the project (standard keys), a console user (account
+/// keys) or the project's organization (organization keys), with its
+/// internal id for the lock.
+enum KeyOwner {
+    Project,
+    User { id: String, sequence: String },
+    Team { id: String, sequence: String },
+}
+
+/// The account API key's user: with `X-Appwrite-User` and a key, the
+/// console user of that ID when one of its keys is the key sent (an expired
+/// one fails). Its keys are kept for `ApiKey::decode`.
+///
+/// PHP: the end of the `user` resource ("Account based on account API key").
+async fn account_key_user(ctx: &mut Context) -> Result<()> {
+    let key = ctx.request.header_or_empty("x-appwrite-key").to_owned();
+    let user_id = ctx.request.header_or_empty("x-appwrite-user").to_owned();
+    if user_id.is_empty() || key.is_empty() {
+        return Ok(());
+    }
+    if ctx.user.is_some() {
+        return Err(Error::new(ErrorType::UserApiKeyAndSessionSet));
+    }
+    let platform = ctx.platform_db()?;
+    let authorization = platform.authorization();
+    let Some(user) = authorization.skip(|| documents::load_user(&platform, &user_id)).await? else {
+        return Ok(());
+    };
+    let keys = project::owned_keys(&platform, "users", &user.sequence.to_string()).await?;
+    let Some(stored) = keys.iter().find(|k| k.secret == key) else {
+        return Ok(());
+    };
+    if stored.expire.is_some_and(|e| e < datetime::now()) {
+        return Err(Error::new(ErrorType::AccountKeyExpired));
+    }
+    ctx.user = Some(user);
+    ctx.account_keys = keys;
+    Ok(())
+}
+
+/// Updates `accessedAt` / `sdks` of a stored key (once per 24h or new SDK).
+fn track_key_usage(ctx: &Context, owner: KeyOwner, key: crate::database::project::Key) {
     const SERVERS: [&str; 13] = [
         "node.js",
         "php",
@@ -573,7 +658,11 @@ fn track_key_usage(ctx: &Context, key: crate::database::project::Key) {
     let project = ctx.project.clone();
     tokio::spawn(async move {
         let Ok(db) = state.databases.platform(Databases::unchecked()) else { return };
-        let lock_key = format!("lock:platform:{}:keys:{}", project.sequence, key.id);
+        let owner_sequence = match &owner {
+            KeyOwner::Project => project.sequence.clone(),
+            KeyOwner::User { sequence, .. } | KeyOwner::Team { sequence, .. } => sequence.clone(),
+        };
+        let lock_key = format!("lock:platform:{owner_sequence}:keys:{}", key.id);
         let state2 = state.clone();
         let _ = state
             .lock
@@ -587,10 +676,19 @@ fn track_key_usage(ctx: &Context, key: crate::database::project::Key) {
                 }
                 match db.update_document("keys", &key.id, updates).await {
                     Ok(_) => {
-                        if let Err(e) = db.purge_cached_document("projects", Some(&project.id)).await {
-                            tracing::warn!(error = %e, "project cache purge failed");
+                        // The document whose `keys` sub-query holds the key.
+                        let (collection, id) = match &owner {
+                            KeyOwner::Project => ("projects", project.id.as_str()),
+                            KeyOwner::User { id, .. } => ("users", id.as_str()),
+                            KeyOwner::Team { id, .. } => ("teams", id.as_str()),
+                        };
+                        let purged = db.authorization().skip(|| db.purge_cached_document(collection, Some(id))).await;
+                        if let Err(e) = purged {
+                            tracing::warn!(error = %e, collection, "key owner cache purge failed");
                         }
-                        state2.projects.forget(&project.id);
+                        if matches!(owner, KeyOwner::Project) {
+                            state2.projects.forget(&project.id);
+                        }
                     }
                     Err(e) => tracing::warn!(error = %e, "key usage update failed"),
                 }

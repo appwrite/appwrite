@@ -5,7 +5,7 @@
 
 use serde::Serialize;
 use serde_json::value::RawValue;
-use serde_json::{Map, Value, json};
+use serde_json::{Value, json};
 
 use crate::datetime;
 
@@ -372,19 +372,6 @@ pub fn usage_message(project: Value, metrics: &[Metric]) -> Value {
 /// Empty actor document as PHP serialises an empty `User`.
 pub fn empty_user() -> Value {
     Value::Array(Vec::new())
-}
-
-/// Minimal actor document for queue messages.
-pub fn actor(id: &str, email: Option<&str>, name: Option<&str>) -> Value {
-    let mut m = Map::new();
-    m.insert("$id".into(), Value::String(id.to_owned()));
-    if let Some(e) = email {
-        m.insert("email".into(), Value::String(e.to_owned()));
-    }
-    if let Some(n) = name {
-        m.insert("name".into(), Value::String(n.to_owned()));
-    }
-    Value::Object(m)
 }
 
 #[cfg(test)]

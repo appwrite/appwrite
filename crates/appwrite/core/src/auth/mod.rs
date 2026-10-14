@@ -52,7 +52,32 @@ pub struct ApiKey {
     pub stored: Option<Key>,
 }
 
+/// The keys a request can carry beyond the project's: an account key's
+/// user (`$user`) and the project's organization (`$team`), each with the
+/// keys it owns.
+#[derive(Default, Clone, Copy)]
+pub struct Owners<'a> {
+    pub account: Option<(&'a str, &'a [Key])>,
+    pub organization: Option<(&'a str, &'a [Key])>,
+}
+
 impl ApiKey {
+    /// A key a user or a team owns, as `Key::decode` builds it.
+    fn owned(kind: KeyType, role: &str, stored: &Key, project_id: String, user_id: String, team_id: String) -> Self {
+        Self {
+            kind,
+            role: role.to_owned(),
+            scopes: stored.scopes.clone(),
+            name: stored.name.clone(),
+            project_id,
+            user_id,
+            team_id,
+            expired: stored.expire.is_some_and(|e| e < datetime::now()),
+            disabled_metrics: Vec::new(),
+            stored: Some(stored.clone()),
+        }
+    }
+
     fn guest(project: &Project, kind: KeyType) -> Self {
         Self {
             kind,
@@ -68,8 +93,10 @@ impl ApiKey {
         }
     }
 
-    /// `Key::decode($project, $team, $user, $key)` for project-scoped key types.
-    pub fn decode(project: &Project, header: &str, jwt_key: &str) -> Self {
+    /// `Key::decode($project, $team, $user, $key)`. `owners` are the keys of
+    /// the account key's user and of the project's organization, when the
+    /// header is of those types.
+    pub fn decode(project: &Project, header: &str, jwt_key: &str, owners: &Owners<'_>) -> Self {
         let (kind, secret) = match header.split_once('_') {
             Some((prefix, secret)) => (KeyType::parse(prefix), secret),
             None => (KeyType::Standard, header),
@@ -142,8 +169,25 @@ impl ApiKey {
                     stored: Some(stored.clone()),
                 }
             }
-            // Organization and account keys are resolved by the PHP API; the
-            // Rust services treat them like unknown keys (guest scopes).
+            // An account key: role `users`, its own scopes only.
+            KeyType::Account => {
+                let Some((user_id, stored)) =
+                    owners.account.and_then(|(id, keys)| keys.iter().find(|k| k.secret == header).map(|k| (id, k)))
+                else {
+                    return Self::guest(project, kind);
+                };
+                Self::owned(kind, roles::USERS, stored, String::new(), user_id.to_owned(), String::new())
+            }
+            // An organization key: role `keys`, its own scopes only.
+            KeyType::Organization => {
+                let Some((team_id, stored)) = owners
+                    .organization
+                    .and_then(|(id, keys)| keys.iter().find(|k| k.secret == header).map(|k| (id, k)))
+                else {
+                    return Self::guest(project, kind);
+                };
+                Self::owned(kind, roles::KEYS, stored, String::new(), String::new(), team_id.to_owned())
+            }
             other => Self::guest(project, other),
         }
     }

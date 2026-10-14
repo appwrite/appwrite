@@ -77,6 +77,8 @@ pub struct Context {
     /// project, the mode and the API key; an error before that is sent
     /// without them.
     pub secured: bool,
+    /// The keys of the account API key's user (see the `user` resource).
+    pub account_keys: Vec<crate::database::project::Key>,
     db: Option<Database>,
     platform_db: OnceLock<Database>,
 }
@@ -106,6 +108,7 @@ impl Context {
             project: console,
             project_found: true,
             secured: false,
+            account_keys: Vec::new(),
             mode: Mode::Default,
             locale,
             format: None,

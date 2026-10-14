@@ -145,6 +145,7 @@ struct Twin {
     seed_key: String,
     session: String,
     jwt: String,
+    keys: OwnedKeys,
 }
 
 /// The console session and organization the twins are created in.
@@ -199,6 +200,60 @@ async fn console(api: &Api, stack: &Stack) -> Result<Console, String> {
         }
     };
     Ok(Console { headers, team })
+}
+
+/// The account's and the organization's keys the scenarios use (each twin
+/// has its own console account, so its account's `keys` are its own). No route
+/// creates them on a self-hosted instance, so `tests/compat/appwrite/keys.php`
+/// writes them to the platform database in the API container. Each twin
+/// has its own, so the first use of a key (which records its access) is
+/// each runtime's.
+struct OwnedKeys {
+    /// The console account that owns the account keys, and its sequence.
+    user: String,
+    user_sequence: String,
+    ids: Vec<String>,
+    account: String,
+    expired_account: String,
+    organization: String,
+}
+
+fn owned_keys(input: &Value) -> Result<Value, String> {
+    let mut child = std::process::Command::new("docker")
+        .args(["exec", "-i", "appwrite", "php", "/usr/src/code/tests/compat/appwrite/keys.php"])
+        .stdin(std::process::Stdio::piped())
+        .stdout(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::piped())
+        .spawn()
+        .map_err(|e| format!("docker: {e}"))?;
+    if let Some(mut stdin) = child.stdin.take() {
+        use std::io::Write;
+        stdin.write_all(input.to_string().as_bytes()).map_err(|e| format!("keys.php: {e}"))?;
+    }
+    let out = child.wait_with_output().map_err(|e| format!("keys.php: {e}"))?;
+    let text = String::from_utf8_lossy(&out.stdout);
+    let last = text.lines().rev().find(|l| l.starts_with('{')).unwrap_or_default();
+    serde_json::from_str(last).map_err(|_| format!("keys.php: {text}{}", String::from_utf8_lossy(&out.stderr)))
+}
+
+fn seed_owned_keys(console: &Console, project: &str, user: String, user_sequence: String) -> Result<OwnedKeys, String> {
+    let run = project;
+    let account = format!("account_diff{run}");
+    let expired_account = format!("account_diff{run}expired");
+    let organization = format!("organization_diff{run}");
+    let created = owned_keys(&json!({"create": [
+        {"resourceType": "users", "resourceId": user, "secret": account, "scopes": SCOPES},
+        {"resourceType": "users", "resourceId": user, "secret": expired_account, "scopes": SCOPES,
+            "expire": "2020-01-01T00:00:00.000+00:00"},
+        {"resourceType": "teams", "resourceId": console.team, "secret": organization, "scopes": SCOPES},
+    ]}))?;
+    let ids = created["keys"]
+        .as_array()
+        .ok_or(format!("keys.php: {created}"))?
+        .iter()
+        .filter_map(|id| id.as_str().map(str::to_owned))
+        .collect();
+    Ok(OwnedKeys { user, user_sequence, ids, account, expired_account, organization })
 }
 
 /// The scopes of the key scenarios use, and of the one that seeds.
@@ -272,6 +327,22 @@ async fn twin(
         .await
         .map_err(|e| format!("project sequence: {e}"))?
         .get::<_, String>(0);
+    let account = api
+        .send(
+            "POST",
+            &format!("{php}/account"),
+            &[("x-appwrite-project".to_owned(), "console".to_owned())],
+            Some(&json!({"userId": format!("{project}-account"), "email": format!("{project}@example.com"),
+                "password": "password-1234", "name": "Account"})),
+        )
+        .await?;
+    let user = account.body["$id"].as_str().ok_or(format!("account: {} {}", account.status, account.body))?.to_owned();
+    let user_sequence = db
+        .query_one("SELECT _id::text FROM appwrite._console_users WHERE _uid = $1", &[&user])
+        .await
+        .map_err(|e| format!("account sequence: {e}"))?
+        .get::<_, String>(0);
+    let keys = seed_owned_keys(console, &project, user, user_sequence)?;
     let (endpoint, container) =
         if runtime == "php" { (stack.php.clone(), "appwrite") } else { (stack.rust.clone(), "appwrite-rust") };
     Ok(Twin {
@@ -285,6 +356,7 @@ async fn twin(
         seed_key: server[1].1.clone(),
         session,
         jwt,
+        keys,
     })
 }
 
@@ -300,9 +372,21 @@ enum Identity {
     InvalidJwt,
     NoProject,
     UnknownProject,
+    /// The console account's key, with `x-appwrite-user`.
+    AccountKey,
+    /// The account's key without `x-appwrite-user`.
+    AccountKeyNoUser,
+    /// The account's expired key.
+    ExpiredAccountKey,
+    /// The account's key alongside a session.
+    AccountKeySession,
+    /// The organization's key, with `x-appwrite-organization`.
+    OrganizationKey,
+    /// The organization's key without `x-appwrite-organization`.
+    OrganizationKeyNoTeam,
 }
 
-const IDENTITIES: [Identity; 10] = [
+const IDENTITIES: [Identity; 16] = [
     Identity::Guest,
     Identity::Key,
     Identity::NarrowKey,
@@ -313,6 +397,12 @@ const IDENTITIES: [Identity; 10] = [
     Identity::InvalidJwt,
     Identity::NoProject,
     Identity::UnknownProject,
+    Identity::AccountKey,
+    Identity::AccountKeyNoUser,
+    Identity::ExpiredAccountKey,
+    Identity::AccountKeySession,
+    Identity::OrganizationKey,
+    Identity::OrganizationKeyNoTeam,
 ];
 
 #[derive(Clone, Copy, Debug)]
@@ -408,12 +498,18 @@ fn scenarios(filter: Option<&str>) -> Vec<Scenario> {
 }
 
 /// The request a scenario sends to `twin` (`other` is the other twin).
-fn request(scenario: &Scenario, twin: &Twin, other: &Twin) -> (String, String, Vec<(String, String)>, Option<Value>) {
+fn request(
+    scenario: &Scenario,
+    twin: &Twin,
+    other: &Twin,
+    console: &Console,
+) -> (String, String, Vec<(String, String)>, Option<Value>) {
     let route = scenario.route;
     let n = scenario.n.to_string();
     let path = route.path.replace("{n}", &n);
     let body = route.body.map(|b| serde_json::from_str(&b.replace("{n}", &n)).unwrap_or(Value::Null));
     let mut headers: Vec<(String, String)> = Vec::new();
+    let keys = &twin.keys;
     let project = |h: &mut Vec<(String, String)>, id: &str| h.push(("x-appwrite-project".into(), id.into()));
     match scenario.identity {
         Identity::Guest => project(&mut headers, &twin.project),
@@ -449,6 +545,35 @@ fn request(scenario: &Scenario, twin: &Twin, other: &Twin) -> (String, String, V
         Identity::UnknownProject => {
             project(&mut headers, "unknown-project");
             headers.push(("x-appwrite-key".into(), twin.key.clone()));
+        }
+        Identity::AccountKey => {
+            project(&mut headers, &twin.project);
+            headers.push(("x-appwrite-key".into(), keys.account.clone()));
+            headers.push(("x-appwrite-user".into(), keys.user.clone()));
+        }
+        Identity::AccountKeyNoUser => {
+            project(&mut headers, &twin.project);
+            headers.push(("x-appwrite-key".into(), keys.account.clone()));
+        }
+        Identity::ExpiredAccountKey => {
+            project(&mut headers, &twin.project);
+            headers.push(("x-appwrite-key".into(), keys.expired_account.clone()));
+            headers.push(("x-appwrite-user".into(), keys.user.clone()));
+        }
+        Identity::AccountKeySession => {
+            project(&mut headers, &twin.project);
+            headers.push(("x-appwrite-key".into(), keys.account.clone()));
+            headers.push(("x-appwrite-user".into(), keys.user.clone()));
+            headers.push(("x-appwrite-session".into(), twin.session.clone()));
+        }
+        Identity::OrganizationKey => {
+            project(&mut headers, &twin.project);
+            headers.push(("x-appwrite-key".into(), keys.organization.clone()));
+            headers.push(("x-appwrite-organization".into(), console.team.clone()));
+        }
+        Identity::OrganizationKeyNoTeam => {
+            project(&mut headers, &twin.project);
+            headers.push(("x-appwrite-key".into(), keys.organization.clone()));
         }
     }
     match scenario.origin {
@@ -657,6 +782,8 @@ struct Normalizer {
     generated: HashMap<String, String>,
     /// The project's sequence, as a string.
     sequence: String,
+    /// The twin's console account's sequence.
+    account_sequence: String,
 }
 
 impl Normalizer {
@@ -676,10 +803,21 @@ impl Normalizer {
             // Shared tables: the tenant in cache keys (`<cache>::<tenant>:collection:...`).
             (format!("::{}:", twin.prefix.trim_matches('_')), "::{seq}:".to_owned()),
         ];
+        // The account's and the organization's keys, by ID (in lock names).
+        for (id, name) in
+            twin.keys.ids.iter().zip(["{account-key-id}", "{expired-account-key-id}", "{organization-key-id}"])
+        {
+            fixed.push((id.clone(), name.to_owned()));
+        }
         fixed.retain(|(from, _)| !from.is_empty());
         // Longest first, so a secret is replaced before a project ID it may contain.
         fixed.sort_by_key(|(from, _)| std::cmp::Reverse(from.len()));
-        Normalizer { fixed, generated: HashMap::new(), sequence: twin.prefix.trim_matches('_').to_owned() }
+        Normalizer {
+            fixed,
+            generated: HashMap::new(),
+            sequence: twin.prefix.trim_matches('_').to_owned(),
+            account_sequence: twin.keys.user_sequence.clone(),
+        }
     }
 
     fn text(&mut self, s: &str) -> String {
@@ -755,9 +893,17 @@ impl Normalizer {
                 // The project document's sequence, and the times messages
                 // are stamped with, differ between the twins by nature.
                 // Documents named after the project (it, and its keys and
-                // platforms, created once per twin) have twin sequences.
-                let project =
-                    o.get("$id").and_then(Value::as_str).is_some_and(|id| self.text(id).contains("{project}"));
+                // platforms, created once per twin) have twin sequences, as
+                // do the organization's keys and the twin's console account's
+                // documents (its keys, sessions and targets).
+                let owned = ["userInternalId", "resourceInternalId"]
+                    .iter()
+                    .any(|k| o.get(*k).and_then(Value::as_str) == Some(self.account_sequence.as_str()));
+                let project = owned
+                    || o.get("$id").and_then(Value::as_str).is_some_and(|id| {
+                        let id = self.text(id);
+                        id.contains("{project}") || id.ends_with("key-id}")
+                    });
                 Value::Object(
                     o.iter()
                         .map(|(k, x)| {
@@ -770,6 +916,12 @@ impl Normalizer {
                                 }
                                 ("resourceInternalId", Value::String(v)) if *v == self.sequence => {
                                     Value::String("{seq}".into())
+                                }
+                                // The twin's console account (its keys and sessions).
+                                ("resourceInternalId" | "userInternalId", Value::String(v))
+                                    if *v == self.account_sequence =>
+                                {
+                                    Value::String("{account-seq}".into())
                                 }
                                 ("timestamp", Value::Number(_)) => Value::String("{timestamp}".into()),
                                 // The response's size counts the `X-Debug-Speed`
@@ -880,10 +1032,11 @@ async fn record(
     scenario: &Scenario,
     twin: &Twin,
     other: &Twin,
+    console: &Console,
 ) -> Result<Value, String> {
     let before = tables(db, &twin.prefix).await?;
     monitor.until_marker(&format!("{}:{}:start", scenario.n, twin.runtime)).await?;
-    let (method, url, headers, body) = request(scenario, twin, other);
+    let (method, url, headers, body) = request(scenario, twin, other, console);
     let reply = api.send(&method, &url, &headers, body.as_ref()).await?;
     // Work after the response (Rust's shutdown jobs) lands within this.
     tokio::time::sleep(Duration::from_millis(300)).await;
@@ -1010,6 +1163,7 @@ pub fn run(_root: &Path, filter: Option<&str>, verbose: bool) -> Result<Value, S
                 api.send("DELETE", &format!("{}/projects/{id}", stack.php), &console.headers, None).await?;
             }
         }
+        owned_keys(&json!({"prune": true}))?;
         let run = chrono::Utc::now().format("%m%d%H%M%S").to_string();
         let php = twin(&api, &stack, &console, &db, "php", &run).await?;
         let rust = twin(&api, &stack, &console, &db, "rust", &run).await?;
@@ -1020,8 +1174,8 @@ pub fn run(_root: &Path, filter: Option<&str>, verbose: bool) -> Result<Value, S
         let mut differences = Vec::new();
         let mut passed = 0;
         for scenario in &list {
-            let a = record(&api, &db, &mut monitor, scenario, &php, &rust).await?;
-            let b = record(&api, &db, &mut monitor, scenario, &rust, &php).await?;
+            let a = record(&api, &db, &mut monitor, scenario, &php, &rust, &console).await?;
+            let b = record(&api, &db, &mut monitor, scenario, &rust, &php, &console).await?;
             let compared = |r: &Value| {
                 let mut r = r.clone();
                 if let Some(o) = r.as_object_mut() {
@@ -1046,6 +1200,7 @@ pub fn run(_root: &Path, filter: Option<&str>, verbose: bool) -> Result<Value, S
         for twin in [&php, &rust] {
             api.send("DELETE", &format!("{}/projects/{}", stack.php, twin.project), &console.headers, None).await?;
         }
+        owned_keys(&json!({"prune": true}))?;
         Ok(json!({
             "projects": {"php": php.project, "rust": rust.project},
             "scenarios": list.len(),

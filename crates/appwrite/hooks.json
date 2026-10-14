@@ -8,7 +8,7 @@
       "php": { "file": "app/controllers/shared/api.php", "kind": "init", "anchor": "Step 9: Validate scope permissions" },
       "rust": {
         "status": "partial",
-        "note": "Same checks in the same order for project, standard and ephemeral keys, sessions, JWTs, admin mode and impersonation. Account and organization keys are treated as unknown keys, the path project binding and the DocumentsDB/VectorsDB product switches are not needed by Users yet.",
+        "note": "Same checks in the same order for project, standard, ephemeral, account and organization keys, sessions, JWTs, admin mode and impersonation, including the account key's user roles, the organization key's team roles and each key's last-access tracking (proved by `bin/compat appwrite diff`). The path project binding and the DocumentsDB/VectorsDB product switches are not needed by Users yet.",
         "where": [
           { "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "// -- auth (shared/api.php)" },
           { "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "fn track_key_usage" },
@@ -201,8 +201,8 @@
       "description": "Answers OPTIONS with the CORS headers and 204 (custom domains go to the router first) and dispatches RequestCompleted for usage, since OPTIONS runs no shutdown hooks.",
       "php": { "file": "app/controllers/general.php", "kind": "options" },
       "rust": {
-        "status": "partial",
-        "note": "Headers (with the user resource's fallback headers) and status match, proven by `appwrite diff`; a preflight's usage (RequestCompleted for a project in the query string) is not recorded.",
+        "status": "done",
+        "note": "Headers (with the user resource's fallback headers) and status match, proven by `appwrite diff`. PHP dispatches RequestCompleted, which only adds metrics to the request's usage context; only the `api` shutdown hook publishes that context, and it does not run for a preflight, so no usage is recorded, as in Rust.",
         "where": [{ "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "fn preflight" }]
       }
     },
@@ -212,8 +212,8 @@
       "description": "Maps framework and database exceptions to Appwrite errors, dispatches usage for non-publishable errors, adds span attributes, hides messages of unexpected codes behind a 500, adds the development trace, CORS and no-cache headers, and renders the error model (or an HTML page outside /v1).",
       "php": { "file": "app/controllers/general.php", "kind": "error" },
       "rust": {
-        "status": "partial",
-        "note": "Error model, status codes, development fields, CORS and no-cache headers match; failed requests record no usage.",
+        "status": "done",
+        "note": "Error model, status codes, development fields, CORS and no-cache headers match, proven by `appwrite diff` (401, 403, 404 and 400 answers). PHP dispatches RequestCompleted for non-publishable errors, but only the `api` shutdown hook, which does not run after an error, publishes usage: no usage is recorded, as in Rust.",
         "where": [
           { "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "pub(crate) fn error_response" },
           { "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "pub(super) fn finalize" }
@@ -375,8 +375,8 @@
       "description": "The user from the session cookie (console cookie in admin mode), the `X-Appwrite-Session` header or `X-Fallback-Cookies`, then a JWT; an account API key's user when its header matches.",
       "php": { "file": "app/init/resources/request.php", "kind": "resource", "anchor": "$context->set('user'" },
       "rust": {
-        "status": "partial",
-        "note": "Account API keys are not resolved.",
+        "status": "done",
+        "note": "Sessions, JWTs and the account API key's user (with `X-Appwrite-User`, refused alongside a session or when expired).",
         "where": [{ "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "async fn resolve_user" }]
       }
     },
@@ -397,8 +397,8 @@
       "description": "Decodes `X-Appwrite-Key` and requires the project, user or organization header its type names.",
       "php": { "file": "app/init/resources/request.php", "kind": "resource", "anchor": "$context->set('apiKey'" },
       "rust": {
-        "status": "partial",
-        "note": "Project keys (standard and ephemeral); account and organization keys are not resolved.",
+        "status": "done",
+        "note": "Project (standard and ephemeral), account and organization keys, with the header each requires.",
         "where": [{ "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "// -- API key" }]
       }
     },

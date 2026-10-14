@@ -116,6 +116,9 @@ pub struct User {
     pub sessions: Vec<Session>,
     pub memberships: Vec<Membership>,
     pub authenticators: Vec<Authenticator>,
+    /// The whole document, for the queue messages that carry it (see
+    /// [`User::message_payload`]).
+    pub document: std::sync::Arc<Document>,
 }
 
 impl From<&Document> for User {
@@ -155,11 +158,18 @@ impl From<&Document> for User {
             sessions: d.documents("sessions").into_iter().map(Session::from).collect(),
             memberships: d.documents("memberships").into_iter().map(Membership::from).collect(),
             authenticators: d.documents("authenticators").into_iter().map(Authenticator::from).collect(),
+            document: std::sync::Arc::new(d.clone()),
         }
     }
 }
 
 impl User {
+    /// The user in queue messages: the whole document, sub-queries
+    /// included, as PHP's `Event::setUser()` sends it.
+    pub fn message_payload(&self) -> Json {
+        utopia_database::Value::from((*self.document).clone()).try_to_json().unwrap_or(Json::Null)
+    }
+
     /// `email || phone` verified.
     pub fn verified(&self) -> bool {
         self.email_verification == Some(true) || self.phone_verification == Some(true)

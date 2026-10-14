@@ -127,7 +127,9 @@ The first version of `appwrite diff` (identity × origin matrices over eight Use
 | A preflight lacked PHP's `Content-Type: text/html` and the user resource's `X-Debug-Fallback` headers | lifecycle | Added |
 | No request filters: a 1.4 client's query strings reached the validators unconverted | `appwrite_core::request` | V17 and V27, V17 proven on 405 queries PHP's own filter converted |
 | An action's explicit event payload followed the client's response format; PHP renders it before the format filters | `response::current` | Explicit payloads render with the latest format |
+| Account and organization keys were treated as unknown keys | `auth::ApiKey::decode`, lifecycle | Both resolved from their owner's `keys`, with the `X-Appwrite-User` / `X-Appwrite-Organization` checks, the account's roles, the organization's team roles and last-access tracking |
+| Event messages carried a minimal actor (`$id`, `email`, `name`); PHP's `Event::setUser()` sends the whole user document, sub-queries included | `User::message_payload` | The user keeps its document |
 
-A variants dimension (preflight, an older and a newer response format, a locale) brought the matrix to 280 scenarios.
+A variants dimension (preflight, an older and a newer response format, a locale) brought the matrix to 280 scenarios. Six key identities (an account key, without `X-Appwrite-User`, expired, alongside a session; an organization key, without `X-Appwrite-Organization`) brought it to 424. No route creates those keys on a self-hosted instance, so `tests/compat/appwrite/keys.php` writes them, each twin's account key on a console account of its own.
 
-It also needed declared masks: the development error fields (`file`, `line`, `trace`), `Content-Length`, `Date`, `X-Debug-Speed` and the `network.outbound` bytes it feeds, and the twins' generated values (IDs, sequences, secrets, salts, IVs, timestamps), which are aligned rather than ignored. All 280 scenarios are now identical, in dedicated and shared tables.
+It also needed declared masks: the development error fields (`file`, `line`, `trace`), `Content-Length`, `Date`, `X-Debug-Speed` and the `network.outbound` bytes it feeds, and the twins' generated values (IDs, sequences, secrets, salts, IVs, timestamps), which are aligned rather than ignored. All 424 scenarios are now identical, in dedicated and shared tables.
