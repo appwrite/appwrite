@@ -10,11 +10,14 @@ use Appwrite\Utopia\Database\Hook\Joins;
 use Closure;
 use Iterator;
 use Override;
+use PDO;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\Cache\Adapter\None;
 use Utopia\Cache\Cache;
 use Utopia\Database\Adapter\Memory;
+use Utopia\Database\Adapter\SQLite;
+use Utopia\Database\Attribute;
 use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -132,7 +135,7 @@ final class JoinsTest extends TestCase
 
         $twice = $joins->rewrite(Event::DocumentFind, $this->customers(), $once);
 
-        $this->assertSame(['database_1_collection_6', 'database_1_collection_7'], \array_map(static fn (Query $query): string => $query->getAttribute(), $twice));
+        $this->assertSame(['database_1_collection_6', 'database_1_collection_7'], $this->tables($twice));
         $this->assertSame($once, $twice, 'a join already pointing at its table is left as it is');
         $this->assertSame($reads, $this->reads, 'a table name resolves to itself without another registry read');
     }
@@ -202,9 +205,68 @@ final class JoinsTest extends TestCase
 
         $twice = $joins->rewrite(Event::DocumentFind, $this->customers(), $once);
 
-        $this->assertSame(['database_1_collection_2', 'database_1_collection_3'], \array_map(static fn (Query $query): string => $query->getAttribute(), $twice));
+        $this->assertSame(['database_1_collection_2', 'database_1_collection_3'], $this->tables($twice));
         $this->assertSame($once, $twice, 'a join already pointing at its table is left as it is');
         $this->assertSame($reads, $this->reads, 'a table name resolves to itself without another registry read');
+    }
+
+    public function testJoinOfAPublicIdEqualToTheTableOfAnEarlierJoinReadsTheTableOfTheCollectionCalledThat(): void
+    {
+        $rewritten = $this->joins()->rewrite(Event::DocumentFind, $this->customers(), [$this->join('shared'), $this->join('database_1_collection_2', 'other')]);
+
+        $this->assertSame(['database_1_collection_2', 'database_1_collection_6'], $this->tables($rewritten), 'the table of shared does not stand for the collection called by that name');
+    }
+
+    public function testJoinOfAPublicIdEqualToTheTableOfAnEarlierReadReadsTheTableOfTheCollectionCalledThat(): void
+    {
+        $joins = $this->joins();
+        $this->rewriteJoin('shared', $joins);
+
+        $this->assertSame('database_1_collection_6', $this->rewriteJoin('database_1_collection_2', $joins)->getAttribute(), 'an earlier read joining shared does not make its table stand for the collection called by that name');
+    }
+
+    public function testJoinOfAPublicIdKeepsItsTableAfterAReadOfTheCollectionWhoseTableItEquals(): void
+    {
+        $joins = $this->joins();
+        $this->rewriteJoin('database_1_collection_2', $joins);
+        $this->rewriteJoin('shared', $joins);
+
+        $this->assertSame('database_1_collection_6', $this->rewriteJoin('database_1_collection_2', $joins)->getAttribute(), 'joining shared does not take over the name another collection is called by');
+    }
+
+    public function testRewritingItsOwnOutputOfJoinsOfATableAndThePublicIdEqualToItChangesNothingAndReadsNothing(): void
+    {
+        $joins = $this->joins();
+        $once = $joins->rewrite(Event::DocumentFind, $this->customers(), [$this->join('shared'), $this->join('database_1_collection_2', 'other')]);
+        $reads = $this->reads;
+
+        $twice = $joins->rewrite(Event::DocumentFind, $this->customers(), $once);
+
+        $this->assertSame(['database_1_collection_2', 'database_1_collection_6'], $this->tables($twice));
+        $this->assertSame($once, $twice, 'a join already pointing at its table is left as it is');
+        $this->assertSame($reads, $this->reads, 'a join the hook pointed at its table is not looked up again');
+    }
+
+    public function testRewrittenJoinNamingAnotherCollectionIsResolvedAgain(): void
+    {
+        $joins = $this->joins();
+        $once = $joins->rewrite(Event::DocumentFind, $this->customers(), [$this->join('shared')]);
+        $once[0]->setAttribute('owned');
+
+        $this->assertSame('database_1_collection_3', $joins->rewrite(Event::DocumentFind, $this->customers(), $once)[0]->getAttribute(), 'a join changed after it was rewritten is resolved by the name it now holds');
+    }
+
+    public function testCursorOverAJoinPagesWithoutLookingTheJoinUpAgain(): void
+    {
+        $store = $this->shop();
+
+        $rows = [];
+        foreach ($store->cursor('database_1_collection_1', [$this->join('shared'), Query::select(['name', 'ord.$id', 'ord.total']), Query::orderAsc('ord.total')], batchSize: 1) as $row) {
+            $rows[] = [$row->getId(), $row->getAttribute('ord.total')];
+        }
+
+        $this->assertSame([['ada', 10], ['bob', 15], ['ada', 20]], $rows, 'every page reads the table of shared');
+        $this->assertSame(['getDocument'], $this->reads, 'each page after the first reuses the join the hook already pointed at its table');
     }
 
     public function testRepeatedJoinOfTheSameCollectionReadsTheRegistryOnce(): void
@@ -231,9 +293,49 @@ final class JoinsTest extends TestCase
         );
     }
 
-    private function join(string $joined): Query
+    private function join(string $joined, string $alias = 'ord'): Query
     {
-        return Query::join($joined, 'ord', [Query::on('$id', 'customerId')]);
+        return Query::join($joined, $alias, [Query::on('$id', 'customerId')]);
+    }
+
+    /**
+     * @param  array<Query>  $queries
+     * @return list<string>
+     */
+    private function tables(array $queries): array
+    {
+        return \array_values(\array_map(static fn (Query $query): string => $query->getAttribute(), $queries));
+    }
+
+    private function shop(): Database
+    {
+        $authorization = new Authorization();
+        $authorization->addRole(Role::any()->toString());
+
+        $store = new Database(new SQLite(new PDO('sqlite::memory:', options: [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION])), new Cache(new None()));
+        $store
+            ->setAuthorization($authorization)
+            ->setDatabase('joins')
+            ->setNamespace('joins_' . \uniqid());
+        $store->create();
+        $store->createCollection(Collection::create(
+            id: 'database_1_collection_1',
+            attributes: [Attribute::string('name', size: 64)],
+            permissions: [Permission::read(Role::any()), Permission::create(Role::any())],
+        ));
+        $store->createCollection(Collection::create(
+            id: 'database_1_collection_2',
+            attributes: [Attribute::string('customerId', size: 64), Attribute::integer('total')],
+            permissions: [Permission::read(Role::any()), Permission::create(Role::any())],
+        ));
+        foreach (['ada' => 'Ada', 'bob' => 'Bob'] as $id => $name) {
+            $store->createDocument('database_1_collection_1', new Document(['$id' => $id, 'name' => $name]));
+        }
+        foreach ([['ada', 10], ['bob', 15], ['ada', 20]] as [$customerId, $total]) {
+            $store->createDocument('database_1_collection_2', new Document(['customerId' => $customerId, 'total' => $total]));
+        }
+
+        return $store->addHook($this->joins());
     }
 
     private function customers(): Collection
