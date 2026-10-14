@@ -64,6 +64,19 @@ pub(super) async fn run(platform: &Platform, request: Request) -> Response {
     finalize(ctx, result)
 }
 
+/// The `allowedSchemes` resource: the console's, and for a project `exp`,
+/// its callback scheme and its platforms' schemes.
+pub(super) fn allowed_schemes(state: &super::State, project: &Project, project_found: bool) -> Vec<String> {
+    let mut schemes = state.config.console_schemas.clone();
+    if project_found && !project.is_console() {
+        schemes.push("exp".to_owned());
+        schemes.push(format!("appwrite-callback-{}", project.id));
+        schemes.extend(network::platform_schemes(&project.platforms));
+    }
+    schemes
+}
+
+/// The `allowedHostnames` resource.
 pub(super) fn allowed_hostnames(
     ctx_state: &super::State,
     project: &Project,
@@ -91,24 +104,6 @@ pub(super) fn allowed_hostnames(
     for h in allowed {
         if !unique.contains(&h) {
             unique.push(h);
-        }
-    }
-    unique
-}
-
-/// The `allowedSchemes` resource: the console's schemes, and for a project
-/// `exp`, its callback scheme and its platforms' schemes.
-pub(super) fn allowed_schemes(state: &super::State, project: &Project, project_found: bool) -> Vec<String> {
-    let mut schemes = state.config.console_schemas.clone();
-    if project_found && !project.is_console() && !project.id.is_empty() {
-        schemes.push("exp".to_owned());
-        schemes.push(format!("appwrite-callback-{}", project.id));
-        schemes.extend(network::platform_schemes(&project.platforms));
-    }
-    let mut unique: Vec<String> = Vec::with_capacity(schemes.len());
-    for s in schemes {
-        if !unique.contains(&s) {
-            unique.push(s);
         }
     }
     unique

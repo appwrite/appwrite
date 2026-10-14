@@ -4,6 +4,7 @@ import { Markdown } from '@/components/Markdown'
 import { PageHeader, Section, WithToc } from '@/components/Page'
 import { loadLibrary, phpDescription, sourceUrl } from '@/lib/docs'
 import { useMigration } from '@/lib/prefs'
+import { badge } from '@/components/Status'
 
 const root = getRouteApi('__root__')
 const layout = getRouteApi('/$lib')
@@ -39,7 +40,7 @@ function PhpClass() {
   return (
     <WithToc toc={[{ id: 'top', label: short }, ...methods.map((m) => ({ id: `php.${m.name}`, label: m.name, depth: 1 }))]}>
       <div id="top" className="grid scroll-mt-20 gap-4">
-        <PageHeader eyebrow={<span className="font-mono text-[12.5px]">{name.slice(0, name.length - short.length - 1)}</span>} title={short} mono aside={<span className="rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">PHP class</span>} />
+        <PageHeader eyebrow={<span className="font-mono text-[12.5px]">{name.slice(0, name.length - short.length - 1)}</span>} title={short} mono aside={<span className={`${badge} bg-muted text-muted-foreground`}>PHP class</span>} />
         {nav.library.rust ? null : (
           <div className="rounded-lg border border-migration-border bg-migration px-3.5 py-2.5 text-[13px] text-migration-ink">
             {nav.library.status === 'retired'

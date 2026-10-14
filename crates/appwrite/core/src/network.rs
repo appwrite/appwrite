@@ -199,8 +199,8 @@ pub fn validate_origin(origin: &str, allowed_hosts: &[String], allowed_schemes: 
     }
 }
 
-/// The `Redirect` validator (`Appwrite\Network\Validator\Redirect`): the
-/// origin check on a redirect URL, with its own description.
+/// Redirect URL validation (`Network\Validator\Redirect`): the origin rules,
+/// with its own description on failure.
 pub fn validate_redirect(url: &str, allowed_hosts: &[String], allowed_schemes: &[String]) -> Result<(), String> {
     if url.is_empty() {
         return Err("Invalid URI.".to_owned());

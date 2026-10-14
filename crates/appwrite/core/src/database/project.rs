@@ -106,6 +106,12 @@ pub struct Project {
     pub keys: Vec<Key>,
     pub platforms: Vec<Platform>,
     pub webhooks: Vec<Webhook>,
+    /// The custom SMTP server (`smtp`), `[]` when unset.
+    pub smtp: Value,
+    /// Custom email and SMS templates (`templates`), `[]` when unset.
+    pub templates: Value,
+    /// `smtpBaseTemplate`.
+    pub smtp_base_template: Option<String>,
 }
 
 impl Project {
@@ -161,6 +167,9 @@ impl Project {
             keys: Vec::new(),
             platforms: vec![Platform { kind: "web".into(), hostname: "localhost".into(), key: String::new() }],
             webhooks: Vec::new(),
+            smtp: Value::Array(Vec::new()),
+            templates: Value::Array(Vec::new()),
+            smtp_base_template: None,
         }
     }
 
@@ -289,6 +298,9 @@ impl From<&Document> for Project {
                 .into_iter()
                 .map(|w| Webhook { enabled: w.boolean("enabled") == Some(true), events: w.strings("events") })
                 .collect(),
+            smtp: json_or_empty("smtp"),
+            templates: json_or_empty("templates"),
+            smtp_base_template: d.string("smtpBaseTemplate"),
         }
     }
 }

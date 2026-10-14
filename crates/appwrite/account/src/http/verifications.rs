@@ -133,7 +133,7 @@ fn created(ctx: &mut Context, user: &User, token: &Document, secret: &str, phras
 /// `POST /v1/account/verifications/email`.
 pub async fn create_email(ctx: &mut Context) -> Result<Response> {
     let url = ctx.required_str("url", &base::Redirect::new(ctx))?;
-    require_smtp()?;
+    require_smtp(ctx)?;
     let user = unverified_email(ctx)?;
 
     let secret = utopia_auth::proofs::Token::default().token();
@@ -141,15 +141,18 @@ pub async fn create_email(ctx: &mut Context) -> Result<Response> {
     let expire_text = datetime::format_tz(&expire);
     let token = verification(ctx, &user, base::TOKEN_TYPE_VERIFICATION, &secret, &datetime::value(&expire)).await?;
 
-    let url = base::url_with_query(&url, &[("userId", &user.id), ("secret", &secret), ("expire", &expire_text)]);
-    let mut inner = base::Template::file(ctx, "email-inner-base.tpl").await?;
-    inner
-        .set("{{body}}", &ctx.text("emails.verification.body", None), false)
-        .set("{{hello}}", &ctx.text("emails.verification.hello", None), true)
-        .set("{{footer}}", &ctx.text("emails.verification.footer", None), true)
-        .set("{{thanks}}", &ctx.text("emails.verification.thanks", None), true)
-        .set("{{buttonText}}", &ctx.text("emails.verification.buttonText", None), true)
-        .set("{{signature}}", &ctx.text("emails.verification.signature", None), true);
+    let url = appwrite_core::template::with_query(
+        &url,
+        &[("userId", &user.id), ("secret", &secret), ("expire", &expire_text)],
+    );
+    let inner = base::template_file(ctx, "email-inner-base.tpl")
+        .await?
+        .param("{{body}}", &ctx.text("emails.verification.body", None), false)
+        .param("{{hello}}", &ctx.text("emails.verification.hello", None), true)
+        .param("{{footer}}", &ctx.text("emails.verification.footer", None), true)
+        .param("{{thanks}}", &ctx.text("emails.verification.thanks", None), true)
+        .param("{{buttonText}}", &ctx.text("emails.verification.buttonText", None), true)
+        .param("{{signature}}", &ctx.text("emails.verification.signature", None), true);
 
     let mut variables = Map::new();
     variables.insert("heading".into(), Json::String(ctx.text("emails.verification.heading", None)));
@@ -171,15 +174,14 @@ pub async fn create_email(ctx: &mut Context) -> Result<Response> {
             body: inner.render(),
             variables,
         },
-    )
-    .await?;
+    );
     Ok(created(ctx, &user, &token, &secret, None))
 }
 
 /// `POST /v1/account/verifications/email/otp`.
 pub async fn create_email_otp(ctx: &mut Context) -> Result<Response> {
     let phrase = php::truthy(&ctx.optional("phrase", Json::Bool(false), &Boolean::STRICT)?);
-    require_smtp()?;
+    require_smtp(ctx)?;
     let user = unverified_email(ctx)?;
     let phrase = phrase.then(|| utopia_auth::proofs::Phrase::new().phrase());
 
@@ -188,16 +190,16 @@ pub async fn create_email_otp(ctx: &mut Context) -> Result<Response> {
     let token = verification(ctx, &user, base::TOKEN_TYPE_VERIFICATION_OTP, &secret, &datetime::value(&expire)).await?;
 
     let detected = appwrite_core::detector::detect(&ctx.user_agent("UNKNOWN"));
-    let mut message = base::Template::file(ctx, "email-otp.tpl").await?;
-    message
-        .set("{{hello}}", &ctx.text("emails.otpVerification.hello", None), true)
-        .set("{{description}}", &ctx.text("emails.otpVerification.description", None), true)
-        .set("{{clientInfo}}", &ctx.text("emails.otpVerification.clientInfo", None), true)
-        .set("{{thanks}}", &ctx.text("emails.otpVerification.thanks", None), true)
-        .set("{{signature}}", &ctx.text("emails.otpVerification.signature", None), true);
+    let message = base::template_file(ctx, "email-otp.tpl")
+        .await?
+        .param("{{hello}}", &ctx.text("emails.otpVerification.hello", None), true)
+        .param("{{description}}", &ctx.text("emails.otpVerification.description", None), true)
+        .param("{{clientInfo}}", &ctx.text("emails.otpVerification.clientInfo", None), true)
+        .param("{{thanks}}", &ctx.text("emails.otpVerification.thanks", None), true)
+        .param("{{signature}}", &ctx.text("emails.otpVerification.signature", None), true);
     let security =
         if phrase.is_some() { ctx.text("emails.otpVerification.securityPhrase", None) } else { String::new() };
-    message.set("{{securityPhrase}}", &security, true);
+    let message = message.param("{{securityPhrase}}", &security, true);
 
     let mut variables = Map::new();
     variables.insert("heading".into(), Json::String(ctx.text("emails.otpVerification.heading", None)));
@@ -223,14 +225,13 @@ pub async fn create_email_otp(ctx: &mut Context) -> Result<Response> {
             body: message.render(),
             variables,
         },
-    )
-    .await?;
+    );
     Ok(created(ctx, &user, &token, &secret, phrase))
 }
 
 /// `POST /v1/account/verifications/phone`.
 pub async fn create_phone(ctx: &mut Context) -> Result<Response> {
-    if utopia_system::env("_APP_SMS_PROVIDER").is_none() {
+    if ctx.state.config.sms_provider.is_empty() {
         return Err(Error::with_message(ErrorType::GeneralPhoneDisabled, "Phone provider not configured"));
     }
     let user = base::session_user(ctx)?;
@@ -255,11 +256,11 @@ pub async fn create_phone(ctx: &mut Context) -> Result<Response> {
     let token = verification(ctx, &user, base::TOKEN_TYPE_PHONE, &secret, &datetime::value(&expire)).await?;
 
     if send {
-        let mut content = base::Template::text(&ctx.text("sms.verification.body", None));
-        content.set("{{project}}", &ctx.project.name, true).set("{{secret}}", &secret, true);
+        let content = base::template_text(&ctx.text("sms.verification.body", None))
+            .param("{{project}}", &ctx.project.name, true)
+            .param("{{secret}}", &secret, true);
         let content = String::from_utf8_lossy(&php_std::string::strip_tags(content.render().as_bytes())).into_owned();
-        let mut message = base::Template::file(ctx, "sms-base.tpl").await?;
-        message.set("{{token}}", &content, true);
+        let message = base::template_file(ctx, "sms-base.tpl").await?.param("{{token}}", &content, true);
         let message = json!({
             "type": "internal",
             "project": ctx.project.message_payload(),
@@ -268,7 +269,8 @@ pub async fn create_phone(ctx: &mut Context) -> Result<Response> {
             "recipients": [phone],
             "providerType": "sms",
         });
-        base::publish(ctx, "_APP_MESSAGING_QUEUE_NAME", "v1-messaging", &message).await;
+        let queue = ctx.state.config.queue_messaging.clone();
+        ctx.events.queued.push((queue, message));
         if let Some(code) = appwrite_core::validators::calling_code(&phone) {
             ctx.metric(&format!("auth.method.phone.{code}"), 1);
         }

@@ -25,6 +25,12 @@ license = "BSD-3-Clause"
 repository = "https://github.com/appwrite/appwrite"
 publish = false
 
+# The license the Utopia crates' mirrors on github.com/utopia-rs are published under.
+# bin/monorepo writes it into each mirror's Cargo.toml, LICENSE and README; the source
+# in this repository stays under the license above.
+[workspace.metadata.utopia]
+mirror-license = "MIT"
+
 [workspace.dependencies]
 # Support crates
 php-std = { path = "crates/support/php-std" }
@@ -84,6 +90,7 @@ utopia-migration = { path = "crates/utopia/migration" }
 appwrite-core = { path = "crates/appwrite/core" }
 appwrite-account = { path = "crates/appwrite/account" }
 appwrite-users = { path = "crates/appwrite/users" }
+appwrite-teams = { path = "crates/appwrite/teams" }
 
 # Third party
 # Multi-needle substring search (utopia-user-agent: the bot table, in one

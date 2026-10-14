@@ -130,7 +130,6 @@ dependencies = [
  "utopia-domains",
  "utopia-emails",
  "utopia-http",
- "utopia-queue",
  "utopia-system",
  "utopia-validators",
 ]
@@ -183,6 +182,7 @@ version = "0.1.0"
 dependencies = [
  "appwrite-account",
  "appwrite-core",
+ "appwrite-teams",
  "appwrite-users",
  "mimalloc",
  "serde_json",
@@ -190,6 +190,25 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "utopia-http",
+]
+
+[[package]]
+name = "appwrite-teams"
+version = "0.1.0"
+dependencies = [
+ "appwrite-core",
+ "async-trait",
+ "chrono",
+ "php-std",
+ "serde_json",
+ "tokio",
+ "tracing",
+ "utopia-auth",
+ "utopia-database",
+ "utopia-domains",
+ "utopia-emails",
+ "utopia-http",
+ "utopia-validators",
 ]
 
 [[package]]

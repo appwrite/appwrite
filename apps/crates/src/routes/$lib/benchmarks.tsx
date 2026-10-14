@@ -1,6 +1,6 @@
 import { Link, createFileRoute, notFound } from '@tanstack/react-router'
 import { Performance } from '@/components/BenchLibrary'
-import { PageHeader } from '@/components/Page'
+import { ContentColumn, DocAsideRow, PageHeader } from '@/components/Page'
 import { loadLibrary } from '@/lib/docs'
 
 export const Route = createFileRoute('/$lib/benchmarks')({
@@ -18,7 +18,8 @@ export const Route = createFileRoute('/$lib/benchmarks')({
 function BenchmarksPage() {
   const { library: l, bench } = Route.useLoaderData()
   return (
-    <div className="grid min-w-0 gap-9">
+    <DocAsideRow reserveAside>
+      <ContentColumn>
       <PageHeader
         eyebrow={
           <Link to="/$lib" params={{ lib: l.slug }} className="hover:text-foreground">
@@ -31,6 +32,7 @@ function BenchmarksPage() {
         spent on them. Lower is better.
       </PageHeader>
       <Performance bench={bench} stale={l.updated?.bench_stale} />
-    </div>
+      </ContentColumn>
+    </DocAsideRow>
   )
 }

@@ -40,6 +40,7 @@ fn routes() -> Vec<(String, &'static str)> {
     let mut out: Vec<(String, &'static str)> =
         appwrite_users::Users.routes().into_iter().map(|r| (r.method.to_string(), r.path)).collect();
     out.extend(appwrite_account::Account.routes().into_iter().map(|r| (r.method.to_string(), r.path)));
+    out.extend(appwrite_teams::Teams.routes().into_iter().map(|r| (r.method.to_string(), r.path)));
     out.extend(health::Health.routes().into_iter().map(|r| (r.method.to_string(), r.path)));
     out
 }
@@ -71,6 +72,7 @@ fn serve() {
         };
         let platform = Platform::new(state)
             .module(&appwrite_users::Users)
+            .module(&appwrite_teams::Teams)
             .module(&appwrite_account::Account)
             .module(&health::Health);
         let addr = SocketAddr::from(([0, 0, 0, 0], port));

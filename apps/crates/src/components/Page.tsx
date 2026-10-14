@@ -227,16 +227,60 @@ export function Toc({ entries }: { entries: { id: string; label: string; depth?:
   )
 }
 
+/** Centered readable width for library docs; the main column beside the sidebar stays full width. */
+export function ContentWidth({ children, className }: { children: ReactNode; className?: string }) {
+  return <div className={`mx-auto w-full max-w-[1100px] min-w-0 ${className ?? ''}`}>{children}</div>
+}
+
+export function ContentColumn({ children }: { children: ReactNode }) {
+  return <ContentWidth className="grid content-start gap-9">{children}</ContentWidth>
+}
+
+/** Grid beside the doc rail (TOC or symbols); breadcrumbs and page body share the same template. */
+export function docAsideColumns(rail: boolean, php: boolean) {
+  if (php && !rail) return null
+  if (rail) return php ? '2xl:grid-cols-[minmax(0,1fr)_260px]' : 'xl:grid-cols-[minmax(0,1fr)_260px]'
+  return 'xl:grid-cols-[minmax(0,1fr)_200px]'
+}
+
+function docAsideRailClass(rail: boolean, php: boolean) {
+  if (rail && php) return 'hidden 2xl:block'
+  return 'hidden xl:block'
+}
+
+/** Reserves the aside column so stacked rows (breadcrumbs, then content) stay aligned. */
+export function DocAsideRow({
+  rail = false,
+  aside,
+  reserveAside = false,
+  children,
+}: {
+  rail?: boolean
+  aside?: ReactNode
+  reserveAside?: boolean
+  children: ReactNode
+}) {
+  const php = useMigration()
+  const columns = docAsideColumns(rail, php)
+  if (!columns) return <>{children}</>
+  const col = aside ?? (reserveAside ? <div aria-hidden className="min-h-0" /> : null)
+  if (!col) return <>{children}</>
+  return (
+    <div className={`grid w-full gap-10 ${columns}`}>
+      <div className="min-w-0">{children}</div>
+      <div className={docAsideRailClass(rail, php)}>{col}</div>
+    </div>
+  )
+}
+
 /** Page body with a rail: "On this page" from `toc`, or a page's own `rail`. */
 export function WithToc({ children, toc = [], rail }: { children: ReactNode; toc?: { id: string; label: string; depth?: number }[]; rail?: ReactNode }) {
-  // Comparing with PHP puts two code panels side by side; they get the rail's width,
-  // except on screens wide enough for both.
   const php = useMigration()
-  const columns = rail ? (php ? '2xl:grid-cols-[minmax(0,1fr)_260px]' : 'xl:grid-cols-[minmax(0,1fr)_260px]') : php ? '' : 'xl:grid-cols-[minmax(0,1fr)_200px]'
+  const body = <ContentColumn>{children}</ContentColumn>
+  if (php && !rail) return body
   return (
-    <div className={`grid gap-10 ${columns}`}>
-      <div className="grid min-w-0 content-start gap-9">{children}</div>
-      {rail ? <div className={`hidden ${php ? '2xl:block' : 'xl:block'}`}>{rail}</div> : php ? null : <Toc entries={toc} />}
-    </div>
+    <DocAsideRow rail={!!rail} aside={rail ? rail : <Toc entries={toc} />} reserveAside={!rail && !php}>
+      {body}
+    </DocAsideRow>
   )
 }

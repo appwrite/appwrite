@@ -3,17 +3,17 @@
     {
       "id": "servers",
       "title": "Servers",
-      "description": "Serving requests and running work: the HTTP framework and its request and response values, WebSockets, DNS servers, job queues and schedules, and the base for building servers."
+      "description": "Serving requests and running work: the HTTP framework and its request and response values, WebSockets, DNS and MQTT brokers, job queues and schedules, and the base for building servers."
     },
     {
       "id": "transport",
       "title": "Transport",
-      "description": "Reaching other services and the addresses behind them: HTTP clients, mail transport, MQTT and NATS, connection strings, domain names and email addresses."
+      "description": "Reaching other services: HTTP and SMTP clients, NATS, and connection strings."
     },
     {
       "id": "data",
       "title": "Data",
-      "description": "Keeping data: databases and the queries over them, migrations, caches, file storage, configuration and compression."
+      "description": "Keeping data: databases and the queries over them, caches and file storage."
     },
     {
       "id": "security",
@@ -28,21 +28,22 @@
     {
       "id": "platform",
       "title": "Platform",
-      "description": "The ground a service runs on: CLIs and consoles, dependency injection and registries, system information, locks, pools, circuit breakers, events, and the PHP engine semantics the Rust crates share."
+      "description": "The ground a service runs on: CLIs and consoles, configuration, dependency injection and registries, system information, locks, pools, circuit breakers, events, and the PHP engine semantics the Rust crates share."
     },
     {
       "id": "utilities",
       "title": "Utilities",
-      "description": "Focused helpers: input validation, translations, user-agent and device detection, load balancing and image processing."
+      "description": "Focused helpers: input validation, translations, domain and email parsing, user-agent and device detection, OpenAPI documents, compression, load balancing and image processing."
     },
     {
       "id": "integrations",
       "title": "Integrations",
-      "description": "Third-party services: AI agents, version control, orchestration, CDNs, and messaging providers for email, SMS and push."
+      "description": "Third-party services: AI agents, version control, orchestration, CDNs, messaging providers for email, SMS and push, and moving data between backends."
     }
   ],
   "external": {
-    "migration": "data",
+    "database": "data",
+    "migration": "integrations",
     "mongo": "data"
   }
 }

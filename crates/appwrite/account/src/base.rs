@@ -16,7 +16,6 @@ use utopia_database::value::{from_plain, list, to_long};
 use utopia_database::{Database, Document, Kind, Query, Value};
 use utopia_emails::Email;
 use utopia_http::Response;
-use utopia_queue::{Publisher as _, Queue};
 use utopia_validators::Validator;
 
 use appwrite_core::database::documents::{self, Attributes, Token, User, text};
@@ -24,6 +23,7 @@ use appwrite_core::database::filters;
 use appwrite_core::datetime;
 use appwrite_core::platform::Context;
 use appwrite_core::response::{AccountModel, Render, TokenModel};
+use appwrite_core::template::Template;
 use appwrite_core::{Error, ErrorType, Result};
 
 // ---- constants (`app/init/constants.php`) ---------------------------------
@@ -375,18 +375,6 @@ pub fn token_payload(token: &Token) -> Bytes {
 
 // ---- queues -----------------------------------------------------------------
 
-/// Publishes `payload` on the queue PHP names `name` (`_APP_<X>_QUEUE_NAME`).
-pub async fn publish(ctx: &Context, env: &str, default: &str, payload: &Json) {
-    let name = utopia_system::env_or(env, default).into_owned();
-    let published = match (Queue::new(&name), utopia_queue::payload(payload)) {
-        (Ok(queue), Ok(payload)) => ctx.state.publisher.publish(&queue, payload).await.map(|_| ()),
-        (Err(e), _) | (_, Err(e)) => Err(e),
-    };
-    if let Err(e) = published {
-        tracing::warn!(error = %e, queue = name, "queue publish failed");
-    }
-}
-
 /// `$mqtt->revoke($projectId, $userId)`: asks the MQTT brokers to drop the
 /// user's connections. Failures are logged, as in PHP.
 pub async fn mqtt_revoke(ctx: &Context, user_id: &str) {
@@ -405,106 +393,26 @@ pub async fn mqtt_revoke(ctx: &Context, user_id: &str) {
 
 // ---- templates ----------------------------------------------------------------
 
-/// `Appwrite\Template\Template`: a file or a string with `{{param}}`s.
-pub struct Template {
-    content: String,
-    params: Vec<(String, String)>,
+/// `Template::fromFile(<templates>/<name>)`.
+pub async fn template_file(ctx: &Context, name: &str) -> Result<Template> {
+    let path = ctx.state.config.asset(&format!("app/config/locale/templates/{name}"));
+    let content = tokio::fs::read_to_string(&path)
+        .await
+        .map_err(|_| Error::internal(format!("{} view template is not readable.", path.display())))?;
+    Ok(Template::new(content))
 }
 
-impl Template {
-    /// `Template::fromFile(<templates>/<name>)`.
-    pub async fn file(ctx: &Context, name: &str) -> Result<Self> {
-        let path = ctx.state.config.asset(&format!("app/config/locale/templates/{name}"));
-        let content = tokio::fs::read_to_string(&path)
-            .await
-            .map_err(|_| Error::internal(format!("{} view template is not readable.", path.display())))?;
-        Ok(Self { content, params: Vec::new() })
-    }
-
-    /// `Template::fromString($content)`: rendered through the `nl2p` filter.
-    pub fn text(content: &str) -> Self {
-        let mut paragraphs = String::new();
-        for line in content.split("\n\n") {
-            if !line.trim().is_empty() {
-                paragraphs.push_str("<p>");
-                paragraphs.push_str(line);
-                paragraphs.push_str("</p>");
-            }
+/// `Template::fromString($content)`: the content through the `nl2p` filter.
+pub fn template_text(content: &str) -> Template {
+    let mut paragraphs = String::new();
+    for line in content.split("\n\n") {
+        if !line.trim().is_empty() {
+            paragraphs.push_str("<p>");
+            paragraphs.push_str(line);
+            paragraphs.push_str("</p>");
         }
-        Self { content: paragraphs.replace('\n', "<br />"), params: Vec::new() }
     }
-
-    /// `setParam($key, $value, $escapeHtml)`.
-    pub fn set(&mut self, key: &str, value: &str, escape: bool) -> &mut Self {
-        let value = if escape {
-            String::from_utf8_lossy(&php_std::encoding::htmlspecialchars(
-                value.as_bytes(),
-                php_std::encoding::HtmlFlags::from_php(3),
-                true,
-            ))
-            .into_owned()
-        } else {
-            value.to_owned()
-        };
-        match self.params.iter_mut().find(|(k, _)| k == key) {
-            Some(p) => p.1 = value,
-            None => self.params.push((key.to_owned(), value)),
-        }
-        self
-    }
-
-    /// `render()`: the params first replaced inside each other, then in the
-    /// template (`str_replace` with arrays, in order).
-    pub fn render(&self) -> String {
-        let replace = |subject: &str, params: &[(String, String)]| {
-            params.iter().fold(subject.to_owned(), |s, (k, v)| if k.is_empty() { s } else { s.replace(k.as_str(), v) })
-        };
-        let params: Vec<(String, String)> =
-            self.params.iter().map(|(k, v)| (k.clone(), replace(v, &self.params))).collect();
-        replace(&self.content, &params)
-    }
-}
-
-/// `Template::mergeQuery` into `Template::parseURL($url)` and back
-/// (`unParseURL`).
-pub fn url_with_query(url: &str, query: &[(&str, &str)]) -> String {
-    let Some(parsed) = php_std::url::parse_url(url.as_bytes()) else {
-        // `parse_url` false: PHP keeps only the merged query.
-        return format!("?{}", merge_query("", query));
-    };
-    let s = |v: Option<std::borrow::Cow<'_, [u8]>>| v.map(|b| String::from_utf8_lossy(&b).into_owned());
-    let scheme = s(parsed.scheme()).map(|v| format!("{v}://")).unwrap_or_default();
-    let host = s(parsed.host()).unwrap_or_default();
-    let port = parsed.port().map(|p| format!(":{p}")).unwrap_or_default();
-    let user = s(parsed.user()).unwrap_or_default();
-    let pass = s(parsed.pass()).map(|p| format!(":{p}")).unwrap_or_default();
-    let pass = if !user.is_empty() || !pass.is_empty() { format!("{pass}@") } else { pass };
-    let path = s(parsed.path()).unwrap_or_default();
-    let query = merge_query(&s(parsed.query()).unwrap_or_default(), query);
-    let query = if query.is_empty() { String::new() } else { format!("?{query}") };
-    let fragment = s(parsed.fragment()).map(|f| format!("#{f}")).unwrap_or_default();
-    format!("{scheme}{user}{pass}{host}{port}{path}{query}{fragment}")
-}
-
-/// `Template::mergeQuery($query, $params)`: `parse_str`, `array_merge`,
-/// `http_build_query`.
-fn merge_query(query: &str, params: &[(&str, &str)]) -> String {
-    let parsed = php_std::Value::Array(php_std::encoding::parse_str(query.as_bytes())).to_json();
-    let mut merged = match parsed {
-        Json::Object(m) => m,
-        Json::Array(items) => items.into_iter().enumerate().map(|(i, v)| (i.to_string(), v)).collect(),
-        _ => Map::new(),
-    };
-    for (k, v) in params {
-        merged.insert((*k).to_owned(), Json::String((*v).to_owned()));
-    }
-    String::from_utf8_lossy(&php_std::encoding::http_build_query(
-        &Json::Object(merged),
-        b"",
-        None,
-        php_std::encoding::QueryEncoding::Rfc1738,
-    ))
-    .into_owned()
+    Template::new(paragraphs.replace('\n', "<br />"))
 }
 
 // ---- mails ------------------------------------------------------------------
@@ -522,22 +430,13 @@ pub struct Mail {
     pub variables: Map<String, Json>,
 }
 
-/// The project document's own attributes the mails read (`smtp`,
-/// `templates`), which the request's project view leaves out.
-pub async fn project_mail_settings(ctx: &Context) -> Result<(Json, Json)> {
-    if ctx.project.is_console() || ctx.project.id.is_empty() {
-        return Ok((Json::Array(Vec::new()), Json::Array(Vec::new())));
-    }
-    let platform = ctx.platform_db()?;
-    let authorization = platform.authorization();
-    let project = authorization.skip(|| platform.get_document("projects", &ctx.project.id, Vec::new(), false)).await?;
-    Ok((project.json("smtp").unwrap_or(Json::Null), project.json("templates").unwrap_or(Json::Null)))
-}
-
 /// The project's SMTP base template (`smtpBaseTemplate`): the console's
-/// branded one, `email-base` for projects.
-pub fn base_template(ctx: &Context) -> &'static str {
-    if ctx.project.is_console() { "email-base-styled" } else { "email-base" }
+/// branded one, else the project's (`email-base` by default).
+pub fn base_template(ctx: &Context) -> String {
+    if ctx.project.is_console() {
+        return "email-base-styled".to_owned();
+    }
+    ctx.project.smtp_base_template.clone().filter(|t| !t.is_empty()).unwrap_or_else(|| "email-base".to_owned())
 }
 
 /// `$project->getAttribute('name')`, or the platform's name on the console.
@@ -573,22 +472,22 @@ fn non_empty(v: Option<&Json>) -> Option<Json> {
     v.filter(|v| !php_std::value::empty(v)).cloned()
 }
 
-/// Queues `mail` with the project's SMTP settings and custom template.
-pub async fn queue_mail(ctx: &Context, mail: Mail) -> Result<()> {
-    let (smtp, templates) = project_mail_settings(ctx).await?;
+/// Queues `mail` (`publisherForMails`) with the project's SMTP settings and
+/// custom template.
+pub fn queue_mail(ctx: &mut Context, mail: Mail) {
+    let project = ctx.project.clone();
+    let templates = &project.templates;
     let template = |locale: &str| templates.get(format!("email.{}-{locale}", mail.key)).cloned();
     let custom = template(&ctx.locale).or_else(|| template("en")).unwrap_or(Json::Array(Vec::new()));
-    let base = base_template(ctx);
-    let body_template = format!("{TEMPLATES_PHP}{base}.tpl");
+    let body_template = format!("{TEMPLATES_PHP}{}.tpl", base_template(ctx));
 
+    let smtp = &project.smtp;
     let mut subject = Json::String(mail.subject);
     let mut body = Json::String(mail.body);
     let mut smtp_config = Json::Array(Vec::new());
     if smtp.get("enabled").is_some_and(utopia_validators::php::truthy) {
-        let mut sender_email =
-            Json::String(utopia_system::env_or("_APP_SYSTEM_EMAIL_ADDRESS", "team@localhost.test").into_owned());
-        let mut sender_name =
-            Json::String(utopia_system::env_or("_APP_SYSTEM_EMAIL_NAME", "Appwrite Server").into_owned());
+        let mut sender_email = Json::String(ctx.state.config.system_email_address.clone());
+        let mut sender_name = Json::String(ctx.state.config.system_email_name.clone());
         let mut reply_email = Json::String(String::new());
         let mut reply_name = Json::String(String::new());
         let apply = |source: &Json,
@@ -602,6 +501,7 @@ pub async fn queue_mail(ctx: &Context, mail: Mail) -> Result<()> {
             if let Some(v) = non_empty(source.get("senderName")) {
                 *sender_name = v;
             }
+            // Includes backwards compatibility: the legacy `replyTo` key.
             let reply = source.get("replyToEmail").filter(|v| !v.is_null()).or_else(|| source.get("replyTo"));
             if let Some(v) = non_empty(reply) {
                 *reply_email = v;
@@ -610,7 +510,7 @@ pub async fn queue_mail(ctx: &Context, mail: Mail) -> Result<()> {
                 *reply_name = v;
             }
         };
-        apply(&smtp, &mut sender_email, &mut sender_name, &mut reply_email, &mut reply_name);
+        apply(smtp, &mut sender_email, &mut sender_name, &mut reply_email, &mut reply_name);
         if !php_std::value::empty(&custom) {
             apply(&custom, &mut sender_email, &mut sender_name, &mut reply_email, &mut reply_name);
             body = custom.get("message").filter(|v| !v.is_null()).cloned().unwrap_or(Json::String(String::new()));
@@ -633,13 +533,13 @@ pub async fn queue_mail(ctx: &Context, mail: Mail) -> Result<()> {
     }
 
     let platform = ctx.state.config.platform.clone();
-    let custom_options = if ctx.project.is_console() {
+    let custom_options = if project.is_console() {
         json!({"senderName": platform.get("emailSenderName").cloned().unwrap_or(Json::Null)})
     } else {
         Json::Array(Vec::new())
     };
     let message = json!({
-        "project": ctx.project.message_payload(),
+        "project": project.message_payload(),
         "recipient": mail.recipient,
         "name": mail.name,
         "subject": subject,
@@ -655,37 +555,32 @@ pub async fn queue_mail(ctx: &Context, mail: Mail) -> Result<()> {
         "platform": platform,
         "headers": [],
     });
-    publish(ctx, "_APP_MAILS_QUEUE_NAME", "v1-mails", &message).await;
-    Ok(())
+    let queue = ctx.state.config.queue_mails.clone();
+    ctx.events.queued.push((queue, message));
 }
 
 // ---- request resources -------------------------------------------------------
 
 /// The `redirectValidator` resource (`Appwrite\Network\Validator\Redirect`).
-pub struct Redirect {
-    hosts: Vec<String>,
-    schemes: Vec<String>,
+pub struct Redirect<'a> {
+    ctx: &'a Context,
     description: std::sync::Mutex<String>,
 }
 
-impl Redirect {
-    pub fn new(ctx: &Context) -> Self {
-        Self {
-            hosts: ctx.allowed_hostnames(),
-            schemes: ctx.allowed_schemes(),
-            description: std::sync::Mutex::new("Invalid URI.".to_owned()),
-        }
+impl<'a> Redirect<'a> {
+    pub fn new(ctx: &'a Context) -> Self {
+        Self { ctx, description: std::sync::Mutex::new("Invalid URI.".to_owned()) }
     }
 }
 
-impl Validator for Redirect {
+impl Validator for Redirect<'_> {
     fn description(&self) -> String {
         self.description.lock().map(|d| d.clone()).unwrap_or_default()
     }
 
     fn is_valid(&self, value: &Json) -> bool {
         let Json::String(url) = value else { return false };
-        match appwrite_core::network::validate_redirect(url, &self.hosts, &self.schemes) {
+        match self.ctx.validate_redirect(url) {
             Ok(()) => true,
             Err(description) => {
                 if let Ok(mut d) = self.description.lock() {
@@ -842,10 +737,9 @@ mod tests {
     use super::*;
 
     #[test]
-    fn templates_replace_params_inside_params_first() {
-        let mut t = Template::text("Hello {{user}}\n\nBye");
-        t.set("{{user}}", "<{{name}}>", true).set("{{name}}", "Ada", false);
-        assert_eq!(t.render(), "<p>Hello &lt;Ada&gt;</p><p>Bye</p>");
+    fn text_templates_are_paragraphs() {
+        let t = template_text("Hello {{user}}\n\nBye\nnow").param("{{user}}", "<Ada>", true);
+        assert_eq!(t.render(), "<p>Hello &lt;Ada&gt;</p><p>Bye<br />now</p>");
     }
 
     /// A token of `kind` expiring `seconds` from now.
@@ -874,14 +768,5 @@ mod tests {
         assert!(token_verify(&user, TOKEN_TYPE_RECOVERY, "old").is_none(), "expired");
         assert!(token_verify(&user, TOKEN_TYPE_PHONE, "s3cret").is_none(), "another kind");
         assert!(token_verify(&user, TOKEN_TYPE_RECOVERY, "wrong").is_none(), "another secret");
-    }
-
-    #[test]
-    fn redirect_urls_get_the_token_query() {
-        assert_eq!(
-            url_with_query("http://localhost/reset?a=1#top", &[("userId", "u1"), ("secret", "s e")]),
-            "http://localhost/reset?a=1&userId=u1&secret=s+e#top"
-        );
-        assert_eq!(url_with_query("http://localhost", &[("userId", "u1")]), "http://localhost?userId=u1");
     }
 }

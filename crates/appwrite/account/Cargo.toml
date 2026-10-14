@@ -21,6 +21,5 @@ utopia-database.workspace = true
 utopia-domains.workspace = true
 utopia-emails.workspace = true
 utopia-http.workspace = true
-utopia-queue.workspace = true
 utopia-system.workspace = true
 utopia-validators.workspace = true

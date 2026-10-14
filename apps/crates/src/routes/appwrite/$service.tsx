@@ -19,6 +19,7 @@ import { PageHeader, Section } from '@/components/Page'
 import { ROUTE_STATUS, SERVICE_STATUS, loadMigration, type RouteStatus } from '@/lib/appwrite'
 import { sourceUrl } from '@/lib/docs'
 import { Time } from '@/components/Time'
+import { badge } from '@/components/Status'
 
 export const Route = createFileRoute('/appwrite/$service')({
   loader: async ({ params }) => {
@@ -237,7 +238,7 @@ function ServicePage() {
                       {suite.tests} test methods in {suite.classes.length} classes
                     </span>
                     {suite.rust.length ? (
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-ok-soft px-2 py-0.5 text-[11px] font-medium text-ok-ink" title={`${suite.rust[0].workflow}, job ${suite.rust[0].job}`}>
+                      <span className={`${badge} bg-ok-soft text-ok-ink`} title={`${suite.rust[0].workflow}, job ${suite.rust[0].job}`}>
                         CI runs it against Rust
                       </span>
                     ) : (

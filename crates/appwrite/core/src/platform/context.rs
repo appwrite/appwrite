@@ -39,6 +39,10 @@ pub struct EventState {
     /// The event's user, when the action sets one (`$queueForEvents->setUser()`):
     /// its message payload. `None` keeps the request's.
     pub actor: Option<Value>,
+    /// Messages for other worker queues (`(queue, message)`: mails, SMS),
+    /// published after the created users' events, as PHP's listeners send
+    /// those before the action's own publishers.
+    pub queued: Vec<(String, Value)>,
 }
 
 /// Request context.
@@ -291,22 +295,6 @@ impl Context {
         self.events.payload = Some(Bytes::from(crate::response::current(payload)));
     }
 
-    /// The request's allowed hostnames (the `allowedHostnames` resource).
-    pub fn allowed_hostnames(&self) -> Vec<String> {
-        super::lifecycle::allowed_hostnames(
-            &self.state,
-            &self.project,
-            self.project_found,
-            &self.request,
-            self.rule_domain.as_deref(),
-        )
-    }
-
-    /// The request's allowed schemes (the `allowedSchemes` resource).
-    pub fn allowed_schemes(&self) -> Vec<String> {
-        super::lifecycle::allowed_schemes(&self.state, &self.project, self.project_found)
-    }
-
     /// Records a usage metric (database listener equivalent).
     pub fn metric(&mut self, key: &str, value: i64) {
         self.listened.lock().unwrap_or_else(|e| e.into_inner()).metrics.push((key.to_owned(), value));
@@ -347,6 +335,20 @@ impl Context {
     /// Localised text.
     pub fn text(&self, key: &str, default: Option<&str>) -> String {
         self.state.translations.text(&self.locale, key, default)
+    }
+
+    /// The `redirectValidator` resource: `url` must be on an allowed
+    /// hostname or scheme. The error is the validator's description.
+    pub fn validate_redirect(&self, url: &str) -> std::result::Result<(), String> {
+        let hosts = super::lifecycle::allowed_hostnames(
+            &self.state,
+            &self.project,
+            self.project_found,
+            &self.request,
+            self.rule_domain.as_deref(),
+        );
+        let schemes = super::lifecycle::allowed_schemes(&self.state, &self.project, self.project_found);
+        crate::network::validate_redirect(url, &hosts, &schemes)
     }
 
     /// Plan flags (`$plan`); empty in CE.

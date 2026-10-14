@@ -107,6 +107,43 @@ fn ephemeral_key(project: &str) -> Result<String, String> {
     Ok(format!("ephemeral_{header}.{payload}.{signature}"))
 }
 
+/// `value` as the `encrypt` database filter stores it: AES-128-GCM under the
+/// stack's `_APP_OPENSSL_KEY_V1`, in PHP's JSON envelope.
+fn encrypted(value: &str) -> Result<String, String> {
+    use base64::Engine as _;
+    let out = std::process::Command::new("docker")
+        .args(["inspect", "-f", "{{range .Config.Env}}{{println .}}{{end}}", "appwrite"])
+        .output()
+        .map_err(|e| format!("docker: {e}"))?;
+    let env = String::from_utf8_lossy(&out.stdout);
+    let secret = env.lines().find_map(|l| l.strip_prefix("_APP_OPENSSL_KEY_V1=")).unwrap_or_default();
+    // PHP's OpenSSL truncates (or zero-pads) the key to the cipher's 16 bytes.
+    let mut key = [0u8; 16];
+    let n = secret.len().min(16);
+    key[..n].copy_from_slice(&secret.as_bytes()[..n]);
+    let mut iv = [0u8; 12];
+    openssl::rand::rand_bytes(&mut iv).map_err(|e| e.to_string())?;
+    let mut tag = [0u8; 16];
+    let data = openssl::symm::encrypt_aead(
+        openssl::symm::Cipher::aes_128_gcm(),
+        &key,
+        Some(&iv),
+        b"",
+        value.as_bytes(),
+        &mut tag,
+    )
+    .map_err(|e| e.to_string())?;
+    let hex = |bytes: &[u8]| bytes.iter().map(|b| format!("{b:02x}")).collect::<String>();
+    Ok(json!({
+        "data": base64::engine::general_purpose::STANDARD.encode(data),
+        "method": "aes-128-gcm",
+        "iv": hex(&iv),
+        "tag": hex(&tag),
+        "version": "1",
+    })
+    .to_string())
+}
+
 /// The addresses a container has on its networks.
 fn container_ips(name: &str) -> Vec<String> {
     std::process::Command::new("docker")
@@ -197,13 +234,13 @@ impl Twin {
 /// Account routes that change their user for good (block, delete, verify):
 /// their session and JWT identities are a user of their own.
 const ROUTE_USERS: &[(&str, &str)] =
-    &[("account.status.update", "u3"), ("account.delete", "u4"), ("account.verifications.phone.create", "u5")];
+    &[("account.status.update", "a3"), ("account.delete", "a4"), ("account.verifications.phone.create", "a5")];
 
-/// The users the Account routes act on besides `u1` and `u2`: `u3`..`u5`
-/// (see [`ROUTE_USERS`]), `u6` (its recoveries are confirmed) and `u7`
+/// The users the Account routes act on besides `u1` and `u2`: `a3`..`a5`
+/// (see [`ROUTE_USERS`]), `a6` (its recoveries are confirmed) and `a7`
 /// (a mock number: its phone verification has a known code).
 const ACCOUNT_USERS: &[(&str, Option<&str>)] =
-    &[("u3", None), ("u4", None), ("u5", Some("+15555550105")), ("u6", None), ("u7", Some("+15555550107"))];
+    &[("a3", None), ("a4", None), ("a5", Some("+15555550105")), ("a6", None), ("a7", Some("+15555550107"))];
 
 /// The console session and organization the twins are created in.
 struct Console {
@@ -322,8 +359,27 @@ fn seed_owned_keys(
 }
 
 /// The scopes of the key scenarios use, and of the one that seeds.
-const SCOPES: &[&str] =
-    &["users.read", "users.write", "sessions.read", "sessions.write", "targets.read", "targets.write"];
+const SCOPES: &[&str] = &[
+    "users.read",
+    "users.write",
+    "sessions.read",
+    "sessions.write",
+    "targets.read",
+    "targets.write",
+    "teams.read",
+    "teams.write",
+];
+
+/// The twins' project ID prefix (`COMPAT_DIFF_PREFIX`, `diff` by default).
+/// A run deletes the projects it names before it starts: runs sharing a
+/// stack at the same time each need their own.
+fn prefix() -> String {
+    std::env::var("COMPAT_DIFF_PREFIX").unwrap_or_else(|_| "diff".to_owned())
+}
+
+/// The secret of the invitation the status scenarios accept (`m3`, of `u4`
+/// to `t1`), written over the one its email carries.
+const INVITE_SECRET: &str = "compat-invite-secret";
 
 async fn twin(
     api: &Api,
@@ -334,7 +390,7 @@ async fn twin(
     run: &str,
 ) -> Result<Twin, String> {
     let php = &stack.php;
-    let project = format!("diff{run}{}", &runtime[..1]);
+    let project = format!("{}{run}{}", prefix(), &runtime[..1]);
     let created = api
         .send(
             "POST",
@@ -378,7 +434,7 @@ async fn twin(
         json!({"platformId": format!("{project}-web"), "name": "Web", "hostname": "localhost"}),
     )
     .await?;
-    for (id, name) in [("u1", "Ada"), ("u2", "Grace")] {
+    for (id, name) in [("u1", "Ada"), ("u2", "Grace"), ("u3", "Linus"), ("u4", "Ken")] {
         post(
             "/users",
             json!({"userId": id, "email": format!("{id}@example.com"), "password": "password-1234", "name": name}),
@@ -393,6 +449,43 @@ async fn twin(
         .await
         .map_err(|e| format!("project sequence: {e}"))?
         .get::<_, String>(0);
+    // Teams: `t1` owned by u1 (the session's user) with u2 a member, `t2`
+    // with u2 (deleted with its memberships), and u1's pending invitation
+    // of u4 to `t1`, whose secret is set to a known one.
+    post("/teams", json!({"teamId": "t1", "name": "Alpha"})).await?;
+    post("/teams", json!({"teamId": "t2", "name": "Beta"})).await?;
+    for (team, user, membership, role) in
+        [("t1", "u1", "m1", "owner"), ("t1", "u2", "m2", "member"), ("t2", "u2", "m4", "member")]
+    {
+        post(
+            &format!("/teams/{team}/memberships"),
+            json!({"userId": user, "roles": [role], "membershipId": membership}),
+        )
+        .await?;
+    }
+    let invite = api
+        .send(
+            "POST",
+            &format!("{php}/teams/t1/memberships"),
+            &[("x-appwrite-project".to_owned(), project.clone()), ("x-appwrite-session".to_owned(), session.clone())],
+            Some(&json!({"userId": "u4", "roles": ["member"], "url": "http://localhost", "membershipId": "m3"})),
+        )
+        .await?;
+    if invite.status != 201 {
+        return Err(format!("invitation: {} {}", invite.status, invite.body));
+    }
+    // The stored secret is the token's SHA-256, encrypted. Nothing read the
+    // invitation since it was created, so no cached copy holds the old one.
+    let hash: String = {
+        use sha2::Digest as _;
+        sha2::Sha256::digest(INVITE_SECRET.as_bytes()).iter().map(|b| format!("{b:02x}")).collect()
+    };
+    db.execute(
+        &format!("UPDATE appwrite.\"_{sequence}_memberships\" SET secret = $1 WHERE _uid = 'm3'"),
+        &[&encrypted(&hash)?],
+    )
+    .await
+    .map_err(|e| format!("invitation secret: {e}"))?;
     let account = api
         .send(
             "POST",
@@ -442,8 +535,8 @@ async fn twin(
 }
 
 /// Seeds what the Account routes need, through PHP: the users of
-/// [`ACCOUNT_USERS`] with a session and a JWT each, a mock number for `u7`
-/// and its phone verification (code `123456`), `u6`'s recoveries (their
+/// [`ACCOUNT_USERS`] with a session and a JWT each, a mock number for `a7`
+/// and its phone verification (code `123456`), `a6`'s recoveries (their
 /// secrets are the `{recovery-secret}` and `{recovery-otp}` body values), and
 /// two push targets of `u1`'s session (`pt1`, `pt2`).
 async fn seed_accounts(
@@ -489,14 +582,14 @@ async fn seed_accounts(
             ("x-appwrite-session".to_owned(), session.to_owned()),
         ]
     };
-    let u7 = accounts.iter().find(|(id, _, _)| id == "u7").map(|(_, s, _)| s.clone()).unwrap_or_default();
-    send("POST", "/account/verifications/phone".into(), client(&u7), json!({})).await?;
-    let recovery = json!({"email": "u6@example.com", "url": "http://localhost/recover"});
+    let a7 = accounts.iter().find(|(id, _, _)| id == "a7").map(|(_, s, _)| s.clone()).unwrap_or_default();
+    send("POST", "/account/verifications/phone".into(), client(&a7), json!({})).await?;
+    let recovery = json!({"email": "a6@example.com", "url": "http://localhost/recover"});
     let secret = send("POST", "/account/recovery".into(), server.to_vec(), recovery).await?["secret"]
         .as_str()
         .unwrap_or_default()
         .to_owned();
-    let otp = send("POST", "/account/recovery/otp".into(), server.to_vec(), json!({"email": "u6@example.com"})).await?
+    let otp = send("POST", "/account/recovery/otp".into(), server.to_vec(), json!({"email": "a6@example.com"})).await?
         ["secret"]
         .as_str()
         .unwrap_or_default()
@@ -677,7 +770,7 @@ const ROUTES: &[Route] = &[
         name: "account.recovery.create",
         method: "POST",
         path: "/account/recovery",
-        body: Some(r#"{"email":"U6@example.com","url":"http://localhost/recover?from=mail"}"#),
+        body: Some(r#"{"email":"A6@example.com","url":"http://localhost/recover?from=mail"}"#),
     },
     Route {
         name: "account.recovery.unknown",
@@ -689,25 +782,25 @@ const ROUTES: &[Route] = &[
         name: "account.recovery.redirect.invalid",
         method: "POST",
         path: "/account/recovery",
-        body: Some(r#"{"email":"u6@example.com","url":"https://evil.example/recover"}"#),
+        body: Some(r#"{"email":"a6@example.com","url":"https://evil.example/recover"}"#),
     },
     Route {
         name: "account.recovery.update",
         method: "PUT",
         path: "/account/recovery",
-        body: Some(r#"{"userId":"u6","secret":"{recovery-secret}","password":"password-5678"}"#),
+        body: Some(r#"{"userId":"a6","secret":"{recovery-secret}","password":"password-5678"}"#),
     },
     Route {
         name: "account.recovery.otp.create",
         method: "POST",
         path: "/account/recovery/otp",
-        body: Some(r#"{"email":"u6@example.com"}"#),
+        body: Some(r#"{"email":"a6@example.com"}"#),
     },
     Route {
         name: "account.recovery.otp.update",
         method: "PUT",
         path: "/account/recovery/otp",
-        body: Some(r#"{"userId":"u6","secret":"{recovery-otp}","password":"password-9012"}"#),
+        body: Some(r#"{"userId":"a6","secret":"{recovery-otp}","password":"password-9012"}"#),
     },
     Route {
         name: "account.verifications.email.create",
@@ -743,10 +836,87 @@ const ROUTES: &[Route] = &[
         name: "account.verifications.phone.update",
         method: "PUT",
         path: "/account/verifications/phone",
-        body: Some(r#"{"userId":"u7","secret":"123456"}"#),
+        body: Some(r#"{"userId":"a7","secret":"123456"}"#),
     },
     Route { name: "account.status.update", method: "PATCH", path: "/account/status", body: None },
     Route { name: "account.delete", method: "DELETE", path: "/account", body: None },
+    // Teams. A client creating a team joins it as its owner.
+    Route {
+        name: "teams.create",
+        method: "POST",
+        path: "/teams",
+        body: Some(r#"{"teamId":"t{n}","name":"Team {n}"}"#),
+    },
+    Route {
+        name: "teams.create.duplicate",
+        method: "POST",
+        path: "/teams",
+        body: Some(r#"{"teamId":"t1","name":"Again","roles":["owner","lead"]}"#),
+    },
+    Route { name: "teams.list", method: "GET", path: "/teams", body: None },
+    Route { name: "teams.list.search", method: "GET", path: "/teams?search=Alpha&total=false", body: None },
+    Route { name: "teams.list.invalid", method: "GET", path: "/teams?queries[]=bogus", body: None },
+    Route { name: "teams.get", method: "GET", path: "/teams/t1", body: None },
+    Route { name: "teams.get.missing", method: "GET", path: "/teams/missing", body: None },
+    Route { name: "teams.name.update", method: "PUT", path: "/teams/t1", body: Some(r#"{"name":"Alpha {n}"}"#) },
+    Route { name: "teams.prefs.get", method: "GET", path: "/teams/t1/prefs", body: None },
+    Route {
+        name: "teams.prefs.update",
+        method: "PUT",
+        path: "/teams/t1/prefs",
+        body: Some(r#"{"prefs":{"n":"{n}"}}"#),
+    },
+    // Deletes its memberships too; the first identity allowed to wins.
+    Route { name: "teams.delete", method: "DELETE", path: "/teams/t2", body: None },
+    Route { name: "teams.delete.missing", method: "DELETE", path: "/teams/missing", body: None },
+    // An invitation by email: keys add a new user at once, the owner's
+    // session invites them (the email goes to the mails queue).
+    Route {
+        name: "teams.memberships.create",
+        method: "POST",
+        path: "/teams/t1/memberships",
+        body: Some(r#"{"email":"i{n}@example.com","roles":["member"],"url":"http://localhost","name":"Invitee {n}"}"#),
+    },
+    Route {
+        name: "teams.memberships.create.user",
+        method: "POST",
+        path: "/teams/t1/memberships",
+        body: Some(r#"{"userId":"u3","roles":["editor"],"url":"http://localhost"}"#),
+    },
+    Route {
+        name: "teams.memberships.create.invalid",
+        method: "POST",
+        path: "/teams/t1/memberships",
+        body: Some(r#"{"roles":["member"],"url":"https://foreign.example"}"#),
+    },
+    Route { name: "teams.memberships.list", method: "GET", path: "/teams/t1/memberships", body: None },
+    Route { name: "teams.memberships.get", method: "GET", path: "/teams/t1/memberships/m1", body: None },
+    Route { name: "teams.memberships.get.missing", method: "GET", path: "/teams/t1/memberships/missing", body: None },
+    Route {
+        name: "teams.memberships.update",
+        method: "PATCH",
+        path: "/teams/t1/memberships/m2",
+        body: Some(r#"{"roles":["member","n{n}"]}"#),
+    },
+    Route {
+        name: "teams.memberships.status",
+        method: "PATCH",
+        path: "/teams/t1/memberships/m3/status",
+        body: Some(r#"{"userId":"u4","secret":"compat-invite-secret"}"#),
+    },
+    Route {
+        name: "teams.memberships.status.invalid",
+        method: "PATCH",
+        path: "/teams/t1/memberships/m1/status",
+        body: Some(r#"{"userId":"u1","secret":"wrong"}"#),
+    },
+    Route { name: "teams.memberships.delete", method: "DELETE", path: "/teams/t1/memberships/m2", body: None },
+    Route {
+        name: "teams.memberships.delete.missing",
+        method: "DELETE",
+        path: "/teams/t1/memberships/missing",
+        body: None,
+    },
 ];
 
 /// What else a request carries, beyond its identity and origin: the hooks
@@ -1074,11 +1244,9 @@ fn effect(args: &[String]) -> Option<Value> {
     }
 }
 
-/// The project's tables, as rows of text.
-async fn tables(
-    db: &tokio_postgres::Client,
-    prefix: &str,
-) -> Result<BTreeMap<String, Vec<Vec<Option<String>>>>, String> {
+/// The project's tables, as rows of text keyed by column (so a column's
+/// value is normalized by its name, as a document attribute is).
+async fn tables(db: &tokio_postgres::Client, prefix: &str) -> Result<Rows, String> {
     let names: Vec<String> = db
         .query(
             "SELECT tablename FROM pg_tables WHERE schemaname = 'appwrite' AND left(tablename, length($1)) = $1 ORDER BY 1",
@@ -1096,7 +1264,12 @@ async fn tables(
             db.simple_query(&format!("SELECT * FROM appwrite.\"{name}\"")).await.map_err(|e| format!("{name}: {e}"))?
         {
             if let tokio_postgres::SimpleQueryMessage::Row(row) = message {
-                rows.push((0..row.len()).map(|i| row.get(i).map(str::to_owned)).collect());
+                let columns = row.columns();
+                rows.push(Value::Object(
+                    (0..row.len())
+                        .map(|i| (columns[i].name().to_owned(), row.get(i).map_or(Value::Null, |v| json!(v))))
+                        .collect(),
+                ));
             }
         }
         out.insert(name[prefix.len()..].to_owned(), rows);
@@ -1104,7 +1277,7 @@ async fn tables(
     Ok(out)
 }
 
-type Rows = BTreeMap<String, Vec<Vec<Option<String>>>>;
+type Rows = BTreeMap<String, Vec<Value>>;
 
 /// Rows each table gained and lost.
 fn delta(before: &Rows, after: &Rows) -> Value {
@@ -1206,6 +1379,24 @@ impl Normalizer {
         // A token link's expiry (`expire=<urlencoded datetime>`) is a time.
         if out.contains("expire=") {
             out = query_datetime(&out);
+        }
+        // A session store inside a longer string (a cookie, the
+        // `X-Fallback-Cookies` JSON), and a cookie's expiry time.
+        if out.contains("eyJ") {
+            out = embedded_sessions(&out);
+        }
+        // A token in a link (an invitation's `secret=`): random, of a fixed length.
+        if let Some(at) = out.find("secret=") {
+            let start = at + "secret=".len();
+            let run = out[start..].bytes().take_while(u8::is_ascii_hexdigit).count();
+            if run >= 32 {
+                out.replace_range(start..start + run, &format!("{{token length={run}}}"));
+            }
+        }
+        if let Some(at) = out.find("; expires=")
+            && let Some(end) = out[at + 2..].find(';')
+        {
+            out.replace_range(at + 2..at + 2 + end, "expires={time}");
         }
         if let Some(kind) = generated(&out) {
             // Two datetimes may share a millisecond in one run and not the
@@ -1358,6 +1549,29 @@ fn session_shape(s: &str) -> Option<String> {
     let (id, secret) = (o.get("id")?.as_str()?, o.get("secret")?.as_str()?);
     let keys: Vec<&str> = o.keys().map(String::as_str).collect();
     Some(format!("{{session keys={} id={id} secret-length={}}}", keys.join(","), secret.len()))
+}
+
+/// `s` with each session store it contains (a run of base64 starting with
+/// `eyJ`) replaced by its [`session_shape`].
+fn embedded_sessions(s: &str) -> String {
+    let mut out = String::with_capacity(s.len());
+    let mut rest = s;
+    while let Some(at) = rest.find("eyJ") {
+        out.push_str(&rest[..at]);
+        let run = rest[at..]
+            .bytes()
+            .take_while(|b| b.is_ascii_alphanumeric() || matches!(b, b'+' | b'/' | b'=' | b'%'))
+            .count();
+        let token = &rest[at..at + run];
+        let decoded = php_std::encoding::rawurldecode(token.as_bytes());
+        match session_shape(&String::from_utf8_lossy(&decoded)) {
+            Some(shape) => out.push_str(&shape),
+            None => out.push_str(token),
+        }
+        rest = &rest[at + run..];
+    }
+    out.push_str(rest);
+    out
 }
 
 fn envelope_shape(s: &str) -> Option<String> {
@@ -1528,7 +1742,18 @@ async fn record(
         {
             // Purges are idempotent and independent: their order is not
             // observable. Messages keep their order.
-            if e.get("purge").is_some() { purges.push(e) } else { effects.push(e) }
+            if e.get("purge").is_some() {
+                // Likewise a purge of another project's cache (its tables'
+                // `_<sequence>` namespace).
+                if !other_namespace(&e.to_string(), twin.prefix.trim_matches('_')) {
+                    purges.push(e)
+                }
+            } else if e.to_string().contains(&twin.project) {
+                // Every message names its project: one that does not name
+                // the twin's is another run's on the same stack (a run
+                // sharing the runtime's address).
+                effects.push(e)
+            }
         }
     }
     let headers: Vec<Value> = reply
@@ -1583,6 +1808,27 @@ async fn record(
     Ok(normalized)
 }
 
+/// Whether `s` names a project namespace (`_<sequence>` followed by `_` or
+/// `:`) other than `sequence`'s.
+fn other_namespace(s: &str, sequence: &str) -> bool {
+    let bytes = s.as_bytes();
+    let mut i = 0;
+    while let Some(at) = s[i..].find('_') {
+        let start = i + at + 1;
+        let digits = bytes[start..].iter().take_while(|b| b.is_ascii_digit()).count();
+        let end = start + digits;
+        if digits > 0
+            && (start < 2 || !bytes[start - 2].is_ascii_alphanumeric())
+            && matches!(bytes.get(end), Some(b'_' | b':'))
+            && &s[start..end] != sequence
+        {
+            return true;
+        }
+        i = start;
+    }
+    false
+}
+
 /// The first path at which `a` and `b` differ.
 fn first_difference(a: &Value, b: &Value, path: &str) -> Option<String> {
     match (a, b) {
@@ -1626,7 +1872,7 @@ pub fn run(_root: &Path, filter: Option<&str>, verbose: bool) -> Result<Value, S
         tokio::spawn(connection);
         let console = console(&api, &stack).await?;
         // Twins an interrupted run left behind.
-        let query = json!({"method": "startsWith", "attribute": "$id", "values": ["diff"]}).to_string();
+        let query = json!({"method": "startsWith", "attribute": "$id", "values": [prefix()]}).to_string();
         let mut url = utopia_client::Uri::parse(&format!("{}/projects", stack.php)).map_err(|e| e.to_string())?;
         url = url.with_query(&format!("queries[]={}", php_std::encoding::rawurlencode(query.as_bytes())));
         let leftovers = api.send("GET", &url.to_string(), &console.headers, None).await?;
@@ -1704,6 +1950,22 @@ mod tests {
         assert_eq!(args, vec!["LPUSH", "utopia-queue.queue.v1-events", r#"{"a":"x\"y"}"#]);
         let (_, args) = parse_monitor(r#"1.0 [0 127.0.0.1:1] "SET" "k" "\xff\x00""#).unwrap();
         assert_eq!(args[2], "\u{FFFD}\0");
+    }
+
+    #[test]
+    fn embedded_session_stores_keep_their_shape() {
+        // base64 of {"id":"u4","secret":"abcd"}
+        let cookie = "a_session_p=eyJpZCI6InU0Iiwic2VjcmV0IjoiYWJjZCJ9; path=/";
+        assert_eq!(embedded_sessions(cookie), "a_session_p={session keys=id,secret id=u4 secret-length=4}; path=/");
+        assert_eq!(embedded_sessions("eyJnope"), "eyJnope");
+    }
+
+    #[test]
+    fn other_projects_namespaces_are_told_apart() {
+        assert!(other_namespace("default-cache-postgresql:_208::collection:users", "207"));
+        assert!(!other_namespace("default-cache-postgresql:_207::collection:users", "207"));
+        assert!(!other_namespace("platform:console:keys:a_1", "207"));
+        assert!(other_namespace("appwrite._208_memberships", "207"));
     }
 
     #[test]

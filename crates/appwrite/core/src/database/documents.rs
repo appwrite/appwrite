@@ -380,11 +380,14 @@ pub struct Membership {
     pub created_at: Option<NaiveDateTime>,
     pub updated_at: Option<NaiveDateTime>,
     pub user_id: String,
+    pub user_internal_id: String,
     pub team_id: String,
+    pub team_internal_id: String,
     pub roles: Vec<String>,
     pub invited: Option<NaiveDateTime>,
     pub joined: Option<NaiveDateTime>,
     pub confirm: Option<bool>,
+    pub secret: Option<String>,
 }
 
 impl From<&Document> for Membership {
@@ -394,11 +397,44 @@ impl From<&Document> for Membership {
             created_at: d.datetime("$createdAt"),
             updated_at: d.datetime("$updatedAt"),
             user_id: d.string_or_empty("userId"),
+            user_internal_id: d.string_or_empty("userInternalId"),
             team_id: d.string_or_empty("teamId"),
+            team_internal_id: d.string_or_empty("teamInternalId"),
             roles: d.strings("roles"),
             invited: d.datetime("invited"),
             joined: d.datetime("joined"),
             confirm: d.boolean("confirm"),
+            secret: d.string("secret"),
+        }
+    }
+}
+
+/// A team.
+#[derive(Debug, Clone, Default)]
+pub struct Team {
+    pub id: String,
+    pub sequence: i64,
+    pub created_at: Option<NaiveDateTime>,
+    pub updated_at: Option<NaiveDateTime>,
+    pub name: Option<String>,
+    pub total: i64,
+    pub prefs: Option<Json>,
+    /// The primary member (`userId`, `userInternalId`), set by editions that
+    /// keep one.
+    pub user_internal_id: Option<String>,
+}
+
+impl From<&Document> for Team {
+    fn from(d: &Document) -> Self {
+        Self {
+            id: d.id().to_owned(),
+            sequence: d.sequence_i64(),
+            created_at: d.datetime("$createdAt"),
+            updated_at: d.datetime("$updatedAt"),
+            name: d.string("name"),
+            total: d.get("total").map(utopia_database::value::to_long).unwrap_or(0),
+            prefs: d.json("prefs"),
+            user_internal_id: d.string("userInternalId"),
         }
     }
 }

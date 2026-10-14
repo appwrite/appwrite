@@ -37,7 +37,7 @@ export default defineConfig({
         crawlLinks: true,
         failOnError: true,
       },
-      pages: migrationPages(),
+      pages: [...migrationPages(), { path: '/changelog' }],
     }),
     viteReact(),
   ],

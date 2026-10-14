@@ -24,6 +24,28 @@ impl Locking {
         Self { conn, enabled }
     }
 
+    /// `(new Distributed($redis, $key))->withLock($section, $timeout)`: a
+    /// lock that must hold (an instance-wide limit), waiting up to `timeout`
+    /// seconds. `None` when another holder kept it (`Contention`); unlike
+    /// [`Locking::try_with_key`], a Redis failure is an error.
+    pub async fn with_lock<F, T>(&self, key: &str, timeout: f64, section: F) -> crate::Result<Option<T>>
+    where
+        F: Future<Output = T> + Send,
+        T: Send,
+    {
+        /// `Distributed`'s default TTL.
+        const TTL_SECONDS: i64 = 600;
+        let lock = Distributed::new(self.conn.clone(), key, TTL_SECONDS);
+        if !lock.acquire(Wait::from_secs_f64(timeout)).await.map_err(|e| crate::Error::internal(e.to_string()))? {
+            return Ok(None);
+        }
+        let result = section.await;
+        if let Err(e) = lock.release().await {
+            tracing::warn!(key, error = %e, "lock release_error");
+        }
+        Ok(Some(result))
+    }
+
     /// `Lock::tryWithKey`: runs `section` when the lock on `key` is free,
     /// without waiting. Returns `None` when another holder has it. A Redis
     /// failure runs `section` unlocked.

@@ -3,15 +3,26 @@ import { Search } from 'lucide-react'
 import { useEffect, useId, useMemo, useState, type ReactNode } from 'react'
 import { chord, ribbon, type Chord, type ChordSubgroup } from 'd3-chord'
 import { arc } from 'd3-shape'
-import { type Graph, type GraphNode, type Index } from '@/lib/docs'
+import { APPWRITE, type Graph, type GraphNode, type Index } from '@/lib/docs'
 import { links as linksOf, neighbours, weight, type Link as Edge, type Runtime } from '@/lib/graph'
 import { useMigration } from '@/lib/prefs'
 import { StatusBadge, StatusDot } from './Status'
 import { MigrationOnly } from './Migration'
 
-const PALETTE = ['var(--chart-1)', 'var(--chart-2)', 'var(--chart-4)', 'var(--chart-5)', 'var(--chart-brand)', 'var(--ok)', 'var(--started)', 'var(--rust)'] as const
-const APP_GROUP = 'app'
-const SIZE = 760
+const SIZE = 840
+
+/** One hue per category, spaced around the wheel so none share a colour. */
+const CATEGORY_COLOR: Record<string, string> = {
+  servers: 'oklch(0.72 0.14 185)',
+  transport: 'oklch(0.70 0.16 55)',
+  data: 'oklch(0.65 0.20 290)',
+  security: 'oklch(0.65 0.20 18)',
+  observability: 'oklch(0.76 0.15 95)',
+  platform: 'oklch(0.70 0.16 145)',
+  utilities: 'oklch(0.64 0.18 255)',
+  integrations: 'oklch(0.68 0.20 340)',
+  [APPWRITE]: 'oklch(0.66 0.23 8)',
+}
 
 type Mode = 'libraries' | 'categories'
 
@@ -59,15 +70,46 @@ function labelPlacement(start: number, end: number, radius: number) {
   return {
     transform: `rotate(${degrees}) translate(${radius}) ${flip ? 'rotate(180)' : ''}`,
     anchor: flip ? ('end' as const) : ('start' as const),
-    dx: flip ? -7 : 7,
+    dx: flip ? -5 : 5,
   }
 }
 
+function outerLabel(start: number, end: number, radius: number) {
+  const mid = (start + end) / 2
+  const point = polar(mid, radius)
+  const cosine = Math.cos(mid - Math.PI / 2)
+  return {
+    x: point.x,
+    y: point.y,
+    anchor: cosine > 0.4 ? ('start' as const) : cosine < -0.4 ? ('end' as const) : ('middle' as const),
+  }
+}
+
+function colorForGroup(id: string) {
+  return CATEGORY_COLOR[id] ?? 'var(--muted-foreground)'
+}
+
+function gapNode(i: number): ChordNode {
+  return { key: `gap-${i}`, group: `gap-${i}`, label: '', color: 'transparent', gap: true }
+}
+
+/** Dummy slices between categories, including the seam where the last meets the first. */
+function withCategoryGaps(nodes: ChordNode[]): ChordNode[] {
+  if (nodes.length < 2) return nodes
+  const out: ChordNode[] = []
+  for (const node of nodes) {
+    const prev = out[out.length - 1]
+    if (prev && !prev.gap && prev.group !== node.group) out.push(gapNode(out.length))
+    out.push(node)
+  }
+  const first = out.find((n) => !n.gap)
+  const last = [...out].reverse().find((n) => !n.gap)
+  if (first && last && first.group !== last.group && !out[out.length - 1]?.gap) out.push(gapNode(out.length))
+  return out
+}
+
 function colorForGroups(ids: string[]) {
-  const colors = new Map<string, string>()
-  ids.forEach((id, i) => colors.set(id, PALETTE[i % PALETTE.length]))
-  colors.set(APP_GROUP, 'var(--foreground)')
-  return colors
+  return new Map(ids.map((id) => [id, colorForGroup(id)]))
 }
 
 function degreeOf(links: Edge[]) {
@@ -123,6 +165,7 @@ function Chord({
   onSelect,
   grouped,
   compactLabels,
+  groupTitles,
 }: {
   nodes: ChordNode[]
   ties: ChordTie[]
@@ -130,25 +173,15 @@ function Chord({
   onSelect: (next: Selection | null, commit?: boolean) => void
   grouped: boolean
   compactLabels: boolean
+  groupTitles: Map<string, string>
 }) {
   const uid = useId().replace(/:/g, '')
   const geometry = grouped
-    ? { inner: 214, outer: 228, bandIn: 233, bandOut: 240, label: 250, pad: 0.012, font: nodes.length > 16 ? 11 : 12.5 }
-    : { inner: 198, outer: 222, bandIn: 0, bandOut: 0, label: 238, pad: 0.04, font: 13 }
+    ? { inner: 198, outer: 212, bandIn: 220, bandOut: 232, label: 240, groupLabel: 348, pad: 0.012, font: nodes.length > 16 ? 9.5 : 11 }
+    : { inner: 210, outer: 236, bandIn: 0, bandOut: 0, label: 254, groupLabel: 0, pad: 0.04, font: 14 }
 
   const model = useMemo(() => {
-    const matrixNodes: ChordNode[] = []
-    if (grouped) {
-      for (const node of nodes) {
-        const prev = matrixNodes[matrixNodes.length - 1]
-        if (prev && !prev.gap && prev.group !== node.group) {
-          matrixNodes.push({ key: `gap-${matrixNodes.length}`, group: `gap-${matrixNodes.length}`, label: '', color: 'transparent', gap: true })
-        }
-        matrixNodes.push(node)
-      }
-    } else {
-      matrixNodes.push(...nodes)
-    }
+    const matrixNodes = withCategoryGaps(nodes)
 
     const index = new Map(matrixNodes.map((node, i) => [node.key, i]))
     const size = matrixNodes.length
@@ -236,7 +269,7 @@ function Chord({
   return (
     <svg viewBox={`0 0 ${SIZE} ${SIZE}`} role="img" aria-label="Map of the Utopia libraries" preserveAspectRatio="xMidYMid meet" className="mx-auto block size-full max-h-full max-w-full text-foreground">
       <g transform={`translate(${SIZE / 2} ${SIZE / 2})`}>
-        <circle r={geometry.label + 108} fill="transparent" onClick={() => onSelect(null, true)} />
+        <circle r={geometry.groupLabel + 90} fill="transparent" onClick={() => onSelect(null, true)} />
         <defs>
           {ribbons.map((item) => {
             const source = matrixNodes[item.source.index]
@@ -297,8 +330,9 @@ function Chord({
           if (!d) return null
           const tone = nodeTone(node)
           const span = group.endAngle - group.startAngle
-          const placement = labelPlacement(group.startAngle, group.endAngle, geometry.label)
-          const showLabel = tone === 'active' || (!compactLabels && span > (grouped ? 0.05 : 0.04))
+          const showLabel = (tone === 'active' || (!compactLabels && span > (grouped ? 0.055 : 0.04))) && !(grouped && node.group === APPWRITE && tone !== 'active')
+          const pack = grouped ? labelPlacement(group.startAngle, group.endAngle, geometry.label) : null
+          const category = grouped ? null : outerLabel(group.startAngle, group.endAngle, geometry.label)
           return (
             <g key={node.key}>
               <path
@@ -312,23 +346,78 @@ function Chord({
               >
                 <title>{node.label}</title>
               </path>
-              {showLabel ? (
+              {showLabel && pack ? (
                 <text
-                  transform={placement.transform}
-                  dx={placement.dx}
-                  textAnchor={placement.anchor}
+                  transform={pack.transform}
+                  dx={pack.dx}
+                  textAnchor={pack.anchor}
                   dominantBaseline="central"
                   fontSize={geometry.font}
                   className={`font-sans ${tone === 'active' ? 'fill-foreground' : 'fill-muted-foreground'}`}
                   style={{ cursor: 'pointer', opacity: tone === 'dim' ? 0.35 : 1 }}
                   onMouseEnter={() => onSelect({ type: 'node', key: node.key })}
                 >
-                  {clipLabel(node.label, grouped ? 18 : 22)}
+                  {clipLabel(node.label, 14)}
+                </text>
+              ) : null}
+              {showLabel && category ? (
+                <text
+                  x={category.x}
+                  y={category.y}
+                  textAnchor={category.anchor}
+                  dominantBaseline="central"
+                  fontSize={13}
+                  letterSpacing="0.06em"
+                  className="font-sans uppercase"
+                  style={{
+                    cursor: 'pointer',
+                    opacity: tone === 'dim' ? 0.35 : 1,
+                    paintOrder: 'stroke',
+                    stroke: 'var(--card)',
+                    strokeWidth: 5,
+                    strokeLinejoin: 'round',
+                    fill: node.color,
+                  }}
+                  onMouseEnter={() => onSelect({ type: 'node', key: node.key })}
+                >
+                  {node.label}
                 </text>
               ) : null}
             </g>
           )
         })}
+        {grouped
+          ? sectors.map((sector) => {
+              const title = groupTitles.get(sector.key) ?? sector.key
+              const placement = outerLabel(sector.startAngle, sector.endAngle, geometry.groupLabel)
+              const tone = sectorTone(sector.key)
+              return (
+                <text
+                  key={`group-${sector.key}`}
+                  x={placement.x}
+                  y={placement.y}
+                  textAnchor={placement.anchor}
+                  dominantBaseline="central"
+                  fontSize={13}
+                  letterSpacing="0.06em"
+                  className="font-sans uppercase"
+                  style={{
+                    fill: sector.color,
+                    cursor: 'pointer',
+                    opacity: tone === 'dim' ? 0.28 : 1,
+                    paintOrder: 'stroke',
+                    stroke: 'var(--card)',
+                    strokeWidth: 5,
+                    strokeLinejoin: 'round',
+                  }}
+                  onMouseEnter={() => onSelect({ type: 'group', key: sector.key })}
+                  onClick={() => onSelect({ type: 'group', key: sector.key }, true)}
+                >
+                  {title}
+                </text>
+              )
+            })
+          : null}
       </g>
     </svg>
   )
@@ -413,8 +502,8 @@ function LibraryBoard({
   rivals.sort((a, b) => b.strength - a.strength || a.other.title.localeCompare(b.other.title))
   const top = rivals.slice(0, 5)
   const peak = top[0]?.strength ?? 1
-  const category = node.kind === 'app' ? 'Application' : (titles.get(node.category ?? '') ?? 'Library')
-  const color = colors.get(node.kind === 'app' ? APP_GROUP : (node.category ?? APP_GROUP)) ?? 'var(--muted-foreground)'
+  const category = titles.get(groupOf(node)) ?? 'Library'
+  const color = colors.get(groupOf(node)) ?? 'var(--muted-foreground)'
   return (
     <div>
       <div className="flex items-center gap-2">
@@ -464,7 +553,7 @@ function LibraryBoard({
       const used = into.some((l) => l.source === rival.other.id)
       const direction = depends && used ? 'Both ways' : depends ? 'Depends on' : 'Used by'
             const tags = tagsOf(rival.link, migration)
-            const rivalColor = colors.get(rival.other.kind === 'app' ? APP_GROUP : (rival.other.category ?? APP_GROUP)) ?? 'var(--muted-foreground)'
+            const rivalColor = colors.get(groupOf(rival.other)) ?? 'var(--muted-foreground)'
             return (
               <div key={rival.other.id}>
                 <div className="flex items-start gap-3">
@@ -512,8 +601,8 @@ function TieBoard({
   const left = byId.get(a)
   const right = byId.get(b)
   if (!left || !right) return <p className="m-0 font-mono text-[10px] tracking-[0.2em] text-muted-foreground uppercase">Hover a library</p>
-  const leftColor = colors.get(left.kind === 'app' ? APP_GROUP : (left.category ?? APP_GROUP)) ?? 'var(--muted-foreground)'
-  const rightColor = colors.get(right.kind === 'app' ? APP_GROUP : (right.category ?? APP_GROUP)) ?? 'var(--muted-foreground)'
+  const leftColor = colors.get(groupOf(left)) ?? 'var(--muted-foreground)'
+  const rightColor = colors.get(groupOf(right)) ?? 'var(--muted-foreground)'
   const aDepends = link?.source === a
   const bDepends = link?.source === b
   const story = aDepends && bDepends ? 'Each depends on the other' : aDepends ? `${left.title} depends on ${right.title}` : `${right.title} depends on ${left.title}`
@@ -544,7 +633,7 @@ function TieBoard({
 }
 
 function groupOf(n: GraphNode) {
-  return n.kind === 'app' ? APP_GROUP : (n.category ?? APP_GROUP)
+  return n.kind === 'app' ? APPWRITE : (n.category ?? 'uncategorized')
 }
 
 function pairsFor(shown: Edge[], byId: Map<string, GraphNode>, match: (left: GraphNode, right: GraphNode) => boolean) {
@@ -609,7 +698,7 @@ function CategoryBoard({
 }
 
 function groupTitle(id: string, titles: Map<string, string>) {
-  return id === APP_GROUP ? 'Application' : (titles.get(id) ?? id)
+  return titles.get(id) ?? id
 }
 
 function Board({
@@ -645,7 +734,7 @@ function Board({
   } else if (selection?.type === 'node' && byId.has(selection.key)) {
     const node = byId.get(selection.key)!
     body = <LibraryBoard node={node} out={near.out.get(node.id) ?? []} into={near.in.get(node.id) ?? []} byId={byId} colors={colors} titles={titles} onSelect={onSelect} migration={migration} />
-  } else if ((selection?.type === 'node' || selection?.type === 'group') && (titles.has(selection.key) || selection.key === APP_GROUP)) {
+  } else if ((selection?.type === 'node' || selection?.type === 'group') && titles.has(selection.key)) {
     const pairs = pairsFor(shown, byId, (left, right) => groupOf(left) === selection.key || groupOf(right) === selection.key)
     body = <CategoryBoard title={groupTitle(selection.key, titles)} color={colors.get(selection.key) ?? 'var(--muted-foreground)'} pairs={pairs} onSelect={onSelect} />
   } else {
@@ -682,8 +771,9 @@ export function MapView({ graph: all, index }: { graph: Graph; index: Index }) {
   const [searching, setSearching] = useState(false)
   const [compact, setCompact] = useState(false)
 
-  const titles = useMemo(() => new Map(index.categories.map((c) => [c.id, c.title])), [index])
-  const colors = useMemo(() => colorForGroups(index.categories.map((c) => c.id)), [index])
+  const categories = useMemo(() => [{ id: APPWRITE, title: 'Appwrite' }, ...index.categories], [index])
+  const titles = useMemo(() => new Map(categories.map((c) => [c.id, c.title])), [categories])
+  const colors = useMemo(() => colorForGroups(categories.map((c) => c.id)), [categories])
   const byId = useMemo(() => new Map(graph.nodes.map((n) => [n.id, n])), [graph])
   const shown = useMemo(() => linksOf(graph.edges, runtime, dev, showApp), [graph, runtime, dev, showApp])
   const near = useMemo(() => neighbours(shown), [shown])
@@ -744,8 +834,8 @@ export function MapView({ graph: all, index }: { graph: Graph; index: Index }) {
         const source = byId.get(l.source)
         const target = byId.get(l.target)
         if (!source || !target) continue
-        const a = source.kind === 'app' ? APP_GROUP : (source.category ?? APP_GROUP)
-        const b = target.kind === 'app' ? APP_GROUP : (target.category ?? APP_GROUP)
+        const a = groupOf(source)
+        const b = groupOf(target)
         if (a === b) continue
         present.add(a)
         present.add(b)
@@ -754,40 +844,34 @@ export function MapView({ graph: all, index }: { graph: Graph; index: Index }) {
         tie.weight += weight(l)
         ties.set(key, tie)
       }
-      const groups = [...index.categories.map((c) => c.id), ...(showApp ? [APP_GROUP] : [])].filter((id) => present.has(id))
+      const groups = categories.map((c) => c.id).filter((id) => (id !== APPWRITE || showApp) && present.has(id))
       const chordNodes: ChordNode[] = groups.map((id) => ({
         key: id,
         group: id,
-        label: id === APP_GROUP ? 'Appwrite' : (titles.get(id) ?? id),
+        label: titles.get(id) ?? id,
         color: colors.get(id) ?? 'var(--muted-foreground)',
       }))
       return { nodes: chordNodes, ties: [...ties.values()], grouped: false }
     }
 
-    const rank = new Map(index.categories.map((c, i) => [c.id, i]))
-    rank.set(APP_GROUP, 99)
+    const rank = new Map(categories.map((c, i) => [c.id, i]))
     const ordered = [...nodes].sort((a, b) => {
-      const ga = a.kind === 'app' ? APP_GROUP : (a.category ?? APP_GROUP)
-      const gb = b.kind === 'app' ? APP_GROUP : (b.category ?? APP_GROUP)
-      const teamDelta = (rank.get(ga) ?? 99) - (rank.get(gb) ?? 99)
+      const teamDelta = (rank.get(groupOf(a)) ?? 99) - (rank.get(groupOf(b)) ?? 99)
       if (teamDelta) return teamDelta
       return (degree.get(b.id) ?? 0) - (degree.get(a.id) ?? 0) || a.title.localeCompare(b.title)
     })
     const chordNodes: ChordNode[] = ordered.map((n) => {
-      const group = n.kind === 'app' ? APP_GROUP : (n.category ?? APP_GROUP)
+      const group = groupOf(n)
       return { key: n.id, group, label: n.title, color: colors.get(group) ?? 'var(--muted-foreground)' }
     })
     const ties: ChordTie[] = shown.filter((l) => l.source !== l.target).map((l) => ({ a: l.source, b: l.target, weight: weight(l) }))
     return { nodes: chordNodes, ties, grouped: true }
-  }, [mode, shown, byId, index, showApp, titles, colors, nodes, degree])
+  }, [mode, shown, byId, categories, showApp, titles, colors, nodes, degree])
 
   const legend = useMemo(() => {
     const keys = new Set(chordModel.nodes.map((n) => n.group))
-    return [
-      ...index.categories.filter((c) => keys.has(c.id)),
-      ...(keys.has(APP_GROUP) ? [{ id: APP_GROUP, title: 'Appwrite' }] : []),
-    ]
-  }, [chordModel.nodes, index])
+    return categories.filter((c) => keys.has(c.id))
+  }, [chordModel.nodes, categories])
 
   const term = q.trim().toLowerCase()
   const matches = term
@@ -869,10 +953,10 @@ export function MapView({ graph: all, index }: { graph: Graph; index: Index }) {
           <>
             <div className="flex min-h-0 min-w-0 flex-1 flex-col">
               <div className="flex min-h-0 flex-1 items-center justify-center px-2 pt-2">
-                <Chord nodes={chordModel.nodes} ties={chordModel.ties} selection={selection} onSelect={onSelect} grouped={chordModel.grouped} compactLabels={compact} />
+                <Chord nodes={chordModel.nodes} ties={chordModel.ties} selection={selection} onSelect={onSelect} grouped={chordModel.grouped} compactLabels={compact} groupTitles={titles} />
               </div>
               {legend.length > 1 ? (
-                <ul className="m-0 flex list-none flex-wrap justify-center gap-x-4 gap-y-2 px-4 pt-1 pb-4">
+                <ul className="m-0 flex flex-none list-none flex-wrap justify-center gap-x-4 gap-y-2 px-4 pt-1 pb-4">
                   {legend.map((c) => (
                     <li key={c.id}>
                       <button

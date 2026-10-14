@@ -72,8 +72,8 @@ pub fn routes() -> Vec<Route> {
 }
 
 /// `SMTP Disabled` unless `_APP_SMTP_HOST` is set.
-pub(crate) fn require_smtp() -> Result<()> {
-    if utopia_system::env("_APP_SMTP_HOST").is_none() {
+pub(crate) fn require_smtp(ctx: &Context) -> Result<()> {
+    if ctx.state.config.smtp_host.is_empty() {
         return Err(Error::with_message(ErrorType::GeneralSmtpDisabled, "SMTP Disabled"));
     }
     Ok(())
@@ -152,7 +152,7 @@ fn created(ctx: &mut Context, recovery: Recovery, phrase: Option<String>) -> Res
 pub async fn create(ctx: &mut Context) -> Result<Response> {
     let email = ctx.required_str("email", &EmailValidator::default())?;
     let url = ctx.required_str("url", &base::Redirect::new(ctx))?;
-    require_smtp()?;
+    require_smtp(ctx)?;
     let email = email.to_lowercase();
 
     let expire = datetime::add_seconds(datetime::now(), base::TOKEN_EXPIRATION_RECOVERY);
@@ -160,18 +160,18 @@ pub async fn create(ctx: &mut Context) -> Result<Response> {
     let secret = utopia_auth::proofs::Token::default().token();
     let recovery = recovery(ctx, &email, base::TOKEN_TYPE_RECOVERY, secret, &datetime::value(&expire)).await?;
 
-    let url = base::url_with_query(
+    let url = appwrite_core::template::with_query(
         &url,
         &[("userId", &recovery.user_id), ("secret", &recovery.secret), ("expire", &expire_text)],
     );
-    let mut inner = base::Template::file(ctx, "email-inner-base.tpl").await?;
-    inner
-        .set("{{body}}", &ctx.text("emails.recovery.body", None), false)
-        .set("{{hello}}", &ctx.text("emails.recovery.hello", None), true)
-        .set("{{footer}}", &ctx.text("emails.recovery.footer", None), true)
-        .set("{{thanks}}", &ctx.text("emails.recovery.thanks", None), true)
-        .set("{{buttonText}}", &ctx.text("emails.recovery.buttonText", None), true)
-        .set("{{signature}}", &ctx.text("emails.recovery.signature", None), true);
+    let inner = base::template_file(ctx, "email-inner-base.tpl")
+        .await?
+        .param("{{body}}", &ctx.text("emails.recovery.body", None), false)
+        .param("{{hello}}", &ctx.text("emails.recovery.hello", None), true)
+        .param("{{footer}}", &ctx.text("emails.recovery.footer", None), true)
+        .param("{{thanks}}", &ctx.text("emails.recovery.thanks", None), true)
+        .param("{{buttonText}}", &ctx.text("emails.recovery.buttonText", None), true)
+        .param("{{signature}}", &ctx.text("emails.recovery.signature", None), true);
 
     if let Some(profile) = &recovery.profile {
         let mut variables = Map::new();
@@ -193,8 +193,7 @@ pub async fn create(ctx: &mut Context) -> Result<Response> {
                 body: inner.render(),
                 variables,
             },
-        )
-        .await?;
+        );
     }
     Ok(created(ctx, recovery, None))
 }
@@ -203,7 +202,7 @@ pub async fn create(ctx: &mut Context) -> Result<Response> {
 pub async fn create_otp(ctx: &mut Context) -> Result<Response> {
     let email = ctx.required_str("email", &EmailValidator::default())?;
     let phrase = php::truthy(&ctx.optional("phrase", Json::Bool(false), &Boolean::STRICT)?);
-    require_smtp()?;
+    require_smtp(ctx)?;
     let email = email.to_lowercase();
     let phrase = phrase.then(|| utopia_auth::proofs::Phrase::new().phrase());
 
@@ -213,16 +212,16 @@ pub async fn create_otp(ctx: &mut Context) -> Result<Response> {
 
     if let Some(profile) = &recovery.profile {
         let detected = appwrite_core::detector::detect(&ctx.user_agent("UNKNOWN"));
-        let mut message = base::Template::file(ctx, "email-otp.tpl").await?;
-        message
-            .set("{{hello}}", &ctx.text("emails.otpRecovery.hello", None), true)
-            .set("{{description}}", &ctx.text("emails.otpRecovery.description", None), true)
-            .set("{{clientInfo}}", &ctx.text("emails.otpRecovery.clientInfo", None), true)
-            .set("{{thanks}}", &ctx.text("emails.otpRecovery.thanks", None), true)
-            .set("{{signature}}", &ctx.text("emails.otpRecovery.signature", None), true);
+        let message = base::template_file(ctx, "email-otp.tpl")
+            .await?
+            .param("{{hello}}", &ctx.text("emails.otpRecovery.hello", None), true)
+            .param("{{description}}", &ctx.text("emails.otpRecovery.description", None), true)
+            .param("{{clientInfo}}", &ctx.text("emails.otpRecovery.clientInfo", None), true)
+            .param("{{thanks}}", &ctx.text("emails.otpRecovery.thanks", None), true)
+            .param("{{signature}}", &ctx.text("emails.otpRecovery.signature", None), true);
         let security =
             if phrase.is_some() { ctx.text("emails.otpRecovery.securityPhrase", None) } else { String::new() };
-        message.set("{{securityPhrase}}", &security, true);
+        let message = message.param("{{securityPhrase}}", &security, true);
 
         let mut variables = Map::new();
         variables.insert("heading".into(), Json::String(ctx.text("emails.otpRecovery.heading", None)));
@@ -248,8 +247,7 @@ pub async fn create_otp(ctx: &mut Context) -> Result<Response> {
                 body: message.render(),
                 variables,
             },
-        )
-        .await?;
+        );
     }
     Ok(created(ctx, recovery, phrase))
 }

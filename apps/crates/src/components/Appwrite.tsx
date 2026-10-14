@@ -3,6 +3,7 @@ import { useState, type ReactNode } from 'react'
 import { sourceUrl } from '@/lib/docs'
 import { setMigration, useMigration } from '@/lib/prefs'
 import { Time } from './Time'
+import { badge } from './Status'
 import { HOOK_STATUS, KIND_LABEL, ROUTE_STATUS, SERVICE_STATUS, type Hook, type HookStatus, type RouteStatus, type Run, type ServiceStatus } from '@/lib/appwrite'
 
 const SERVICE_BADGE: Record<ServiceStatus, string> = {
@@ -14,8 +15,8 @@ const SERVICE_DOT: Record<ServiceStatus, string> = { rust: 'bg-ok', partial: 'bg
 
 export function ServiceBadge({ status }: { status: ServiceStatus }) {
   return (
-    <span className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-medium whitespace-nowrap ${SERVICE_BADGE[status]}`} title={SERVICE_STATUS[status].note}>
-      <span className={`inline-block size-1.5 rounded-full ${SERVICE_DOT[status]}`} />
+    <span className={`${badge} ${SERVICE_BADGE[status]}`} title={SERVICE_STATUS[status].note}>
+      <span className={`inline-block size-1.5 ${SERVICE_DOT[status]}`} />
       {SERVICE_STATUS[status].label}
     </span>
   )
@@ -63,7 +64,7 @@ const METHOD: Record<string, string> = {
 }
 
 export function MethodBadge({ method }: { method: string }) {
-  return <span className={`inline-block w-[52px] rounded px-1 py-px text-center font-mono text-[10.5px] font-semibold ${METHOD[method] ?? 'bg-muted'}`}>{method}</span>
+  return <span className={`inline-block w-[52px] px-1 py-px text-center font-mono text-[10.5px] font-semibold ${METHOD[method] ?? 'bg-muted'}`}>{method}</span>
 }
 
 /** A progress bar of parts of a whole, in order. */

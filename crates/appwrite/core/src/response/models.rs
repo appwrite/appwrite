@@ -3,7 +3,7 @@ use serde::ser::{SerializeMap, Serializer};
 use serde_json::{Map, Value};
 
 use super::{Render, dt};
-use crate::database::documents::{Authenticator, Challenge, Identity, Membership, Session, Target, Token, User};
+use crate::database::documents::{Authenticator, Challenge, Identity, Membership, Session, Target, Team, Token, User};
 
 fn s(v: &Option<String>) -> &str {
     v.as_deref().unwrap_or("")
@@ -301,13 +301,42 @@ impl Serialize for IdentityListModel<'_> {
     }
 }
 
-/// `membership` model (as returned by the Users API).
+/// `membership` model.
 pub struct MembershipModel<'a> {
     pub membership: &'a Membership,
+    /// `userId`, `None` when the privacy policy removed it.
+    pub user_id: Option<&'a str>,
     pub user_name: &'a str,
     pub user_email: &'a str,
+    pub user_phone: &'a str,
     pub team_name: &'a str,
+    pub mfa: bool,
+    pub user_accessed_at: Option<chrono::NaiveDateTime>,
     pub render: Render,
+}
+
+impl<'a> MembershipModel<'a> {
+    /// The membership with the member's name and email (the rest left to
+    /// the model's defaults).
+    pub fn new(
+        membership: &'a Membership,
+        user_name: &'a str,
+        user_email: &'a str,
+        team_name: &'a str,
+        render: Render,
+    ) -> Self {
+        Self {
+            membership,
+            user_id: Some(&membership.user_id),
+            user_name,
+            user_email,
+            user_phone: "",
+            team_name,
+            mfa: false,
+            user_accessed_at: None,
+            render,
+        }
+    }
 }
 
 impl Serialize for MembershipModel<'_> {
@@ -318,11 +347,11 @@ impl Serialize for MembershipModel<'_> {
         m.serialize_entry("$id", &x.id)?;
         m.serialize_entry("$createdAt", &dt(&x.created_at))?;
         m.serialize_entry("$updatedAt", &dt(&x.updated_at))?;
-        m.serialize_entry("userId", &x.user_id)?;
+        m.serialize_entry("userId", self.user_id.unwrap_or(""))?;
         m.serialize_entry("userName", self.user_name)?;
         m.serialize_entry("userEmail", self.user_email)?;
         if !r.before(1, 9, 2) {
-            m.serialize_entry("userPhone", "")?;
+            m.serialize_entry("userPhone", self.user_phone)?;
         }
         m.serialize_entry("teamId", &x.team_id)?;
         m.serialize_entry("teamName", self.team_name)?;
@@ -330,10 +359,45 @@ impl Serialize for MembershipModel<'_> {
         m.serialize_entry("joined", &dt(&x.joined))?;
         m.serialize_entry("confirm", &x.confirm.unwrap_or(false))?;
         if !r.before(1, 5, 0) {
-            m.serialize_entry("mfa", &false)?;
+            m.serialize_entry("mfa", &self.mfa)?;
         }
-        m.serialize_entry("userAccessedAt", "")?;
+        m.serialize_entry("userAccessedAt", &dt(&self.user_accessed_at))?;
         m.serialize_entry("roles", &x.roles)?;
+        m.end()
+    }
+}
+
+/// `team` model.
+pub struct TeamModel<'a> {
+    pub team: &'a Team,
+}
+
+impl Serialize for TeamModel<'_> {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        let t = self.team;
+        let mut m = serializer.serialize_map(Some(6))?;
+        m.serialize_entry("$id", &t.id)?;
+        m.serialize_entry("$createdAt", &dt(&t.created_at))?;
+        m.serialize_entry("$updatedAt", &dt(&t.updated_at))?;
+        m.serialize_entry("name", s(&t.name))?;
+        m.serialize_entry("total", &t.total)?;
+        m.serialize_entry("prefs", &prefs_value(&t.prefs))?;
+        m.end()
+    }
+}
+
+/// `{total, teams}`.
+pub struct TeamListModel<'a> {
+    pub total: i64,
+    pub teams: &'a [Team],
+}
+
+impl Serialize for TeamListModel<'_> {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        let mut m = serializer.serialize_map(Some(2))?;
+        m.serialize_entry("total", &self.total)?;
+        let items: Vec<TeamModel<'_>> = self.teams.iter().map(|t| TeamModel { team: t }).collect();
+        m.serialize_entry("teams", &items)?;
         m.end()
     }
 }

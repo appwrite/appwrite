@@ -28,6 +28,35 @@ impl Validator for CustomId {
     }
 }
 
+/// `APP_LIMIT_ROLE_LENGTH`: `project-<projectId>-<role>` is 9 template
+/// characters around two 36-character IDs.
+pub const LIMIT_ROLE_LENGTH: i64 = 81;
+
+/// `APP_LIMIT_ARRAY_PARAMS_SIZE`.
+pub const LIMIT_ARRAY_PARAMS_SIZE: usize = 100;
+
+/// `Key(maxLength: APP_LIMIT_ROLE_LENGTH)`: a team role.
+#[derive(Debug, Clone, Copy, Default)]
+pub struct Role;
+
+impl Validator for Role {
+    fn description(&self) -> String {
+        Key::new(false, LIMIT_ROLE_LENGTH).description()
+    }
+
+    fn is_valid(&self, value: &Value) -> bool {
+        match value {
+            Value::String(s) => Key::new(false, LIMIT_ROLE_LENGTH).accepts(s.as_bytes()),
+            _ => false,
+        }
+    }
+}
+
+/// `ArrayList(new Key(maxLength: APP_LIMIT_ROLE_LENGTH), APP_LIMIT_ARRAY_PARAMS_SIZE)`: team roles.
+pub fn roles() -> utopia_validators::ArrayList<Role> {
+    utopia_validators::ArrayList::new(Role, LIMIT_ARRAY_PARAMS_SIZE)
+}
+
 /// `UID` validator (36 chars).
 pub fn uid() -> Uid {
     Uid::new(MAX_UID)
