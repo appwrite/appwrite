@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "29449fc2362aa9af364bdf8af14c0fb5",
+    "content-hash": "4938aab4b4211b65ad5af5e402512d28",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2396,16 +2396,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "8.0.0",
+            "version": "8.1.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "e4c46dfe9b5fad60d8b47e09ecb0f134b90c47f7"
+                "reference": "79577115a047f8a0e24c7505eac8141513c4dfec"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/e4c46dfe9b5fad60d8b47e09ecb0f134b90c47f7",
-                "reference": "e4c46dfe9b5fad60d8b47e09ecb0f134b90c47f7",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/79577115a047f8a0e24c7505eac8141513c4dfec",
+                "reference": "79577115a047f8a0e24c7505eac8141513c4dfec",
                 "shasum": ""
             },
             "require": {
@@ -2463,9 +2463,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/8.0.0"
+                "source": "https://github.com/utopia-php/database/tree/8.1.2"
             },
-            "time": "2026-10-09T08:45:12+00:00"
+            "time": "2026-10-14T07:00:00+00:00"
         },
         {
             "name": "utopia-php/dsn",
@@ -5192,9 +5192,9 @@
         }
     ],
     "aliases": [],
-    "minimum-stability": "dev",
+    "minimum-stability": "stable",
     "stability-flags": {},
-    "prefer-stable": true,
+    "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
         "php": ">=8.5",
