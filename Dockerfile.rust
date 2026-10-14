@@ -19,6 +19,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 COPY Cargo.toml Cargo.lock rustfmt.toml ./
+COPY .cargo ./.cargo
 COPY crates ./crates
 
 RUN --mount=type=cache,target=/usr/local/cargo/registry \

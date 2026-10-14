@@ -4,6 +4,7 @@
 !Cargo.toml
 !Cargo.lock
 !rustfmt.toml
+!.cargo/config.toml
 !crates
 !app/config/locale/translations
 !app/assets/security/10k-common-passwords

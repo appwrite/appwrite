@@ -6,3 +6,11 @@
 # syncs with F_FULLFSYNC either way).
 [env]
 LIBSQLITE3_FLAGS = "SQLITE_ENABLE_MATH_FUNCTIONS SQLITE_MAX_VARIABLE_NUMBER=250000 SQLITE_DEFAULT_RECURSIVE_TRIGGERS SQLITE_SECURE_DELETE -USQLITE_DEFAULT_FOREIGN_KEYS -DHAVE_FDATASYNC=1"
+
+# AES-GCM (the `encrypt` attribute filter, shared with PHP's OpenSSL) uses the
+# ARMv8 AES and PMULL instructions only behind these flags; without them ARM
+# hosts (Graviton, Apple silicon and the Linux VMs on it) run the constant-time
+# software fallback, several times slower. Both detect the instructions at
+# runtime and fall back when they are missing.
+[target.'cfg(target_arch = "aarch64")']
+rustflags = ["--cfg", "aes_armv8", "--cfg", "polyval_armv8"]
