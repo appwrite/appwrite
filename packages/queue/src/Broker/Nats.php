@@ -464,8 +464,7 @@ class Nats implements Synchronous, Consumer, Bounded
         $envelope = $this->envelope($queue, $payload);
 
         return $this->synchronize(function () use ($queue, $subject, $envelope): bool {
-            $this->ensure($queue);
-            $this->publishEnvelope($subject, $envelope);
+            $this->publishEnvelope($queue, $subject, $envelope);
 
             return true;
         });
@@ -495,15 +494,18 @@ class Nats implements Synchronous, Consumer, Bounded
         }
 
         return $this->synchronize(function () use ($queue, $messages): bool {
-            $this->ensure($queue);
-
             // One round trip per window rather than one per payload: the whole batch is
             // written before any acknowledgment is read. Each payload still carries its
             // own message id, so deduplication works exactly as it does on the single
             // publish, and a payload the server rejects still throws.
             // Republished whole, for the reason republishing() gives: every payload
-            // keeps its id, so the ones that did land collapse.
-            $acks = $this->republishing(fn (): array => $this->js()->publishMany($messages));
+            // keeps its id, so the ones that did land collapse. Provisioned inside the
+            // republish, for the reason publishEnvelope() gives.
+            $acks = $this->republishing(function () use ($queue, $messages): array {
+                $this->ensure($queue);
+
+                return $this->js()->publishMany($messages);
+            });
 
             foreach ($acks as $ack) {
                 // Not discarded, for the same reason publishEnvelope() counts it: a
@@ -528,15 +530,25 @@ class Nats implements Synchronous, Consumer, Bounded
      * gave up on the ack — can only be retried by creating a second copy that
      * nothing downstream can tell from a genuine second message.
      *
+     * The queue is provisioned inside the republish, not before it. A reconnect
+     * forgets what was provisioned, so in a rolling restart the first publish after
+     * one server went away re-provisions -- and that request is what meets the next
+     * server going away. Outside the republish it threw to the caller: a lost
+     * execution log, a failed API call, a dead-lettered function run.
+     *
      * @param array<string, mixed> $envelope
      */
-    private function publishEnvelope(string $subject, array $envelope): void
+    private function publishEnvelope(Queue $queue, string $subject, array $envelope): void
     {
         /** @var string $id */
         $id = $envelope['pid'];
         $data = $this->codec->encode($envelope);
 
-        $ack = $this->republishing(fn (): PubAck => $this->publishOnce($subject, $data, $id));
+        $ack = $this->republishing(function () use ($queue, $subject, $data, $id): PubAck {
+            $this->ensure($queue);
+
+            return $this->publishOnce($subject, $data, $id);
+        });
 
         // Not discarded: a duplicate ack means the stream already held this id,
         // so the retry collapsed instead of double-delivering. That is the
