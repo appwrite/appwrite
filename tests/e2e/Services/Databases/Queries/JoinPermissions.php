@@ -1306,6 +1306,7 @@ trait JoinPermissions
 
         foreach ([$list(), $list()] as $warm) {
             $this->assertSame(200, $warm['headers']['status-code']);
+            $this->assertArrayNotHasKey('x-appwrite-cache', $warm['headers'], 'a joined list never takes the cache branch');
             $this->assertSame(['Lamp'], $this->joinPermissionValues($warm['body'][$this->getRecordResource()], 'ord', 'item'));
         }
 
