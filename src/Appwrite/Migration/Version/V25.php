@@ -515,15 +515,8 @@ class V25 extends Migration
      */
     protected function predatesMigration(Document $resource, Document $migration): bool
     {
-        $resourceCreated = $resource->getCreatedAt();
-        $migrationCreated = $migration->getCreatedAt();
-
-        if (!\is_string($resourceCreated) || !\is_string($migrationCreated)) {
-            return false;
-        }
-
-        $resourceCreatedAt = \strtotime($resourceCreated);
-        $migrationCreatedAt = \strtotime($migrationCreated);
+        $resourceCreatedAt = \strtotime($resource->getCreatedAt() ?? '');
+        $migrationCreatedAt = \strtotime($migration->getCreatedAt() ?? '');
 
         if ($resourceCreatedAt === false || $migrationCreatedAt === false) {
             return false;

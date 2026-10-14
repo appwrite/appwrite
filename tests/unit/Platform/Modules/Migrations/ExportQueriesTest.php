@@ -16,7 +16,6 @@ use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;
 use Utopia\Database\Adapter\Memory;
 use Utopia\Database\Attribute;
-use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
@@ -75,13 +74,6 @@ final class ExportQueriesTest extends TestCase
 
         $dbForProject = $this->createStub(Database::class);
         $dbForProject->method('profile')->willReturn((new Database(new Memory(), new Cache(new NoCache())))->profile());
-        $dbForProject->method('getCollection')->willReturnCallback(
-            static fn (string $collection): Collection => Collection::create(id: $collection, attributes: [
-                Attribute::string('migrationId'),
-                Attribute::string('migrationAttemptId'),
-                Attribute::string('attemptId'),
-            ])
-        );
         $dbForProject->method('getDocument')->willReturnCallback(
             static fn (string $collection, string $id): Document => match ([$collection, $id]) {
                 ['databases', 'library'] => new Document(['$id' => 'library', '$sequence' => '1', 'type' => $databaseType]),
@@ -106,7 +98,6 @@ final class ExportQueriesTest extends TestCase
             [],
             $this->createStub(Event::class),
             $this->createStub(MigrationPublisher::class),
-            static fn (): null => null,
         ];
     }
 }

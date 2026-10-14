@@ -3,10 +3,10 @@
 namespace Appwrite\Platform\Modules\Migrations\Http\Migrations\JSON\Imports;
 
 use Appwrite\Event\Event;
+use Appwrite\Event\Message\Migration as MigrationMessage;
 use Appwrite\Event\Publisher\Migration as MigrationPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\OpenSSL\OpenSSL;
-use Appwrite\Platform\Modules\Migrations\Claim;
 use Appwrite\Platform\Modules\Migrations\Http\Migrations\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -78,7 +78,6 @@ class Create extends Action
             ->inject('deviceForMigrations')
             ->inject('queueForEvents')
             ->inject('publisherForMigrations')
-            ->inject('locks')
             ->callback($this->action(...));
     }
 
@@ -98,10 +97,8 @@ class Create extends Action
         Device $deviceForFiles,
         Device $deviceForMigrations,
         Event $queueForEvents,
-        MigrationPublisher $publisherForMigrations,
-        callable $locks,
+        MigrationPublisher $publisherForMigrations
     ): void {
-        $claim = new Claim($dbForProject, $locks);
         $bucket = $authorization->skip(function () use ($internalFile, $dbForPlatform, $dbForProject, $bucketId) {
             if ($internalFile) {
                 return $dbForPlatform->getDocument('buckets', 'default');
@@ -180,36 +177,39 @@ class Create extends Action
         $resources = Transfer::extractServices([self::transferGroupForDatabaseType($databaseType)]);
         $parentResourceType = self::resourceTypeForDatabaseType($databaseType);
 
-        $migration = $claim->start(
-            project: $project,
-            migration: new Document([
-                '$id' => $migrationId,
-                'source' => JSONSource::getName(),
-                'destination' => AppwriteSource::getName(),
-                'resources' => $resources,
-                'resourceId' => $collection->getId(),
-                'resourceInternalId' => $collection->getSequence(),
-                'resourceType' => Resource::TYPE_COLLECTION,
-                'parentResourceId' => $database->getId(),
-                'parentResourceInternalId' => $database->getSequence(),
-                'parentResourceType' => $parentResourceType,
-                'destinationResourceId' => $database->getId(),
-                'destinationResourceInternalId' => $database->getSequence(),
-                'destinationResourceType' => $parentResourceType,
-                'statusCounters' => '{}',
-                'resourceData' => '{}',
-                'errors' => [],
-                'options' => [
-                    'path' => $newPath,
-                    'size' => $fileSize,
-                    'onDuplicate' => $onDuplicate,
-                ],
-            ]),
-            platform: $platform,
-            publisher: $publisherForMigrations,
-        );
+        $migration = $dbForProject->createDocument('migrations', new Document([
+            '$id' => $migrationId,
+            'status' => 'pending',
+            'stage' => 'init',
+            'source' => JSONSource::getName(),
+            'destination' => AppwriteSource::getName(),
+            'resources' => $resources,
+            'resourceId' => $collection->getId(),
+            'resourceInternalId' => $collection->getSequence(),
+            'resourceType' => Resource::TYPE_COLLECTION,
+            'parentResourceId' => $database->getId(),
+            'parentResourceInternalId' => $database->getSequence(),
+            'parentResourceType' => $parentResourceType,
+            'destinationResourceId' => $database->getId(),
+            'destinationResourceInternalId' => $database->getSequence(),
+            'destinationResourceType' => $parentResourceType,
+            'statusCounters' => '{}',
+            'resourceData' => '{}',
+            'errors' => [],
+            'options' => [
+                'path' => $newPath,
+                'size' => $fileSize,
+                'onDuplicate' => $onDuplicate,
+            ],
+        ]));
 
         $queueForEvents->setParam('migrationId', $migration->getId());
+
+        $publisherForMigrations->enqueue(new MigrationMessage(
+            project: $project,
+            migration: $migration,
+            platform: $platform,
+        ));
 
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)

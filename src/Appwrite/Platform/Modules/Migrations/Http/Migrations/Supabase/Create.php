@@ -3,11 +3,11 @@
 namespace Appwrite\Platform\Modules\Migrations\Http\Migrations\Supabase;
 
 use Appwrite\Event\Event;
+use Appwrite\Event\Message\Migration as MigrationMessage;
 use Appwrite\Event\Publisher\Migration as MigrationPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\PublicHostname;
 use Appwrite\Platform\Action;
-use Appwrite\Platform\Modules\Migrations\Claim;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -71,7 +71,6 @@ class Create extends Action
             ->inject('platform')
             ->inject('queueForEvents')
             ->inject('publisherForMigrations')
-            ->inject('locks')
             ->inject('publicHostname')
             ->callback($this->action(...));
     }
@@ -90,8 +89,7 @@ class Create extends Action
         array $platform,
         Event $queueForEvents,
         MigrationPublisher $publisherForMigrations,
-        callable $locks,
-        PublicHostname $publicHostname,
+        PublicHostname $publicHostname
     ): void {
         // Block a source endpoint or database host that resolves to a private or
         // reserved address to prevent SSRF into the internal network. The migration
@@ -103,32 +101,33 @@ class Create extends Action
             }
         }
 
-        $claim = new Claim($dbForProject, $locks);
-
-        $migration = $claim->start(
-            project: $project,
-            migration: new Document([
-                '$id' => Id::unique(),
-                'source' => Supabase::getName(),
-                'destination' => AppwriteSource::getName(),
-                'credentials' => [
-                    'endpoint' => $endpoint,
-                    'apiKey' => $apiKey,
-                    'databaseHost' => $databaseHost,
-                    'username' => $username,
-                    'password' => $password,
-                    'port' => $port,
-                ],
-                'resources' => $resources,
-                'statusCounters' => '{}',
-                'resourceData' => '{}',
-                'errors' => [],
-            ]),
-            platform: $platform,
-            publisher: $publisherForMigrations,
-        );
+        $migration = $dbForProject->createDocument('migrations', new Document([
+            '$id' => Id::unique(),
+            'status' => 'pending',
+            'stage' => 'init',
+            'source' => Supabase::getName(),
+            'destination' => AppwriteSource::getName(),
+            'credentials' => [
+                'endpoint' => $endpoint,
+                'apiKey' => $apiKey,
+                'databaseHost' => $databaseHost,
+                'username' => $username,
+                'password' => $password,
+                'port' => $port,
+            ],
+            'resources' => $resources,
+            'statusCounters' => '{}',
+            'resourceData' => '{}',
+            'errors' => [],
+        ]));
 
         $queueForEvents->setParam('migrationId', $migration->getId());
+
+        $publisherForMigrations->enqueue(new MigrationMessage(
+            project: $project,
+            migration: $migration,
+            platform: $platform,
+        ));
 
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)

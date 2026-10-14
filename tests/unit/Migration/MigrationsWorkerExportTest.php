@@ -92,7 +92,7 @@ final class MigrationsWorkerExportTest extends TestCase
                 );
             }
 
-            protected function updateMigrationDocument(Document $migration, Document $project, Realtime $queueForRealtime, bool $publish = true): Document
+            protected function updateMigrationDocument(Document $migration, Document $project, Realtime $queueForRealtime): Document
             {
                 return $migration;
             }
@@ -351,7 +351,7 @@ final class MigrationsWorkerExportTest extends TestCase
                 Realtime $queueForRealtime,
                 array $platform,
                 Authorization $authorization,
-            ): Document {
+            ): void {
                 throw new \RuntimeException('Artifact unavailable');
             }
 
@@ -360,7 +360,7 @@ final class MigrationsWorkerExportTest extends TestCase
                 return 'api-key';
             }
 
-            protected function updateMigrationDocument(Document $migration, Document $project, Realtime $queueForRealtime, bool $publish = true): Document
+            protected function updateMigrationDocument(Document $migration, Document $project, Realtime $queueForRealtime): Document
             {
                 $this->statuses[] = (string) $migration->getAttribute('status');
                 return $migration;
