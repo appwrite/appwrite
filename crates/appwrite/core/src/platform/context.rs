@@ -34,6 +34,11 @@ pub struct EventState {
     pub payload: Option<Bytes>,
     /// Extra delete messages to publish.
     pub deletes: Vec<Value>,
+    /// Payload keys realtime leaves out (`setPayload($payload, sensitive: [...])`).
+    pub sensitive: Vec<&'static str>,
+    /// The event's user, when the action sets one (`$queueForEvents->setUser()`):
+    /// its message payload. `None` keeps the request's.
+    pub actor: Option<Value>,
 }
 
 /// Request context.
@@ -284,6 +289,22 @@ impl Context {
     /// format's filters, as PHP's `output()` renders it.
     pub fn event_payload<T: Serialize>(&mut self, payload: &T) {
         self.events.payload = Some(Bytes::from(crate::response::current(payload)));
+    }
+
+    /// The request's allowed hostnames (the `allowedHostnames` resource).
+    pub fn allowed_hostnames(&self) -> Vec<String> {
+        super::lifecycle::allowed_hostnames(
+            &self.state,
+            &self.project,
+            self.project_found,
+            &self.request,
+            self.rule_domain.as_deref(),
+        )
+    }
+
+    /// The request's allowed schemes (the `allowedSchemes` resource).
+    pub fn allowed_schemes(&self) -> Vec<String> {
+        super::lifecycle::allowed_schemes(&self.state, &self.project, self.project_found)
     }
 
     /// Records a usage metric (database listener equivalent).

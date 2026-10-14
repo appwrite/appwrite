@@ -64,7 +64,7 @@ pub(super) async fn run(platform: &Platform, request: Request) -> Response {
     finalize(ctx, result)
 }
 
-fn allowed_hostnames(
+pub(super) fn allowed_hostnames(
     ctx_state: &super::State,
     project: &Project,
     project_found: bool,
@@ -91,6 +91,24 @@ fn allowed_hostnames(
     for h in allowed {
         if !unique.contains(&h) {
             unique.push(h);
+        }
+    }
+    unique
+}
+
+/// The `allowedSchemes` resource: the console's schemes, and for a project
+/// `exp`, its callback scheme and its platforms' schemes.
+pub(super) fn allowed_schemes(state: &super::State, project: &Project, project_found: bool) -> Vec<String> {
+    let mut schemes = state.config.console_schemas.clone();
+    if project_found && !project.is_console() && !project.id.is_empty() {
+        schemes.push("exp".to_owned());
+        schemes.push(format!("appwrite-callback-{}", project.id));
+        schemes.extend(network::platform_schemes(&project.platforms));
+    }
+    let mut unique: Vec<String> = Vec::with_capacity(schemes.len());
+    for s in schemes {
+        if !unique.contains(&s) {
+            unique.push(s);
         }
     }
     unique
@@ -266,12 +284,7 @@ pub(super) async fn authenticate(ctx: &mut Context) -> Result<()> {
     if !origin.is_empty() && key_header.is_empty() {
         let allowed =
             allowed_hostnames(&state, &ctx.project, ctx.project_found, &ctx.request, ctx.rule_domain.as_deref());
-        let mut schemes = state.config.console_schemas.clone();
-        if ctx.project_found && !ctx.project.is_console() {
-            schemes.push("exp".to_owned());
-            schemes.push(format!("appwrite-callback-{}", ctx.project.id));
-            schemes.extend(network::platform_schemes(&ctx.project.platforms));
-        }
+        let schemes = allowed_schemes(&state, &ctx.project, ctx.project_found);
         if let Err(description) = network::validate_origin(&origin, &allowed, &schemes) {
             return Err(Error::with_message(ErrorType::GeneralUnknownOrigin, description));
         }

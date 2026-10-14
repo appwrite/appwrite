@@ -70,6 +70,52 @@ impl Serialize for UserModel<'_> {
     }
 }
 
+/// `account` model: the user without its password fields.
+pub struct AccountModel<'a> {
+    pub user: &'a User,
+    pub render: Render,
+    /// `impersonatorUserId`: the impersonator, when the response is the
+    /// impersonated user (`Response::dynamic`); `null` otherwise.
+    pub impersonator_user_id: Option<&'a str>,
+}
+
+impl Serialize for AccountModel<'_> {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        let u = self.user;
+        let r = self.render;
+        let mut m = serializer.serialize_map(None)?;
+        m.serialize_entry("$id", &u.id)?;
+        m.serialize_entry("$createdAt", &dt(&u.created_at))?;
+        m.serialize_entry("$updatedAt", &dt(&u.updated_at))?;
+        m.serialize_entry("name", s(&u.name))?;
+        m.serialize_entry("registration", &dt(&u.registration))?;
+        m.serialize_entry("status", &u.status.unwrap_or(true))?;
+        m.serialize_entry("labels", &u.labels)?;
+        m.serialize_entry("passwordUpdate", &dt(&u.password_update))?;
+        m.serialize_entry("email", s(&u.email))?;
+        m.serialize_entry("phone", s(&u.phone))?;
+        m.serialize_entry("emailVerification", &u.email_verification.unwrap_or(false))?;
+        m.serialize_entry("emailCanonical", &u.email_canonical)?;
+        m.serialize_entry("emailIsFree", &u.email_is_free)?;
+        m.serialize_entry("emailIsDisposable", &u.email_is_disposable)?;
+        m.serialize_entry("emailIsCorporate", &u.email_is_corporate)?;
+        m.serialize_entry("emailIsCanonical", &u.email_is_canonical)?;
+        m.serialize_entry("passwordPwned", &u.password_pwned)?;
+        m.serialize_entry("phoneVerification", &u.phone_verification.unwrap_or(false))?;
+        // No V17 filter for the account model: `mfa` and `targets` stay.
+        m.serialize_entry("mfa", &u.mfa.unwrap_or(false))?;
+        m.serialize_entry("prefs", &prefs_value(&u.prefs))?;
+        let targets: Vec<TargetModel<'_>> = u.targets.iter().map(|t| TargetModel { target: t }).collect();
+        m.serialize_entry("targets", &targets)?;
+        m.serialize_entry("accessedAt", &dt(&u.accessed_at))?;
+        if !r.before(1, 9, 0) {
+            m.serialize_entry("impersonator", &u.impersonator)?;
+            m.serialize_entry("impersonatorUserId", &self.impersonator_user_id)?;
+        }
+        m.end()
+    }
+}
+
 /// `{total, users}`.
 pub struct UserListModel<'a> {
     pub total: i64,
@@ -209,7 +255,7 @@ impl Serialize for TokenModel<'_> {
         m.serialize_entry("secret", secret)?;
         m.serialize_entry("expire", &dt(&t.expire))?;
         if !self.render.before(1, 5, 0) {
-            m.serialize_entry("phrase", "")?;
+            m.serialize_entry("phrase", t.phrase.as_deref().unwrap_or(""))?;
         }
         m.end()
     }
