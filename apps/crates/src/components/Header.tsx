@@ -1,50 +1,85 @@
 import { Link, getRouteApi, useMatch, useRouterState } from '@tanstack/react-router'
-import { Menu } from 'lucide-react'
-import { Fragment } from 'react'
+import { ArrowLeftRight, ChevronDown, Menu as MenuIcon } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
 import { setMigration, useMigration } from '@/lib/prefs'
 import { DiscordMark, GitHubMark, Logo } from './Logo'
+import { MigrationOnly } from './Migration'
+import { MIGRATION_TITLE, item, menuCategories } from './Sidebar'
 
 const root = getRouteApi('__root__')
 
-function Crumbs() {
+// A page in the header's menu: the menu's ink, and when active the red square before it, as in the library menu.
+const link = 'relative inline-flex h-8 items-center gap-1.5 px-3 text-[13px] text-sidebar-ink transition-colors hover:text-sidebar-strong'
+const on = 'font-medium text-sidebar-strong before:absolute before:top-1/2 before:left-0 before:size-[6px] before:-translate-y-1/2 before:bg-highlight'
+
+/** The categories, from the header: a panel of the same rows as the drawer's, opened on click. */
+function CategoriesMenu() {
   const index = root.useLoaderData()
-  const path = useRouterState({ select: (s) => decodeURIComponent(s.location.pathname) })
-  const parts = path.split('/').filter(Boolean)
-  const crumbs: { label: string; to?: string; params?: Record<string, string> }[] = []
-  const service = useMatch({ from: '/appwrite/$service', shouldThrow: false })?.loaderData?.service
-  if (parts[0] === 'appwrite') {
-    crumbs.push({ label: 'Appwrite migration', to: '/appwrite' })
-    if (parts[1]) crumbs.push({ label: service?.title ?? parts[1] })
-  } else if (parts[0] === 'map') {
-    crumbs.push({ label: 'Map' })
-  } else if (parts[0] === 'changelog') {
-    crumbs.push({ label: 'Changelog' })
-  } else if (parts[0] === 'libraries') {
-    crumbs.push({ label: 'Libraries' })
-  } else if (index && parts[0] === 'categories' && parts[1]) {
-    crumbs.push({ label: index.categories.find((c) => c.id === parts[1])?.title ?? parts[1] })
-  } else if (index && parts[0]) {
-    const lib = index.libraries.find((l) => l.slug === parts[0])
-    const category = index.categories.find((c) => c.id === lib?.category)
-    if (category) crumbs.push({ label: category.title, to: '/categories/$category', params: { category: category.id } })
-    if (lib) crumbs.push({ label: lib.title, to: '/$lib', params: { lib: lib.slug } })
-    for (const p of parts.slice(1)) crumbs.push({ label: p === 'php-api' ? 'PHP API' : p === 'root' ? 'Crate root' : p === 'functions' && parts.length === 2 ? 'PHP functions' : p })
-  }
+  const migration = useMigration()
+  const path = useRouterState({ select: (s) => s.location.pathname })
+  const [open, setOpen] = useState(false)
+  const box = useRef<HTMLDivElement>(null)
+  const button = useRef<HTMLButtonElement>(null)
+  useEffect(() => setOpen(false), [path])
+  useEffect(() => {
+    if (!open) return
+    const outside = (e: PointerEvent) => box.current?.contains(e.target as Node) || setOpen(false)
+    const escape = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return
+      setOpen(false)
+      button.current?.focus()
+    }
+    document.addEventListener('pointerdown', outside)
+    document.addEventListener('keydown', escape)
+    return () => {
+      document.removeEventListener('pointerdown', outside)
+      document.removeEventListener('keydown', escape)
+    }
+  }, [open])
+  if (!index) return null
   return (
-    <div className="flex min-w-0 items-center gap-2.5 font-mono text-[11px] tracking-[0.08em] uppercase">
-      {crumbs.map((c, i) => (
-        <Fragment key={i}>
-          <span className="text-muted-foreground/35">/</span>
-          {c.to && i < crumbs.length - 1 ? (
-            <Link to={c.to} params={c.params} className="truncate text-muted-foreground hover:text-foreground">
-              {c.label}
+    <div ref={box} className="relative flex h-14 items-center">
+      <button ref={button} type="button" aria-expanded={open} aria-controls="categories-menu" onClick={() => setOpen((o) => !o)} className={`${link} cursor-pointer ${path.startsWith('/categories/') ? on : ''}`}>
+        Categories
+        <ChevronDown className={`size-3.5 text-muted-foreground transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+      {open ? (
+        <nav id="categories-menu" aria-label="Categories" className="absolute top-full left-0 -mt-px grid w-[260px] gap-px border border-border bg-background p-3">
+          {menuCategories(index, migration).map(({ category: c, count, rust }) => (
+            <Link key={c.id} to="/categories/$category" params={{ category: c.id }} className={item(!rust)} title={rust ? undefined : MIGRATION_TITLE}>
+              <span className="truncate">{c.title}</span>
+              <span className="ml-auto font-mono text-[10px] text-muted-foreground tabular-nums">{count}</span>
             </Link>
-          ) : (
-            <span className={`truncate ${i === crumbs.length - 1 ? 'font-medium text-foreground' : 'text-muted-foreground'}`}>{c.label}</span>
-          )}
-        </Fragment>
-      ))}
+          ))}
+        </nav>
+      ) : null}
     </div>
+  )
+}
+
+/** The site's pages, across the header on wide screens; the drawer holds them on small ones. */
+function Menu() {
+  // A library's pages sit under Libraries.
+  const library = !!useMatch({ from: '/$lib', shouldThrow: false })
+  return (
+    <nav className="hidden h-14 items-center gap-1 pl-3 lg:flex" aria-label="Site">
+      <Link to="/libraries" activeOptions={{ includeSearch: false }} className={`${link} ${library ? on : ''}`} activeProps={{ className: on }}>
+        Libraries
+      </Link>
+      <CategoriesMenu />
+      <Link to="/map" className={link} activeProps={{ className: on }}>
+        Map
+      </Link>
+      <Link to="/changelog" className={link} activeProps={{ className: on }}>
+        Changelog
+      </Link>
+      <MigrationOnly>
+        <Link to="/appwrite" className={`${link} nav-migration`} activeProps={{ className: on }} title={MIGRATION_TITLE}>
+          <ArrowLeftRight className="size-3.5 flex-none text-migration-ink" />
+          Appwrite migration
+        </Link>
+      </MigrationOnly>
+    </nav>
   )
 }
 
@@ -71,14 +106,13 @@ export function Header({ onMenu }: { onMenu: () => void }) {
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center border-b border-border bg-background">
       <button type="button" onClick={onMenu} className="ml-2 inline-flex size-9 items-center justify-center rounded-md text-muted-foreground hover:bg-accent lg:hidden" aria-label="Open navigation">
-        <Menu className="size-5" />
+        <MenuIcon className="size-5" />
       </button>
-      <Link to="/" className="flex h-14 flex-none items-center gap-2 px-4 lg:w-[240px] lg:border-r lg:border-border">
+      <Link to="/" className="flex h-14 flex-none items-center gap-2 px-4 lg:pl-5" aria-label="Utopia for Rust, home">
         <Logo />
       </Link>
-      <div className="hidden min-w-0 flex-1 px-4 md:block">
-        <Crumbs />
-      </div>
+      <span className="hidden h-5 w-px bg-border lg:block" aria-hidden />
+      <Menu />
       <div className="ml-auto flex items-center gap-1.5 pr-3">
         <MigrationSwitch />
         <span className="mx-0.5 h-5 w-px bg-border sm:mx-1" aria-hidden />

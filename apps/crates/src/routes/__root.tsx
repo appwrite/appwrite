@@ -1,6 +1,7 @@
 import { HeadContent, Outlet, Scripts, createRootRoute, useMatch, useRouterState } from '@tanstack/react-router'
 import { useEffect, useState, type ReactNode } from 'react'
 import appCss from '../styles.css?url'
+import { Crumbs } from '@/components/Crumbs'
 import { Header } from '@/components/Header'
 import { FAVICON } from '@/components/Logo'
 import { Footer } from '@/components/Footer'
@@ -55,11 +56,8 @@ function Layout() {
   return (
     <div className="min-h-screen">
       <Header onMenu={() => setMenu(true)} />
-      {/* Two menus, as in the Appwrite docs: the catalog, and beside it the open library's own menu. */}
-      <div className={`lg:grid ${nav ? 'lg:grid-cols-[240px_300px_minmax(0,1fr)]' : 'lg:grid-cols-[240px_minmax(0,1fr)]'}`}>
-        <aside className="sticky top-14 hidden h-[calc(100vh-3.5rem)] overflow-y-auto border-r border-border bg-sidebar lg:block">
-          <Sidebar />
-        </aside>
+      {/* The site's pages are in the header; a library's pages add its own menu on the left. */}
+      <div className={nav ? 'lg:grid lg:grid-cols-[300px_minmax(0,1fr)]' : ''}>
         {nav ? (
           <aside className="sticky top-14 hidden h-[calc(100vh-3.5rem)] overflow-y-auto border-r border-border bg-sidebar lg:block">
             <LibraryMenu key={nav.library.slug} nav={nav} />
@@ -79,6 +77,7 @@ function Layout() {
           </div>
         ) : null}
         <main className="min-w-0 px-5 pt-8 pb-16 md:px-10">
+          <Crumbs />
           <Outlet />
           {index ? <Footer index={index} /> : null}
         </main>
