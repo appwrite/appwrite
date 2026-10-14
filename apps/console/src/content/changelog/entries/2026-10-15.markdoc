@@ -1,7 +1,7 @@
 ---
 layout: changelog
 title: Self-host Appwrite on Kubernetes with the official Helm chart
-date: 2026-10-14
+date: 2026-10-15
 cover: /images/blog/announcing-appwrite-helm-chart/cover.avif
 tags: infrastructure
 ---

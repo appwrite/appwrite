@@ -2,7 +2,7 @@
 layout: post
 title: "Announcing the official Appwrite Helm chart for Kubernetes"
 description: Self-host Appwrite on Kubernetes with the official Helm chart, using built-in or managed PostgreSQL, Redis, and ClickHouse, S3, and Functions and Sites.
-date: 2026-10-14
+date: 2026-10-15
 cover: /images/blog/announcing-appwrite-helm-chart/cover.avif
 timeToRead: 8
 author: levi-van-noort
