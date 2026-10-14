@@ -1304,6 +1304,9 @@ impl Normalizer {
                                 (k, Value::String(code)) if one_time_code(k, x) => {
                                     Value::String(self.number(code.clone(), "otp"))
                                 }
+                                (k, Value::String(hash)) if secret_hash(k, x) => {
+                                    Value::String(self.number(hash.clone(), "secret-hash"))
+                                }
                                 // The response's size counts the `X-Debug-Speed`
                                 // header, a time whose digits vary.
                                 ("value", Value::Number(_))
@@ -1401,6 +1404,15 @@ fn one_time_code(key: &str, value: &Value) -> bool {
         && value.as_str().is_some_and(|s| s.len() == 6 && s.bytes().all(|b| b.is_ascii_digit()))
 }
 
+/// A stored session or token secret (`proofForToken->hash()`: SHA-256 hex
+/// of a random secret), under `secret` (the deletes worker's user document).
+fn secret_hash(key: &str, value: &Value) -> bool {
+    key == "secret"
+        && value
+            .as_str()
+            .is_some_and(|s| s.len() == 64 && s.bytes().all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b)))
+}
+
 /// What kind of generated value `s` is, if it is one: an ID from
 /// `ID::unique()` (20 hexadecimal characters), a `uniqid('', true)`, or a
 /// datetime.
@@ -1445,6 +1457,20 @@ const MASKED_ERROR_FIELDS: &[(&str, &str)] = &[
     ("file", "the runtime's source file (development only)"),
     ("line", "the runtime's source line (development only)"),
     ("trace", "the runtime's stack (development only)"),
+];
+
+/// The placeholders of a twin's own names: a side effect that names none of
+/// them is another run's.
+const OWN_PLACEHOLDERS: &[&str] = &[
+    "{project}",
+    "_{seq}_",
+    "::{seq}:",
+    "project:{seq}:",
+    "platform:{seq}:",
+    "{account-seq}",
+    "{team-seq}",
+    "key-id}",
+    "{other-project}",
 ];
 
 /// One runtime's record of a scenario.
@@ -1508,6 +1534,16 @@ async fn record(
             }
         }
     }
+    // Several runs can share the stack: the PHP container also serves other
+    // twins' requests while this one runs. What this request did names its
+    // twin (its project, tables or keys); the rest is another run's, and is
+    // left out before generated values are numbered.
+    let own = |item: &Value| {
+        let text = Normalizer::new(twin, other).value(item).to_string();
+        OWN_PLACEHOLDERS.iter().any(|p| text.contains(p))
+    };
+    effects.retain(own);
+    purges.retain(own);
     let mut normalizer = Normalizer::new(twin, other);
     let raw = json!({
         "status": reply.status,
@@ -1606,10 +1642,11 @@ pub fn run(_root: &Path, filter: Option<&str>, verbose: bool) -> Result<Value, S
                 }
                 r
             };
-            // `COMPAT_DIFF_SHOW=<text>`: print the PHP record of the
-            // scenarios whose id contains it, to read what was compared.
+            // `COMPAT_DIFF_SHOW=<text>`: print both records of the scenarios
+            // whose id contains it, to read what was compared.
             if std::env::var("COMPAT_DIFF_SHOW").is_ok_and(|s| scenario.id.contains(&s)) {
-                eprintln!("{}: {}", scenario.id, compared(&a));
+                eprintln!("SHOW php  {}: {}", scenario.id, compared(&a));
+                eprintln!("SHOW rust {}: {}", scenario.id, compared(&b));
             }
             match first_difference(&compared(&a), &compared(&b), "") {
                 None => {

@@ -153,6 +153,10 @@ pub fn skipped(keep: &[&str]) -> Vec<String> {
 /// when there is none (or it is not readable).
 pub async fn user_document(db: &Database, id: &str, keep: &[&str]) -> Result<Document> {
     let skipped = skipped(keep);
+    if skipped.is_empty() {
+        // An empty list skips every filter.
+        return Ok(db.get_document("users", id, Vec::new(), false).await?);
+    }
     Ok(db.skip_filters(|| db.get_document("users", id, Vec::new(), false), Some(&skipped)).await?)
 }
 

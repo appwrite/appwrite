@@ -417,7 +417,7 @@ pub(super) async fn authenticate(ctx: &mut Context) -> Result<()> {
         }
     }
 
-    track_access(ctx);
+    track_access(ctx).await;
 
     // Service and API toggles.
     let privileged_or_key = roles::is_privileged(&ctx.roles) || roles::is_key(&ctx.roles);
@@ -764,7 +764,7 @@ fn track_key_usage(ctx: &Context, owner: KeyOwner, key: crate::database::project
 /// Updates project and user `accessedAt` (once per 24h), without the
 /// sub-queries (`updateDocument` returns the document decoded, and nothing
 /// reads it).
-fn track_access(ctx: &Context) {
+async fn track_access(ctx: &mut Context) {
     let now = datetime::now();
     let threshold = datetime::add_seconds(now, -86_400);
     let state = ctx.state.clone();
@@ -808,20 +808,23 @@ fn track_access(ctx: &Context) {
             Err(_) => return,
         }
     };
-    tokio::spawn(async move {
-        let _ = state
-            .lock
-            .try_with_key(&lock_key, async move {
-                let mut updates = Document::default();
-                updates.set("accessedAt", datetime::value(&now));
-                let skipped = filters::names(filters::USERS_SUBQUERIES);
-                let updated = db.skip_filters(|| db.update_document("users", &user_id, updates), Some(&skipped)).await;
-                if let Err(e) = updated {
-                    tracing::warn!(error = %e, "user access update failed");
-                }
-            })
-            .await;
-    });
+    // Before the action, as in PHP: an action that writes the user returns
+    // it with its access time, and the action reads it too.
+    let _ = state
+        .lock
+        .try_with_key(&lock_key, async move {
+            let mut updates = Document::default();
+            updates.set("accessedAt", datetime::value(&now));
+            let skipped = filters::names(filters::USERS_SUBQUERIES);
+            let updated = db.skip_filters(|| db.update_document("users", &user_id, updates), Some(&skipped)).await;
+            if let Err(e) = updated {
+                tracing::warn!(error = %e, "user access update failed");
+            }
+        })
+        .await;
+    if let Some(user) = ctx.user.as_mut() {
+        user.accessed_at = Some(datetime::truncate(now));
+    }
 }
 
 /// Builds the final response (success or error) and schedules shutdown work.

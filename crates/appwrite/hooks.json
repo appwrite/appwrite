@@ -8,7 +8,7 @@
       "php": { "file": "app/controllers/shared/api.php", "kind": "init", "anchor": "Step 9: Validate scope permissions" },
       "rust": {
         "status": "partial",
-        "note": "Same checks in the same order for project, standard, ephemeral, account and organization keys, sessions, JWTs, admin mode and impersonation, including the account key's user roles, the organization key's team roles and each key's last-access tracking (proved by `bin/compat appwrite diff`). The path project binding and the DocumentsDB/VectorsDB product switches are not needed by Users yet.",
+        "note": "Same checks in the same order for project, standard, ephemeral, account and organization keys, sessions, JWTs, admin mode and impersonation, including the account key's user roles, the organization key's team roles and each key's last-access tracking (proved by `bin/compat appwrite diff`). The path project binding and the DocumentsDB/VectorsDB product switches are not needed by Users yet. The user's `accessedAt` is written before the action, as in PHP, so an action that writes the user returns it (proved on `PATCH /v1/account/status`).",
         "where": [
           { "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "// -- auth (shared/api.php)" },
           { "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "fn track_key_usage" },
@@ -23,8 +23,8 @@
       "php": { "file": "app/controllers/shared/api.php", "kind": "init", "anchor": "GENERAL_RATE_LIMIT_EXCEEDED" },
       "rust": {
         "status": "partial",
-        "note": "Implemented in `platform/guards.rs` (route labels in `platform::Labels`); no route Rust serves carries its labels yet, so Teams and Account prove it.",
-        "where": []
+        "note": "Implemented in `platform/guards.rs` (route labels in `platform::Labels`). The Account routes carry `abuse-limit` and `abuse-key` labels (`url:{url},ip:{ip}`, `{param-email}`, `{userId}`, `{param-userId}`): `appwrite diff` proves their keys, parameters and `X-RateLimit-*` headers with `_APP_OPTIONS_ABUSE` disabled (peek). Refusing past the limit is not exercised.",
+        "where": [{ "file": "crates/appwrite/core/src/platform/guards.rs", "anchor": "pub(super) async fn abuse" }]
       }
     },
     {
@@ -250,7 +250,7 @@
       "title": "Authentication methods",
       "description": "For `auth` routes, refuses console access from denied countries and, except for keys and privileged users, an authentication method the project disabled (`auth.type` label).",
       "php": { "file": "app/controllers/shared/api/auth.php", "kind": "init", "anchor": "auth.type" },
-      "rust": { "status": "partial", "note": "Implemented in `platform/guards.rs` (route labels in `platform::Labels`); no route Rust serves carries its labels yet, so Teams and Account prove it.", "note": null, "where": [] }
+      "rust": { "status": "partial", "note": "Implemented in `platform/guards.rs`. Proved for the `phone` method (the `auth` group and `auth.type` of `POST /v1/account/verifications/phone`, enabled) by `appwrite diff`; a disabled method and the console country denylist are not exercised.", "where": [{ "file": "crates/appwrite/core/src/platform/guards.rs", "anchor": "pub(super) async fn auth_methods" }] }
     },
     {
       "id": "graphql-api",
