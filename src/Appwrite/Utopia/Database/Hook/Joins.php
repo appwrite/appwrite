@@ -73,16 +73,16 @@ final class Joins implements Queries
     private function lookup(string $joined): Document
     {
         $registry = $this->registry();
-        $prefix = $this->prefix();
 
-        if (!\str_starts_with($joined, $prefix)) {
-            return $this->authorization->skip(
-                fn (): Document => $this->dbForProject->getDocument($registry, $joined)
-            );
+        $related = $this->authorization->skip(
+            fn (): Document => $this->dbForProject->getDocument($registry, $joined)
+        );
+        if (!$related->isEmpty()) {
+            return $related;
         }
 
-        $sequence = \substr($joined, \strlen($prefix));
-        if ($sequence === '' || !\ctype_digit($sequence)) {
+        $sequence = $this->sequence($joined);
+        if ($sequence === null) {
             return new Document();
         }
 
@@ -94,6 +94,18 @@ final class Joins implements Queries
         );
 
         return $found[0] ?? new Document();
+    }
+
+    private function sequence(string $table): ?string
+    {
+        $prefix = $this->prefix();
+        if (!\str_starts_with($table, $prefix)) {
+            return null;
+        }
+
+        $sequence = \substr($table, \strlen($prefix));
+
+        return \ctype_digit($sequence) ? $sequence : null;
     }
 
     private function isPrivileged(): bool
