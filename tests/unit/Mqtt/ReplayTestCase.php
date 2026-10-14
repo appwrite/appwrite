@@ -102,9 +102,10 @@ abstract class ReplayTestCase extends TestCase
             Attribute::integer('sequence', true),
         ], permissions: $any, documentSecurity: false));
 
-        $this->database->createCollection('subscribers', [], [], $any, false);
-        $this->database->createAttribute('subscribers', 'topicInternalId', Database::VAR_STRING, 255, true);
-        $this->database->createAttribute('subscribers', 'userId', Database::VAR_STRING, 255, true);
+        $this->database->createCollection(Collection::create('subscribers', attributes: [
+            Attribute::string('topicInternalId', 255, true),
+            Attribute::string('userId', 255, true),
+        ], permissions: $any, documentSecurity: false));
 
         $container = new Container();
         $container->set('getConsoleDB', fn () => fn (): Database => $this->database, []);
@@ -137,7 +138,7 @@ abstract class ReplayTestCase extends TestCase
         // is granted. Reserved users/<id> topics are owner-gated and ignore this.
         if ($subscribed) {
             $this->database->createDocument('subscribers', new Document([
-                '$id' => ID::unique(),
+                '$id' => Id::unique(),
                 'topicInternalId' => (string) $topic->getSequence(),
                 'userId' => self::USER,
             ]));
