@@ -1227,6 +1227,112 @@ trait JoinPermissions
         }
     }
 
+    public function testJoinOfAnUnknownCollectionIsNotFound(): void
+    {
+        if (!$this->getSupportForJoins()) {
+            $this->markTestSkipped('Adapter does not support join queries');
+        }
+
+        $data = $this->setupJoinPermissionsFixture();
+        $unknownId = Id::unique();
+        $queries = [
+            Query::join($unknownId, 'ord', [Query::on('$id', 'customerId')])->toString(),
+            Query::select(['name', 'ord.amount'])->toString(),
+        ];
+
+        $listed = $this->joinPermissionList($data['databaseId'], $data['customersId'], $queries);
+        $got = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($data['databaseId'], $data['customersId'], $data['aliceId']), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => $queries,
+        ]);
+
+        $type = $this->getDatabaseType() === 'tablesdb' ? Exception::TABLE_NOT_FOUND : Exception::COLLECTION_NOT_FOUND;
+        foreach ([$listed, $got] as $result) {
+            $this->assertSame(404, $result['headers']['status-code'], 'no caller, privileged or not, can join a collection that does not exist');
+            $this->assertSame($type, $result['body']['type']);
+            $this->assertStringContainsString($unknownId, $result['body']['message'], 'the refusal names the joined collection, not the listed one');
+        }
+    }
+
+    public function testJoinInATransactionReadResolvesTheJoinedCollection(): void
+    {
+        if (!$this->getSupportForJoins()) {
+            $this->markTestSkipped('Adapter does not support join queries');
+        }
+
+        $data = $this->createCustomerWithOrder();
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), $headers);
+        $this->assertSame(201, $transaction['headers']['status-code']);
+
+        $listed = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($data['databaseId'], $data['customersId']), $headers, [
+            'queries' => [
+                Query::join($data['ordersId'], 'ord', [Query::on('$id', 'customerId')])->toString(),
+                Query::select(['name', 'ord.item'])->toString(),
+            ],
+            'transactionId' => $transaction['body']['$id'],
+        ]);
+
+        $this->assertSame(200, $listed['headers']['status-code'], 'a transaction read resolves the joined collection by the ID the caller gave');
+        $rows = $listed['body'][$this->getRecordResource()];
+        $this->assertSame([$data['customerId']], \array_column($rows, '$id'));
+        $this->assertSame(['Lamp'], $this->joinPermissionValues($rows, 'ord', 'item'));
+        $this->assertSame(1, $listed['body']['total']);
+    }
+
+    public function testJoinedListIsNotCached(): void
+    {
+        if (!$this->getSupportForJoins()) {
+            $this->markTestSkipped('Adapter does not support join queries');
+        }
+
+        $data = $this->createCustomerWithOrder();
+        $list = fn (): array => $this->client->call(Client::METHOD_GET, $this->getRecordUrl($data['databaseId'], $data['customersId']), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::join($data['ordersId'], 'ord', [Query::on('$id', 'customerId')])->toString(),
+                Query::select(['name', 'ord.item'])->toString(),
+            ],
+            'ttl' => 60,
+        ]);
+
+        foreach ([$list(), $list()] as $warm) {
+            $this->assertSame(200, $warm['headers']['status-code']);
+            $this->assertSame(['Lamp'], $this->joinPermissionValues($warm['body'][$this->getRecordResource()], 'ord', 'item'));
+        }
+
+        $disabled = $this->client->call(Client::METHOD_PUT, $this->getContainerUrl($data['databaseId'], $data['ordersId']), [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'name' => 'jpDisabledOrders',
+            'enabled' => false,
+            $this->getSecurityParam() => true,
+        ]);
+        $this->assertSame(200, $disabled['headers']['status-code']);
+        $this->assertFalse($disabled['body']['enabled']);
+
+        $listed = $list();
+
+        if ($this->getSide() === 'client') {
+            $this->assertSame(404, $listed['headers']['status-code'], 'a joined list is not served from the cache, so disabling the joined collection takes effect at once');
+            $this->assertSame($this->getDatabaseType() === 'tablesdb' ? Exception::TABLE_NOT_FOUND : Exception::COLLECTION_NOT_FOUND, $listed['body']['type']);
+            $this->assertStringContainsString($data['ordersId'], $listed['body']['message'], 'the refusal names the joined collection, not the listed one');
+        } else {
+            $this->assertSame(200, $listed['headers']['status-code'], 'API keys and privileged users still read a disabled collection');
+            $this->assertSame(['Lamp'], $this->joinPermissionValues($listed['body'][$this->getRecordResource()], 'ord', 'item'));
+        }
+    }
+
     /**
      * @return array{databaseId: string, customersId: string, ordersId: string, customerId: string}
      */
