@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents;
 
-use Appwrite\Databases\Joins;
 use Appwrite\Databases\TransactionState;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
@@ -102,14 +101,6 @@ class Get extends Action
         } catch (QueryException $e) {
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
-
-        $queries = (new Joins(
-            $dbForProject,
-            $database,
-            $authorization,
-            $isAPIKey || $isPrivilegedUser,
-            $this->getParentNotFoundException(),
-        ))->resolve($queries);
 
         try {
             $selects = Query::groupByType($queries)->selections;

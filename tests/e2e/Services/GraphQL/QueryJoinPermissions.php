@@ -1103,4 +1103,149 @@ trait QueryJoinPermissions
         $this->assertStringNotContainsString('classified-join-data', $this->joinEncodedBody($refused));
     }
 
+    public function testDisabledJoinsInOneRequestNameTheirOwnResource(): void
+    {
+        if (!$this->getSupportForJoins()) {
+            $this->markTestSkipped('Adapter does not support join queries');
+        }
+        if ($this->isTablesDB() || $this->getSide() !== 'client') {
+            $this->markTestSkipped('The request lists through both APIs, so it runs once, in the legacy client class');
+        }
+
+        $collections = $this->createCustomerWithOrder(false);
+        $tables = $this->createCustomerWithOrder(true);
+        $joins = fn (array $fixture): array => [
+            Query::join($fixture['ordersId'], 'ord', [Query::on('$id', 'customerId')])->toString(),
+            Query::select(['name', 'ord.item'])->toString(),
+        ];
+        $query = 'query listBoth($collectionDatabaseId: String!, $collectionId: String!, $collectionQueries: [String!], $tableDatabaseId: String!, $tableId: String!, $tableQueries: [String!]) {
+            databasesListDocuments(databaseId: $collectionDatabaseId, collectionId: $collectionId, queries: $collectionQueries) {
+                documents {
+                    _id
+                    data
+                }
+            }
+            tablesDBListRows(databaseId: $tableDatabaseId, tableId: $tableId, queries: $tableQueries) {
+                rows {
+                    _id
+                    data
+                }
+            }
+        }';
+        $variables = [
+            'collectionDatabaseId' => $collections['databaseId'],
+            'collectionId' => $collections['customersId'],
+            'collectionQueries' => $joins($collections),
+            'tableDatabaseId' => $tables['databaseId'],
+            'tableId' => $tables['customersId'],
+            'tableQueries' => $joins($tables),
+        ];
+
+        $enabled = $this->graphqlJoin($query, $variables);
+        $this->assertArrayNotHasKey('errors', $enabled['body'], 'both joins succeed while the joined collection and table are enabled');
+        $this->assertSame(['Lamp'], $this->joinPermissionValues($enabled['body']['data']['databasesListDocuments']['documents'] ?? [], 'ord', 'item'));
+        $this->assertSame(['Lamp'], $this->joinPermissionValues($enabled['body']['data']['tablesDBListRows']['rows'] ?? [], 'ord', 'item'));
+
+        foreach ([[false, $collections], [true, $tables]] as [$tablesDB, $fixture]) {
+            $api = $this->joinApi($tablesDB);
+            $disabled = $this->client->call(Client::METHOD_PUT, "{$api['api']}/{$fixture['databaseId']}/{$api['containers']}/{$fixture['ordersId']}", $this->joinServerHeaders(), [
+                'enabled' => false,
+                $api['security'] => true,
+            ]);
+            $this->assertSame(200, $disabled['headers']['status-code']);
+            $this->assertFalse($disabled['body']['enabled']);
+        }
+
+        $refused = $this->graphqlJoin($query, $variables);
+        $this->assertArrayHasKey('errors', $refused['body']);
+        $messages = [];
+        foreach ($refused['body']['errors'] as $error) {
+            $messages[$error['path'][0] ?? ''] = $error['message'] ?? null;
+        }
+        \ksort($messages);
+
+        $this->assertSame([
+            'databasesListDocuments' => "Collection with the requested ID '{$collections['ordersId']}' could not be found.",
+            'tablesDBListRows' => "Table with the requested ID '{$tables['ordersId']}' could not be found.",
+        ], $messages, 'each field is refused with the not-found type of its own API, naming its own joined resource');
+    }
+
+    /**
+     * @return array{api: string, containers: string, containerId: string, security: string, schema: string, records: string, recordId: string}
+     */
+    private function joinApi(bool $tablesDB): array
+    {
+        return $tablesDB
+            ? ['api' => '/tablesdb', 'containers' => 'tables', 'containerId' => 'tableId', 'security' => 'rowSecurity', 'schema' => 'columns', 'records' => 'rows', 'recordId' => 'rowId']
+            : ['api' => '/databases', 'containers' => 'collections', 'containerId' => 'collectionId', 'security' => 'documentSecurity', 'schema' => 'attributes', 'records' => 'documents', 'recordId' => 'documentId'];
+    }
+
+    /**
+     * @return array{databaseId: string, customersId: string, ordersId: string}
+     */
+    private function createCustomerWithOrder(bool $tablesDB): array
+    {
+        $api = $this->joinApi($tablesDB);
+        $serverHeaders = $this->joinServerHeaders();
+
+        $database = $this->client->call(Client::METHOD_POST, $api['api'], $serverHeaders, [
+            'databaseId' => Id::unique(),
+            'name' => 'jpDisabledJoin',
+        ]);
+        $this->assertSame(201, $database['headers']['status-code']);
+        $databaseId = $database['body']['$id'];
+
+        $containerIds = [];
+        $containerUrls = [];
+        foreach (['customers' => ['name'], 'orders' => ['customerId', 'item']] as $key => $attributes) {
+            $container = $this->client->call(Client::METHOD_POST, "{$api['api']}/{$databaseId}/{$api['containers']}", $serverHeaders, [
+                $api['containerId'] => Id::unique(),
+                'name' => 'jpDisabled' . \ucfirst($key),
+                $api['security'] => true,
+                'permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::create(Role::any()),
+                ],
+            ]);
+            $this->assertSame(201, $container['headers']['status-code']);
+            $containerIds[$key] = $container['body']['$id'];
+            $containerUrls[$key] = "{$api['api']}/{$databaseId}/{$api['containers']}/{$container['body']['$id']}";
+
+            foreach ($attributes as $attribute) {
+                $created = $this->client->call(Client::METHOD_POST, "{$containerUrls[$key]}/{$api['schema']}/string", $serverHeaders, [
+                    'key' => $attribute,
+                    'size' => 64,
+                    'required' => true,
+                ]);
+                $this->assertSame(202, $created['headers']['status-code']);
+            }
+            foreach ($attributes as $attribute) {
+                $this->assertEventually(function () use ($containerUrls, $key, $api, $attribute, $serverHeaders) {
+                    $status = $this->client->call(Client::METHOD_GET, "{$containerUrls[$key]}/{$api['schema']}/{$attribute}", $serverHeaders);
+                    $this->assertSame(200, $status['headers']['status-code']);
+                    $this->assertSame('available', $status['body']['status'] ?? '');
+                }, 360000, 500);
+            }
+        }
+
+        $customer = $this->client->call(Client::METHOD_POST, "{$containerUrls['customers']}/{$api['records']}", $serverHeaders, [
+            $api['recordId'] => Id::unique(),
+            'data' => ['name' => 'Alice'],
+            'permissions' => [Permission::read(Role::any())],
+        ]);
+        $this->assertSame(201, $customer['headers']['status-code']);
+
+        $order = $this->client->call(Client::METHOD_POST, "{$containerUrls['orders']}/{$api['records']}", $serverHeaders, [
+            $api['recordId'] => Id::unique(),
+            'data' => ['customerId' => $customer['body']['$id'], 'item' => 'Lamp'],
+            'permissions' => [Permission::read(Role::any())],
+        ]);
+        $this->assertSame(201, $order['headers']['status-code']);
+
+        return [
+            'databaseId' => $databaseId,
+            'customersId' => $containerIds['customers'],
+            'ordersId' => $containerIds['orders'],
+        ];
+    }
 }

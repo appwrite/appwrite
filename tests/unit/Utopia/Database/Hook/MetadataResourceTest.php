@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Tests\Unit\Utopia\Database\Hook;
 
 use Appwrite\Database\Factory as DatabaseFactory;
+use Appwrite\Extend\Exception;
 use Appwrite\Usage\Context;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use PHPUnit\Framework\TestCase;
 use Utopia\Cache\Adapter\None as NoCache;
@@ -17,16 +19,19 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Hook\Relationships;
 use Utopia\Database\Permission;
+use Utopia\Database\Query;
 use Utopia\Database\Relationship;
 use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
+use Utopia\Http\Adapter\FPM\Server;
+use Utopia\Http\Http;
 
 /**
  * The HTTP `getDatabasesDB` resource wires the Metadata hook of every tenant database it hands out: the hook must
  * know the public ID of the collection the caller passed without querying the catalog for it, and must record
- * what it decorates on the request's operations counter. Cloud keeps its own copy of the resource, so the closure
- * contract stays as it is.
+ * what it decorates on the request's operations counter. It also wires the Joins hook, whose refusals name the resource
+ * of the request being served. Cloud keeps its own copy of the resource, so the closure contract stays as it is.
  */
 final class MetadataResourceTest extends TestCase
 {
@@ -114,6 +119,28 @@ final class MetadataResourceTest extends TestCase
         }
     }
 
+    public function testRequestResourceRefusesAJoinOfAnUnknownCollectionAsCollectionNotFound(): void
+    {
+        $getDatabasesDB = $this->requestContainer($this->catalog())->get('getDatabasesDB');
+
+        $refusal = $this->joinRefusal($getDatabasesDB(new Document(['$id' => 'cinema', '$sequence' => '4'])));
+
+        $this->assertSame(Exception::COLLECTION_NOT_FOUND, $refusal->getType());
+        $this->assertStringContainsString("'directors'", $refusal->getMessage());
+    }
+
+    public function testRequestResourceNamesTheResourceOfTheOperationBeingServed(): void
+    {
+        $container = $this->requestContainer($this->catalog());
+        $operation = new Container($container);
+        $operation->set('request', fn (): Request => $this->request('/v1/tablesdb/cinema/tables/movies/rows'));
+        $container->set('utopia', static fn (): Http => new Http(new Server($operation), 'UTC'));
+
+        $refusal = $this->joinRefusal($container->get('getDatabasesDB')(new Document(['$id' => 'cinema', '$sequence' => '4'])));
+
+        $this->assertSame(Exception::TABLE_NOT_FOUND, $refusal->getType(), 'a GraphQL operation serves its own request from a child container, not the request the database was built for');
+    }
+
     public function testWorkerResourceTakesTheProjectByName(): void
     {
         $projects = [];
@@ -170,9 +197,7 @@ final class MetadataResourceTest extends TestCase
         $factory = $this->createStub(DatabaseFactory::class);
         $factory->method('tenant')->willReturnCallback(fn (): Database => $this->tenant());
 
-        $request = $this->createStub(Request::class);
-        $request->method('getURI')->willReturn('/v1/databases/cinema/collections/movies/documents/film');
-        $request->method('getHeaderLine')->willReturn('');
+        $request = $this->request('/v1/databases/cinema/collections/movies/documents/film');
 
         $register = require __DIR__ . '/../../../../../app/init/resources/request.php';
         $container = new Container();
@@ -182,7 +207,30 @@ final class MetadataResourceTest extends TestCase
         $container->set('request', static fn (): Request => $request);
         $container->set('dbForProject', static fn (): Database => $catalog);
         $container->set('usage', static fn (): Context => new Context());
+        $container->set('authorization', fn (): Authorization => $this->authorization);
+        $container->set('user', static fn (): User => new User());
+        $container->set('utopia', static fn (): Http => new Http(new Server($container), 'UTC'));
 
         return $container;
+    }
+
+    private function request(string $uri): Request
+    {
+        $request = $this->createStub(Request::class);
+        $request->method('getURI')->willReturn($uri);
+        $request->method('getHeaderLine')->willReturn('');
+
+        return $request;
+    }
+
+    private function joinRefusal(Database $database): Exception
+    {
+        try {
+            $database->find(self::MOVIES, [Query::join('directors', 'director', [Query::on('lead', '$id')])]);
+        } catch (Exception $refusal) {
+            return $refusal;
+        }
+
+        $this->fail('the join of an unknown collection must be refused');
     }
 }
