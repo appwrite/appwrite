@@ -620,6 +620,8 @@ impl Normalizer {
             (twin.prefix.trim_end_matches('_').to_owned(), "_{seq}".to_owned()),
             (format!("platform:{}:", twin.prefix.trim_matches('_')), "platform:{seq}:".to_owned()),
             (format!("project:{}:", twin.prefix.trim_matches('_')), "project:{seq}:".to_owned()),
+            // Shared tables: the tenant in cache keys (`<cache>::<tenant>:collection:...`).
+            (format!("::{}:", twin.prefix.trim_matches('_')), "::{seq}:".to_owned()),
         ];
         fixed.retain(|(from, _)| !from.is_empty());
         // Longest first, so a secret is replaced before a project ID it may contain.
