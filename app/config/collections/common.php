@@ -301,6 +301,7 @@ return [
         'attributes' => [
             Attribute::boolean(key: 'enabled', required: true),
             Attribute::string(key: 'name', size: 128, required: true),
+            Attribute::string(key: 'description', size: 1024, default: ''),
             Attribute::boolean(key: 'fileSecurity'),
             Attribute::integer(key: 'maximumFileSize', width: IntegerWidth::Bits64, required: true, signed: false),
             Attribute::string(key: 'allowedFileExtensions', size: 64, required: true, array: true),
@@ -392,6 +393,7 @@ return [
         'name' => 'Topics',
         'attributes' => [
             Attribute::string(key: 'name', size: 128, required: true),
+            Attribute::string(key: 'description', size: 1024, default: ''),
             Attribute::string(key: 'subscribe', size: 128, array: true),
             Attribute::integer(key: 'emailTotal', default: 0),
             Attribute::integer(key: 'smsTotal', default: 0),

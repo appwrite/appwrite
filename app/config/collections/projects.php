@@ -15,6 +15,7 @@ return [
         'name' => 'Databases',
         'attributes' => [
             Attribute::string(key: 'name', size: 256, required: true),
+            Attribute::string(key: 'description', size: 1024, default: ''),
             Attribute::boolean(key: 'enabled', default: true),
             Attribute::string(key: 'search', size: 16384),
             Attribute::string(key: 'originalId'),
@@ -38,6 +39,7 @@ return [
             Attribute::string(key: 'collectionInternalId', required: true),
             Attribute::string(key: 'collectionId', required: true),
             Attribute::string(key: 'key'),
+            Attribute::string(key: 'description', size: 1024, default: ''),
             Attribute::string(key: 'type', size: 256),
             Attribute::string(key: 'status', size: 16),
             Attribute::string(key: 'error', size: 2048),
@@ -66,6 +68,7 @@ return [
             Attribute::string(key: 'collectionInternalId', required: true),
             Attribute::string(key: 'collectionId', required: true),
             Attribute::string(key: 'key'),
+            Attribute::string(key: 'description', size: 1024, default: ''),
             Attribute::string(key: 'type', size: 16),
             Attribute::string(key: 'status', size: 16),
             Attribute::string(key: 'error', size: 2048),
@@ -85,6 +88,7 @@ return [
         'attributes' => [
             Attribute::string(key: 'execute', size: 128, array: true),
             Attribute::string(key: 'name', size: 2048),
+            Attribute::string(key: 'description', size: 1024, default: ''),
             Attribute::boolean(key: 'enabled', required: true),
             Attribute::boolean(key: 'live', required: true),
             Attribute::string(key: 'installationId'),
@@ -146,6 +150,7 @@ return [
         'name' => 'Sites',
         'attributes' => [
             Attribute::string(key: 'name', size: 2048),
+            Attribute::string(key: 'description', size: 1024, default: ''),
             Attribute::boolean(key: 'enabled', required: true),
             Attribute::boolean(key: 'live', required: true),
             Attribute::string(key: 'installationId'),
@@ -281,6 +286,7 @@ return [
             Attribute::string(key: 'resourceInternalId'),
             Attribute::string(key: 'resourceId'),
             Attribute::string(key: 'key'),
+            Attribute::string(key: 'description', size: 1024, default: ''),
             Attribute::string(key: 'value', size: 8192, required: true, filters: ['encrypt']),
             Attribute::boolean(key: 'secret', default: false),
             Attribute::string(key: 'search', size: 16384),

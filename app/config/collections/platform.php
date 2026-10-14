@@ -122,6 +122,7 @@ $platformCollections = [
             Attribute::string(key: 'resourceId'),
             Attribute::string(key: 'resourceInternalId'),
             Attribute::string(key: 'name', required: true),
+            Attribute::string(key: 'description', size: 1024, default: ''),
             Attribute::string(key: 'scopes', required: true, array: true),
             // var_dump of \bin2hex(\random_bytes(128)) => string(256) doubling for encryption
             Attribute::string(key: 'secret', size: 512, required: true, filters: ['encrypt']),
@@ -143,6 +144,7 @@ $platformCollections = [
             Attribute::string(key: 'projectInternalId', required: true),
             Attribute::string(key: 'projectId'),
             Attribute::string(key: 'name', required: true),
+            Attribute::string(key: 'description', size: 1024, default: ''),
             Attribute::string(key: 'url', required: true),
             Attribute::string(key: 'httpUser'),
             Attribute::text(key: 'httpPass', size: 65535, filters: ['encrypt']),

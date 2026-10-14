@@ -13,6 +13,7 @@ return [
             Attribute::string(key: 'databaseInternalId', required: true),
             Attribute::string(key: 'databaseId', required: true),
             Attribute::string(key: 'name', size: 256, required: true),
+            Attribute::string(key: 'description', size: 1024, default: ''),
             Attribute::boolean(key: 'enabled', required: true),
             Attribute::boolean(key: 'documentSecurity', required: true),
             Attribute::string(key: 'attributes', size: 1000000, filters: ['subQueryAttributes']),
