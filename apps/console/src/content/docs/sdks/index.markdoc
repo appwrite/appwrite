@@ -97,7 +97,7 @@ Server libraries for integrating with Appwrite to build server side integrations
 ---
 * {% only_dark %}{% icon_image src="/images/platforms/dark/dotnet.svg" alt=".NET logo" size="m" /%}{% /only_dark %}
 {% only_light %}{% icon_image src="/images/platforms/light/dotnet.svg" alt=".NET logo" size="m" /%}{% /only_light %}
-* .NET SDK `8.3.1`
+* .NET SDK `8.4.0`
 * [appwrite/sdk-for-dotnet](https://github.com/appwrite/sdk-for-dotnet)
 * 
 ---
@@ -397,7 +397,7 @@ You can discover the available enums in each SDK at the source.
 ---
 * {% only_dark %}{% icon_image src="/images/platforms/dark/dotnet.svg" alt=".NET logo" size="m" /%}{% /only_dark %}
 {% only_light %}{% icon_image src="/images/platforms/light/dotnet.svg" alt=".NET logo" size="m" /%}{% /only_light %}
-* .NET SDK `8.3.1`
+* .NET SDK `8.4.0`
 * [appwrite/sdk-for-dotnet](https://github.com/appwrite/sdk-for-dotnet/tree/dev/Appwrite/Enums)
 *
 ---

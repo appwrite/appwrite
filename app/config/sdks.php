@@ -450,7 +450,7 @@ $platforms = [
             [
                 'key' => 'dotnet',
                 'name' => '.NET',
-                'version' => '8.3.1',
+                'version' => '8.4.0',
                 'url' => 'https://github.com/appwrite/sdk-for-dotnet',
                 'package' => 'https://www.nuget.org/packages/Appwrite',
                 'enabled' => true,

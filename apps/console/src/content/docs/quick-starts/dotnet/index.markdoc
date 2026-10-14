@@ -59,7 +59,7 @@ cd MyApp
 Install the .NET Appwrite SDK.
 
 ```sh
-dotnet add package Appwrite --version 8.3.1
+dotnet add package Appwrite --version 8.4.0
 ```
 {% /section %}
 {% section #step-4 step=4 title="Import Appwrite" %}
