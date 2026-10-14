@@ -90,9 +90,14 @@ export function SizeLine({ lib }: { lib: LibrarySummary }) {
       <div className="mt-2 max-w-[640px]">
         <SizeTable lib={lib} />
         <p className="m-0 mt-1.5 text-[11.5px]">
-          Comments include doc comments. Rust tests are <code className="font-mono">tests/</code> and <code className="font-mono">#[cfg(test)]</code> modules; PHP tests are the
-          package's <code className="font-mono">tests/</code>.
-</p>
+          Comments include doc comments. Rust tests are <code className="font-mono">tests/</code> and <code className="font-mono">#[cfg(test)]</code> modules
+          {s.php && migration ? (
+            <>
+              ; PHP tests are the package's <code className="font-mono">tests/</code>
+            </>
+          ) : null}
+          .
+        </p>
       </div>
     </details>
   )

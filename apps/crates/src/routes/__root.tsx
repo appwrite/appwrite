@@ -15,7 +15,7 @@ export const Route = createRootRoute({
       { charSet: 'utf-8' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
       { title: 'Utopia for Rust' },
-      { name: 'description', content: 'Documentation of the Utopia libraries in Rust, with their PHP counterparts.' },
+      { name: 'description', content: 'Documentation of the Utopia libraries in Rust.' },
     ],
     links: [
       { rel: 'stylesheet', href: appCss },

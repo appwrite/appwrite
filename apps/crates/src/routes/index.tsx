@@ -46,10 +46,10 @@ export const Route = createFileRoute('/')({
   component: Home,
 })
 
-/** Whether a library matches the search text: its name, package, crate, description or category. */
-function matches(l: LibrarySummary, term: string, category: string) {
+/** Whether a library matches the search text: its name, crate, description or category, and its PHP package in migration mode. */
+function matches(l: LibrarySummary, term: string, category: string, migration: boolean) {
   if (!term) return true
-  return [l.title, l.slug, l.description, l.php?.package, l.rust?.crate, category].join(' ').toLowerCase().includes(term)
+  return [l.title, l.slug, l.description, migration ? l.php?.package : '', l.rust?.crate, category].join(' ').toLowerCase().includes(term)
 }
 
 const chip =
@@ -111,7 +111,7 @@ function Home() {
   const behind = (l: LibrarySummary) => (l.sync.behind ?? 0) + (l.sync.upstream ?? 0) > 0
   const visible = (l: LibrarySummary, ignore?: 'status' | 'category' | 'behind') =>
     (migration || !!l.rust) &&
-    matches(l, term, categoryTitle.get(l.category) ?? '') &&
+    matches(l, term, categoryTitle.get(l.category) ?? '', migration) &&
     (ignore === 'behind' || !migration || !filters.behind || behind(l)) &&
     (ignore === 'status' || !migration || !filters.status || l.status === filters.status) &&
     (ignore === 'category' || !filters.category || l.category === filters.category)
@@ -167,7 +167,7 @@ function Home() {
               type="search"
               value={filters.q ?? ''}
               onChange={(e) => set({ q: e.target.value || undefined })}
-              placeholder="Search libraries, packages and crates"
+              placeholder={migration ? 'Search libraries, packages and crates' : 'Search libraries and crates'}
               aria-label="Search libraries"
               className="min-w-0 flex-1 bg-transparent text-[13.5px] text-foreground outline-none placeholder:text-muted-foreground"
             />
