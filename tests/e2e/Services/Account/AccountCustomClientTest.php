@@ -1705,7 +1705,8 @@ final class AccountCustomClientTest extends Scope
             'secret' => $verification,
         ]);
 
-        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertEquals('user_invalid_token', $response['body']['type']);
 
         $response = $this->client->call(Client::METHOD_PUT, '/account/verification', array_merge([
             'origin' => 'http://localhost',
@@ -2115,7 +2116,7 @@ final class AccountCustomClientTest extends Scope
 
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertNotEmpty($response['body']['userId']);
+        $this->assertEmpty($response['body']['userId']);
         $this->assertEmpty($response['body']['secret']);
         $this->assertEmpty($response['body']['phrase']);
         $this->assertTrue((new DatetimeValidator())->isValid($response['body']['expire']));
@@ -2157,7 +2158,7 @@ final class AccountCustomClientTest extends Scope
 
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertNotEmpty($response['body']['userId']);
+        $this->assertEmpty($response['body']['userId']);
         $this->assertEmpty($response['body']['secret']);
         $this->assertEmpty($response['body']['phrase']);
         $this->assertTrue((new DatetimeValidator())->isValid($response['body']['expire']));
@@ -2211,7 +2212,8 @@ final class AccountCustomClientTest extends Scope
             'password' => $newPassword,
         ]);
 
-        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertEquals('user_invalid_token', $response['body']['type']);
 
         $response = $this->client->call(Client::METHOD_PUT, '/account/recovery', array_merge([
             'origin' => 'http://localhost',
@@ -3917,7 +3919,9 @@ final class AccountCustomClientTest extends Scope
             'password' => $password,
         ]);
 
-        $this->assertEquals(409, $response['headers']['status-code']);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('general_bad_request', $response['body']['type']);
+        $this->assertEquals('There was an error processing your request. Please check the inputs and try again.', $response['body']['message']);
 
         /**
          * Test for SUCCESS
@@ -4850,7 +4854,7 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(400, $response['headers']['status-code']);
 
         /**
-         * Existing user ID with a different phone -> SHOULD FAIL with 409, not 500
+         * Existing user ID with a different phone -> SHOULD FAIL with the generic 400, not 500
          */
         $response = $this->client->call(Client::METHOD_POST, '/account/tokens/phone', array_merge([
             'origin' => 'http://localhost',
@@ -4861,8 +4865,9 @@ final class AccountCustomClientTest extends Scope
             'phone' => '+123456780',
         ]);
 
-        $this->assertEquals(409, $response['headers']['status-code']);
-        $this->assertEquals('user_already_exists', $response['body']['type']);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('general_bad_request', $response['body']['type']);
+        $this->assertEquals('There was an error processing your request. Please check the inputs and try again.', $response['body']['message']);
     }
 
     public function testCreateEmailTokenWithExistingUserId(): void
@@ -4888,8 +4893,9 @@ final class AccountCustomClientTest extends Scope
             'email' => uniqid() . 'other@localhost.test',
         ]);
 
-        $this->assertEquals(409, $response['headers']['status-code']);
-        $this->assertEquals('user_already_exists', $response['body']['type']);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('general_bad_request', $response['body']['type']);
+        $this->assertEquals('There was an error processing your request. Please check the inputs and try again.', $response['body']['message']);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/tokens/magic-url', array_merge([
             'origin' => 'http://localhost',
@@ -4900,8 +4906,9 @@ final class AccountCustomClientTest extends Scope
             'email' => uniqid() . 'other@localhost.test',
         ]);
 
-        $this->assertEquals(409, $response['headers']['status-code']);
-        $this->assertEquals('user_already_exists', $response['body']['type']);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('general_bad_request', $response['body']['type']);
+        $this->assertEquals('There was an error processing your request. Please check the inputs and try again.', $response['body']['message']);
     }
 
     public function testCreateSessionWithPhone(): void
@@ -5298,7 +5305,8 @@ final class AccountCustomClientTest extends Scope
             'secret' => $secret,
         ]);
 
-        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertEquals('user_invalid_token', $response['body']['type']);
 
         $response = $this->client->call(Client::METHOD_PUT, '/account/verification/phone', array_merge([
             'origin' => 'http://localhost',
@@ -5732,8 +5740,9 @@ final class AccountCustomClientTest extends Scope
             'identifier' => 'test-identifier-taken',
         ]);
 
-        $this->assertEquals(409, $response['headers']['status-code']);
-        $this->assertEquals('user_target_already_exists', $response['body']['type']);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('general_bad_request', $response['body']['type']);
+        $this->assertEquals('There was an error processing your request. Please check the inputs and try again.', $response['body']['message']);
 
         $response = $this->client->call(Client::METHOD_GET, '/account', \array_merge([
             'content-type' => 'application/json',
@@ -7191,8 +7200,9 @@ final class AccountCustomClientTest extends Scope
             'cookie' => 'a_session_' . $projectId . '=' . $attacker['session'],
         ]);
 
-        $this->assertEquals(409, $response['headers']['status-code']);
-        $this->assertEquals('user_already_exists', $response['body']['type']);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('general_bad_request', $response['body']['type']);
+        $this->assertEquals('There was an error processing your request. Please check the inputs and try again.', $response['body']['message']);
     }
 
     public function testCreateIdTokenSessionForeignSubjectKeepsSession(): void
@@ -7228,8 +7238,9 @@ final class AccountCustomClientTest extends Scope
             'cookie' => 'a_session_' . $projectId . '=' . $other['session'],
         ]);
 
-        $this->assertEquals(409, $response['headers']['status-code']);
-        $this->assertEquals('user_already_exists', $response['body']['type']);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('general_bad_request', $response['body']['type']);
+        $this->assertEquals('There was an error processing your request. Please check the inputs and try again.', $response['body']['message']);
 
         // A failed link must leave the caller's existing session intact
         $account = $this->client->call(Client::METHOD_GET, '/account', array_merge([
@@ -7750,7 +7761,8 @@ final class AccountCustomClientTest extends Scope
             'secret' => $otp,
         ]);
 
-        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertEquals('user_invalid_token', $response['body']['type']);
 
         /**
          * Test for FAILURE - OTP is single use
@@ -8010,7 +8022,8 @@ final class AccountCustomClientTest extends Scope
             'password' => 'new-password-otp',
         ]);
 
-        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertEquals('user_invalid_token', $response['body']['type']);
     }
 
     public function testCreateIdTokenSessionGoogleShapedClaims(): void

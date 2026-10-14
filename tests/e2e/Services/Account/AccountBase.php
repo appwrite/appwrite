@@ -78,7 +78,9 @@ trait AccountBase
             'name' => $name,
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 409);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('general_bad_request', $response['body']['type']);
+        $this->assertEquals('There was an error processing your request. Please check the inputs and try again.', $response['body']['message']);
 
         $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
             'origin' => 'http://localhost',

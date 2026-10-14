@@ -64,7 +64,7 @@ trait DatabasesPermissionsBase
             'password' => $password
         ]);
 
-        $this->assertContains($user['headers']['status-code'], [201, 409]);
+        $this->assertContains($user['headers']['status-code'], [201, 400]);
 
         $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
             'origin' => 'http://localhost',

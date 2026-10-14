@@ -78,7 +78,7 @@ export function provisionProject(config) {
         }
     });
 
-    assert(accountResponse, 'account created successfully', (r) => r.status === 201 || r.status === 409);
+    assert(accountResponse, 'account created successfully', (r) => r.status === 201 || r.status === 400);
 
     const userId = accountResponse.json('$id');
 

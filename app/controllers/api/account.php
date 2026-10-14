@@ -369,15 +369,6 @@ Http::post('/v1/account')
             }
         }
 
-        // Makes sure this email is not already used in another identity
-        $identityWithMatchingEmail = $dbForProject->findOne('identities', [
-            Query::equal('providerEmail', [$email]),
-        ]);
-        if (!$identityWithMatchingEmail->isEmpty()) {
-            throw new Exception(Exception::GENERAL_BAD_REQUEST);
-            /** Return a generic bad request to prevent exposing existing accounts */
-        }
-
         if ($project->getAttribute('auths', [])['personalDataCheck'] ?? false) {
             $personalDataValidator = new PersonalData($userId, $email, $name, null);
             if (!$personalDataValidator->isValid($password)) {
@@ -434,6 +425,16 @@ Http::post('/v1/account')
 
         if ((($project->getId() === 'console') || empty($plan) || ($plan['supportsCorporateEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['corporateEmails'] ?? false) && !$emailMetadata['emailIsCorporate']) {
             throw new Exception(Exception::USER_EMAIL_NOT_CORPORATE);
+        }
+
+        // Makes sure this email is not already used in another identity.
+        // Checked after the password and email policies so their errors do not depend on it.
+        $identityWithMatchingEmail = $dbForProject->findOne('identities', [
+            Query::equal('providerEmail', [$email]),
+        ]);
+        if (!$identityWithMatchingEmail->isEmpty()) {
+            throw new Exception(Exception::GENERAL_BAD_REQUEST);
+            /** Return a generic bad request to prevent exposing existing accounts */
         }
 
         try {
@@ -498,7 +499,8 @@ Http::post('/v1/account')
 
             $dbForProject->purgeCachedDocument('users', $user->getId());
         } catch (Duplicate) {
-            throw new Exception(Exception::USER_ALREADY_EXISTS);
+            throw new Exception(Exception::GENERAL_BAD_REQUEST);
+            /** Return a generic bad request to prevent exposing existing accounts */
         }
 
         $authorization->removeRole(Role::guests()->toString());
@@ -1835,7 +1837,8 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 Query::notEqual('userInternalId', $user->getSequence()),
             ]);
             if (!$identityWithMatchingUid->isEmpty()) {
-                $failureRedirect(Exception::USER_ALREADY_EXISTS);
+                $failureRedirect(Exception::GENERAL_BAD_REQUEST);
+                /** Return a generic bad request to prevent exposing existing accounts */
             }
 
             if (!empty($providerEmail)) {
@@ -1844,7 +1847,8 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                     Query::notEqual('userInternalId', $user->getSequence()),
                 ]);
                 if (!$identityWithMatchingEmail->isEmpty()) {
-                    $failureRedirect(Exception::USER_ALREADY_EXISTS);
+                    $failureRedirect(Exception::GENERAL_BAD_REQUEST);
+                    /** Return a generic bad request to prevent exposing existing accounts */
                 }
 
                 $userWithMatchingEmail = $dbForProject->find('users', [
@@ -1852,7 +1856,8 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                     Query::notEqual('$id', $userId),
                 ]);
                 if (!empty($userWithMatchingEmail)) {
-                    $failureRedirect(Exception::USER_ALREADY_EXISTS);
+                    $failureRedirect(Exception::GENERAL_BAD_REQUEST);
+                    /** Return a generic bad request to prevent exposing existing accounts */
                 }
             }
 
@@ -2054,7 +2059,8 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                         ]));
                     }
                 } catch (Duplicate) {
-                    $failureRedirect(Exception::USER_ALREADY_EXISTS);
+                    $failureRedirect(Exception::GENERAL_BAD_REQUEST);
+                    /** Return a generic bad request to prevent exposing existing accounts */
                 }
             }
         }
@@ -2114,7 +2120,8 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 Query::notEqual('$id', $user->getId()),
             ]);
             if (!empty($userWithMatchingEmail)) {
-                $failureRedirect(Exception::USER_ALREADY_EXISTS);
+                $failureRedirect(Exception::GENERAL_BAD_REQUEST);
+                /** Return a generic bad request to prevent exposing existing accounts */
             }
 
             if ((($project->getId() === 'console') || empty($plan) || ($plan['supportsDisposableEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['disposableEmails'] ?? false) && $emailMetadata['emailIsDisposable']) {
@@ -2163,7 +2170,8 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                     Query::equal('identifier', [$email]),
                 ]));
                 if ($existingTarget->isEmpty() || $existingTarget->getAttribute('userInternalId') !== $user->getSequence()) {
-                    $failureRedirect(Exception::USER_ALREADY_EXISTS);
+                    $failureRedirect(Exception::GENERAL_BAD_REQUEST);
+                    /** Return a generic bad request to prevent exposing existing accounts */
                 }
             }
         }
@@ -2217,7 +2225,8 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                         $dbForProject->deleteDocument('users', $newUser->getId());
                     });
                 }
-                $failureRedirect(Exception::USER_ALREADY_EXISTS);
+                $failureRedirect(Exception::GENERAL_BAD_REQUEST);
+                /** Return a generic bad request to prevent exposing existing accounts */
             }
         } else {
             $identity = $dbForProject->updateDocument('identities', $identity->getId(), new Document([
@@ -2561,14 +2570,6 @@ Http::post('/v1/account/tokens/magic-url')
                 }
             }
 
-            // Makes sure this email is not already used in another identity
-            $identityWithMatchingEmail = $dbForProject->findOne('identities', [
-                Query::equal('providerEmail', [$email]),
-            ]);
-            if (!$identityWithMatchingEmail->isEmpty()) {
-                throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
-            }
-
             $userId = $userId === 'unique()' ? ID::unique() : $userId;
 
             $emailMetadata = [
@@ -2609,6 +2610,16 @@ Http::post('/v1/account/tokens/magic-url')
                 throw new Exception(Exception::USER_EMAIL_NOT_CORPORATE);
             }
 
+            // Makes sure this email is not already used in another identity.
+            // Checked after the email policies so their errors do not depend on it.
+            $identityWithMatchingEmail = $dbForProject->findOne('identities', [
+                Query::equal('providerEmail', [$email]),
+            ]);
+            if (!$identityWithMatchingEmail->isEmpty()) {
+                throw new Exception(Exception::GENERAL_BAD_REQUEST);
+                /** Return a generic bad request to prevent exposing existing accounts */
+            }
+
             $user->setAttributes([
                 '$id' => $userId,
                 '$permissions' => [
@@ -2644,7 +2655,8 @@ Http::post('/v1/account/tokens/magic-url')
             try {
                 $user = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
             } catch (Duplicate) {
-                throw new Exception(Exception::USER_ALREADY_EXISTS);
+                throw new Exception(Exception::GENERAL_BAD_REQUEST);
+                /** Return a generic bad request to prevent exposing existing accounts */
             }
         }
 
@@ -2894,15 +2906,6 @@ Http::post('/v1/account/tokens/email')
                 }
             }
 
-            // Makes sure this email is not already used in another identity
-            $identityWithMatchingEmail = $dbForProject->findOne('identities', [
-                Query::equal('providerEmail', [$email]),
-            ]);
-            if (!$identityWithMatchingEmail->isEmpty()) {
-                throw new Exception(Exception::GENERAL_BAD_REQUEST);
-                /** Return a generic bad request to prevent exposing existing accounts */
-            }
-
             $userId = $userId === 'unique()' ? ID::unique() : $userId;
 
             $emailMetadata = [
@@ -2943,6 +2946,16 @@ Http::post('/v1/account/tokens/email')
                 throw new Exception(Exception::USER_EMAIL_NOT_CORPORATE);
             }
 
+            // Makes sure this email is not already used in another identity.
+            // Checked after the email policies so their errors do not depend on it.
+            $identityWithMatchingEmail = $dbForProject->findOne('identities', [
+                Query::equal('providerEmail', [$email]),
+            ]);
+            if (!$identityWithMatchingEmail->isEmpty()) {
+                throw new Exception(Exception::GENERAL_BAD_REQUEST);
+                /** Return a generic bad request to prevent exposing existing accounts */
+            }
+
             $user->setAttributes([
                 '$id' => $userId,
                 '$permissions' => [
@@ -2976,7 +2989,8 @@ Http::post('/v1/account/tokens/email')
             try {
                 $user = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
             } catch (Duplicate) {
-                throw new Exception(Exception::USER_ALREADY_EXISTS);
+                throw new Exception(Exception::GENERAL_BAD_REQUEST);
+                /** Return a generic bad request to prevent exposing existing accounts */
             }
             try {
                 $target = $authorization->skip(fn () => $dbForProject->createDocument('targets', new Document([
@@ -3384,7 +3398,8 @@ Http::post('/v1/account/tokens/phone')
             try {
                 $user = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
             } catch (Duplicate) {
-                throw new Exception(Exception::USER_ALREADY_EXISTS);
+                throw new Exception(Exception::GENERAL_BAD_REQUEST);
+                /** Return a generic bad request to prevent exposing existing accounts */
             }
             try {
                 $target = $authorization->skip(fn () => $dbForProject->createDocument('targets', new Document([
@@ -3805,16 +3820,6 @@ Http::patch('/v1/account/email')
 
         $email = \strtolower($email);
 
-        // Makes sure this email is not already used in another identity
-        $identityWithMatchingEmail = $dbForProject->findOne('identities', [
-            Query::equal('providerEmail', [$email]),
-            Query::notEqual('userInternalId', $user->getSequence()),
-        ]);
-        if (!$identityWithMatchingEmail->isEmpty()) {
-            throw new Exception(Exception::GENERAL_BAD_REQUEST);
-            /** Return a generic bad request to prevent exposing existing accounts */
-        }
-
         $emailMetadata = [
             'emailCanonical' => null,
             'emailIsCanonical' => null,
@@ -3853,6 +3858,17 @@ Http::patch('/v1/account/email')
             throw new Exception(Exception::USER_EMAIL_NOT_CORPORATE);
         }
 
+        // Makes sure this email is not already used in another identity.
+        // Checked after the email policies so their errors do not depend on it.
+        $identityWithMatchingEmail = $dbForProject->findOne('identities', [
+            Query::equal('providerEmail', [$email]),
+            Query::notEqual('userInternalId', $user->getSequence()),
+        ]);
+        if (!$identityWithMatchingEmail->isEmpty()) {
+            throw new Exception(Exception::GENERAL_BAD_REQUEST);
+            /** Return a generic bad request to prevent exposing existing accounts */
+        }
+
         $user
             ->setAttribute('email', $email)
             ->setAttribute('emailVerification', false) // After this user needs to confirm mail again
@@ -3880,7 +3896,8 @@ Http::patch('/v1/account/email')
         ]));
 
         if (!$target->isEmpty()) {
-            throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
+            throw new Exception(Exception::GENERAL_BAD_REQUEST);
+            /** Return a generic bad request to prevent exposing existing accounts */
         }
 
         try {
@@ -3983,7 +4000,8 @@ Http::patch('/v1/account/phone')
         ]));
 
         if (!$target->isEmpty()) {
-            throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
+            throw new Exception(Exception::GENERAL_BAD_REQUEST);
+            /** Return a generic bad request to prevent exposing existing accounts */
         }
 
         $oldPhone = $user->getAttribute('phone');
@@ -4014,7 +4032,8 @@ Http::patch('/v1/account/phone')
             }
             $dbForProject->purgeCachedDocument('users', $user->getId());
         } catch (Duplicate $th) {
-            throw new Exception(Exception::USER_PHONE_ALREADY_EXISTS);
+            throw new Exception(Exception::GENERAL_BAD_REQUEST);
+            /** Return a generic bad request to prevent exposing existing accounts */
         }
 
         $queueForEvents->setParam('userId', $user->getId());
@@ -4354,6 +4373,11 @@ Http::post('/v1/account/recovery')
             $recovery->setAttribute('secret', '');
         }
 
+        // A known address would get the same user ID on every request and an unknown one a fresh ID; the emailed link already carries it.
+        if ($apiKey === null || !\in_array('users.write', $apiKey->getScopes())) {
+            $recovery->setAttribute('userId', '');
+        }
+
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($recovery, Response::MODEL_TOKEN);
@@ -4401,7 +4425,7 @@ Http::put('/v1/account/recovery')
         $profile = $dbForProject->getDocument('users', $userId);
 
         if ($profile->isEmpty()) {
-            throw new Exception(Exception::USER_NOT_FOUND);
+            throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
         $verifiedToken = $profile->tokenVerify(TOKEN_TYPE_RECOVERY, $secret, $proofForToken);
@@ -4783,7 +4807,7 @@ Http::put('/v1/account/recovery/otp')
         $profile = $dbForProject->getDocument('users', $userId);
 
         if ($profile->isEmpty()) {
-            throw new Exception(Exception::USER_NOT_FOUND);
+            throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
         $verifiedToken = $profile->tokenVerify(TOKEN_TYPE_RECOVERY_OTP, $secret, $proofForCode);
@@ -5171,7 +5195,7 @@ Http::put('/v1/account/verifications/email')
         $profile = $authorization->skip(fn () => $dbForProject->getDocument('users', $userId));
 
         if ($profile->isEmpty()) {
-            throw new Exception(Exception::USER_NOT_FOUND);
+            throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
         $verifiedToken = $profile->tokenVerify(TOKEN_TYPE_VERIFICATION, $secret, $proofForToken);
@@ -5373,7 +5397,7 @@ Http::put('/v1/account/verifications/phone')
         $profile = $authorization->skip(fn () => $dbForProject->getDocument('users', $userId));
 
         if ($profile->isEmpty()) {
-            throw new Exception(Exception::USER_NOT_FOUND);
+            throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
         $verifiedToken = $profile->tokenVerify(TOKEN_TYPE_PHONE, $secret, $proofForCode);
@@ -5509,7 +5533,8 @@ Http::post('/v1/account/targets/push')
                     'name' => $name,
                 ]));
         } catch (Duplicate) {
-            throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
+            throw new Exception(Exception::GENERAL_BAD_REQUEST);
+            /** Return a generic bad request to prevent exposing existing accounts */
         }
 
         // Anything left holds a token the client just told us it no longer uses. Expiring rather than
@@ -5593,7 +5618,8 @@ Http::put('/v1/account/targets/:targetId/push')
                 'name' => $target->getAttribute('name'),
             ]));
         } catch (Duplicate) {
-            throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
+            throw new Exception(Exception::GENERAL_BAD_REQUEST);
+            /** Return a generic bad request to prevent exposing existing accounts */
         }
 
         $dbForProject->purgeCachedDocument('users', $user->getId());
@@ -6041,7 +6067,7 @@ Http::put('/v1/account/verifications/email/otp')
         $profile = $authorization->skip(fn () => $dbForProject->getDocument('users', $userId));
 
         if ($profile->isEmpty()) {
-            throw new Exception(Exception::USER_NOT_FOUND);
+            throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
         $verifiedToken = $profile->tokenVerify(TOKEN_TYPE_VERIFICATION_OTP, $secret, $proofForCode);
