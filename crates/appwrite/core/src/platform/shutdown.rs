@@ -75,8 +75,8 @@ pub(super) fn schedule(ctx: Context, status: StatusCode, body: Bytes, response_s
         // in both runtimes together).
         size: request.size(),
     };
-    // PHP's events carry the `user` resource: empty for a project or an
-    // organization key, the account for an account key.
+    // PHP's events carry the `user` resource's context: empty for a project
+    // or an organization key, the account for an account key.
     let actor = match (&ctx.key, ctx.roles_user()) {
         (Some(key), Some(u)) if key.kind == KeyType::Account => u.message_payload(),
         (Some(_), _) | (None, None) => event::empty_user(),
@@ -112,8 +112,9 @@ fn raw(bytes: &Bytes) -> Box<RawValue> {
 
 impl Job {
     async fn run(self) {
+        // Functions, webhooks and events all carry the project's context.
         let project_payload = self.project.message_payload();
-        let trimmed = self.project.trimmed_payload();
+        let trimmed = project_payload.clone();
 
         for delete in &self.deletes {
             self.publish(&self.state.config.queue_deletes, delete).await;
@@ -281,14 +282,12 @@ impl Job {
         if resource.is_empty() {
             return;
         }
-        let mut project = Map::new();
-        project.insert("$id".into(), Value::String(self.project.id.clone()));
-        project.insert("$sequence".into(), Value::String(self.project.sequence.clone()));
         let message = serde_json::json!({
-            "project": project,
+            "project": self.project.message_payload(),
             "user": self.actor,
-            "impersonatorUser": null,
-            "payload": raw(&self.payload),
+            "impersonatorUser": [],
+            // `audits.payload`, which no route Rust serves sets.
+            "payload": [],
             "resource": resource,
             "mode": if self.mode == Mode::Admin { "admin" } else { "default" },
             "ip": self.request.ip,

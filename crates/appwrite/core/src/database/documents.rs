@@ -116,9 +116,8 @@ pub struct User {
     pub sessions: Vec<Session>,
     pub memberships: Vec<Membership>,
     pub authenticators: Vec<Authenticator>,
-    /// The whole document, for the queue messages that carry it (see
-    /// [`User::message_payload`]).
-    pub document: std::sync::Arc<Document>,
+    /// `type`: set on the key actors PHP builds, absent on stored users.
+    pub kind: Option<String>,
 }
 
 impl From<&Document> for User {
@@ -158,16 +157,29 @@ impl From<&Document> for User {
             sessions: d.documents("sessions").into_iter().map(Session::from).collect(),
             memberships: d.documents("memberships").into_iter().map(Membership::from).collect(),
             authenticators: d.documents("authenticators").into_iter().map(Authenticator::from).collect(),
-            document: std::sync::Arc::new(d.clone()),
+            kind: d.string("type"),
         }
     }
 }
 
 impl User {
-    /// The user in queue messages: the whole document, sub-queries
-    /// included, as PHP's `Event::setUser()` sends it.
+    /// The user in queue messages (PHP's `UserContext::toArray()`): its
+    /// main fields, the empty ones left out (`[]` when all are).
     pub fn message_payload(&self) -> Json {
-        utopia_database::Value::from((*self.document).clone()).try_to_json().unwrap_or(Json::Null)
+        let sequence = if self.sequence == 0 { String::new() } else { self.sequence.to_string() };
+        let fields = [
+            ("$id", self.id.as_str()),
+            ("$sequence", sequence.as_str()),
+            ("name", self.name.as_deref().unwrap_or("")),
+            ("email", self.email.as_deref().unwrap_or("")),
+            ("type", self.kind.as_deref().unwrap_or("")),
+        ];
+        let map: serde_json::Map<String, Json> = fields
+            .into_iter()
+            .filter(|(_, v)| !v.is_empty())
+            .map(|(k, v)| (k.to_owned(), Json::String(v.to_owned())))
+            .collect();
+        if map.is_empty() { Json::Array(Vec::new()) } else { Json::Object(map) }
     }
 
     /// `email || phone` verified.
