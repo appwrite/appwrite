@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes;
 
-use Appwrite\Databases\RelationshipUpdate;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Database as DatabaseMessage;
 use Appwrite\Event\Publisher\Database as DatabasePublisher;
@@ -25,6 +24,7 @@ use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\Exception\Truncate as TruncateException;
 use Utopia\Database\Format;
 use Utopia\Database\Id;
+use Utopia\Database\RelationshipDeleteAction;
 use Utopia\Database\RelationshipSide;
 use Utopia\Database\RelationshipUpdate as DatabaseRelationshipUpdate;
 use Utopia\Database\Unchanged;
@@ -654,8 +654,8 @@ abstract class Action extends DatabasesAction
         }
 
         if ($type === ColumnType::Relationship->value) {
-            $update = new RelationshipUpdate($options, $key, $newKey);
-            $primaryDocumentOptions = $update->options($attribute->getAttribute('options', []));
+            $options = \array_filter($options, fn (mixed $option): bool => $option !== null);
+            $primaryDocumentOptions = \array_merge($attribute->getAttribute('options', []), $options);
             $attribute->setAttribute('options', $primaryDocumentOptions);
             try {
                 $dbForDatabases->updateRelationship(
@@ -663,7 +663,7 @@ abstract class Action extends DatabasesAction
                     key: $key,
                     update: new DatabaseRelationshipUpdate(
                         key: $newKey ?: null,
-                        onDelete: $update->onDelete(),
+                        onDelete: isset($options['onDelete']) ? RelationshipDeleteAction::from($options['onDelete']) : null,
                     ),
                 );
             } catch (IndexException) {
@@ -681,7 +681,12 @@ abstract class Action extends DatabasesAction
 
                 $relatedAttribute = $dbForProject->getDocument('attributes', $db->getSequence() . '_' . $relatedCollection->getSequence() . '_' . $primaryDocumentOptions['twoWayKey']);
 
-                $relatedAttribute->setAttribute('options', $update->related($relatedAttribute->getAttribute('options')));
+                if (!empty($newKey) && $newKey !== $key) {
+                    $options['twoWayKey'] = $newKey;
+                }
+
+                $relatedOptions = \array_merge($relatedAttribute->getAttribute('options'), $options);
+                $relatedAttribute->setAttribute('options', $relatedOptions);
                 $dbForProject->updateDocument('attributes', $db->getSequence() . '_' . $relatedCollection->getSequence() . '_' . $primaryDocumentOptions['twoWayKey'], $relatedAttribute);
 
                 $dbForProject->purgeCachedDocument('database_' . $db->getSequence(), $relatedCollection->getId());
