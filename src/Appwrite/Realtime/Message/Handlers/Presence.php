@@ -97,7 +97,6 @@ class Presence extends Action
         $presenceDocument = new Document($presenceData);
         $presenceState->setPermissions($presenceDocument, $permissions, $user, $authorization);
 
-        $firstHold = empty($realtime->connections[$connectionId]['presences']);
         $projectId = $project->getId();
         $userId = $user->getId();
         $lockKey = 'presence:' . $projectId . ':' . $userId;
@@ -110,22 +109,29 @@ class Presence extends Action
             fn () => $presenceState->triggerUsage($publisherForUsage, $project, 1),
         );
 
-        // The lock keeps counting a new holder from racing a close that deletes the row.
-        $presence = $pools->get('lock')->use(function (\Redis $redis) use ($upsert, $firstHold, $lockKey, $presenceState, $projectId, $userId): Document {
+        // The lock keeps counting a new holder from racing a close that deletes the row, and
+        // keeps two concurrent messages on this connection from counting the same hold twice.
+        $presence = $pools->get('lock')->use(function (\Redis $redis) use ($upsert, $lockKey, $presenceState, $projectId, $userId, $realtime, $connectionId): Document {
             $lock = new Distributed($redis, $lockKey, ttl: self::LOCK_TTL);
-            $locked = $lock->acquire(self::LOCK_TIMEOUT);
+
+            // Could not coordinate: still upsert so the user is present, but leave the counter
+            // and the hold untouched so no unsynchronised count is left behind.
+            if (!$lock->acquire(self::LOCK_TIMEOUT)) {
+                return $upsert();
+            }
 
             try {
+                $firstHold = empty($realtime->connections[$connectionId]['presences']);
                 $presence = $upsert();
+
                 if ($firstHold) {
                     $presenceState->incrementConnections($redis, $projectId, $userId);
                 }
+                $realtime->connections[$connectionId]['presences'][$presence->getId()] = true;
 
                 return $presence;
             } finally {
-                if ($locked) {
-                    $lock->release();
-                }
+                $lock->release();
             }
         });
 
@@ -134,8 +140,6 @@ class Presence extends Action
         $presence->removeAttribute('hostname');
         $presence->removeAttribute('permissionsHash');
         $presence->removeAttribute('userInternalId');
-
-        $realtime->connections[$connectionId]['presences'][$presence->getId()] = true;
 
         $presenceState->triggerEvent(
             $queueForEvents,

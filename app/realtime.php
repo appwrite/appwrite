@@ -1543,10 +1543,17 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register, $
                         $deletedPresences = [];
                         $pools->get('lock')->use(function (\Redis $redis) use ($dbForProject, $presenceIds, $lockKey, $presenceState, $projectId, $userId, &$deletedPresences): void {
                             $lock = new Distributed($redis, $lockKey, ttl: PresenceHandler::LOCK_TTL);
-                            $locked = $lock->acquire(PresenceHandler::LOCK_TIMEOUT);
+
+                            // Could not coordinate: leave the row to its expiresAt rather than
+                            // decrement and delete outside the lock.
+                            if (!$lock->acquire(PresenceHandler::LOCK_TIMEOUT)) {
+                                return;
+                            }
 
                             try {
-                                if ($presenceState->decrementConnections($redis, $projectId, (string) $userId) > 0) {
+                                // Delete only on an exact zero. A negative count means Redis lost
+                                // the key while holders were open, so keep the row for expiresAt.
+                                if ($presenceState->decrementConnections($redis, $projectId, (string) $userId) !== 0) {
                                     return;
                                 }
 
@@ -1560,9 +1567,7 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register, $
                                     $deletedPresences[$presence->getId()] = $presence;
                                 }
                             } finally {
-                                if ($locked) {
-                                    $lock->release();
-                                }
+                                $lock->release();
                             }
                         });
 
