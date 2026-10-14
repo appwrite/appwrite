@@ -18,12 +18,15 @@ Self-hosted Backend-as-a-Service. Hybrid monolithic-microservice architecture on
 | `composer check` | Same as `analyze` |
 | `composer refactor:check` | Rector dry-run over `tests/` (CI "Refactor" check) |
 | `composer refactor` | Apply Rector fixes |
-| `bin/monorepo validate` | Check every `packages/<name>` against the standard shape and the root autoload wiring |
+| `bin/monorepo validate` | Check every `packages/<name>` against the standard shape and the root autoload wiring, and every mirrored crate |
 | `bin/monorepo check <name> [--fix]` | Pint, PHPStan (package `phpstan.neon`) and Rector for one package |
 | `bin/monorepo test <name> [--linked]` | Package unit tier (`composer test`), plus `test:e2e` against its compose file when defined |
 | `bin/monorepo absorb <name> [url]` | Import a library with history, strip hoisted QA, write mirror plumbing |
 | `bin/monorepo split <name> --dry-run` | Synthesize the mirror history and print its head without pushing |
 | `bin/monorepo release <name> <version>` | Tag `<name>/<version>` and push it; CI mirrors the tag and publishes the release |
+| `bin/monorepo crates absorb [name…]` | Write crate README from `guide.md`, LICENSE, gitignore, repository URL, mirror.yml |
+| `bin/monorepo crates split [name…]` | Push `crates/utopia/<name>` (and `php-std`) to `github.com/utopia-rs/<name>` |
+| `bin/monorepo crates release <name> <version>` | Tag `rs/<name>/<version>`; CI mirrors the tag to utopia-rs |
 
 `composer check` / `composer analyze` over the whole project is very slow. Prefer specific files during development.
 
@@ -53,7 +56,8 @@ Self-hosted Backend-as-a-Service. Hybrid monolithic-microservice architecture on
   - **Extend** -- shared exceptions
 - **src/Appwrite/Platform/** -- HTTP modules, workers, CLI tasks. Register modules in `src/Appwrite/Platform/Appwrite.php`. See [Modules](#modules).
 - **src/Executor/** -- Open Runtimes executor HTTP client (create/run/delete function and site runtimes)
-- **packages/** -- Utopia libraries absorbed into this repository and autoloaded directly (`agents`, `bus`); each is an independent Composer package mirrored to `utopia-php/<name>`, managed with `bin/monorepo`. See [rfc/monorepo.md](rfc/monorepo.md)
+- **packages/** -- Utopia PHP libraries absorbed into this repository and autoloaded directly (`agents`, `bus`); each is an independent Composer package mirrored to `utopia-php/<name>`, managed with `bin/monorepo`. See [rfc/monorepo.md](rfc/monorepo.md)
+- **crates/** -- Utopia Rust libraries (`crates/utopia/<name>`), `php-std`, Appwrite domain crates and tools. Utopia crates and php-std are workspace `path` members here and mirrored to `utopia-rs/<name>`. See [rfc/rust.md](rfc/rust.md)
 - **apps/** -- deployable applications with their own runtime, image, and release (`console`: the web Console, Bun + TanStack Start, shipped as `appwrite/new`). Not Utopia packages: no Composer autoload, no split mirror. Do not confuse with `app/`, the PHP server. See [apps/README.md](apps/README.md) and [Console](#console).
 - **app/config/** -- static product config (collections, locales, SDKs, runtimes, scopes, errors, OAuth, storage)
 - **app/assets/** -- bundled data (fonts, common-password dictionary)
@@ -69,12 +73,14 @@ Self-hosted Backend-as-a-Service. Hybrid monolithic-microservice architecture on
 
 The API is migrating to Rust service by service ([rfc/rust.md](rfc/rust.md)). Rust lives in `crates/` (Cargo workspace at the root, never in `packages/`):
 
-- `crates/utopia/<name>`: generic Utopia crates
+- `crates/utopia/<name>`: generic Utopia crates, loaded by the workspace `path` and mirrored to [`github.com/utopia-rs/<name>`](https://github.com/utopia-rs)
 - `crates/appwrite/core`: lifecycle, auth, models and events
 - `crates/appwrite/<service>`: one module per migrated service
 - `crates/appwrite/server`: the binary
-- `crates/support/php-std`: PHP engine semantics shared by Utopia crates
+- `crates/support/php-std`: PHP engine semantics shared by Utopia crates; mirrored to [`github.com/utopia-rs/php-std`](https://github.com/utopia-rs/php-std)
 - `crates/tools/compat`: `bin/compat`, the PHP ↔ Rust compatibility tester
+
+Appwrite crates and tools are not mirrored. Crate releases are tagged `rs/<name>/<version>` so they do not collide with PHP's `<name>/<version>`. See [rfc/rust.md](rfc/rust.md#mirrors-and-releases).
 
 A Utopia library is converted in full, to the standard in [crates/CONVERSION.md](crates/CONVERSION.md), and proven with `bin/compat check <lib>` ([tests/compat](tests/compat/README.md)): 100% of the PHP API covered, every PHP test class ported, zero differences on cases and fuzzed inputs. Status: [tests/compat/STATUS.md](tests/compat/STATUS.md).
 

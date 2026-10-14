@@ -26,7 +26,34 @@ tests/rust/                local integration harness (PostgreSQL + Redis, no PHP
 tests/benchmarks/users*    PHP vs Rust load, CPU and memory comparison
 ```
 
-Rust crates live in `crates/`, not `packages/`. `packages/` is wired into Composer autoloading, `bin/monorepo`, the per-package CI matrix and the PHP image. A Rust crate there would break all four. `crates/` falls into the "server" branch of `.github/scripts/changes.sh`, so a Rust change also runs the PHP suites.
+Rust crates live in `crates/`, not `packages/`. `packages/` is wired into Composer autoloading, the per-package PHP CI matrix and the PHP image. A Rust crate there would break those. Appwrite loads Utopia crates **directly** as Cargo workspace members (`path` in the root `Cargo.toml`); they are not crates.io or git dependencies. Each generic crate is also split to a read-only mirror at [`github.com/utopia-rs/<name>`](https://github.com/utopia-rs), the same way PHP packages split to `utopia-php/<name>`. `crates/` falls into the "server" branch of `.github/scripts/changes.sh`, so a Rust change also runs the PHP suites.
+
+### Mirrors and releases
+
+`crates/utopia/<name>` and `crates/support/php-std` are the writable home. `crates/appwrite/*` and `crates/tools/*` stay in this repository only.
+
+On every push to `main`, `split.yml` synthesizes each crate's history and pushes it to the mirror. Workspace inheritance (`version.workspace = true`, `bytes.workspace = true`) is expanded in that synthesized tree so a clone of the mirror builds standalone: third-party crates keep their crates.io versions, sibling Utopia crates become `git = "https://github.com/utopia-rs/<name>"`. Appwrite never sees that rewrite; it keeps using the workspace `path` entries.
+
+| | PHP (`packages/<name>`) | Rust (`crates/utopia/<name>`) |
+|---|---|---|
+| Mirror org | [utopia-php](https://github.com/utopia-php) | [utopia-rs](https://github.com/utopia-rs) |
+| Tooling | `bin/monorepo …` | `bin/monorepo crates …` |
+| Release tag | `<name>/<version>` | `rs/<name>/<version>` |
+| Consumer install | `composer require utopia-php/<name>` | `{ git = "https://github.com/utopia-rs/<name>" }` |
+| Appwrite install | root Composer autoload | Cargo workspace `path` |
+
+Commands:
+
+```bash
+bin/monorepo crates absorb                 # README from guide.md, LICENSE, mirror.yml, repository URL
+bin/monorepo crates create-mirrors         # empty public repos on utopia-rs (once)
+bin/monorepo crates split --dry-run        # synthesize histories without pushing
+bin/monorepo crates materialize http       # print the standalone Cargo.toml the mirror would get
+bin/monorepo crates release http 0.1.0     # tag rs/http/0.1.0; CI mirrors the tag
+bin/monorepo validate                      # PHP packages and crate mirror shape
+```
+
+PHP splits use the `utopia-php/monorepo` GitHub App (`SPLIT_APP_ID` / `SPLIT_APP_PRIVATE_KEY`), installed on `utopia-php`. Crate splits use the `utopia-rs/monorepo` GitHub App (`SPLIT_RS_APP_ID` / `SPLIT_RS_APP_PRIVATE_KEY`), installed on `utopia-rs`. Create the empty repos before the first split (`bin/monorepo crates create-mirrors`). `split-dev.yml` takes `kind: rust` to publish a feature branch to the crate mirrors.
 
 ### Crate map
 

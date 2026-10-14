@@ -2,20 +2,24 @@
 <?php
 
 /**
- * Package tooling for the Utopia libraries in packages/<name>.
+ * Package tooling for the Utopia libraries in packages/<name> and the Rust
+ * crates in crates/utopia/<name> (plus crates/support/php-std).
  *
- * Each package is loaded directly through the root composer.json autoload and
- * distributed (read-only) to github.com/utopia-php/<name> as a synthesized
- * split history. Releases are made by tagging this repository
- * `<name>/<version>`, which pushes `<version>` to the mirror for Packagist to
- * pick up. See rfc/monorepo.md.
+ * PHP packages are loaded through the root composer.json autoload and
+ * distributed (read-only) to github.com/utopia-php/<name>. Rust crates are
+ * workspace members here and distributed (read-only) to
+ * github.com/utopia-rs/<name>. Releases are made by tagging this repository
+ * `<name>/<version>` (PHP) or `rs/<name>/<version>` (Rust), which pushes
+ * `<version>` to the mirror. See rfc/monorepo.md and rfc/rust.md.
  */
 
 chdir(dirname(__DIR__));
 
 const ORG = 'utopia-php';
+const CRATES_ORG = 'utopia-rs';
 const REPOSITORY = 'appwrite/appwrite';
-const SPLIT_APP_ID = 4016286; // GitHub App that pushes splits to the mirrors
+const SPLIT_APP_ID = 4016286; // GitHub App that pushes PHP splits to utopia-php
+const CRATES_SPLIT_APP_ID = 5319328; // GitHub App that pushes crate splits to utopia-rs
 const HOISTED = ['laravel/pint', 'phpstan/phpstan', 'rector/rector', 'phpunit/phpunit'];
 const BANNED = ['pint.json', 'psalm.xml', 'phpcs.xml', '.travis.yml', '.gitpod.yml', '.coderabbit.yaml'];
 
@@ -203,19 +207,22 @@ function release_notes(string $package, string $version, string $to): string
 }
 
 /**
- * Compute a package's split head: starting from the latest subtree
- * annotation (an import or rejoin merge), or from the repository root when
- * there is none, re-synthesize one commit per mainline commit that changed
- * the package, copying tree, author, committer and raw message. Deterministic,
- * and byte-identical to `git subtree split` output — without its fatal cache
- * collision when a package is re-imported.
+ * Compute a prefix's split head: starting from the latest subtree annotation
+ * (an import or rejoin merge), or from the repository root when there is none,
+ * re-synthesize one commit per mainline commit that changed the prefix,
+ * copying tree, author, committer and raw message. Deterministic, and
+ * byte-identical to `git subtree split` output when $transform is null —
+ * without its fatal cache collision when a package is re-imported.
+ *
+ * $transform($commit, $prefix, $tree) may rewrite the tree (Rust crates expand
+ * workspace inheritance so the mirror builds standalone).
  */
-function split_package(string $package): string
+function split_tree(string $prefix, ?callable $transform = null): string
 {
     // With an annotation present, resume from it; without one — a hand-created
     // package, or one whose import merge a squash-merge flattened — synthesize
     // from the repository root, the first commit landing parentless.
-    $join = sh('git log --format=%H --grep=' . escapeshellarg("^git-subtree-dir: packages/{$package}\$") . ' -1 HEAD');
+    $join = sh('git log --format=%H --grep=' . escapeshellarg("^git-subtree-dir: {$prefix}\$") . ' -1 HEAD');
     $tip = null;
     $range = 'HEAD';
     if ($join !== '') {
@@ -226,11 +233,15 @@ function split_package(string $package): string
         $range = "{$mainline[1]}..HEAD";
     }
 
-    $commits = sh("git log --reverse --first-parent --format=%H {$range} -- packages/{$package}");
+    $commits = sh("git log --reverse --first-parent --format=%H {$range} -- {$prefix}");
     foreach (array_filter(explode("\n", $commits)) as $commit) {
         unset($tree);
-        exec("git rev-parse -q --verify {$commit}:packages/{$package} 2>/dev/null", $tree, $missing);
-        if ($missing !== 0 || ($tip !== null && $tree[0] === sh("git rev-parse {$tip}^{tree}"))) {
+        exec("git rev-parse -q --verify {$commit}:{$prefix} 2>/dev/null", $tree, $missing);
+        if ($missing !== 0) {
+            continue;
+        }
+        $treeSha = $transform === null ? $tree[0] : $transform($commit, $prefix, $tree[0]);
+        if ($tip !== null && $treeSha === sh("git rev-parse {$tip}^{tree}")) {
             continue;
         }
         $identity = explode("\x1f", sh("git log -1 --format=%an%x1f%ae%x1f%aD%x1f%cn%x1f%ce%x1f%cD {$commit}"));
@@ -239,12 +250,17 @@ function split_package(string $package): string
             $environment .= $variable . '=' . escapeshellarg($identity[$index]) . ' ';
         }
         $parent = $tip === null ? '' : "-p {$tip}";
-        $tip = sh("git log -1 --pretty=format:%B {$commit} | {$environment}git commit-tree {$tree[0]} {$parent}");
+        $tip = sh("git log -1 --pretty=format:%B {$commit} | {$environment}git commit-tree {$treeSha} {$parent}");
     }
 
-    $tip !== null || fail("packages/{$package} has no commits to split");
+    $tip !== null || fail("{$prefix} has no commits to split");
 
     return $tip;
+}
+
+function split_package(string $package): string
+{
+    return split_tree("packages/{$package}");
 }
 
 function manifest(string $package): ?array
@@ -532,6 +548,912 @@ function linked_version(string $constraint): string
     $parts = explode('.', end($candidates));
 
     return $parts[0] . '.' . ($parts[1] ?? '0') . '.999';
+}
+
+/**
+ * Rust crates mirrored to github.com/utopia-rs/<name>: every crates/utopia/*
+ * member, plus php-std (crates/support/php-std). Appwrite and tool crates stay
+ * in this repository only.
+ *
+ * @return string[]
+ */
+function crates(): array
+{
+    static $names;
+    if (is_array($names)) {
+        return $names;
+    }
+    $names = array_map(fn (string $manifest) => basename(dirname($manifest)), glob('crates/utopia/*/Cargo.toml') ?: []);
+    if (is_file('crates/support/php-std/Cargo.toml')) {
+        $names[] = 'php-std';
+    }
+    sort($names);
+
+    return $names;
+}
+
+function crate_prefix(string $package): string
+{
+    return $package === 'php-std' ? 'crates/support/php-std' : "crates/utopia/{$package}";
+}
+
+function crate_package_name(string $package): string
+{
+    return $package === 'php-std' ? 'php-std' : "utopia-{$package}";
+}
+
+function crate_repo_of_dep(string $name): ?string
+{
+    if ($name === 'php-std') {
+        return 'php-std';
+    }
+    if (str_starts_with($name, 'utopia-')) {
+        $package = substr($name, strlen('utopia-'));
+
+        return in_array($package, crates(), true) ? $package : null;
+    }
+
+    return null;
+}
+
+function crate_remote(string $package): string
+{
+    $base = getenv('SPLIT_CRATES_REMOTE_BASE') ?: 'git@github.com:' . CRATES_ORG;
+
+    return $base . '/' . $package . '.git';
+}
+
+function crate_title(string $package): string
+{
+    if ($package === 'openapi') {
+        return 'Utopia OpenAPI';
+    }
+    if ($package === 'psr7') {
+        return 'Utopia PSR-7';
+    }
+    if ($package === 'php-std') {
+        return 'PHP standard library';
+    }
+    $upper = ['http', 'dns', 'dsn', 'cdn', 'cli', 'smtp', 'mqtt', 'nats', 'vcs', 'di'];
+    if (in_array($package, $upper, true)) {
+        return 'Utopia ' . strtoupper($package);
+    }
+
+    return 'Utopia ' . ucwords(str_replace('-', ' ', $package));
+}
+
+function crate_mirror_workflow(string $package): string
+{
+    $yaml = <<<'YAML'
+    name: Mirror
+
+    on:
+      pull_request_target:
+        types: [opened]
+      issues:
+        types: [opened]
+
+    permissions:
+      issues: write
+      pull-requests: write
+
+    jobs:
+      redirect:
+        uses: {repository}/.github/workflows/mirror-redirect.yml@main
+        with:
+          package: {package}
+          path: {path}
+    YAML;
+
+    return str_replace(
+        ['{repository}', '{package}', '{path}'],
+        [REPOSITORY, $package, crate_prefix($package)],
+        $yaml
+    ) . "\n";
+}
+
+function crate_readme(string $package, string $description): string
+{
+    $title = crate_title($package);
+    $home = 'https://github.com/' . REPOSITORY;
+    $prefix = crate_prefix($package);
+    $crate = crate_package_name($package);
+    $org = CRATES_ORG;
+    $repo = REPOSITORY;
+    $dep = $crate . ' = { git = "https://github.com/' . $org . '/' . $package . '" }';
+    $guidePath = "{$prefix}/guide.md";
+    $guide = is_file($guidePath) ? crate_guide_for_readme(file_get_contents($guidePath)) : '';
+
+    $parts = [
+        "# {$title}",
+        '',
+        '> [!IMPORTANT]',
+        "> This repository is a read-only mirror of [`{$prefix}`]({$home}/tree/main/{$prefix}) in [{$repo}]({$home}). Development happens there — please open issues and pull requests against {$repo}.",
+        '',
+        '[![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://discord.gg/GSeTUeA)',
+        '',
+        $description,
+        '',
+        'This library is maintained by the [Appwrite team](https://appwrite.io).',
+        '',
+        '## Getting started',
+        '',
+        '```toml',
+        '[dependencies]',
+        $dep,
+        '```',
+    ];
+    if ($guide !== '') {
+        $parts[] = '';
+        $parts[] = $guide;
+    }
+    $parts[] = '';
+    $parts[] = '## License';
+    $parts[] = '';
+    $parts[] = 'BSD-3-Clause. See [LICENSE](LICENSE).';
+
+    return implode("\n", $parts);
+}
+
+/**
+ * The crate's getting-started guide as it reads on GitHub: Rust examples only,
+ * rustdoc hidden lines stripped, PHP twin blocks and PHP-named sections left out
+ * (the same view `apps/crates` shows outside migration mode).
+ */
+function crate_guide_for_readme(string $guide): string
+{
+    $guide = str_replace(["\r\n", "\r"], "\n", $guide);
+    $out = [];
+    $fence = null;
+    $skipLevel = 0;
+    $skipPhpPara = false;
+    $paragraphStart = true;
+    foreach (explode("\n", $guide) as $line) {
+        $trim = ltrim($line);
+        if ($fence !== null) {
+            if (str_starts_with($trim, '```')) {
+                if ($fence !== 'php' && $skipLevel === 0) {
+                    $out[] = '```';
+                }
+                $fence = null;
+                $paragraphStart = true;
+                continue;
+            }
+            if ($skipLevel !== 0 || $fence === 'php') {
+                continue;
+            }
+            if ($fence === 'rust') {
+                $shown = crate_rustdoc_shown_line($line);
+                if ($shown !== null) {
+                    $out[] = $shown;
+                }
+                continue;
+            }
+            $out[] = $line;
+            continue;
+        }
+        if (str_starts_with($trim, '```')) {
+            $kind = crate_fence_kind(trim(substr($trim, 3)));
+            $fence = $kind;
+            if ($skipLevel === 0 && $kind !== 'php') {
+                $out[] = $kind === 'rust' ? '```rust' : $line;
+            }
+            continue;
+        }
+        $level = crate_heading_level($line);
+        if ($level > 0) {
+            if ($skipLevel !== 0 && $level <= $skipLevel) {
+                $skipLevel = 0;
+            }
+            if ($skipLevel === 0 && str_contains($line, 'PHP')) {
+                $skipLevel = $level;
+            }
+        }
+        if ($skipLevel !== 0) {
+            continue;
+        }
+        if ($skipPhpPara) {
+            if (trim($line) === '') {
+                $skipPhpPara = false;
+                $paragraphStart = true;
+                $out[] = '';
+            }
+            continue;
+        }
+        if ($paragraphStart && str_starts_with($trim, 'PHP:')) {
+            $skipPhpPara = true;
+            continue;
+        }
+        if (trim($line) === '') {
+            $paragraphStart = true;
+            $out[] = '';
+            continue;
+        }
+        $paragraphStart = false;
+        $out[] = crate_rustdoc_links($line);
+    }
+
+    return crate_squeeze_blanks(implode("\n", $out));
+}
+
+function crate_heading_level(string $line): int
+{
+    $n = 0;
+    $length = strlen($line);
+    while ($n < $length && $line[$n] === '#') {
+        $n++;
+    }
+    if ($n === 0 || $n === $length || $line[$n] !== ' ') {
+        return 0;
+    }
+
+    return $n;
+}
+
+function crate_fence_kind(string $tag): string
+{
+    $attrs = [];
+    foreach (explode(',', $tag) as $part) {
+        $part = trim($part);
+        if ($part !== '') {
+            $attrs[] = $part;
+        }
+    }
+    foreach ($attrs as $attr) {
+        if ($attr === 'php') {
+            return 'php';
+        }
+    }
+    foreach ($attrs as $attr) {
+        if ($attr === 'ignore' || $attr === 'compile_fail' || $attr === 'text') {
+            return 'other';
+        }
+    }
+    $rustdoc = ['rust', 'no_run', 'should_panic', 'edition2018', 'edition2021', 'edition2024'];
+    foreach ($attrs as $attr) {
+        if (!in_array($attr, $rustdoc, true)) {
+            return 'other';
+        }
+    }
+
+    return 'rust';
+}
+
+function crate_rustdoc_shown_line(string $line): ?string
+{
+    $trim = ltrim($line);
+    $indent = substr($line, 0, strlen($line) - strlen($trim));
+    if ($trim === '#') {
+        return null;
+    }
+    if (str_starts_with($trim, '# ')) {
+        return null;
+    }
+    if (str_starts_with($trim, '##')) {
+        return $indent . '#' . substr($trim, 1);
+    }
+
+    return $line;
+}
+
+function crate_rustdoc_links(string $line): string
+{
+    $out = '';
+    $rest = $line;
+    while (true) {
+        $start = strpos($rest, '[`');
+        if ($start === false) {
+            return $out . $rest;
+        }
+        $out .= substr($rest, 0, $start);
+        $rest = substr($rest, $start);
+        $end = strpos($rest, '`]');
+        if ($end === false) {
+            return $out . $rest;
+        }
+        $inner = substr($rest, 2, $end - 2);
+        $after = substr($rest, $end + 2);
+        if (str_starts_with($after, '(')) {
+            $out .= '[`' . $inner . '`]';
+            $rest = $after;
+            continue;
+        }
+        $out .= '`' . $inner . '`';
+        $rest = $after;
+    }
+}
+
+function crate_squeeze_blanks(string $text): string
+{
+    $out = [];
+    $blank = 0;
+    foreach (explode("\n", trim($text)) as $line) {
+        if (trim($line) === '') {
+            $blank++;
+            if ($blank === 1) {
+                $out[] = '';
+            }
+            continue;
+        }
+        $blank = 0;
+        $out[] = $line;
+    }
+
+    return implode("\n", $out);
+}
+
+function crate_description(string $package): string
+{
+    $toml = file_get_contents(crate_prefix($package) . '/Cargo.toml') ?: '';
+    if (preg_match('/^description\s*=\s*"(.*)"/m', $toml, $match) !== 1) {
+        return crate_title($package) . ' library.';
+    }
+
+    return str_replace('\\"', '"', $match[1]);
+}
+
+/**
+ * Comma-split that ignores commas inside quotes and brackets.
+ *
+ * @return string[]
+ */
+function toml_split_commas(string $value): array
+{
+    $parts = [];
+    $current = '';
+    $depth = 0;
+    $quote = false;
+    $length = strlen($value);
+    for ($i = 0; $i < $length; $i++) {
+        $char = $value[$i];
+        if ($char === '"' && ($i === 0 || $value[$i - 1] !== '\\')) {
+            $quote = !$quote;
+        } elseif (!$quote) {
+            if ($char === '[') {
+                $depth++;
+            } elseif ($char === ']' && $depth > 0) {
+                $depth--;
+            } elseif ($char === ',' && $depth === 0) {
+                $parts[] = $current;
+                $current = '';
+                continue;
+            }
+        }
+        $current .= $char;
+    }
+    if ($current !== '') {
+        $parts[] = $current;
+    }
+
+    return $parts;
+}
+
+function parse_toml_value(string $value): mixed
+{
+    $value = trim($value);
+    if ($value === 'true') {
+        return true;
+    }
+    if ($value === 'false') {
+        return false;
+    }
+    if ($value !== '' && $value[0] === '"') {
+        return stripcslashes(substr($value, 1, -1));
+    }
+    if ($value !== '' && $value[0] === '[') {
+        $inner = trim(substr($value, 1, -1));
+        if ($inner === '') {
+            return [];
+        }
+
+        return array_map('parse_toml_value', toml_split_commas($inner));
+    }
+    if ($value !== '' && $value[0] === '{') {
+        return parse_inline_table($value);
+    }
+
+    return $value;
+}
+
+function parse_inline_table(string $value): array
+{
+    $value = trim($value);
+    $inner = trim(substr($value, 1, -1));
+    $result = [];
+    foreach (toml_split_commas($inner) as $pair) {
+        $pair = trim($pair);
+        if ($pair === '') {
+            continue;
+        }
+        [$key, $raw] = array_map('trim', explode('=', $pair, 2));
+        $result[$key] = parse_toml_value($raw);
+    }
+
+    return $result;
+}
+
+function format_toml_value(mixed $value): string
+{
+    if (is_bool($value)) {
+        return $value ? 'true' : 'false';
+    }
+    if (is_array($value)) {
+        if (array_is_list($value)) {
+            return '[' . implode(', ', array_map('format_toml_value', $value)) . ']';
+        }
+
+        return format_inline_table($value);
+    }
+
+    return '"' . str_replace(['\\', '"'], ['\\\\', '\\"'], (string) $value) . '"';
+}
+
+function format_inline_table(array $table): string
+{
+    $order = ['version', 'git', 'optional', 'default-features', 'features'];
+    $keys = array_merge(array_intersect($order, array_keys($table)), array_diff(array_keys($table), $order));
+    $parts = [];
+    foreach ($keys as $key) {
+        $parts[] = $key . ' = ' . format_toml_value($table[$key]);
+    }
+
+    return '{ ' . implode(', ', $parts) . ' }';
+}
+
+/**
+ * @return array{package: array<string, string>, dependencies: array<string, mixed>}
+ */
+function parse_workspace_toml(string $toml): array
+{
+    $package = [];
+    $dependencies = [];
+    $section = null;
+    foreach (explode("\n", $toml) as $line) {
+        $trimmed = trim($line);
+        if ($trimmed === '' || str_starts_with($trimmed, '#')) {
+            continue;
+        }
+        if (str_starts_with($trimmed, '[')) {
+            $section = trim($trimmed, '[]');
+            continue;
+        }
+        if (!str_contains($trimmed, '=')) {
+            continue;
+        }
+        [$key, $raw] = array_map('trim', explode('=', $trimmed, 2));
+        if ($section === 'workspace.package' && in_array($key, ['version', 'edition', 'rust-version', 'license'], true)) {
+            $package[$key] = parse_toml_value($raw);
+        } elseif ($section === 'workspace.dependencies') {
+            $dependencies[$key] = parse_toml_value($raw);
+        }
+    }
+
+    return ['package' => $package, 'dependencies' => $dependencies];
+}
+
+function expand_workspace_dep(string $name, array $overrides, array $workspace, string $crateVersion): string
+{
+    unset($overrides['workspace']);
+    if (!array_key_exists($name, $workspace['dependencies'])) {
+        fail("workspace.dependencies has no {$name}");
+    }
+    $base = $workspace['dependencies'][$name];
+    $repo = crate_repo_of_dep($name);
+    if ($repo !== null) {
+        $merged = ['version' => $crateVersion, 'git' => 'https://github.com/' . CRATES_ORG . '/' . $repo];
+        if (is_array($base) && !array_is_list($base)) {
+            foreach ($base as $key => $value) {
+                if ($key !== 'path') {
+                    $merged[$key] = $value;
+                }
+            }
+        }
+        if (isset($overrides['features'], $merged['features']) && is_array($overrides['features']) && is_array($merged['features'])) {
+            $merged['features'] = array_values(array_unique([...$merged['features'], ...$overrides['features']]));
+            unset($overrides['features']);
+        }
+        $merged = array_merge($merged, $overrides);
+
+        return format_inline_table($merged);
+    }
+
+    if (is_string($base)) {
+        if ($overrides === []) {
+            return format_toml_value($base);
+        }
+
+        return format_inline_table(array_merge(['version' => $base], $overrides));
+    }
+
+    $merged = $base;
+    unset($merged['path']);
+    if (isset($overrides['features'], $merged['features']) && is_array($overrides['features']) && is_array($merged['features'])) {
+        $merged['features'] = array_values(array_unique([...$merged['features'], ...$overrides['features']]));
+        unset($overrides['features']);
+    }
+    $merged = array_merge($merged, $overrides);
+
+    return count($merged) === 1 && isset($merged['version'])
+        ? format_toml_value($merged['version'])
+        : format_inline_table($merged);
+}
+
+/**
+ * Expand workspace inheritance in a crate Cargo.toml so the mirror builds
+ * without this repository's workspace. Sibling Utopia crates become git
+ * dependencies on github.com/utopia-rs/<name>.
+ */
+function materialize_cargo_toml(string $toml, string $workspaceToml, string $package): string
+{
+    $workspace = parse_workspace_toml($workspaceToml);
+    $crateVersion = $workspace['package']['version'] ?? '0.1.0';
+    $expected = crate_package_name($package);
+    $lines = explode("\n", $toml);
+    $out = [];
+    $dotted = null;
+    foreach ($lines as $line) {
+        $trimmed = trim($line);
+        if ($dotted !== null) {
+            if ($trimmed === '' || str_starts_with($trimmed, '[') || str_starts_with($trimmed, '#')) {
+                $dotted = null;
+            } elseif (preg_match('/^workspace\s*=\s*true\s*$/', $trimmed) === 1) {
+                $indent = substr($line, 0, strlen($line) - strlen(ltrim($line)));
+                $expanded = expand_workspace_dep($dotted, [], $workspace, $crateVersion);
+                if (str_starts_with($expanded, '{')) {
+                    $table = parse_inline_table($expanded);
+                    foreach ($table as $key => $value) {
+                        $out[] = $indent . $key . ' = ' . format_toml_value($value);
+                    }
+                } else {
+                    $out[] = $indent . 'version = ' . $expanded;
+                }
+                continue;
+            }
+        }
+        if (preg_match('/^\[(?:dev-|build-)?dependencies\.([A-Za-z0-9_-]+)\]$/', $trimmed, $match) === 1) {
+            $dotted = $match[1];
+            $out[] = $line;
+            continue;
+        }
+        if (preg_match('/^(\s*)version\.workspace\s*=\s*true\s*$/', $line, $match) === 1) {
+            $out[] = $match[1] . 'version = ' . format_toml_value($crateVersion);
+            continue;
+        }
+        if (preg_match('/^(\s*)edition\.workspace\s*=\s*true\s*$/', $line, $match) === 1) {
+            $out[] = $match[1] . 'edition = ' . format_toml_value($workspace['package']['edition'] ?? '2024');
+            continue;
+        }
+        if (preg_match('/^(\s*)rust-version\.workspace\s*=\s*true\s*$/', $line, $match) === 1) {
+            $out[] = $match[1] . 'rust-version = ' . format_toml_value($workspace['package']['rust-version'] ?? '1.88');
+            continue;
+        }
+        if (preg_match('/^(\s*)license\.workspace\s*=\s*true\s*$/', $line, $match) === 1) {
+            $out[] = $match[1] . 'license = ' . format_toml_value($workspace['package']['license'] ?? 'BSD-3-Clause');
+            continue;
+        }
+        if (preg_match('/^(\s*)publish\.workspace\s*=\s*true\s*$/', $line, $match) === 1) {
+            continue;
+        }
+        if (preg_match('/^(\s*)([A-Za-z0-9_-]+)\.workspace\s*=\s*true\s*$/', $line, $match) === 1) {
+            $out[] = $match[1] . $match[2] . ' = ' . expand_workspace_dep($match[2], [], $workspace, $crateVersion);
+            continue;
+        }
+        if (preg_match('/^(\s*)([A-Za-z0-9_-]+)\s*=\s*\{(.*)\}\s*$/', $line, $match) === 1 && str_contains($match[3], 'workspace')) {
+            $overrides = parse_inline_table('{' . $match[3] . '}');
+            if (($overrides['workspace'] ?? null) === true) {
+                $out[] = $match[1] . $match[2] . ' = ' . expand_workspace_dep($match[2], $overrides, $workspace, $crateVersion);
+                continue;
+            }
+        }
+        $out[] = $line;
+    }
+
+    $materialized = implode("\n", $out);
+    if (!str_contains($materialized, "name = \"{$expected}\"")) {
+        fail("{$package}: materialized Cargo.toml name is not {$expected}");
+    }
+    if (str_contains($materialized, '.workspace = true') || str_contains($materialized, 'workspace = true')) {
+        fail("{$package}: materialized Cargo.toml still has workspace inheritance");
+    }
+
+    return $materialized;
+}
+
+function replace_tree_file(string $tree, string $name, string $blob): string
+{
+    $entries = array_filter(explode("\n", sh("git ls-tree {$tree}")), fn (string $line) => $line !== '');
+    $out = [];
+    $replaced = false;
+    foreach ($entries as $entry) {
+        if (preg_match('/^(\S+) (\S+) (\S+)\t(.*)$/', $entry, $match) !== 1) {
+            fail("unreadable tree entry: {$entry}");
+        }
+        if ($match[4] === $name) {
+            $out[] = "{$match[1]} {$match[2]} {$blob}\t{$name}";
+            $replaced = true;
+        } else {
+            $out[] = $entry;
+        }
+    }
+    if (!$replaced) {
+        $out[] = "100644 blob {$blob}\t{$name}";
+    }
+
+    return sh('printf %s ' . escapeshellarg(implode("\n", $out) . "\n") . ' | git mktree');
+}
+
+function materialize_crate_tree(string $commit, string $prefix, string $tree): string
+{
+    exec("git cat-file -e {$commit}:Cargo.toml 2>/dev/null", $_, $missing);
+    if ($missing !== 0) {
+        return $tree;
+    }
+    $package = str_starts_with($prefix, 'crates/utopia/')
+        ? substr($prefix, strlen('crates/utopia/'))
+        : 'php-std';
+    $toml = sh("git show {$commit}:{$prefix}/Cargo.toml");
+    $workspace = sh("git show {$commit}:Cargo.toml");
+    $materialized = materialize_cargo_toml($toml, $workspace, $package);
+    $blob = sh('printf %s ' . escapeshellarg($materialized) . ' | git hash-object -w --stdin');
+
+    return replace_tree_file($tree, 'Cargo.toml', $blob);
+}
+
+function split_crate(string $package): string
+{
+    return split_tree(crate_prefix($package), 'materialize_crate_tree');
+}
+
+function crate_release_notes(string $package, string $version, string $to): string
+{
+    $previous = null;
+    $tags = sh("git -c versionsort.suffix=- tag --list 'rs/{$package}/*' --sort=-v:refname");
+    foreach (explode("\n", $tags) as $tag) {
+        $candidate = substr($tag, strlen("rs/{$package}/"));
+        if ($candidate !== '' && version_compare($candidate, $version, '<')) {
+            $previous = $tag;
+            break;
+        }
+    }
+
+    $home = 'https://github.com/' . REPOSITORY;
+    $prefix = crate_prefix($package);
+    if ($previous === null) {
+        return "First release cut from [`{$prefix}`]({$home}/tree/main/{$prefix}) in " . REPOSITORY . '.';
+    }
+
+    $log = sh("git log {$previous}..{$to} --pretty='- %s' -- {$prefix}");
+
+    return ($log !== '' ? $log : '- No changes to this crate since ' . $previous . '.')
+        . "\n\n**Changes**: {$home}/compare/{$previous}...rs/{$package}/{$version}";
+}
+
+function crate_lockdown(string $package): void
+{
+    exec('gh --version 2>/dev/null', $_, $missing);
+    if ($missing !== 0) {
+        out('gh not found — create the mirror ruleset manually (see rfc/rust.md)');
+
+        return;
+    }
+    $payload = json_encode([
+        'name' => 'main',
+        'target' => 'branch',
+        'enforcement' => 'active',
+        'conditions' => ['ref_name' => ['include' => ['~DEFAULT_BRANCH'], 'exclude' => []]],
+        'rules' => [
+            ['type' => 'deletion'],
+            ['type' => 'non_fast_forward'],
+            ['type' => 'pull_request', 'parameters' => [
+                'required_approving_review_count' => 0,
+                'dismiss_stale_reviews_on_push' => false,
+                'require_code_owner_review' => false,
+                'require_last_push_approval' => false,
+                'required_review_thread_resolution' => false,
+                'allowed_merge_methods' => ['merge', 'squash', 'rebase'],
+            ]],
+        ],
+        'bypass_actors' => [['actor_id' => CRATES_SPLIT_APP_ID, 'actor_type' => 'Integration', 'bypass_mode' => 'always']],
+    ]);
+    exec('gh api ' . escapeshellarg('repos/' . CRATES_ORG . "/{$package}/rulesets") . ' 2>/dev/null', $listing, $listed);
+    $id = null;
+    foreach (($listed === 0 ? json_decode(implode('', $listing), true) : []) ?: [] as $rule) {
+        if (($rule['target'] ?? '') === 'branch') {
+            $id = $rule['id'];
+            break;
+        }
+    }
+    $endpoint = 'repos/' . CRATES_ORG . "/{$package}/rulesets" . ($id === null ? '' : "/{$id}");
+    exec('printf %s ' . escapeshellarg($payload) . ' | gh api -X ' . ($id === null ? 'POST' : 'PUT')
+        . " {$endpoint} --input - 2>&1", $response, $code);
+    out($code === 0
+        ? ($id === null ? 'mirror ruleset created' : 'mirror ruleset updated (split app can bypass)')
+        : 'could not set mirror ruleset (configure manually, see rfc/rust.md): ' . implode("\n", $response));
+}
+
+/**
+ * Write the files a crate's mirror needs: README from guide.md, LICENSE,
+ * gitignore, repository URL, and the PR/issue redirect workflow.
+ */
+function absorb_crate(string $package, bool $skipRuleset): void
+{
+    $directory = crate_prefix($package);
+    is_file("{$directory}/Cargo.toml") || fail("unknown crate: {$package}");
+
+    $toml = file_get_contents("{$directory}/Cargo.toml");
+    $expected = crate_package_name($package);
+    if (preg_match('/^name\s*=\s*"' . preg_quote($expected, '/') . '"/m', $toml) !== 1) {
+        fail("{$directory}/Cargo.toml name must be \"{$expected}\"");
+    }
+    $repository = 'https://github.com/' . CRATES_ORG . '/' . $package;
+    if (preg_match('/^repository\s*=/m', $toml) !== 1) {
+        $toml = preg_replace(
+            '/^(license\.workspace\s*=\s*true)$/m',
+            "$1\nrepository = \"{$repository}\"",
+            $toml,
+            1,
+            $count
+        );
+        $count === 1 || fail("{$directory}/Cargo.toml has no license.workspace line to attach repository to");
+        file_put_contents("{$directory}/Cargo.toml", $toml);
+        out("added repository = \"{$repository}\" to Cargo.toml");
+    }
+
+    $readme = "{$directory}/README.md";
+    $generated = crate_readme($package, crate_description($package)) . "\n";
+    if (!is_file($readme) || file_get_contents($readme) !== $generated) {
+        file_put_contents($readme, $generated);
+        out('wrote README.md from guide.md');
+    }
+
+    $license = "{$directory}/LICENSE";
+    if (!is_file($license)) {
+        is_file('LICENSE') || fail('root LICENSE is missing');
+        copy('LICENSE', $license);
+        out('copied LICENSE from the repository root');
+    }
+
+    $ignore = "{$directory}/.gitignore";
+    $ignored = is_file($ignore) ? file_get_contents($ignore) : '';
+    $needed = ['/target', 'Cargo.lock'];
+    $append = [];
+    foreach ($needed as $entry) {
+        if (preg_match('#^' . preg_quote($entry, '#') . '$#m', $ignored) !== 1) {
+            $append[] = $entry;
+        }
+    }
+    if ($append !== []) {
+        file_put_contents($ignore, rtrim($ignored) . ($ignored === '' ? '' : "\n") . implode("\n", $append) . "\n");
+        out('updated .gitignore');
+    }
+
+    $workflows = "{$directory}/.github/workflows";
+    if (!is_dir($workflows)) {
+        mkdir($workflows, 0755, true);
+    }
+    foreach (glob("{$workflows}/*.{yml,yaml}", GLOB_BRACE) ?: [] as $file) {
+        unlink($file);
+    }
+    file_put_contents("{$workflows}/mirror.yml", crate_mirror_workflow($package));
+    out('wrote .github/workflows/mirror.yml (closes mirror PRs and issues with a redirect)');
+
+    if ($skipRuleset) {
+        out('skipped the mirror ruleset (--skip-ruleset)');
+    } else {
+        crate_lockdown($package);
+    }
+}
+
+function push_crate_split(string $package, array $options): int
+{
+    out("splitting {$package}...");
+    $sha = split_crate($package);
+    if (isset($options['dry-run'])) {
+        out("{$package} -> {$sha} (dry run)");
+
+        return 0;
+    }
+
+    $remote = is_string($options['remote'] ?? null) ? $options['remote'] : crate_remote($package);
+    $force = isset($options['force']) ? ' --force' : '';
+    $ref = is_string($options['tag'] ?? null)
+        ? 'refs/tags/' . $options['tag']
+        : 'refs/heads/' . (is_string($options['branch'] ?? null) ? $options['branch'] : 'main');
+
+    passthru("git push{$force} {$remote} {$sha}:{$ref}", $code);
+    if ($code !== 0) {
+        return $code;
+    }
+    out("{$package} -> {$ref} ({$sha})");
+
+    if (!is_string($options['tag'] ?? null)) {
+        return 0;
+    }
+
+    $version = $options['tag'];
+    $tag = "rs/{$package}/{$version}";
+    exec("git rev-parse -q --verify refs/tags/{$tag} > /dev/null 2>&1", $_, $missing);
+    $payload = json_encode([
+        'tag_name' => $version,
+        'name' => $version,
+        'body' => crate_release_notes($package, $version, $missing === 0 ? $tag : 'HEAD'),
+        'prerelease' => str_contains($version, '-'),
+    ]);
+    $token = getenv('GH_TOKEN') ?: sh('gh auth token');
+    $authorization = escapeshellarg('Authorization: Bearer ' . $token);
+    foreach ([1, 2] as $attempt) {
+        $response = [];
+        exec('printf %s ' . escapeshellarg($payload)
+            . ' | curl -sS --fail-with-body -X POST -H ' . $authorization
+            . ' -H "Accept: application/vnd.github+json" --data-binary @- '
+            . 'https://api.github.com/repos/' . CRATES_ORG . "/{$package}/releases 2>&1", $response, $code);
+        if ($code === 0 || $attempt === 2) {
+            break;
+        }
+        sleep(2);
+    }
+    if ($code === 0) {
+        out("{$package} -> release {$version} published");
+
+        return 0;
+    }
+    if (stripos($message = implode("\n", $response), 'already_exists') !== false) {
+        out("release {$version} already exists");
+
+        return 0;
+    }
+    out("could not publish release: {$message}");
+
+    return 1;
+}
+
+function validate_crates(): int
+{
+    $failures = 0;
+    foreach (crates() as $package) {
+        $problems = [];
+        $directory = crate_prefix($package);
+        $toml = is_file("{$directory}/Cargo.toml") ? file_get_contents("{$directory}/Cargo.toml") : null;
+        if ($toml === null) {
+            $problems[] = 'missing Cargo.toml';
+        } else {
+            $expected = crate_package_name($package);
+            if (preg_match('/^name\s*=\s*"' . preg_quote($expected, '/') . '"/m', $toml) !== 1) {
+                $problems[] = "name must be \"{$expected}\"";
+            }
+            if (preg_match('/^license(?:\.workspace)?\s*=/m', $toml) !== 1) {
+                $problems[] = 'missing license';
+            }
+            $repository = 'https://github.com/' . CRATES_ORG . '/' . $package;
+            if (preg_match('/^repository\s*=\s*"' . preg_quote($repository, '/') . '"/m', $toml) !== 1) {
+                $problems[] = "repository must be \"{$repository}\", run `bin/monorepo crates absorb {$package} --skip-ruleset`";
+            }
+        }
+        if (!is_file("{$directory}/README.md")) {
+            $problems[] = 'missing README.md, run `bin/monorepo crates absorb ' . $package . ' --skip-ruleset`';
+        } elseif (!str_contains(file_get_contents("{$directory}/README.md"), 'read-only mirror')) {
+            $problems[] = 'README.md must carry the read-only mirror banner';
+        }
+        if (!is_file("{$directory}/LICENSE")) {
+            $problems[] = 'missing LICENSE, run `bin/monorepo crates absorb ' . $package . ' --skip-ruleset`';
+        }
+        if (!is_file("{$directory}/.github/workflows/mirror.yml")) {
+            $problems[] = 'missing .github/workflows/mirror.yml, run `bin/monorepo crates absorb ' . $package . ' --skip-ruleset`';
+        }
+        $ignored = is_file("{$directory}/.gitignore") ? file_get_contents("{$directory}/.gitignore") : '';
+        if (preg_match('#^/?target$#m', $ignored) !== 1) {
+            $problems[] = '.gitignore must list /target';
+        }
+        if (preg_match('#^/?Cargo\.lock$#m', $ignored) !== 1) {
+            $problems[] = '.gitignore must list Cargo.lock';
+        }
+        foreach ($problems as $problem) {
+            out("{$directory}: {$problem}");
+            $failures++;
+        }
+    }
+
+    return $failures;
 }
 
 $arguments = array_slice($argv, 1);
@@ -919,7 +1841,8 @@ switch ($command) {
             out('composer.json: package autoload entries are stale, run `bin/monorepo autoload`');
             $failures++;
         }
-        out($failures === 0 ? 'all packages valid' : "{$failures} problem(s) found");
+        $failures += validate_crates();
+        out($failures === 0 ? 'all packages and crates valid' : "{$failures} problem(s) found");
         exit($failures === 0 ? 0 : 1);
 
     case 'autoload':
@@ -1050,6 +1973,134 @@ switch ($command) {
         out('all tests passed');
         break;
 
+    case 'crates':
+        $subcommand = array_shift($arguments) ?? 'help';
+        switch ($subcommand) {
+            case 'list':
+                foreach (crates() as $package) {
+                    $latest = sh("git tag --list 'rs/{$package}/*' --sort=-v:refname | head -n 1");
+                    out(str_pad($package, 24) . ($latest !== '' ? $latest : '(unreleased)'));
+                }
+                break;
+
+            case 'absorb':
+                $targets = $arguments !== [] ? $arguments : crates();
+                foreach ($targets as $package) {
+                    in_array($package, crates(), true) || fail("unknown crate: {$package}");
+                    out("==> {$package}");
+                    absorb_crate($package, isset($options['skip-ruleset']));
+                }
+                break;
+
+            case 'split':
+                $targets = $arguments !== [] ? $arguments : crates();
+                $failed = [];
+                foreach ($targets as $package) {
+                    in_array($package, crates(), true) || fail("unknown crate: {$package}");
+                    if (push_crate_split($package, $options) !== 0) {
+                        $failed[] = $package;
+                    }
+                }
+                if ($failed !== []) {
+                    fail('failed to push: ' . implode(', ', $failed));
+                }
+                break;
+
+            case 'release':
+                $package = $arguments[0] ?? fail('usage: monorepo crates release <name> <version> [--dry-run]');
+                $version = $arguments[1] ?? fail('usage: monorepo crates release <name> <version> [--dry-run]');
+                in_array($package, crates(), true) || fail("unknown crate: {$package}");
+                preg_match('/^\d+\.\d+\.\d+(-[0-9A-Za-z.]+)?$/', $version)
+                    || fail("version must be semver (e.g. 0.1.0 or 0.1.0-rc1), got \"{$version}\"");
+
+                $tag = "rs/{$package}/{$version}";
+                if (sh('git tag --list ' . escapeshellarg($tag)) !== '') {
+                    fail("tag {$tag} already exists");
+                }
+
+                out("release notes for {$tag}:\n");
+                out(crate_release_notes($package, $version, 'HEAD') . "\n");
+
+                if (isset($options['dry-run'])) {
+                    out('(dry run — nothing tagged)');
+                    break;
+                }
+
+                if (sh('git status --porcelain') !== '') {
+                    fail('working tree is dirty — commit or stash before releasing');
+                }
+                exec('git merge-base --is-ancestor HEAD origin/main', $_, $unmerged);
+                if ($unmerged !== 0) {
+                    out('warning: HEAD is not on origin/main — you are releasing unmerged commits');
+                }
+
+                sh("git tag {$tag}");
+                sh("git push origin {$tag}");
+                out("pushed {$tag} — CI will mirror the tag and create the GitHub release");
+                break;
+
+            case 'validate':
+                $failures = validate_crates();
+                out($failures === 0 ? 'all crates valid' : "{$failures} problem(s) found");
+                exit($failures === 0 ? 0 : 1);
+
+            case 'materialize':
+                $package = $arguments[0] ?? fail('usage: monorepo crates materialize <name>');
+                in_array($package, crates(), true) || fail("unknown crate: {$package}");
+                echo materialize_cargo_toml(
+                    file_get_contents(crate_prefix($package) . '/Cargo.toml'),
+                    file_get_contents('Cargo.toml'),
+                    $package
+                );
+                break;
+
+            case 'create-mirrors':
+                exec('gh --version 2>/dev/null', $_, $missing);
+                $missing === 0 || fail('gh is required to create mirror repositories');
+                $targets = $arguments !== [] ? $arguments : crates();
+                $failed = [];
+                foreach ($targets as $package) {
+                    in_array($package, crates(), true) || fail("unknown crate: {$package}");
+                    $description = crate_description($package);
+                    if (strlen($description) > 350) {
+                        $description = substr($description, 0, 347) . '...';
+                    }
+                    $cmd = 'gh repo create ' . escapeshellarg(CRATES_ORG . '/' . $package)
+                        . ' --public --description ' . escapeshellarg($description)
+                        . ' --homepage ' . escapeshellarg('https://github.com/' . REPOSITORY . '/tree/main/' . crate_prefix($package));
+                    if (isset($options['dry-run'])) {
+                        out($cmd);
+                        continue;
+                    }
+                    passthru($cmd, $code);
+                    if ($code !== 0) {
+                        $failed[] = $package;
+                    }
+                }
+                if ($failed !== []) {
+                    fail('failed to create: ' . implode(', ', $failed));
+                }
+                break;
+
+            default:
+                out(<<<'HELP'
+                usage: bin/monorepo crates <command>
+
+                  list                                show crates and their latest rs/<name>/<version> tag
+                  absorb [name...] [--skip-ruleset]   write README from guide.md, LICENSE, gitignore, repository URL, mirror.yml
+                  split [name...] [--tag=v] [--branch=main] [--remote=url] [--force] [--dry-run]
+                                                      push crate histories to github.com/utopia-rs/<name>
+                  release <name> <version> [--dry-run]
+                                                      preview notes, tag rs/<name>/<version> and push it
+                  validate                            check the crate mirror shape
+                  materialize <name>                  print the standalone Cargo.toml the mirror would get
+                  create-mirrors [name...] [--dry-run]
+                                                      create empty public repos on utopia-rs
+                HELP);
+                break;
+        }
+        break;
+
     default:
         out(<<<'HELP'
         usage: bin/monorepo <command>
@@ -1061,13 +2112,14 @@ switch ($command) {
                                               push package histories to their mirrors
           release <name> <version> [--dry-run]
                                               preview notes, tag <name>/<version> and push it (CI does the rest)
-          validate                            check the package shape and the root autoload wiring
+          validate                            check the package shape, crate mirrors, and the root autoload wiring
           autoload                            regenerate the root composer.json autoload entries for packages/
           check [name...] [--fix] [--linked]  run pint, phpstan and rector against packages
                                               (--linked resolves siblings from the local checkout)
           test [name...] [--linked]           install dependencies and run package test suites
                                               (--linked resolves siblings from the local checkout)
           dependents <name...>                list packages that depend on the given ones (transitively)
+          crates <command>                    Rust crate mirrors on github.com/utopia-rs (see `crates help`)
         HELP);
         break;
 }
