@@ -1,6 +1,7 @@
 import { HeadContent, Outlet, Scripts, createRootRoute, useMatch, useRouterState } from '@tanstack/react-router'
 import { useEffect, useState, type ReactNode } from 'react'
 import appCss from '../styles.css?url'
+import { Analytics } from '@/components/Analytics'
 import { Crumbs } from '@/components/Crumbs'
 import { Header } from '@/components/Header'
 import { FAVICON } from '@/components/Logo'
@@ -55,6 +56,7 @@ function Layout() {
   useEffect(() => setMenu(false), [path])
   return (
     <div className="min-h-screen">
+      <Analytics />
       <Header onMenu={() => setMenu(true)} />
       {/* The site's pages are in the header; a library's pages add its own menu on the left. */}
       <div className={nav ? 'lg:grid lg:grid-cols-[300px_minmax(0,1fr)]' : ''}>

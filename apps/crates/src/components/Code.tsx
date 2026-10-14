@@ -7,6 +7,7 @@ import 'prismjs/components/prism-bash'
 import { Check, Copy, Maximize2, Minimize2 } from 'lucide-react'
 import { useState } from 'react'
 import type { Example } from '@/lib/docs'
+import { trackDocsEvent } from '@/lib/analytics'
 import { useMigration } from '@/lib/prefs'
 
 export type Lang = 'rust' | 'php' | 'toml' | 'bash' | 'text'
@@ -19,7 +20,7 @@ function highlight(code: string, lang: Lang) {
   return Prism.highlight(code, grammar, lang)
 }
 
-export function CopyButton({ text, label = 'Copy' }: { text: string; label?: string }) {
+export function CopyButton({ text, label = 'Copy', kind = 'snippet' }: { text: string; label?: string; kind?: 'snippet' | 'program' | 'install' }) {
   const [copied, setCopied] = useState(false)
   return (
     <button
@@ -29,6 +30,7 @@ export function CopyButton({ text, label = 'Copy' }: { text: string; label?: str
           .writeText(text)
           .then(() => {
             setCopied(true)
+            trackDocsEvent('code_copied', { kind })
             setTimeout(() => setCopied(false), 1500)
           })
           .catch(() => undefined)
@@ -84,7 +86,7 @@ export function CodeBlock({
             <span className="hidden 2xl:inline">{full ? 'Example' : 'Full program'}</span>
           </button>
         ) : null}
-        <CopyButton text={program ?? code} label={program ? 'Copy program' : 'Copy'} />
+        <CopyButton text={program ?? code} label={program ? 'Copy program' : 'Copy'} kind={program ? 'program' : 'snippet'} />
       </div>
       <pre className="code m-0 overflow-x-auto px-5 py-4 font-mono text-[12.5px] leading-[1.75]">
         <code dangerouslySetInnerHTML={{ __html: highlight(text, lang) }} />

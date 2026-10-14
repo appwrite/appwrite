@@ -84,7 +84,7 @@ export function Hero({ index, factory }: { index: Index; factory: Plan | null })
           <div className="-mt-3 flex max-w-full min-w-0 items-center gap-1 border border-code-border bg-code py-1 pr-1 pl-4 font-mono text-[12.5px] text-zinc-200">
             <span className="text-highlight select-none">$</span>
             <span className="min-w-0 truncate px-2 text-left">{install}</span>
-            <CopyButton text={install} label="Copy" />
+            <CopyButton text={install} label="Copy" kind="install" />
           </div>
         </div>
         {factory ? <Factory plan={factory} libraries={index.libraries} /> : null}

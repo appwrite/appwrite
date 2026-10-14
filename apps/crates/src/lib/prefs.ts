@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react'
+import { trackDocsEvent } from '@/lib/analytics'
 
 // Per-reader preferences, kept in this browser: migration mode (PHP and the
 // conversion's status next to the Rust docs) and how library lists are laid
@@ -44,9 +45,15 @@ function usePref(key: Key) {
 
 /** Migration mode: PHP twins, PHP signatures, conversion status and sync, in yellow cards. */
 export const useMigration = () => usePref('migration') === 'on'
-export const setMigration = (on: boolean) => write('migration', on ? 'on' : 'off')
+export const setMigration = (on: boolean) => {
+  write('migration', on ? 'on' : 'off')
+  trackDocsEvent('migration_mode_changed', { enabled: on })
+}
 
 /** How lists of libraries are shown: a grid of cards, or one row per library. */
 export type Layout = 'grid' | 'list'
 export const useLayout = () => (usePref('layout') === 'list' ? 'list' : 'grid') as Layout
-export const setLayout = (layout: Layout) => write('layout', layout)
+export const setLayout = (layout: Layout) => {
+  write('layout', layout)
+  trackDocsEvent('library_layout_changed', { layout })
+}
