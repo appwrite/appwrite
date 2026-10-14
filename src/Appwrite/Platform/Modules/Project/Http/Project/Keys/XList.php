@@ -2,8 +2,8 @@
 
 namespace Appwrite\Platform\Modules\Project\Http\Project\Keys;
 
+use Appwrite\Auth\Key as ApiKey;
 use Appwrite\Extend\Exception;
-use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -16,7 +16,6 @@ use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Query\Cursor;
-use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Boolean;
 
@@ -24,7 +23,7 @@ use Utopia\Validator\Boolean;
  * TODO: Remove once the Console, CLI and SDKs use the Organization API
  * (/v1/organization/projects/:projectId/keys) instead of this project-scoped route.
  */
-class XList extends Base
+class XList extends Action
 {
     use HTTP;
 
@@ -63,6 +62,7 @@ class XList extends Base
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('authorization')
+            ->inject('apiKey')
             ->callback($this->action(...));
     }
 
@@ -76,6 +76,7 @@ class XList extends Base
         Response $response,
         Database $dbForPlatform,
         Authorization $authorization,
+        ?ApiKey $apiKey,
     ) {
         try {
             $queries = Query::parseQueries($queries);
@@ -124,7 +125,7 @@ class XList extends Base
         }
 
         $response->dynamic(new Document([
-            'keys' => $keys,
+            'keys' => $this->withoutSecrets($apiKey, $keys),
             'total' => $total,
         ]), Response::MODEL_KEY_LIST);
     }

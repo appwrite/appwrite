@@ -2,8 +2,8 @@
 
 namespace Appwrite\Platform\Modules\Project\Http\Project\Keys;
 
+use Appwrite\Auth\Key as ApiKey;
 use Appwrite\Extend\Exception;
-use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -12,14 +12,13 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
-use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 
 /**
  * TODO: Remove once the Console, CLI and SDKs use the Organization API
  * (/v1/organization/projects/:projectId/keys) instead of this project-scoped route.
  */
-class Get extends Base
+class Get extends Action
 {
     use HTTP;
 
@@ -57,6 +56,7 @@ class Get extends Base
             ->inject('dbForPlatform')
             ->inject('project')
             ->inject('authorization')
+            ->inject('apiKey')
             ->callback($this->action(...));
     }
 
@@ -66,6 +66,7 @@ class Get extends Base
         Database $dbForPlatform,
         Document $project,
         Authorization $authorization,
+        ?ApiKey $apiKey,
     ) {
         $key = $authorization->skip(fn () => $dbForPlatform->getDocument('keys', $keyId));
 
@@ -73,6 +74,6 @@ class Get extends Base
             throw new Exception(Exception::KEY_NOT_FOUND);
         }
 
-        $response->dynamic($key, Response::MODEL_KEY);
+        $response->dynamic($this->withoutSecret($apiKey, $key), Response::MODEL_KEY);
     }
 }

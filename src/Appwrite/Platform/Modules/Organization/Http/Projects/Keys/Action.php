@@ -33,4 +33,32 @@ class Action extends AppwriteAction
 
         return $project;
     }
+
+    /**
+     * Blank the stored secret when the caller is an API key.
+     */
+    protected function withoutSecret(?Key $apiKey, Document $key): Document
+    {
+        if ($apiKey === null) {
+            return $key;
+        }
+
+        $copy = new Document($key->getArrayCopy());
+        $copy->setAttribute('secret', '');
+
+        return $copy;
+    }
+
+    /**
+     * @param array<Document> $keys
+     * @return array<Document>
+     */
+    protected function withoutSecrets(?Key $apiKey, array $keys): array
+    {
+        if ($apiKey === null) {
+            return $keys;
+        }
+
+        return \array_map(fn (Document $key) => $this->withoutSecret($apiKey, $key), $keys);
+    }
 }
