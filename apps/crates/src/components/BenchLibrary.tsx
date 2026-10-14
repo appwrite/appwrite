@@ -1,6 +1,5 @@
 import type { Bench, Timing } from '@/lib/docs'
 import { Duel, DuelLegend, Footnote, GoalNote, Measured, PARITY, Problems, Summary, goalOf, meets, unit } from './Bench'
-import { MigrationCard } from './Migration'
 
 /** The geometric mean of PHP's value over Rust's, across the benchmarks that have both (compat ones left out). */
 function mean(results: Bench['results'], pick: (t: Timing) => number | undefined) {
@@ -26,7 +25,7 @@ function allocs(t: Timing) {
  * The library's benchmarks against PHP (`compat bench`, tests/compat/README.md#benchmarks): time per call, CPU
  * per call and peak heap of each runtime, the same comparisons the Appwrite API benchmarks show.
  */
-export function Performance({ bench, id, stale }: { bench: Bench | null; id?: string; stale?: boolean | null }) {
+export function Performance({ bench, stale }: { bench: Bench | null; stale?: boolean | null }) {
   if (!bench?.results.length) return null
   const env = bench.environment
   const results = bench.results
@@ -44,11 +43,7 @@ export function Performance({ bench, id, stale }: { bench: Bench | null; id?: st
   const speed = mean(results, (t) => t.ns)
   const cpu = mean(results, (t) => t.cpu)
   return (
-    <MigrationCard id={id} title="Performance against PHP">
-      <p className="m-0 text-[13px] text-muted-foreground">
-        The same work timed in each runtime, in-process: the median of {results[0].rust.samples} samples per benchmark, with the CPU time and heap the
-        driver spent on them. Lower is better.
-      </p>
+    <div className="grid min-w-0 gap-3">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
         <Measured date={env.date} commit={env.commit} machine={env.machine.cpu || env.machine.arch} stale={stale} />
         <Summary
@@ -148,6 +143,6 @@ export function Performance({ bench, id, stale }: { bench: Bench | null; id?: st
         {env.machine.cpu || env.machine.arch} ({env.machine.os} host) · PHP {env.php.version}
         {env.php.opcache ? `, opcache, JIT ${env.php.jit || 'off'}` : ', no opcache'} · {env.rust.version.split(' (')[0]}, {env.rust.profile} build · {where}.
       </Footnote>
-    </MigrationCard>
+    </div>
   )
 }

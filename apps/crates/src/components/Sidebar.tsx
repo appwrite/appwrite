@@ -195,6 +195,11 @@ export function LibraryMenu({ nav, onNavigate }: { nav: Navigation; onNavigate?:
             <span className="ml-auto text-[10.5px] whitespace-nowrap text-muted-foreground tabular-nums">{nav.library.counts.php_functions.entries}</span>
           </Link>
         ) : null}
+        {migration && nav.library.bench ? (
+          <Link to="/$lib/benchmarks" params={{ lib: slug }} className={row}>
+            <span className="truncate">Benchmarks vs PHP</span>
+          </Link>
+        ) : null}
         <Fold.Provider value={fold}>{body}</Fold.Provider>
         {commands.length || unported ? (
           <>

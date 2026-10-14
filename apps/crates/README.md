@@ -30,7 +30,7 @@ Everything is generated from each library's own data and metadata; nothing is wr
 | Libraries | `packages/*`, the `utopia-php/*` packages in `composer.lock`, `crates/utopia/*` and `crates/support/*` |
 | Category | `extra.utopia.category` in the package's `composer.json` (or `[package.metadata.utopia]` in a Rust-only crate's `Cargo.toml`); category titles and descriptions in [`crates/categories.json`](../../crates/categories.json) |
 | Status | converted (`tests/compat/<lib>` is complete), in progress (a compat spec), started (a crate) or planned |
-| Performance | `tests/compat/<lib>/bench.json`, written by `bin/compat bench <lib> --write` (migration mode) |
+| Benchmarks vs PHP | `tests/compat/<lib>/bench.json`, written by `bin/compat bench <lib> --write`: the library's `/<lib>/benchmarks` page, in its menu in migration mode |
 | Sync with PHP | git history of `packages/<lib>/src` since the commit in the crate's `php-sync` marker (below) |
 | Getting started | `guide.md` next to the crate's `Cargo.toml` (below) |
 | Tasks | the crate's task binaries (`src/bin/<task>.rs`): their `//!` docs (first paragraph, `sh` examples, and the `# Commands`, `# Arguments`, `# Environment` and `# Exit codes` lists as tables), `tasks` in `tests/compat/<lib>/spec.json` (the files each writes), and the PHP package's tasks as `bin/compat coverage` discovers them; the PHP command, and the PHP tasks waived or pending, in migration mode (see [tests/compat](../../tests/compat/README.md#tasks)) |

@@ -6,7 +6,6 @@ import { PageHeader, Section, WithToc } from '@/components/Page'
 import { StatusBadge, StatusDot } from '@/components/Status'
 import { SyncBadge, SyncPanel } from '@/components/Sync'
 import { SpeedupBadge } from '@/components/Bench'
-import { Performance } from '@/components/BenchLibrary'
 import { KIND_ORDER, KIND_TITLE, STATUS, guideHeadings, isTopLevel, itemHash, loadLibrary, moduleSplat, slug, summary, taskHash, type LibrarySummary, type Status } from '@/lib/docs'
 import { useMigration } from '@/lib/prefs'
 import { MigrationCard, MigrationOnly, PhpNotes } from '@/components/Migration'
@@ -189,7 +188,6 @@ function LibraryPage() {
   const toc = [
     ...(l.counts.php_functions ? [{ id: 'php-functions', label: 'PHP functions' }] : []),
     ...(migration ? [{ id: 'migration', label: 'Conversion status' }] : []),
-    ...(migration && d.bench?.results.length ? [{ id: 'performance', label: 'Performance' }] : []),
     ...(l.rust ? [{ id: 'install', label: 'Install' }] : []),
     ...(d.guide.length ? [{ id: 'getting-started', label: 'Getting started' }, ...guideHeadings(d.guide).map((h) => ({ id: slug(h), label: h, depth: 1 }))] : []),
     ...(d.overview || d.examples.length || (migration && d.overview_notes) ? [{ id: 'overview', label: d.guide.length ? 'Reference' : 'Overview' }] : []),
@@ -262,6 +260,16 @@ function LibraryPage() {
                 value={[l.size.rust ? `Rust ${formatCount(l.size.rust.total)}` : null, l.size.php ? `PHP ${formatCount(l.size.php.total)}` : null].filter(Boolean).join(' · ') + ' lines'}
               />
             ) : null}
+            {d.bench?.results.length ? (
+              <Fact
+                label="Benchmarks"
+                value={
+                  <Link to="/$lib/benchmarks" params={{ lib: l.slug }} className="hover:underline">
+                    {d.bench.results.length} vs PHP →
+                  </Link>
+                }
+              />
+            ) : null}
             {l.counts.tasks?.total ? <Fact label="Tasks ported" value={`${l.counts.tasks.ported} of ${l.counts.tasks.total}${l.counts.tasks.waived ? `, ${l.counts.tasks.waived} waived` : ''}`} /> : null}
           </div>
           {l.status === 'progress' && l.compat?.summary ? <p className="m-0 text-[13px] text-muted-foreground">{l.compat.summary}</p> : null}
@@ -277,8 +285,6 @@ function LibraryPage() {
           </>
         )}
       </MigrationCard>
-
-      <Performance id="performance" bench={d.bench} stale={l.updated?.bench_stale} />
 
       {d.install.cargo ? (
         <Section id="install" title="Install" description="The crate lives in the Appwrite repository; depend on it from Git.">
