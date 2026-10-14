@@ -3,7 +3,7 @@
 use std::sync::{Arc, Mutex};
 
 use async_trait::async_trait;
-use php_std::{Array, ArrayKey, Value};
+use php_std::{Array, ArrayKey, Str, Value};
 use utopia_cache::Cache;
 use utopia_console::Command;
 
@@ -273,7 +273,7 @@ impl Origin {
     /// PHP: `getSigningKeys()`.
     pub async fn signing_keys(&self, refresh: bool) -> Result<Vec<Value>> {
         let keys = self.jwks(refresh).await?;
-        Ok(keys.iter().map(|key| s(php::string(&at(key, "x")))).collect())
+        Ok(keys.iter().map(|key| Value::Str(php::string(&at(key, "x")))).collect())
     }
 
     /// Origin's published Ed25519 JWKS entries, fetched once.
@@ -473,12 +473,12 @@ impl Origin {
         let sha_text = php::text(&sha);
         let nullable = |key: &str| {
             let v = at(check_run, key);
-            if empty(&v) { Value::Null } else { s(php::string(&v)) }
+            if empty(&v) { Value::Null } else { Value::Str(php::string(&v)) }
         };
         object([
             ("id", s(&id)),
-            ("name", s(php::string(&or(at(check_run, "name"), "")))),
-            ("status", s(php::string(&or(at(check_run, "status"), "")))),
+            ("name", Value::Str(php::string(&or(at(check_run, "name"), "")))),
+            ("status", Value::Str(php::string(&or(at(check_run, "status"), "")))),
             ("conclusion", nullable("conclusion")),
             ("head_sha", s(&sha)),
             (
@@ -500,16 +500,16 @@ impl Origin {
             ),
             ("started_at", nullable("startedAt")),
             ("completed_at", nullable("completedAt")),
-            ("details_url", s(php::string(&or(at(check_run, "detailsUrl"), "")))),
-            ("external_id", s(php::string(&or(at(check_run, "externalId"), "")))),
-            ("key", s(php::string(&or(at(check_run, "key"), "")))),
-            ("check_suite_id", s(php::string(&or(at(&suite, "id"), "")))),
+            ("details_url", Value::Str(php::string(&or(at(check_run, "detailsUrl"), "")))),
+            ("external_id", Value::Str(php::string(&or(at(check_run, "externalId"), "")))),
+            ("key", Value::Str(php::string(&or(at(check_run, "key"), "")))),
+            ("check_suite_id", Value::Str(php::string(&or(at(&suite, "id"), "")))),
             (
                 "output",
                 object([
-                    ("title", s(php::string(&or(at(&output, "title"), "")))),
-                    ("summary", s(php::string(&or(at(&output, "summary"), "")))),
-                    ("text", s(php::string(&or(at(&output, "text"), "")))),
+                    ("title", Value::Str(php::string(&or(at(&output, "title"), "")))),
+                    ("summary", Value::Str(php::string(&or(at(&output, "summary"), "")))),
+                    ("text", Value::Str(php::string(&or(at(&output, "text"), "")))),
                 ]),
             ),
         ])
@@ -648,7 +648,7 @@ impl Origin {
             _ => Value::Array(Array::new()),
         };
         Ok(object([
-            ("mergeCommitSha", s(php::string(&or(at(&body, "mergeCommitSha"), "")))),
+            ("mergeCommitSha", Value::Str(php::string(&or(at(&body, "mergeCommitSha"), "")))),
             ("mergedPullNumbers", merged),
             ("pullRequest", normalize_pull_request(array_or_empty(at(&body, "pullRequest")))),
         ]))
@@ -843,8 +843,8 @@ impl Origin {
             };
             let commit_sha = php::text(&php::string(&or(at(&item, "sha"), "")));
             normalized.push(object([
-                ("commitAuthor", s(php::string(&or(at(&author, "name"), "")))),
-                ("commitMessage", s(php::string(&or(at(&commit, "message"), "")))),
+                ("commitAuthor", Value::Str(php::string(&or(at(&author, "name"), "")))),
+                ("commitMessage", Value::Str(php::string(&or(at(&commit, "message"), "")))),
                 ("commitAuthorAvatar", s("")),
                 ("commitAuthorUrl", s("")),
                 ("commitHash", s(&commit_sha)),
@@ -901,7 +901,7 @@ impl Origin {
         }
         let body = array_or_empty(response.body);
         Ok(object([
-            ("sha", s(php::string(&or(at(&body, "sha"), "")))),
+            ("sha", Value::Str(php::string(&or(at(&body, "sha"), "")))),
             ("size", Value::Int(php::int(&or(at(&body, "size"), Value::Int(0))))),
             (
                 "content",
@@ -1148,7 +1148,7 @@ impl Origin {
         let body = array_or_empty(response.body);
         Ok(object([
             ("deliveries", array_or_empty(at(&body, "deliveries"))),
-            ("nextPageToken", s(php::string(&or(at(&body, "nextPageToken"), "")))),
+            ("nextPageToken", Value::Str(php::string(&or(at(&body, "nextPageToken"), "")))),
         ]))
     }
 
@@ -1177,7 +1177,7 @@ impl Origin {
             if php::is_array(&result) {
                 outcomes.set(
                     ArrayKey::from_bytes(&php::string(&or(at(&result, "deliveryId"), ""))),
-                    s(php::string(&or(at(&result, "outcome"), ""))),
+                    Value::Str(php::string(&or(at(&result, "outcome"), ""))),
                 );
             }
         }
@@ -1716,9 +1716,9 @@ impl Adapter for Origin {
                 array_or_empty(at(&envelope, "payload")),
                 php::string(&or(at(&decoded, "installationId"), "")),
             ),
-            _ => (event.as_bytes().to_vec(), decoded.clone(), Vec::new()),
+            _ => (Str::copy_from(event.as_bytes()), decoded.clone(), Str::EMPTY),
         };
-        if kind == EVENT_PUSH.as_bytes() {
+        if kind == *EVENT_PUSH.as_bytes() {
             return Ok(self.push_events(&body, &installation_id));
         }
         if let ArrayKey::Str(k) = ArrayKey::from_bytes(&kind)
@@ -1737,7 +1737,7 @@ impl Adapter for Origin {
             return Ok(vec![object([
                 ("action", s(action)),
                 ("installationId", s(id)),
-                ("userName", s(php::string(&or(at(&target, "slug"), "")))),
+                ("userName", Value::Str(php::string(&or(at(&target, "slug"), "")))),
             ])]);
         }
         Ok(Vec::new())
@@ -1802,7 +1802,7 @@ impl Adapter for Origin {
             let body = array_or_empty(response.body);
             for branch in each(&array_or_empty(at(&body, "branches"))) {
                 if php::is_array(&branch) && !empty(&at(&branch, "name")) {
-                    branches.push(s(php::string(&at(&branch, "name"))));
+                    branches.push(Value::Str(php::string(&at(&branch, "name"))));
                 }
             }
             token = php::text(&php::string(&or(at(&body, "nextPageToken"), "")));
@@ -1970,7 +1970,7 @@ impl Adapter for Origin {
             .fetch_check_suite(owner, repository_name, &php::text(&php::string(&or(at(&existing_suite, "id"), ""))))
             .await?;
         let existing_output = array_or_empty(at(&existing, "output"));
-        let field = |key: &str| s(php::string(&or(at(&existing, key), "")));
+        let field = |key: &str| Value::Str(php::string(&or(at(&existing, key), "")));
         let pick = |given: &str, key: &str| if php::filled(given) { s(given) } else { field(key) };
 
         let mut check_run = object([
@@ -1996,7 +1996,7 @@ impl Adapter for Origin {
             php::set(&mut check_run, "output", existing_output);
         }
 
-        let suite_field = |key: &str| s(php::string(&or(at(&suite, key), "")));
+        let suite_field = |key: &str| Value::Str(php::string(&or(at(&suite, key), "")));
         let mut check_suite = object([
             ("key", suite_field("key")),
             ("name", suite_field("name")),
@@ -2089,7 +2089,7 @@ impl Adapter for Origin {
             .filter(|item| php::is_array(item))
             .map(|item| {
                 object([
-                    ("name", s(php::string(&or(at(item, "name"), "")))),
+                    ("name", Value::Str(php::string(&or(at(item, "name"), "")))),
                     ("size", Value::Int(php::int(&or(at(item, "size"), Value::Int(0))))),
                     ("type", s(if php::is_str(&or(at(item, "type"), "file"), "dir") { "dir" } else { "file" })),
                 ])
@@ -2118,7 +2118,7 @@ impl Adapter for Origin {
             return Err(Error::file_not_found());
         }
         Ok(object([
-            ("sha", s(php::string(&or(at(&body, "sha"), "")))),
+            ("sha", Value::Str(php::string(&or(at(&body, "sha"), "")))),
             ("size", Value::Int(php::int(&or(at(&body, "size"), Value::Int(0))))),
             (
                 "content",
@@ -2143,8 +2143,8 @@ impl Adapter for Origin {
         let author = array_or_empty(at(&commit, "author"));
         let sha = php::text(&php::string(&or(at(&body, "sha"), "")));
         Ok(object([
-            ("commitAuthor", s(php::string(&or(at(&author, "name"), "Unknown")))),
-            ("commitMessage", s(php::string(&or(at(&commit, "message"), "No message")))),
+            ("commitAuthor", Value::Str(php::string(&or(at(&author, "name"), "Unknown")))),
+            ("commitMessage", Value::Str(php::string(&or(at(&commit, "message"), "No message")))),
             ("commitAuthorAvatar", s("")),
             ("commitAuthorUrl", s("")),
             ("commitHash", s(&sha)),
@@ -2214,9 +2214,9 @@ impl Origin {
                 ("owner", s(&owner)),
                 ("authorUrl", s("")),
                 ("authorAvatarUrl", s("")),
-                ("headCommitAuthorName", s(php::string(&or(at(&author, "name"), "")))),
-                ("headCommitAuthorEmail", s(php::string(&or(at(&author, "email"), "")))),
-                ("headCommitMessage", s(php::string(&or(at(&head_commit, "message"), "")))),
+                ("headCommitAuthorName", Value::Str(php::string(&or(at(&author, "name"), "")))),
+                ("headCommitAuthorEmail", Value::Str(php::string(&or(at(&author, "email"), "")))),
+                ("headCommitMessage", Value::Str(php::string(&or(at(&head_commit, "message"), "")))),
                 (
                     "headCommitUrl",
                     s(if php::filled(&repository_url) && php::filled(&commit_hash) {
@@ -2589,7 +2589,7 @@ impl Git for Origin {
             let conclusion = php::string(&or(at(&run, "conclusion"), ""));
             let state = if !php::is_str(&or(at(&run, "status"), ""), "completed") {
                 "pending"
-            } else if matches!(conclusion.as_slice(), b"success" | b"neutral" | b"skipped") {
+            } else if matches!(conclusion.as_bytes(), b"success" | b"neutral" | b"skipped") {
                 "success"
             } else {
                 "failure"
@@ -2597,9 +2597,9 @@ impl Git for Origin {
             let output = array_or_empty(at(&run, "output"));
             statuses.push(object([
                 ("state", s(state)),
-                ("description", s(php::string(&or(at(&output, "title"), "")))),
-                ("target_url", s(php::string(&or(at(&run, "details_url"), "")))),
-                ("context", s(php::string(&or(at(&run, "key"), or(at(&run, "name"), ""))))),
+                ("description", Value::Str(php::string(&or(at(&output, "title"), "")))),
+                ("target_url", Value::Str(php::string(&or(at(&run, "details_url"), "")))),
+                ("context", Value::Str(php::string(&or(at(&run, "key"), or(at(&run, "name"), ""))))),
             ]));
         }
         Ok(statuses)

@@ -11,7 +11,7 @@ use utopia_console::Command;
 use crate::adapter::{Adapter, CheckRun, Git, VcsType, WebhookId, WebhookScope};
 use crate::error::{Error, Result};
 use crate::git::{self, clone_command, normalize_repository_path};
-use crate::github::{concat, settle};
+use crate::github::{concat, joined, settle};
 use crate::php::{self, at, each, empty, object, or, path, s};
 use crate::transport::{Call, Method, Params, Response, Transport};
 use crate::webhook;
@@ -328,7 +328,7 @@ impl Bitbucket {
         overrides: Vec<(&str, Value)>,
     ) -> Value {
         let state = php::string(&or(at(status, "state"), ""));
-        let (run_status, conclusion) = match state.as_slice() {
+        let (run_status, conclusion) = match state.as_bytes() {
             b"INPROGRESS" => ("in_progress", Value::Null),
             b"SUCCESSFUL" => ("completed", s("success")),
             b"FAILED" => ("completed", s("failure")),
@@ -340,23 +340,23 @@ impl Bitbucket {
         let completed = if matches!(conclusion, Value::Null) {
             Value::Null
         } else {
-            s(php::string(&or(at(status, "updated_on"), "")))
+            Value::Str(php::string(&or(at(status, "updated_on"), "")))
         };
         let mut run = object([
-            ("id", s(concat(&[commit_hash.as_bytes(), b":", &key]))),
-            ("name", s(php::string(&or(at(status, "name"), "")))),
+            ("id", joined(&[commit_hash.as_bytes(), b":", &key])),
+            ("name", Value::Str(php::string(&or(at(status, "name"), "")))),
             ("status", s(run_status)),
             ("conclusion", conclusion),
             ("head_sha", s(commit_hash)),
-            ("url", s(php::string(&or(path(status, &["links", "self", "href"]), commit_url.as_str())))),
-            ("html_url", s(php::string(&or(at(status, "url"), commit_url.as_str())))),
-            ("started_at", s(php::string(&or(at(status, "created_on"), "")))),
+            ("url", Value::Str(php::string(&or(path(status, &["links", "self", "href"]), commit_url.as_str())))),
+            ("html_url", Value::Str(php::string(&or(at(status, "url"), commit_url.as_str())))),
+            ("started_at", Value::Str(php::string(&or(at(status, "created_on"), "")))),
             ("completed_at", completed),
             (
                 "output",
                 object([
                     ("title", s("")),
-                    ("summary", s(php::string(&or(at(status, "description"), "")))),
+                    ("summary", Value::Str(php::string(&or(at(status, "description"), "")))),
                     ("text", s("")),
                 ]),
             ),
@@ -389,7 +389,7 @@ fn check_run_state(conclusion: &str) -> &'static str {
 fn workspace_slug_of(repository: &Value) -> Vec<u8> {
     let slug = php::string(&or(path(repository, &["workspace", "slug"]), ""));
     if !slug.is_empty() && slug != b"0" {
-        return slug;
+        return slug.to_vec();
     }
     let full_name = php::string(&or(at(repository, "full_name"), ""));
     if php::contains(&full_name, b"/") {
@@ -405,7 +405,7 @@ fn normalize_repository(mut repository: Value) -> Value {
     if !php::is_array(&repository) {
         repository = Value::Array(Array::new());
     }
-    let id = s(php::string(&or(at(&repository, "full_name"), "")));
+    let id = Value::Str(php::string(&or(at(&repository, "full_name"), "")));
     php::set(&mut repository, "id", id);
     let private = php::identical(&or(at(&repository, "is_private"), false), &Value::Bool(true));
     php::set(&mut repository, "private", Value::Bool(private));
@@ -427,7 +427,7 @@ fn author_name_of(author: &Value) -> Value {
     };
     let name = or(at(&user, "display_name"), "");
     if !empty(&name) {
-        return s(php::string(&name));
+        return Value::Str(php::string(&name));
     }
     let raw = php::string(&or(at(author, "raw"), ""));
     s(php_std::string::trim(&strip_angles(&raw), b" \t\n\r\0\x0B"))
@@ -880,7 +880,7 @@ impl Adapter for Bitbucket {
                     let raw = php::string(&or(at(&author, "raw"), ""));
                     let email = angle_group(&raw).map(<[u8]>::to_vec).unwrap_or_default();
                     let branch_url = if repository_url_filled && !empty(&branch) {
-                        s(concat(&[&repository_url, b"/branch/", &php::string(&branch)]))
+                        joined(&[&repository_url, b"/branch/", &php::string(&branch)])
                     } else {
                         s("")
                     };
@@ -895,7 +895,7 @@ impl Adapter for Bitbucket {
                         ),
                         ("branch", branch),
                         ("branchUrl", branch_url),
-                        ("repositoryId", s(php::string(&or(at(&repository, "full_name"), "")))),
+                        ("repositoryId", Value::Str(php::string(&or(at(&repository, "full_name"), "")))),
                         ("repositoryName", or(at(&repository, "name"), "")),
                         ("repositoryUrl", s(repository_url.clone())),
                         ("installationId", s("")),
@@ -936,12 +936,12 @@ impl Adapter for Bitbucket {
                     && !matches!(destination_id, Value::Null)
                     && !php::identical(&source_id, &destination_id);
                 let branch_url = if repository_url_filled && !empty(&branch) {
-                    s(concat(&[&repository_url, b"/branch/", &php::string(&branch)]))
+                    joined(&[&repository_url, b"/branch/", &php::string(&branch)])
                 } else {
                     s("")
                 };
                 let head_commit_url = if repository_url_filled && !empty(&commit_hash) {
-                    s(concat(&[&repository_url, b"/commits/", &php::string(&commit_hash)]))
+                    joined(&[&repository_url, b"/commits/", &php::string(&commit_hash)])
                 } else {
                     s("")
                 };
@@ -949,7 +949,7 @@ impl Adapter for Bitbucket {
                 Ok(vec![object([
                     ("branch", branch),
                     ("branchUrl", branch_url),
-                    ("repositoryId", s(php::string(&or(at(&repository, "full_name"), "")))),
+                    ("repositoryId", Value::Str(php::string(&or(at(&repository, "full_name"), "")))),
                     ("repositoryName", or(at(&repository, "name"), "")),
                     ("repositoryUrl", s(repository_url)),
                     ("installationId", s("")),
@@ -1520,10 +1520,10 @@ impl Git for Bitbucket {
             let uuid = php::string(&or(at(&workspace, "uuid"), ""));
             namespaces.push(object([
                 ("id", s(if uuid.is_empty() { slug.clone() } else { uuid })),
-                ("name", s(php::string(&or(at(&workspace, "name"), s(&slug))))),
+                ("name", Value::Str(php::string(&or(at(&workspace, "name"), s(&slug))))),
                 ("path", s(&slug)),
                 ("kind", s("group")),
-                ("avatarUrl", s(php::string(&or(path(&workspace, &["links", "avatar", "href"]), "")))),
+                ("avatarUrl", Value::Str(php::string(&or(path(&workspace, &["links", "avatar", "href"]), "")))),
             ]));
         }
         let total = php::int(&or(response.at("size"), Value::Int(namespaces.len() as i64)));

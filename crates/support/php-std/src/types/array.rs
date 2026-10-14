@@ -2,7 +2,8 @@
 
 use std::fmt;
 use std::hash::{BuildHasher, Hash, Hasher};
-use std::sync::Arc;
+use std::sync::atomic::{AtomicU8, Ordering};
+use std::sync::{Arc, OnceLock};
 
 use hashbrown::{HashTable, hash_table};
 
@@ -215,15 +216,59 @@ impl<X: Extension> Clone for Array<X> {
 /// order: no index to allocate and no keys to hash.
 const SMALL: usize = 8;
 
+/// Up to this many entries, a table taken as it is (a decoded object) is
+/// checked for repeated keys without hashing them, and only indexed once
+/// it has been searched [`SCANS`] times: most decoded objects are read a
+/// few times, or only iterated.
+const LAZY: usize = 64;
+
+/// How many lookups scan an unindexed table before it is indexed.
+const SCANS: u8 = 8;
+
 /// The hash representation's entries, in order, and past [`SMALL`] entries
-/// an index of their positions by key.
+/// an index of their positions by key (made on demand for a table taken
+/// as it is, see [`LAZY`]).
 ///
 /// The entries are kept as they were added (an object decoded with its
 /// members in order is taken as it is), and the index only holds positions.
-#[derive(Clone)]
 struct Table<X: Extension> {
     entries: Vec<(ArrayKey, Value<X>)>,
-    index: Option<Index>,
+    /// When set, it holds every entry.
+    index: OnceLock<Index>,
+    /// Lookups that scanned the entries while unindexed: a hint (readers on
+    /// several threads may lose counts), never a correctness concern.
+    scans: AtomicU8,
+}
+
+impl<X: Extension> Clone for Table<X> {
+    /// The same entries, and the index when it is made.
+    fn clone(&self) -> Self {
+        Table { entries: self.entries.clone(), index: self.index.clone(), scans: AtomicU8::new(0) }
+    }
+}
+
+/// A summary of a key that equal keys share: its length and its first and
+/// last eight bytes (an integer key is its value), read in at most two
+/// loads, so most different keys are told apart without comparing them.
+#[inline]
+fn fingerprint(k: KeyRef<'_>) -> u64 {
+    let s = match k {
+        KeyRef::Int(i) => return i as u64,
+        KeyRef::Str(s) => s,
+    };
+    let n = s.len();
+    let word = |at: usize| u64::from_le_bytes(s[at..at + 8].try_into().unwrap_or_default());
+    let half = |at: usize| u64::from(u32::from_le_bytes(s[at..at + 4].try_into().unwrap_or_default()));
+    let (head, tail) = if n >= 8 {
+        (word(0), word(n - 8))
+    } else if n >= 4 {
+        (half(0), half(n - 4))
+    } else if n > 0 {
+        (u64::from(s[0]) | u64::from(s[n / 2]) << 8, u64::from(s[n - 1]))
+    } else {
+        (0, 0)
+    };
+    head ^ tail.rotate_left(29) ^ (n as u64).wrapping_mul(0x9e37_79b9_7f4a_7c15)
 }
 
 /// Positions of a table's entries by key, with a fast hasher seeded randomly
@@ -261,24 +306,67 @@ impl Index {
         }
         Some(index)
     }
+
+    /// The index of `entries`, whose keys are all different.
+    fn build<X: Extension>(entries: &[(ArrayKey, Value<X>)], capacity: usize) -> Index {
+        let mut index = Index::with_capacity(capacity.max(entries.len()));
+        for (i, (k, _)) in entries.iter().enumerate() {
+            let hash = index.hash(k.as_ref());
+            let hasher = &index.hasher;
+            index.positions.insert_unique(hash, i, |&j| hasher.hash_one(entries[j].0.as_ref()));
+        }
+        index
+    }
+}
+
+/// Whether no two of `entries` (at most [`LAZY`]) have the same key, telling
+/// them apart by [`fingerprint`]; `false` may also mean that two
+/// fingerprints are alike, past [`SMALL`] entries.
+fn distinct<X: Extension>(entries: &[(ArrayKey, Value<X>)]) -> bool {
+    let n = entries.len();
+    debug_assert!(n <= LAZY);
+    if n <= 4 {
+        // A few keys: compared directly (most differ in length).
+        return (1..n).all(|i| (0..i).all(|j| entries[i].0 != entries[j].0));
+    }
+    if n <= SMALL {
+        let mut prints = [0u64; SMALL];
+        for (print, (k, _)) in prints.iter_mut().zip(entries) {
+            *print = fingerprint(k.as_ref());
+        }
+        // Pairs compared by fingerprint first: only equal fingerprints (equal
+        // keys, or rarely keys alike at both ends) compare bytes.
+        return (1..n).all(|i| (0..i).all(|j| prints[i] != prints[j] || entries[i].0 != entries[j].0));
+    }
+    let mut prints = [0u64; LAZY];
+    for (print, (k, _)) in prints.iter_mut().zip(entries) {
+        *print = fingerprint(k.as_ref());
+    }
+    // Sorted, equal fingerprints are neighbours.
+    let prints = &mut prints[..n];
+    prints.sort_unstable();
+    prints.windows(2).all(|w| w[0] != w[1])
 }
 
 impl<X: Extension> Table<X> {
     fn with_capacity(n: usize) -> Self {
-        let index = (n > SMALL).then(|| Index::with_capacity(n));
-        Table { entries: Vec::with_capacity(n), index }
+        let index = if n > SMALL { OnceLock::from(Index::with_capacity(n)) } else { OnceLock::new() };
+        Table { entries: Vec::with_capacity(n), index, scans: AtomicU8::new(0) }
     }
 
     /// A table of `entries` as they are, when their keys are all different
     /// (`entries` back otherwise).
     fn of(entries: Vec<(ArrayKey, Value<X>)>) -> Result<Self, Vec<(ArrayKey, Value<X>)>> {
-        if entries.len() <= SMALL {
-            let distinct =
-                entries.iter().enumerate().all(|(i, (k, _))| entries[..i].iter().all(|(other, _)| other != k));
-            return if distinct { Ok(Table { entries, index: None }) } else { Err(entries) };
+        let n = entries.len();
+        if n <= LAZY && distinct(&entries) {
+            return Ok(Table { entries, index: OnceLock::new(), scans: AtomicU8::new(0) });
         }
-        match Index::of(&entries, entries.len()) {
-            Some(index) => Ok(Table { entries, index: Some(index) }),
+        if n <= SMALL {
+            return Err(entries);
+        }
+        // Many entries, or fingerprints alike: hashed, and indexed.
+        match Index::of(&entries, n) {
+            Some(index) => Ok(Table { entries, index: OnceLock::from(index), scans: AtomicU8::new(0) }),
             None => Err(entries),
         }
     }
@@ -287,9 +375,27 @@ impl<X: Extension> Table<X> {
         self.entries.len()
     }
 
+    /// The index: `None` for a small table, and for one not indexed yet
+    /// that was searched fewer than [`SCANS`] times (made now otherwise).
+    #[inline]
+    fn index(&self) -> Option<&Index> {
+        if let Some(index) = self.index.get() {
+            return Some(index);
+        }
+        if self.entries.len() <= SMALL {
+            return None;
+        }
+        let scans = self.scans.load(Ordering::Relaxed);
+        if scans < SCANS {
+            self.scans.store(scans + 1, Ordering::Relaxed);
+            return None;
+        }
+        Some(self.index.get_or_init(|| Index::build(&self.entries, 0)))
+    }
+
     /// Where `k` is in the entries.
     fn position(&self, k: KeyRef<'_>) -> Option<usize> {
-        match &self.index {
+        match self.index() {
             None => self.entries.iter().position(|(key, _)| key.as_ref() == k),
             Some(index) => index.positions.find(index.hash(k), |&i| self.entries[i].0.as_ref() == k).copied(),
         }
@@ -310,20 +416,20 @@ impl<X: Extension> Table<X> {
     /// Sets `k` (in place when it exists, at the end otherwise); returns the previous value.
     #[inline]
     fn insert(&mut self, k: ArrayKey, value: Value<X>) -> Option<Value<X>> {
+        // A table that grows is indexed from [`SMALL`] entries on.
+        if self.entries.len() >= SMALL && self.index.get().is_none() {
+            self.reindex();
+        }
         if let Some(i) = self.position(k.as_ref()) {
             return Some(std::mem::replace(&mut self.entries[i].1, value));
         }
         let i = self.entries.len();
         self.entries.push((k, value));
-        match &mut self.index {
-            Some(index) => {
-                let entries = &self.entries;
-                let hash = index.hash(entries[i].0.as_ref());
-                let hasher = &index.hasher;
-                index.positions.insert_unique(hash, i, |&j| hasher.hash_one(entries[j].0.as_ref()));
-            }
-            None if i == SMALL => self.reindex(),
-            None => {}
+        if let Some(index) = self.index.get_mut() {
+            let entries = &self.entries;
+            let hash = index.hash(entries[i].0.as_ref());
+            let hasher = &index.hasher;
+            index.positions.insert_unique(hash, i, |&j| hasher.hash_one(entries[j].0.as_ref()));
         }
         None
     }
@@ -331,13 +437,13 @@ impl<X: Extension> Table<X> {
     /// Indexes the entries (their keys are different).
     #[cold]
     fn reindex(&mut self) {
-        self.index = Index::of(&self.entries, self.entries.capacity().max(SMALL * 2));
+        self.index = OnceLock::from(Index::build(&self.entries, self.entries.capacity().max(SMALL * 2)));
     }
 
     /// Removes `k`, shifting the entries after it.
     fn shift_remove(&mut self, k: &ArrayKey) -> Option<Value<X>> {
         let i = self.position(k.as_ref())?;
-        if let Some(index) = &mut self.index {
+        if let Some(index) = self.index.get_mut() {
             if let Ok(slot) = index.positions.find_entry(index.hasher.hash_one(k.as_ref()), |&j| j == i) {
                 slot.remove();
             }
@@ -354,7 +460,7 @@ impl<X: Extension> Table<X> {
 
     fn reserve(&mut self, additional: usize) {
         self.entries.reserve(additional);
-        match &mut self.index {
+        match self.index.get_mut() {
             Some(index) => {
                 let entries = &self.entries;
                 let hasher = &index.hasher;
@@ -368,7 +474,7 @@ impl<X: Extension> Table<X> {
     /// Keeps the entries `keep` accepts, in order.
     fn retain(&mut self, mut keep: impl FnMut() -> bool) {
         self.entries.retain(|_| keep());
-        if self.index.is_some() {
+        if self.index.get().is_some() {
             self.reindex();
         }
     }
@@ -671,6 +777,27 @@ impl<X: Extension> Array<X> {
         old
     }
 
+    /// A new array with the same keys, in the same order, and the value `f`
+    /// makes of each entry (`array_map()` with one array, which keeps the
+    /// keys): the same array in every other respect, next free index
+    /// included. No key is copied into a new table or looked up again.
+    pub fn map_values(&self, mut f: impl FnMut(KeyRef<'_>, &Value<X>) -> Value<X>) -> Array<X> {
+        let Some(repr) = self.repr.as_deref() else { return Array::new() };
+        let repr = match repr {
+            Repr::Packed(v) => Repr::Packed(v.iter().enumerate().map(|(i, v)| f(KeyRef::Int(i as i64), v)).collect()),
+            Repr::Hash { map, next, packed } => Repr::Hash {
+                map: Table {
+                    entries: map.entries.iter().map(|(k, v)| (k.clone(), f(k.as_ref(), v))).collect(),
+                    index: map.index.clone(),
+                    scans: AtomicU8::new(0),
+                },
+                next: *next,
+                packed: *packed,
+            },
+        };
+        Array { repr: Some(Arc::new(repr)) }
+    }
+
     /// The entries in order, with borrowed keys.
     pub fn iter(&self) -> Iter<'_, X> {
         match self.view() {
@@ -780,11 +907,9 @@ impl<X: Extension> FromIterator<(ArrayKey, Value<X>)> for Array<X> {
     /// Built unshared and presized: a list for an integer first key, a hash
     /// for a string one (what assigning to an empty array leads to).
     fn from_iter<T: IntoIterator<Item = (ArrayKey, Value<X>)>>(iter: T) -> Self {
-        let iter = iter.into_iter();
-        if iter.size_hint().1.is_some_and(|n| n <= SMALL) {
-            return Self::from_pairs(iter.collect());
-        }
-        Self::assign(iter)
+        // Taken as they come, and indexed once (or not at all) when the keys
+        // are strings and all different; assigned one by one otherwise.
+        Self::from_pairs(iter.into_iter().collect())
     }
 }
 

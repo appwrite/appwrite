@@ -95,11 +95,8 @@ pub(crate) fn is_array(value: &Value) -> bool {
 
 /// `(string) $value`, `\strval($value)` and string interpolation: arrays
 /// are `"Array"` (PHP warns).
-pub(crate) fn string(value: &Value) -> Vec<u8> {
-    match value.to_php_string() {
-        Ok(s) => s.as_bytes().to_vec(),
-        Err(_) => b"Object".to_vec(),
-    }
+pub(crate) fn string(value: &Value) -> Str {
+    value.to_php_string().unwrap_or(Str::from_static("Object"))
 }
 
 /// `(int) $value`.

@@ -177,6 +177,20 @@ impl PartialEq<[u8]> for Str {
     }
 }
 
+impl PartialEq<&[u8]> for Str {
+    /// Whether the string holds these bytes.
+    fn eq(&self, other: &&[u8]) -> bool {
+        self.as_bytes() == *other
+    }
+}
+
+impl<const N: usize> PartialEq<&[u8; N]> for Str {
+    /// Whether the string holds these bytes (a byte string literal).
+    fn eq(&self, other: &&[u8; N]) -> bool {
+        self.as_bytes() == other.as_slice()
+    }
+}
+
 impl PartialEq<str> for Str {
     /// Whether the string holds the bytes of `other`.
     fn eq(&self, other: &str) -> bool {

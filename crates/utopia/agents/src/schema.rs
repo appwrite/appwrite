@@ -281,21 +281,27 @@ impl Schema {
     ///
     /// PHP: `toJson()`.
     pub fn to_json(&self) -> Result<String, Error> {
-        let mut hints: Array = Array::with_capacity(self.object.properties.len());
-        for (name, definition) in self.object.properties.iter() {
-            let field = |key: &str| match definition {
+        fn field<'a>(definition: &'a Value, key: &str) -> &'a [u8] {
+            match definition {
                 Value::Array(a) => match a.get_str(key) {
-                    Some(Value::Str(s)) => s.as_bytes().to_vec(),
-                    _ => Vec::new(),
+                    Some(Value::Str(s)) => s.as_bytes(),
+                    _ => b"",
                 },
-                _ => Vec::new(),
-            };
-            let mut hint = field("description");
-            hint.extend_from_slice(b" (");
-            hint.extend_from_slice(&field("type"));
-            hint.push(b')');
-            hints.set(name.to_owned(), Value::Str(Str::from(hint)));
+                _ => b"",
+            }
         }
+        // Each hint copied out of one buffer at its size: one allocation for
+        // a long one, none for a short one (kept inline).
+        let mut hint = Vec::with_capacity(64);
+        // `$json[$property] = ...` for each property in order: the same keys.
+        let hints = self.object.properties.map_values(|_, definition| {
+            hint.clear();
+            hint.extend_from_slice(field(definition, "description"));
+            hint.extend_from_slice(b" (");
+            hint.extend_from_slice(field(definition, "type"));
+            hint.push(b')');
+            Value::Str(Str::copy_from(&hint))
+        });
         json::encode(&Value::Array(hints), Flags::NONE, json::DEFAULT_DEPTH)
             .map_err(|e| Error::exception(format!("Invalid JSON: {}", e.message())))
     }
