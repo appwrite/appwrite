@@ -10,6 +10,7 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 use Utopia\Database\DateTime;
+use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
@@ -8290,5 +8291,72 @@ final class AccountCustomClientTest extends Scope
         $this->assertIsArray($claims, 'Stored ID token payload is not JSON.');
 
         return $claims;
+    }
+
+    public function testListAccountMemberships(): void
+    {
+        $data = $this->createFreshAccountWithSession();
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $data['session'],
+        ];
+
+        /**
+         * Test for SUCCESS
+         */
+        $team = $this->client->call(Client::METHOD_POST, '/teams', $headers, [
+            'teamId' => ID::unique(),
+            'name' => 'Account Memberships Team',
+        ]);
+        $this->assertEquals(201, $team['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/memberships', $headers);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(1, $response['body']['total']);
+        $this->assertEquals($team['body']['$id'], $response['body']['memberships'][0]['teamId']);
+        $this->assertEquals('Account Memberships Team', $response['body']['memberships'][0]['teamName']);
+        $this->assertEquals($data['id'], $response['body']['memberships'][0]['userId']);
+        $this->assertContains('owner', $response['body']['memberships'][0]['roles']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/memberships', $headers, [
+            'queries' => [Query::equal('teamId', [$team['body']['$id']])->toString()],
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(1, $response['body']['total']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/memberships', $headers, ['total' => false]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(0, $response['body']['total']);
+        $this->assertCount(1, $response['body']['memberships']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/memberships', $headers, [
+            'search' => 'no-such-team-' . uniqid(),
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(0, $response['body']['total']);
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/account/memberships', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]);
+        $this->assertEquals(401, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/memberships', $headers, [
+            'queries' => [Query::equal('roles', ['owner'])->toString()],
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('general_argument_invalid', $response['body']['type']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/memberships', $headers, [
+            'queries' => [Query::cursorAfter(new Document(['$id' => 'nonexistent-membership']))->toString()],
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('general_cursor_not_found', $response['body']['type']);
     }
 }

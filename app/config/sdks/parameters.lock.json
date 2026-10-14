@@ -133,6 +133,11 @@
             "queries",
             "total"
         ],
+        "account.listMemberships": [
+            "queries",
+            "search",
+            "total"
+        ],
         "account.listMFAFactors": [],
         "account.listMfaFactors": [],
         "account.listPasskeys": [
@@ -4942,6 +4947,11 @@
         ],
         "account.listIdentities": [
             "queries",
+            "total"
+        ],
+        "account.listMemberships": [
+            "queries",
+            "search",
             "total"
         ],
         "account.listMFAFactors": [],
