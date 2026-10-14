@@ -270,6 +270,8 @@ import { PointEditor, LineEditor, PolygonEditor } from './spatial'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { getDocsPageUrl } from '@/lib/marketing/urls'
 import { translate, useT } from '@/lib/i18n/translate'
+import { useDebouncedValue } from '@/lib/hooks/useDebouncedValue'
+import { buildAttributePrefixSearchQueries } from '@/lib/appwrite-id'
 import {
   localizeResourceStatusLabel,
   localizeTableIndexTypeLabel,
@@ -727,11 +729,8 @@ function getRelationshipTableId(columnInfo?: unknown): string | undefined {
   return col?.relatedTableId || col?.relatedTable || undefined
 }
 
-function getRelationshipRowLabel(
-  row: Record<string, unknown>,
-  columns: unknown[],
-): string {
-  const labelColumn = columns.find((column) => {
+function findRelationshipLabelColumn(columns: unknown[]): unknown {
+  return columns.find((column) => {
     const col = column as { type?: string } | undefined
     const key = getTableColumnKey(column)
 
@@ -747,6 +746,30 @@ function getRelationshipRowLabel(
       col?.type === 'url'
     )
   })
+}
+
+/**
+ * Attributes the relationship picker searches server-side: always `$id`, plus
+ * the label column when it is a plain string/varchar column (prefix matching is
+ * not supported on the text types).
+ */
+function getRelationshipSearchKeys(columns: unknown[]): string[] {
+  const labelColumn = findRelationshipLabelColumn(columns) as
+    | { type?: string }
+    | undefined
+  const labelKey = labelColumn ? getTableColumnKey(labelColumn) : null
+
+  return labelKey &&
+    (labelColumn?.type === 'string' || labelColumn?.type === 'varchar')
+    ? ['$id', labelKey]
+    : ['$id']
+}
+
+function getRelationshipRowLabel(
+  row: Record<string, unknown>,
+  columns: unknown[],
+): string {
+  const labelColumn = findRelationshipLabelColumn(columns)
 
   const labelKey = labelColumn ? getTableColumnKey(labelColumn) : null
   const labelValue =
@@ -781,18 +804,10 @@ function RelationshipField({
   const relatedTableId = getRelationshipTableId(columnInfo)
   const isMulti = isMultiRelationship(columnInfo)
 
-  const { rows: relatedRows, isLoading: relatedRowsLoading } =
-    useProjectTableRows(
-    projectId,
-    databaseId,
-    relatedTableId,
-    DB_KIND,
-    0,
-      100,
-      undefined,
-      'desc',
-      '$createdAt',
-    )
+  const [search, setSearch] = useState('')
+  const debouncedSearch = useDebouncedValue(search, 300)
+  const isSearching = debouncedSearch.trim().length > 0
+
   const { columns: relatedColumns } = useProjectTableColumns(
     projectId,
     databaseId,
@@ -801,6 +816,34 @@ function RelationshipField({
     undefined,
     0,
     100,
+  )
+
+  // Rows are searched server-side: the list only ever holds one page, so
+  // filtering that page in the browser would hide rows beyond it.
+  const searchQueries = useMemo(
+    () =>
+      buildAttributePrefixSearchQueries(
+        getRelationshipSearchKeys(relatedColumns),
+        debouncedSearch,
+      ),
+    [relatedColumns, debouncedSearch],
+  )
+
+  const {
+    rows: relatedRows,
+    isLoading: relatedRowsLoading,
+    isFetching: relatedRowsFetching,
+  } = useProjectTableRows(
+    projectId,
+    databaseId,
+    relatedTableId,
+    DB_KIND,
+    0,
+    100,
+    undefined,
+    'desc',
+    '$createdAt',
+    searchQueries.length > 0 ? searchQueries : undefined,
   )
 
   // Values arrive as populated rows: ids drive the selection, the rows label
@@ -824,15 +867,21 @@ function RelationshipField({
       label: getRelationshipRowLabel(row, relatedColumns),
     })
   }
+  const searchResults: { value: string; label: string }[] = []
   for (const relatedRow of relatedRows) {
     const row = relatedRow as Record<string, unknown>
     if (typeof row.$id !== 'string') continue
-    optionsById.set(row.$id, {
+    const option = {
       value: row.$id,
       label: getRelationshipRowLabel(row, relatedColumns),
-    })
+    }
+    optionsById.set(row.$id, option)
+    searchResults.push(option)
   }
+  // Labels for selected rows come from `options`; while searching, the list
+  // shows only what the server returned for the query.
   const options = [...optionsById.values()]
+  const listOptions = isSearching ? searchResults : options
 
   if (!relatedTableId) {
     return (
@@ -845,7 +894,7 @@ function RelationshipField({
   }
 
   if (isMulti) {
-    const availableItems = options.filter(
+    const availableItems = listOptions.filter(
       (option) => !selectedValues.includes(option.value),
     )
 
@@ -866,7 +915,13 @@ function RelationshipField({
           emptyMessage={
             relatedRowsLoading ? t('Loading related rows…') : t('No related rows')
           }
-          disabled={isSaving || relatedRowsLoading || availableItems.length === 0}
+          onSearchChange={setSearch}
+          isFetching={relatedRowsFetching}
+          disabled={
+            isSaving ||
+            relatedRowsLoading ||
+            (availableItems.length === 0 && search.length === 0)
+          }
         />
         {selectedValues.length > 0 ? (
           <div className="space-y-2">
@@ -923,7 +978,10 @@ function RelationshipField({
       <SearchableSelect
         value={selectedValues[0] || ''}
         onValueChange={(value) => onChange(value)}
-        items={options}
+        items={listOptions}
+        selectedName={
+          options.find((option) => option.value === selectedValues[0])?.label
+        }
         placeholder={
           relatedRowsLoading ? t('Loading related rows…') : t('Select related row')
         }
@@ -931,6 +989,8 @@ function RelationshipField({
         emptyMessage={
           relatedRowsLoading ? t('Loading related rows…') : t('No related rows')
         }
+        onSearchChange={setSearch}
+        isFetching={relatedRowsFetching}
         disabled={isSaving || relatedRowsLoading}
       />
       {!isRequired && selectedValues[0] && (
