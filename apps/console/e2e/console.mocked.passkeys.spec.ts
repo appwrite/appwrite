@@ -371,7 +371,12 @@ async function mockAppwriteApi(
     }
 
     if (apiPath === '/account') return json(200, ACCOUNT)
-    if (apiPath === '/account/prefs') return json(200, ACCOUNT.prefs)
+    // GET returns the prefs, PATCH the updated user.
+    if (apiPath === '/account/prefs') {
+      return request.method() === 'PATCH'
+        ? json(200, { ...ACCOUNT, prefs: request.postDataJSON().prefs })
+        : json(200, ACCOUNT.prefs)
+    }
     if (apiPath === '/account/sessions')
       return json(200, { total: 0, sessions: [] })
     if (apiPath === '/health/version') return json(200, { version: '1.8.0' })
@@ -551,16 +556,13 @@ async function addPasskey(
   })
 }
 
-async function allowPresence({
-  cdp,
-  authenticatorId,
-}: {
-  cdp: CDPSession
-  authenticatorId: string
-}) {
+async function setPresence(
+  { cdp, authenticatorId }: { cdp: CDPSession; authenticatorId: string },
+  enabled: boolean,
+) {
   await cdp.send('WebAuthn.setAutomaticPresenceSimulation', {
     authenticatorId,
-    enabled: true,
+    enabled,
   })
 }
 
@@ -583,7 +585,7 @@ test.describe('passkeys (mocked API)', () => {
 
     // No passkey on this device: the prompt ends quietly and autofill comes back.
     const before = calls.challenges.length
-    calls.beforeChallenge = () => allowPresence(authenticator)
+    calls.beforeChallenge = () => setPresence(authenticator, true)
     await button.click()
     await expect
       .poll(() => calls.challenges.length)
@@ -593,12 +595,15 @@ test.describe('passkeys (mocked API)', () => {
     expect(calls.verifications).toHaveLength(0)
 
     // With a passkey, the prompt's challenge is verified and exchanged for a session.
+    // Presence stays off until the click so autofill cannot sign in first.
     const credentialId = Buffer.from('console-passkey')
+    await setPresence(authenticator, false)
     await addPasskey(authenticator, credentialId)
     await page.goto('/sign-in')
     await expect(button).toBeEnabled()
     await page.waitForLoadState('networkidle')
     const challengeId = `challenge${calls.challenges.length + 1}`
+    calls.beforeChallenge = () => setPresence(authenticator, true)
     await button.click()
 
     await expect.poll(() => calls.sessions.length).toBe(1)

@@ -1,0 +1,25 @@
+---
+layout: changelog
+title: Self-host Appwrite on Kubernetes with the official Helm chart
+date: 2026-10-14
+cover: /images/blog/announcing-appwrite-helm-chart/cover.avif
+tags: infrastructure
+---
+
+Self-hosted Appwrite now has an official Helm chart. It installs the API, console, realtime, workers, and schedulers on your own [Kubernetes](/docs/advanced/self-hosting/platforms/kubernetes) cluster from `oci://ghcr.io/appwrite/charts/appwrite`, and runs Appwrite's data migration as part of `helm upgrade`.
+
+A plain install includes built-in PostgreSQL, Redis, and ClickHouse. For production, switch each one to a managed service on its own, store files in S3, and route traffic through an ingress controller or the Gateway API. Functions and Sites run in the cluster too, with builds as Kubernetes Jobs and the executor in a namespace of its own.
+
+```bash
+helm install appwrite oci://ghcr.io/appwrite/charts/appwrite \
+  --namespace appwrite --create-namespace \
+  -f values.yaml --wait --timeout 15m
+```
+
+{% arrow_link href="/blog/post/announcing-appwrite-helm-chart" %}
+Read the announcement
+{% /arrow_link %}
+
+{% arrow_link href="/docs/advanced/self-hosting/platforms/kubernetes" %}
+Install Appwrite on Kubernetes
+{% /arrow_link %}
