@@ -5,7 +5,7 @@
  *
  * Keys are Platform worker Action names. Each entry is the same shape a single
  * worker used to get from env + defaults — queue name (overridable) and
- * coroutines. databases must stay at 1 (ordered writes / adapter locks).
+ * coroutines. Database DDL is serialized per backing by the worker.
  */
 
 use Appwrite\Event\Event;
@@ -34,9 +34,9 @@ return [
         'coroutines' => 8,
     ],
     'databases' => [
-        'queue' => 'database_db_main',
-        'queueEnv' => '_APP_QUEUE_NAME',
-        'coroutines' => 1,
+        'queue' => Event::DATABASE_QUEUE_NAME,
+        'queueEnv' => '_APP_DATABASE_QUEUE_NAME',
+        'coroutines' => 8,
     ],
     'builds' => [
         'queue' => Event::BUILDS_QUEUE_NAME,

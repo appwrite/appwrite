@@ -7,10 +7,8 @@ namespace Appwrite\Workers;
 /**
  * Resolves per-queue worker jobs for {@see app/worker.php}.
  *
- * Combined mode (`all` / many queues) keeps each queue's configured
- * `coroutines` so `databases` stays at 1. Dedicated mode still allows
- * `_APP_WORKER_MAX_COROUTINES` to override — except for `databases`, where
- * parallelism risks adapter deadlocks on schema mutations.
+ * Combined mode keeps each queue's configured concurrency. Dedicated mode
+ * allows `_APP_WORKER_MAX_COROUTINES` to override it.
  */
 final class Jobs
 {
@@ -22,6 +20,11 @@ final class Jobs
      */
     public static function resolve(array $workers, array $config, callable $env): array
     {
+        // Database DDL mutexes are process-local, including in combined mode.
+        if (in_array('databases', $workers, true) && (int) $env('_APP_WORKERS_NUM', 1) !== 1) {
+            throw new \InvalidArgumentException('Database workers require one process for DDL mutexes.');
+        }
+
         $jobs = [];
         $single = \count($workers) === 1;
 
@@ -38,10 +41,7 @@ final class Jobs
 
             $coroutines = max(1, (int) ($spec['coroutines'] ?? 1));
 
-            // Combined: never apply the global override — databases must stay at 1
-            // while other queues keep their own caps. Dedicated: override is allowed
-            // for every queue except databases.
-            if ($single && $name !== 'databases') {
+            if ($single) {
                 $override = $env('_APP_WORKER_MAX_COROUTINES');
                 if ($override !== false && $override !== null && $override !== '') {
                     $coroutines = max(1, (int) $override);
