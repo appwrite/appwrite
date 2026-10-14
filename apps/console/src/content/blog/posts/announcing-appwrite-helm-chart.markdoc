@@ -102,7 +102,7 @@ A few choices are hard to undo once Appwrite holds data: the release name, the d
 
 # Bring your own PostgreSQL, Redis, and S3
 
-The built-in datastores run one replica each. That's fine for evaluation and small installs, and it's not where you want production data. Every external service takes the same shape: a `mode`, an `external` block, and a password that comes from a Secret.
+The built-in datastores and object storage run one replica each. That's fine for evaluation and small installs, and it's not where you want production data. Every external service takes the same shape: a `mode`, an `external` block, and a password that comes from a Secret.
 
 ```yaml
 database:
@@ -115,13 +115,21 @@ database:
 storage:
   device: s3
   s3:
-    region: eu-central-1
+    mode: external                      # the default, builtin, runs object storage in the release
+    external:
+      region: eu-central-1              # no endpoint: AWS S3
     bucket: appwrite
     accessKeyId:
       secretName: appwrite-external
     secretAccessKey:
       secretName: appwrite-external
+
+compute:
+  executor:
+    existingSecret: appwrite-executor   # the executor's copy of the S3 keys, in its own namespace
 ```
+
+Functions and Sites, on by default, run the executor in a namespace of its own, so S3 keys from your Secret need a copy there too ([executor guide](https://github.com/appwrite/helm-chart/blob/main/docs/executor.md#existing-secrets)), or set `compute.enabled: false`.
 
 Every credential in the chart, including database passwords, S3 keys, and SMTP passwords, accepts `value`, `secretName`, and `secretKey`. Secrets created by External Secrets, Sealed Secrets, or SOPS plug in without changes. The repository also has example values for [AWS](https://github.com/appwrite/helm-chart/blob/main/examples/aws.yaml), [Google Cloud](https://github.com/appwrite/helm-chart/blob/main/examples/gcp.yaml), and [Azure](https://github.com/appwrite/helm-chart/blob/main/examples/azure.yaml), each wiring Appwrite to that provider's managed database, cache, and storage.
 
