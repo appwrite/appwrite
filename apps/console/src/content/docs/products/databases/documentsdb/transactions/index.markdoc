@@ -78,7 +78,7 @@ let client = Client()
 let documentsDB = DocumentsDB(client)
 
 let tx = try await documentsDB.createTransaction()
-// tx.$id is your transactionId
+// tx.id is your transactionId
 ```
 ```client-android-kotlin
 import io.appwrite.Client
@@ -91,13 +91,13 @@ val client = Client(applicationContext)
 val documentsDB = DocumentsDB(client)
 
 val tx = documentsDB.createTransaction()
-// tx.$id is your transactionId
+// tx.id is your transactionId
 ```
 ```client-android-java
 import io.appwrite.Client;
 import io.appwrite.services.DocumentsDB;
 
-Client client = new Client()
+Client client = new Client(context)
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
     .setProject("<PROJECT_ID>");
 
@@ -150,7 +150,7 @@ client.set_key('<API_KEY>')
 documents_db = DocumentsDB(client)
 
 tx = documents_db.create_transaction()
-# tx.$id is your transactionId
+# tx.id is your transactionId
 ```
 ```server-php
 <?php
@@ -184,21 +184,21 @@ client = Client.new
 documents_db = DocumentsDB.new(client)
 
 tx = documents_db.create_transaction
-# tx['$id'] is your transactionId
+# tx.id is your transactionId
 ```
 ```server-dotnet
 using Appwrite;
 using Appwrite.Services;
 
 var client = new Client()
-  .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1")
+  .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1")
   .SetProject("<PROJECT_ID>")
   .SetKey("<API_KEY>");
 
 var documentsDB = new DocumentsDB(client);
 
 var tx = await documentsDB.CreateTransaction();
-// tx.$id is your transactionId
+// tx.Id is your transactionId
 ```
 ```server-dart
 import 'package:dart_appwrite/dart_appwrite.dart';
@@ -249,7 +249,7 @@ let client = Client()
 let documentsDB = DocumentsDB(client)
 
 let tx = try await documentsDB.createTransaction()
-// tx.$id is your transactionId
+// tx.id is your transactionId
 ```
 ```server-kotlin
 import io.appwrite.Client
@@ -263,7 +263,7 @@ val client = Client()
 val documentsDB = DocumentsDB(client)
 
 val tx = documentsDB.createTransaction()
-// tx.$id is your transactionId
+// tx.id is your transactionId
 ```
 ```server-java
 import io.appwrite.Client;
@@ -364,7 +364,7 @@ try await documentsDB.createDocument(
   collectionId: "<COLLECTION_ID>",
   documentId: "<DOCUMENT_ID>",
   data: ["name": "Walter"],
-  transactionId: tx.$id
+  transactionId: tx.id
 )
 
 // Increment inside a transaction
@@ -374,7 +374,7 @@ try await documentsDB.incrementDocumentAttribute(
   documentId: "<DOCUMENT_ID>",
   attribute: "credits",
   value: 1,
-  transactionId: tx.$id
+  transactionId: tx.id
 )
 ```
 ```server-kotlin
@@ -384,7 +384,7 @@ documentsDB.createDocument(
   collectionId = "<COLLECTION_ID>",
   documentId = "<DOCUMENT_ID>",
   data = mapOf("name" to "Walter"),
-  transactionId = tx.$id
+  transactionId = tx.id
 )
 
 // Increment inside a transaction
@@ -394,7 +394,7 @@ documentsDB.incrementDocumentAttribute(
   documentId = "<DOCUMENT_ID>",
   attribute = "credits",
   value = 1,
-  transactionId = tx.$id
+  transactionId = tx.id
 )
 ```
 ```server-java
@@ -498,7 +498,7 @@ $documentsDB->createDocument(
   collectionId: '<COLLECTION_ID>',
   documentId: '<DOCUMENT_ID>',
   data: ['name' => 'Walter'],
-  transactionId: $tx['$id']
+  transactionId: $tx->id
 );
 
 // Increment inside a transaction
@@ -508,7 +508,7 @@ $documentsDB->incrementDocumentAttribute(
   documentId: '<DOCUMENT_ID>',
   attribute: 'credits',
   value: 1,
-  transactionId: $tx['$id']
+  transactionId: $tx->id
 );
 ```
 ```server-ruby
@@ -518,7 +518,7 @@ documents_db.create_document(
   collection_id: '<COLLECTION_ID>',
   document_id: '<DOCUMENT_ID>',
   data: { 'name' => 'Walter' },
-  transaction_id: tx['$id']
+  transaction_id: tx.id
 )
 
 # Increment inside a transaction
@@ -528,7 +528,7 @@ documents_db.increment_document_attribute(
   document_id: '<DOCUMENT_ID>',
   attribute: 'credits',
   value: 1,
-  transaction_id: tx['$id']
+  transaction_id: tx.id
 )
 ```
 ```server-dotnet
@@ -598,7 +598,7 @@ try await documentsDB.createDocument(
   collectionId: "<COLLECTION_ID>",
   documentId: "<DOCUMENT_ID>",
   data: ["name": "Walter"],
-  transactionId: tx.$id
+  transactionId: tx.id
 )
 
 // Increment inside a transaction
@@ -608,7 +608,7 @@ try await documentsDB.incrementDocumentAttribute(
   documentId: "<DOCUMENT_ID>",
   attribute: "credits",
   value: 1,
-  transactionId: tx.$id
+  transactionId: tx.id
 )
 ```
 ```server-rust
@@ -742,7 +742,7 @@ await documentsDB.createOperations(
 ```
 ```client-apple
 try await documentsDB.createOperations(
-  transactionId: tx.$id,
+  transactionId: tx.id,
   operations: [
     [
       "action": "create",
@@ -763,7 +763,7 @@ try await documentsDB.createOperations(
 ```
 ```server-kotlin
 documentsDB.createOperations(
-  transactionId = tx.$id,
+  transactionId = tx.id,
   operations = listOf(
     mapOf(
       "action" to "create",
@@ -858,7 +858,7 @@ await documentsDB.createOperations({
 ```
 ```server-php
 $documentsDB->createOperations(
-  transactionId: $tx['$id'],
+  transactionId: $tx->id,
   operations: [
     [
       'action' => 'create',
@@ -879,7 +879,7 @@ $documentsDB->createOperations(
 ```
 ```server-ruby
 documents_db.create_operations(
-  transaction_id: tx['$id'],
+  transaction_id: tx.id,
   operations: [
     {
       'action' => 'create',
@@ -945,7 +945,7 @@ await documentsDB.createOperations(
 ```
 ```server-swift
 try await documentsDB.createOperations(
-  transactionId: tx.$id,
+  transactionId: tx.id,
   operations: [
     [
       "action": "create",
@@ -1087,26 +1087,26 @@ await documentsDB.updateTransaction(
 ```client-apple
 // Commit
 try await documentsDB.updateTransaction(
-  transactionId: tx.$id,
+  transactionId: tx.id,
   commit: true
 )
 
 // Roll back
 try await documentsDB.updateTransaction(
-  transactionId: tx.$id,
+  transactionId: tx.id,
   rollback: true
 )
 ```
 ```server-kotlin
 // Commit
 documentsDB.updateTransaction(
-  transactionId = tx.$id,
+  transactionId = tx.id,
   commit = true
 )
 
 // Roll back
 documentsDB.updateTransaction(
-  transactionId = tx.$id,
+  transactionId = tx.id,
   rollback = true
 )
 ```
@@ -1183,26 +1183,26 @@ documents_db.update_transaction(
 ```server-php
 // Commit
 $documentsDB->updateTransaction(
-  transactionId: $tx['$id'],
+  transactionId: $tx->id,
   commit: true
 );
 
 // Roll back
 $documentsDB->updateTransaction(
-  transactionId: $tx['$id'],
+  transactionId: $tx->id,
   rollback: true
 );
 ```
 ```server-ruby
 # Commit
 documents_db.update_transaction(
-  transaction_id: tx['$id'],
+  transaction_id: tx.id,
   commit: true
 )
 
 # Roll back
 documents_db.update_transaction(
-  transaction_id: tx['$id'],
+  transaction_id: tx.id,
   rollback: true
 )
 ```

@@ -119,7 +119,7 @@ using Appwrite;
 using Appwrite.Services;
 
 Client client = new Client()
-    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1")
     .SetProject("<PROJECT_ID>")
     .SetKey("<YOUR_API_KEY>");
 
@@ -716,7 +716,7 @@ response, error := project.CreateVariable(
 id.Unique(),
 "<KEY>",
 "<VALUE>",
-appwrite.WithCreateVariableSecret(false),
+project.WithCreateVariableSecret(false),
 )
 ```
 ```server-rust

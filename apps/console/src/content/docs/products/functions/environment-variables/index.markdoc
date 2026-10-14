@@ -41,7 +41,7 @@ You can also manage function variables programmatically using a [Server SDK](/do
 
 {% multicode %}
 ```server-nodejs
-import { Client, Functions } from 'node-appwrite';
+import { Client, Functions, ID } from 'node-appwrite';
 
 const client = new Client()
     .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
@@ -52,13 +52,14 @@ const functions = new Functions(client);
 
 const result = await functions.createVariable({
     functionId: '<FUNCTION_ID>',
+    variableId: ID.unique(),
     key: '<KEY>',
     value: '<VALUE>',
     secret: false // optional
 });
 ```
 ```server-deno
-import { Client, Functions } from "npm:node-appwrite";
+import { Client, Functions, ID } from "npm:node-appwrite";
 
 const client = new Client()
     .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
@@ -69,6 +70,7 @@ const functions = new Functions(client);
 
 const result = await functions.createVariable({
     functionId: '<FUNCTION_ID>',
+    variableId: ID.unique(),
     key: '<KEY>',
     value: '<VALUE>',
     secret: false // optional
@@ -78,6 +80,7 @@ const result = await functions.createVariable({
 <?php
 
 use Appwrite\Client;
+use Appwrite\ID;
 use Appwrite\Services\Functions;
 
 $client = (new Client())
@@ -89,6 +92,7 @@ $functions = new Functions($client);
 
 $result = $functions->createVariable(
     functionId: '<FUNCTION_ID>',
+    variableId: ID::unique(),
     key: '<KEY>',
     value: '<VALUE>',
     secret: false // optional
@@ -96,6 +100,7 @@ $result = $functions->createVariable(
 ```
 ```server-python
 from appwrite.client import Client
+from appwrite.id import ID
 from appwrite.services.functions import Functions
 from appwrite.models import Variable
 
@@ -108,6 +113,7 @@ functions = Functions(client)
 
 result: Variable = functions.create_variable(
     function_id = '<FUNCTION_ID>',
+    variable_id = ID.unique(),
     key = '<KEY>',
     value = '<VALUE>',
     secret = False # optional
@@ -129,6 +135,7 @@ functions = Functions.new(client)
 
 result = functions.create_variable(
     function_id: '<FUNCTION_ID>',
+    variable_id: ID.unique(),
     key: '<KEY>',
     value: '<VALUE>',
     secret: false # optional
@@ -140,7 +147,7 @@ using Appwrite.Models;
 using Appwrite.Services;
 
 Client client = new Client()
-    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
     .SetProject("<YOUR_PROJECT_ID>") // Your project ID
     .SetKey("<YOUR_API_KEY>"); // Your API key
 
@@ -148,6 +155,7 @@ Functions functions = new Functions(client);
 
 Variable result = await functions.CreateVariable(
     functionId: "<FUNCTION_ID>",
+    variableId: ID.Unique(),
     key: "<KEY>",
     value: "<VALUE>",
     secret: false // optional
@@ -165,6 +173,7 @@ Functions functions = Functions(client);
 
 Variable result = await functions.createVariable(
     functionId: '<FUNCTION_ID>',
+    variableId: ID.unique(),
     key: '<KEY>',
     value: '<VALUE>',
     secret: false, // (optional)
@@ -172,6 +181,7 @@ Variable result = await functions.createVariable(
 ```
 ```server-kotlin
 import io.appwrite.Client
+import io.appwrite.ID
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Functions
 
@@ -184,6 +194,7 @@ val functions = Functions(client)
 
 val response = functions.createVariable(
     functionId = "<FUNCTION_ID>",
+    variableId = ID.unique(),
     key = "<KEY>",
     value = "<VALUE>",
     secret = false // optional
@@ -191,6 +202,7 @@ val response = functions.createVariable(
 ```
 ```server-java
 import io.appwrite.Client;
+import io.appwrite.ID;
 import io.appwrite.coroutines.CoroutineCallback;
 import io.appwrite.services.Functions;
 
@@ -203,6 +215,7 @@ Functions functions = new Functions(client);
 
 functions.createVariable(
     "<FUNCTION_ID>", // functionId
+    ID.unique(), // variableId
     "<KEY>", // key
     "<VALUE>", // value
     false, // secret (optional)
@@ -228,6 +241,7 @@ let functions = Functions(client)
 
 let variable = try await functions.createVariable(
     functionId: "<FUNCTION_ID>",
+    variableId: ID.unique(),
     key: "<KEY>",
     value: "<VALUE>",
     secret: false // optional
@@ -239,6 +253,7 @@ package main
 import (
     "fmt"
     "github.com/appwrite/sdk-for-go/v7/appwrite"
+    "github.com/appwrite/sdk-for-go/v7/id"
 )
 
 client := appwrite.NewClient(
@@ -251,13 +266,15 @@ functions := appwrite.NewFunctions(client)
 
 response, error := functions.CreateVariable(
     "<FUNCTION_ID>",
+    id.Unique(),
     "<KEY>",
     "<VALUE>",
-    appwrite.WithCreateVariableSecret(false),
+    functions.WithCreateVariableSecret(false),
 )
 ```
 ```server-rust
 use appwrite::Client;
+use appwrite::id::ID;
 use appwrite::services::Functions;
 
 #[tokio::main]
@@ -271,6 +288,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let result = functions.create_variable(
         "<FUNCTION_ID>",
+        ID::unique(),
         "<KEY>",
         "<VALUE>",
         Some(false) // optional
@@ -371,7 +389,7 @@ using Appwrite.Models;
 using Appwrite.Services;
 
 Client client = new Client()
-    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
     .SetProject("<YOUR_PROJECT_ID>") // Your project ID
     .SetKey("<YOUR_API_KEY>"); // Your API key
 
@@ -586,7 +604,7 @@ using Appwrite.Models;
 using Appwrite.Services;
 
 Client client = new Client()
-    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
     .SetProject("<YOUR_PROJECT_ID>") // Your project ID
     .SetKey("<YOUR_API_KEY>"); // Your API key
 
@@ -825,7 +843,7 @@ using Appwrite.Models;
 using Appwrite.Services;
 
 Client client = new Client()
-    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
     .SetProject("<YOUR_PROJECT_ID>") // Your project ID
     .SetKey("<YOUR_API_KEY>"); // Your API key
 
@@ -943,8 +961,8 @@ response, error := functions.UpdateVariable(
     "<FUNCTION_ID>",
     "<VARIABLE_ID>",
     "<KEY>",
-    appwrite.WithUpdateVariableValue("<VALUE>"),
-    appwrite.WithUpdateVariableSecret(false),
+    functions.WithUpdateVariableValue("<VALUE>"),
+    functions.WithUpdateVariableSecret(false),
 )
 ```
 ```server-rust
@@ -1065,7 +1083,7 @@ using Appwrite.Models;
 using Appwrite.Services;
 
 Client client = new Client()
-    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
     .SetProject("<YOUR_PROJECT_ID>") // Your project ID
     .SetKey("<YOUR_API_KEY>"); // Your API key
 

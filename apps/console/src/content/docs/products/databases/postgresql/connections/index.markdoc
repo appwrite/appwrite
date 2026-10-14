@@ -76,7 +76,7 @@ $postgresql = new Postgresql($client);
 
 $database = $postgresql->get(databaseId: '<DATABASE_ID>');
 
-echo $database['connectionString'];
+echo $database->connectionString;
 ```
 ```server-python
 from appwrite.client import Client
@@ -114,7 +114,7 @@ using Appwrite;
 using Appwrite.Services;
 
 Client client = new Client()
-    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1")
     .SetProject("<PROJECT_ID>")
     .SetKey("<YOUR_API_KEY>");
 
@@ -343,7 +343,7 @@ using Appwrite;
 using Appwrite.Services;
 
 Client client = new Client()
-    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1")
     .SetProject("<PROJECT_ID>")
     .SetKey("<YOUR_API_KEY>");
 

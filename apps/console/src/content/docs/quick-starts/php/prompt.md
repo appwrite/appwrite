@@ -70,29 +70,29 @@ function prepareDatabase($tablesDB) {
     );
 
     $todoTable = $tablesDB->createTable(
-        databaseId: $todoDatabase['$id'],
+        databaseId: $todoDatabase->id,
         tableId: ID::unique(),
         name: 'Todos'
     );
 
     $tablesDB->createVarcharColumn(
-        databaseId: $todoDatabase['$id'],
-        tableId: $todoTable['$id'],
+        databaseId: $todoDatabase->id,
+        tableId: $todoTable->id,
         key: 'title',
         size: 255,
         required: true
     );
 
     $tablesDB->createTextColumn(
-        databaseId: $todoDatabase['$id'],
-        tableId: $todoTable['$id'],
+        databaseId: $todoDatabase->id,
+        tableId: $todoTable->id,
         key: 'description',
         required: false,
     );
 
     $tablesDB->createBooleanColumn(
-        databaseId: $todoDatabase['$id'],
-        tableId: $todoTable['$id'],
+        databaseId: $todoDatabase->id,
+        tableId: $todoTable->id,
         key: 'isComplete',
         required: true
     );
@@ -125,22 +125,22 @@ function seedDatabase($tablesDB, $todoDatabase, $todoTable) {
     ];
 
     $tablesDB->createRow(
-        $todoDatabase['$id'],
-        $todoTable['$id'],
+        $todoDatabase->id,
+        $todoTable->id,
         ID::unique(),
         $testTodo1
     );
 
     $tablesDB->createRow(
-        $todoDatabase['$id'],
-        $todoTable['$id'],
+        $todoDatabase->id,
+        $todoTable->id,
         ID::unique(),
         $testTodo2
     );
 
     $tablesDB->createRow(
-        $todoDatabase['$id'],
-        $todoTable['$id'],
+        $todoDatabase->id,
+        $todoTable->id,
         ID::unique(),
         $testTodo3
     );
@@ -157,23 +157,23 @@ use Appwrite\Query;
 function getTodos($tablesDB, $todoDatabase, $todoTable) {
     // Retrieve rows (default limit is 25)
     $todos = $tablesDB->listRows(
-        $todoDatabase['$id'],
-        $todoTable['$id']
+        $todoDatabase->id,
+        $todoTable->id
     );
 
     echo "Todos:\n";
-    foreach ($todos['rows'] as $todo) {
-        echo "Title: {$todo['title']}\n" .
-            "Description: {$todo['description']}\n" .
-            "Is Todo Complete: {$todo['isComplete']}\n\n";
+    foreach ($todos->rows as $todo) {
+        echo "Title: {$todo->data['title']}\n" .
+            "Description: {$todo->data['description']}\n" .
+            "Is Todo Complete: {$todo->data['isComplete']}\n\n";
    }
 }
 
 function getCompletedTodos($tablesDB, $todoDatabase, $todoTable) {
     // Use queries to filter completed todos with pagination
     $todos = $tablesDB->listRows(
-        $todoDatabase['$id'],
-        $todoTable['$id'],
+        $todoDatabase->id,
+        $todoTable->id,
         [
             Query::equal('isComplete', true),
             Query::orderDesc('$createdAt'),
@@ -182,18 +182,18 @@ function getCompletedTodos($tablesDB, $todoDatabase, $todoTable) {
     );
 
     echo "Completed todos (limited to 5):\n";
-    foreach ($todos['rows'] as $todo) {
-        echo "Title: {$todo['title']}\n" .
-            "Description: {$todo['description']}\n" .
-            "Is Todo Complete: {$todo['isComplete']}\n\n";
+    foreach ($todos->rows as $todo) {
+        echo "Title: {$todo->data['title']}\n" .
+            "Description: {$todo->data['description']}\n" .
+            "Is Todo Complete: {$todo->data['isComplete']}\n\n";
    }
 }
 
 function getIncompleteTodos($tablesDB, $todoDatabase, $todoTable) {
     // Query for incomplete todos
     $todos = $tablesDB->listRows(
-        $todoDatabase['$id'],
-        $todoTable['$id'],
+        $todoDatabase->id,
+        $todoTable->id,
         [
             Query::equal('isComplete', false),
             Query::orderAsc('title')
@@ -201,10 +201,10 @@ function getIncompleteTodos($tablesDB, $todoDatabase, $todoTable) {
     );
 
     echo "Incomplete todos (ordered by title):\n";
-    foreach ($todos['rows'] as $todo) {
-        echo "Title: {$todo['title']}\n" .
-            "Description: {$todo['description']}\n" .
-            "Is Todo Complete: {$todo['isComplete']}\n\n";
+    foreach ($todos->rows as $todo) {
+        echo "Title: {$todo->data['title']}\n" .
+            "Description: {$todo->data['description']}\n" .
+            "Is Todo Complete: {$todo->data['isComplete']}\n\n";
    }
 }
 

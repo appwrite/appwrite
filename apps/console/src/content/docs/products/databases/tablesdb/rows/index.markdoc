@@ -464,7 +464,7 @@ rows = tables_db.list_rows(
 )
 ```
 ```server-deno
-import { Client, Query, TablesDB } from "https://deno.land/x/appwrite/mod.ts";
+import { Client, Query, TablesDB } from "npm:node-appwrite";
 
 const client = new Client()
     .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
@@ -616,7 +616,7 @@ using Appwrite.Models;
 using Appwrite.Services;
 
 Client client = new Client()
-    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1")
     .SetProject("<PROJECT_ID>")
     .SetKey("<YOUR_API_KEY>");
 
@@ -836,7 +836,7 @@ tables_db.update_table(
 )
 ```
 ```server-deno
-import { Client, TablesDB } from "https://deno.land/x/appwrite/mod.ts";
+import { Client, TablesDB } from "npm:node-appwrite";
 
 const client = new Client()
     .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')

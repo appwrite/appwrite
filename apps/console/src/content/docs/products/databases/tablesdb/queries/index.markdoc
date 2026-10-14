@@ -82,9 +82,9 @@ void main() async {
 
     try {
         final rows = await tablesDB.listRows(
-            '<DATABASE_ID>',
-            '<TABLE_ID>',
-            [
+            databaseId: '<DATABASE_ID>',
+            tableId: '<TABLE_ID>',
+            queries: [
                 Query.equal('title', ['Avatar', 'Lord of the Rings']),
                 Query.greaterThan('year', 1999)
             ]
@@ -127,7 +127,7 @@ import io.appwrite.services.TablesDB
 suspend fun main() {
     val client = Client(applicationContext)
         .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
-        .setProject('<PROJECT_ID>');
+        .setProject("<PROJECT_ID>");
 
     val tablesDB = TablesDB(client)
 
@@ -1274,14 +1274,14 @@ Query.notContains("name", "Tom")
 ```
 ```client-apple
 // For arrays
-Query.notContains("ingredients", value: ['apple', 'banana'])
+Query.notContains("ingredients", value: ["apple", "banana"])
 
 // For text columns
 Query.notContains("name", value: "Tom")
 ```
 ```client-android-kotlin
 // For arrays
-Query.notContains("ingredients", ['apple', 'banana'])
+Query.notContains("ingredients", ["apple", "banana"])
 
 // For text columns
 Query.notContains("name", "Tom")
@@ -1350,7 +1350,7 @@ Query.notContains("name", "Tom")
 ```
 ```server-swift
 // For arrays
-Query.notContains("ingredients", value: ['apple', 'banana'])
+Query.notContains("ingredients", value: ["apple", "banana"])
 
 // For text columns
 Query.notContains("name", value: "Tom")
@@ -3001,9 +3001,9 @@ const results = await tablesDB.listRows({
 ```
 ```client-flutter
 final results = await tablesDB.listRows(
-    '<DATABASE_ID>',
-    '<TABLE_ID>',
-    [
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    queries: [
         Query.or([
             Query.and([
                 Query.equal('category', ['books']),

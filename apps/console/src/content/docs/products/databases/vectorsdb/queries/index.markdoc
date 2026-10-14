@@ -92,9 +92,9 @@ void main() async {
 
     try {
         final documents = await vectorsDB.listDocuments(
-            '<DATABASE_ID>',
-            '<COLLECTION_ID>',
-            [
+            databaseId: '<DATABASE_ID>',
+            collectionId: '<COLLECTION_ID>',
+            queries: [
                 Query.equal('metadata.genre', ['sci-fi', 'drama']),
                 Query.greaterThan('metadata.year', '2010')
             ]
@@ -137,7 +137,7 @@ import io.appwrite.services.VectorsDB
 suspend fun main() {
     val client = Client(applicationContext)
         .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
-        .setProject('<YOUR_PROJECT_ID>');
+        .setProject("<YOUR_PROJECT_ID>");
 
     val vectorsDB = VectorsDB(client)
 
@@ -2355,9 +2355,9 @@ const results = await vectorsDB.listDocuments({
 ```
 ```client-flutter
 final results = await vectorsDB.listDocuments(
-    '<DATABASE_ID>',
-    '<COLLECTION_ID>',
-    [
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    queries: [
         Query.or([
             Query.and([
                 Query.equal('metadata.genre', ['sci-fi']),

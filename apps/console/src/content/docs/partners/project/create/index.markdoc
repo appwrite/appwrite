@@ -113,7 +113,7 @@ using Appwrite.Models;
 using Appwrite.Services;
 
 Client client = new Client()
-    .SetEndPoint("https://cloud.appwrite.io/v1")
+    .SetEndpoint("https://cloud.appwrite.io/v1")
     .SetOrganization("<ORGANIZATION_ID>")
     .SetKey("<YOUR_PARTNERS_KEY>");
 

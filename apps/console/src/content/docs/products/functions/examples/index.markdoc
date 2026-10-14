@@ -403,7 +403,7 @@ def main(context):
         Query.equal('topicId', vote['topicId'])
     ])
 
-    if existing_votes['total'] > 0:
+    if existing_votes.total > 0:
         return context.res.json({
           'ok': False,
           'message': 'You have already voted on this topic.'
@@ -461,7 +461,7 @@ return function ($context) {
         ]
     );
 
-    if ($existingVotes['total'] > 0) {
+    if ($existingVotes->total > 0) {
         return $context->res->json([
           'ok' => false,
           'message' => 'You have already voted on this topic.'
@@ -574,7 +574,7 @@ def main(context)
         ]
     )
 
-    if existing_votes['total'] > 0
+    if existing_votes.total > 0
         return context.res.json({
           'ok': false,
           'message': 'You have already voted on this topic.'

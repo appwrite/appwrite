@@ -155,7 +155,7 @@ using Appwrite.Services;
 using Appwrite.Models;
 
 Client client = new Client()
-    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1")
     .SetProject("<PROJECT_ID>")
     .SetKey("<YOUR_API_KEY>");
 
@@ -292,7 +292,7 @@ func main() {
         "https://example.com/webhook",
         "My Webhook",
         []string{"users.*.create"},
-        appwrite.WithCreateSecret("<SECRET>"), // optional
+        webhooks.WithCreateSecret("<SECRET>"), // optional
     )
 
     if err != nil {
@@ -426,7 +426,7 @@ using Appwrite.Services;
 using Appwrite.Models;
 
 Client client = new Client()
-    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1")
     .SetProject("<PROJECT_ID>")
     .SetKey("<YOUR_API_KEY>");
 
@@ -643,7 +643,7 @@ using Appwrite.Services;
 using Appwrite.Models;
 
 Client client = new Client()
-    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1")
     .SetProject("<PROJECT_ID>")
     .SetKey("<YOUR_API_KEY>");
 
@@ -876,7 +876,7 @@ using Appwrite.Services;
 using Appwrite.Models;
 
 Client client = new Client()
-    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1")
     .SetProject("<PROJECT_ID>")
     .SetKey("<YOUR_API_KEY>");
 
@@ -1121,7 +1121,7 @@ using Appwrite;
 using Appwrite.Services;
 
 Client client = new Client()
-    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1")
     .SetProject("<PROJECT_ID>")
     .SetKey("<YOUR_API_KEY>");
 
@@ -1339,7 +1339,7 @@ using Appwrite;
 using Appwrite.Services;
 
 Client client = new Client()
-    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1")
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1")
     .SetProject("<PROJECT_ID>")
     .SetKey("<YOUR_API_KEY>");
 
@@ -1438,7 +1438,7 @@ func main() {
     webhooks := appwrite.NewWebhooks(client)
     result, err := webhooks.UpdateSecret(
         "<WEBHOOK_ID>",
-        appwrite.WithUpdateSecretSecret("<SECRET>"), // optional
+        webhooks.WithUpdateSecretSecret("<SECRET>"), // optional
     )
 
     if err != nil {

@@ -1786,7 +1786,7 @@ func main(context: RuntimeContext) async throws -> RuntimeOutput {
        .setProject(ProcessInfo.processInfo.environment["APPWRITE_FUNCTION_PROJECT_ID"])
        .setKey(context.req.headers["x-appwrite-key"] ?? "")
 
-    let tablesDB = TablesDB(client: client)
+    let tablesDB = TablesDB(client)
 
     do {
         try await tablesDB.createRow(
@@ -2212,7 +2212,7 @@ func main(context: RuntimeContext) async throws -> RuntimeOutput {
         return context.res.text("Access denied: This function requires authentication. Please sign in to continue.")
     }
 
-    let tablesDB = TablesDB(client: client)
+    let tablesDB = TablesDB(client)
 
     do {
         try await tablesDB.createRow(
