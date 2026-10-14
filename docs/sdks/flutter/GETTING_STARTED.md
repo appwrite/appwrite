@@ -110,14 +110,14 @@ User user = await account.create(
   userId: ID.unique(),
   email: 'email@example.com',
   password: 'password',
-  name: 'Walter O'Brien',
+  name: "Walter O'Brien",
 );
 ```
 
 ### Full Example
 
 ```dart
-Client client = Client().setProject('<YOUR_PROJECT_ID>>');
+Client client = Client().setProject('<YOUR_PROJECT_ID>');
 
 Account account = Account(client);
 
@@ -125,7 +125,7 @@ User user = await account.create(
   userId: ID.unique(),
   email: 'email@example.com',
   password: 'password',
-  name: 'Walter O'Brien'
+  name: "Walter O'Brien"
 );
 ```
 
