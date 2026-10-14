@@ -205,7 +205,11 @@ final class Harness
                 skipValidation: (bool) ($p['skip_validation'] ?? false),
                 aliases: $p['aliases'] ?? [],
             );
-            $names[] = 'param:' . $p['key'];
+            // A key declared again replaces the param in place (the hook keys
+            // its params by name), so the action receives it once.
+            if (!\in_array('param:' . $p['key'], $names, true)) {
+                $names[] = 'param:' . $p['key'];
+            }
         }
         foreach ($spec['inject'] ?? [] as $name) {
             $hook->inject($name);
