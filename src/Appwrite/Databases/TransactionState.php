@@ -115,7 +115,7 @@ class TransactionState
     ): array {
         $dbForDatabases = ($this->getDatabasesDB)($database);
         if ($transactionId === null) {
-            return $dbForDatabases->read($collectionId, $queries);
+            return $dbForDatabases->find($collectionId, $queries);
         }
 
         $this->assertNotAggregated($queries);

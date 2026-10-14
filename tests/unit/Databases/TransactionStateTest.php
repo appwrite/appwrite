@@ -59,33 +59,6 @@ final class TransactionStateTest extends TestCase
         $this->assertSame(['drama', 'drama'], \array_map(static fn (Document $document): mixed => $document->getAttribute('genre'), $documents));
     }
 
-    public function testListOutsideATransactionRunsAggregates(): void
-    {
-        $rows = $this->state->listDocuments(new Document(), self::MOVIES, null, [
-            Query::count('*', 'movies'),
-            Query::sum('year', 'years'),
-        ]);
-
-        $this->assertCount(1, $rows);
-        $this->assertInstanceOf(Document::class, $rows[0]);
-        $this->assertSame(3, $rows[0]->getAttribute('movies'));
-        $this->assertSame(5992, $rows[0]->getAttribute('years'));
-    }
-
-    public function testListOutsideATransactionRunsGroups(): void
-    {
-        $rows = $this->state->listDocuments(new Document(), self::MOVIES, null, [
-            Query::groupBy(['genre']),
-            Query::count('*', 'movies'),
-            Query::orderAsc('genre'),
-        ]);
-
-        $this->assertSame(
-            [['genre' => 'comedy', 'movies' => 1], ['genre' => 'drama', 'movies' => 2]],
-            \array_map(static fn (Document $row): array => ['genre' => $row->getAttribute('genre'), 'movies' => $row->getAttribute('movies')], $rows),
-        );
-    }
-
     public function testAggregatesInsideATransactionAreRejected(): void
     {
         $this->expectException(QueryException::class);
