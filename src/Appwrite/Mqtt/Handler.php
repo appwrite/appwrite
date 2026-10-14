@@ -240,6 +240,7 @@ class Handler implements MqttHandler
         $projectDB->setAuthorization($authorization);
 
         $topicsByName = [];
+        $ordinaryInternalIds = [];
         if ($names !== []) {
             $documents = $authorization->skip(fn () => $projectDB->find('topics', [
                 Query::equal('name', array_keys($names)),
@@ -247,8 +248,15 @@ class Handler implements MqttHandler
             ]));
             foreach ($documents as $document) {
                 $topicsByName[$document->getAttribute('name')] ??= $document;
+                if (!$this->isReservedUserTopic($document->getAttribute('name', ''))) {
+                    $ordinaryInternalIds[] = (string) $document->getSequence();
+                }
             }
         }
+
+        // The ordinary topics this user is entered as a subscriber of, resolved in one query over the
+        // packet's topics rather than once per filter.
+        $subscribedInternalIds = $this->subscribedTopics($projectDB, $authorization, $userId, $ordinaryInternalIds);
 
         $grantedTopics = [];
 
@@ -270,7 +278,7 @@ class Handler implements MqttHandler
                 // topic must be one the user is a subscriber of.
                 $document = $this->isWildcard($filter->topic) ? null : ($topicsByName[$filter->topic] ?? null);
 
-                if ($document === null || !$this->isSubscribed($projectDB, $authorization, $userId, (string) $document->getSequence())) {
+                if ($document === null || !isset($subscribedInternalIds[(string) $document->getSequence()])) {
                     $suback->deny();
                     continue;
                 }
@@ -416,10 +424,28 @@ class Handler implements MqttHandler
      * Drop the user's live subscription to a topic after they were removed as a subscriber, so an
      * already-open connection stops receiving it. Returns how many connections were touched. The
      * connection stays open and keeps its other subscriptions; a topic it never held is a no-op.
+     *
+     * The event is applied asynchronously and unordered against the subscriber table, so membership is
+     * re-checked here: if the user subscribed again before this landed, the subscription is left alone.
      */
     public function unsubscribe(Server $server, string $projectId, string $userId, string $topic): int
     {
         $connections = $this->connectionsOf($projectId, $userId);
+        if ($connections === []) {
+            return 0;
+        }
+
+        $projectDB = $this->getProjectDB($projectId);
+        $authorization = new Authorization();
+        $projectDB->setAuthorization($authorization);
+
+        $document = $authorization->skip(fn () => $projectDB->findOne('topics', [
+            Query::equal('name', [$topic]),
+        ]));
+
+        if (!$document->isEmpty() && $this->isSubscribed($projectDB, $authorization, $userId, (string) $document->getSequence())) {
+            return 0;
+        }
 
         foreach ($connections as $connection) {
             $server->unsubscribe($topic, $connection->fd);
@@ -526,14 +552,47 @@ class Handler implements MqttHandler
     /** Whether the user is entered as a subscriber of the topic (via any of their targets). */
     private function isSubscribed(Database $projectDB, Authorization $authorization, string $userId, string $topicInternalId): bool
     {
-        if ($userId === '') {
-            return false;
+        return $this->subscribedTopics($projectDB, $authorization, $userId, [$topicInternalId]) !== [];
+    }
+
+    /**
+     * The subset of the given topic ids the user is entered as a subscriber of (via any of their
+     * targets), resolved in one query per page. A user can hold several targets on one topic, so the
+     * query is paged until every id is matched or the rows run out, never undercounting a topic.
+     *
+     * @param  array<int, string>  $topicInternalIds
+     * @return array<string, true> topicInternalId => true
+     */
+    private function subscribedTopics(Database $projectDB, Authorization $authorization, string $userId, array $topicInternalIds): array
+    {
+        if ($userId === '' || $topicInternalIds === []) {
+            return [];
         }
 
-        return !$authorization->skip(fn () => $projectDB->findOne('subscribers', [
-            Query::equal('topicInternalId', [$topicInternalId]),
-            Query::equal('userId', [$userId]),
-        ]))->isEmpty();
+        $page = \count($topicInternalIds);
+        $subscribed = [];
+        $cursor = null;
+
+        do {
+            $queries = [
+                Query::equal('userId', [$userId]),
+                Query::equal('topicInternalId', $topicInternalIds),
+                Query::select(['$sequence', 'topicInternalId']),
+                Query::orderAsc('$sequence'),
+                Query::limit($page),
+            ];
+            if ($cursor !== null) {
+                $queries[] = Query::cursorAfter($cursor);
+            }
+
+            $rows = $authorization->skip(fn () => $projectDB->find('subscribers', $queries));
+            foreach ($rows as $row) {
+                $subscribed[(string) $row->getAttribute('topicInternalId')] = true;
+                $cursor = $row;
+            }
+        } while (\count($rows) === $page && \count($subscribed) < $page);
+
+        return $subscribed;
     }
 
     /**

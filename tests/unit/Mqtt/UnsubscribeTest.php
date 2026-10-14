@@ -10,6 +10,15 @@ use PHPUnit\Framework\TestCase;
 use Tests\Unit\Mqtt\Fakes\Accounts;
 use Tests\Unit\Mqtt\Fakes\NullPubSub;
 use Tests\Unit\Mqtt\Fakes\RecordingAdapter;
+use Utopia\Cache\Adapter\None as NoCache;
+use Utopia\Cache\Cache;
+use Utopia\Database\Adapter\Memory;
+use Utopia\Database\Database;
+use Utopia\Database\Document;
+use Utopia\Database\Helpers\ID;
+use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Helpers\Role;
+use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
 use Utopia\Mqtt\Packet;
 use Utopia\Mqtt\Packet\Specs\V5;
@@ -21,7 +30,8 @@ use Utopia\Telemetry\Adapter\None as NoTelemetry;
 
 /**
  * Dropping a user's live subscription when they are removed as a subscriber: the connection stays
- * open and keeps its other subscriptions, but stops receiving the removed topic.
+ * open and keeps its other subscriptions, but stops receiving the removed topic. The drop re-checks
+ * membership so a late event cannot tear down a subscription the user re-created.
  */
 final class UnsubscribeTest extends TestCase
 {
@@ -39,6 +49,8 @@ final class UnsubscribeTest extends TestCase
 
     private Handler $handler;
 
+    private Database $database;
+
     private string|false $previousAbuseOption = false;
 
     protected function setUp(): void
@@ -46,10 +58,35 @@ final class UnsubscribeTest extends TestCase
         $this->previousAbuseOption = \getenv(self::ABUSE_OPTION);
         \putenv(self::ABUSE_OPTION . '=disabled');
 
+        $authorization = new Authorization();
+        $authorization->addRole(Role::any()->toString());
+
+        $this->database = new Database(new Memory(), new Cache(new NoCache()));
+        $this->database
+            ->setAuthorization($authorization)
+            ->setDatabase('mqttTests')
+            ->setNamespace('mqtt_' . \uniqid());
+        $this->database->create();
+
+        $any = [
+            Permission::create(Role::any()),
+            Permission::read(Role::any()),
+            Permission::update(Role::any()),
+            Permission::delete(Role::any()),
+        ];
+        $this->database->createCollection('projects', [], [], $any, false);
+        $this->database->createCollection('topics', [], [], $any, false);
+        $this->database->createAttribute('topics', 'name', Database::VAR_STRING, 255, true);
+        $this->database->createCollection('subscribers', [], [], $any, false);
+        $this->database->createAttribute('subscribers', 'topicInternalId', Database::VAR_STRING, 255, true);
+        $this->database->createAttribute('subscribers', 'userId', Database::VAR_STRING, 255, true);
+
         $container = new Container();
         $accounts = new Accounts();
         $container->set('authenticator', fn (): \Closure => $accounts->authenticate(...));
         $container->set('authorizer', fn (): \Closure => $accounts->authorize(...));
+        $container->set('getConsoleDB', fn () => fn (): Database => $this->database, []);
+        $container->set('getProjectDB', fn () => fn (Document $project): Database => $this->database, []);
 
         $this->handler = new Handler(
             $container,
@@ -70,7 +107,25 @@ final class UnsubscribeTest extends TestCase
         \putenv($this->previousAbuseOption === false ? self::ABUSE_OPTION : self::ABUSE_OPTION . '=' . $this->previousAbuseOption);
     }
 
-    /** Open and index a connection as $userId, then subscribe it to $topics in the store. */
+    /** Create a topic and return its internal id (the subscribers' topicInternalId). */
+    private function seedTopic(string $name): string
+    {
+        return (string) $this->database->createDocument('topics', new Document([
+            '$id' => ID::unique(),
+            'name' => $name,
+        ]))->getSequence();
+    }
+
+    private function subscribe(string $topicInternalId, string $userId): void
+    {
+        $this->database->createDocument('subscribers', new Document([
+            '$id' => ID::unique(),
+            'topicInternalId' => $topicInternalId,
+            'userId' => $userId,
+        ]));
+    }
+
+    /** Open and index a connection as $userId, then seed its store subscriptions to $topics. */
     private function connect(int $fd, string $userId, string ...$topics): void
     {
         $properties = new Properties();
@@ -88,6 +143,7 @@ final class UnsubscribeTest extends TestCase
 
     public function testRemovedSubscriberStopsReceivingTheTopic(): void
     {
+        $this->seedTopic('scores'); // the subscriber row is already gone (removed)
         $this->connect(1, 'member', 'scores', 'users/member');
         $this->assertArrayHasKey(1, $this->store->getSubscribers(self::PROJECT, 'scores'));
 
@@ -99,14 +155,27 @@ final class UnsubscribeTest extends TestCase
         $this->assertSame([], $this->network->disconnects(1), 'the connection was disconnected rather than unsubscribed');
     }
 
+    public function testResubscribedUserKeepsTheSubscription(): void
+    {
+        $topicInternalId = $this->seedTopic('scores');
+        $this->subscribe($topicInternalId, 'member'); // re-subscribed before the event landed
+        $this->connect(1, 'member', 'scores');
+
+        $dropped = $this->handler->unsubscribe($this->server, self::PROJECT, 'member', 'scores');
+
+        $this->assertSame(0, $dropped, 'a re-created subscription was torn down by a late event');
+        $this->assertArrayHasKey(1, $this->store->getSubscribers(self::PROJECT, 'scores'));
+    }
+
     public function testUnsubscribeIgnoresOtherUsers(): void
     {
+        $this->seedTopic('scores');
         $this->connect(1, 'member', 'scores');
         $this->connect(2, 'other', 'scores');
 
         $this->assertSame(1, $this->handler->unsubscribe($this->server, self::PROJECT, 'member', 'scores'));
 
-        $this->assertSame([], $this->store->getSubscribers(self::PROJECT, 'scores')[1] ?? [], 'the removed user kept the subscription');
+        $this->assertArrayNotHasKey(1, $this->store->getSubscribers(self::PROJECT, 'scores'), 'the removed user kept the subscription');
         $this->assertArrayHasKey(2, $this->store->getSubscribers(self::PROJECT, 'scores'), 'another user lost the subscription');
     }
 
