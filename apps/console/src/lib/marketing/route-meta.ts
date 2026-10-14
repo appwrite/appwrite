@@ -1,15 +1,19 @@
 import { getSeoSiteOrigin } from '@/lib/marketing/site-origin'
 import { getPageMetaTags } from '@/lib/seo/page-meta'
+import { buildOgImageUrl, type OgImageParams } from '@/lib/seo/og-image'
 import { asRouteHead } from '@/lib/seo/route-head'
 import { pageTitle } from '@/lib/utils/page-title'
 
 export const MARKETING_HOMEPAGE_TITLE =
   'Appwrite · The open-source cloud for developers and agents'
 
-/** Homepage social card (2400×1260, 2× Open Graph). Avoid `@` in the path — crawlers fetch `%40` and static hosts 404. */
-export const MARKETING_HOME_OG_IMAGE_PATH = '/assets/logotype/dark-2x.avif'
-export const MARKETING_HOME_OG_IMAGE_WIDTH = 2400
-export const MARKETING_HOME_OG_IMAGE_HEIGHT = 1260
+/** Homepage social card — PNG via `/og/image.png` (1200×630) for crawler compatibility. */
+export const MARKETING_HOME_OG_IMAGE_PARAMS = {
+  title: 'The open-source cloud for developers and agents',
+  subtitle:
+    'Auth, Databases, Storage, Functions, Messaging, and Sites in one open-source platform.',
+  eyebrow: 'Appwrite',
+} as const satisfies OgImageParams
 
 type MetaTag = Record<string, string>
 
@@ -21,6 +25,7 @@ type MarketingPageMetaInput = {
   ogImage?: string
   ogImageWidth?: number
   ogImageHeight?: number
+  ogImageParams?: OgImageParams
   ogImageTitle?: string
   ogImageSubtitle?: string
   ogImageEyebrow?: string
@@ -35,7 +40,7 @@ function asRouteMetaTags(tags: readonly MetaTag[]): MetaTag[] {
 }
 
 export function getMarketingHomeOgImage(siteOrigin?: string): string {
-  return `${getSeoSiteOrigin(siteOrigin)}${MARKETING_HOME_OG_IMAGE_PATH}`
+  return buildOgImageUrl(MARKETING_HOME_OG_IMAGE_PARAMS, siteOrigin)
 }
 
 export function getMarketingPageMetaTags(input: MarketingPageMetaInput): MetaTag[] {
@@ -52,12 +57,12 @@ export function getMarketingPageMetaTags(input: MarketingPageMetaInput): MetaTag
       ogImageHeight: input.ogImageHeight,
       ogImageParams: input.ogImage
         ? undefined
-        : {
+        : (input.ogImageParams ?? {
             title: input.ogImageTitle ?? input.pageName,
             subtitle: input.ogImageSubtitle ?? input.description,
             eyebrow: input.ogImageEyebrow,
             cta: input.ogImageCta,
-          },
+          }),
       siteOrigin,
     }) as unknown as MetaTag[],
   )
