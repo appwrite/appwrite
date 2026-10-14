@@ -175,6 +175,7 @@ Tell us which events you need on [Discord](https://appwrite.io/discord) or in th
 # Resources {% #resources %}
 
 - [Appwrite MCP server documentation](/docs/tooling/ai/mcp-servers)
+- [MCP Events documentation](/docs/tooling/ai/mcp-servers#events)
 - [MCP Events design notes](https://github.com/appwrite/mcp/blob/main/docs/events.md)
 - [SEP-3415: Events extension](https://github.com/modelcontextprotocol/modelcontextprotocol/pull/3415)
 - [pi-mcp-events on GitHub](https://github.com/mikekelly/pi-mcp-events)
