@@ -1,11 +1,11 @@
 <?php
 
 use Appwrite\Auth\EncryptionKey;
+use Appwrite\Database\Factory as DatabaseFactory;
 use Appwrite\Event\Event as QueueEvent;
 use Appwrite\Event\Message\Usage as UsageMessage;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Messaging\Adapter\Mqtt;
-use Appwrite\Mqtt\Databases;
 use Appwrite\Mqtt\Handler;
 use Appwrite\PubSub\Adapter\Pool as PubSubPool;
 use Appwrite\Usage\Context as UsageContext;
@@ -20,6 +20,7 @@ use Utopia\Config\Config;
 use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
 use Utopia\Mqtt\Adapter;
 use Utopia\Mqtt\Server;
@@ -90,7 +91,10 @@ $container->set('getConsoleDB', fn () => function () use ($register, $container)
     /** @var Group $pools */
     $pools = $register->get('pools');
 
-    return $ctx['dbForPlatform'] = (new Databases($pools, $getCache()))->console();
+    return $ctx['dbForPlatform'] = (new DatabaseFactory($pools, $getCache(), new Authorization()))->platform(metadata: [
+        'host' => \gethostname(),
+        'project' => '_console',
+    ]);
 }, []);
 
 $container->set('getProjectDB', fn () => function (Document $project) use ($register, $container): Database {
@@ -115,7 +119,10 @@ $container->set('getProjectDB', fn () => function (Document $project) use ($regi
     /** @var Group $pools */
     $pools = $register->get('pools');
 
-    return $ctx['dbForProject'][$project->getSequence()] = (new Databases($pools, $getCache()))->project($project);
+    return $ctx['dbForProject'][$project->getSequence()] = (new DatabaseFactory($pools, $getCache(), new Authorization()))->project($project, metadata: [
+        'host' => \gethostname(),
+        'project' => $project->getId(),
+    ]);
 }, []);
 
 $container->set('getPlanForUser', fn () => fn (Document $project, string $userId): int => (int) System::getEnv('_APP_MQTT_REPLAY_DEPTH', '5'), []);
