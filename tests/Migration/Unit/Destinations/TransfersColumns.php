@@ -13,7 +13,6 @@ use Utopia\Database\Database as UtopiaDatabase;
 use Utopia\Database\Document as UtopiaDocument;
 use Utopia\Database\Query;
 use Utopia\Migration\Destinations\Appwrite as AppwriteDestination;
-use Utopia\Migration\Destinations\Appwrite\ProvisioningOwner;
 use Utopia\Migration\Destinations\OnDuplicate;
 use Utopia\Migration\Resource;
 use Utopia\Migration\Resources\Database\Column;
@@ -108,7 +107,17 @@ trait TransfersColumns
      */
     private function transferSchema(callable $makeResources, UtopiaDatabase $database, OnDuplicate $onDuplicate, string $updatedAt): array
     {
-        $source = new MockSource();
+        $source = new class () extends MockSource {
+            #[\Override]
+            protected function exportGroupDatabases(int $batchSize, array $resources): void
+            {
+                foreach ([Resource::TYPE_DATABASE, Resource::TYPE_TABLE, Resource::TYPE_COLUMN, Resource::TYPE_INDEX] as $type) {
+                    if (Resource::isSupported($type, $resources)) {
+                        parent::exportGroupDatabases($batchSize, [$type]);
+                    }
+                }
+            }
+        };
         $databaseResource = new DatabaseResource(
             id: 'shop',
             name: 'Shop',
@@ -129,12 +138,11 @@ trait TransfersColumns
         $destination = $this->destination($database, $onDuplicate);
         $transfer = new Transfer($source, $destination);
         $database->getAuthorization()->skip(
-            static function () use ($transfer): void {
-                $noop = static function (): void {
-                };
-                $transfer->run([Resource::TYPE_DATABASE, Resource::TYPE_TABLE, Resource::TYPE_COLUMN], $noop);
-                $transfer->run([Resource::TYPE_INDEX], $noop);
-            },
+            static fn () => $transfer->run(
+                [Resource::TYPE_DATABASE, Resource::TYPE_TABLE, Resource::TYPE_COLUMN, Resource::TYPE_INDEX],
+                static function (): void {
+                },
+            ),
         );
 
         return [$destination, $resources];
@@ -163,8 +171,6 @@ trait TransfersColumns
             ],
             dbForPlatform: $database,
             projectInternalId: '1',
-            owner: new ProvisioningOwner('migration-test', 'attempt-test'),
-            getRecoverableOwner: static fn (UtopiaDocument $document): ?ProvisioningOwner => null,
             onDuplicate: $onDuplicate,
         );
     }

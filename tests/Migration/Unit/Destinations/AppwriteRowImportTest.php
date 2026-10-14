@@ -13,7 +13,6 @@ use Utopia\Database\Database as UtopiaDatabase;
 use Utopia\Database\Document as UtopiaDocument;
 use Utopia\Database\Query;
 use Utopia\Migration\Destinations\Appwrite as AppwriteDestination;
-use Utopia\Migration\Destinations\Appwrite\ProvisioningOwner;
 use Utopia\Migration\Resource;
 use Utopia\Migration\Resources\Database\Columns\Text;
 use Utopia\Migration\Resources\Database\Database as DatabaseResource;
@@ -206,8 +205,6 @@ final class AppwriteRowImportTest extends TestCase
             ],
             dbForPlatform: $database,
             projectInternalId: '1',
-            owner: new ProvisioningOwner('migration-row-import', 'attempt-current'),
-            getRecoverableOwner: static fn (UtopiaDocument $document): ?ProvisioningOwner => null,
         );
     }
 
@@ -232,8 +229,6 @@ final class AppwriteRowImportTest extends TestCase
                 $this->attribute('type', ColumnType::String, default: 'tablesdb', size: 128),
                 $this->attribute('database', ColumnType::String, size: 2000),
                 $this->attribute('status', ColumnType::String, size: 16),
-                $this->attribute('migrationId', ColumnType::String, size: UtopiaDatabase::LENGTH_KEY),
-                $this->attribute('migrationAttemptId', ColumnType::String, size: UtopiaDatabase::LENGTH_KEY),
             ],
         ));
 

@@ -15,7 +15,6 @@ use Utopia\Database\Database as UtopiaDatabase;
 use Utopia\Database\Document as UtopiaDocument;
 use Utopia\Database\Query;
 use Utopia\Migration\Destinations\Appwrite as AppwriteDestination;
-use Utopia\Migration\Destinations\Appwrite\ProvisioningOwner;
 use Utopia\Migration\Resource;
 use Utopia\Migration\Resources\Database\Columns\Text;
 use Utopia\Migration\Resources\Database\Database as DatabaseResource;
@@ -188,8 +187,6 @@ final class AppwriteCheckAttributeTest extends TestCase
             ],
             dbForPlatform: $database,
             projectInternalId: '1',
-            owner: new ProvisioningOwner('migration-test', 'attempt-test'),
-            getRecoverableOwner: static fn (UtopiaDocument $document): ?ProvisioningOwner => null,
         );
 
         $transfer = new Transfer($source, $destination);

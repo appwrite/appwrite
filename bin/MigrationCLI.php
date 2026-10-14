@@ -11,7 +11,6 @@ use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Migration\Destination;
 use Utopia\Migration\Destinations\Appwrite as DestinationsAppwrite;
-use Utopia\Migration\Destinations\Appwrite\ProvisioningOwner;
 use Utopia\Migration\Destinations\Local;
 use Utopia\Migration\Source;
 use Utopia\Migration\Sources\Appwrite;
@@ -33,9 +32,6 @@ class MigrationCLI
     protected mixed $source;
 
     protected mixed $destination;
-
-    /** @var list<string> */
-    private readonly array $arguments;
 
     protected const STRUCTURE = [
         '$collection' => 'databases',
@@ -157,34 +153,6 @@ class MigrationCLI
         ],
     ];
 
-    /** @param list<string> $arguments */
-    public function __construct(array $arguments = [])
-    {
-        $this->arguments = $arguments;
-    }
-
-    public static function getHelp(): string
-    {
-        return <<<'HELP'
-Usage: php bin/MigrationCLI.php [options]
-
-Options:
-  -h, --help                  Show this help.
-  --migration-id=<identifier> Stable logical owner identifier for this migration.
-                              Required for Appwrite; reuse it for retries.
-  --migration-attempt-id=<identifier>
-                              Required for Appwrite; use a fresh attempt for every
-                              execution or retry.
-  --recover-migration-id=<prior-migration-id>
-  --recover-migration-attempt-id=<prior-attempt-id>
-                              Together attest that the exact prior migration attempt is terminal
-                              and allow recovery of its provisioning or failed databases.
-                              Recovery is refused by default.
-                              Resource status alone never proves an attempt terminal.
-
-HELP;
-    }
-
     /**
      * Prints the current status of migrations as a table after wiping the screen
      */
@@ -283,7 +251,6 @@ HELP;
         switch ($_ENV['DESTINATION_PROVIDER']) {
             case 'appwrite':
                 $database = $this->getDatabase('destination');
-                $recoverableOwner = $this->getRecoverableOwner();
 
                 return new DestinationsAppwrite(
                     project: $_ENV['DESTINATION_APPWRITE_TEST_PROJECT'],
@@ -294,72 +261,12 @@ HELP;
                     collectionStructure: self::STRUCTURE,
                     dbForPlatform: $database,
                     projectInternalId: $_ENV['DESTINATION_APPWRITE_TEST_PROJECT_INTERNAL_ID'],
-                    owner: new ProvisioningOwner($this->getMigrationId(), $this->getMigrationAttemptId()),
-                    // The standalone operator supplies the fixed pair only after confirming the prior
-                    // lifecycle owner is terminal. The destination independently compares it with the row.
-                    getRecoverableOwner: static fn (Document $document): ?ProvisioningOwner => $recoverableOwner,
                 );
             case 'local':
                 return new Local('./localBackup');
             default:
                 throw new Exception('Invalid destination provider');
         }
-    }
-
-    private function getMigrationId(): string
-    {
-        foreach ($this->arguments as $argument) {
-            if (! \str_starts_with($argument, '--migration-id=')) {
-                continue;
-            }
-
-            $migrationId = \substr($argument, \strlen('--migration-id='));
-            if ($migrationId !== '') {
-                return $migrationId;
-            }
-        }
-
-        throw new \InvalidArgumentException('--migration-id is required for an Appwrite destination');
-    }
-
-    private function getMigrationAttemptId(): string
-    {
-        foreach ($this->arguments as $argument) {
-            if (! \str_starts_with($argument, '--migration-attempt-id=')) {
-                continue;
-            }
-
-            $attemptId = \substr($argument, \strlen('--migration-attempt-id='));
-            if ($attemptId !== '') {
-                return $attemptId;
-            }
-        }
-
-        throw new \InvalidArgumentException('--migration-attempt-id is required for an Appwrite destination');
-    }
-
-    private function getRecoverableOwner(): ?ProvisioningOwner
-    {
-        $migrationId = null;
-        $attemptId = null;
-
-        foreach ($this->arguments as $argument) {
-            if (\str_starts_with($argument, '--recover-migration-id=')) {
-                $value = \substr($argument, \strlen('--recover-migration-id='));
-                $migrationId = $value !== '' ? $value : null;
-            }
-
-            if (\str_starts_with($argument, '--recover-migration-attempt-id=')) {
-                $value = \substr($argument, \strlen('--recover-migration-attempt-id='));
-                $attemptId = $value !== '' ? $value : null;
-            }
-        }
-
-        if ($migrationId === null || $attemptId === null) {
-            return null;
-        }
-
-        return new ProvisioningOwner($migrationId, $attemptId);
     }
 
     public function getDatabase(string $type): Database
@@ -534,8 +441,6 @@ HELP;
                 $this->drawFrame();
             }
         );
-
-        $this->destination->success();
     }
 
     protected function loadEnvironment(): void
@@ -546,12 +451,7 @@ HELP;
 }
 
 if (\realpath($_SERVER['SCRIPT_FILENAME'] ?? '') === __FILE__) {
-    $arguments = $_SERVER['argv'] ?? [];
-    if (\in_array('-h', $arguments, true) || \in_array('--help', $arguments, true)) {
-        echo MigrationCLI::getHelp();
-    } else {
-        $instance = new MigrationCLI($arguments);
-        $instance->start();
-        $instance->drawFrame();
-    }
+    $instance = new MigrationCLI();
+    $instance->start();
+    $instance->drawFrame();
 }

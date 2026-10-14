@@ -9,42 +9,19 @@ use Utopia\Cache\Adapter\Memory as MemoryCache;
 use Utopia\Cache\Cache;
 use Utopia\Database\Adapter\Memory as MemoryAdapter;
 use Utopia\Database\Attribute as UtopiaAttribute;
-use Utopia\Database\Capability;
 use Utopia\Database\Collection;
 use Utopia\Database\Database as UtopiaDatabase;
 use Utopia\Database\DateTime as UtopiaDateTime;
 use Utopia\Database\Document as UtopiaDocument;
 use Utopia\Database\Exception as DatabaseException;
-use Utopia\Database\Exception\Conflict as ConflictException;
 use Utopia\Migration\Destinations\Appwrite as AppwriteDestination;
-use Utopia\Migration\Destinations\Appwrite\ProvisioningOwner;
 use Utopia\Migration\Destinations\OnDuplicate;
 use Utopia\Migration\Exception as MigrationException;
-use Utopia\Migration\Exception\Finalization;
 use Utopia\Migration\Resource;
 use Utopia\Migration\Resources\Database\Database as DatabaseResource;
 use Utopia\Migration\Transfer;
 use Utopia\Query\Schema\ColumnType;
 use Utopia\Tests\Unit\Adapters\MockSource;
-
-class ReplicaMemoryAdapter extends MemoryAdapter
-{
-    /** @return array<Capability> */
-    #[Override]
-    public function capabilities(): array
-    {
-        return [...parent::capabilities(), Capability::TransactionRetries];
-    }
-}
-
-final class StandaloneMemoryAdapter extends ReplicaMemoryAdapter
-{
-    #[Override]
-    public function withTransaction(callable $callback): mixed
-    {
-        return $callback();
-    }
-}
 
 class CountingAppwriteDestination extends AppwriteDestination
 {
@@ -115,127 +92,31 @@ class StrandedProvisioningProjectDatabase extends UtopiaDatabase
     }
 }
 
-final class InterleavingProjectDatabase extends UtopiaDatabase
+final class ReadyFailingProjectDatabase extends UtopiaDatabase
 {
-    public bool $interceptNextDatabasesReload = false;
-
-    /** @var (callable(): void)|null */
-    public $onDatabasesReload = null;
-
-    #[Override]
-    public function getDocument(string $collection, string $id, array $queries = [], bool $forUpdate = false): UtopiaDocument
-    {
-        $document = parent::getDocument($collection, $id, $queries, $forUpdate);
-        if (
-            $this->interceptNextDatabasesReload
-            && $collection === 'databases'
-            && ! $document->isEmpty()
-        ) {
-            $this->interceptNextDatabasesReload = false;
-            ($this->onDatabasesReload)();
-        }
-
-        return $document;
-    }
-}
-
-class RecordingProjectDatabase extends UtopiaDatabase
-{
-    /** @var list<array{operation: string, id: string, document: array<string, mixed>, guarded?: bool}> */
-    public array $databaseWrites = [];
-
-    public bool $failReadyWrite = false;
-
-    public bool $disappearBeforeGuardedWrite = false;
+    /** @var list<string> */
+    public array $readyWrites = [];
 
     /** @var list<string> */
     public array $failReadyWrites = [];
 
-    protected ?\DateTime $guardedAt = null;
-
-    #[Override]
-    public function withRequestTimestamp(?\DateTime $requestTimestamp, callable $callback): mixed
-    {
-        $previous = $this->guardedAt;
-        $this->guardedAt = $requestTimestamp;
-        try {
-            return parent::withRequestTimestamp($requestTimestamp, $callback);
-        } finally {
-            $this->guardedAt = $previous;
-        }
-    }
-
-    #[Override]
-    public function createDocument(string $collection, UtopiaDocument $document): UtopiaDocument
-    {
-        if ($collection === 'databases') {
-            $this->databaseWrites[] = [
-                'operation' => 'create',
-                'id' => $document->getId(),
-                'document' => $document->getArrayCopy(),
-            ];
-        }
-
-        return parent::createDocument($collection, $document);
-    }
-
     #[Override]
     public function updateDocument(string $collection, string $id, UtopiaDocument $document): UtopiaDocument
     {
-        if ($collection === 'databases') {
-            $this->databaseWrites[] = [
-                'operation' => 'update',
-                'id' => $id,
-                'document' => $document->getArrayCopy(),
-                'guarded' => $this->guardedAt !== null,
-            ];
-        }
+        if ($collection === 'databases' && $document->getAttribute('status') === 'ready') {
+            $this->readyWrites[] = $id;
 
-        if (
-            ($this->failReadyWrite || \in_array($id, $this->failReadyWrites, true))
-            && $collection === 'databases'
-            && $document->getAttribute('status') === 'ready'
-        ) {
-            throw new DatabaseException('ready status unavailable');
-        }
-
-        if (
-            $this->disappearBeforeGuardedWrite
-            && $collection === 'databases'
-            && $this->guardedAt !== null
-        ) {
-            $this->disappearBeforeGuardedWrite = false;
-            parent::deleteDocument($collection, $id);
-
-            return new UtopiaDocument();
+            if (\in_array($id, $this->failReadyWrites, true)) {
+                throw new DatabaseException('ready status unavailable');
+            }
         }
 
         return parent::updateDocument($collection, $id, $document);
     }
 }
 
-final class FinalizerInterleavingProjectDatabase extends RecordingProjectDatabase
-{
-    public ?\Closure $beforeFinalizerRead = null;
-
-    #[Override]
-    public function getDocument(string $collection, string $id, array $queries = [], bool $forUpdate = false): UtopiaDocument
-    {
-        $document = parent::getDocument($collection, $id, $queries, $forUpdate);
-        if ($forUpdate && $collection === 'databases' && $this->beforeFinalizerRead !== null) {
-            $callback = $this->beforeFinalizerRead;
-            $this->beforeFinalizerRead = null;
-            $callback();
-        }
-
-        return $document;
-    }
-}
-
 final class AppwriteDatabaseStatusTest extends TestCase
 {
-    private const string LAPSED_UPDATED_AT = '2020-01-01 00:00:00.000';
-
     public function testDatabaseCreationOmitsStatusThroughLegacyAndExplicitEntrypoints(): void
     {
         foreach ([false, true] as $explicit) {
@@ -258,11 +139,7 @@ final class AppwriteDatabaseStatusTest extends TestCase
     public function testDatabaseCreationPreservesLifecycleThroughLegacyAndExplicitEntrypoints(): void
     {
         foreach ([false, true] as $explicit) {
-            $database = new UtopiaDatabase(
-                new StandaloneMemoryAdapter(),
-                new Cache(new MemoryCache()),
-            );
-            $this->createProjectDatabase(withStatus: true, database: $database);
+            $database = $this->createProjectDatabase(withStatus: true);
 
             $destination = $this->runDatabaseTransfer($database, $explicit);
 
@@ -278,523 +155,25 @@ final class AppwriteDatabaseStatusTest extends TestCase
         }
     }
 
-    public function testCreatePersistsProvisioningAndOwnerAtomically(): void
+    public function testReadyFlipAttemptsEveryDatabaseAndReportsEveryFailure(): void
     {
-        $database = new RecordingProjectDatabase(new MemoryAdapter(), new Cache(new MemoryCache()));
-        $this->createProjectDatabase(withStatus: true, database: $database);
-
-        $destination = $this->runDatabaseTransfer(
-            $database,
-            explicit: false,
-            migrationId: 'migration-create',
-            migrationAttemptId: 'attempt-create',
-        );
-
-        $this->assertSame([], $this->errorMessages($destination));
-        $this->assertSame('create', $database->databaseWrites[0]['operation']);
-        $this->assertSame('provisioning', $database->databaseWrites[0]['document']['status']);
-        $this->assertSame('migration-create', $database->databaseWrites[0]['document']['migrationId']);
-        $this->assertSame('attempt-create', $database->databaseWrites[0]['document']['migrationAttemptId']);
-    }
-
-    public function testStandaloneUniqueCreateCannotFinalizeAfterOwnerMismatch(): void
-    {
-        $database = new FinalizerInterleavingProjectDatabase(
-            new StandaloneMemoryAdapter(),
-            new Cache(new MemoryCache()),
-        );
-        $this->createProjectDatabase(withStatus: true, database: $database);
-        $database->beforeFinalizerRead = static function () use ($database): void {
-            $database->updateDocument(
-                'databases',
-                'database',
-                new UtopiaDocument([
-                    'status' => 'provisioning',
-                    'migrationId' => 'migration-successor',
-                    'migrationAttemptId' => 'attempt-successor',
-                ]),
-            );
-        };
-
-        $destination = $this->runDatabaseTransfer(
-            $database,
-            explicit: false,
-            migrationId: 'migration-create',
-            migrationAttemptId: 'attempt-create',
-            success: false,
-        );
-        $failure = $this->finalizeExpectingFailure($database, $destination);
-
-        $terminalWrites = \array_values(\array_filter(
-            $database->databaseWrites,
-            static fn (array $write): bool => \in_array(
-                $write['document']['status'] ?? null,
-                ['ready', 'failed'],
-                true,
-            ),
-        ));
-        $created = $this->getDatabaseDocument($database);
-        $this->assertSame(['Database provisioning owner changed before finalization'], $this->errorMessages($destination));
-        $this->assertSame($destination->getErrors(), $failure->failures);
-        $this->assertCount(1, $terminalWrites);
-        $this->assertTrue($terminalWrites[0]['guarded'] ?? false, 'The terminal write must be pinned to the timestamp read under lock');
-        $this->assertSame('provisioning', $created->getAttribute('status'));
-        $this->assertSame('migration-successor', $created->getAttribute('migrationId'));
-        $this->assertSame('attempt-successor', $created->getAttribute('migrationAttemptId'));
-    }
-
-    public function testAuthorizedOverwritePersistsProvisioningAndNewOwnerAtomically(): void
-    {
-        $database = new RecordingProjectDatabase(new ReplicaMemoryAdapter(), new Cache(new MemoryCache()));
-        $this->createProjectDatabase(withStatus: true, database: $database);
-        $this->seedDatabase(
-            $database,
-            status: 'provisioning',
-            migrationId: 'migration-old',
-            migrationAttemptId: 'attempt-old',
-        );
-        $database->databaseWrites = [];
-
-        $destination = $this->runDatabaseTransfer(
-            $database,
-            explicit: false,
-            migrationId: 'migration-new',
-            migrationAttemptId: 'attempt-new',
-            getRecoverableOwner: static fn (UtopiaDocument $database): ProvisioningOwner => new ProvisioningOwner(
-                'migration-old',
-                'attempt-old',
-            ),
-        );
-
-        $this->assertSame([], $this->errorMessages($destination));
-        $write = $database->databaseWrites[0] ?? null;
-        $this->assertNotNull($write);
-        $this->assertSame('update', $write['operation']);
-        $this->assertSame('provisioning', $write['document']['status']);
-        $this->assertSame('migration-new', $write['document']['migrationId']);
-        $this->assertSame('attempt-new', $write['document']['migrationAttemptId']);
-    }
-
-    public function testActiveProvisioningRefusalRetainsExistingOwner(): void
-    {
-        $database = new RecordingProjectDatabase(new StandaloneMemoryAdapter(), new Cache(new MemoryCache()));
-        $this->createProjectDatabase(withStatus: true, database: $database);
-        $this->seedDatabase(
-            $database,
-            status: 'provisioning',
-            migrationId: 'migration-active',
-            migrationAttemptId: 'attempt-active',
-        );
-        $database->databaseWrites = [];
-
-        $destination = $this->runDatabaseTransfer(
-            $database,
-            explicit: false,
-            migrationId: 'migration-colliding',
-            migrationAttemptId: 'attempt-colliding',
-            getRecoverableOwner: static fn (UtopiaDocument $database): ?ProvisioningOwner => null,
-        );
-
-        $existing = $this->getDatabaseDocument($database);
-        $this->assertNotSame([], $this->errorMessages($destination));
-        $this->assertSame([], $database->databaseWrites);
-        $this->assertSame('provisioning', $existing->getAttribute('status'));
-        $this->assertSame('migration-active', $existing->getAttribute('migrationId'));
-        $this->assertSame('attempt-active', $existing->getAttribute('migrationAttemptId'));
-    }
-
-    public function testMissingOrMismatchedOwnerRefusesRecovery(): void
-    {
-        foreach ([null, 'migration-existing'] as $owner) {
-            $database = new RecordingProjectDatabase(new StandaloneMemoryAdapter(), new Cache(new MemoryCache()));
-            $this->createProjectDatabase(withStatus: true, database: $database);
-            $this->seedDatabase(
-                $database,
-                status: 'provisioning',
-                migrationId: $owner,
-                migrationAttemptId: 'attempt-existing',
-            );
-            $database->databaseWrites = [];
-
-            $destination = $this->runDatabaseTransfer(
-                $database,
-                explicit: false,
-                migrationId: 'migration-new',
-                migrationAttemptId: 'attempt-new',
-                getRecoverableOwner: static fn (UtopiaDocument $database): ProvisioningOwner => new ProvisioningOwner(
-                    'migration-terminal',
-                    'attempt-existing',
-                ),
-            );
-
-            $existing = $this->getDatabaseDocument($database);
-            $this->assertNotSame([], $this->errorMessages($destination));
-            $this->assertSame([], $database->databaseWrites);
-            $this->assertSame('provisioning', $existing->getAttribute('status'));
-            $this->assertSame($owner, $existing->getAttribute('migrationId'));
-            $this->assertSame('attempt-existing', $existing->getAttribute('migrationAttemptId'));
-        }
-    }
-
-    public function testMissingOrMismatchedAttemptRefusesRecovery(): void
-    {
-        foreach ([null, 'attempt-existing'] as $attemptId) {
-            $database = new RecordingProjectDatabase(new StandaloneMemoryAdapter(), new Cache(new MemoryCache()));
-            $this->createProjectDatabase(withStatus: true, database: $database);
-            $this->seedDatabase(
-                $database,
-                status: 'provisioning',
-                migrationId: 'migration-existing',
-                migrationAttemptId: $attemptId,
-            );
-            $database->databaseWrites = [];
-
-            $destination = $this->runDatabaseTransfer(
-                $database,
-                explicit: false,
-                migrationId: 'migration-new',
-                migrationAttemptId: 'attempt-new',
-                getRecoverableOwner: static fn (UtopiaDocument $database): ProvisioningOwner => new ProvisioningOwner(
-                    'migration-existing',
-                    'attempt-terminal',
-                ),
-            );
-
-            $existing = $this->getDatabaseDocument($database);
-            $this->assertNotSame([], $this->errorMessages($destination));
-            $this->assertSame([], $database->databaseWrites);
-            $this->assertSame('provisioning', $existing->getAttribute('status'));
-            $this->assertSame('migration-existing', $existing->getAttribute('migrationId'));
-            $this->assertSame($attemptId, $existing->getAttribute('migrationAttemptId'));
-        }
-    }
-
-    public function testRecoveryRefusesReusingThePriorAttempt(): void
-    {
-        $database = new RecordingProjectDatabase(new StandaloneMemoryAdapter(), new Cache(new MemoryCache()));
-        $this->createProjectDatabase(withStatus: true, database: $database);
-        $this->seedDatabase(
-            $database,
-            status: 'failed',
-            migrationId: 'migration-shared',
-            migrationAttemptId: 'attempt-shared',
-        );
-        $database->databaseWrites = [];
-
-        $destination = $this->runDatabaseTransfer(
-            $database,
-            explicit: false,
-            migrationId: 'migration-shared',
-            migrationAttemptId: 'attempt-shared',
-            getRecoverableOwner: static fn (UtopiaDocument $database): ProvisioningOwner => new ProvisioningOwner(
-                'migration-shared',
-                'attempt-shared',
-            ),
-        );
-
-        $existing = $this->getDatabaseDocument($database);
-        $this->assertNotSame([], $this->errorMessages($destination));
-        $this->assertSame([], $database->databaseWrites);
-        $this->assertSame('failed', $existing->getAttribute('status'));
-        $this->assertSame('migration-shared', $existing->getAttribute('migrationId'));
-        $this->assertSame('attempt-shared', $existing->getAttribute('migrationAttemptId'));
-    }
-
-    public function testSameMigrationFailedRetryRequiresTerminalAttestation(): void
-    {
-        $database = new RecordingProjectDatabase(new ReplicaMemoryAdapter(), new Cache(new MemoryCache()));
-        $this->createProjectDatabase(withStatus: true, database: $database);
-        $this->seedDatabase(
-            $database,
-            status: 'failed',
-            migrationId: 'migration-shared',
-            migrationAttemptId: 'attempt-active',
-        );
-        $database->databaseWrites = [];
-
-        $destination = $this->runDatabaseTransfer(
-            $database,
-            explicit: false,
-            migrationId: 'migration-shared',
-            migrationAttemptId: 'attempt-retry',
-            getRecoverableOwner: static fn (UtopiaDocument $database): ?ProvisioningOwner => null,
-        );
-
-        $existing = $this->getDatabaseDocument($database);
-        $this->assertNotSame([], $this->errorMessages($destination));
-        $this->assertSame([], $database->databaseWrites);
-        $this->assertSame('failed', $existing->getAttribute('status'));
-        $this->assertSame('migration-shared', $existing->getAttribute('migrationId'));
-        $this->assertSame('attempt-active', $existing->getAttribute('migrationAttemptId'));
-    }
-
-    public function testPreExistingRecoveryUsesDocumentVersionCompareAndSet(): void
-    {
-        foreach ([new MemoryAdapter(), new StandaloneMemoryAdapter()] as $adapter) {
-            $database = new RecordingProjectDatabase($adapter, new Cache(new MemoryCache()));
-            $this->createProjectDatabase(withStatus: true, database: $database);
-            $this->seedDatabase(
-                $database,
-                status: 'failed',
-                migrationId: 'migration-old',
-                migrationAttemptId: 'attempt-old',
-            );
-            $database->databaseWrites = [];
-
-            $destination = $this->runDatabaseTransfer(
-                $database,
-                explicit: false,
-                migrationId: 'migration-old',
-                migrationAttemptId: 'attempt-new',
-                getRecoverableOwner: static fn (UtopiaDocument $database): ProvisioningOwner => new ProvisioningOwner(
-                    'migration-old',
-                    'attempt-old',
-                ),
-            );
-
-            $existing = $this->getDatabaseDocument($database);
-            $this->assertSame([], $this->errorMessages($destination));
-            $this->assertNotSame([], $database->databaseWrites);
-            $this->assertSame('ready', $existing->getAttribute('status'));
-            $this->assertSame('migration-old', $existing->getAttribute('migrationId'));
-            $this->assertSame('attempt-new', $existing->getAttribute('migrationAttemptId'));
-        }
-    }
-
-    public function testHealthyOverwriteUsesDocumentVersionCompareAndSet(): void
-    {
-        foreach ([new MemoryAdapter(), new StandaloneMemoryAdapter()] as $adapter) {
-            $database = new RecordingProjectDatabase($adapter, new Cache(new MemoryCache()));
-            $this->createProjectDatabase(withStatus: true, database: $database);
-            $this->seedDatabase(
-                $database,
-                status: 'ready',
-                migrationId: 'migration-old',
-                migrationAttemptId: 'attempt-old',
-            );
-            $database->getAuthorization()->skip(
-                static fn (): UtopiaDocument => $database->updateDocument(
-                    'databases',
-                    'database',
-                    new UtopiaDocument(['name' => 'Old database']),
-                ),
-            );
-            $database->databaseWrites = [];
-
-            $destination = $this->runDatabaseTransfer(
-                $database,
-                explicit: false,
-                migrationId: 'migration-new',
-                migrationAttemptId: 'attempt-new',
-                onDuplicate: OnDuplicate::Overwrite,
-                resourceUpdatedAt: '2099-01-01T00:00:00.000+00:00',
-            );
-
-            $existing = $this->getDatabaseDocument($database);
-            $this->assertSame([], $this->errorMessages($destination));
-            $this->assertNotSame([], $database->databaseWrites);
-            $this->assertSame('ready', $existing->getAttribute('status'));
-            $this->assertSame('migration-new', $existing->getAttribute('migrationId'));
-            $this->assertSame('attempt-new', $existing->getAttribute('migrationAttemptId'));
-        }
-    }
-
-    public function testFailedDatabaseRecoveryRequiresExactTerminalOwner(): void
-    {
-        foreach (
-            [
-                'no attestation' => ['migration-terminal', null],
-                'missing owner' => [null, 'migration-terminal'],
-                'mismatched owner' => ['migration-existing', 'migration-terminal'],
-                'unknown terminal owner' => ['migration-existing', null],
-            ] as [$owner, $recoverableMigrationId]
-        ) {
-            $database = new RecordingProjectDatabase(new StandaloneMemoryAdapter(), new Cache(new MemoryCache()));
-            $this->createProjectDatabase(withStatus: true, database: $database);
-            $this->seedDatabase(
-                $database,
-                status: 'failed',
-                migrationId: $owner,
-                migrationAttemptId: 'attempt-existing',
-            );
-            $database->databaseWrites = [];
-
-            $destination = $this->runDatabaseTransfer(
-                $database,
-                explicit: false,
-                migrationId: 'migration-new',
-                migrationAttemptId: 'attempt-new',
-                getRecoverableOwner: static fn (UtopiaDocument $database): ?ProvisioningOwner => $recoverableMigrationId === null
-                    ? null
-                    : new ProvisioningOwner($recoverableMigrationId, 'attempt-existing'),
-            );
-
-            $existing = $this->getDatabaseDocument($database);
-            $this->assertNotSame([], $this->errorMessages($destination));
-            $this->assertSame([], $database->databaseWrites);
-            $this->assertSame('failed', $existing->getAttribute('status'));
-            $this->assertSame($owner, $existing->getAttribute('migrationId'));
-            $this->assertSame('attempt-existing', $existing->getAttribute('migrationAttemptId'));
-        }
-    }
-
-    public function testReadyWriteFailureRetainsProvisioningOwner(): void
-    {
-        $database = new RecordingProjectDatabase(new MemoryAdapter(), new Cache(new MemoryCache()));
-        $this->createProjectDatabase(withStatus: true, database: $database);
-        $database->failReadyWrite = true;
-
-        $destination = $this->runDatabaseTransfer(
-            $database,
-            explicit: false,
-            migrationId: 'migration-ready-failure',
-            migrationAttemptId: 'attempt-ready-failure',
-            success: false,
-        );
-        $failure = $this->finalizeExpectingFailure($database, $destination);
-
-        $created = $this->getDatabaseDocument($database);
-        $errors = $destination->getErrors();
-        $this->assertCount(1, $errors);
-        $this->assertSame($errors, $failure->failures);
-        $this->assertSame(Resource::TYPE_DATABASE, $errors[0]->getResourceName());
-        $this->assertSame(Transfer::GROUP_DATABASES, $errors[0]->getResourceGroup());
-        $this->assertSame('database', $errors[0]->getResourceId());
-        $this->assertSame('ready status unavailable', $errors[0]->getMessage());
-        $this->assertInstanceOf(DatabaseException::class, $errors[0]->getPrevious());
-        $this->assertSame('provisioning', $created->getAttribute('status'));
-        $this->assertSame('migration-ready-failure', $created->getAttribute('migrationId'));
-        $this->assertSame('attempt-ready-failure', $created->getAttribute('migrationAttemptId'));
-    }
-
-    public function testDatabaseDisappearanceBeforeReadyWriteLosesFinalizationOwnership(): void
-    {
-        $database = new RecordingProjectDatabase(new MemoryAdapter(), new Cache(new MemoryCache()));
-        $this->createProjectDatabase(withStatus: true, database: $database);
-        $database->disappearBeforeGuardedWrite = true;
-
-        $destination = $this->runDatabaseTransfer(
-            $database,
-            explicit: false,
-            migrationId: 'migration-disappearing-ready',
-            migrationAttemptId: 'attempt-disappearing-ready',
-            success: false,
-        );
-        $failure = $this->finalizeExpectingFailure($database, $destination);
-
-        $readyWrites = \array_values(\array_filter(
-            $database->databaseWrites,
-            static fn (array $write): bool => ($write['document']['status'] ?? null) === 'ready',
-        ));
-
-        $this->assertSame(['Database provisioning owner changed before finalization'], $this->errorMessages($destination));
-        $this->assertSame($destination->getErrors(), $failure->failures);
-        $this->assertCount(1, $readyWrites);
-        $this->assertTrue($readyWrites[0]['guarded'] ?? false, 'The ready write must be pinned to the timestamp read under lock');
-        $this->assertTrue($this->getDatabaseDocument($database)->isEmpty());
-    }
-
-    public function testDatabaseDisappearanceBeforeRecoveryClaimLosesOwnership(): void
-    {
-        $database = new RecordingProjectDatabase(new StandaloneMemoryAdapter(), new Cache(new MemoryCache()));
-        $this->createProjectDatabase(withStatus: true, database: $database);
-        $seeded = $this->seedDatabase(
-            $database,
-            status: 'failed',
-            migrationId: 'migration-old',
-            migrationAttemptId: 'attempt-old',
-        );
-        $database->databaseWrites = [];
-        $database->disappearBeforeGuardedWrite = true;
-
-        $destination = $this->runDatabaseTransfer(
-            $database,
-            explicit: false,
-            migrationId: 'migration-new',
-            migrationAttemptId: 'attempt-new',
-            getRecoverableOwner: static fn (UtopiaDocument $database): ProvisioningOwner => new ProvisioningOwner(
-                'migration-old',
-                'attempt-old',
-            ),
-            success: false,
-        );
-
-        $claimWrites = \array_values(\array_filter(
-            $database->databaseWrites,
-            static fn (array $write): bool => ($write['document']['status'] ?? null) === 'provisioning',
-        ));
-
-        $this->assertSame(
-            ['Database database provisioning owner changed before it could be claimed'],
-            $this->errorMessages($destination),
-        );
-        $this->assertCount(1, $claimWrites);
-        $this->assertSame(
-            [true],
-            \array_map(
-                static fn (array $write): bool => $write['guarded'] ?? false,
-                $claimWrites,
-            ),
-        );
-        $this->assertTrue($this->getDatabaseDocument($database)->isEmpty());
-        $this->assertNull($database->findCollection('database_'.$seeded->getSequence()));
-    }
-
-    public function testDatabaseFinalizersRunOnlyAfterSuccess(): void
-    {
-        $database = new RecordingProjectDatabase(new MemoryAdapter(), new Cache(new MemoryCache()));
-        $this->createProjectDatabase(withStatus: true, database: $database);
-
-        $destination = $this->runDatabaseTransfer(
-            $database,
-            explicit: false,
-            migrationId: 'migration-finalizing',
-            migrationAttemptId: 'attempt-finalizing',
-            success: false,
-        );
-
-        $provisioning = $this->getDatabaseDocument($database);
-        $this->assertSame('provisioning', $provisioning->getAttribute('status'));
-        $this->assertSame('migration-finalizing', $provisioning->getAttribute('migrationId'));
-        $this->assertSame('attempt-finalizing', $provisioning->getAttribute('migrationAttemptId'));
-
-        $database->getAuthorization()->skip($destination->success(...));
-
-        $this->assertSame('ready', $this->getDatabaseDocument($database)->getAttribute('status'));
-    }
-
-    public function testReadyFinalizationAttemptsEveryDatabaseAndReportsEveryFailure(): void
-    {
-        $database = new RecordingProjectDatabase(new MemoryAdapter(), new Cache(new MemoryCache()));
+        $database = new ReadyFailingProjectDatabase(new MemoryAdapter(), new Cache(new MemoryCache()));
         $this->createProjectDatabase(withStatus: true, database: $database);
         $database->failReadyWrites = ['database-first', 'database-third'];
 
         $destination = $this->runDatabaseTransfer(
             $database,
             explicit: false,
-            migrationId: 'migration-finalizers',
-            migrationAttemptId: 'attempt-finalizers',
             databaseIds: ['database-first', 'database-second', 'database-third'],
-            success: false,
         );
-        $failure = $this->finalizeExpectingFailure($database, $destination);
 
-        $readyAttempts = \array_values(\array_map(
-            static fn (array $write): string => $write['id'],
-            \array_filter(
-                $database->databaseWrites,
-                static fn (array $write): bool => ($write['document']['status'] ?? null) === 'ready',
-            ),
-        ));
-        $errors = $destination->getErrors();
         $errorIds = \array_map(
             static fn (MigrationException $error): string => $error->getResourceId(),
-            $errors,
+            $destination->getErrors(),
         );
 
-        $this->assertSame(['database-first', 'database-second', 'database-third'], $readyAttempts);
+        $this->assertSame(['database-first', 'database-second', 'database-third'], $database->readyWrites);
         $this->assertSame(['database-first', 'database-third'], $errorIds);
-        $this->assertSame($errors, $failure->failures);
         $this->assertSame('provisioning', $this->getDatabaseDocument($database, 'database-first')->getAttribute('status'));
         $this->assertSame('ready', $this->getDatabaseDocument($database, 'database-second')->getAttribute('status'));
         $this->assertSame('provisioning', $this->getDatabaseDocument($database, 'database-third')->getAttribute('status'));
@@ -803,7 +182,7 @@ final class AppwriteDatabaseStatusTest extends TestCase
     public function testReloadFailureMarksTheDatabaseFailed(): void
     {
         $database = new ReloadFailingProjectDatabase(
-            new StandaloneMemoryAdapter(),
+            new MemoryAdapter(),
             new Cache(new MemoryCache()),
         );
         $this->createProjectDatabase(withStatus: true, database: $database);
@@ -815,8 +194,6 @@ final class AppwriteDatabaseStatusTest extends TestCase
         $this->assertNotSame([], $this->errorMessages($destination));
         $this->assertStringContainsString('Failed to reload created database', $this->errorMessages($destination)[0]);
         $this->assertSame('failed', $created->getAttribute('status'));
-        $this->assertSame('migration-current', $created->getAttribute('migrationId'));
-        $this->assertSame('attempt-current', $created->getAttribute('migrationAttemptId'));
         $this->assertNull(
             $database->findCollection('database_'.$created->getSequence()),
             'A reload failure must not leave a backing collection behind the metadata document',
@@ -826,7 +203,7 @@ final class AppwriteDatabaseStatusTest extends TestCase
     public function testFailedDatabaseRetrySucceedsUnderOnDuplicateFail(): void
     {
         $database = new ReloadFailingProjectDatabase(
-            new ReplicaMemoryAdapter(),
+            new MemoryAdapter(),
             new Cache(new MemoryCache()),
         );
         $this->createProjectDatabase(withStatus: true, database: $database);
@@ -840,23 +217,12 @@ final class AppwriteDatabaseStatusTest extends TestCase
             $database->findCollection('database_'.$failed->getSequence()),
         );
 
-        $destination = $this->runDatabaseTransfer(
-            $database,
-            explicit: false,
-            migrationId: 'migration-current',
-            migrationAttemptId: 'attempt-recovery',
-            getRecoverableOwner: static fn (UtopiaDocument $existing): ProvisioningOwner => new ProvisioningOwner(
-                'migration-current',
-                'attempt-current',
-            ),
-        );
+        $destination = $this->runDatabaseTransfer($database, explicit: false);
 
         $recovered = $this->getDatabaseDocument($database);
         $this->assertSame([], $this->errorMessages($destination));
         $this->assertSame('ready', $recovered->getAttribute('status'));
         $this->assertSame($failed->getSequence(), $recovered->getSequence());
-        $this->assertSame('migration-current', $recovered->getAttribute('migrationId'));
-        $this->assertSame('attempt-recovery', $recovered->getAttribute('migrationAttemptId'));
         $this->assertNotNull(
             $database->findCollection('database_'.$recovered->getSequence()),
             'A Fail retry must recreate the backing collection for a previously failed database',
@@ -866,7 +232,7 @@ final class AppwriteDatabaseStatusTest extends TestCase
     public function testProvisioningDatabaseRetrySucceedsUnderOnDuplicateFail(): void
     {
         $database = new StrandedProvisioningProjectDatabase(
-            new ReplicaMemoryAdapter(),
+            new MemoryAdapter(),
             new Cache(new MemoryCache()),
         );
         $this->createProjectDatabase(withStatus: true, database: $database);
@@ -887,603 +253,52 @@ final class AppwriteDatabaseStatusTest extends TestCase
         );
         $database->failDatabasesWrites = false;
 
-        $destination = $this->runDatabaseTransfer(
-            $database,
-            explicit: false,
-            migrationId: 'migration-recovery',
-            migrationAttemptId: 'attempt-recovery',
-            getRecoverableOwner: static fn (UtopiaDocument $existing): ProvisioningOwner => new ProvisioningOwner(
-                'migration-current',
-                'attempt-current',
-            ),
-        );
+        $destination = $this->runDatabaseTransfer($database, explicit: false);
 
         $recovered = $this->getDatabaseDocument($database);
         $this->assertSame([], $this->errorMessages($destination));
         $this->assertSame('ready', $recovered->getAttribute('status'));
         $this->assertSame($stranded->getSequence(), $recovered->getSequence());
-        $this->assertSame('migration-recovery', $recovered->getAttribute('migrationId'));
-        $this->assertSame('attempt-recovery', $recovered->getAttribute('migrationAttemptId'));
         $this->assertNotNull(
             $database->findCollection('database_'.$recovered->getSequence()),
             'A Fail retry must recover a database stranded in provisioning, not keep colliding with its metadata id',
         );
     }
 
-    public function testConcurrentMigrationDoesNotRecoverAnActivelyProvisioningDatabase(): void
-    {
-        $database = new InterleavingProjectDatabase(
-            new MemoryAdapter(),
-            new Cache(new MemoryCache()),
-        );
-        $this->createProjectDatabase(withStatus: true, database: $database);
-
-        $second = null;
-        $statusDuringOverlap = null;
-        $collectionExistsDuringOverlap = null;
-        $database->onDatabasesReload = function () use (
-            $database,
-            &$second,
-            &$statusDuringOverlap,
-            &$collectionExistsDuringOverlap,
-        ): void {
-            $second = $this->runDatabaseTransfer(
-                $database,
-                explicit: false,
-                migrationId: 'migration-second',
-                migrationAttemptId: 'attempt-second',
-            );
-            $provisioning = $this->getDatabaseDocument($database);
-            $statusDuringOverlap = $provisioning->getAttribute('status');
-            $collectionExistsDuringOverlap = $database
-                ->findCollection('database_'.$provisioning->getSequence()) !== null;
-        };
-        $database->interceptNextDatabasesReload = true;
-
-        $first = $this->runDatabaseTransfer(
-            $database,
-            explicit: false,
-            migrationId: 'migration-first',
-            migrationAttemptId: 'attempt-first',
-        );
-
-        $created = $this->getDatabaseDocument($database);
-        $this->assertSame([], $this->errorMessages($first));
-        $this->assertInstanceOf(CountingAppwriteDestination::class, $second);
-        $this->assertNotSame([], $this->errorMessages($second));
-        $this->assertStringContainsString('terminal-owner attestation', $this->errorMessages($second)[0]);
-        $this->assertSame('provisioning', $statusDuringOverlap);
-        $this->assertFalse($collectionExistsDuringOverlap);
-        $this->assertSame('ready', $created->getAttribute('status'));
-        $this->assertSame('migration-first', $created->getAttribute('migrationId'));
-        $this->assertSame('attempt-first', $created->getAttribute('migrationAttemptId'));
-        $this->assertNotNull($database->findCollection('database_'.$created->getSequence()));
-    }
-
-    public function testAuthorizedOverwriteReplacesTerminalOwner(): void
-    {
-        $database = new RecordingProjectDatabase(new ReplicaMemoryAdapter(), new Cache(new MemoryCache()));
-        $this->createProjectDatabase(withStatus: true, database: $database);
-        $this->seedDatabase(
-            $database,
-            status: 'provisioning',
-            migrationId: 'migration-terminal',
-            migrationAttemptId: 'attempt-terminal',
-        );
-
-        $destination = $this->runDatabaseTransfer(
-            $database,
-            explicit: false,
-            migrationId: 'migration-successor',
-            migrationAttemptId: 'attempt-successor',
-            getRecoverableOwner: static fn (UtopiaDocument $database): ProvisioningOwner => new ProvisioningOwner(
-                'migration-terminal',
-                'attempt-terminal',
-            ),
-        );
-
-        $recovered = $this->getDatabaseDocument($database);
-        $this->assertSame([], $this->errorMessages($destination));
-        $this->assertSame('ready', $recovered->getAttribute('status'));
-        $this->assertSame('migration-successor', $recovered->getAttribute('migrationId'));
-        $this->assertSame('attempt-successor', $recovered->getAttribute('migrationAttemptId'));
-    }
-
-    /** @return array<string, array{bool}> */
-    public static function unknownAttributePolicies(): array
+    /** @return array<string, array{OnDuplicate, string}> */
+    public static function duplicatePolicies(): array
     {
         return [
-            'unknown attributes rejected' => [false],
-            'unknown attributes dropped' => [true],
+            'fail' => [OnDuplicate::Fail, ''],
+            'skip' => [OnDuplicate::Skip, ''],
+            'overwrite with an older source' => [OnDuplicate::Overwrite, '2000-01-01T00:00:00.000+00:00'],
+            'overwrite with a newer source' => [OnDuplicate::Overwrite, '2099-01-01T00:00:00.000+00:00'],
         ];
     }
 
-    #[DataProvider('unknownAttributePolicies')]
-    public function testStatusOnlySchemaImportsWithoutProvisioningOwner(bool $dropUnknownAttributes): void
+    #[DataProvider('duplicatePolicies')]
+    public function testIncompleteDatabasesAreRecoveredImmediately(OnDuplicate $onDuplicate, string $resourceUpdatedAt): void
     {
-        $database = new RecordingProjectDatabase(new MemoryAdapter(), new Cache(new MemoryCache()));
-        $database->setDropUnknownAttributes($dropUnknownAttributes);
-        $this->createStatusOnlyProjectDatabase($database);
-
-        $destination = $this->runDatabaseTransfer($database, explicit: false);
-
-        $created = $this->getDatabaseDocument($database);
-        $this->assertSame([], $this->errorMessages($destination));
-        $this->assertSame('create', $database->databaseWrites[0]['operation']);
-        $this->assertSame('provisioning', $database->databaseWrites[0]['document']['status']);
-        $this->assertArrayNotHasKey('migrationId', $database->databaseWrites[0]['document']);
-        $this->assertArrayNotHasKey('migrationAttemptId', $database->databaseWrites[0]['document']);
-        $this->assertSame('ready', $created->getAttribute('status'));
-        $this->assertNotNull($database->findCollection('database_'.$created->getSequence()));
-    }
-
-    public function testStatusOnlySchemaRecoversIncompleteDatabasesWithoutOwner(): void
-    {
-        $database = new RecordingProjectDatabase(new ReplicaMemoryAdapter(), new Cache(new MemoryCache()));
-        $this->createStatusOnlyProjectDatabase($database);
-        $this->seedLegacyDatabase($database, 'database-provisioning', 'provisioning', withCollection: true);
-        $this->seedLegacyDatabase($database, 'database-failed', 'failed');
-        $database->databaseWrites = [];
+        $database = $this->createProjectDatabase(withStatus: true);
+        $provisioning = $this->seedIncompleteDatabase($database, 'database-provisioning', 'provisioning', name: 'Incomplete database', withCollection: true, updatedAt: $this->secondsAgo(1));
+        $failed = $this->seedIncompleteDatabase($database, 'database-failed', 'failed', name: 'Incomplete database', updatedAt: $this->secondsAgo(1));
 
         $destination = $this->runDatabaseTransfer(
             $database,
             explicit: false,
             databaseIds: ['database-provisioning', 'database-failed'],
-        );
-
-        $this->assertSame([], $this->errorMessages($destination));
-        foreach (['database-provisioning', 'database-failed'] as $databaseId) {
-            $recovered = $this->getDatabaseDocument($database, $databaseId);
-            $this->assertSame('ready', $recovered->getAttribute('status'), $databaseId);
-            $this->assertNotNull($database->findCollection('database_'.$recovered->getSequence()), $databaseId);
-        }
-        $this->assertNotSame([], $database->databaseWrites);
-        foreach ($database->databaseWrites as $write) {
-            $this->assertArrayNotHasKey('migrationId', $write['document']);
-            $this->assertArrayNotHasKey('migrationAttemptId', $write['document']);
-        }
-    }
-
-    /** @return array<string, array{OnDuplicate, string, string}> */
-    public static function legacyProvisioningResolutions(): array
-    {
-        return [
-            'fail keeps the destination' => [OnDuplicate::Fail, '', 'Legacy database'],
-            'skip keeps the destination' => [OnDuplicate::Skip, '', 'Legacy database'],
-            'overwrite with an older source keeps the destination' => [OnDuplicate::Overwrite, '2000-01-01T00:00:00.000+00:00', 'Legacy database'],
-            'overwrite with a newer source replaces the destination' => [OnDuplicate::Overwrite, '2099-01-01T00:00:00.000+00:00', 'Database'],
-        ];
-    }
-
-    #[DataProvider('legacyProvisioningResolutions')]
-    public function testLegacyProvisioningDatabaseIsRecoveredAndClaimed(
-        OnDuplicate $onDuplicate,
-        string $resourceUpdatedAt,
-        string $expectedName,
-    ): void {
-        $database = new RecordingProjectDatabase(new ReplicaMemoryAdapter(), new Cache(new MemoryCache()));
-        $this->createProjectDatabase(withStatus: true, database: $database);
-        $seeded = $this->seedLegacyDatabase(
-            $database,
-            'database',
-            'provisioning',
-            name: 'Legacy database',
-            withCollection: true,
-        );
-
-        $destination = $this->runDatabaseTransfer(
-            $database,
-            explicit: false,
             onDuplicate: $onDuplicate,
             resourceUpdatedAt: $resourceUpdatedAt,
         );
 
-        $recovered = $this->getDatabaseDocument($database);
         $this->assertSame([], $this->errorMessages($destination));
-        $this->assertSame('ready', $recovered->getAttribute('status'));
-        $this->assertSame($expectedName, $recovered->getAttribute('name'));
-        $this->assertSame($seeded->getSequence(), $recovered->getSequence());
-        $this->assertSame('migration-current', $recovered->getAttribute('migrationId'));
-        $this->assertSame('attempt-current', $recovered->getAttribute('migrationAttemptId'));
-        $this->assertNotNull($database->findCollection('database_'.$recovered->getSequence()));
-    }
-
-    public function testLegacyProvisioningDatabaseMissingItsCollectionIsRecreated(): void
-    {
-        $database = new RecordingProjectDatabase(new ReplicaMemoryAdapter(), new Cache(new MemoryCache()));
-        $this->createProjectDatabase(withStatus: true, database: $database);
-        $seeded = $this->seedLegacyDatabase($database, 'database', 'provisioning');
-
-        $destination = $this->runDatabaseTransfer($database, explicit: false);
-
-        $recovered = $this->getDatabaseDocument($database);
-        $this->assertSame([], $this->errorMessages($destination));
-        $this->assertSame('ready', $recovered->getAttribute('status'));
-        $this->assertSame($seeded->getSequence(), $recovered->getSequence());
-        $this->assertSame('migration-current', $recovered->getAttribute('migrationId'));
-        $this->assertSame('attempt-current', $recovered->getAttribute('migrationAttemptId'));
-        $this->assertNotNull(
-            $database->findCollection('database_'.$recovered->getSequence()),
-            'A recovered database must never be marked ready without its backing collection',
-        );
-    }
-
-    public function testLegacyFailedDatabaseIsOverwrittenAndClaimed(): void
-    {
-        $database = new RecordingProjectDatabase(new ReplicaMemoryAdapter(), new Cache(new MemoryCache()));
-        $this->createProjectDatabase(withStatus: true, database: $database);
-        $seeded = $this->seedLegacyDatabase($database, 'database', 'failed', name: 'Legacy database');
-
-        $destination = $this->runDatabaseTransfer($database, explicit: false);
-
-        $recovered = $this->getDatabaseDocument($database);
-        $this->assertSame([], $this->errorMessages($destination));
-        $this->assertSame('ready', $recovered->getAttribute('status'));
-        $this->assertSame('Database', $recovered->getAttribute('name'));
-        $this->assertSame($seeded->getSequence(), $recovered->getSequence());
-        $this->assertSame('migration-current', $recovered->getAttribute('migrationId'));
-        $this->assertSame('attempt-current', $recovered->getAttribute('migrationAttemptId'));
-        $this->assertNotNull($database->findCollection('database_'.$recovered->getSequence()));
-    }
-
-    public function testOwnedDatabaseWithoutAttestationIsRefusedWhileLegacyDatabaseRecovers(): void
-    {
-        $database = new RecordingProjectDatabase(new ReplicaMemoryAdapter(), new Cache(new MemoryCache()));
-        $this->createProjectDatabase(withStatus: true, database: $database);
-        $this->seedDatabase(
-            $database,
-            status: 'provisioning',
-            migrationId: 'migration-active',
-            migrationAttemptId: 'attempt-active',
-        );
-        $this->seedLegacyDatabase($database, 'database-legacy', 'failed');
-
-        $destination = $this->runDatabaseTransfer(
-            $database,
-            explicit: false,
-            databaseIds: ['database', 'database-legacy'],
-        );
-
-        $owned = $this->getDatabaseDocument($database);
-        $legacy = $this->getDatabaseDocument($database, 'database-legacy');
-        $this->assertSame(
-            ['Database database recovery requires exact terminal-owner attestation and a fresh attempt'],
-            $this->errorMessages($destination),
-        );
-        $this->assertSame('provisioning', $owned->getAttribute('status'));
-        $this->assertSame('migration-active', $owned->getAttribute('migrationId'));
-        $this->assertSame('attempt-active', $owned->getAttribute('migrationAttemptId'));
-        $this->assertSame('ready', $legacy->getAttribute('status'));
-        $this->assertSame('migration-current', $legacy->getAttribute('migrationId'));
-        $this->assertSame('attempt-current', $legacy->getAttribute('migrationAttemptId'));
-    }
-
-    public function testLegacyRecoveryYieldsToAClaimThatLandsFirst(): void
-    {
-        $database = new InterleavingProjectDatabase(new MemoryAdapter(), new Cache(new MemoryCache()));
-        $this->createProjectDatabase(withStatus: true, database: $database);
-        $this->seedLegacyDatabase($database, 'database', 'failed');
-        $database->onDatabasesReload = static function () use ($database): void {
-            $database->updateDocument('databases', 'database', new UtopiaDocument([
-                'status' => 'provisioning',
-                'migrationId' => 'migration-rival',
-                'migrationAttemptId' => 'attempt-rival',
-            ]));
-        };
-        $database->interceptNextDatabasesReload = true;
-
-        $destination = $this->runDatabaseTransfer($database, explicit: false);
-
-        $claimed = $this->getDatabaseDocument($database);
-        $this->assertSame(
-            ['Database database recovery owner changed before it could be claimed'],
-            $this->errorMessages($destination),
-        );
-        $this->assertSame('provisioning', $claimed->getAttribute('status'));
-        $this->assertSame('migration-rival', $claimed->getAttribute('migrationId'));
-        $this->assertSame('attempt-rival', $claimed->getAttribute('migrationAttemptId'));
-    }
-
-    public function testRecoveryClaimUnderPreservedDatesStillMovesTheTimestampForward(): void
-    {
-        $database = new class (new ReplicaMemoryAdapter(), new Cache(new MemoryCache())) extends RecordingProjectDatabase {
-            #[Override]
-            public function setPreserveDates(bool $preserve): static
-            {
-                return parent::setPreserveDates(true);
-            }
-        };
-        $this->createProjectDatabase(withStatus: true, database: $database);
-        $seeded = $this->seedDatabase(
-            $database,
-            status: 'failed',
-            migrationId: 'migration-old',
-            migrationAttemptId: 'attempt-old',
-        );
-        $readAt = (string) $seeded->getUpdatedAt();
-
-        $destination = $this->runDatabaseTransfer(
-            $database,
-            explicit: false,
-            migrationId: 'migration-new',
-            migrationAttemptId: 'attempt-new',
-            getRecoverableOwner: static fn (UtopiaDocument $database): ProvisioningOwner => new ProvisioningOwner(
-                'migration-old',
-                'attempt-old',
-            ),
-            resourceUpdatedAt: '2000-01-01T00:00:00.000+00:00',
-            success: false,
-        );
-
-        $claimed = $this->getDatabaseDocument($database);
-        $this->assertSame([], $this->errorMessages($destination));
-        $this->assertSame('attempt-new', $claimed->getAttribute('migrationAttemptId'));
-        $this->assertGreaterThan(
-            new \DateTime($readAt),
-            new \DateTime((string) $claimed->getUpdatedAt()),
-            'The claim must move $updatedAt forward whatever the preserveDates setting',
-        );
-
-        $this->expectException(ConflictException::class);
-        $database->getAuthorization()->skip(
-            static fn (): UtopiaDocument => $database->withRequestTimestamp(
-                new \DateTime($readAt),
-                static fn (): UtopiaDocument => $database->updateDocument(
-                    'databases',
-                    'database',
-                    new UtopiaDocument(['status' => 'ready']),
-                ),
-            ),
-        );
-    }
-
-    public function testGuardedWriteThatDoesNotAdvanceTheTimestampIsRolledBack(): void
-    {
-        $database = new class (new ReplicaMemoryAdapter(), new Cache(new MemoryCache())) extends RecordingProjectDatabase {
-            #[Override]
-            public function updateDocument(string $collection, string $id, UtopiaDocument $document): UtopiaDocument
-            {
-                if ($collection !== 'databases' || $this->guardedAt === null) {
-                    return parent::updateDocument($collection, $id, $document);
-                }
-
-                return $this->withPreserveDates(
-                    true,
-                    fn (): UtopiaDocument => parent::updateDocument(
-                        $collection,
-                        $id,
-                        $document->setAttribute('$updatedAt', '2000-01-01T00:00:00.000+00:00'),
-                    ),
-                );
-            }
-        };
-        $this->createProjectDatabase(withStatus: true, database: $database);
-        $this->seedDatabase(
-            $database,
-            status: 'failed',
-            migrationId: 'migration-old',
-            migrationAttemptId: 'attempt-old',
-        );
-
-        $destination = $this->runDatabaseTransfer(
-            $database,
-            explicit: false,
-            migrationId: 'migration-new',
-            migrationAttemptId: 'attempt-new',
-            getRecoverableOwner: static fn (UtopiaDocument $database): ProvisioningOwner => new ProvisioningOwner(
-                'migration-old',
-                'attempt-old',
-            ),
-        );
-
-        $existing = $this->getDatabaseDocument($database);
-        $this->assertSame(
-            ['Database database provisioning write did not move its update timestamp forward'],
-            $this->errorMessages($destination),
-        );
-        $this->assertSame('failed', $existing->getAttribute('status'));
-        $this->assertSame('migration-old', $existing->getAttribute('migrationId'));
-        $this->assertSame('attempt-old', $existing->getAttribute('migrationAttemptId'));
-    }
-
-
-    public function testOwnerlessProvisioningDatabaseWithinTheLeaseIsNotRecovered(): void
-    {
-        $database = new RecordingProjectDatabase(new ReplicaMemoryAdapter(), new Cache(new MemoryCache()));
-        $this->createStatusOnlyProjectDatabase($database);
-        $seeded = $this->seedLegacyDatabase(
-            $database,
-            'database',
-            'provisioning',
-            name: 'Provisioning database',
-            withCollection: true,
-            updatedAt: $this->secondsAgo(5),
-        );
-        $database->databaseWrites = [];
-
-        $destination = $this->runDatabaseTransfer($database, explicit: false);
-
-        $untouched = $this->getDatabaseDocument($database);
-        $this->assertSame(
-            ['Database database names no owner and another migration may still be provisioning it; it becomes recoverable after 86400 seconds without an update'],
-            $this->errorMessages($destination),
-        );
-        $this->assertSame('provisioning', $untouched->getAttribute('status'));
-        $this->assertSame('Provisioning database', $untouched->getAttribute('name'));
-        $this->assertSame($seeded->getUpdatedAt(), $untouched->getUpdatedAt());
-        $this->assertSame([], $database->databaseWrites, 'A refused database must not be written, and success() must flip nothing');
-    }
-
-    public function testOwnerlessFailedDatabaseWithinTheLeaseIsNotOverwritten(): void
-    {
-        $database = new RecordingProjectDatabase(new ReplicaMemoryAdapter(), new Cache(new MemoryCache()));
-        $this->createStatusOnlyProjectDatabase($database);
-        $seeded = $this->seedLegacyDatabase(
-            $database,
-            'database',
-            'failed',
-            name: 'Failed database',
-            updatedAt: $this->secondsAgo(5),
-        );
-        $database->databaseWrites = [];
-
-        $destination = $this->runDatabaseTransfer($database, explicit: false);
-
-        $untouched = $this->getDatabaseDocument($database);
-        $this->assertSame(
-            ['Database database names no owner and another migration may still be provisioning it; it becomes recoverable after 86400 seconds without an update'],
-            $this->errorMessages($destination),
-        );
-        $this->assertSame('failed', $untouched->getAttribute('status'));
-        $this->assertSame('Failed database', $untouched->getAttribute('name'));
-        $this->assertSame($seeded->getUpdatedAt(), $untouched->getUpdatedAt());
-        $this->assertSame([], $database->databaseWrites, 'A refused database must not be overwritten');
-    }
-
-    public function testOwnerlessDatabasesPastTheLeaseAreRecovered(): void
-    {
-        $database = new RecordingProjectDatabase(new ReplicaMemoryAdapter(), new Cache(new MemoryCache()));
-        $this->createStatusOnlyProjectDatabase($database);
-        $this->seedLegacyDatabase(
-            $database,
-            'database-provisioning',
-            'provisioning',
-            withCollection: true,
-            updatedAt: $this->secondsAgo(AppwriteDestination::DEFAULT_PROVISIONING_LEASE + 1),
-        );
-        $this->seedLegacyDatabase(
-            $database,
-            'database-failed',
-            'failed',
-            updatedAt: $this->secondsAgo(AppwriteDestination::DEFAULT_PROVISIONING_LEASE + 1),
-        );
-
-        $destination = $this->runDatabaseTransfer(
-            $database,
-            explicit: false,
-            databaseIds: ['database-provisioning', 'database-failed'],
-        );
-
-        $this->assertSame([], $this->errorMessages($destination));
-        foreach (['database-provisioning', 'database-failed'] as $databaseId) {
-            $recovered = $this->getDatabaseDocument($database, $databaseId);
-            $this->assertSame('ready', $recovered->getAttribute('status'), $databaseId);
-            $this->assertNotNull($database->findCollection('database_'.$recovered->getSequence()), $databaseId);
+        foreach ([$provisioning, $failed] as $seeded) {
+            $recovered = $this->getDatabaseDocument($database, $seeded->getId());
+            $this->assertSame('ready', $recovered->getAttribute('status'), $seeded->getId());
+            $this->assertSame('Database', $recovered->getAttribute('name'), $seeded->getId().' must be overwritten from the source whatever the duplicate policy');
+            $this->assertSame($seeded->getSequence(), $recovered->getSequence(), $seeded->getId());
+            $this->assertNotNull($database->findCollection('database_'.$recovered->getSequence()), $seeded->getId());
         }
-    }
-
-    public function testTheOwnerlessProvisioningClaimRestartsTheLease(): void
-    {
-        $database = new RecordingProjectDatabase(new ReplicaMemoryAdapter(), new Cache(new MemoryCache()));
-        $this->createStatusOnlyProjectDatabase($database);
-        $seeded = $this->seedLegacyDatabase(
-            $database,
-            'database',
-            'provisioning',
-            withCollection: true,
-            updatedAt: $this->secondsAgo(AppwriteDestination::DEFAULT_PROVISIONING_LEASE + 1),
-        );
-
-        $claiming = $this->runDatabaseTransfer($database, explicit: false, success: false);
-
-        $claimed = $this->getDatabaseDocument($database);
-        $this->assertSame([], $this->errorMessages($claiming));
-        $this->assertSame('provisioning', $claimed->getAttribute('status'));
-        $this->assertGreaterThan(
-            new \DateTime((string) $seeded->getUpdatedAt()),
-            new \DateTime((string) $claimed->getUpdatedAt()),
-            'The claim must restart the lease on the row it recovered',
-        );
-
-        $second = $this->runDatabaseTransfer($database, explicit: false, success: false);
-
-        $refused = $this->getDatabaseDocument($database);
-        $this->assertSame(
-            ['Database database names no owner and another migration may still be provisioning it; it becomes recoverable after 86400 seconds without an update'],
-            $this->errorMessages($second),
-            'A migration arriving inside the restarted lease must not recover the same database',
-        );
-        $this->assertSame('provisioning', $refused->getAttribute('status'));
-        $this->assertSame((string) $claimed->getUpdatedAt(), (string) $refused->getUpdatedAt());
-    }
-
-    public function testProvisioningLeaseMovesTheOwnerlessRecoveryBoundary(): void
-    {
-        $database = new RecordingProjectDatabase(new ReplicaMemoryAdapter(), new Cache(new MemoryCache()));
-        $this->createStatusOnlyProjectDatabase($database);
-        $this->seedLegacyDatabase($database, 'database-lapsed', 'provisioning', withCollection: true, updatedAt: $this->secondsAgo(61));
-        $this->seedLegacyDatabase($database, 'database-live', 'provisioning', withCollection: true, updatedAt: $this->secondsAgo(1));
-
-        $destination = $this->runDatabaseTransfer(
-            $database,
-            explicit: false,
-            databaseIds: ['database-lapsed', 'database-live'],
-            provisioningLease: 60,
-        );
-
-        $this->assertSame(
-            ['Database database-live names no owner and another migration may still be provisioning it; it becomes recoverable after 60 seconds without an update'],
-            $this->errorMessages($destination),
-        );
-        $this->assertSame('ready', $this->getDatabaseDocument($database, 'database-lapsed')->getAttribute('status'));
-        $this->assertSame('provisioning', $this->getDatabaseDocument($database, 'database-live')->getAttribute('status'));
-    }
-
-    public function testZeroProvisioningLeaseRecoversAnOwnerlessDatabaseAtOnce(): void
-    {
-        $database = new RecordingProjectDatabase(new ReplicaMemoryAdapter(), new Cache(new MemoryCache()));
-        $this->createStatusOnlyProjectDatabase($database);
-        $this->seedLegacyDatabase($database, 'database', 'provisioning', withCollection: true, updatedAt: $this->secondsAgo(1));
-
-        $destination = $this->runDatabaseTransfer($database, explicit: false, provisioningLease: 0);
-
-        $this->assertSame([], $this->errorMessages($destination));
-        $this->assertSame('ready', $this->getDatabaseDocument($database)->getAttribute('status'));
-    }
-
-    public function testNegativeProvisioningLeaseIsRejected(): void
-    {
-        $database = new UtopiaDatabase(new MemoryAdapter(), new Cache(new MemoryCache()));
-
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Provisioning lease must not be negative');
-
-        new AppwriteDestination(
-            project: 'destination-project',
-            endpoint: 'http://example.test/v1',
-            key: 'test-key',
-            dbForProject: $database,
-            getDatabasesDB: static fn (UtopiaDocument $document): UtopiaDatabase => $database,
-            collectionStructure: ['attributes' => [], 'indexes' => []],
-            dbForPlatform: $database,
-            projectInternalId: '1',
-            owner: new ProvisioningOwner('migration-current', 'attempt-current'),
-            getRecoverableOwner: static fn (UtopiaDocument $document): ?ProvisioningOwner => null,
-            provisioningLease: -1,
-        );
-    }
-
-    public function testOwnerlessRecoveryYieldsToAnUpdateThatLandsFirst(): void
-    {
-        $database = new InterleavingProjectDatabase(new MemoryAdapter(), new Cache(new MemoryCache()));
-        $this->createStatusOnlyProjectDatabase($database);
-        $this->seedLegacyDatabase($database, 'database', 'failed', updatedAt: $this->secondsAgo(AppwriteDestination::DEFAULT_PROVISIONING_LEASE + 1));
-        $database->onDatabasesReload = static function () use ($database): void {
-            $database->updateDocument('databases', 'database', new UtopiaDocument([
-                'name' => 'Database claimed elsewhere',
-            ]));
-        };
-        $database->interceptNextDatabasesReload = true;
-
-        $destination = $this->runDatabaseTransfer($database, explicit: false);
-
-        $claimed = $this->getDatabaseDocument($database);
-        $this->assertSame(
-            ['Database database names no owner and was updated before it could be claimed'],
-            $this->errorMessages($destination),
-        );
-        $this->assertSame('failed', $claimed->getAttribute('status'));
-        $this->assertSame('Database claimed elsewhere', $claimed->getAttribute('name'));
     }
 
     private function createProjectDatabase(bool $withStatus, ?UtopiaDatabase $database = null): UtopiaDatabase
@@ -1508,8 +323,6 @@ final class AppwriteDatabaseStatusTest extends TestCase
 
         if ($withStatus) {
             $attributes[] = $this->attribute('status', ColumnType::String, size: 16);
-            $attributes[] = $this->attribute('migrationId', ColumnType::String, size: UtopiaDatabase::LENGTH_KEY);
-            $attributes[] = $this->attribute('migrationAttemptId', ColumnType::String, size: UtopiaDatabase::LENGTH_KEY);
         }
 
         $database->createCollection(Collection::create(
@@ -1520,49 +333,13 @@ final class AppwriteDatabaseStatusTest extends TestCase
         return $database;
     }
 
-    private function seedDatabase(
-        UtopiaDatabase $database,
-        string $status,
-        ?string $migrationId,
-        ?string $migrationAttemptId,
-    ): UtopiaDocument {
-        $document = [
-            '$id' => 'database',
-            'name' => 'Database',
-            'enabled' => true,
-            'search' => 'database Database',
-            'originalId' => null,
-            'type' => 'tablesdb',
-            'database' => '',
-            'status' => $status,
-        ];
-        if ($migrationId !== null) {
-            $document['migrationId'] = $migrationId;
-        }
-        if ($migrationAttemptId !== null) {
-            $document['migrationAttemptId'] = $migrationAttemptId;
-        }
-
-        return $database->getAuthorization()->skip(
-            static fn (): UtopiaDocument => $database->createDocument('databases', new UtopiaDocument($document)),
-        );
-    }
-
-    private function createStatusOnlyProjectDatabase(UtopiaDatabase $database): UtopiaDatabase
-    {
-        $this->createProjectDatabase(withStatus: false, database: $database);
-        $database->createAttribute('databases', $this->attribute('status', ColumnType::String, size: 16));
-
-        return $database;
-    }
-
-    private function seedLegacyDatabase(
+    private function seedIncompleteDatabase(
         UtopiaDatabase $database,
         string $databaseId,
         string $status,
         string $name = 'Database',
         bool $withCollection = false,
-        string $updatedAt = self::LAPSED_UPDATED_AT,
+        string $updatedAt = '',
     ): UtopiaDocument {
         $seeded = $database->getAuthorization()->skip(
             static fn (): UtopiaDocument => $database->withPreserveDates(
@@ -1610,17 +387,15 @@ final class AppwriteDatabaseStatusTest extends TestCase
         ]);
     }
 
+    /**
+     * @param list<string> $databaseIds
+     */
     private function runDatabaseTransfer(
         UtopiaDatabase $database,
         bool $explicit,
-        string $migrationId = 'migration-current',
-        string $migrationAttemptId = 'attempt-current',
-        ?callable $getRecoverableOwner = null,
+        array $databaseIds = ['database'],
         OnDuplicate $onDuplicate = OnDuplicate::Fail,
         string $resourceUpdatedAt = '',
-        array $databaseIds = ['database'],
-        bool $success = true,
-        int $provisioningLease = AppwriteDestination::DEFAULT_PROVISIONING_LEASE,
     ): CountingAppwriteDestination {
         $source = new class () extends MockSource {
             #[Override]
@@ -1640,25 +415,11 @@ final class AppwriteDatabaseStatusTest extends TestCase
             ));
         }
 
-        $destination = new CountingAppwriteDestination(
-            project: 'destination-project',
-            endpoint: 'http://example.test/v1',
-            key: 'test-key',
-            dbForProject: $database,
-            getDatabasesDB: static fn (UtopiaDocument $document): UtopiaDatabase => $database,
-            collectionStructure: ['attributes' => [], 'indexes' => []],
-            dbForPlatform: $database,
-            projectInternalId: '1',
-            owner: new ProvisioningOwner($migrationId, $migrationAttemptId),
-            getRecoverableOwner: $getRecoverableOwner
-                ?? static fn (UtopiaDocument $document): ?ProvisioningOwner => null,
-            onDuplicate: $onDuplicate,
-            provisioningLease: $provisioningLease,
-        );
+        $destination = $this->createDestination($database, $onDuplicate);
 
         $transfer = new Transfer($source, $destination);
         $database->getAuthorization()->skip(
-            static function () use ($destination, $explicit, $success, $transfer): void {
+            static function () use ($explicit, $transfer): void {
                 if ($explicit) {
                     $transfer->runWithResourceSelector(
                         [Resource::TYPE_DATABASE],
@@ -1671,7 +432,6 @@ final class AppwriteDatabaseStatusTest extends TestCase
                         parentResourceInternalId: '',
                         parentResourceType: '',
                     );
-
                 } else {
                     $transfer->run(
                         [Resource::TYPE_DATABASE],
@@ -1679,25 +439,25 @@ final class AppwriteDatabaseStatusTest extends TestCase
                         },
                     );
                 }
-
-                if ($success) {
-                    $destination->success();
-                }
             },
         );
 
         return $destination;
     }
 
-    private function finalizeExpectingFailure(UtopiaDatabase $database, AppwriteDestination $destination): Finalization
+    private function createDestination(UtopiaDatabase $database, OnDuplicate $onDuplicate): CountingAppwriteDestination
     {
-        try {
-            $database->getAuthorization()->skip($destination->success(...));
-        } catch (Finalization $failure) {
-            return $failure;
-        }
-
-        $this->fail('A failed finalization must throw');
+        return new CountingAppwriteDestination(
+            project: 'destination-project',
+            endpoint: 'http://example.test/v1',
+            key: 'test-key',
+            dbForProject: $database,
+            getDatabasesDB: static fn (UtopiaDocument $document): UtopiaDatabase => $database,
+            collectionStructure: ['attributes' => [], 'indexes' => []],
+            dbForPlatform: $database,
+            projectInternalId: '1',
+            onDuplicate: $onDuplicate,
+        );
     }
 
     private function getDatabaseDocument(UtopiaDatabase $database, string $databaseId = 'database'): UtopiaDocument

@@ -10,11 +10,11 @@ use Utopia\Database\PermissionType;
 use Utopia\Database\Query;
 
 /**
- * A project database whose finalization steps can be made to fail: the
+ * A project database whose end-of-run steps can be made to fail: the
  * `ready` write of chosen databases, and the attribute scan the overwrite
  * sweep runs for one chosen table.
  */
-final class FailingFinalizationDatabase extends UtopiaDatabase
+final class FailingCompletionDatabase extends UtopiaDatabase
 {
     /** @var list<string> */
     public array $failReadyWrites = [];
