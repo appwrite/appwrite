@@ -136,9 +136,10 @@ export interface LibrarySummary {
     /**
      * How many dependencies of each kind (older data leaves it out). `php` counts the PHP package's `require`.
      * `dependents` counts every library depending on it, through either runtime, plus Appwrite when it does
-     * (older data leaves `php_used_by`, `appwrite` and `dependents` out).
+     * (older data leaves `php_used_by`, `appwrite` and `dependents` out). `rust_dependents` counts them through
+     * Rust alone, Appwrite's crates included: what the docs show outside migration mode.
      */
-    dependencies?: { rust: number; dev: number; build: number; used_by: number; php: number; php_used_by?: number; appwrite?: boolean; dependents?: number }
+    dependencies?: { rust: number; dev: number; build: number; used_by: number; php: number; php_used_by?: number; appwrite?: boolean; dependents?: number; rust_dependents?: number }
     /** php-std only: the PHP functions it reimplements (older data leaves it out). */
     php_functions?: PhpFunctionTotals | null
   }
@@ -444,6 +445,16 @@ export interface Graph {
 /** The graph's id for Appwrite. */
 export const APPWRITE = 'appwrite'
 
+/**
+ * Who depends on a library, as the reader sees it: through either runtime in migration mode, through Rust
+ * alone otherwise. `appwrite` says whether Appwrite is among them.
+ */
+export function dependents(counts: NonNullable<LibrarySummary['counts']['dependencies']>, migration: boolean): { count: number; appwrite: boolean } {
+  if (migration) return { count: counts.dependents ?? counts.used_by, appwrite: !!counts.appwrite }
+  const rust = counts.rust_dependents ?? counts.used_by
+  return { count: rust, appwrite: rust > counts.used_by }
+}
+
 export interface Library {
   library: LibrarySummary
   bench: Bench | null
@@ -618,6 +629,41 @@ export function slug(text: string) {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '')
+}
+
+/**
+ * A guide as it reads outside migration mode: the sections under a heading naming PHP (sharing data with a
+ * PHP service), their examples included, and the paragraphs that are only a PHP comparison (`PHP: …`) are
+ * left out. Mentions of PHP inside a paragraph about the Rust API stay: they are part of its description.
+ */
+export function rustGuide(guide: GuideBlock[]): GuideBlock[] {
+  const out: GuideBlock[] = []
+  let skip = 0 // the level of the PHP heading being skipped, 0 when none
+  let fenced = false
+  for (const b of guide) {
+    if (!('text' in b)) {
+      if (!skip) out.push(b)
+      continue
+    }
+    const kept: string[] = []
+    for (const line of b.text.split('\n')) {
+      if (line.trimStart().startsWith('```')) fenced = !fenced
+      const level = !fenced && line.startsWith('#') ? line.length - line.replace(/^#+/, '').length : 0
+      if (level && line.charAt(level) === ' ') {
+        if (skip && level <= skip) skip = 0
+        if (!skip && line.includes('PHP')) skip = level
+      }
+      if (!skip) kept.push(line)
+    }
+    const text = kept
+      .join('\n')
+      .split('\n\n')
+      .filter((p) => !p.trimStart().startsWith('PHP:'))
+      .join('\n\n')
+      .trim()
+    if (text) out.push({ ...b, text })
+  }
+  return out
 }
 
 /** The `##` headings of a guide, for the page's table of contents. */

@@ -423,6 +423,8 @@ pub fn write(mut engine: Option<&mut Engine>, root: &Path, out: &Path) -> Result
         let dependents =
             users.iter().chain(&php_users).filter_map(|u| u["slug"].as_str()).collect::<BTreeSet<_>>().len()
                 + usize::from(uses_appwrite);
+        // The same through Rust alone: what the docs show outside migration mode.
+        let rust_dependents = users.len() + usize::from(!appwrite_rust.is_empty());
         let dependencies = json!({
             "rust": of_kind("normal"),
             "dev": of_kind("dev"),
@@ -470,6 +472,7 @@ pub fn write(mut engine: Option<&mut Engine>, root: &Path, out: &Path) -> Result
                     "php_used_by": php_users.len(),
                     "appwrite": uses_appwrite,
                     "dependents": dependents,
+                    "rust_dependents": rust_dependents,
                     "php": php_deps.iter().filter(|d| d["kind"] == "normal").count(),
                 },
             },

@@ -240,20 +240,21 @@ function AppwriteCard({ title, detail }: { title: string; detail: ReactNode }) {
 const grid = 'grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-2'
 
 /**
- * Who depends on the library, across the ecosystem: the Rust crates of this repository, the Utopia PHP
- * packages, and Appwrite. Which libraries depend on it places it in the ecosystem, so both runtimes show
- * in every mode; how far each dependent is converted is migration detail.
+ * Who depends on the library, across the ecosystem: the Rust crates of this repository and Appwrite's; in
+ * migration mode also the Utopia PHP packages and Appwrite's PHP server, in a migration card.
  */
 function UsedBy({ l, d, libs, name }: { l: LibrarySummary; d: Dependencies; libs: Map<string, LibrarySummary>; name: string }) {
+  const migration = useMigration()
   const byTitle = (a: { slug: string }, b: { slug: string }) => (libs.get(a.slug)?.title ?? a.slug).localeCompare(libs.get(b.slug)?.title ?? b.slug)
   const rust = [...d.used_by].sort(byTitle)
-  const php = [...(d.php_used_by ?? [])].sort(byTitle)
-  const appwrite = d.appwrite ?? null
-  const appwriteRust = appwrite?.rust ?? []
-  const appwritePhp = appwrite?.php ?? null
+  // The PHP packages, and Appwrite's PHP server, are migration detail.
+  const php = migration ? [...(d.php_used_by ?? [])].sort(byTitle) : []
+  const appwriteRust = d.appwrite?.rust ?? []
+  const appwritePhp = migration ? (d.appwrite?.php ?? null) : null
+  const appwrite = appwriteRust.length > 0 || !!appwritePhp
   const rustCount = rust.length + (appwriteRust.length ? 1 : 0)
   const phpCount = php.length + (appwritePhp ? 1 : 0)
-  const line = dependentsLine(rust.length, php.length, !!appwrite)
+  const line = dependentsLine(rust.length, php.length, appwrite)
   const map = (
     <Link to="/map" hash={l.slug} className="inline-flex items-center gap-1 text-[13px] text-foreground hover:underline">
       <Network className="size-3.5 text-muted-foreground" />
@@ -280,7 +281,7 @@ function UsedBy({ l, d, libs, name }: { l: LibrarySummary; d: Dependencies; libs
         </div>
       ) : null}
       {phpCount ? (
-        <div className="grid gap-2">
+        <MigrationCard>
           <GroupLabel runtime="php" count={phpCount}>
             PHP packages
           </GroupLabel>
@@ -295,7 +296,7 @@ function UsedBy({ l, d, libs, name }: { l: LibrarySummary; d: Dependencies; libs
               <DependentCard key={u.slug} slug={u.slug} kinds={u.kinds} lib={libs.get(u.slug)} runtime="php" />
             ))}
           </div>
-        </div>
+        </MigrationCard>
       ) : null}
       <div>{map}</div>
     </Section>

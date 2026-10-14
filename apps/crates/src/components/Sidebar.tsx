@@ -1,7 +1,7 @@
 import { Link, getRouteApi, useMatch, useRouterState } from '@tanstack/react-router'
 import { ArrowLeftRight, ChevronRight, ChevronsDownUp, ChevronsUpDown, Search } from 'lucide-react'
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
-import { isTopLevel, moduleSplat, taskHash, type Navigation } from '@/lib/docs'
+import { dependents as dependentsOf, isTopLevel, moduleSplat, taskHash, type Navigation } from '@/lib/docs'
 import { StatusBadge, StatusDot } from './Status'
 import { MigrationOnly } from './Migration'
 import { useMigration } from '@/lib/prefs'
@@ -11,6 +11,13 @@ const root = getRouteApi('__root__')
 
 const row =
   'flex min-w-0 items-center gap-2 rounded-md px-2 py-1.5 text-[13px] text-sidebar-ink transition-colors hover:bg-sidebar-accent hover:text-sidebar-strong data-[status=active]:bg-sidebar-accent data-[status=active]:text-sidebar-strong'
+
+/**
+ * A menu item shown only in migration mode carries the migration marking (a yellow rule and tint), so the
+ * menu reads as the Rust docs plus what migration mode adds. Every such row and group goes through this.
+ */
+const MIGRATION_TITLE = 'Shown in migration mode'
+const item = (migration?: boolean) => (migration ? `${row} nav-migration` : row)
 
 /** Expand all / Collapse all: each press tells every group in the menu to open or close. */
 const Fold = createContext<{ open: boolean; n: number } | null>(null)
@@ -37,7 +44,22 @@ function useFold() {
   return [fold, (open: boolean) => setFold((f) => ({ open, n: (f?.n ?? 0) + 1 }))] as const
 }
 
-function Group({ label, open: initial, children, depth = 0, badge }: { label: ReactNode; open: boolean; children: ReactNode; depth?: number; badge?: ReactNode }) {
+function Group({
+  label,
+  open: initial,
+  children,
+  depth = 0,
+  badge,
+  migration,
+}: {
+  label: ReactNode
+  open: boolean
+  children: ReactNode
+  depth?: number
+  badge?: ReactNode
+  /** Shown only in migration mode: the header gets the marking, the rail of its items turns yellow. */
+  migration?: boolean
+}) {
   const [open, setOpen] = useState(initial)
   const fold = useContext(Fold)
   useEffect(() => {
@@ -52,13 +74,14 @@ function Group({ label, open: initial, children, depth = 0, badge }: { label: Re
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
-        className={`flex min-w-0 items-center gap-1.5 rounded-md py-1.5 pr-2 text-left text-[13px] transition-colors hover:bg-sidebar-accent ${depth === 0 ? 'pl-2 font-medium text-sidebar-strong' : 'pl-2 text-sidebar-ink hover:text-sidebar-strong'}`}
+        title={migration ? MIGRATION_TITLE : undefined}
+        className={`flex min-w-0 items-center gap-1.5 rounded-md py-1.5 pr-2 text-left text-[13px] transition-colors hover:bg-sidebar-accent ${depth === 0 ? 'pl-2 font-medium text-sidebar-strong' : 'pl-2 text-sidebar-ink hover:text-sidebar-strong'} ${migration ? 'nav-migration' : ''}`}
       >
         <ChevronRight className={`size-3.5 flex-none text-muted-foreground transition-transform ${open ? 'rotate-90' : ''}`} />
         <span className="min-w-0 flex-1 truncate">{label}</span>
         {badge}
       </button>
-      {open ? <div className="ml-[13px] grid border-l border-border pl-2">{children}</div> : null}
+      {open ? <div className={`ml-[13px] grid border-l pl-2 ${migration ? 'border-migration-accent' : 'border-border'}`}>{children}</div> : null}
     </div>
   )
 }
@@ -83,8 +106,10 @@ export function LibraryMenu({ nav, onNavigate }: { nav: Navigation; onNavigate?:
   // The crate's dependencies; for a library without one, the PHP package's requirements.
   const counts = nav.library.counts.dependencies
   const deps = counts && (nav.library.rust ? counts.rust : migration ? counts.php : undefined)
-  // Everything depending on it, through either runtime, Appwrite included (older data leaves it out).
-  const dependents = counts?.dependents
+  // Everything depending on it, Appwrite included: through either runtime in migration mode, Rust alone otherwise.
+  const dependents = counts ? dependentsOf(counts, migration).count : undefined
+  // Without a crate or a Rust dependent, the page is only in the menu for migration mode.
+  const depsMigration = !nav.library.rust && !(counts && dependentsOf(counts, false).count)
   let body: ReactNode
   if (!nav.library.rust && !migration) {
     body = null
@@ -104,6 +129,7 @@ export function LibraryMenu({ nav, onNavigate }: { nav: Navigation; onNavigate?:
           <Group
             key={ns}
             depth={1}
+            migration
             label={<span className="font-mono text-[12px]">{ns === base ? (base.split('\\').pop() ?? 'global') : ns.slice(base.length + 1)}</span>}
             open={!!term || byNamespace.size === 1 || classes.some((c) => path.endsWith(`/php-api/${c.split('\\').join('/')}`))}
           >
@@ -158,7 +184,7 @@ export function LibraryMenu({ nav, onNavigate }: { nav: Navigation; onNavigate?:
             <StatusBadge status={nav.library.status} />
           </MigrationOnly>
         </div>
-        <span className="truncate font-mono text-[11px] text-muted-foreground">{nav.library.rust?.crate ?? nav.library.php?.package}</span>
+        <span className="truncate font-mono text-[11px] text-muted-foreground">{nav.library.rust?.crate ?? (migration ? nav.library.php?.package : nav.library.slug)}</span>
       </div>
       <label className="flex items-center gap-2 rounded-md border border-border bg-background px-2.5 py-1.5 text-muted-foreground focus-within:border-ring">
         <Search className="size-3.5" />
@@ -177,7 +203,7 @@ export function LibraryMenu({ nav, onNavigate }: { nav: Navigation; onNavigate?:
           Overview
         </Link>
         {nav.library.rust || migration || dependents ? (
-          <Link to="/$lib/dependencies" params={{ lib: slug }} className={row}>
+          <Link to="/$lib/dependencies" params={{ lib: slug }} className={item(depsMigration)} title={depsMigration ? MIGRATION_TITLE : undefined}>
             <span className="truncate">Dependencies</span>
             <span className="ml-auto flex items-center gap-1.5 text-[10.5px] whitespace-nowrap text-muted-foreground tabular-nums">
               {deps !== undefined ? <span title={`${deps} ${deps === 1 ? 'dependency' : 'dependencies'}`}>{deps}</span> : null}
@@ -196,7 +222,7 @@ export function LibraryMenu({ nav, onNavigate }: { nav: Navigation; onNavigate?:
           </Link>
         ) : null}
         {migration && nav.library.bench ? (
-          <Link to="/$lib/benchmarks" params={{ lib: slug }} className={row}>
+          <Link to="/$lib/benchmarks" params={{ lib: slug }} className={item(true)} title={MIGRATION_TITLE}>
             <span className="truncate">Benchmarks vs PHP</span>
           </Link>
         ) : null}
@@ -210,7 +236,7 @@ export function LibraryMenu({ nav, onNavigate }: { nav: Navigation; onNavigate?:
               </Link>
             ))}
             {unported ? (
-              <Link to="/$lib" params={{ lib: slug }} hash="commands" activeOptions={{ exact: true, includeHash: true }} className={`${row} text-muted-foreground`}>
+              <Link to="/$lib" params={{ lib: slug }} hash="commands" activeOptions={{ exact: true, includeHash: true }} className={`${item(true)} text-muted-foreground`} title={MIGRATION_TITLE}>
                 <StatusDot status="planned" />
                 <span className="truncate">
                   {unported} PHP {unported === 1 ? 'task' : 'tasks'} not ported
@@ -243,6 +269,7 @@ function AppwriteGroup() {
         </span>
       }
       open={path.startsWith('/appwrite')}
+      migration
       badge={services.length ? <span className="text-[11px] text-muted-foreground tabular-nums">{services.length}</span> : undefined}
     >
       <Link to="/appwrite" activeOptions={{ exact: true }} className={row}>
@@ -309,13 +336,13 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
           .filter((l) => l && (migration || l.rust) && (!term || `${l.title} ${l.slug} ${l.description}`.toLowerCase().includes(term)))
         if (!libs.length) return null
         return (
-          <Group key={c.id} label={c.title} open={!!term || c.id === activeCategory} badge={<span className="text-[11px] text-muted-foreground tabular-nums">{libs.length}</span>}>
+          <Group key={c.id} label={c.title} open={!!term || c.id === activeCategory} migration={!libs.some((l) => l?.rust)} badge={<span className="text-[11px] text-muted-foreground tabular-nums">{libs.length}</span>}>
             <Link to="/categories/$category" params={{ category: c.id }} className={row}>
               Overview
             </Link>
             {libs.map((l) =>
               l ? (
-                <Link key={l.slug} to="/$lib" params={{ lib: l.slug }} className={row}>
+                <Link key={l.slug} to="/$lib" params={{ lib: l.slug }} className={item(!l.rust)} title={l.rust ? undefined : MIGRATION_TITLE}>
                   <MigrationOnly>
                     <StatusDot status={l.status} />
                   </MigrationOnly>

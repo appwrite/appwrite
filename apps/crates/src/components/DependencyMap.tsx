@@ -73,8 +73,10 @@ function Toggle({ on, onChange, children }: { on: boolean; onChange: (on: boolea
 
 /** A library in the panel or the list: selects it on the map, with the runtimes it goes through. */
 function Neighbour({ node, link, onSelect }: { node: GraphNode | undefined; link: Edge; onSelect?: (id: string) => void }) {
+  const migration = useMigration()
   if (!node) return null
-  const tags = [link.rust ? 'Rust' : '', link.php ? 'PHP' : '', link.dev ? 'dev' : ''].filter(Boolean)
+  // Outside migration mode every edge is a Rust one: no runtime to tell apart.
+  const tags = [migration && link.rust ? 'Rust' : '', migration && link.php ? 'PHP' : '', link.dev ? 'dev' : ''].filter(Boolean)
   const name = (
     <span className="flex min-w-0 items-center gap-1.5">
       {node.status ? (
@@ -161,7 +163,11 @@ function Panel({ node, out, into, byId, category, onSelect, onClose }: { node: G
       <div className="grid gap-0.5 font-mono text-[11.5px] text-muted-foreground">
         {node.rust ? <span className="truncate">{node.rust}</span> : null}
         {app && node.crates?.length ? <span className="[overflow-wrap:anywhere]">{node.crates.join(', ')}</span> : null}
-        {node.php ? <span className="truncate">{node.php}</span> : null}
+        {node.php ? (
+          <MigrationOnly>
+            <span className="truncate">{node.php}</span>
+          </MigrationOnly>
+        ) : null}
         {!app && !node.rust ? <span className="font-sans">No Rust crate yet.</span> : null}
       </div>
       {app ? null : (
@@ -201,9 +207,9 @@ function Legend({ migration, retired }: { migration: boolean; retired: boolean }
   )
   return (
     <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[12px] text-muted-foreground">
-      {item(line('var(--rust)'), 'Rust')}
-      {item(line('var(--php)'), 'PHP')}
-      {item(line('var(--muted-foreground)'), 'Both')}
+      {item(line('var(--rust)'), migration ? 'Rust' : 'Dependency')}
+      {migration ? item(line('var(--php)'), 'PHP') : null}
+      {migration ? item(line('var(--muted-foreground)'), 'Both') : null}
       {item(line('var(--muted-foreground)', true), 'Dev only')}
       <span>Arrows point to the dependency.</span>
       {migration ? (
@@ -213,12 +219,7 @@ function Legend({ migration, retired }: { migration: boolean; retired: boolean }
             {STATUS[s].label}
           </span>
         ))
-      ) : (
-        <>
-          {item(<span className="size-2.5 rounded-full bg-foreground" />, 'Rust crate')}
-          {item(<span className="size-2.5 rounded-full border border-muted-foreground" />, 'PHP only')}
-        </>
-      )}
+      ) : null}
       <span>Larger nodes have more dependents.</span>
     </div>
   )
@@ -271,9 +272,17 @@ function MapList({ nodes, near, byId, category, index }: { nodes: GraphNode[]; n
  * Pan by dragging the background, zoom with the wheel or the buttons, drag a node to move it; hovering
  * a node shows its dependencies and dependents, clicking one keeps them and opens its panel.
  */
-export function DependencyMap({ graph, index }: { graph: Graph; index: Index }) {
+export function DependencyMap({ graph: all, index }: { graph: Graph; index: Index }) {
   const migration = useMigration()
-  const [runtime, setRuntime] = useState<Runtime>('both')
+  // Outside migration mode the map is the Rust ecosystem: its crates, Appwrite, and the Rust edges between them.
+  const graph = useMemo(() => {
+    if (migration) return all
+    const nodes = all.nodes.filter((n) => n.kind === 'app' || n.rust)
+    const ids = new Set(nodes.map((n) => n.id))
+    return { ...all, nodes, edges: all.edges.filter((e) => e.runtime === 'rust' && ids.has(e.source) && ids.has(e.target)) }
+  }, [all, migration])
+  const [chosen, setRuntime] = useState<Runtime>('both')
+  const runtime: Runtime = migration ? chosen : 'rust'
   const [dev, setDev] = useState(false)
   const [showApp, setShowApp] = useState(true)
   const [category, setCategory] = useState('')
@@ -467,7 +476,7 @@ export function DependencyMap({ graph, index }: { graph: Graph; index: Index }) 
 
   const term = q.trim().toLowerCase()
   const matches = term
-    ? nodes.filter((n) => `${n.title} ${n.id} ${n.rust ?? ''} ${n.php ?? ''}`.toLowerCase().includes(term)).sort((a, b) => Number(!a.title.toLowerCase().startsWith(term)) - Number(!b.title.toLowerCase().startsWith(term))).slice(0, 8)
+    ? nodes.filter((n) => `${n.title} ${n.id} ${n.rust ?? ''} ${migration ? (n.php ?? '') : ''}`.toLowerCase().includes(term)).sort((a, b) => Number(!a.title.toLowerCase().startsWith(term)) - Number(!b.title.toLowerCase().startsWith(term))).slice(0, 8)
     : []
   const pick = (id: string) => {
     setQ('')
@@ -510,14 +519,14 @@ export function DependencyMap({ graph, index }: { graph: Graph; index: Index }) 
                 <li key={n.id}>
                   <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => pick(n.id)} className="flex w-full items-center justify-between gap-2 rounded px-2 py-1 text-left text-[13px] hover:bg-accent">
                     <span className="truncate">{n.title}</span>
-                    <span className="truncate font-mono text-[11px] text-muted-foreground">{n.rust ?? n.php}</span>
+                    <span className="truncate font-mono text-[11px] text-muted-foreground">{n.rust ?? (migration ? n.php : null)}</span>
                   </button>
                 </li>
               ))}
             </ul>
           ) : null}
         </div>
-        <RuntimeSwitch value={runtime} onChange={setRuntime} />
+        {migration ? <RuntimeSwitch value={runtime} onChange={setRuntime} /> : null}
         <select value={category} onChange={(e) => setCategory(e.target.value)} aria-label="Category" className="h-8 rounded-md border border-border bg-card pr-8 pl-2 text-[12.5px] text-foreground">
           <option value="">All categories</option>
           {index.categories.map((c) => (

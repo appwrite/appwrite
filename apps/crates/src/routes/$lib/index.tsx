@@ -6,7 +6,7 @@ import { PageHeader, Section, WithToc } from '@/components/Page'
 import { StatusBadge, StatusDot } from '@/components/Status'
 import { SyncBadge, SyncPanel } from '@/components/Sync'
 import { SpeedupBadge } from '@/components/Bench'
-import { KIND_ORDER, KIND_TITLE, STATUS, guideHeadings, isTopLevel, itemHash, loadLibrary, moduleSplat, slug, summary, taskHash, type LibrarySummary, type Status } from '@/lib/docs'
+import { KIND_ORDER, KIND_TITLE, STATUS, dependents as dependentsOf, guideHeadings, isTopLevel, itemHash, loadLibrary, moduleSplat, rustGuide, slug, summary, taskHash, type LibrarySummary, type Status } from '@/lib/docs'
 import { useMigration } from '@/lib/prefs'
 import { MigrationCard, MigrationOnly, PhpNotes } from '@/components/Migration'
 import { Tasks } from '@/components/Tasks'
@@ -90,13 +90,14 @@ function Ecosystem({ l }: { l: LibrarySummary }) {
   if (!counts) return null
   // A library without a Rust crate depends on PHP packages only: migration detail.
   const deps = l.rust ? counts.rust : migration ? counts.php : undefined
-  const dependents = counts.dependents ?? counts.used_by
+  // Through Rust alone outside migration mode.
+  const { count: dependents, appwrite } = dependentsOf(counts, migration)
   const link = 'inline-flex items-center gap-1 hover:text-foreground'
   return (
     <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] text-muted-foreground">
       <Link to="/$lib/dependencies" params={{ lib: l.slug }} className={link}>
         {deps !== undefined ? `${deps} ${deps === 1 ? 'dependency' : 'dependencies'} · ` : ''}
-        {dependents ? `used by ${dependents}${counts.appwrite ? ', Appwrite included' : ''}` : 'used by nothing yet'}
+        {dependents ? `used by ${dependents}${appwrite ? ', Appwrite included' : ''}` : 'used by nothing yet'}
       </Link>
       <Link to="/map" hash={l.slug} className={link}>
         <Network className="size-3.5" />
@@ -183,14 +184,16 @@ function LibraryPage() {
   const index = root.useLoaderData()
   const migration = useMigration()
   const l = d.library
+  // Outside migration mode the guide leaves out its PHP sections and comparisons.
+  const guide = migration ? d.guide : rustGuide(d.guide)
   const category = index?.categories.find((c) => c.id === l.category)
   const ported = d.tasks.flatMap((t) => (t.status === 'ported' ? [{ name: t.name, bin: t.bin }] : []))
   const toc = [
     ...(l.counts.php_functions ? [{ id: 'php-functions', label: 'PHP functions' }] : []),
     ...(migration ? [{ id: 'migration', label: 'Conversion status' }] : []),
     ...(l.rust ? [{ id: 'install', label: 'Install' }] : []),
-    ...(d.guide.length ? [{ id: 'getting-started', label: 'Getting started' }, ...guideHeadings(d.guide).map((h) => ({ id: slug(h), label: h, depth: 1 }))] : []),
-    ...(d.overview || d.examples.length || (migration && d.overview_notes) ? [{ id: 'overview', label: d.guide.length ? 'Reference' : 'Overview' }] : []),
+    ...(guide.length ? [{ id: 'getting-started', label: 'Getting started' }, ...guideHeadings(guide).map((h) => ({ id: slug(h), label: h, depth: 1 }))] : []),
+    ...(d.overview || d.examples.length || (migration && d.overview_notes) ? [{ id: 'overview', label: guide.length ? 'Reference' : 'Overview' }] : []),
     ...(d.modules.length ? [{ id: 'modules', label: 'Modules' }] : []),
     ...(d.root.length ? [{ id: 'api', label: 'API' }] : []),
     ...(ported.length || (migration && d.tasks.length) ? [{ id: 'commands', label: 'Commands' }, ...ported.map((t) => ({ id: taskHash(t.name), label: t.bin ?? t.name, depth: 1 }))] : []),
@@ -297,16 +300,16 @@ function LibraryPage() {
         </MigrationCard>
       ) : null}
 
-      {d.guide.length ? (
+      {guide.length ? (
         <Section id="getting-started" title="Getting started" description={`Common tasks with ${l.title}, each a complete program you can copy and run.`}>
           <div className="grid gap-4">
-            {d.guide.map((b, i) => ('text' in b ? <Markdown key={i} text={b.text} /> : <ExampleView key={i} example={b.example} />))}
+            {guide.map((b, i) => ('text' in b ? <Markdown key={i} text={b.text} /> : <ExampleView key={i} example={b.example} />))}
           </div>
         </Section>
       ) : null}
 
       {d.overview || d.examples.length || (migration && d.overview_notes) ? (
-        <Section id="overview" title={d.guide.length ? 'Reference' : 'Overview'}>
+        <Section id="overview" title={guide.length ? 'Reference' : 'Overview'}>
           <Markdown text={d.overview} />
           <PhpNotes notes={d.overview_notes} title={l.rust ? 'From PHP' : 'PHP library'} />
           <Examples examples={d.examples} />

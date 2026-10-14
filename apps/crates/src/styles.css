@@ -72,6 +72,8 @@
   --rust: #d4692a;
   --migration-border: #fef08a;
   --migration-ink: #713f12;
+  /* The migration marking on menu items: the warning callout's own yellow. */
+  --migration-accent: var(--progress);
 
   --font-display: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
@@ -150,6 +152,7 @@
   --color-rust: var(--rust);
   --color-migration-border: var(--migration-border);
   --color-migration-ink: var(--migration-ink);
+  --color-migration-accent: var(--migration-accent);
   --font-display: var(--font-display);
   --font-sans: var(--font-body);
   --font-mono: var(--font-code);
@@ -197,6 +200,16 @@
     * {
       transition: none !important;
     }
+  }
+}
+
+/* A menu item shown only in migration mode: the migration cards' tint and a
+   yellow rule on its left. In the components layer, so a row's hover and
+   active backgrounds still win over the tint. */
+@layer components {
+  .nav-migration {
+    background-color: var(--migration);
+    box-shadow: inset 2px 0 0 var(--migration-accent);
   }
 }
 
