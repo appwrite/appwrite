@@ -807,6 +807,9 @@ function RelationshipField({
   const [search, setSearch] = useState('')
   const debouncedSearch = useDebouncedValue(search, 300)
   const isSearching = debouncedSearch.trim().length > 0
+  // Labels of every row this field has loaded, so a row picked from search
+  // results keeps its label after the list goes back to the default page.
+  const labelCache = useRef(new Map<string, string>())
 
   const { columns: relatedColumns } = useProjectTableColumns(
     projectId,
@@ -876,12 +879,15 @@ function RelationshipField({
       label: getRelationshipRowLabel(row, relatedColumns),
     }
     optionsById.set(row.$id, option)
+    labelCache.current.set(option.value, option.label)
     searchResults.push(option)
   }
   // Labels for selected rows come from `options`; while searching, the list
   // shows only what the server returned for the query.
   const options = [...optionsById.values()]
   const listOptions = isSearching ? searchResults : options
+  const getOptionLabel = (value: string) =>
+    optionsById.get(value)?.label ?? labelCache.current.get(value)
 
   if (!relatedTableId) {
     return (
@@ -926,7 +932,7 @@ function RelationshipField({
         {selectedValues.length > 0 ? (
           <div className="space-y-2">
             {selectedValues.map((value) => {
-              const option = options.find((item) => item.value === value)
+              const label = getOptionLabel(value)
 
               return (
                 <div
@@ -934,7 +940,7 @@ function RelationshipField({
                   className="flex items-center justify-between rounded-lg border border-border bg-muted/30 px-3 py-2"
                 >
                   <span className="truncate text-[12px] text-foreground">
-                    {option?.label || value}
+                    {label || value}
                   </span>
                   <Button
                     type="button"
@@ -980,7 +986,7 @@ function RelationshipField({
         onValueChange={(value) => onChange(value)}
         items={listOptions}
         selectedName={
-          options.find((option) => option.value === selectedValues[0])?.label
+          selectedValues[0] ? getOptionLabel(selectedValues[0]) : undefined
         }
         placeholder={
           relatedRowsLoading ? t('Loading related rows…') : t('Select related row')
