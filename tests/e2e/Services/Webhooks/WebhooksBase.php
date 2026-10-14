@@ -958,7 +958,7 @@ trait WebhooksBase
             });
 
             $this->assertNotEmpty($delivery);
-            $payload = json_encode($delivery['data']);
+            $payload = $delivery['body'];
             $url = $delivery['url'];
             $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $originalSecret, true));
             $this->assertEquals($signatureExpected, $delivery['headers']['X-Appwrite-Webhook-Signature']);
@@ -997,7 +997,7 @@ trait WebhooksBase
             });
 
             $this->assertNotEmpty($delivery);
-            $payload = json_encode($delivery['data']);
+            $payload = $delivery['body'];
             $url = $delivery['url'];
             $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $newSecret, true));
             $this->assertEquals($signatureExpected, $delivery['headers']['X-Appwrite-Webhook-Signature']);
@@ -1053,7 +1053,7 @@ trait WebhooksBase
             });
 
             $this->assertNotEmpty($delivery);
-            $payload = json_encode($delivery['data']);
+            $payload = $delivery['body'];
             $url = $delivery['url'];
             $signatureExpected = base64_encode(hash_hmac('sha1', $url . $payload, $customSecret, true));
             $this->assertEquals($signatureExpected, $delivery['headers']['X-Appwrite-Webhook-Signature']);

@@ -28,9 +28,18 @@ class Webhook extends Event
      */
     protected function preparePayload(): array
     {
-        return \array_merge(parent::preparePayload(), [
+        $prepared = \array_merge(parent::preparePayload(), [
             'eventId' => ID::unique(),
         ]);
+
+        // Queue decoders turn nested JSON objects into associative arrays.
+        // Keep the original body only when that conversion changes its shape.
+        $body = \json_encode($this->payload) ?: '';
+        if ($body !== \json_encode(\json_decode($body, true))) {
+            $prepared['body'] = $body;
+        }
+
+        return $prepared;
     }
 
     /**
