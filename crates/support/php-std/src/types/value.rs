@@ -73,6 +73,26 @@ impl<X: Extension> From<Array<X>> for Value<X> {
     }
 }
 
+/// The decimal digits of `i`, kept inline (no allocation).
+fn int_string(i: i64) -> Str {
+    let mut buf = [0u8; 20];
+    let mut pos = buf.len();
+    let mut n = i.unsigned_abs();
+    loop {
+        pos -= 1;
+        buf[pos] = b'0' + (n % 10) as u8;
+        n /= 10;
+        if n == 0 {
+            break;
+        }
+    }
+    if i < 0 {
+        pos -= 1;
+        buf[pos] = b'-';
+    }
+    Str::copy_from(&buf[pos..])
+}
+
 /// `ZEND_THREEWAY_COMPARE` for doubles: NaN compares greater.
 fn threeway(a: f64, b: f64) -> i32 {
     if a == b {
@@ -238,7 +258,7 @@ impl<X: Extension> Value<X> {
         Ok(match self {
             Value::Null | Value::Bool(false) => Str::EMPTY,
             Value::Bool(true) => Str::from_static("1"),
-            Value::Int(i) => Str::from(i.to_string()),
+            Value::Int(i) => int_string(*i),
             Value::Float(f) => Str::from(number::to_string(*f)),
             Value::Str(s) => s.clone(),
             Value::Array(_) => Str::from_static("Array"),
