@@ -105,6 +105,19 @@ export const POLICIES_SETTINGS_CARD_INDEX: SettingsCardIndexEntry[] = [
     ],
   },
   {
+    sectionId: 'passwords',
+    title: 'Periodic password change',
+    keywords: [
+      'rotation',
+      'rotate',
+      'expiry',
+      'expire',
+      'maximum age',
+      'reset',
+      'periodic',
+    ],
+  },
+  {
     sectionId: 'passkeys',
     title: 'Relying party',
     keywords: ['passkey', 'webauthn', 'rp id', 'domain', 'origins'],

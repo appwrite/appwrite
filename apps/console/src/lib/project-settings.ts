@@ -38,6 +38,13 @@ export type PasswordPwnedPolicy = {
   users: boolean
 }
 
+export type PasswordRotationPolicy = {
+  /** Require a password reset once the password is older than `maxAge`. */
+  enabled: boolean
+  /** Maximum password age in seconds. */
+  maxAge: number
+}
+
 export type ProjectAuthSecuritySnapshot = {
   authLimit: number
   authDuration: number
@@ -48,6 +55,8 @@ export type ProjectAuthSecuritySnapshot = {
   authPersonalDataCheck: boolean
   /** Null when the server does not report a password-pwned policy. */
   authPasswordPwned: PasswordPwnedPolicy | null
+  /** Null when the server does not report a password-rotation policy. */
+  authPasswordRotation: PasswordRotationPolicy | null
   authSessionAlerts: boolean
   authInvalidateSessions: boolean
   authDenyFreeEmail: boolean
@@ -81,6 +90,7 @@ const DEFAULT_AUTH_SECURITY: ProjectAuthSecuritySnapshot = {
   authPasswordDictionary: false,
   authPersonalDataCheck: false,
   authPasswordPwned: null,
+  authPasswordRotation: null,
   authSessionAlerts: false,
   authInvalidateSessions: false,
   authDenyFreeEmail: false,
@@ -164,6 +174,10 @@ export function parseProjectAuthSecurity(
     ProjectPolicyId.Passwordpersonaldata,
   )
   const passwordPwned = policyById(policies, ProjectPolicyId.Passwordpwned)
+  const passwordRotation = policyById(
+    policies,
+    ProjectPolicyId.Passwordrotation,
+  )
   const sessionAlert = policyById(policies, ProjectPolicyId.Sessionalert)
   const sessionInvalidation = policyById(
     policies,
@@ -215,6 +229,14 @@ export function parseProjectAuthSecurity(
             enabled: passwordPwned.enabled ?? true,
             sessions: passwordPwned.sessions ?? false,
             users: passwordPwned.users ?? false,
+          }
+        : null,
+    // `maxAge` only exists on the rotation policy, so it doubles as the type guard.
+    authPasswordRotation:
+      passwordRotation && 'maxAge' in passwordRotation
+        ? {
+            enabled: passwordRotation.enabled ?? false,
+            maxAge: passwordRotation.maxAge ?? 31_536_000,
           }
         : null,
     authSessionAlerts:
