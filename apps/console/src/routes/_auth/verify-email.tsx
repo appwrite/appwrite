@@ -245,6 +245,14 @@ function VerifyEmailPage() {
     if (!accountId || sentVerifications.has(accountId)) return
     if (hasConsoleImpersonationSessionTarget()) return
     sentVerifications.add(accountId)
+    // A reload clears the set above, so the tab also remembers the send.
+    const sentKey = `verify-email-sent:${accountId}`
+    try {
+      if (sessionStorage.getItem(sentKey)) return
+      sessionStorage.setItem(sentKey, '1')
+    } catch {
+      /* private mode */
+    }
     resendMutation.mutate()
   }, [accountId])
 
