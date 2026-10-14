@@ -100,7 +100,7 @@ export function Header({ onMenu }: { onMenu: () => void }) {
         <MigrationSwitch />
         <span className="mx-0.5 h-5 w-px bg-border sm:mx-1" aria-hidden />
         <a
-          href="https://discord.gg/GSeTUeA"
+          href="https://appwrite.io/discord"
           target="_blank"
           rel="noopener"
           className="inline-flex size-8 items-center justify-center text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
