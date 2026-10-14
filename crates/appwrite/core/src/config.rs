@@ -91,6 +91,16 @@ pub struct Config {
     pub queue_deletes: String,
     pub queue_usage: String,
     pub queue_audits: String,
+    pub queue_mails: String,
+    pub queue_messaging: String,
+    /// `_APP_SMTP_HOST`: empty when the instance sends no email.
+    pub smtp_host: String,
+    /// `_APP_SMS_PROVIDER`: empty when the instance sends no SMS.
+    pub sms_provider: String,
+    /// `_APP_SYSTEM_EMAIL_ADDRESS` (`APP_EMAIL_TEAM` by default).
+    pub system_email_address: String,
+    /// `_APP_SYSTEM_EMAIL_NAME` (`APP_NAME . ' Server'` by default).
+    pub system_email_name: String,
     pub console_trusted_projects: Vec<String>,
     /// `_APP_OPTIONS_ABUSE_INCREASED_LIMIT_PROJECTS`: projects whose limits
     /// are a hundred times higher.
@@ -194,6 +204,12 @@ impl Config {
             queue_deletes: env_or("_APP_DELETE_QUEUE_NAME", "v1-deletes").into_owned(),
             queue_usage: env_or("_APP_STATS_USAGE_QUEUE_NAME", "v1-stats-usage").into_owned(),
             queue_audits: env_or("_APP_AUDITS_QUEUE_NAME", "v1-audits").into_owned(),
+            queue_mails: env_or("_APP_MAILS_QUEUE_NAME", "v1-mails").into_owned(),
+            queue_messaging: env_or("_APP_MESSAGING_QUEUE_NAME", "v1-messaging").into_owned(),
+            smtp_host: env_or("_APP_SMTP_HOST", "").into_owned(),
+            sms_provider: env_or("_APP_SMS_PROVIDER", "").into_owned(),
+            system_email_address: env_or("_APP_SYSTEM_EMAIL_ADDRESS", "team@localhost.test").into_owned(),
+            system_email_name: env_or("_APP_SYSTEM_EMAIL_NAME", "Appwrite Server").into_owned(),
             console_trusted_projects: list(env("_APP_CONSOLE_TRUSTED_PROJECTS")),
             rules_md5: env_or("_APP_RULES_FORMAT", "") == "md5",
             abuse_increased_projects: list(env("_APP_OPTIONS_ABUSE_INCREASED_LIMIT_PROJECTS")),

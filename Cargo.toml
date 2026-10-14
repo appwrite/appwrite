@@ -83,6 +83,7 @@ utopia-migration = { path = "crates/utopia/migration" }
 # Appwrite crates
 appwrite-core = { path = "crates/appwrite/core" }
 appwrite-users = { path = "crates/appwrite/users" }
+appwrite-teams = { path = "crates/appwrite/teams" }
 
 # Third party
 # Multi-needle substring search (utopia-user-agent: the bot table, in one

@@ -73,6 +73,7 @@ PHP splits use the `utopia-php/monorepo` GitHub App (`SPLIT_APP_ID` / `SPLIT_APP
 | `utopia-dsn` | `packages/dsn` | DSN parsing |
 | `appwrite-core` | `src/Appwrite`, `app/` | config, errors catalogue, auth (keys, sessions, JWT, roles), crypto filter, documents, events, network (CORS, origin, IP), response models, request lifecycle |
 | `appwrite-users` | `Platform/Modules/Users` | all 47 `/v1/users` routes |
+| `appwrite-teams` | `Platform/Modules/Teams` | all 13 `/v1/teams` routes |
 | `appwrite-server` | `app/http.php` | process entry point, health probe |
 
 Package boundaries are enforced by Cargo: Utopia crates never depend on `appwrite-*`, and service crates depend only on `appwrite-core` and Utopia crates. A Utopia crate is created only when a service needs it (Users needed the twelve above). Its internals are idiomatic Rust, not a mirror of the PHP class.
@@ -81,7 +82,7 @@ Package boundaries are enforced by Cargo: Utopia crates never depend on `appwrit
 
 ```
              ┌──────────── Traefik ────────────┐
- client ───► │ /v1/users, /v1/users/*  (p=1000) │──► appwrite-rust :8080
+ client ───► │ /v1/users*, /v1/teams*  (p=1000) │──► appwrite-rust :8080
              │ everything else      (catch-all) │──► appwrite (PHP) :80
              └──────────────────────────────────┘
                      │                     │

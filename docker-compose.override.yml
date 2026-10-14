@@ -560,11 +560,11 @@ services:
       - traefik.docker.network=appwrite
       - traefik.http.services.appwrite_rust.loadbalancer.server.port=8080
       - traefik.http.routers.appwrite_rust_http.entrypoints=appwrite_web
-      - traefik.http.routers.appwrite_rust_http.rule=(Host(`${_APP_DOMAIN:-localhost}`) || Host(`${_APP_CONSOLE_DOMAIN:-localhost}`) || Host(`localhost`)) && (Path(`/v1/users`) || PathPrefix(`/v1/users/`)) && !HeaderRegexp(`x-appwrite-hostname`, `.+`)
+      - traefik.http.routers.appwrite_rust_http.rule=(Host(`${_APP_DOMAIN:-localhost}`) || Host(`${_APP_CONSOLE_DOMAIN:-localhost}`) || Host(`localhost`)) && (Path(`/v1/users`) || PathPrefix(`/v1/users/`) || Path(`/v1/teams`) || PathPrefix(`/v1/teams/`)) && !HeaderRegexp(`x-appwrite-hostname`, `.+`)
       - traefik.http.routers.appwrite_rust_http.priority=1000
       - traefik.http.routers.appwrite_rust_http.service=appwrite_rust
       - traefik.http.routers.appwrite_rust_https.entrypoints=appwrite_websecure
-      - traefik.http.routers.appwrite_rust_https.rule=(Host(`${_APP_DOMAIN:-localhost}`) || Host(`${_APP_CONSOLE_DOMAIN:-localhost}`) || Host(`localhost`)) && (Path(`/v1/users`) || PathPrefix(`/v1/users/`)) && !HeaderRegexp(`x-appwrite-hostname`, `.+`)
+      - traefik.http.routers.appwrite_rust_https.rule=(Host(`${_APP_DOMAIN:-localhost}`) || Host(`${_APP_CONSOLE_DOMAIN:-localhost}`) || Host(`localhost`)) && (Path(`/v1/users`) || PathPrefix(`/v1/users/`) || Path(`/v1/teams`) || PathPrefix(`/v1/teams/`)) && !HeaderRegexp(`x-appwrite-hostname`, `.+`)
       - traefik.http.routers.appwrite_rust_https.priority=1000
       - traefik.http.routers.appwrite_rust_https.service=appwrite_rust
       - traefik.http.routers.appwrite_rust_https.tls=true
@@ -612,6 +612,13 @@ services:
       - _APP_DELETE_QUEUE_NAME
       - _APP_STATS_USAGE_QUEUE_NAME
       - _APP_AUDITS_QUEUE_NAME
+      - _APP_MAILS_QUEUE_NAME
+      - _APP_MESSAGING_QUEUE_NAME
+      - _APP_SMTP_HOST
+      - _APP_SMS_PROVIDER
+      - _APP_SYSTEM_EMAIL_ADDRESS
+      - _APP_SYSTEM_EMAIL_NAME
+      - _APP_CONSOLE_ROOT_SESSION
       - _APP_RUST_LOG
       - _APP_RUST_WORKERS
       - _APP_RUST_DB_POOL

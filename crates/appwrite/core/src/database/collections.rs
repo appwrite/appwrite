@@ -40,6 +40,10 @@ pub const USERS: Schema = Schema {
     ],
 };
 
+/// `Queries\Teams` (`billingPlan` is allowed, but not an attribute of the
+/// project's `teams`).
+pub const TEAMS: Schema = Schema { attributes: &[("name", STRING, false), ("total", Database::VAR_INTEGER, false)] };
+
 /// `Queries\Targets`.
 pub const TARGETS: Schema = Schema {
     attributes: &[

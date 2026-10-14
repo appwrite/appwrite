@@ -34,6 +34,10 @@ pub struct EventState {
     pub payload: Option<Bytes>,
     /// Extra delete messages to publish.
     pub deletes: Vec<Value>,
+    /// Messages for other worker queues (`(queue, message)`: mails, SMS),
+    /// published after the created users' events, as PHP's listeners send
+    /// those before the action's own publishers.
+    pub queued: Vec<(String, Value)>,
 }
 
 /// Request context.
@@ -326,6 +330,20 @@ impl Context {
     /// Localised text.
     pub fn text(&self, key: &str, default: Option<&str>) -> String {
         self.state.translations.text(&self.locale, key, default)
+    }
+
+    /// The `redirectValidator` resource: `url` must be on an allowed
+    /// hostname or scheme. The error is the validator's description.
+    pub fn validate_redirect(&self, url: &str) -> std::result::Result<(), String> {
+        let hosts = super::lifecycle::allowed_hostnames(
+            &self.state,
+            &self.project,
+            self.project_found,
+            &self.request,
+            self.rule_domain.as_deref(),
+        );
+        let schemes = super::lifecycle::allowed_schemes(&self.state, &self.project, self.project_found);
+        crate::network::validate_redirect(url, &hosts, &schemes)
     }
 
     /// Plan flags (`$plan`); empty in CE.
