@@ -2424,10 +2424,6 @@ final class VideosCustomServerTest extends Scope
         $counts = ['video' => 0, 'audio' => 0, 'other' => 0];
 
         foreach ($document->getElementsByTagName('AdaptationSet') as $set) {
-            if (!$set instanceof \DOMElement) {
-                continue;
-            }
-
             // Captions (text/vtt) only carry a BaseURL on the Representation.
             if ($set->getAttribute('mimeType') === 'text/vtt') {
                 continue;
@@ -2441,10 +2437,6 @@ final class VideosCustomServerTest extends Scope
             };
 
             foreach ($set->getElementsByTagName('Representation') as $representation) {
-                if (!$representation instanceof \DOMElement) {
-                    continue;
-                }
-
                 $baseUrl = '';
                 foreach ($representation->childNodes as $child) {
                     if ($child instanceof \DOMElement && $child->tagName === 'BaseURL') {
@@ -2457,16 +2449,12 @@ final class VideosCustomServerTest extends Scope
                 $init = '';
                 $media = '';
                 foreach ($representation->getElementsByTagName('Initialization') as $initialization) {
-                    if ($initialization instanceof \DOMElement) {
-                        $init = $initialization->getAttribute('sourceURL');
-                        break;
-                    }
+                    $init = $initialization->getAttribute('sourceURL');
+                    break;
                 }
                 foreach ($representation->getElementsByTagName('SegmentURL') as $segmentUrl) {
-                    if ($segmentUrl instanceof \DOMElement) {
-                        $media = $segmentUrl->getAttribute('media');
-                        break;
-                    }
+                    $media = $segmentUrl->getAttribute('media');
+                    break;
                 }
 
                 $this->assertNotSame('', $init, 'Representation is missing Initialization');
