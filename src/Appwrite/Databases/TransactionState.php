@@ -120,43 +120,60 @@ class TransactionState
 
         $this->assertNotAggregated($queries);
 
-        $state = $this->getTransactionState($transactionId);
-        $committedDocs = $dbForDatabases->find($collectionId, $queries);
-        $documentMap = [];
+        $staged = $this->getTransactionState($transactionId)[$collectionId] ?? [];
+        $documents = [];
+        $committed = [];
 
-        // Build map of committed documents
-        foreach ($committedDocs as $doc) {
-            $documentMap[$doc->getId()] = $doc;
-        }
-
-        // Apply transaction state changes
-        if (isset($state[$collectionId])) {
-            foreach ($state[$collectionId] as $docId => $docState) {
-                if (!$docState['exists']) {
-                    // Document was deleted, remove from results
-                    unset($documentMap[$docId]);
-                } elseif ($docState['action'] === 'create') {
-                    // Document was created, add to results with projection
-                    $documentMap[$docId] = $this->applyProjection($docState['document'], $queries);
-                } elseif ($docState['action'] === 'update' || $docState['action'] === 'upsert') {
-                    if (isset($documentMap[$docId])) {
-                        // Update existing document
-                        foreach ($docState['document']->getAttributes() as $key => $value) {
-                            if ($key !== '$id') {
-                                $documentMap[$docId]->setAttribute($key, $value);
-                            }
-                        }
-                        // Reapply projection in case transaction added new fields
-                        $documentMap[$docId] = $this->applyProjection($documentMap[$docId], $queries);
-                    } elseif ($docState['action'] === 'upsert') {
-                        // Upsert created a new document, apply projection
-                        $documentMap[$docId] = $this->applyProjection($docState['document'], $queries);
-                    }
-                }
+        foreach ($dbForDatabases->find($collectionId, $queries) as $row) {
+            $id = $row->getId();
+            $document = $this->overlay($row, $staged[$id] ?? null, !isset($committed[$id]), $queries);
+            $committed[$id] = true;
+            if ($document !== null) {
+                $documents[] = $document;
             }
         }
 
-        return array_values($documentMap);
+        foreach ($staged as $id => $docState) {
+            if (isset($committed[$id]) || !$docState['exists']) {
+                continue;
+            }
+            if ($docState['action'] === 'create' || $docState['action'] === 'upsert') {
+                $documents[] = $this->applyProjection($docState['document'], $queries);
+            }
+        }
+
+        return $documents;
+    }
+
+    /**
+     * A join returns one row per joined row, all carrying the main document's $id: the staged state of
+     * that $id applies to every one of them, and a staged create takes the place of the first.
+     *
+     * @param array<string, mixed>|null $docState
+     * @param array<Query> $queries
+     */
+    private function overlay(Document $row, ?array $docState, bool $first, array $queries): ?Document
+    {
+        if ($docState === null) {
+            return $row;
+        }
+        if (!$docState['exists']) {
+            return null;
+        }
+        if ($docState['action'] === 'create') {
+            return $first ? $this->applyProjection($docState['document'], $queries) : null;
+        }
+        if ($docState['action'] !== 'update' && $docState['action'] !== 'upsert') {
+            return $row;
+        }
+
+        foreach ($docState['document']->getAttributes() as $key => $value) {
+            if ($key !== '$id') {
+                $row->setAttribute($key, $value);
+            }
+        }
+
+        return $this->applyProjection($row, $queries);
     }
 
     /**
@@ -190,10 +207,10 @@ class TransactionState
         if (!isset($state[$collectionId])) {
             return $baseCount;
         }
-        $committedDocs = $dbForDatabases->find($collectionId, $queries);
-        $committedDocIds = [];
-        foreach ($committedDocs as $doc) {
-            $committedDocIds[$doc->getId()] = true;
+        $committedRows = [];
+        foreach ($dbForDatabases->find($collectionId, $queries) as $row) {
+            $id = $row->getId();
+            $committedRows[$id] = ($committedRows[$id] ?? 0) + 1;
         }
 
         $adjustedCount = $baseCount;
@@ -202,21 +219,19 @@ class TransactionState
 
         foreach ($state[$collectionId] as $docId => $docState) {
             if (!$docState['exists']) {
-                if (isset($committedDocIds[$docId])) {
-                    $adjustedCount--;
-                }
+                $adjustedCount -= $committedRows[$docId] ?? 0;
             } elseif ($docState['action'] === 'create') {
                 if ($this->documentMatchesFilters($docState['document'], $filters)) {
                     $adjustedCount++;
                 }
             } elseif ($docState['action'] === 'update' || $docState['action'] === 'upsert') {
-                $wasInResults = isset($committedDocIds[$docId]);
+                $wasInResults = isset($committedRows[$docId]);
                 $nowMatches = $this->documentMatchesFilters($docState['document'], $filters);
 
                 if (!$wasInResults && $nowMatches && $docState['action'] === 'upsert') {
                     $adjustedCount++;
                 } elseif ($wasInResults && !$nowMatches) {
-                    $adjustedCount--;
+                    $adjustedCount -= $committedRows[$docId];
                 } elseif (!$wasInResults && $nowMatches) {
                     // Update shouldn't add a new doc, but upsert might have
                     if ($docState['action'] === 'upsert') {
@@ -642,8 +657,12 @@ class TransactionState
         }
 
         $selections = [];
+        $aliases = [];
         foreach ($queries as $query) {
-            if ($query->getMethod() === Method::Select) {
+            $method = $query->getMethod();
+            if ($method->isJoin()) {
+                $aliases[$query->getAlias()] = true;
+            } elseif ($method === Method::Select) {
                 $values = $query->getValues();
                 foreach ($values as $value) {
                     // Skip relationship selections (containing '.')
@@ -674,6 +693,13 @@ class TransactionState
         foreach ($selections as $attribute) {
             if ($doc->offsetExists($attribute)) {
                 $projected->setAttribute($attribute, $doc->getAttribute($attribute));
+            }
+        }
+
+        foreach ($doc as $key => $value) {
+            $dot = \strpos((string) $key, '.');
+            if ($dot !== false && isset($aliases[\substr((string) $key, 0, $dot)])) {
+                $projected->setAttribute((string) $key, $value);
             }
         }
 
