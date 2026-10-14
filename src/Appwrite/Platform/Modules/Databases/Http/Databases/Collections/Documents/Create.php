@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents;
 
-use Appwrite\Databases\RelationshipValues;
 use Appwrite\Databases\TransactionState;
 use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
@@ -17,7 +16,6 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Usage\Context;
 use Appwrite\Usage\Operations;
 use Appwrite\Utopia\Database\Documents\User;
-use Appwrite\Utopia\Database\Hook\UniqueId;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
@@ -290,14 +288,8 @@ class Create extends Action
         };
 
         $dbForDatabases = $getDatabasesDB($database, $collection);
-        $relationshipValues = new RelationshipValues(
-            $dbForProject,
-            $database,
-            fn (array $relation): array => $this->removeReadonlyAttributes($relation, $isAPIKey || $isPrivilegedUser),
-            $transactionId === null ? null : new UniqueId(),
-        );
 
-        $documents = \array_map(function ($document) use ($collection, $permissions, $isBulk, $documentId, $setPermissions, $isAPIKey, $isPrivilegedUser, $relationshipValues) {
+        $documents = \array_map(function ($document) use ($collection, $permissions, $isBulk, $documentId, $setPermissions, $isAPIKey, $isPrivilegedUser, $dbForProject, $database, $transactionId) {
             $document['$collection'] = $collection->getId();
 
             // Determine the source ID depending on whether it's a bulk operation.
@@ -315,7 +307,7 @@ class Create extends Action
 
             // Assign a unique ID if needed, otherwise use the provided ID.
             $document['$id'] = $sourceId === CustomId::UNIQUE ? Id::unique() : $sourceId;
-            $document = $relationshipValues->prepare($document, $collection);
+            $document = $this->prepareRelationships($document, $collection, $dbForProject, $database, $isAPIKey || $isPrivilegedUser, $transactionId !== null);
             $document = $this->removeReadonlyAttributes($document, $isAPIKey || $isPrivilegedUser);
             $document = new Document($document);
             $setPermissions($document, $permissions);

@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents;
 
-use Appwrite\Databases\RelationshipValues;
 use Appwrite\Databases\TransactionState;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
@@ -14,7 +13,6 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Usage\Context;
 use Appwrite\Usage\Operations;
 use Appwrite\Utopia\Database\Documents\User;
-use Appwrite\Utopia\Database\Hook\UniqueId;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
@@ -198,12 +196,7 @@ class Upsert extends Action
 
         $data['$id'] = $documentId;
         $data['$permissions'] = $permissions ?? [];
-        $data = (new RelationshipValues(
-            $dbForProject,
-            $database,
-            fn (array $relation): array => $this->removeReadonlyAttributes($relation, $isAPIKey || $isPrivilegedUser),
-            $transactionId === null ? null : new UniqueId(),
-        ))->prepare($data, $collection);
+        $data = $this->prepareRelationships($data, $collection, $dbForProject, $database, $isAPIKey || $isPrivilegedUser, $transactionId !== null);
         $data = $this->removeReadonlyAttributes($data, $isAPIKey || $isPrivilegedUser);
         $newDocument = new Document($data);
 
