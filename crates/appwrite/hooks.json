@@ -22,9 +22,11 @@
       "description": "Rate limits a route by its `abuse-key`, `abuse-limit` and `abuse-time` labels (raised 100 times for listed projects), skipping keys and privileged users and when `_APP_OPTIONS_ABUSE` is disabled; sets the X-RateLimit headers and throws a rate limit error past the limit. Also hands the user to the request and response.",
       "php": { "file": "app/controllers/shared/api.php", "kind": "init", "anchor": "GENERAL_RATE_LIMIT_EXCEEDED" },
       "rust": {
-        "status": "partial",
-        "note": "Implemented in `platform/guards.rs` (route labels in `platform::Labels`); no route Rust serves carries its labels yet, so Teams and Account prove it.",
-        "where": []
+        "status": "done",
+        "note": "Teams' `createMembership` (`abuse-limit` 10 on the default key) and `updateMembershipStatus` (`ip:{ip},url:{url}`) prove the counters and the `X-RateLimit-*` headers in `bin/compat appwrite diff` (the dev stack runs with `_APP_OPTIONS_ABUSE=disabled`, so requests are counted, not refused).",
+        "where": [
+          { "file": "crates/appwrite/core/src/platform/guards.rs", "anchor": "pub(super) async fn abuse" }
+        ]
       }
     },
     {
@@ -45,14 +47,14 @@
       "title": "One session at a time",
       "description": "Refuses to create a session for a caller who already has one, unless the route is labelled `session.allowActive`.",
       "php": { "file": "app/controllers/shared/api.php", "kind": "init", "anchor": "session.allowActive" },
-      "rust": { "status": "partial", "note": "Implemented in `platform/guards.rs` (route labels in `platform::Labels`); no route Rust serves carries its labels yet, so Teams and Account prove it.", "note": null, "where": [] }
+      "rust": { "status": "partial", "note": "Implemented in `platform/guards.rs` (route labels in `platform::Labels`); no route Rust serves carries its labels yet (Teams has none), so Account proves it.", "note": null, "where": [] }
     },
     {
       "id": "session-limit",
       "title": "Session limit",
       "description": "After a session is created, deletes the user's oldest sessions beyond the project's `maxSessions` and purges the cached user.",
       "php": { "file": "app/controllers/shared/api.php", "kind": "shutdown", "anchor": "maxSessions" },
-      "rust": { "status": "partial", "note": "Implemented in `platform/guards.rs` (route labels in `platform::Labels`); no route Rust serves carries its labels yet, so Teams and Account prove it.", "note": null, "where": [] }
+      "rust": { "status": "partial", "note": "Implemented in `platform/guards.rs` (route labels in `platform::Labels`); no route Rust serves carries its labels yet (Teams has none), so Account proves it.", "note": null, "where": [] }
     },
     {
       "id": "events",
@@ -73,7 +75,7 @@
       "title": "Abuse counter reset",
       "description": "Resets the route's abuse counters when the response status is one of its `abuse-reset` codes.",
       "php": { "file": "app/controllers/shared/api.php", "kind": "shutdown", "anchor": "abuse-reset" },
-      "rust": { "status": "partial", "note": "Implemented in `platform/guards.rs` (route labels in `platform::Labels`); no route Rust serves carries its labels yet, so Teams and Account prove it.", "where": [] }
+      "rust": { "status": "partial", "note": "Implemented in `platform/guards.rs` (route labels in `platform::Labels`); no route Rust serves carries an `abuse-reset` label yet (Teams has none), so Account proves it.", "where": [] }
     },
     {
       "id": "audits",
@@ -236,21 +238,27 @@
       "title": "Recent MFA challenge",
       "description": "For `mfaProtected` routes, requires an MFA challenge completed within the recent window.",
       "php": { "file": "app/controllers/shared/api/auth.php", "kind": "init", "anchor": "USER_CHALLENGE_REQUIRED" },
-      "rust": { "status": "partial", "note": "Implemented in `platform/guards.rs` (route labels in `platform::Labels`); no route Rust serves carries its labels yet, so Teams and Account prove it.", "note": null, "where": [] }
+      "rust": { "status": "partial", "note": "Implemented in `platform/guards.rs` (route labels in `platform::Labels`); no route Rust serves carries its labels yet (Teams has none), so Account proves it.", "note": null, "where": [] }
     },
     {
       "id": "recent-session",
       "title": "Recent sign-in",
       "description": "For `recentSession` routes, requires a session created or MFA-verified within the recent window.",
       "php": { "file": "app/controllers/shared/api/auth.php", "kind": "init", "anchor": "USER_REAUTHENTICATION_REQUIRED" },
-      "rust": { "status": "partial", "note": "Implemented in `platform/guards.rs` (route labels in `platform::Labels`); no route Rust serves carries its labels yet, so Teams and Account prove it.", "note": null, "where": [] }
+      "rust": { "status": "partial", "note": "Implemented in `platform/guards.rs` (route labels in `platform::Labels`); no route Rust serves carries its labels yet (Teams has none), so Account proves it.", "note": null, "where": [] }
     },
     {
       "id": "auth-methods",
       "title": "Authentication methods",
       "description": "For `auth` routes, refuses console access from denied countries and, except for keys and privileged users, an authentication method the project disabled (`auth.type` label).",
       "php": { "file": "app/controllers/shared/api/auth.php", "kind": "init", "anchor": "auth.type" },
-      "rust": { "status": "partial", "note": "Implemented in `platform/guards.rs` (route labels in `platform::Labels`); no route Rust serves carries its labels yet, so Teams and Account prove it.", "note": null, "where": [] }
+      "rust": {
+        "status": "done",
+        "note": "`createMembership` (`auth.type` `invites`, groups `api`, `teams`, `auth`) runs it in `bin/compat appwrite diff` under every identity (invites enabled, as on the twins); the refusal of a disabled method is the shared code path the other `auth.type` values take.",
+        "where": [
+          { "file": "crates/appwrite/core/src/platform/guards.rs", "anchor": "pub(super) async fn auth_methods" }
+        ]
+      }
     },
     {
       "id": "graphql-api",

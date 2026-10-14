@@ -58,6 +58,7 @@ struct Job {
     /// A function changed: its events cache is purged.
     functions_changed: bool,
     deletes: Vec<Value>,
+    queued: Vec<(String, Value)>,
     metrics: Vec<(String, i64)>,
     request: RequestInfo,
     status: StatusCode,
@@ -190,6 +191,7 @@ pub(super) fn schedule(ctx: Context, status: StatusCode, body: Bytes, response_s
         session_user,
         abuse_params: ctx.abuse_params,
         deletes: ctx.events.deletes,
+        queued: ctx.events.queued,
         metrics: listened.metrics,
         request: info,
         status,
@@ -249,6 +251,10 @@ impl Job {
             }
         }
 
+        for (queue, message) in &self.queued {
+            self.publish(queue, message).await;
+        }
+
         if let Some(pattern) = self.route.event {
             match event::generate_events(pattern, &self.params) {
                 Ok(events) => self.trigger(&events, &project_payload, &trimmed).await,
@@ -273,7 +279,10 @@ impl Job {
 
     async fn realtime(&self, events: &[String], user_id: Option<&str>, payload: &RawValue) {
         let Some(first) = events.first() else { return };
-        let Some(target) = event::realtime_target(first) else { return };
+        let member = serde_json::from_str::<Value>(payload.get())
+            .ok()
+            .and_then(|p| p.get("userId").and_then(Value::as_str).map(str::to_owned));
+        let Some(target) = event::realtime_target(first, member.as_deref()) else { return };
         let message = event::realtime_message(&self.project.id, &target, user_id, events, payload);
         let mut pubsub = self.state.pubsub.clone();
         let sent: Result<i64, _> =

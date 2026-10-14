@@ -199,6 +199,27 @@ pub fn validate_origin(origin: &str, allowed_hosts: &[String], allowed_schemes: 
     }
 }
 
+/// Redirect URL validation (`Network\Validator\Redirect`): the origin rules,
+/// with its own description on failure.
+pub fn validate_redirect(url: &str, allowed_hosts: &[String], allowed_schemes: &[String]) -> Result<(), String> {
+    if url.is_empty() {
+        return Err("Invalid URI.".to_owned());
+    }
+    if validate_origin(url, allowed_hosts, allowed_schemes).is_ok() {
+        return Ok(());
+    }
+    let scheme = url_scheme(url);
+    let host = url_host(url).unwrap_or_default();
+    if host.is_empty() && scheme.is_none() {
+        return Err("Invalid URI.".to_owned());
+    }
+    let platform = scheme.as_deref().and_then(platform_name).unwrap_or("");
+    let host = if host.is_empty() { String::new() } else { format!("({host})") };
+    Err(format!(
+        "Invalid URI. Register your new client {host} as a new {platform} platform on your project console dashboard"
+    ))
+}
+
 /// Parses an IPv4/IPv6 CIDR or single address.
 fn in_range(ip: &IpAddr, range: &str) -> bool {
     let (net, bits) = match range.split_once('/') {

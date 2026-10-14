@@ -164,16 +164,28 @@ const USER_EVENTS_WITHOUT_ACCESS_CHANGE: [&str; 16] = [
     "identities.*.delete",
 ];
 
-/// Realtime target for an event (`Messaging\Adapter\Realtime::fromPayload`, users subset).
+/// Realtime target for an event (`Messaging\Adapter\Realtime::fromPayload`,
+/// users and teams subsets).
 pub struct RealtimeTarget {
     pub channels: Vec<String>,
     pub roles: Vec<String>,
+    /// `permissionsChanged` (for membership events PHP's `$parts[4] ?? false`,
+    /// cast to a boolean when sent).
     pub permissions_changed: bool,
 }
 
-pub fn realtime_target(event: &str) -> Option<RealtimeTarget> {
+/// `Realtime::SUPPORTED_ACTIONS`.
+const ACTIONS: [&str; 4] = ["create", "update", "upsert", "delete"];
+
+/// `Realtime::RESOURCE_LEAF_NAMES`: channels that get an action-suffixed sibling.
+const RESOURCE_LEAF_NAMES: [&str; 9] =
+    ["documents", "rows", "files", "executions", "functions", "account", "teams", "memberships", "presences"];
+
+/// The target of `event`; `user_id` is the payload's `userId` (the member of
+/// a deleted membership).
+pub fn realtime_target(event: &str, user_id: Option<&str>) -> Option<RealtimeTarget> {
     let parts: Vec<&str> = event.split('.').collect();
-    match parts.first().copied() {
+    let (mut channels, roles, permissions_changed) = match parts.first().copied() {
         Some("users") if parts.len() > 1 => {
             let id = parts[1];
             let suffix = &parts[2..];
@@ -188,27 +200,56 @@ pub fn realtime_target(event: &str) -> Option<RealtimeTarget> {
                     break;
                 }
             }
-            let mut channels = vec!["account".to_owned(), format!("account.{id}")];
-            // The action-suffixed siblings, for top-level user events only (the
-            // action right after the user ID: `users.U.update.email`, not
-            // `users.U.sessions.S.create`).
-            const ACTIONS: [&str; 4] = ["create", "update", "upsert", "delete"];
-            let n = parts.len();
-            let action = if ACTIONS.contains(&parts[n - 1]) {
-                Some(parts[n - 1])
-            } else if n >= 2 && ACTIONS.contains(&parts[n - 2]) {
-                Some(parts[n - 2])
-            } else {
-                None
-            };
-            if let Some(action) = action.filter(|a| parts.get(2) == Some(a)) {
-                channels.push(format!("account.{action}"));
-                channels.push(format!("account.{id}.{action}"));
-            }
-            Some(RealtimeTarget { channels, roles: vec![format!("user:{id}")], permissions_changed })
+            let channels = vec!["account".to_owned(), format!("account.{id}")];
+            (channels, vec![format!("user:{id}")], permissions_changed)
         }
-        _ => None,
+        Some("teams") if parts.len() > 2 => {
+            let id = parts[1];
+            let mut roles = vec![format!("team:{id}")];
+            if parts[2] == "memberships" {
+                let changed = parts.get(4).is_some_and(|a| !a.is_empty() && *a != "0");
+                let membership = parts.get(3).copied().unwrap_or("");
+                // The member of a deleted membership no longer holds the team
+                // role: the delete is addressed to them too.
+                if parts.get(4) == Some(&"delete")
+                    && let Some(user) = user_id.filter(|u| !u.is_empty())
+                {
+                    roles.push(format!("user:{user}"));
+                }
+                (vec!["memberships".to_owned(), format!("memberships.{membership}")], roles, changed)
+            } else {
+                (vec!["teams".to_owned(), format!("teams.{id}")], roles, parts[2] == "create")
+            }
+        }
+        _ => return None,
+    };
+    let n = parts.len();
+    let mut action = if ACTIONS.contains(&parts[n - 1]) {
+        Some(parts[n - 1])
+    } else if n >= 2 && ACTIONS.contains(&parts[n - 2]) {
+        Some(parts[n - 2])
+    } else {
+        None
+    };
+    // User events are suffixed at the top level only (the action right after
+    // the user ID: `users.U.update.email`, not `users.U.sessions.S.create`).
+    if parts[0] == "users" && parts.get(2) != action.as_ref() {
+        action = None;
     }
+    if let Some(action) = action {
+        let mut augmented = channels.clone();
+        for channel in &channels {
+            let segments: Vec<&str> = channel.split('.').collect();
+            let count = segments.len();
+            let leaf = RESOURCE_LEAF_NAMES.contains(&segments[count - 1]);
+            let parent = count >= 2 && RESOURCE_LEAF_NAMES.contains(&segments[count - 2]);
+            if leaf || parent {
+                augmented.push(format!("{channel}.{action}"));
+            }
+        }
+        channels = unique(augmented);
+    }
+    Some(RealtimeTarget { channels, roles, permissions_changed })
 }
 
 /// Functions queue message (`Message\Func::toArray`).
@@ -435,16 +476,35 @@ mod tests {
 
     #[test]
     fn realtime() {
-        let t = realtime_target("users.u1.update.name").unwrap();
+        let t = realtime_target("users.u1.update.name", None).unwrap();
         assert!(!t.permissions_changed);
         assert_eq!(t.channels, vec!["account", "account.u1", "account.update", "account.u1.update"]);
         assert_eq!(
-            realtime_target("users.u1.create").unwrap().channels,
+            realtime_target("users.u1.create", None).unwrap().channels,
             vec!["account", "account.u1", "account.create", "account.u1.create"]
         );
         // Nested events keep the plain channels.
-        assert_eq!(realtime_target("users.u1.sessions.s1.create").unwrap().channels, vec!["account", "account.u1"]);
-        assert!(realtime_target("users.u1.update.email").unwrap().permissions_changed);
-        assert!(!realtime_target("users.u1.targets.t1.create").unwrap().permissions_changed);
+        assert_eq!(
+            realtime_target("users.u1.sessions.s1.create", None).unwrap().channels,
+            vec!["account", "account.u1"]
+        );
+        assert!(realtime_target("users.u1.update.email", None).unwrap().permissions_changed);
+        assert!(!realtime_target("users.u1.targets.t1.create", None).unwrap().permissions_changed);
+    }
+
+    #[test]
+    fn realtime_teams() {
+        let t = realtime_target("teams.t1.create", None).unwrap();
+        assert_eq!(t.channels, vec!["teams", "teams.t1", "teams.create", "teams.t1.create"]);
+        assert_eq!(t.roles, vec!["team:t1"]);
+        assert!(t.permissions_changed);
+        assert!(!realtime_target("teams.t1.update.prefs", None).unwrap().permissions_changed);
+        let m = realtime_target("teams.t1.memberships.m1.delete", Some("u1")).unwrap();
+        assert_eq!(m.channels, vec!["memberships", "memberships.m1", "memberships.delete", "memberships.m1.delete"]);
+        assert_eq!(m.roles, vec!["team:t1", "user:u1"]);
+        assert!(m.permissions_changed);
+        let s = realtime_target("teams.t1.memberships.m1.update.status", Some("u1")).unwrap();
+        assert_eq!(s.roles, vec!["team:t1"]);
+        assert_eq!(s.channels, vec!["memberships", "memberships.m1", "memberships.update", "memberships.m1.update"]);
     }
 }

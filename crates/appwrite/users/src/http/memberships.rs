@@ -40,13 +40,7 @@ pub async fn list(ctx: &mut Context) -> Result<Response> {
     let models: Vec<MembershipModel<'_>> = memberships
         .iter()
         .zip(team_names.iter())
-        .map(|(m, team_name)| MembershipModel {
-            membership: m,
-            user_name: &user_name,
-            user_email: &user_email,
-            team_name,
-            render,
-        })
+        .map(|(m, team_name)| MembershipModel::new(m, &user_name, &user_email, team_name, render))
         .collect();
     let total = if include_total { models.len() as i64 } else { 0 };
     Ok(ctx.ok(&MembershipListModel { total, memberships: models }))
