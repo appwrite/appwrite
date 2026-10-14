@@ -510,7 +510,7 @@ async function resolveAuthorizationCode(params: {
     state: params.state,
     codeChallenge: params.codeChallenge,
     codeChallengeMethod: 'S256',
-    resource: params.resource,
+    resource: [params.resource],
     authorizationDetails: params.authorizationDetails,
   })
 
@@ -619,7 +619,7 @@ export async function connectMcpOAuthSilently(
         redirectUri,
         clientId: fixedClientId,
         codeVerifier,
-        resource,
+        resource: [resource],
       })
 
       if (!tokens.access_token) {

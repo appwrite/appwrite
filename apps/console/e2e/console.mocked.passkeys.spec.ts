@@ -371,7 +371,12 @@ async function mockAppwriteApi(
     }
 
     if (apiPath === '/account') return json(200, ACCOUNT)
-    if (apiPath === '/account/prefs') return json(200, ACCOUNT.prefs)
+    // GET returns the prefs, PATCH the updated user.
+    if (apiPath === '/account/prefs') {
+      return request.method() === 'PATCH'
+        ? json(200, { ...ACCOUNT, prefs: request.postDataJSON().prefs })
+        : json(200, ACCOUNT.prefs)
+    }
     if (apiPath === '/account/sessions')
       return json(200, { total: 0, sessions: [] })
     if (apiPath === '/health/version') return json(200, { version: '1.8.0' })

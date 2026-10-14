@@ -2458,7 +2458,7 @@ return [
                 'filters' => [],
             ],
             // message retention in seconds capped at 7 days. A ledger message expires
-            // this long after it is written.
+            // this long after it is written. null inherits the lowest Appwrite provider expiry.
             [
                 '$id' => ID::custom('expiry'),
                 'type' => Database::VAR_INTEGER,

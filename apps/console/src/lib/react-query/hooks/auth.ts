@@ -908,7 +908,7 @@ export function useUpdateSessionAlerts(projectId: string | null | undefined) {
 }
 
 /**
- * Updates the passkey relying party policy. Send only the fields that changed.
+ * Updates the passkey relying party ID.
  *
  * @param projectId - The project ID
  */
@@ -916,12 +916,12 @@ export function useUpdatePasskeyPolicy(projectId: string | null | undefined) {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async (policy: { rpId?: string; origins?: string[] }) => {
+    mutationFn: async ({ rpId }: { rpId: string }) => {
       if (!projectId) {
         throw new Error('Project ID is required')
       }
 
-      return sdk.forProject(projectId).project.updatePasskeyPolicy(policy)
+      return sdk.forProject(projectId).project.updatePasskeyPolicy({ rpId })
     },
     // Awaited so the mutation stays pending until the refetch lands: the card keeps
     // Update disabled across the whole write, not just the PATCH.
