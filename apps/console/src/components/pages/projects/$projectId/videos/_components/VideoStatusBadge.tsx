@@ -32,7 +32,7 @@ const RENDITION_STATUS: Record<
   aborted: { label: 'Aborted', variant: 'warning' },
 }
 
-const SUBTITLE_STATUS: Record<
+const CAPTION_STATUS: Record<
   string,
   { label: string; variant: BadgeVariant }
 > = {
@@ -45,7 +45,7 @@ const SUBTITLE_STATUS: Record<
 const STATUS_MAPS = {
   video: VIDEO_STATUS,
   rendition: RENDITION_STATUS,
-  subtitle: SUBTITLE_STATUS,
+  caption: CAPTION_STATUS,
 }
 
 export function VideoStatusBadge({

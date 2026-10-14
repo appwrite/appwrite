@@ -49,10 +49,11 @@ export const RENDITIONS_DEFAULT_SORT_ORDER = 'asc' as const
 
 /** Spreadsheet column ids used in the renditions sort URL param. */
 export type RenditionSortColumn =
-  | 'rendition'
   | 'profile'
   | 'output'
   | 'resolution'
+  | 'videoBitRate'
+  | 'audioBitRate'
   | 'bitrate'
   | 'segmentLength'
   | 'status'
@@ -91,6 +92,12 @@ export function compareVideoRenditions(
       break
     case 'resolution':
       cmp = a.width * a.height - b.width * b.height
+      break
+    case 'videoBitRate':
+      cmp = a.videoBitRate - b.videoBitRate
+      break
+    case 'audioBitRate':
+      cmp = a.audioBitRate - b.audioBitRate
       break
     case 'bitrate':
       cmp =

@@ -14,6 +14,7 @@ export const ALTERNATIVE_IDS = [
   'planetscale',
   'posthog',
   'plausible',
+  'mux',
 ] as const satisfies readonly AlternativeId[]
 
 /** Month the competitor facts on these pages were last checked against public sources. */
@@ -174,6 +175,18 @@ export const ALTERNATIVE_REGISTRY: Record<AlternativeId, AlternativeMeta> = {
     tone: 'purple',
     secondaryTone: 'mint',
     focusProduct: 'analytics',
+  },
+  mux: {
+    id: 'mux',
+    name: 'Mux',
+    category: 'Video API',
+    metaTitle: 'Appwrite Videos vs Mux: video streaming inside your backend',
+    metaDescription:
+      'Compare Appwrite Videos and Mux. Adaptive HLS, DASH, and CMAF streams from files in Storage, with subtitles, timeline thumbnails, and a built-in player, next to auth, databases, and functions in one open-source backend.',
+    summary: 'HLS, DASH, and CMAF next to your users and data.',
+    tone: 'pink',
+    secondaryTone: 'mint',
+    focusProduct: 'videos',
   },
 }
 

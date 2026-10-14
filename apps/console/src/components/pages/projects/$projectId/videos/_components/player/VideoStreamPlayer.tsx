@@ -1,19 +1,30 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+} from 'react'
 import { createPortal } from 'react-dom'
 import type { Models } from '@appwrite.io/console'
-import { Info, Loader2, Pause, Play, SquareArrowOutUpRight } from 'lucide-react'
+import { Pause, Play, SquareArrowOutUpRight } from 'lucide-react'
 import { sdk } from '@/lib/appwrite/sdk'
-import { withAdminMode } from '@/lib/appwrite/admin-resource-url'
+import { isEmbedUnauthorizedMessage } from '@/lib/videos/embed-player-errors'
+import { applyVideoStreamAccess } from '@/lib/videos/video-stream-access'
+import { EmbedUnauthorized } from '@/components/pages/player/EmbedUnauthorized'
+import {
+  groupReadyRenditionIds,
+  resolvePreferredPlaybackOutput,
+} from '@/lib/videos/preferred-playback-output'
 import { Button } from '@/components/ui/button'
-import { ProgressBarRow } from '@/components/global/shared/ProgressBarRow'
 import { AppwriteMarkIcon } from '@/components/global/shared/AppwriteMarkIcon'
 import {
+  getVideoSpriteUrl,
+  isVideoMetadataReady,
   isVideoRenditionActive,
-  parseVideoProgress,
   useVideoTimeline,
-  videoSourceHasAudio,
 } from '@/lib/react-query/hooks/videos'
-import { VideoFormatLabel } from '../VideoOutputBadge'
 import {
   getVideoPlayerViewportStyle,
   resolveVideoViewportAspect,
@@ -32,6 +43,15 @@ import {
   useVideoInspector,
 } from './VideoInspectorContext'
 import { useQoeTracker } from './useQoeTracker'
+import { AudioOnlyPlayerBackdrop } from './AudioOnlyPlayerBackdrop'
+import {
+  resolveVideoSubtitleSize,
+  VIDEO_SUBTITLE_INSET_CONSOLE_PX,
+  VIDEO_SUBTITLE_INSET_OVERLAY_GAP_PX,
+  VIDEO_SUBTITLE_OVERLAY_GRADIENT_PAD_PX,
+  videoSubtitleSizeCss,
+  type VideoSubtitleSize,
+} from '@/lib/videos/player-subtitle-display'
 
 const FULLSCREEN_CONTROLS_IDLE_MS = 2500
 
@@ -39,45 +59,42 @@ export interface VideoStreamPlayerProps {
   projectId: string
   video: Models.Video
   renditions: Models.VideoRendition[]
-  /** Rendition progress card above the player. */
-  showProcessing?: boolean
   /** Overview layout: slightly shorter max height. */
   variant?: 'default' | 'featured'
+  /** Full-viewport embed player for end users (`/player/:videoId`). */
+  layout?: 'console' | 'embed'
+  /** Seek once when the stream is ready (`?start=` on the embed URL). */
+  initialStartSeconds?: number
 }
 
 export function VideoStreamPlayer({
   projectId,
   video,
   renditions,
-  showProcessing = false,
   variant = 'default',
+  layout = 'console',
+  initialStartSeconds,
 }: VideoStreamPlayerProps) {
   const t = useT()
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const featured = variant === 'featured'
+  const embed = layout === 'embed'
+  const streamAccess = embed ? 'end-user' : 'console'
+  const overlayControls = embed
 
-  const readyIds = useMemo(() => {
-    const byOutput: Record<string, string[]> = { hls: [], dash: [], cmaf: [] }
-    for (const rendition of renditions) {
-      if (rendition.status === 'ready') {
-        byOutput[rendition.output]?.push(rendition.$id)
-      }
-    }
-    for (const key of Object.keys(byOutput)) byOutput[key].sort()
-    return byOutput
-  }, [renditions])
+  const readyIds = useMemo(
+    () => groupReadyRenditionIds(renditions),
+    [renditions],
+  )
 
-  const preferredOutput: PlaybackOutput =
-    readyIds.hls.length > 0
-      ? 'hls'
-      : readyIds.cmaf.length > 0
-        ? 'cmaf'
-        : readyIds.dash.length > 0
-          ? 'dash'
-          : 'source'
+  const preferredOutput = useMemo(
+    () => resolvePreferredPlaybackOutput(readyIds),
+    [readyIds],
+  )
   const playerPrefs = useVideoPlayerPrefs()
   const [chosenOutput, setChosenOutput] = useState<PlaybackOutput | null>(
     () => {
+      if (embed) return null
       const saved = playerPrefs.read().output
       if (!saved) return null
       return saved === 'source' || readyIds[saved]?.length ? saved : null
@@ -86,7 +103,7 @@ export function VideoStreamPlayer({
   const output = chosenOutput ?? preferredOutput
   const changeOutput = (next: PlaybackOutput) => {
     setChosenOutput(next)
-    playerPrefs.update({ output: next })
+    if (!embed) playerPrefs.update({ output: next })
   }
 
   const videos = sdk.forProject(projectId).videos
@@ -123,27 +140,27 @@ export function VideoStreamPlayer({
 
   const sourceFileUrl = useMemo(
     () =>
-      withAdminMode(
+      applyVideoStreamAccess(
         sdk.forProject(projectId).storage.getFileView({
           bucketId: video.bucketId,
           fileId: video.fileId,
         }),
+        streamAccess,
       ),
-    [projectId, video.bucketId, video.fileId],
+    [projectId, video.bucketId, video.fileId, streamAccess],
   )
 
   const posterUrl = useMemo(
     () =>
       video.previewId
-        ? withAdminMode(
-            sdk.forProject(projectId).videos.getPreview({
-              videoId: video.$id,
-              previewId: video.previewId,
+        ? applyVideoStreamAccess(
+            getVideoSpriteUrl(projectId, video.$id, video.previewId, {
               width: 1280,
             }),
+            streamAccess,
           )
         : undefined,
-    [projectId, video.$id, video.previewId],
+    [projectId, video.$id, video.previewId, streamAccess],
   )
 
   const activeManifestUrl = useMemo(() => {
@@ -192,15 +209,24 @@ export function VideoStreamPlayer({
     )
   }, [inspectorContainer, video.name, t])
 
+  const hasStorageFile = Boolean(video.bucketId && video.fileId)
+
   const playerSource: PlayerSource | null = useMemo(() => {
-    if (!activeManifestUrl) {
+    const adaptiveReady =
+      (output === 'hls' && readyIds.hls.length > 0) ||
+      (output === 'dash' && readyIds.dash.length > 0) ||
+      (output === 'cmaf' && readyIds.cmaf.length > 0)
+    if (adaptiveReady && activeManifestUrl) {
+      return {
+        url: activeManifestUrl,
+        type: output === 'dash' ? 'dash' : 'hls',
+      }
+    }
+    if (hasStorageFile) {
       return { url: sourceFileUrl, type: 'file' }
     }
-    if (output === 'dash') {
-      return { url: activeManifestUrl, type: 'dash' }
-    }
-    return { url: activeManifestUrl, type: 'hls' }
-  }, [activeManifestUrl, sourceFileUrl, output])
+    return null
+  }, [activeManifestUrl, hasStorageFile, output, readyIds, sourceFileUrl])
 
   useEffect(() => {
     setLoadedKey(outputReadyKey)
@@ -246,6 +272,7 @@ export function VideoStreamPlayer({
     videoRef,
     playerSource,
     reloadToken,
+    streamAccess,
   )
 
   useEffect(() => {
@@ -265,6 +292,36 @@ export function VideoStreamPlayer({
     el.addEventListener('volumechange', onVolumeChange)
     return () => el.removeEventListener('volumechange', onVolumeChange)
   }, [readPlayerPrefs, updatePlayerPrefs])
+
+  const appliedEmbedStartRef = useRef(false)
+  useEffect(() => {
+    appliedEmbedStartRef.current = false
+  }, [initialStartSeconds, outputReadyKey, reloadToken])
+
+  useEffect(() => {
+    const start = initialStartSeconds
+    if (start == null || !Number.isFinite(start) || start <= 0) return
+    const el = videoRef.current
+    if (!el || appliedEmbedStartRef.current) return
+
+    const applyStart = () => {
+      if (appliedEmbedStartRef.current) return
+      if (!Number.isFinite(el.duration) || el.duration <= 0) return
+      const target = Math.min(start, Math.max(0, el.duration - 0.05))
+      if (target > 0) {
+        el.currentTime = target
+      }
+      appliedEmbedStartRef.current = true
+    }
+
+    el.addEventListener('loadedmetadata', applyStart)
+    el.addEventListener('durationchange', applyStart)
+    applyStart()
+    return () => {
+      el.removeEventListener('loadedmetadata', applyStart)
+      el.removeEventListener('durationchange', applyStart)
+    }
+  }, [initialStartSeconds, outputReadyKey, reloadToken])
 
   // Re-apply saved quality and subtitles once per load, when the tracks arrive.
   const appliedQualityForRef = useRef<number | null>(null)
@@ -321,6 +378,18 @@ export function VideoStreamPlayer({
     })
   }
 
+  const [subtitleSize, setSubtitleSize] = useState<VideoSubtitleSize>(() =>
+    resolveVideoSubtitleSize(readPlayerPrefs().subtitleSize),
+  )
+  const selectSubtitleSize = (size: VideoSubtitleSize) => {
+    setSubtitleSize(size)
+    updatePlayerPrefs({ subtitleSize: size })
+  }
+
+  const [subtitleInsetPx, setSubtitleInsetPx] = useState(
+    VIDEO_SUBTITLE_INSET_CONSOLE_PX,
+  )
+
   const { qoe, reset: resetQoe } = useQoeTracker(videoRef, state)
   const clearSessionData = () => {
     clearEvents()
@@ -347,10 +416,6 @@ export function VideoStreamPlayer({
   } | null>(null)
 
   useEffect(() => {
-    setMediaPixelSize(null)
-  }, [playerSource?.url, reloadToken])
-
-  useEffect(() => {
     const el = videoRef.current
     if (!el) return
 
@@ -371,11 +436,11 @@ export function VideoStreamPlayer({
     }
   }, [playerSource?.url, reloadToken, state.loadStartedAt])
 
-  // `cqh` is the visible height of the VideoPage scroll area; the offset
-  // reserves room for the controls bar so the whole player stays on screen.
+  // `cqh` is the visible height of the VideoPage scroll area. Controls sit on
+  // the picture, so the frame can use almost the full area.
   const playerMaxHeight = featured
-    ? 'max(200px, min(800px, calc(100cqh - 130px)))'
-    : 'max(240px, min(800px, calc(100cqh - 120px)))'
+    ? 'max(240px, min(800px, calc(100cqh - 32px)))'
+    : 'max(240px, min(800px, calc(100cqh - 24px)))'
   const viewportAspect = useMemo(() => {
     if (mediaPixelSize) {
       return mediaPixelSize
@@ -387,9 +452,19 @@ export function VideoStreamPlayer({
     )
   }, [mediaPixelSize, video.width, video.height, video.aspectRatio])
   const viewportStyle = useMemo(
-    () => getVideoPlayerViewportStyle(viewportAspect, playerMaxHeight),
-    [viewportAspect, playerMaxHeight],
+    () =>
+      embed
+        ? { width: '100%', height: '100%', maxHeight: 'none' }
+        : getVideoPlayerViewportStyle(
+            viewportAspect,
+            playerMaxHeight,
+            featured ? 'width' : 'height',
+          ),
+    [embed, featured, viewportAspect, playerMaxHeight],
   )
+
+  const audioOnly =
+    (video.duration ?? 0) > 0 && !isVideoMetadataReady(video)
 
   const playerContainerRef = useRef<HTMLDivElement | null>(null)
   const [fullscreen, setFullscreen] = useState(false)
@@ -431,7 +506,7 @@ export function VideoStreamPlayer({
   useEffect(() => {
     const container = playerContainerRef.current
     const video = videoRef.current
-    if (!fullscreen || !container || !video) {
+    if (!container || !video) {
       setControlsVisible(true)
       return
     }
@@ -454,7 +529,7 @@ export function VideoStreamPlayer({
       video.removeEventListener('play', revealControls)
       video.removeEventListener('pause', revealControls)
     }
-  }, [fullscreen, revealControls])
+  }, [revealControls])
 
   const toggleFullscreen = () => {
     if (document.fullscreenElement) {
@@ -473,21 +548,24 @@ export function VideoStreamPlayer({
     el?.webkitEnterFullscreen?.()
   }
 
-  const timelineQuery = useVideoTimeline(projectId, video.$id)
+  const timelineQuery = useVideoTimeline(
+    embed ? null : projectId,
+    embed ? null : video.$id,
+  )
   const timelineCues = timelineQuery.data?.cues
 
-  const activeRenditions = renditions.filter((r) =>
-    isVideoRenditionActive(r.status),
-  )
-  const failedRenditions = renditions.filter((r) => r.status === 'error')
-
-  const hasAdaptiveReady =
-    readyIds.hls.length + readyIds.cmaf.length + readyIds.dash.length > 0
-
-  const sourceMissingAudio =
-    video.status === 'ready' &&
-    (video.duration ?? 0) > 0 &&
-    !videoSourceHasAudio(video)
+  let emptyPlaybackMessage: string | null = null
+  if (!playerSource) {
+    if (renditions.some((rendition) => isVideoRenditionActive(rendition.status))) {
+      emptyPlaybackMessage = t(
+        'Renditions are still encoding. Playback starts when one is ready.',
+      )
+    } else if (renditions.length > 0) {
+      emptyPlaybackMessage = t('No renditions are ready to play.')
+    } else {
+      emptyPlaybackMessage = t('This video has no source to play.')
+    }
+  }
 
   const outputOptions: Array<{
     id: PlaybackOutput
@@ -521,7 +599,86 @@ export function VideoStreamPlayer({
     state.firstFrameAt == null &&
     state.loadStartedAt != null
 
-  const inspectorPanel = (container: HTMLElement) => (
+  /** Overlay-style controls, same chrome as the embed player page. */
+  const menuOnlyAdvanced = true
+
+  useEffect(() => {
+    const node = controlsRef.current
+    if (!node) {
+      setSubtitleInsetPx(72)
+      return
+    }
+    const measure = () => {
+      const height = node.getBoundingClientRect().height
+      setSubtitleInsetPx(
+        height > 0
+          ? Math.max(
+              48,
+              height -
+                VIDEO_SUBTITLE_OVERLAY_GRADIENT_PAD_PX +
+                VIDEO_SUBTITLE_INSET_OVERLAY_GAP_PX,
+            )
+          : 72,
+      )
+    }
+    measure()
+    const ro = new ResizeObserver(measure)
+    ro.observe(node)
+    return () => ro.disconnect()
+  }, [embed, fullscreen, state.fatalError])
+
+  const videoSubtitleStyle = useMemo(
+    (): CSSProperties =>
+      ({
+        '--video-subtitle-bottom-offset': `${subtitleInsetPx}px`,
+        '--video-subtitle-font-size': videoSubtitleSizeCss(subtitleSize),
+      }) as CSSProperties,
+    [subtitleInsetPx, subtitleSize],
+  )
+
+  const playerControls = !state.fatalError ? (
+    <VideoStreamPlayerControls
+      videoRef={videoRef}
+      output={output}
+      outputOptions={outputOptions}
+      onOutputChange={changeOutput}
+      playerState={state}
+      onSelectLevel={selectLevel}
+      onSelectSubtitleTrack={selectSubtitleTrack}
+      subtitleSize={subtitleSize}
+      onSelectSubtitleSize={selectSubtitleSize}
+      onReload={() => reload()}
+      hasNewRenditions={hasNewRenditions}
+      isLoading={streamLoading}
+      scrubCues={timelineCues}
+      fullscreen={fullscreen}
+      onToggleFullscreen={toggleFullscreen}
+      onOpenInspector={openInspector}
+      menuOnlyAdvanced={menuOnlyAdvanced}
+      portalContainer={
+        embed || fullscreen
+          ? (playerContainerRef.current ?? undefined)
+          : undefined
+      }
+      className={
+        controlsVisible ? 'pointer-events-auto' : 'pointer-events-none'
+      }
+    />
+  ) : null
+
+  const showInlineInspector = featured && !embed && !inspectorContainer
+
+  const streamInspector = ({
+    detached,
+    portalContainer,
+    onOpenWindow,
+    onClose,
+  }: {
+    detached: boolean
+    portalContainer?: HTMLElement
+    onOpenWindow?: () => void
+    onClose?: () => void
+  }) => (
     <StreamDebugPanel
       player={state}
       qoe={qoe}
@@ -541,146 +698,217 @@ export function VideoStreamPlayer({
       onClearEvents={clearEvents}
       onClearData={clearSessionData}
       onRestartSession={() => reload()}
-      detached
-      portalContainer={container}
-      onClose={inspector?.close}
+      detached={detached}
+      portalContainer={portalContainer}
+      onOpenWindow={onOpenWindow}
+      onClose={onClose}
     />
   )
 
+  const frameMessage = emptyPlaybackMessage ? (
+    <div className="absolute inset-0 flex items-center justify-center bg-black px-6 text-center">
+      <p className="max-w-sm text-[13px] leading-relaxed text-white/75">
+        {emptyPlaybackMessage}
+      </p>
+    </div>
+  ) : state.fatalError ? (
+    <div className="absolute inset-0 flex items-center justify-center bg-black/70 px-6 text-center">
+      <p className="max-w-md text-[13px] text-white/80">
+        {isEmbedUnauthorizedMessage(state.fatalError)
+          ? t(state.fatalError)
+          : state.fatalError}
+      </p>
+    </div>
+  ) : null
+
+  if (embed && isEmbedUnauthorizedMessage(state.fatalError)) {
+    return <EmbedUnauthorized className="h-full" />
+  }
+
+  const frameVisible = state.firstFrameAt != null && !reloading
+  const videoFrameClass = cn(
+    'transition-opacity duration-[900ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none',
+    frameVisible ? 'opacity-100' : 'opacity-0',
+  )
+
   return (
-    <div className="min-w-0 max-w-full space-y-4">
-      {showProcessing &&
-      (activeRenditions.length > 0 || failedRenditions.length > 0) ? (
-        <div className="rounded-xl border border-border bg-card/50 px-6 py-4">
-          <div className="flex items-center gap-2">
-            {activeRenditions.length > 0 ? (
-              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-            ) : (
-              <Info className="h-4 w-4 text-muted-foreground" />
-            )}
-            <h3 className="text-[13px] font-semibold text-foreground">
-              {activeRenditions.length > 0
-                ? t('Processing renditions')
-                : t('Some renditions failed')}
-            </h3>
-          </div>
-          <div className="mt-3 space-y-2">
-            {[...activeRenditions, ...failedRenditions].map((rendition) => (
-              <div
-                key={rendition.$id}
-                className="grid grid-cols-[minmax(0,160px)_1fr] items-center gap-3"
-              >
-                <VideoFormatLabel
-                  format={rendition.output}
-                  className="min-w-0 truncate font-mono text-[12px]"
-                >
-                  {rendition.output.toUpperCase()} {rendition.height}p
-                </VideoFormatLabel>
-                {rendition.status === 'error' ? (
-                  <span className="text-[12px] text-red-600 dark:text-red-400">
-                    {t('Failed')}
-                  </span>
-                ) : (
-                  <ProgressBarRow
-                    value={parseVideoProgress(rendition.progress)}
-                    className="mb-0"
-                  />
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      ) : null}
-
-      {sourceMissingAudio ? (
-        <div className="rounded-xl border border-border bg-card/50 px-4 py-3 sm:px-6">
-          <div className="flex gap-2">
-            <Info className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-            <p className="text-[13px] text-muted-foreground">
-              {t(
-                'This video has no detected audio track after prepare. Adaptive streams and the original file will play without sound. Re-upload a file with an audio track or check the source in storage.',
-              )}
-            </p>
-          </div>
-        </div>
-      ) : null}
-
+    <div
+      className={cn(
+        'min-w-0 max-w-full',
+        featured && !fullscreen && 'w-full',
+        embed
+          ? 'animate-player-fade-in flex h-full min-h-0 flex-col'
+          : 'space-y-4',
+      )}
+    >
       <div
         ref={playerContainerRef}
         className={cn(
           'min-w-0',
-          fullscreen && 'dark relative bg-black',
-          fullscreen && !controlsVisible && 'cursor-none',
+          embed && 'relative flex min-h-0 flex-1 flex-col dark bg-black',
+          (fullscreen || overlayControls) && 'dark relative bg-black',
+          (fullscreen || overlayControls) &&
+            !controlsVisible &&
+            'cursor-none',
         )}
       >
         <div
           className={cn(
-            'flex w-full min-w-0 justify-center',
-            fullscreen && 'absolute inset-0',
+            'flex w-full min-w-0',
+            featured && !fullscreen ? 'justify-stretch' : 'justify-center',
+            embed && 'min-h-0 flex-1',
+            (fullscreen || overlayControls) && 'absolute inset-0',
           )}
         >
-          <div
-            className={cn(
-              'relative shrink-0 overflow-hidden bg-black',
-              fullscreen ? 'size-full' : 'rounded-xl',
-            )}
-            style={fullscreen ? undefined : viewportStyle}
-          >
-            <video
-              ref={videoRef}
-              className={cn(
-                'size-full object-contain outline-none',
-                reloading
-                  ? 'opacity-0'
-                  : 'opacity-100 transition-opacity duration-700 ease-out',
-                fullscreen && !controlsVisible
-                  ? 'cursor-none'
-                  : 'cursor-pointer',
-              )}
-              playsInline
-              poster={posterUrl}
-              aria-label={video.name}
-              onClick={() => {
-                const el = videoRef.current
-                if (!el) return
-                const play = el.paused
-                if (play) void el.play()
-                else el.pause()
-                setToggleFlash((current) => ({
-                  action: play ? 'play' : 'pause',
-                  key: (current?.key ?? 0) + 1,
-                }))
-              }}
-              onDoubleClick={toggleFullscreen}
-            />
-            {toggleFlash ? (
-              <div
-                key={toggleFlash.key}
-                aria-hidden
-                className="pointer-events-none absolute inset-0 flex items-center justify-center"
-              >
+          {embed ? (
+            <div className="relative size-full shrink-0 overflow-hidden bg-black">
+              {audioOnly ? (
+                <AudioOnlyPlayerBackdrop title={video.name} />
+              ) : null}
+              <video
+                ref={videoRef}
+                className={cn(
+                  'video-stream-player size-full object-contain outline-none',
+                  videoFrameClass,
+                  !controlsVisible ? 'cursor-none' : 'cursor-pointer',
+                )}
+                style={videoSubtitleStyle}
+                playsInline
+                poster={posterUrl}
+                aria-label={video.name}
+                onClick={() => {
+                  const el = videoRef.current
+                  if (!el) return
+                  const play = el.paused
+                  if (play) void el.play()
+                  else el.pause()
+                  setToggleFlash((current) => ({
+                    action: play ? 'play' : 'pause',
+                    key: (current?.key ?? 0) + 1,
+                  }))
+                }}
+                onDoubleClick={toggleFullscreen}
+              />
+              {toggleFlash ? (
                 <div
-                  className="animate-video-toggle-flash flex size-20 items-center justify-center rounded-full border border-white/20 bg-black/35 text-white shadow-2xl backdrop-blur-md sm:size-28"
-                  onAnimationEnd={() => setToggleFlash(null)}
+                  key={toggleFlash.key}
+                  aria-hidden
+                  className="pointer-events-none absolute inset-0 flex items-center justify-center"
                 >
-                  {toggleFlash.action === 'play' ? (
-                    <Play className="size-9 translate-x-0.5 fill-current sm:size-12" />
-                  ) : (
-                    <Pause className="size-9 fill-current sm:size-12" />
-                  )}
+                  <div
+                    className="animate-video-toggle-flash flex size-20 items-center justify-center rounded-full border border-white/20 bg-black/35 text-white shadow-2xl backdrop-blur-md sm:size-28"
+                    onAnimationEnd={() => setToggleFlash(null)}
+                  >
+                    {toggleFlash.action === 'play' ? (
+                      <Play className="size-9 translate-x-0.5 fill-current sm:size-12" />
+                    ) : (
+                      <Pause className="size-9 fill-current sm:size-12" />
+                    )}
+                  </div>
                 </div>
+              ) : null}
+              {frameMessage}
+              {playerControls ? (
+                <div
+                  ref={controlsRef}
+                  className={cn(
+                    'pointer-events-none absolute inset-x-0 bottom-0 z-10 transition duration-300',
+                    !controlsVisible && 'translate-y-2 opacity-0',
+                  )}
+                >
+                  {playerControls}
+                </div>
+              ) : null}
+            </div>
+          ) : (
+            <div
+              className={cn(
+                'animate-player-fade-in relative flex min-w-0 max-w-full flex-col overflow-hidden',
+                fullscreen
+                  ? 'size-full min-h-0'
+                  : 'rounded-xl border border-border shadow-sm',
+              )}
+              style={fullscreen ? undefined : { width: viewportStyle.width }}
+            >
+              <div
+                className={cn(
+                  'relative w-full overflow-hidden bg-black',
+                  fullscreen ? 'min-h-0 flex-1' : 'shrink-0',
+                )}
+                style={
+                  fullscreen
+                    ? undefined
+                    : {
+                        aspectRatio:
+                          'aspectRatio' in viewportStyle
+                            ? viewportStyle.aspectRatio
+                            : undefined,
+                        maxHeight: viewportStyle.maxHeight,
+                      }
+                }
+              >
+                {audioOnly ? (
+                  <AudioOnlyPlayerBackdrop title={video.name} />
+                ) : null}
+                <video
+                  ref={videoRef}
+                  className={cn(
+                    'video-stream-player size-full object-contain outline-none',
+                    videoFrameClass,
+                    !controlsVisible ? 'cursor-none' : 'cursor-pointer',
+                  )}
+                  style={videoSubtitleStyle}
+                  playsInline
+                  poster={posterUrl}
+                  aria-label={video.name}
+                  onClick={() => {
+                    const el = videoRef.current
+                    if (!el) return
+                    const play = el.paused
+                    if (play) void el.play()
+                    else el.pause()
+                    setToggleFlash((current) => ({
+                      action: play ? 'play' : 'pause',
+                      key: (current?.key ?? 0) + 1,
+                    }))
+                  }}
+                  onDoubleClick={toggleFullscreen}
+                />
+                {toggleFlash ? (
+                  <div
+                    key={toggleFlash.key}
+                    aria-hidden
+                    className="pointer-events-none absolute inset-0 flex items-center justify-center"
+                  >
+                    <div
+                      className="animate-video-toggle-flash flex size-20 items-center justify-center rounded-full border border-white/20 bg-black/35 text-white shadow-2xl backdrop-blur-md sm:size-28"
+                      onAnimationEnd={() => setToggleFlash(null)}
+                    >
+                      {toggleFlash.action === 'play' ? (
+                        <Play className="size-9 translate-x-0.5 fill-current sm:size-12" />
+                      ) : (
+                        <Pause className="size-9 fill-current sm:size-12" />
+                      )}
+                    </div>
+                  </div>
+                ) : null}
+                {frameMessage}
+                {playerControls ? (
+                  <div
+                    ref={controlsRef}
+                    className={cn(
+                      'pointer-events-none absolute inset-x-0 bottom-0 z-10 transition duration-300',
+                      !controlsVisible && 'translate-y-2 opacity-0',
+                    )}
+                  >
+                    {playerControls}
+                  </div>
+                ) : null}
               </div>
-            ) : null}
-            {state.fatalError ? (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/70 px-6 text-center">
-                <p className="max-w-md text-[13px] text-white/80">
-                  {state.fatalError}
-                </p>
-              </div>
-            ) : null}
-          </div>
+            </div>
+          )}
         </div>
-        {fullscreen ? (
+        {fullscreen && !embed ? (
           <div
             aria-hidden
             className={cn(
@@ -691,48 +919,16 @@ export function VideoStreamPlayer({
             <AppwriteMarkIcon className="size-5" />
           </div>
         ) : null}
-        {!state.fatalError ? (
-          <div
-            ref={controlsRef}
-            className={cn(
-              fullscreen &&
-                'pointer-events-none absolute inset-x-0 bottom-0 px-4 pb-16 transition duration-300 sm:px-6 sm:pb-24',
-              fullscreen && !controlsVisible && 'translate-y-2 opacity-0',
-            )}
-          >
-            <VideoStreamPlayerControls
-              videoRef={videoRef}
-              output={output}
-              outputOptions={outputOptions}
-              onOutputChange={changeOutput}
-              playerState={state}
-              onSelectLevel={selectLevel}
-              onSelectSubtitleTrack={selectSubtitleTrack}
-              onReload={() => reload()}
-              hasNewRenditions={hasNewRenditions}
-              isLoading={streamLoading}
-              scrubCues={timelineCues}
-              fullscreen={fullscreen}
-              onToggleFullscreen={toggleFullscreen}
-              onOpenInspector={openInspector}
-              portalContainer={
-                fullscreen
-                  ? (playerContainerRef.current ?? undefined)
-                  : undefined
-              }
-              className={cn(
-                fullscreen && 'mx-auto max-w-7xl',
-                fullscreen &&
-                  (controlsVisible
-                    ? 'pointer-events-auto'
-                    : 'pointer-events-none'),
-              )}
-            />
-          </div>
-        ) : null}
       </div>
 
-      {inspectorContainer ? (
+      {showInlineInspector
+        ? streamInspector({
+            detached: false,
+            onOpenWindow: openInspector,
+          })
+        : null}
+
+      {!embed && inspectorContainer ? (
         <div className="flex flex-wrap items-center gap-2 rounded-md border border-border bg-card/50 px-3 py-2">
           <SquareArrowOutUpRight className="h-3.5 w-3.5 text-muted-foreground" />
           <span className="min-w-0 flex-1 text-[12px] text-muted-foreground">
@@ -759,21 +955,15 @@ export function VideoStreamPlayer({
         </div>
       ) : null}
 
-      {output === 'source' ? (
-        <p className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
-          <Info className="h-3.5 w-3.5 shrink-0" />
-          {hasAdaptiveReady
-            ? t(
-                'Playing the original Storage file. Switch to HLS, DASH, or CMAF to test adaptive streaming.',
-              )
-            : t(
-                'Playing the original Storage file. Create HLS, DASH, or CMAF renditions to test adaptive streaming.',
-              )}
-        </p>
-      ) : null}
-
       {inspectorContainer
-        ? createPortal(inspectorPanel(inspectorContainer), inspectorContainer)
+        ? createPortal(
+            streamInspector({
+              detached: true,
+              portalContainer: inspectorContainer,
+              onClose: inspector?.close,
+            }),
+            inspectorContainer,
+          )
         : null}
     </div>
   )

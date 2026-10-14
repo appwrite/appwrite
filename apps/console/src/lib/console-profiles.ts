@@ -586,18 +586,43 @@ export function getActiveProfileWithoutDebugOverride(): ConsoleProfile {
   }
 }
 
-export function getActiveProfile(): ConsoleProfile {
-  const stored = getStoredProfile()
-  const profileId = stored?.id ?? getProfileFromEnv()
-  const canonical = CONSOLE_PROFILES[profileId]
+function resolveProfile(stored: StoredConsoleProfile | null): ConsoleProfile {
   if (!stored) {
     return getActiveProfileWithoutDebugOverride()
   }
-  const mergedFeatures = applyCloudOnlyFeatureGates(profileId, {
-    ...applyEnvFeatureOverrides(profileId, canonical.features),
+  const canonical = CONSOLE_PROFILES[stored.id]
+  const mergedFeatures = applyCloudOnlyFeatureGates(stored.id, {
+    ...applyEnvFeatureOverrides(stored.id, canonical.features),
     ...stored.features,
   } as ConsoleProfileFeatures)
   return { ...stored, features: mergedFeatures }
+}
+
+export function getActiveProfile(): ConsoleProfile {
+  return resolveProfile(getStoredProfile())
+}
+
+const DEBUG_PROFILE_COOKIE_PATTERN = new RegExp(
+  `(?:^|;\\s*)${DEBUG_PROFILE_COOKIE}=([^;]*)`,
+)
+
+/**
+ * Feature flags for a document request on the server, honoring the debug
+ * profile override through its cookie mirror (localStorage is browser-only).
+ */
+export function getProfileFeaturesForCookieHeader(
+  cookieHeader: string | null | undefined,
+): ConsoleProfileFeatures {
+  const raw = cookieHeader?.match(DEBUG_PROFILE_COOKIE_PATTERN)?.[1]
+  let stored: StoredConsoleProfile | null = null
+  if (raw) {
+    try {
+      stored = parseStoredProfileRaw(decodeURIComponent(raw))
+    } catch {
+      stored = null
+    }
+  }
+  return resolveProfile(stored).features
 }
 
 /**

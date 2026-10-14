@@ -3,7 +3,9 @@
 import { ArrowRight } from 'lucide-react'
 import { MarketingSectionHeading } from '@/components/pages/marketing/MarketingSections'
 import { ProductIconTile } from '@/components/pages/products/_components/ProductTone'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { scrollMarketingMainToTop } from '@/lib/marketing/MarketingScrollToTop'
+import { isProductReleased } from '@/lib/products/availability'
 import {
   PRODUCT_NAV_REGISTRY,
   PRODUCT_PAGE_EXPLORE_NAV_ITEM_IDS,
@@ -13,7 +15,6 @@ import {
 import type { ProductId, ProductNavItemId } from '@/lib/products/types'
 import { cn } from '@/lib/utils'
 import { useI18n } from '@/lib/i18n'
-import { useConsoleProfile } from '@/hooks/use-console-profile'
 
 type ProductExploreSectionProps = {
   currentProductId: ProductId
@@ -30,6 +31,7 @@ type ProductNavigationItemsCopy = {
   storageTagline: string
   functionsTagline: string
   messagingTagline: string
+  videosTagline: string
   realtimeTagline: string
   sitesTagline: string
   domainsName: string
@@ -63,6 +65,7 @@ function getExploreNavItemTagline(
     storage: navigationItemsCopy.storageTagline,
     functions: navigationItemsCopy.functionsTagline,
     messaging: navigationItemsCopy.messagingTagline,
+    videos: navigationItemsCopy.videosTagline,
     realtime: navigationItemsCopy.realtimeTagline,
     sites: navigationItemsCopy.sitesTagline,
     domains: navigationItemsCopy.domainsTagline,
@@ -139,13 +142,14 @@ function ProductExploreCard({
 
 export function ProductExploreSection({ currentProductId }: ProductExploreSectionProps) {
   const { catalog } = useI18n()
+  const { features } = useConsoleProfile()
   const exploreCopy = catalog.website.products.explore
   const productNamesCopy = catalog.website.products.productNames
   const productNavigationItemsCopy = catalog.website.products.navigation.items
-  const { features } = useConsoleProfile()
-  // Analytics is listed only once its feature flag is on, including on its own page.
   const exploreIds = PRODUCT_PAGE_EXPLORE_NAV_ITEM_IDS.filter(
-    (id) => id !== 'analytics' || features.analytics,
+    (id) =>
+      (isProductId(id) && id === currentProductId) ||
+      ((id !== 'analytics' || features.analytics) && isProductReleased(id, features)),
   )
 
   return (

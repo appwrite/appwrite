@@ -13,6 +13,7 @@ import {
   withConsoleVideoAccess,
 } from './useDashPlayer'
 import { useHlsPlayer, type HlsPlayerState } from './useHlsPlayer'
+import type { VideoStreamAccess } from '@/lib/videos/video-stream-access'
 
 export type {
   StreamPlayerState,
@@ -64,6 +65,7 @@ export function useStreamPlayer(
   videoRef: RefObject<HTMLVideoElement | null>,
   source: PlayerSource | null,
   reloadToken: number,
+  access: VideoStreamAccess = 'console',
 ) {
   const hlsSource = useMemo(() => {
     if (!source || source.type === 'dash') return null
@@ -78,8 +80,8 @@ export function useStreamPlayer(
     return { url: source.url, type: 'dash' as const }
   }, [source])
 
-  const hls = useHlsPlayer(videoRef, hlsSource, reloadToken)
-  const dash = useDashPlayer(videoRef, dashSource, reloadToken)
+  const hls = useHlsPlayer(videoRef, hlsSource, reloadToken, access)
+  const dash = useDashPlayer(videoRef, dashSource, reloadToken, access)
   const hlsState = useMemo(() => mapHlsState(hls.state), [hls.state])
 
   if (source?.type === 'dash') return dash

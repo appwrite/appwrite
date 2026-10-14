@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils'
 import { copyToClipboard, openInNewTab } from '@/lib/utils/context-menu'
 import type { VideoGlossaryTerm } from '@/lib/videos/glossary'
 import { useT } from '@/lib/i18n/translate'
-import { VideoFormatLabel, VideoOutputBadge } from './VideoOutputBadge'
+import { VideoOutputBadge } from './VideoOutputBadge'
 import { VideoTermHint } from './VideoTermHint'
 
 /**

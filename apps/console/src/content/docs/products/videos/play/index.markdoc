@@ -1,0 +1,314 @@
+---
+layout: article
+title: Play a video in your app
+description: Play Appwrite Videos streams on the web, Apple platforms, Android, Flutter, and React Native by loading the master manifest in a standard player.
+---
+
+Appwrite Videos streams work with standard HLS and DASH players. You give the player the master manifest URL, and it handles adaptive bitrate and captions on its own. There is no Appwrite SDK to add for playback.
+
+{% info title="Shortcut in the Console" %}
+Open a video and select **Install**. Pick a platform, player, framework, and format to get install steps and code with your stream URL already filled in. **Copy prompt** copies the same setup as instructions for an AI coding agent.
+{% /info %}
+
+# Before you start {% #before-you-start %}
+
+1. Make sure the video has at least one `ready` [rendition](/docs/products/videos/renditions) for the output you want to play.
+2. Grant read access on the source file to the viewers who should watch it. See [Permissions](/docs/products/videos/permissions).
+3. Copy the master manifest URL from the video's **Streaming** page, or build it as described in [Outputs](/docs/products/videos/outputs#master-manifest-urls):
+
+```text
+https://<REGION>.cloud.appwrite.io/v1/videos/<VIDEO_ID>/outputs/cmaf/master.m3u8?project=<PROJECT_ID>
+```
+
+Use the `.m3u8` manifest with HLS players and the `.mpd` manifest with DASH players.
+
+In your app, build the URL from the video ID you store with your data, rather than hard-coding it:
+
+```js
+const APPWRITE_ENDPOINT = 'https://<REGION>.cloud.appwrite.io/v1';
+const PROJECT_ID = '<PROJECT_ID>';
+
+function manifestUrl(videoId, format = 'm3u8') {
+    return `${APPWRITE_ENDPOINT}/videos/${videoId}/outputs/cmaf/master.${format}?project=${PROJECT_ID}`;
+}
+```
+
+# Choose a player {% #choose-a-player %}
+
+| Platform | Start with | Why |
+|----------|------------|-----|
+| Web | hls.js | Small, plays HLS everywhere, falls back to Safari's native player |
+| Web, with DASH or more control | Shaka Player or Video.js | Plays HLS and DASH, with richer APIs and plugins |
+| iOS, iPadOS, tvOS, macOS | AVPlayer | Built into the OS, nothing to install |
+| Android | Media3 ExoPlayer | Google's recommended player, plays HLS and DASH |
+| Flutter | video_player | The official Flutter plugin |
+| React Native | react-native-video | The most widely used React Native player |
+
+# Add a player {% #add-a-player %}
+
+{% tabs %}
+
+{% tabsitem #hlsjs title="hls.js" %}
+[hls.js](https://github.com/video-dev/hls.js) plays HLS in every modern browser. Safari plays HLS natively, so fall back to the `<video>` element there. If you only target Safari and iOS, a plain `<video src="<HLS_MANIFEST_URL>">` is enough.
+
+```sh
+npm install hls.js
+```
+
+```js
+import Hls from 'hls.js'
+
+const video = document.getElementById('player')
+const src = '<HLS_MANIFEST_URL>'
+
+if (Hls.isSupported()) {
+  const hls = new Hls()
+  hls.loadSource(src)
+  hls.attachMedia(video)
+} else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+  // Safari plays HLS natively
+  video.src = src
+}
+```
+
+```html
+<video id="player" controls playsinline></video>
+<script type="module" src="/main.js"></script>
+```
+{% /tabsitem %}
+
+{% tabsitem #shaka title="Shaka Player" %}
+[Shaka Player](https://shaka-player-demo.appspot.com/docs/api/tutorial-welcome.html) plays both DASH and HLS.
+
+```sh
+npm install shaka-player
+```
+
+```js
+import shaka from 'shaka-player'
+
+shaka.polyfill.installAll()
+
+const video = document.getElementById('player')
+const player = new shaka.Player()
+await player.attach(video)
+await player.load('<DASH_OR_HLS_MANIFEST_URL>')
+```
+{% /tabsitem %}
+
+{% tabsitem #videojs title="Video.js" %}
+[Video.js](https://videojs.com/guides/) plays both DASH and HLS. Set the source `type` to match the manifest.
+
+```sh
+npm install video.js
+```
+
+```js
+import videojs from 'video.js'
+import 'video.js/dist/video-js.css'
+
+const player = videojs('player', { fluid: true })
+player.src({
+  src: '<HLS_MANIFEST_URL>',
+  type: 'application/x-mpegURL' // 'application/dash+xml' for DASH
+})
+```
+
+```html
+<video id="player" class="video-js" controls playsinline></video>
+<script type="module" src="/main.js"></script>
+```
+{% /tabsitem %}
+
+{% tabsitem #avplayer title="Apple" %}
+AVPlayer is part of AVKit on iOS, iPadOS, tvOS, visionOS, and macOS, so there is nothing to install. It plays HLS.
+
+```swift
+import AVKit
+import SwiftUI
+
+struct PlayerView: View {
+    @State private var player = AVPlayer(
+        url: URL(string: "<HLS_MANIFEST_URL>")!
+    )
+
+    var body: some View {
+        VideoPlayer(player: player)
+            .onAppear { player.play() }
+            .onDisappear { player.pause() }
+    }
+}
+```
+{% /tabsitem %}
+
+{% tabsitem #exoplayer title="Android" %}
+[Media3 ExoPlayer](https://developer.android.com/media/media3/exoplayer) plays both HLS and DASH. Add the module for your format to `build.gradle.kts`, and allow network access in `AndroidManifest.xml`.
+
+```kotlin
+implementation("androidx.media3:media3-exoplayer:1.8.0")
+implementation("androidx.media3:media3-exoplayer-hls:1.8.0") // or media3-exoplayer-dash
+implementation("androidx.media3:media3-ui:1.8.0")
+```
+
+```xml
+<uses-permission android:name="android.permission.INTERNET" />
+```
+
+```kotlin
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.media3.common.MediaItem
+import androidx.media3.common.MimeTypes
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.ui.PlayerView
+
+private const val STREAM_URL = "<HLS_MANIFEST_URL>"
+
+@Composable
+fun PlayerScreen(modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    val player = remember {
+        ExoPlayer.Builder(context).build().apply {
+            setMediaItem(
+                MediaItem.Builder()
+                    .setUri(STREAM_URL)
+                    .setMimeType(MimeTypes.APPLICATION_M3U8) // APPLICATION_MPD for DASH
+                    .build()
+            )
+            prepare()
+            playWhenReady = true
+        }
+    }
+    DisposableEffect(player) {
+        onDispose { player.release() }
+    }
+    AndroidView(
+        modifier = modifier,
+        factory = { PlayerView(it).apply { this.player = player } },
+    )
+}
+```
+{% /tabsitem %}
+
+{% tabsitem #flutter title="Flutter" %}
+The [video_player](https://pub.dev/packages/video_player) package plays HLS.
+
+```sh
+flutter pub add video_player
+```
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:video_player/video_player.dart';
+
+const streamUrl = '<HLS_MANIFEST_URL>';
+
+class PlayerScreen extends StatefulWidget {
+  const PlayerScreen({super.key});
+
+  @override
+  State<PlayerScreen> createState() => _PlayerScreenState();
+}
+
+class _PlayerScreenState extends State<PlayerScreen> {
+  late final VideoPlayerController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = VideoPlayerController.networkUrl(
+      Uri.parse(streamUrl),
+      formatHint: VideoFormat.hls,
+    )..initialize().then((_) {
+        setState(() {});
+        _controller.play();
+      });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_controller.value.isInitialized) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    return AspectRatio(
+      aspectRatio: _controller.value.aspectRatio,
+      child: VideoPlayer(_controller),
+    );
+  }
+}
+```
+{% /tabsitem %}
+
+{% tabsitem #react-native title="React Native" %}
+[react-native-video](https://docs.thewidlarzgroup.com/react-native-video/) plays HLS.
+
+```sh
+npm install react-native-video
+cd ios && pod install
+```
+
+```tsx
+import { StyleSheet } from 'react-native'
+import Video from 'react-native-video'
+
+const src = '<HLS_MANIFEST_URL>'
+
+export function VideoPlayer() {
+  return (
+    <Video
+      source={{ uri: src, type: 'm3u8' }}
+      style={styles.video}
+      resizeMode="contain"
+      controls
+    />
+  )
+}
+
+const styles = StyleSheet.create({
+  video: { width: '100%', aspectRatio: 16 / 9 },
+})
+```
+{% /tabsitem %}
+
+{% /tabs %}
+
+# Captions {% #captions %}
+
+[Captions](/docs/products/videos/captions) are listed in the master manifest, so players that support text tracks show them in their captions menu without extra setup. The [default caption](/docs/products/videos/captions#default-caption) turns on automatically.
+
+# Poster and thumbnails {% #poster-and-thumbnails %}
+
+Set the `<video>` element's `poster` to the video's preview image so viewers see a frame before they press play. For scrubbing thumbnails, load the [timeline](/docs/products/videos/timeline) into your player's thumbnail track, or [render them yourself](/docs/products/videos/timeline#custom-player).
+
+# Autoplay {% #autoplay %}
+
+Browsers block autoplay with sound. To start playback on load, for example in a background or preview clip, mute the video and keep `playsinline` so iOS does not open it fullscreen:
+
+```html
+<video id="player" muted autoplay playsinline loop></video>
+```
+
+Attach the stream as usual. Leave autoplay off for videos people choose to watch, and let them press play.
+
+# Clean up {% #clean-up %}
+
+Players hold network connections and decoders. In single-page apps, release them when the view goes away: call `hls.destroy()` for hls.js, `player.destroy()` for Shaka Player, and `player.dispose()` for Video.js. On mobile, release ExoPlayer and pause AVPlayer when the screen closes, as the examples above do.
+
+# Troubleshooting {% #troubleshooting %}
+
+| Symptom | Check |
+|---------|-------|
+| `401` or `404` on the manifest | The source file's read permissions. See [Permissions](/docs/products/videos/permissions) |
+| Manifest loads but lists no renditions | At least one rendition for that output is `ready` |
+| DASH does not play in Safari | Safari has no native DASH. Use the HLS manifest, or CMAF HLS |
+| Stalls or low quality | Open the [inspector](/docs/products/videos/inspector) to see buffer, bitrate, and network timing |

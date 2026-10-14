@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useRef, useState, type RefObject } from 'react'
 import shaka from 'shaka-player'
-import { withAdminMode } from '@/lib/appwrite/admin-resource-url'
+import { playbackFatalMessage } from '@/lib/videos/embed-player-errors'
+import {
+  applyVideoStreamAccess,
+  type VideoStreamAccess,
+} from '@/lib/videos/video-stream-access'
 
 const MAX_EVENTS = 200
 const MAX_FRAGMENTS = 300
@@ -11,9 +15,9 @@ const STATS_INTERVAL_MS = 500
  * Console sessions need admin mode (the console user is not in the file's read
  * roles), so every playlist, segment, and init request is rewritten here.
  */
+/** @deprecated Use `applyVideoStreamAccess(url, 'console')` from `@/lib/videos/video-stream-access`. */
 export function withConsoleVideoAccess(url: string): string {
-  if (!url || url.includes('mode=admin')) return url
-  return withAdminMode(url)
+  return applyVideoStreamAccess(url, 'console')
 }
 
 export type StreamVariantInfo = {
@@ -211,6 +215,7 @@ export function useDashPlayer(
   videoRef: RefObject<HTMLVideoElement | null>,
   source: DashPlayerSource | null,
   reloadToken: number,
+  access: VideoStreamAccess = 'console',
 ) {
   const src = source?.url ?? null
   const sourceType = source?.type ?? null
@@ -297,8 +302,10 @@ export function useDashPlayer(
     const net = player.getNetworkingEngine()
     const RequestType = shaka.net.NetworkingEngine.RequestType
 
-    net?.registerRequestFilter((type, request) => {
-      request.uris = request.uris.map((uri) => withConsoleVideoAccess(uri))
+    net?.registerRequestFilter((_type, request) => {
+      request.uris = request.uris.map((uri) =>
+        applyVideoStreamAccess(uri, access),
+      )
       request.allowCrossSiteCredentials = true
     })
 
@@ -309,15 +316,16 @@ export function useDashPlayer(
           ? response.data.byteLength
           : response.data.byteLength
       const segment = context?.segment
-      const start = segment?.startTime ?? 0
-      const duration = segment != null ? segment.endTime - segment.startTime : 0
+      const start = segment?.getStartTime() ?? 0
+      const duration =
+        segment != null ? segment.getEndTime() - segment.getStartTime() : 0
       const active = variantTracks(player!).find((t) => t.active)
       const levelIdx = levelIndexForTrack(levelsRef.current, active)
       segmentCounterRef.current += 1
       const entry: StreamSegmentInfo = {
         sn: segmentCounterRef.current,
         level: levelIdx,
-        type: context?.type ?? 'segment',
+        type: String(context?.type ?? 'segment'),
         mediaKind: inferSegmentMediaKindForUrl(response.uri, context?.type),
         start,
         duration,
@@ -334,7 +342,7 @@ export function useDashPlayer(
     })
 
     player.addEventListener('error', (event) => {
-      const error = (event as { detail: shaka.util.Error }).detail
+      const error = (event as unknown as { detail: shaka.util.Error }).detail
       const detail = describeShakaError(error)
       pushEvent({
         kind:
@@ -345,7 +353,14 @@ export function useDashPlayer(
         detail,
       })
       if (error.severity === shaka.util.Error.Severity.CRITICAL) {
-        setState((prev) => ({ ...prev, fatalError: detail }))
+        const status = error.data?.[1]
+        setState((prev) => ({
+          ...prev,
+          fatalError: playbackFatalMessage(
+            typeof status === 'number' ? status : undefined,
+            detail,
+          ),
+        }))
       }
     })
 
@@ -365,7 +380,7 @@ export function useDashPlayer(
       syncTracks(player!)
     })
 
-    const manifestUrl = withConsoleVideoAccess(src)
+    const manifestUrl = applyVideoStreamAccess(src, access)
     pushEvent({ kind: 'info', name: 'LOAD_SOURCE', detail: manifestUrl })
 
     void player
@@ -398,7 +413,7 @@ export function useDashPlayer(
       video.removeAttribute('src')
       video.load()
     }
-  }, [videoRef, src, sourceType, reloadToken, pushEvent, syncTracks])
+  }, [videoRef, src, sourceType, reloadToken, pushEvent, syncTracks, access])
 
   useEffect(() => {
     if (!src) return
@@ -419,7 +434,8 @@ export function useDashPlayer(
       let autoLevelEnabled = true
       let latency: number | null = null
       let droppedFrames = quality?.droppedVideoFrames ?? 0
-      let totalFrames = quality?.totalFrames ?? 0
+      let totalFrames =
+        (quality?.totalVideoFrames ?? 0) + (quality?.droppedVideoFrames ?? 0)
 
       if (player) {
         const stats = player.getStats()

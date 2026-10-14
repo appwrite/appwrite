@@ -9,6 +9,7 @@ import { runtimeConfigMiddleware } from '@/server/middleware/runtime-config'
 import { securityTxtMiddleware } from '@/server/middleware/security-txt'
 import { seoIndexingMiddleware } from '@/server/middleware/seo-indexing'
 import { serverFnGuardMiddleware } from '@/server/middleware/server-fn-guard'
+import { marketingDisabledMiddleware } from '@/server/middleware/marketing-disabled'
 import { preLaunchMiddleware } from '@/server/middleware/pre-launch'
 import { selfHostedRoutesMiddleware } from '@/server/middleware/self-hosted-routes'
 
@@ -30,6 +31,7 @@ export const startInstance = createStart(() => ({
     legacyRedirectsMiddleware,
     legacyConsolePathMiddleware,
     preLaunchMiddleware,
+    marketingDisabledMiddleware,
     selfHostedRoutesMiddleware,
     rootGuestRedirectMiddleware,
   ],

@@ -1,0 +1,103 @@
+---
+layout: article
+title: Videos
+description: Stream video and audio with Appwrite Videos. Turn files in Storage into adaptive HLS, DASH, and CMAF streams with encoding profiles, captions, and scrubbing thumbnails.
+---
+
+Appwrite **Videos** turns video and audio files in [Storage](/docs/products/storage) into adaptive streams. You create a video from a file that is already in a bucket, encode it into a ladder of renditions, and hand the master manifest URL to any HLS or DASH player.
+
+The source file stays in its bucket. Videos never replaces it, and playback follows the same [permissions](/docs/products/videos/permissions) as the file.
+
+You manage videos under **Videos** in your project, and encoding profiles under **Videos** > **Encoding profiles**.
+
+# Why stream instead of serving the file {% #why-stream %}
+
+You could put an MP4 in Storage and point a `<video>` tag at it. That works for short clips, but the viewer downloads one large file at one quality, whatever their connection. Streaming fixes this:
+
+- **Faster start**: The player fetches a small manifest and a few seconds of video, not the whole file.
+- **Fewer stalls**: The player drops to a lower quality when the connection slows, instead of pausing to buffer.
+- **Better quality where possible**: On a fast connection, viewers get your sharpest rendition.
+- **Less wasted bandwidth**: Viewers who stop after a minute only downloaded a minute.
+
+Use Videos for anything longer than a short loop, or anything watched on mobile networks: courses, product demos, user uploads, recorded talks, and podcasts.
+
+# How it works {% #how-it-works %}
+
+A video is built from a few resources:
+
+1. **Video**: Points at a source file in a Storage bucket and holds the media metadata probed from it, such as duration, resolution, and codecs. See [Videos](/docs/products/videos/videos).
+2. **Profile**: A reusable encoding target with a resolution, video and audio bitrate, and codec. Every project starts with a default ladder of profiles. See [Encoding profiles](/docs/products/videos/profiles).
+3. **Rendition**: One encode of a video against one profile, packaged for one output. Players switch between renditions as bandwidth changes. See [Renditions](/docs/products/videos/renditions).
+4. **Output**: The streaming format a rendition is packaged in: **HLS**, **DASH**, or **CMAF**. Each output has a master manifest that players load first. See [Outputs](/docs/products/videos/outputs).
+5. **Captions and timeline**: Text tracks listed in the manifest, and scrubbing thumbnails with a poster image. See [Captions](/docs/products/videos/captions) and [Timeline](/docs/products/videos/timeline).
+
+```text
+Storage file ──> Video ──> Renditions (profile × output) ──> Master manifest ──> Player
+                   ├──> Captions
+                   └──> Timeline (sprites + WebVTT)
+```
+
+# The API at a glance {% #api-at-a-glance %}
+
+Everything the Console does is available from a [server SDK](/docs/sdks#server) with an API key. A typical integration makes four calls:
+
+| Step | Call | Notes |
+|------|------|-------|
+| 1. Upload the source | `storage.createFile()` | Any bucket. Set [permissions](/docs/products/videos/permissions) here, since playback follows them |
+| 2. Create the video | `videos.create({ bucketId, fileId })` | Queues the timeline. Metadata fills in shortly after |
+| 3. Encode | `videos.createRendition({ videoId, profileId, output })` | Once per profile. Encoding runs in the background |
+| 4. Play | Master manifest URL | Build it from the video ID. See [Outputs](/docs/products/videos/outputs#master-manifest-urls) |
+
+To run steps 2 and 3 for every upload automatically, see [Automate with Functions](/docs/products/videos/videos#automate-with-functions).
+
+# Get started {% #getting-started %}
+
+Upload a file, encode a ladder, and play the stream in a browser.
+
+{% arrow_link href="/docs/products/videos/quick-start" %}
+Quick start
+{% /arrow_link %}
+
+# Concepts {% #concepts %}
+
+Core ideas behind videos, encoding, and delivery.
+
+{% cards %}
+{% cards_item href="/docs/products/videos/videos" title="Videos" %}
+The source file, probed metadata, status, and what happens when you delete a video.
+{% /cards_item %}
+{% cards_item href="/docs/products/videos/profiles" title="Encoding profiles" %}
+Resolution, bitrate, and codec targets, presets, and how profile changes apply.
+{% /cards_item %}
+{% cards_item href="/docs/products/videos/renditions" title="Renditions" %}
+One rendition per profile and output, statuses, progress, and retries.
+{% /cards_item %}
+{% cards_item href="/docs/products/videos/outputs" title="Outputs" %}
+HLS, DASH, and CMAF, master manifests, and which players support each.
+{% /cards_item %}
+{% cards_item href="/docs/products/videos/captions" title="Captions" %}
+Upload WebVTT or SubRip, extract embedded tracks, and set a default language.
+{% /cards_item %}
+{% cards_item href="/docs/products/videos/timeline" title="Timeline" %}
+Sprite sheets with a WebVTT index for scrubbing thumbnails and poster images.
+{% /cards_item %}
+{% cards_item href="/docs/products/videos/permissions" title="Permissions" %}
+Who can watch a stream, and who can manage videos in your organization.
+{% /cards_item %}
+{% /cards %}
+
+# Guides {% #guides %}
+
+Step-by-step guides for playing and checking your streams.
+
+{% cards %}
+{% cards_item href="/docs/products/videos/play" title="Play a video in your app" %}
+Load the master manifest with hls.js, Shaka Player, Video.js, AVPlayer, ExoPlayer, Flutter, or React Native.
+{% /cards_item %}
+{% cards_item href="/docs/products/videos/embed" title="Embed the player" %}
+Copy an iframe from the Console and drop the Appwrite player on any page.
+{% /cards_item %}
+{% cards_item href="/docs/products/videos/inspector" title="Inspect playback" %}
+Watch the experience score, buffer, bitrate, and network requests for a playback session.
+{% /cards_item %}
+{% /cards %}

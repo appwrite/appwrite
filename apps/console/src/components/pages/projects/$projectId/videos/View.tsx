@@ -1,225 +1,586 @@
-import { useState } from 'react'
-import { Link, useParams } from '@tanstack/react-router'
-import { useQuery } from '@tanstack/react-query'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
-  Captions,
-  Check,
-  FileVideo,
-  Layers,
-  Maximize,
-  Play,
-  Radio,
-  Settings,
-  Volume2,
-} from 'lucide-react'
+  Link,
+  useLocation,
+  useNavigate,
+  useParams,
+  useSearch,
+} from '@tanstack/react-router'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
+import type { Models } from '@appwrite.io/console'
 import { VIDEOS_PRODUCT_ICON } from '@/lib/videos/product-icon'
-import { CreateVideo } from './_components/CreateVideo'
-import { VideoActionButton } from './_components/VideoPage'
-import { VideoTermHint } from './_components/VideoTermHint'
+import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
 import {
-  ProductEmptyStateSteps,
-  ProductEmptyStateVisual,
-  type ProductEmptyStateStep,
-} from '@/components/global/shared/ProductEmptyState'
-import { Button } from '@/components/ui/button'
+  RESOURCE_CARD_GRID_CLASSNAME,
+  RESOURCE_CARD_MEDIA_SHELL_CLASSNAME,
+  RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME,
+} from '../shared/ResourceCard'
+import { ServiceListViewToggle } from '../shared/ServiceListViewToggle'
+import { CopyableId } from '@/components/global/shared/CopyableId'
+import { DateTooltip } from '@/components/global/shared/DateTooltip'
+import { EmptyState } from '@/components/global/shared/EmptyState'
+import { FiltersPopover } from '@/components/global/shared/FiltersPopover'
+import { Pagination } from '@/components/global/shared/Pagination'
+import { useServiceListViewMode } from '@/hooks/use-service-list-view-mode'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { sdk } from '@/lib/appwrite/sdk'
 import { canCreateVideo } from '@/lib/console-access-checks'
 import {
+  Dependencies,
   useOrganizationScopes,
   useProject,
-  videosSidebarQueryOptions,
+  useProjectVideos,
+  VIDEOS_DEFAULT_SORT_BY,
+  VIDEOS_DEFAULT_SORT_ORDER,
 } from '@/lib/react-query/hooks'
-import { useT } from '@/lib/i18n/translate'
+import { GRID_DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
+import {
+  buildListSearchParams,
+  encodeSort,
+  getLimit,
+  getPage,
+  getQueryParam,
+  getSearch,
+  getSort,
+  mapToQueryParam,
+  MIN_SEARCH_LENGTH,
+  parseSort,
+  queryParamToMap,
+  urlFromRouterLocation,
+  videosFilterColumns,
+} from '@/lib/table-filters'
+import type { CompactFilterKey } from '@/lib/table-filters'
 import { cn } from '@/lib/utils'
+import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { formatResolution } from '@/lib/utils/video-format'
+import { useT } from '@/lib/i18n/translate'
+import { CreateVideo } from './_components/CreateVideo'
+import { SpreadsheetBulkActionsBar } from './_components/SpreadsheetBulkActionsBar'
+import { VideoContextMenu } from './_components/VideoContextMenu'
+import { VideosEmptyState } from './_components/VideosEmptyState'
+import { VideosListTable } from './_components/VideosListTable'
+import { VideoThumb } from './_components/VideoThumb'
+import { getVideosServiceTabs } from './_components/videos-service-tabs'
 
-const STEPS: ProductEmptyStateStep[] = [
-  {
-    icon: FileVideo,
-    title: 'Create a video',
-    description:
-      'Pick a video or audio file you uploaded to Storage. The file stays in its bucket.',
-  },
-  {
-    icon: Layers,
-    title: 'Encode renditions',
-    description:
-      'Choose encoding profiles and an output format. Each profile becomes one quality level, and Appwrite reads the file metadata on the first job.',
-    hint: <VideoTermHint term="rendition" />,
-  },
-  {
-    icon: Radio,
-    title: 'Stream it',
-    description:
-      'Give the manifest URL to any HLS or DASH player. Quality adapts to each viewer.',
-    hint: <VideoTermHint term="manifest" />,
-  },
-]
-
-const RENDITIONS = [
-  { label: '1080p', bitrate: '5.0 Mbps', active: true },
-  { label: '720p', bitrate: '2.8 Mbps', active: false },
-  { label: '480p', bitrate: '1.2 Mbps', active: false },
-  { label: '360p', bitrate: '0.6 Mbps', active: false },
-]
-
-/** Decorative adaptive player with a rendition menu and subtitle tracks. */
-function PlayerVisual() {
-  return (
-    <ProductEmptyStateVisual className="px-6 py-8">
-      <div className="overflow-hidden rounded-xl border border-border bg-card shadow-xl">
-        <div className="relative aspect-video overflow-hidden bg-gradient-to-br from-muted via-muted/70 to-muted-foreground/25">
-          <div className="absolute -bottom-1/3 -start-1/4 h-full w-3/4 rounded-full bg-muted-foreground/10 blur-2xl" />
-          <div className="absolute -top-1/4 end-0 h-2/3 w-1/2 rounded-full bg-background/40 blur-2xl" />
-
-          <span className="absolute start-3 top-3 rounded-md bg-background/70 px-1.5 font-mono text-[10px] leading-5 text-foreground/80 backdrop-blur-sm">
-            HLS
-          </span>
-
-          <span className="absolute inset-0 flex items-center justify-center">
-            <span className="flex h-14 w-14 items-center justify-center rounded-full bg-[var(--brand-cta)] text-[var(--brand-cta-foreground)] shadow-lg ring-8 ring-[color-mix(in_oklch,var(--brand-cta)_20%,transparent)]">
-              <Play className="ms-1 h-5 w-5 fill-current" />
-            </span>
-          </span>
-
-          <span className="absolute inset-x-0 bottom-14 flex flex-col items-center gap-1">
-            <span className="h-2 w-40 rounded-sm bg-foreground/60" />
-            <span className="h-2 w-28 rounded-sm bg-foreground/60" />
-          </span>
-
-          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-background/80 to-transparent px-3 pb-2.5 pt-6">
-            <div className="relative h-1 rounded-full bg-foreground/15">
-              <span className="absolute inset-y-0 start-0 w-3/5 rounded-full bg-foreground/20" />
-              <span className="absolute inset-y-0 start-0 w-[38%] rounded-full bg-[var(--brand-cta)]" />
-              <span className="absolute top-1/2 start-[38%] h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[var(--brand-cta)] shadow rtl:translate-x-1/2" />
-            </div>
-            <div className="mt-2 flex items-center gap-3 text-foreground/80">
-              <Play className="h-3.5 w-3.5 fill-current" />
-              <Volume2 className="h-3.5 w-3.5" />
-              <span className="font-mono text-[10px] tabular-nums">
-                02:14 / 05:48
-              </span>
-              <Captions className="ms-auto h-3.5 w-3.5" />
-              <Settings className="h-3.5 w-3.5 text-foreground" />
-              <Maximize className="h-3.5 w-3.5" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="absolute bottom-0 end-0 w-44 rounded-lg border border-border bg-popover p-1 shadow-lg">
-        {RENDITIONS.map((rendition) => (
-          <div
-            key={rendition.label}
-            className={cn(
-              'flex items-center gap-2 rounded-md px-2 py-1.5 font-mono text-[11px]',
-              rendition.active
-                ? 'bg-muted text-foreground'
-                : 'text-muted-foreground',
-            )}
-          >
-            <Check
-              className={cn(
-                'h-3 w-3 shrink-0',
-                rendition.active ? 'text-[var(--brand-cta)]' : 'invisible',
-              )}
-            />
-            <span>{rendition.label}</span>
-            <span className="ms-auto text-[10px] tabular-nums text-muted-foreground">
-              {rendition.bitrate}
-            </span>
-          </div>
-        ))}
-      </div>
-
-      <div className="absolute start-0 top-0 flex items-center gap-1.5 rounded-lg border border-border bg-popover px-2.5 py-1.5 shadow-lg">
-        <Captions className="h-3.5 w-3.5 text-muted-foreground" />
-        {['en', 'es', 'ja'].map((language, index) => (
-          <span
-            key={language}
-            className={cn(
-              'rounded px-1 font-mono text-[10px] leading-4',
-              index === 0
-                ? 'bg-foreground text-background'
-                : 'text-muted-foreground',
-            )}
-          >
-            {language}
-          </span>
-        ))}
-      </div>
-    </ProductEmptyStateVisual>
-  )
+type VideosListSearch = {
+  search?: string
+  query?: string
+  page?: number
+  limit?: number
+  sort?: string
 }
 
-/** Shown when the project has no videos (desktop lands on the first video otherwise). */
+const isDefaultSort = (sortBy: string, sortOrder: 'asc' | 'desc') =>
+  sortBy === VIDEOS_DEFAULT_SORT_BY && sortOrder === VIDEOS_DEFAULT_SORT_ORDER
+
 export function View() {
   const t = useT()
   const { projectId } = useParams({ strict: false }) as { projectId: string }
+  const navigate = useNavigate()
+  const location = useLocation()
+  const queryClient = useQueryClient()
+  const search = useSearch({ strict: false }) as Record<string, unknown>
+
+  const listParams = useMemo(() => {
+    const url = urlFromRouterLocation(location, window.location.origin)
+    const parsed = parseSort(search.sort as string | undefined) ??
+      getSort(url) ?? {
+        sortBy: VIDEOS_DEFAULT_SORT_BY,
+        sortOrder: VIDEOS_DEFAULT_SORT_ORDER,
+      }
+    const pageFromSearch = search.page != null ? Number(search.page) : undefined
+    const limitFromSearch =
+      search.limit != null ? Number(search.limit) : undefined
+    return {
+      search: getSearch(url) ?? (search.search as string | undefined),
+      page:
+        Number.isInteger(pageFromSearch) && (pageFromSearch ?? 0) >= 1
+          ? pageFromSearch!
+          : getPage(url, 1),
+      limit:
+        Number.isInteger(limitFromSearch) && (limitFromSearch ?? 0) >= 1
+          ? limitFromSearch!
+          : getLimit(url, GRID_DEFAULT_PAGE_SIZE),
+      filterMap: queryParamToMap(
+        getQueryParam(url) ?? (search.query as string | undefined) ?? null,
+      ),
+      sortBy: parsed.sortBy,
+      sortOrder: parsed.sortOrder,
+    }
+  }, [search, location.pathname, location.search, projectId])
+
+  const urlPage = listParams.page
+  const urlLimit = listParams.limit
+  const urlSearch = listParams.search
+  const urlSortBy = listParams.sortBy
+  const urlSortOrder = listParams.sortOrder
+  const filterMap = listParams.filterMap
+  const filterQueries =
+    filterMap.size > 0 ? Array.from(filterMap.values()) : undefined
+  const filterQueryString = filterMap.size > 0 ? mapToQueryParam(filterMap) : ''
+  const encodedSort = isDefaultSort(urlSortBy, urlSortOrder)
+    ? undefined
+    : encodeSort(urlSortBy, urlSortOrder)
+
+  const [searchInput, setSearchInput] = useState('')
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [requestedPage, setRequestedPage] = useState(urlPage)
+  const [displayed, setDisplayed] = useState(() => ({
+    page: urlPage,
+    search: urlSearch ?? undefined,
+    sortBy: urlSortBy,
+    sortOrder: urlSortOrder,
+    filterQueryString,
+  }))
+  const [filtersOpen, setFiltersOpen] = useState(false)
   const [createOpen, setCreateOpen] = useState(false)
-  const { data } = useQuery(videosSidebarQueryOptions(projectId))
+  const [selectedVideos, setSelectedVideos] = useState<Set<string>>(new Set())
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const { viewMode, setViewMode } = useServiceListViewMode('videos')
+
+  useEffect(() => {
+    if (search.create !== 'video') return
+    setCreateOpen(true)
+    navigate({
+      to: '/projects/$projectId/videos',
+      params: { projectId },
+      search: (prev: Record<string, unknown>) => {
+        const next = { ...prev }
+        delete next.create
+        return next
+      },
+      replace: true,
+    })
+  }, [search.create, navigate, projectId])
+
+  useEffect(() => {
+    setSearchInput(urlSearch ?? '')
+  }, [urlSearch])
+
+  useEffect(() => {
+    setRequestedPage(urlPage)
+  }, [urlPage])
+
+  const displayedFilterQueries = useMemo(() => {
+    const map = queryParamToMap(displayed.filterQueryString || null)
+    return map.size > 0 ? Array.from(map.values()) : undefined
+  }, [displayed.filterQueryString])
+
+  const navigateToList = (params: VideosListSearch) => {
+    navigate({
+      to: '/projects/$projectId/videos',
+      params: { projectId },
+      search: (prev: Record<string, unknown>) => {
+        const built = buildListSearchParams({
+          search: 'search' in params ? params.search : (urlSearch ?? undefined),
+          query:
+            'query' in params ? params.query : filterQueryString || undefined,
+          page: params.page ?? 1,
+          limit: params.limit ?? urlLimit,
+          sort: 'sort' in params ? params.sort : encodedSort,
+        })
+        const next = { ...prev, ...built }
+        if (params.page === 1) delete next.page
+        if ('query' in params && params.query === undefined) delete next.query
+        if ('search' in params && !params.search) delete next.search
+        if ('sort' in params && params.sort === undefined) delete next.sort
+        return next
+      },
+      replace: true,
+    })
+  }
+
+  useEffect(() => {
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current)
+    searchDebounceRef.current = setTimeout(() => {
+      const trimmed = searchInput.trim()
+      if (trimmed === (urlSearch ?? '')) return
+      if (trimmed.length > 0 && trimmed.length < MIN_SEARCH_LENGTH) return
+      navigateToList({ search: trimmed || undefined, page: 1 })
+    }, 300)
+    return () => {
+      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchInput, urlSearch])
+
+  // Requested page: drives the fetch for what the user asked for.
+  const requested = useProjectVideos(
+    projectId,
+    requestedPage - 1,
+    urlLimit,
+    urlSearch ?? undefined,
+    filterQueries,
+    urlSortBy,
+    urlSortOrder,
+  )
+  // Displayed page: stays on screen until the requested page has loaded.
+  const shown = useProjectVideos(
+    projectId,
+    displayed.page - 1,
+    urlLimit,
+    displayed.search,
+    displayedFilterQueries,
+    displayed.sortBy,
+    displayed.sortOrder,
+  )
+
+  useEffect(() => {
+    if (requested.isFetching || requested.isLoading || !requested.isFetched)
+      return
+    if (
+      displayed.page === urlPage &&
+      (displayed.search ?? '') === (urlSearch ?? '') &&
+      displayed.sortBy === urlSortBy &&
+      displayed.sortOrder === urlSortOrder &&
+      displayed.filterQueryString === filterQueryString
+    ) {
+      return
+    }
+    setDisplayed({
+      page: urlPage,
+      search: urlSearch ?? undefined,
+      sortBy: urlSortBy,
+      sortOrder: urlSortOrder,
+      filterQueryString,
+    })
+  }, [
+    requested.isFetching,
+    requested.isLoading,
+    requested.isFetched,
+    urlPage,
+    urlSearch,
+    urlSortBy,
+    urlSortOrder,
+    filterQueryString,
+    displayed,
+  ])
+
+  const videos = shown.videos
+  const displayedTotal = shown.total
+
   const { project } = useProject(projectId)
   const { features } = useConsoleProfile()
   const { access } = useOrganizationScopes(project?.teamId)
   const noCreatePermission = !canCreateVideo(access, features)
-  const hasVideos = (data?.total ?? 0) > 0
+  const createPermissionTooltip = noCreatePermission
+    ? t("You don't have permission to create videos.")
+    : undefined
+
+  useEffect(() => {
+    setSelectedVideos(new Set())
+    setDeleteDialogOpen(false)
+  }, [projectId, urlSearch, filterQueryString])
+
+  const bulkDeleteMutation = useMutation({
+    mutationFn: async (videoIds: string[]) => {
+      const projectVideos = sdk.forProject(projectId).videos
+      await Promise.all(
+        videoIds.map((videoId) => projectVideos.delete({ videoId })),
+      )
+    },
+    onSuccess: async (_data, videoIds) => {
+      await queryClient.refetchQueries({ queryKey: Dependencies.VIDEOS })
+      toast.success(
+        videoIds.length === 1
+          ? t('Video deleted')
+          : `${t('Successfully deleted')} ${videoIds.length} ${t('videos')}`,
+      )
+      setSelectedVideos(new Set())
+      setDeleteDialogOpen(false)
+    },
+    onError: (error: Error) => {
+      toast.error(getErrorMessage(error) || t('Failed to delete videos'))
+    },
+  })
+
+  const toggleVideo = (videoId: string) => {
+    const next = new Set(selectedVideos)
+    if (next.has(videoId)) next.delete(videoId)
+    else next.add(videoId)
+    setSelectedVideos(next)
+  }
+
+  const toggleAll = () => {
+    setSelectedVideos(
+      selectedVideos.size === videos.length
+        ? new Set()
+        : new Set(videos.map((video) => video.$id)),
+    )
+  }
+
+  const applyFilter = (
+    compactKey: CompactFilterKey,
+    queryStr: string,
+    replaceKey?: CompactFilterKey,
+  ) => {
+    const next = new Map(filterMap)
+    if (replaceKey) next.delete(replaceKey)
+    next.set(compactKey, queryStr)
+    navigateToList({ query: mapToQueryParam(next) || undefined, page: 1 })
+  }
+
+  const removeFilter = (compactKey: CompactFilterKey) => {
+    const next = new Map(filterMap)
+    next.delete(compactKey)
+    navigateToList({
+      query: next.size > 0 ? mapToQueryParam(next) : undefined,
+      page: 1,
+    })
+  }
+
+  const tabs: Tab[] = useMemo(
+    () =>
+      getVideosServiceTabs(projectId).map((tab) => ({
+        ...tab,
+        label: t(tab.label),
+      })),
+    [projectId, t],
+  )
+
+  const hasFilters = (urlSearch?.length ?? 0) > 0 || filterMap.size > 0
+  const filtersMatch =
+    (displayed.search ?? '') === (urlSearch ?? '') &&
+    displayed.filterQueryString === filterQueryString
+  const showLoading = shown.isLoading && videos.length === 0
+  const hasVideos = displayedTotal > 0
+  const noSearchResults =
+    hasFilters && filtersMatch && !hasVideos && !shown.isLoading
 
   return (
-    <div className="@container flex h-full min-h-0 flex-col overflow-y-auto">
-      <div className="mx-auto my-auto w-full max-w-6xl px-6 py-12 @5xl:px-10 sm:py-16">
-        <div className="grid items-center gap-12 @3xl:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] @3xl:gap-10 @5xl:gap-14">
-          <div className="text-start">
-            <span className="flex h-11 w-11 items-center justify-center rounded-lg border border-border bg-muted text-muted-foreground">
-              <VIDEOS_PRODUCT_ICON className="h-5 w-5" />
-            </span>
-            <h1 className="mt-6 text-[28px] font-semibold leading-tight tracking-tight text-foreground">
-              {hasVideos
-                ? t('Select a video')
-                : t('Stream video with Appwrite')}
-            </h1>
-            <p className="mt-3 max-w-md text-[14px] leading-relaxed text-muted-foreground">
-              {hasVideos
-                ? t(
-                    'Pick a video from the list to play it, encode renditions, add subtitles, and get streaming URLs.',
-                  )
-                : t(
-                    'Turn files in Storage into adaptive streams that play smoothly on any device and connection.',
-                  )}
-            </p>
-            <div className="mt-7 flex flex-wrap items-center gap-2">
-              <VideoActionButton
-                variant="brandCta"
-                className="h-9 text-[13px]"
-                onClick={() => setCreateOpen(true)}
-                disabledReason={
-                  noCreatePermission
-                    ? t("You don't have permission to create videos.")
-                    : null
-                }
-              >
-                {t('Create video')}
-              </VideoActionButton>
-              <Button variant="outline" className="h-9 text-[13px]" asChild>
-                <Link
-                  to="/projects/$projectId/videos/profiles"
-                  params={{ projectId }}
-                >
-                  {t('Encoding profiles')}
-                </Link>
-              </Button>
-            </div>
-          </div>
+    <div className="flex flex-col">
+      <ServiceHeader
+        title={t('Videos')}
+        tabs={tabs}
+        activeTab="videos"
+        searchPlaceholder={t('Search videos...')}
+        searchValue={searchInput}
+        onSearchChange={(value) => {
+          setSearchInput(value)
+          setSelectedVideos(new Set())
+        }}
+        createLabel={t('Create video')}
+        createAnalyticsAction="create-video"
+        onCreate={() => setCreateOpen(true)}
+        createDisabled={noCreatePermission}
+        createDisabledTooltip={createPermissionTooltip}
+        fullWidthBorder
+        hideToolbar={!showLoading && !hasVideos && !hasFilters}
+        showFilters
+        rightContent={
+          <ServiceListViewToggle
+            viewMode={viewMode}
+            onViewModeChange={setViewMode}
+          />
+        }
+        filterTrigger={
+          <FiltersPopover
+            open={filtersOpen}
+            onOpenChange={setFiltersOpen}
+            columns={videosFilterColumns}
+            filterMap={filterMap}
+            onRemoveFilter={removeFilter}
+            onClearAll={() => {
+              navigateToList({ query: undefined, page: 1 })
+              setFiltersOpen(false)
+            }}
+            onApplyFilter={applyFilter}
+            resourceLabel={t('videos')}
+            filterScope="videos"
+            onApplyQuery={(queryParam, sortParam) =>
+              navigateToList({
+                query: queryParam ?? undefined,
+                page: 1,
+                sort: sortParam ?? undefined,
+              })
+            }
+            sortBy={urlSortBy}
+            sortOrder={urlSortOrder}
+            onSortChange={(sortBy, sortOrder) =>
+              navigateToList({
+                page: 1,
+                sort: isDefaultSort(sortBy, sortOrder)
+                  ? undefined
+                  : encodeSort(sortBy, sortOrder),
+              })
+            }
+            defaultSortParam={encodeSort(
+              VIDEOS_DEFAULT_SORT_BY,
+              VIDEOS_DEFAULT_SORT_ORDER,
+            )}
+            onReset={() =>
+              navigate({
+                to: '/projects/$projectId/videos',
+                params: { projectId },
+                search: { page: 1, limit: urlLimit },
+                replace: true,
+              })
+            }
+            teamId={project?.teamId}
+          />
+        }
+      />
 
-          <div className="order-first w-full max-w-md @3xl:order-none @3xl:max-w-none">
-            <PlayerVisual />
+      <div className="mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6">
+        {shown.error && videos.length === 0 ? (
+          <div className="rounded-lg border border-border bg-card py-12 text-center">
+            <p className="text-[13px] text-muted-foreground">
+              {getErrorMessage(shown.error) ||
+                t('Failed to load videos. Please try again.')}
+            </p>
           </div>
-        </div>
-        <ProductEmptyStateSteps steps={STEPS} />
+        ) : showLoading ? (
+          <div className="rounded-lg border border-border bg-card py-12 text-center">
+            <p className="text-[13px] text-muted-foreground">
+              {t('Loading videos...')}
+            </p>
+          </div>
+        ) : noSearchResults || (!hasVideos && hasFilters) ? (
+          <EmptyState
+            icon={VIDEOS_PRODUCT_ICON}
+            isEmpty={false}
+            hasFilters={hasFilters}
+            variant="card"
+          />
+        ) : !hasVideos ? (
+          <VideosEmptyState
+            projectId={projectId}
+            onCreate={() => setCreateOpen(true)}
+            createDisabled={noCreatePermission}
+            createDisabledTooltip={createPermissionTooltip}
+          />
+        ) : (
+          <>
+            {viewMode === 'list' ? (
+              <VideosListTable
+                projectId={projectId}
+                videos={videos}
+                selectedVideoIds={selectedVideos}
+                onToggleVideo={toggleVideo}
+                onToggleAll={toggleAll}
+              />
+            ) : (
+              <div className={RESOURCE_CARD_GRID_CLASSNAME}>
+                {videos.map((video) => (
+                  <VideoCard
+                    key={video.$id}
+                    projectId={projectId}
+                    video={video}
+                  />
+                ))}
+              </div>
+            )}
+            <Pagination
+              currentPage={displayed.page}
+              totalItems={displayedTotal}
+              pageSize={urlLimit}
+              pageSizeOptions={[12, 18, 36, 72]}
+              onPageChange={(page) => {
+                setRequestedPage(page)
+                setSelectedVideos(new Set())
+                navigateToList({ page })
+              }}
+              onPageSizeChange={(size) => {
+                setRequestedPage(1)
+                setSelectedVideos(new Set())
+                navigateToList({ page: 1, limit: size })
+              }}
+              itemLabel={t('videos')}
+            />
+          </>
+        )}
+
+        {noCreatePermission ? null : (
+          <SpreadsheetBulkActionsBar
+            selectedCount={selectedVideos.size}
+            selectionBadge={`${selectedVideos.size} ${
+              selectedVideos.size === 1 ? t('video') : t('videos')
+            } ${t('selected')}`}
+            onClearSelection={() => setSelectedVideos(new Set())}
+            deleteDialogOpen={deleteDialogOpen}
+            onDeleteDialogOpenChange={setDeleteDialogOpen}
+            deleteDialogTitle={
+              selectedVideos.size === 1 ? t('Delete video') : t('Delete videos')
+            }
+            deleteDialogDescription={`${t('Are you sure you want to delete')} ${selectedVideos.size} ${
+              selectedVideos.size === 1 ? t('video') : t('videos')
+            }? ${t('This action cannot be undone.')}`}
+            onConfirmDelete={() =>
+              bulkDeleteMutation.mutate(Array.from(selectedVideos))
+            }
+            isDeleting={bulkDeleteMutation.isPending}
+          />
+        )}
       </div>
+
       <CreateVideo
         open={createOpen}
         onOpenChange={setCreateOpen}
         projectId={projectId}
       />
     </div>
+  )
+}
+
+function VideoCard({
+  projectId,
+  video,
+}: {
+  projectId: string
+  video: Models.Video
+}) {
+  const t = useT()
+  const meta = [
+    video.width > 0 ? formatResolution(video.width, video.height) : null,
+    video.videoCodec,
+    video.audioCodec,
+  ].filter(Boolean)
+  return (
+    <VideoContextMenu
+      projectId={projectId}
+      video={{ $id: video.$id, name: video.name }}
+    >
+      <Link
+        to="/projects/$projectId/videos/$videoId"
+        params={{ projectId, videoId: video.$id }}
+        className="block min-w-0"
+      >
+        <div className={cn(RESOURCE_CARD_MEDIA_SHELL_CLASSNAME, 'h-auto')}>
+          <div className="p-1.5 pb-0">
+            <VideoThumb
+              projectId={projectId}
+              video={video}
+              uniformSize
+              showDuration
+              className="w-full rounded-md border border-border/60"
+            />
+          </div>
+          <div className="px-4 pt-4 pb-0">
+            <h3 className="truncate text-[14px] font-medium text-foreground">
+              {video.name || t('Untitled video')}
+            </h3>
+            <div className="mt-1.5">
+              <CopyableId id={video.$id} size="xs" maxWidth={120} />
+            </div>
+            <div className={RESOURCE_CARD_METADATA_DIVIDER_CLASSNAME}>
+              <div className="flex min-w-0 items-center gap-x-1.5">
+                {meta.length > 0 ? (
+                  <span className="min-w-0 truncate font-mono text-[11px] text-muted-foreground">
+                    {meta.join(' · ')}
+                  </span>
+                ) : null}
+                <span className="ms-auto shrink-0 text-[12px] text-muted-foreground">
+                  <DateTooltip
+                    date={video.$createdAt}
+                    className="text-[12px] text-muted-foreground"
+                  />
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Link>
+    </VideoContextMenu>
   )
 }

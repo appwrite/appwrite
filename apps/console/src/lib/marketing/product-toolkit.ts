@@ -1,4 +1,5 @@
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
+import { isProductReleased } from '@/lib/products/availability'
 import {
   getMarketingProductMenuCategories,
   PRODUCT_NAV_REGISTRY,
@@ -11,7 +12,8 @@ export type MarketingProductToolkitItem = {
 }
 
 function toToolkitItems(ids: readonly ProductNavItemId[]) {
-  return ids.map((id) => {
+  const features = getActiveProfileFeatures()
+  return ids.filter((id) => isProductReleased(id, features)).map((id) => {
     const item = PRODUCT_NAV_REGISTRY[id]
     return { label: item.name, href: item.href }
   })

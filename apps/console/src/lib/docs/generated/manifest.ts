@@ -3437,6 +3437,90 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 6
   },
   {
+    "slug": "products/videos",
+    "title": "Videos",
+    "description": "Stream video and audio with Appwrite Videos. Turn files in Storage into adaptive HLS, DASH, and CMAF streams with encoding profiles, captions, and scrubbing thumbnails.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
+    "slug": "products/videos/captions",
+    "title": "Captions",
+    "description": "Add WebVTT or SubRip captions to an Appwrite video, use subtitle tracks embedded in the source, and set a default language for players.",
+    "layout": "article",
+    "readingTimeMinutes": 3
+  },
+  {
+    "slug": "products/videos/embed",
+    "title": "Embed the player",
+    "description": "Embed the Appwrite video player on any page with an iframe from the Console, with an optional start time.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
+    "slug": "products/videos/inspector",
+    "title": "Inspect playback",
+    "description": "Use the Appwrite Videos inspector to watch a playback session's experience score, buffer, bitrate, network requests, and manifests.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
+    "slug": "products/videos/outputs",
+    "title": "Outputs",
+    "description": "Learn the difference between HLS, DASH, and CMAF outputs in Appwrite Videos, where to find each master manifest, and which players support them.",
+    "layout": "article",
+    "readingTimeMinutes": 3
+  },
+  {
+    "slug": "products/videos/permissions",
+    "title": "Permissions",
+    "description": "Learn how Appwrite Videos uses the source file's Storage permissions for playback, and which API key scopes manage videos.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
+    "slug": "products/videos/play",
+    "title": "Play a video in your app",
+    "description": "Play Appwrite Videos streams on the web, Apple platforms, Android, Flutter, and React Native by loading the master manifest in a standard player.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
+    "slug": "products/videos/profiles",
+    "title": "Encoding profiles",
+    "description": "Learn how Appwrite Videos encoding profiles set the resolution, bitrate, and codec of each rendition, and how profile changes apply.",
+    "layout": "article",
+    "readingTimeMinutes": 3
+  },
+  {
+    "slug": "products/videos/quick-start",
+    "title": "Start with Videos",
+    "description": "Create your first Appwrite video from a Storage file, encode an adaptive ladder, and play the stream in a browser.",
+    "layout": "article",
+    "readingTimeMinutes": 3
+  },
+  {
+    "slug": "products/videos/renditions",
+    "title": "Renditions",
+    "description": "Learn how Appwrite Videos encodes a rendition per profile and output, how rendition status and progress work, and how to retry a failed encode.",
+    "layout": "article",
+    "readingTimeMinutes": 2
+  },
+  {
+    "slug": "products/videos/timeline",
+    "title": "Timeline",
+    "description": "Learn how Appwrite Videos generates sprite sheets and a WebVTT index for scrubbing thumbnails, and how preview images become video posters.",
+    "layout": "article",
+    "readingTimeMinutes": 1
+  },
+  {
+    "slug": "products/videos/videos",
+    "title": "Videos",
+    "description": "Learn how an Appwrite video points at a Storage file, which metadata it holds, how its status is derived, and what deleting it removes.",
+    "layout": "article",
+    "readingTimeMinutes": 3
+  },
+  {
     "slug": "quick-starts/android",
     "title": "Start with Android (Kotlin)",
     "description": "Get started with Appwrite on Android and learn how to build secure and scalable apps using our powerful backend.",
@@ -4078,7 +4162,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Command Center",
     "description": "Appwrite Command Center enhances developer experience with AI, keyboard shortcuts, and context-aware search for efficient navigation and task execution.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 2
   },
   {
     "slug": "tooling/command-center/shortcuts",

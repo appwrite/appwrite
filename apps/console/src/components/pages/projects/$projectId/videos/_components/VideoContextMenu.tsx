@@ -33,7 +33,9 @@ import {
   useDeleteVideo,
   useOrganizationScopes,
   useProject,
+  useVideoRenditions,
 } from '@/lib/react-query/hooks'
+import { VideoPreviewEmbedMenu } from './VideoPreviewEmbedMenu'
 import { canShowVideoSettings } from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
@@ -54,7 +56,7 @@ import { useT } from '@/lib/i18n/translate'
 
 interface VideoContextMenuProps {
   projectId: string
-  video: { $id: string; name?: string | null }
+  video: { $id: string; name?: string | null; duration?: number }
   children: React.ReactNode
 }
 
@@ -73,6 +75,8 @@ export function VideoContextMenu({
   const { access } = useOrganizationScopes(project?.teamId)
   const canWrite = canShowVideoSettings(access, features)
   const inspector = useVideoInspector()
+  const { data: renditionsData } = useVideoRenditions(projectId, video.$id)
+  const renditions = renditionsData?.renditions ?? []
 
   const videoHref = buildConsoleUrl(
     `/projects/${projectId}/videos/${video.$id}`,
@@ -134,6 +138,12 @@ export function VideoContextMenu({
             </Fragment>
           ))}
           <ContextMenuSeparator />
+          <VideoPreviewEmbedMenu
+            variant="context"
+            projectId={projectId}
+            video={video}
+            renditions={renditions}
+          />
           <ContextMenuSub>
             <ContextMenuSubTrigger>
               <ContextMenuIcon icon={Copy} />
