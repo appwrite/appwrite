@@ -595,7 +595,7 @@ impl Adapter for GitHub {
             _ => return Err(Error::exception("Invalid payload.", 0)),
         };
         let installation = or(at(&payload, "installation"), Value::Array(Array::new()));
-        let installation_id = s(php::string(&or(at(&installation, "id"), "")));
+        let installation_id = Value::Str(php::string(&or(at(&installation, "id"), "")));
 
         match event {
             "push" => {
@@ -623,7 +623,7 @@ impl Adapter for GitHub {
                     ("branchDeleted", or(at(&payload, "deleted"), false)),
                     ("branch", branch),
                     ("branchUrl", branch_url),
-                    ("repositoryId", s(php::string(&or(at(&repository, "id"), "")))),
+                    ("repositoryId", Value::Str(php::string(&or(at(&repository, "id"), "")))),
                     ("repositoryName", or(at(&repository, "name"), "")),
                     ("repositoryUrl", repository_url),
                     ("installationId", installation_id),
@@ -657,7 +657,7 @@ impl Adapter for GitHub {
                 let branch_url = concat_if_both(&repository_url, "/tree/", &branch);
                 let commit_hash = or(at(&head, "sha"), "");
                 let head_commit_url = if repository_url.truthy() {
-                    s(concat(&[&php::string(&repository_url), b"/commits/", &php::string(&commit_hash)]))
+                    joined(&[&php::string(&repository_url), b"/commits/", &php::string(&commit_hash)])
                 } else {
                     s("")
                 };
@@ -666,7 +666,7 @@ impl Adapter for GitHub {
                 Ok(vec![object([
                     ("branch", branch),
                     ("branchUrl", branch_url),
-                    ("repositoryId", s(php::string(&or(at(&repository, "id"), "")))),
+                    ("repositoryId", Value::Str(php::string(&or(at(&repository, "id"), "")))),
                     ("repositoryName", or(at(&repository, "name"), "")),
                     ("repositoryUrl", repository_url),
                     ("installationId", installation_id),
@@ -1170,19 +1170,24 @@ fn with_string_id(body: Value) -> Value {
         Value::Null => Value::Array(Array::new()),
         other => other,
     };
-    let id = s(php::string(&or(at(&run, "id"), "")));
+    let id = Value::Str(php::string(&or(at(&run, "id"), "")));
     php::set(&mut run, "id", id);
     run
 }
 
 /// `"$a$infix$b"` when both are non-empty, `''` otherwise.
 pub(crate) fn concat_if_both(a: &Value, infix: &str, b: &Value) -> Value {
-    if !empty(a) && !empty(b) { s(concat(&[&php::string(a), infix.as_bytes(), &php::string(b)])) } else { s("") }
+    if !empty(a) && !empty(b) { joined(&[&php::string(a), infix.as_bytes(), &php::string(b)]) } else { s("") }
 }
 
 /// Byte strings joined.
 pub(crate) fn concat(parts: &[&[u8]]) -> Vec<u8> {
     parts.concat()
+}
+
+/// Byte strings joined, as a string value.
+pub(crate) fn joined(parts: &[&[u8]]) -> Value {
+    Value::Str(php_std::Str::from(parts.concat()))
 }
 
 /// A contents listing as `{name, size, type}` entries: a list of items, or

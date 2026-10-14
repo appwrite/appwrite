@@ -138,7 +138,7 @@ pub(crate) fn match_glob(names: Vec<Value>, pattern: &str) -> Result<Vec<Value>>
     for name in names {
         let bytes = match &name {
             Value::Str(s) => s.as_bytes().to_vec(),
-            Value::Int(_) | Value::Float(_) | Value::Bool(_) => php::string(&name),
+            Value::Int(_) | Value::Float(_) | Value::Bool(_) => php::string(&name).to_vec(),
             other => {
                 return Err(Error::type_error(format!(
                     "{{closure:Utopia\\VCS\\Adapter\\Git::matchGlob():434}}(): Argument #1 ($name) must be of type string, {} given",

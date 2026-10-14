@@ -11,7 +11,7 @@ use utopia_console::Command;
 use crate::adapter::{Adapter, CheckRun, Git, VcsType, WebhookId, WebhookScope, unsupported};
 use crate::error::{Error, Result};
 use crate::git::{self, clone_command, normalize_repository_path};
-use crate::github::{concat, concat_if_both, contents_listing};
+use crate::github::{concat_if_both, contents_listing, joined};
 use crate::gitlab::return_array;
 use crate::php::{self, at, each, empty, object, or, path, s};
 use crate::transport::{Call, Method, Response, Transport};
@@ -340,7 +340,7 @@ impl Gitea {
                 if recursive && php::is_str(&or(at(&entry, "type"), ""), "tree") {
                     let sha = php::text(&php::string(&at(&entry, "sha")));
                     for sub in self.gogs_tree(owner, repository_name, sha, true).await? {
-                        paths.push(s(concat(&[&php::string(&entry_path), b"/", &php::string(&sub)])));
+                        paths.push(joined(&[&php::string(&entry_path), b"/", &php::string(&sub)]));
                     }
                 }
             }
@@ -771,7 +771,7 @@ impl Adapter for Gitea {
                     ("branchDeleted", or(at(&payload, "deleted"), false)),
                     ("branch", branch),
                     ("branchUrl", branch_url),
-                    ("repositoryId", s(php::string(&or(at(&repository, "id"), "")))),
+                    ("repositoryId", Value::Str(php::string(&or(at(&repository, "id"), "")))),
                     ("repositoryName", or(at(&repository, "name"), "")),
                     ("repositoryUrl", repository_url),
                     ("installationId", s("")),
@@ -803,7 +803,7 @@ impl Adapter for Gitea {
                 let branch_url = concat_if_both(&repository_url, "/src/branch/", &branch);
                 let commit_hash = or(at(&head, "sha"), "");
                 let head_commit_url = if repository_url.truthy() {
-                    s(concat(&[&php::string(&repository_url), b"/commit/", &php::string(&commit_hash)]))
+                    joined(&[&php::string(&repository_url), b"/commit/", &php::string(&commit_hash)])
                 } else {
                     s("")
                 };
@@ -814,7 +814,7 @@ impl Adapter for Gitea {
                 Ok(vec![object([
                     ("branch", branch),
                     ("branchUrl", branch_url),
-                    ("repositoryId", s(php::string(&or(at(&repository, "id"), "")))),
+                    ("repositoryId", Value::Str(php::string(&or(at(&repository, "id"), "")))),
                     ("repositoryName", or(at(&repository, "name"), "")),
                     ("repositoryUrl", repository_url),
                     ("installationId", s("")),

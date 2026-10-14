@@ -1,6 +1,8 @@
 //! Provider API calls: the request every adapter sends and the response it
 //! reads back.
 
+use std::sync::OnceLock;
+
 use php_std::{Str, Value};
 use utopia_client::{Client, Http, Request};
 
@@ -126,13 +128,20 @@ impl Response {
 #[derive(Debug)]
 pub(crate) struct Transport {
     pub endpoint: String,
+    /// Made on the first call: an adapter that only parses webhooks never
+    /// needs them.
+    clients: OnceLock<Clients>,
+}
+
+/// The clients of a [`Transport`]: one following redirects, one not.
+#[derive(Debug)]
+struct Clients {
     following: Client<Http>,
     direct: Client<Http>,
 }
 
-impl Transport {
-    /// A transport calling `endpoint` (no trailing slash).
-    pub fn new(endpoint: impl Into<String>) -> Self {
+impl Clients {
+    fn new() -> Self {
         let base = Client::new(Http::new())
             .with_user_agent(USER_AGENT)
             .with_path_as_is(true)
@@ -144,7 +153,14 @@ impl Transport {
                 .and_then(|c| c.with_timeout(15.0))
                 .expect("constant client settings are valid")
         };
-        Transport { endpoint: endpoint.into(), following: configure(true), direct: configure(false) }
+        Clients { following: configure(true), direct: configure(false) }
+    }
+}
+
+impl Transport {
+    /// A transport calling `endpoint` (no trailing slash).
+    pub fn new(endpoint: impl Into<String>) -> Self {
+        Transport { endpoint: endpoint.into(), clients: OnceLock::new() }
     }
 
     /// Sends a call and reads its response.
@@ -189,7 +205,8 @@ impl Transport {
             request = request.body(body);
         }
 
-        let client = if call.follow { &self.following } else { &self.direct };
+        let clients = self.clients.get_or_init(Clients::new);
+        let client = if call.follow { &clients.following } else { &clients.direct };
         let response = match client.send(request).await {
             Ok(r) => r,
             Err(e) if e.is_client() => {

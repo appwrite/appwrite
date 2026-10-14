@@ -92,7 +92,7 @@ impl GitLab {
         }
         let id = php::string(&or(response.at("id"), ""));
         let group = php::string(&or(response.at("path"), ""));
-        Ok(php::text(&[id.as_slice(), b":", group.as_slice()].concat()))
+        Ok(php::text(&[id.as_bytes(), b":", group.as_bytes()].concat()))
     }
 }
 
@@ -538,7 +538,7 @@ impl Adapter for GitLab {
                     ("branchDeleted", Value::Bool(php::identical(&or(at(&payload, "after"), ""), &zero))),
                     ("branch", branch),
                     ("branchUrl", branch_url),
-                    ("repositoryId", s(php::string(&or(at(&project, "id"), "")))),
+                    ("repositoryId", Value::Str(php::string(&or(at(&project, "id"), "")))),
                     ("repositoryName", or(at(&project, "name"), "")),
                     ("repositoryUrl", repository_url),
                     ("installationId", s("")),
@@ -579,7 +579,7 @@ impl Adapter for GitLab {
                 Ok(vec![object([
                     ("branch", branch),
                     ("branchUrl", branch_url),
-                    ("repositoryId", s(php::string(&or(at(&project, "id"), "")))),
+                    ("repositoryId", Value::Str(php::string(&or(at(&project, "id"), "")))),
                     ("repositoryName", or(at(&project, "name"), "")),
                     ("repositoryUrl", repository_url),
                     ("installationId", s("")),
@@ -1052,7 +1052,7 @@ impl Git for GitLab {
             namespaces.set(
                 key.to_owned(),
                 object([
-                    ("id", s(php::string(&or(at(namespace, "id"), "")))),
+                    ("id", Value::Str(php::string(&or(at(namespace, "id"), "")))),
                     ("name", or(at(namespace, "name"), or(at(namespace, "path"), ""))),
                     ("path", or(at(namespace, "full_path"), or(at(namespace, "path"), ""))),
                     ("kind", or(at(namespace, "kind"), "group")),
