@@ -16,6 +16,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception\Transaction as TransactionException;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\UID;
+use Utopia\Lock\Exception\Contention;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Device;
@@ -61,10 +62,12 @@ class Delete extends Action
             ->param('siteId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Site ID.', false, ['dbForProject'])
             ->param('deploymentId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Deployment ID.', false, ['dbForProject'])
             ->inject('response')
+            ->inject('project')
             ->inject('dbForProject')
             ->inject('publisherForDeletes')
             ->inject('queueForEvents')
             ->inject('deviceForSites')
+            ->inject('locks')
             ->callback($this->action(...));
     }
 
@@ -72,10 +75,12 @@ class Delete extends Action
         string $siteId,
         string $deploymentId,
         Response $response,
+        Document $project,
         Database $dbForProject,
         DeletePublisher $publisherForDeletes,
         Event $queueForEvents,
-        Device $deviceForSites
+        Device $deviceForSites,
+        callable $locks
     ) {
         $site = $dbForProject->getDocument('sites', $siteId);
         if ($site->isEmpty()) {
@@ -94,50 +99,62 @@ class Delete extends Action
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
+        // The Console deletes deployments in parallel, so repointing must not pick one that another request is deleting.
         try {
-            if (!$dbForProject->deleteDocument('deployments', $deployment->getId())) {
-                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove deployment from DB');
-            }
-        } catch (TransactionException) {
-            $deploymentExists = !$dbForProject->getDocument('deployments', $deployment->getId())->isEmpty();
+            $site = $locks('sites:deployments:' . $project->getId() . ':' . $siteId, 30, function () use ($dbForProject, $siteId, $deployment) {
+                try {
+                    if (!$dbForProject->deleteDocument('deployments', $deployment->getId())) {
+                        throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove deployment from DB');
+                    }
+                } catch (TransactionException) {
+                    $deploymentExists = !$dbForProject->getDocument('deployments', $deployment->getId())->isEmpty();
 
-            if ($deploymentExists && !$dbForProject->deleteDocument('deployments', $deployment->getId())) {
-                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove deployment from DB');
-            }
+                    if ($deploymentExists && !$dbForProject->deleteDocument('deployments', $deployment->getId())) {
+                        throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove deployment from DB');
+                    }
+                }
+
+                $site = $dbForProject->getDocument('sites', $siteId);
+
+                if ($site->getAttribute('latestDeploymentId') === $deployment->getId()) {
+                    $latestDeployment = $dbForProject->findOne('deployments', [
+                        Query::equal('resourceType', ['sites']),
+                        Query::equal('resourceInternalId', [$site->getSequence()]),
+                        Query::orderDesc('$createdAt'),
+                    ]);
+                    $site = $dbForProject->updateDocument(
+                        'sites',
+                        $site->getId(),
+                        new Document([
+                            'latestDeploymentCreatedAt' => $latestDeployment->isEmpty() ? null : $latestDeployment->getCreatedAt(),
+                            'latestDeploymentInternalId' => $latestDeployment->isEmpty() ? '' : $latestDeployment->getSequence(),
+                            'latestDeploymentId' => $latestDeployment->isEmpty() ? '' : $latestDeployment->getId(),
+                            'latestDeploymentStatus' => $latestDeployment->isEmpty() ? '' : $latestDeployment->getAttribute('status', ''),
+                        ])
+                    );
+                }
+
+                if ($site->getAttribute('deploymentId') === $deployment->getId()) { // Reset site deployment
+                    $site = $dbForProject->updateDocument('sites', $site->getId(), new Document([
+                        'deploymentId' => '',
+                        'deploymentInternalId' => '',
+                        'deploymentScreenshotDark' => '',
+                        'deploymentScreenshotLight' => '',
+                        'deploymentCreatedAt' => null,
+                    ]));
+                }
+
+                return $site;
+            }, 10.0);
+        } catch (Contention) {
+            $response->addHeader('Retry-After', '5');
+            throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED, 'Deployment deletion is busy. Try again.');
         }
 
         if (!empty($deployment->getAttribute('sourcePath', ''))) {
             if (!($deviceForSites->delete($deployment->getAttribute('sourcePath', '')))) {
                 throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove deployment from storage');
             }
-        }
-
-        if ($site->getAttribute('latestDeploymentId') === $deployment->getId()) {
-            $latestDeployment = $dbForProject->findOne('deployments', [
-                Query::equal('resourceType', ['sites']),
-                Query::equal('resourceInternalId', [$site->getSequence()]),
-                Query::orderDesc('$createdAt'),
-            ]);
-            $site = $dbForProject->updateDocument(
-                'sites',
-                $site->getId(),
-                new Document([
-                    'latestDeploymentCreatedAt' => $latestDeployment->isEmpty() ? '' : $latestDeployment->getCreatedAt(),
-                    'latestDeploymentInternalId' => $latestDeployment->isEmpty() ? '' : $latestDeployment->getSequence(),
-                    'latestDeploymentId' => $latestDeployment->isEmpty() ? '' : $latestDeployment->getId(),
-                    'latestDeploymentStatus' => $latestDeployment->isEmpty() ? '' : $latestDeployment->getAttribute('status', ''),
-                ])
-            );
-        }
-
-        if ($site->getAttribute('deploymentId') === $deployment->getId()) { // Reset site deployment
-            $site = $dbForProject->updateDocument('sites', $site->getId(), new Document(array_merge($site->getArrayCopy(), [
-                'deploymentId' => '',
-                'deploymentInternalId' => '',
-                'deploymentScreenshotDark' => '',
-                'deploymentScreenshotLight' => '',
-                'deploymentCreatedAt' => '',
-            ])));
         }
 
         $queueForEvents
