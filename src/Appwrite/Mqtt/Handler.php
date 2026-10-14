@@ -212,8 +212,8 @@ class Handler implements MqttHandler
     {
         $suback = new Suback();
 
-        // Topic selection is open, but the connection's user must still be valid: re-check that it
-        // was not blocked or removed since CONNECT. If it is no longer permitted, refuse every filter.
+        // The connection's user must still be valid: re-check that it was not blocked or removed
+        // since CONNECT. If it is no longer permitted, refuse every filter before any topic gating.
         $authorizer = $this->container->get('authorizer');
         if ($authorizer !== null && !$authorizer($connection->identity)) {
             foreach ($subscribe->filters() as $filter) {
@@ -226,10 +226,8 @@ class Handler implements MqttHandler
         $projectDB = $this->getProjectDB($connection->prefix);
         $userId = $connection->identity['userId'] ?? '';
 
-        // Subscription is open: a permitted connection may subscribe to any topic or wildcard, except
-        // a filter that could reach the reserved users/ namespace, which is ownership-gated (see
-        // deniesUserTopic); a wildcard first level is refused for that reason. The topic
-        // document is consulted only to cap the QoS and to enable offline replay for an exact name.
+        // Resolve exact topic names to their documents: needed to cap QoS, enable replay, and key the
+        // subscriber-list check on an ordinary topic's id.
         $names = [];
         foreach ($subscribe->filters() as $filter) {
             if ($this->isWildcard($filter->topic) || $this->deniesUserTopic($filter->topic, $userId)) {
@@ -264,14 +262,25 @@ class Handler implements MqttHandler
                 continue;
             }
 
-            $document = $this->isWildcard($filter->topic) ? null : ($topicsByName[$filter->topic] ?? null);
+            if ($this->isReservedUserTopic($filter->topic)) {
+                // Authorised by ownership; its document may not exist yet (auto-provisioned on publish).
+                $document = $topicsByName[$filter->topic] ?? null;
+            } else {
+                // Ordinary topic: a wildcard cannot be matched against one topic's list, and an exact
+                // topic must be one the user is a subscriber of.
+                $document = $this->isWildcard($filter->topic) ? null : ($topicsByName[$filter->topic] ?? null);
+
+                if ($document === null || !$this->isSubscribed($projectDB, $authorization, $userId, (string) $document->getSequence())) {
+                    $suback->deny();
+                    continue;
+                }
+            }
 
             $topicQos = $document?->getAttribute('qos');
             $grantedQos = \min($filter->qos, $topicQos === null ? Packet::QOS_1 : (int) $topicQos);
             $suback->grant($grantedQos);
 
-            // Offline replay needs an exact topic (its ledger and cursor); a wildcard or an unknown
-            // topic is delivered live only.
+            // Offline replay needs an exact topic; an owned user topic with no document yet is live only.
             if ($document !== null) {
                 $grantedTopics[$filter->topic] = [$document, $grantedQos];
             }
@@ -485,6 +494,30 @@ class Handler implements MqttHandler
         $segments = \explode('/', $topic);
 
         return \count($segments) === 2 && $segments[1] !== $userId;
+    }
+
+    /**
+     * Whether a topic is an exact reserved per-user topic (users/<id>), authorised by ownership rather
+     * than the subscriber list. A deeper users/<id>/… path is ordinary, matching deliver()'s carve-out.
+     */
+    private function isReservedUserTopic(string $topic): bool
+    {
+        $segments = \explode('/', $topic);
+
+        return \count($segments) === 2 && $segments[0] === self::USER_TOPIC_PREFIX;
+    }
+
+    /** Whether the user is entered as a subscriber of the topic (via any of their targets). */
+    private function isSubscribed(Database $projectDB, Authorization $authorization, string $userId, string $topicInternalId): bool
+    {
+        if ($userId === '') {
+            return false;
+        }
+
+        return !$authorization->skip(fn () => $projectDB->findOne('subscribers', [
+            Query::equal('topicInternalId', [$topicInternalId]),
+            Query::equal('userId', [$userId]),
+        ]))->isEmpty();
     }
 
     /**

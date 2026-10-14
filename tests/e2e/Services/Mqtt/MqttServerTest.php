@@ -211,28 +211,28 @@ final class MqttServerTest extends Scope
         $subscriber->disconnect();
     }
 
-    public function testSubscribeToArbitraryTopicIsGranted(): void
+    public function testSubscribeToUnknownTopicIsRefused(): void
     {
         $projectId = $this->getProject()['$id'];
         ['userId' => $userId, 'jwt' => $jwt] = $this->createUser();
 
         $subscriber = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
-        $this->assertSame(0, $subscriber->connect($projectId, $jwt, 'e2e-open-' . $userId, cleanStart: true));
+        $this->assertSame(0, $subscriber->connect($projectId, $jwt, 'e2e-unknown-' . $userId, cleanStart: true));
 
         try {
-            // Subscription is open: a connected user may subscribe to any topic, including one that
-            // maps to no topic document. It is granted (live-only, no backlog), not refused.
+            // Test for FAILURE: an ordinary topic is gated by its subscriber list, so a name that maps
+            // to no topic (and thus no subscriber) is refused rather than granted live-only.
             $codes = $subscriber->subscribe(['does-not-exist-' . $userId]);
-            $this->assertSame([1], $codes);
+            $this->assertSame([0x80], $codes);
         } finally {
             $subscriber->disconnect();
         }
     }
 
-    public function testSubscriptionIgnoresTopicRoles(): void
+    public function testSubscriptionRequiresMembership(): void
     {
         $projectId = $this->getProject()['$id'];
-        ['userId' => $ownerId] = $this->createUser();
+        ['userId' => $memberId, 'jwt' => $memberJwt] = $this->createUser();
         ['userId' => $otherId, 'jwt' => $otherJwt] = $this->createUser();
 
         $server = [
@@ -241,23 +241,27 @@ final class MqttServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ];
 
-        // A topic whose subscribe roles name only the owner. Subscription authorization has been
-        // removed, so the broker does not enforce these roles.
-        $topicName = 'mqtt-open-' . $ownerId;
-        $topic = $this->client->call(Client::METHOD_POST, '/messaging/topics', $server, [
-            'topicId' => ID::unique(),
-            'name' => $topicName,
-            'subscribe' => ['user:' . $ownerId],
-        ]);
-        $this->assertEquals(201, $topic['headers']['status-code']);
+        // A topic the member is subscribed to (setupPushTopic subscribes the user's push target); the
+        // other user is never entered on it.
+        ['name' => $topicName] = $this->setupPushTopic($server, $memberId, 'mqtt-members-' . $memberId);
 
-        // Test for SUCCESS: a user outside the topic's subscribe roles is still granted.
+        // Test for FAILURE: a user who is not a subscriber of the topic is refused, even though the
+        // topic name is known and they are a valid project user.
         $other = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
-        $this->assertSame(0, $other->connect($projectId, $otherJwt, 'e2e-open-other-' . $otherId, cleanStart: true));
+        $this->assertSame(0, $other->connect($projectId, $otherJwt, 'e2e-nonmember-' . $otherId, cleanStart: true));
         try {
-            $this->assertSame([1], $other->subscribe([$topicName]));
+            $this->assertSame([0x80], $other->subscribe([$topicName]));
         } finally {
             $other->disconnect();
+        }
+
+        // Test for SUCCESS: the entered subscriber is granted.
+        $member = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
+        $this->assertSame(0, $member->connect($projectId, $memberJwt, 'e2e-member-' . $memberId, cleanStart: true));
+        try {
+            $this->assertSame([1], $member->subscribe([$topicName]));
+        } finally {
+            $member->disconnect();
         }
     }
 
@@ -784,12 +788,12 @@ final class MqttServerTest extends Scope
     }
 
     /**
-     * Wildcard subscriptions: a subscriber can subscribe to an MQTT topic pattern
-     * (users/+/status) and receive publishes to any concrete topic whose name matches
-     * (users/<id>/status), even though the publisher addressed the campaign by topic id.
-     * The delivery is tagged with the concrete topic name the broker fanned out to.
+     * Ordinary wildcard subscriptions are refused: a filter like scores/+/live cannot be matched
+     * against a single topic's subscriber list, so the broker denies it rather than fan an authorised
+     * campaign out to an unbounded set of names. (First-level and users/ wildcards are refused
+     * separately by the reserved-namespace gate.)
      */
-    public function testWildcardSubscriptionReceivesMatchingTopic(): void
+    public function testWildcardSubscriptionIsRefused(): void
     {
         $projectId = $this->getProject()['$id'];
         ['userId' => $userId, 'jwt' => $jwt] = $this->createUser();
@@ -799,28 +803,20 @@ final class MqttServerTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ];
-        // A hierarchical topic outside the reserved users/ namespace (which forbids wildcards).
-        ['id' => $topicId, 'name' => $topicName] = $this->setupPushTopic($server, $userId, 'scores/' . $userId . '/live');
+        // A hierarchical topic the user is subscribed to; the exact name is granted, the wildcard is not.
+        ['name' => $topicName] = $this->setupPushTopic($server, $userId, 'scores/' . $userId . '/live');
 
         $subscriber = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
         $this->assertSame(0, $subscriber->connect($projectId, $jwt, 'e2e-wild-' . $userId, cleanStart: true));
-        // A single-level (+) wildcard filter, authorized at the connection level, matches the
-        // concrete topic name and is granted (capped at QoS 1).
-        $this->assertSame([1], $subscriber->subscribe(['scores/+/live'], Packet::QOS_1));
 
         try {
-            $this->publishCampaign($server, $topicId, 'Status', 'online', ['s' => 'up']);
-            $received = $subscriber->consume(limit: 1, timeout: 20.0);
+            // Test for FAILURE: a single-level (+) wildcard that would match the concrete name is denied.
+            $this->assertSame([0x80], $subscriber->subscribe(['scores/+/live'], Packet::QOS_1));
+            // Test for SUCCESS: the exact subscribed name is still granted.
+            $this->assertSame([Packet::QOS_1], $subscriber->subscribe([$topicName], Packet::QOS_1));
         } finally {
             $subscriber->disconnect();
         }
-
-        // Test for SUCCESS: the wildcard subscriber received the publish, tagged with the concrete
-        // topic name (not the id the publisher addressed it by).
-        $this->assertCount(1, $received, 'wildcard subscriber did not receive the matching publish');
-        $this->assertSame($topicName, $received[0]['topic']);
-        $payload = \json_decode($received[0]['payload'], true);
-        $this->assertSame('online', $payload['notification']['body']);
     }
 
     /**
