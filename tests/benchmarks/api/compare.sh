@@ -18,7 +18,8 @@
 # Other work on the machine skews every number (a run next to builds and test
 # suites measured both runtimes about 3x slower), so the run waits up to
 # LOAD_WAIT seconds (default 300) for the 1-minute load average to fall
-# below LOAD_MAX (default a quarter of the cores, at least 2), and refuses
+# below LOAD_MAX (default half the cores, at least 2: the dev stack and the
+# OS idle around a quarter), and refuses
 # to start otherwise. Each step records the load it started at.
 #
 # The Markdown report goes to stdout and $OUT/report.md; the same run as JSON
@@ -50,7 +51,7 @@ RUST_CONTAINER=${RUST_CONTAINER:-appwrite-rust}
 DB_CONTAINER=${DB_CONTAINER:-appwrite-postgresql}
 REDIS_CONTAINER=${REDIS_CONTAINER:-appwrite-redis}
 
-LOAD_MAX=${LOAD_MAX:-$(python3 -c 'import os; print(max(2, (os.cpu_count() or 8) // 4))')}
+LOAD_MAX=${LOAD_MAX:-$(python3 -c 'import os; print(max(2, (os.cpu_count() or 8) // 2))')}
 LOAD_WAIT=${LOAD_WAIT:-300}
 
 load() {
