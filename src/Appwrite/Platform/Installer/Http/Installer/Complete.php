@@ -4,7 +4,6 @@ namespace Appwrite\Platform\Installer\Http\Installer;
 
 use Appwrite\Platform\Installer\Runtime\State;
 use Appwrite\Platform\Installer\Server;
-use Swoole\Coroutine;
 use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Http\Adapter\Swoole\Response;
 use Utopia\Platform\Action;
@@ -49,17 +48,12 @@ class Complete extends Action
 
         $progressData = ($installId !== '') ? $state->readProgressFile($installId) : [];
 
-        if (!$sessionSecret && $installId !== '') {
-            for ($attempt = 0; $attempt < 10; $attempt++) {
-                $progressData = $state->readProgressFile($installId);
-                $details = $progressData['details'][Server::STEP_ACCOUNT_SETUP] ?? [];
-                if (!empty($details['sessionSecret'])) {
-                    $sessionSecret = $details['sessionSecret'];
-                    $sessionId = $sessionId ?: ($details['sessionId'] ?? '');
-                    $sessionExpire = $sessionExpire ?: ($details['sessionExpire'] ?? '');
-                    break;
-                }
-                Coroutine::getCid() !== -1 ? Coroutine::sleep(0.5) : usleep(500_000);
+        if (!$sessionSecret) {
+            $details = $progressData['details'][Server::STEP_ACCOUNT_SETUP] ?? [];
+            if (!empty($details['sessionSecret'])) {
+                $sessionSecret = $details['sessionSecret'];
+                $sessionId = $sessionId ?: ($details['sessionId'] ?? '');
+                $sessionExpire = $sessionExpire ?: ($details['sessionExpire'] ?? '');
             }
         }
 
