@@ -604,7 +604,7 @@ mod onboarding_tests {
         let keys: Vec<&str> = php
             .lines()
             .map(str::trim)
-            .filter(|l| l.starts_with('\'') && l.ends_with("=> true,"))
+            .filter(|l| l.starts_with('\'') && l.contains("=> true,"))
             .filter_map(|l| l[1..].split('\'').next())
             .collect();
         assert_eq!(keys, super::ONBOARDING);
