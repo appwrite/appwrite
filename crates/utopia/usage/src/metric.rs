@@ -446,7 +446,7 @@ impl Metric {
 
     /// `isset($this[$name]) ? $this[$name] : null`.
     fn isset(&self, name: &str) -> Option<&Value> {
-        self.attributes.get(&ArrayKey::from(name)).filter(|v| !matches!(v, Value::Null))
+        self.attributes.get_str(name).filter(|v| !matches!(v, Value::Null))
     }
 
     fn string(&self, name: &str) -> Option<&Str> {
@@ -604,7 +604,7 @@ impl Metric {
         let mut columns = Vec::with_capacity(allowed.len());
         let mut used = 0;
         for col in allowed {
-            let raw = tags.get(&ArrayKey::from(*col));
+            let raw = tags.get_str(col);
             if raw.is_some() {
                 used += 1;
             }
@@ -645,7 +645,7 @@ impl Metric {
     /// PHP: `Metric::validate($data, $type)`.
     pub fn validate(data: &Array, kind: Kind) -> Result<()> {
         for attribute in kind.schema() {
-            let value = data.get(&ArrayKey::from(attribute.id)).filter(|v| !matches!(v, Value::Null));
+            let value = data.get_str(attribute.id).filter(|v| !matches!(v, Value::Null));
             let Some(value) = value else {
                 if attribute.required {
                     return Err(Error::exception(format!("Required attribute '{}' is missing", attribute.id)));
