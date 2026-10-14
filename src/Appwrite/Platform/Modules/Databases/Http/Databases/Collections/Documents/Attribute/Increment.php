@@ -107,6 +107,8 @@ class Increment extends Action
             throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
         }
 
+        $max = $this->resolveNumericBound($collection, $attribute, 'max', $max);
+
         // Handle transaction staging
         if ($transactionId !== null) {
             $transaction = ($isAPIKey || $isPrivilegedUser)

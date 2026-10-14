@@ -210,6 +210,68 @@ class Action extends AppwriteAction
     }
 
     /**
+     * Tighten a request-side min/max with the column/attribute schema bound.
+     *
+     * Increment/decrement accept an optional request clamp, but utopia-php/database
+     * only enforces that caller-supplied value. Column `min`/`max` must still apply
+     * when the request omits a clamp, and when both are set the stricter bound wins.
+     *
+     * Bounds may live at the top level (HTTP attribute responses after the platform
+     * `range` filter) or under `formatOptions` (raw `getCollection()` schemas used
+     * on transaction commit).
+     */
+    protected function resolveNumericBound(
+        Document $collection,
+        string $attributeKey,
+        string $bound,
+        int|float|null $requested,
+    ): int|float|null {
+        $schemaBound = null;
+
+        foreach ($collection->getAttribute('attributes', []) as $attribute) {
+            $key = $attribute->getAttribute('key', $attribute->getId());
+            if ($key !== $attributeKey) {
+                continue;
+            }
+
+            // HTTP attribute responses expose top-level min/max via the platform
+            // `range` filter. Raw collection schemas from getCollection() keep the
+            // same values under formatOptions only — transaction commits use that
+            // shape, so both must be checked.
+            $schemaBound = $attribute->getAttribute($bound);
+            if ($schemaBound === null || $schemaBound === '') {
+                $formatOptions = $attribute->getAttribute('formatOptions', []);
+                if (\is_array($formatOptions) && \array_key_exists($bound, $formatOptions)) {
+                    $schemaBound = $formatOptions[$bound];
+                }
+            }
+            break;
+        }
+
+        if ($schemaBound === null || $schemaBound === '') {
+            return $requested;
+        }
+
+        if (!\is_int($schemaBound) && !\is_float($schemaBound)) {
+            if (!\is_numeric($schemaBound)) {
+                return $requested;
+            }
+
+            $schemaBound = \str_contains((string) $schemaBound, '.')
+                ? (float) $schemaBound
+                : (int) $schemaBound;
+        }
+
+        if ($requested === null) {
+            return $schemaBound;
+        }
+
+        return $bound === 'max'
+            ? \min($requested, $schemaBound)
+            : \max($requested, $schemaBound);
+    }
+
+    /**
      * Users can only grant roles they hold on a related document written through
      * its parent. Permissions the related document already has may be sent back
      * unchanged.
