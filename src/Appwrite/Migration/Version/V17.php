@@ -5,7 +5,7 @@ namespace Appwrite\Migration\Version;
 use Appwrite\Migration\Migration;
 use Utopia\Auth\Proofs\Password;
 use Utopia\Console\Console;
-use Utopia\Database\AttributeUpdate;
+use Utopia\Database\Attribute\Update as AttributeUpdate;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Query\Schema\ColumnType;

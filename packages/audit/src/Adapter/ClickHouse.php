@@ -10,7 +10,7 @@ use Utopia\Audit\Query;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Client;
 use Utopia\Database\Attribute;
-use Utopia\Database\AttributeUpdate;
+use Utopia\Database\Attribute\Update as AttributeUpdate;
 use Utopia\Database\Index;
 use Utopia\Psr7\ContentType;
 use Utopia\Psr7\Method as HttpMethod;

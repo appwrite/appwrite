@@ -10,7 +10,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Storage\Bytes;
 use Appwrite\Utopia\Response;
 use Utopia\Compression\Compression;
-use Utopia\Database\CollectionUpdate;
+use Utopia\Database\Collection\Update as CollectionUpdate;
 use Utopia\Database\Database;
 use Utopia\Database\Permission;
 use Utopia\Database\Validator\Permissions;

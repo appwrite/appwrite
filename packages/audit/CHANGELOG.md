@@ -6,7 +6,7 @@ All notable changes to `utopia-php/audit` are documented in this file.
 
 ### Breaking changes
 
-- Requires utopia-php/database `^8.0` instead of `^7.0.0`. PHP `>=8.5` is
+- Requires utopia-php/database `^8.1.2` instead of `^7.0.0`. PHP `>=8.5` is
   unchanged from 4.0.3.
 - `ClickHouse::getAttributes()`, `ClickHouse::getIndexes()`,
   `SQL::getAttributes()` and `SQL::getIndexes()` return

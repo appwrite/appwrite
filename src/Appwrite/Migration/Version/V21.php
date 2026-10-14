@@ -6,7 +6,7 @@ use Appwrite\Migration\Migration;
 use Exception;
 use Throwable;
 use Utopia\Console\Console;
-use Utopia\Database\AttributeUpdate;
+use Utopia\Database\Attribute\Update as AttributeUpdate;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;

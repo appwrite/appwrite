@@ -10,7 +10,7 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
-use Utopia\Database\CollectionUpdate;
+use Utopia\Database\Collection\Update as CollectionUpdate;
 use Utopia\Database\Database;
 use Utopia\Database\Permission;
 use Utopia\Database\Validator\Authorization;

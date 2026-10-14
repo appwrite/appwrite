@@ -32,7 +32,7 @@
 - The Database adapter compiles `contains()` through `containsString()`
   instead of the deprecated `contains()` factory. Matching is unchanged: a
   substring match on the column.
-- `utopia-php/database` is required as `^8.0`, replacing the temporary
+- `utopia-php/database` is required as `^8.1.2`, replacing the temporary
   `dev-feat-query-lib as 7.0.0` root alias. The branch resolves through its
   own `8.0.x-dev` branch alias, so `minimum-stability` is `dev` with
   `prefer-stable: true` until database 8.0.0 is tagged; `stable` is restored

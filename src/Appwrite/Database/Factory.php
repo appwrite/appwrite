@@ -126,8 +126,7 @@ class Factory implements Provisioner
         $database
             ->setDatabase($this->database)
             ->setAuthorization($this->authorization)
-            ->setCheckGrants(true)
-            ->setRoundFractions(true);
+            ->setCheckGrants(true);
 
         if ($database->getAdapter()->hasFeature(Schemaless::class)) {
             $database->setSchemaless($databaseType === DOCUMENTSDB);
