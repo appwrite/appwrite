@@ -266,28 +266,28 @@ final class MqttServerTest extends Scope
         $subscriber->disconnect();
     }
 
-    public function testSubscribeToArbitraryTopicIsGranted(): void
+    public function testSubscribeToUnknownTopicIsRefused(): void
     {
         $projectId = $this->getProject()['$id'];
         ['userId' => $userId, 'jwt' => $jwt] = $this->createUser();
 
         $subscriber = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
-        $this->assertSame(0, $subscriber->connect($projectId, $jwt, 'e2e-open-' . $userId, cleanStart: true));
+        $this->assertSame(0, $subscriber->connect($projectId, $jwt, 'e2e-unknown-' . $userId, cleanStart: true));
 
         try {
-            // Subscription is open: a connected user may subscribe to any topic, including one that
-            // maps to no topic document. It is granted (live-only, no backlog), not refused.
+            // Test for FAILURE: an ordinary topic is gated by its subscriber list, so a name that maps
+            // to no topic (and thus no subscriber) is refused rather than granted live-only.
             $codes = $subscriber->subscribe(['does-not-exist-' . $userId]);
-            $this->assertSame([1], $codes);
+            $this->assertSame([0x80], $codes);
         } finally {
             $subscriber->disconnect();
         }
     }
 
-    public function testSubscriptionIgnoresTopicRoles(): void
+    public function testSubscriptionRequiresMembership(): void
     {
         $projectId = $this->getProject()['$id'];
-        ['userId' => $ownerId] = $this->createUser();
+        ['userId' => $memberId, 'jwt' => $memberJwt] = $this->createUser();
         ['userId' => $otherId, 'jwt' => $otherJwt] = $this->createUser();
 
         $server = [
@@ -296,23 +296,27 @@ final class MqttServerTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ];
 
-        // A topic whose subscribe roles name only the owner. Subscription authorization has been
-        // removed, so the broker does not enforce these roles.
-        $topicName = 'mqtt-open-' . $ownerId;
-        $topic = $this->client->call(Client::METHOD_POST, '/messaging/topics', $server, [
-            'topicId' => Id::unique(),
-            'name' => $topicName,
-            'subscribe' => ['user:' . $ownerId],
-        ]);
-        $this->assertEquals(201, $topic['headers']['status-code']);
+        // A topic the member is subscribed to (setupPushTopic subscribes the user's push target); the
+        // other user is never entered on it.
+        ['id' => $topicId] = $this->setupPushTopic($server, $memberId, 'mqtt-members-' . $memberId);
 
-        // Test for SUCCESS: a user outside the topic's subscribe roles is still granted.
+        // Test for FAILURE: a user who is not a subscriber of the topic is refused, even though the
+        // topic id is known and they are a valid project user.
         $other = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
-        $this->assertSame(0, $other->connect($projectId, $otherJwt, 'e2e-open-other-' . $otherId, cleanStart: true));
+        $this->assertSame(0, $other->connect($projectId, $otherJwt, 'e2e-nonmember-' . $otherId, cleanStart: true));
         try {
-            $this->assertSame([1], $other->subscribe([$topicName]));
+            $this->assertSame([0x80], $other->subscribe([$topicId]));
         } finally {
             $other->disconnect();
+        }
+
+        // Test for SUCCESS: the entered subscriber is granted.
+        $member = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
+        $this->assertSame(0, $member->connect($projectId, $memberJwt, 'e2e-member-' . $memberId, cleanStart: true));
+        try {
+            $this->assertSame([1], $member->subscribe([$topicId]));
+        } finally {
+            $member->disconnect();
         }
     }
 
@@ -586,8 +590,8 @@ final class MqttServerTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ];
-        $topicQos1 = $this->setupPushTopic($server, $userId, 'mqtt-qos1', qos: 1)['name'];
-        $topicQos0 = $this->setupPushTopic($server, $userId, 'mqtt-qos0', qos: 0)['name'];
+        $topicQos1 = $this->setupPushTopic($server, $userId, 'mqtt-qos1', qos: 1)['id'];
+        $topicQos0 = $this->setupPushTopic($server, $userId, 'mqtt-qos0', qos: 0)['id'];
 
         $subscriber = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
         $this->assertSame(0, $subscriber->connect($projectId, $jwt, 'e2e-qos-' . $userId, cleanStart: true));
@@ -603,10 +607,9 @@ final class MqttServerTest extends Scope
     }
 
     /**
-     * The messaging graph for the built-in Appwrite push provider: a provider, a topic (whose
-     * name is the MQTT channel subscribers match on), a user with a push target identified by
-     * the topic id, and a subscription. Returns the topic id (the publish handle) and name (the
-     * subscribe handle) — they are distinct: publishers address topics by id, subscribers by name.
+     * The messaging graph for the built-in Appwrite push provider: a provider, a topic, a user with a
+     * push target, and a subscription. Returns the topic id and name; the wire topic both publishers
+     * and subscribers address is the id (the name is a display label).
      *
      * @param  array<string, string>  $server server-key headers
      * @return array{id: string, name: string}
@@ -740,13 +743,13 @@ final class MqttServerTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ];
-        ['id' => $topicId, 'name' => $topicName] = $this->setupPushTopic($server, $userId, 'appwrite-mqtt-flow');
+        ['id' => $topicId] = $this->setupPushTopic($server, $userId, 'appwrite-mqtt-flow');
 
         // Subscribe first (the fan-out only reaches connected subscribers), then publish,
         // then read the delivery that lands on the still-open socket.
         $subscriber = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
         $this->assertSame(0, $subscriber->connect($projectId, $jwt, 'e2e-flow-' . $userId, cleanStart: true));
-        $subscriber->subscribe([$topicName]);
+        $subscriber->subscribe([$topicId]);
 
         try {
             $messageId = $this->publishCampaign($server, $topicId, 'Match update', 'India needs 12 off 6', ['matchId' => '42']);
@@ -756,9 +759,9 @@ final class MqttServerTest extends Scope
         }
 
         // Test for SUCCESS: the campaign reached the live subscriber through the broker, delivered
-        // on the topic name (not the id the publisher addressed it by).
+        // on the topic id the publisher addressed it by.
         $this->assertCount(1, $received, 'subscriber did not receive the campaign');
-        $this->assertSame($topicName, $received[0]['topic']);
+        $this->assertSame($topicId, $received[0]['topic']);
 
         $payload = \json_decode($received[0]['payload'], true);
         $this->assertEquals('Match update', $payload['notification']['title']);
@@ -777,11 +780,11 @@ final class MqttServerTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ];
-        ['id' => $topicId, 'name' => $topicName] = $this->setupPushTopic($server, $userId, 'appwrite-mqtt-channel');
+        ['id' => $topicId] = $this->setupPushTopic($server, $userId, 'appwrite-mqtt-channel');
 
         $subscriber = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
         $this->assertSame(0, $subscriber->connect($projectId, $jwt, 'e2e-channel-' . $userId, cleanStart: true));
-        $subscriber->subscribe([$topicName]);
+        $subscriber->subscribe([$topicId]);
 
         try {
             $this->publishCampaign($server, $topicId, 'Reminder', 'Stand-up in 5', extra: ['channelId' => 'reminders']);
@@ -805,7 +808,7 @@ final class MqttServerTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ];
-        ['id' => $topicId, 'name' => $topicName] = $this->setupPushTopic($server, $userId, 'appwrite-mqtt-channel-clear');
+        ['id' => $topicId] = $this->setupPushTopic($server, $userId, 'appwrite-mqtt-channel-clear');
 
         $draft = $this->client->call(Client::METHOD_POST, '/messaging/messages/push', $server, [
             'messageId' => Id::unique(),
@@ -819,7 +822,7 @@ final class MqttServerTest extends Scope
 
         $subscriber = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
         $this->assertSame(0, $subscriber->connect($projectId, $jwt, 'e2e-channel-clear-' . $userId, cleanStart: true));
-        $subscriber->subscribe([$topicName]);
+        $subscriber->subscribe([$topicId]);
 
         try {
             // Sending the draft while clearing the channel returns it to the app's default channel.
@@ -839,12 +842,12 @@ final class MqttServerTest extends Scope
     }
 
     /**
-     * Wildcard subscriptions: a subscriber can subscribe to an MQTT topic pattern
-     * (users/+/status) and receive publishes to any concrete topic whose name matches
-     * (users/<id>/status), even though the publisher addressed the campaign by topic id.
-     * The delivery is tagged with the concrete topic name the broker fanned out to.
+     * Ordinary wildcard subscriptions are refused: a filter like scores/+/live cannot be matched
+     * against a single topic's subscriber list, so the broker denies it rather than fan an authorised
+     * campaign out to an unbounded set of names. (First-level and users/ wildcards are refused
+     * separately by the reserved-namespace gate.)
      */
-    public function testWildcardSubscriptionReceivesMatchingTopic(): void
+    public function testWildcardSubscriptionIsRefused(): void
     {
         $projectId = $this->getProject()['$id'];
         ['userId' => $userId, 'jwt' => $jwt] = $this->createUser();
@@ -854,28 +857,20 @@ final class MqttServerTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ];
-        // A hierarchical topic outside the reserved users/ namespace (which forbids wildcards).
-        ['id' => $topicId, 'name' => $topicName] = $this->setupPushTopic($server, $userId, 'scores/' . $userId . '/live');
+        // A topic the user is subscribed to; the exact id is granted, a wildcard filter is not.
+        ['id' => $topicId] = $this->setupPushTopic($server, $userId, 'scores/' . $userId . '/live');
 
         $subscriber = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
         $this->assertSame(0, $subscriber->connect($projectId, $jwt, 'e2e-wild-' . $userId, cleanStart: true));
-        // A single-level (+) wildcard filter, authorized at the connection level, matches the
-        // concrete topic name and is granted (capped at QoS 1).
-        $this->assertSame([1], $subscriber->subscribe(['scores/+/live'], Packet::QOS_1));
 
         try {
-            $this->publishCampaign($server, $topicId, 'Status', 'online', ['s' => 'up']);
-            $received = $subscriber->consume(limit: 1, timeout: 20.0);
+            // Test for FAILURE: a single-level (+) wildcard cannot be matched against a subscriber list and is denied.
+            $this->assertSame([0x80], $subscriber->subscribe(['scores/+/live'], Packet::QOS_1));
+            // Test for SUCCESS: the exact subscribed topic id is still granted.
+            $this->assertSame([Packet::QOS_1], $subscriber->subscribe([$topicId], Packet::QOS_1));
         } finally {
             $subscriber->disconnect();
         }
-
-        // Test for SUCCESS: the wildcard subscriber received the publish, tagged with the concrete
-        // topic name (not the id the publisher addressed it by).
-        $this->assertCount(1, $received, 'wildcard subscriber did not receive the matching publish');
-        $this->assertSame($topicName, $received[0]['topic']);
-        $payload = \json_decode($received[0]['payload'], true);
-        $this->assertSame('online', $payload['notification']['body']);
     }
 
     /**
@@ -894,11 +889,11 @@ final class MqttServerTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ];
-        ['id' => $topicId, 'name' => $topicName] = $this->setupPushTopic($server, $userId, 'appwrite-mqtt-qos0', qos: 0);
+        ['id' => $topicId] = $this->setupPushTopic($server, $userId, 'appwrite-mqtt-qos0', qos: 0);
 
         $subscriber = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
         $this->assertSame(0, $subscriber->connect($projectId, $jwt, 'e2e-qos0-' . $userId, cleanStart: true));
-        $this->assertSame([0], $subscriber->subscribe([$topicName], Packet::QOS_1), 'the QoS-0 topic must cap the grant to 0');
+        $this->assertSame([0], $subscriber->subscribe([$topicId], Packet::QOS_1), 'the QoS-0 topic must cap the grant to 0');
 
         try {
             $this->publishCampaign($server, $topicId, 'No ack', 'delivered at qos 0', ['k' => 'v']);
@@ -909,7 +904,7 @@ final class MqttServerTest extends Scope
 
         // Test for SUCCESS: delivered once, at QoS 0 (no packet id, so the client never PUBACKs).
         $this->assertCount(1, $received, 'qos 0 subscriber did not receive the campaign');
-        $this->assertSame($topicName, $received[0]['topic']);
+        $this->assertSame($topicId, $received[0]['topic']);
         $this->assertSame(0, $received[0]['qos'], 'delivery to a QoS-0 subscription must be QoS 0');
         $this->assertFalse($received[0]['dup'], 'a QoS-0 delivery is never marked DUP');
     }
@@ -931,12 +926,12 @@ final class MqttServerTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ];
-        $topicName = $this->setupPushTopic($server, $userId, 'appwrite-mqtt-ws')['name'];
+        $topicId = $this->setupPushTopic($server, $userId, 'appwrite-mqtt-ws')['id'];
 
         $connackReason = null;
         $codes = [];
 
-        run(function () use ($projectId, $jwt, $userId, $topicName, &$connackReason, &$codes) {
+        run(function () use ($projectId, $jwt, $userId, $topicId, &$connackReason, &$codes) {
             $client = new WebSocketClient(self::BROKER_HOST, self::BROKER_WS_PORT);
             $client->set(['timeout' => 10]);
             $this->assertTrue($client->upgrade('/'), 'websocket upgrade failed');
@@ -952,7 +947,7 @@ final class MqttServerTest extends Scope
             $connack = $this->wsReceive($client, $buffer);
             $connackReason = \ord($connack->body[1] ?? "\x80");
 
-            $client->push(V5::subscribe(1, [$topicName], 1), WEBSOCKET_OPCODE_BINARY);
+            $client->push(V5::subscribe(1, [$topicId], 1), WEBSOCKET_OPCODE_BINARY);
             $suback = $this->wsReceive($client, $buffer);
             // SUBACK body: [packetId:2][properties][one reason code per filter].
             $offset = Properties::skip($suback->body, 2);
@@ -1000,7 +995,7 @@ final class MqttServerTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ];
-        ['id' => $topicId, 'name' => $topicName] = $this->setupPushTopic($server, $userId, 'appwrite-mqtt-replay');
+        ['id' => $topicId] = $this->setupPushTopic($server, $userId, 'appwrite-mqtt-replay');
 
         $clientId = 'e2e-replay-' . $userId;
 
@@ -1008,7 +1003,7 @@ final class MqttServerTest extends Scope
         // replay, so it receives nothing.
         $seed = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
         $this->assertSame(0, $seed->connect($projectId, $jwt, $clientId, cleanStart: false));
-        $seed->subscribe([$topicName]);
+        $seed->subscribe([$topicId]);
         $this->assertCount(0, $seed->consume(limit: 1, timeout: 2.0));
         $seed->disconnect();
 
@@ -1021,14 +1016,14 @@ final class MqttServerTest extends Scope
         // 3) The same persistent session reconnects and the broker replays both, in order.
         $resume = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
         $this->assertSame(0, $resume->connect($projectId, $jwt, $clientId, cleanStart: false));
-        $resume->subscribe([$topicName]);
+        $resume->subscribe([$topicId]);
         $received = $resume->consume(limit: 2, timeout: 10.0);
         $resume->disconnect();
 
         // Test for SUCCESS: both offline messages replayed, in sequence order.
         $this->assertCount(2, $received, 'offline messages were not replayed');
         foreach ($received as $message) {
-            $this->assertSame($topicName, $message['topic']);
+            $this->assertSame($topicId, $message['topic']);
             $this->assertTrue($message['dup'], 'replayed messages carry the DUP flag');
         }
         $replayedBodies = \array_map(
@@ -1043,7 +1038,7 @@ final class MqttServerTest extends Scope
         \usleep(1000000);
         $again = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
         $this->assertSame(0, $again->connect($projectId, $jwt, $clientId, cleanStart: false));
-        $again->subscribe([$topicName]);
+        $again->subscribe([$topicId]);
         $leftover = $again->consume(limit: 2, timeout: 3.0);
         $again->disconnect();
 
@@ -1070,13 +1065,13 @@ final class MqttServerTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ];
-        ['id' => $topicId, 'name' => $topicName] = $this->setupPushTopic($server, $userId, 'appwrite-mqtt-gap');
+        ['id' => $topicId] = $this->setupPushTopic($server, $userId, 'appwrite-mqtt-gap');
         $clientId = 'e2e-gap-' . $userId;
 
         // Seed the persistent session, then publish three messages while offline.
         $seed = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
         $this->assertSame(0, $seed->connect($projectId, $jwt, $clientId, cleanStart: false));
-        $seed->subscribe([$topicName]);
+        $seed->subscribe([$topicId]);
         $this->assertCount(0, $seed->consume(limit: 1, timeout: 2.0));
         $seed->disconnect();
 
@@ -1087,7 +1082,7 @@ final class MqttServerTest extends Scope
         // Replay all three, but ack only the first and third — leave the middle unacked.
         $resume = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
         $this->assertSame(0, $resume->connect($projectId, $jwt, $clientId, cleanStart: false));
-        $resume->subscribe([$topicName]);
+        $resume->subscribe([$topicId]);
         $received = $resume->consume(limit: 3, timeout: 10.0, shouldAck: fn (int $i): bool => $i !== 1);
         $resume->disconnect();
         $this->assertCount(3, $received);
@@ -1096,7 +1091,7 @@ final class MqttServerTest extends Scope
         \usleep(1000000);
         $again = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
         $this->assertSame(0, $again->connect($projectId, $jwt, $clientId, cleanStart: false));
-        $again->subscribe([$topicName]);
+        $again->subscribe([$topicId]);
         $redelivered = $again->consume(limit: 3, timeout: 5.0);
         $again->disconnect();
 
@@ -1126,7 +1121,7 @@ final class MqttServerTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ];
-        ['id' => $topicId, 'name' => $topicName] = $this->setupPushTopic($server, $userId, 'appwrite-mqtt-depth');
+        ['id' => $topicId] = $this->setupPushTopic($server, $userId, 'appwrite-mqtt-depth');
         $clientId = 'e2e-depth-' . $userId;
         $bodiesOf = fn (array $messages): array => \array_map(
             fn (array $message): string => \json_decode($message['payload'], true)['notification']['body'],
@@ -1135,7 +1130,7 @@ final class MqttServerTest extends Scope
 
         $seed = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
         $this->assertSame(0, $seed->connect($projectId, $jwt, $clientId, cleanStart: false));
-        $seed->subscribe([$topicName]);
+        $seed->subscribe([$topicId]);
         $this->assertCount(0, $seed->consume(limit: 1, timeout: 2.0));
         $seed->disconnect();
 
@@ -1150,7 +1145,7 @@ final class MqttServerTest extends Scope
 
         $resume = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
         $this->assertSame(0, $resume->connect($projectId, $jwt, $clientId, cleanStart: false));
-        $resume->subscribe([$topicName]);
+        $resume->subscribe([$topicId]);
         $received = $resume->consume(limit: $overflow, timeout: 10.0);
         $resume->disconnect();
 
@@ -1158,11 +1153,11 @@ final class MqttServerTest extends Scope
         $this->assertSame($replayWindow, $bodiesOf($received));
 
         $redelivered = [];
-        $this->assertEventually(function () use ($projectId, $jwt, $clientId, $topicName, $overflow, $bodiesOf, &$redelivered): void {
+        $this->assertEventually(function () use ($projectId, $jwt, $clientId, $topicId, $overflow, $bodiesOf, &$redelivered): void {
             $again = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
             try {
                 $this->assertSame(0, $again->connect($projectId, $jwt, $clientId, cleanStart: false));
-                $again->subscribe([$topicName]);
+                $again->subscribe([$topicId]);
                 $leftover = $again->consume(limit: $overflow, timeout: 1.0);
             } finally {
                 $again->disconnect();
@@ -1191,13 +1186,13 @@ final class MqttServerTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ];
-        ['id' => $topicId, 'name' => $topicName] = $this->setupPushTopic($server, $userId, 'appwrite-mqtt-clean');
+        ['id' => $topicId] = $this->setupPushTopic($server, $userId, 'appwrite-mqtt-clean');
         $clientId = 'e2e-clean-' . $userId;
 
         // Establish a persistent session, then go offline.
         $seed = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
         $this->assertSame(0, $seed->connect($projectId, $jwt, $clientId, cleanStart: false));
-        $seed->subscribe([$topicName]);
+        $seed->subscribe([$topicId]);
         $this->assertCount(0, $seed->consume(limit: 1, timeout: 2.0));
         $seed->disconnect();
 
@@ -1207,7 +1202,7 @@ final class MqttServerTest extends Scope
         // Reconnect with cleanStart = true: the session is discarded, so nothing replays.
         $fresh = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
         $this->assertSame(0, $fresh->connect($projectId, $jwt, $clientId, cleanStart: true));
-        $fresh->subscribe([$topicName]);
+        $fresh->subscribe([$topicId]);
         $this->assertCount(0, $fresh->consume(limit: 1, timeout: 3.0), 'clean-start session should not replay a backlog');
         $fresh->disconnect();
     }

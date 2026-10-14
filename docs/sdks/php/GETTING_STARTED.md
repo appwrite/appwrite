@@ -51,7 +51,7 @@ $users = new Users($client);
 try {
     $user = $users->create(ID::unique(), "email@example.com", "+123456789", "password", "Walter O'Brien");
 } catch(AppwriteException $error) {
-    echo $error->message;
+    echo $error->getMessage();
 }
 
 ```

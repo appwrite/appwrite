@@ -15,7 +15,7 @@ User user = await users.create(
   email: 'email@example.com',
   phone: '+123456789',
   password: 'password',
-  name: 'Walter O'Brien'
+  name: "Walter O'Brien"
 );
 ```
 
