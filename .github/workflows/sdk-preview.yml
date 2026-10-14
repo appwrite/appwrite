@@ -75,7 +75,7 @@ jobs:
         run: |
             npm install
             npm run build
-            npx pkg-pr-new publish --comment=update
+            npx pkg-pr-new publish --comment=update --no-compact
 
   changes:
     name: Console / Changes
@@ -147,4 +147,4 @@ jobs:
 
       - name: Publish SDK
         working-directory: app/sdks/console-web
-        run: npx pkg-pr-new@0.0.88 publish --comment=update
+        run: npx pkg-pr-new@0.0.88 publish --comment=update --no-compact
