@@ -465,10 +465,22 @@ class Redis implements Synchronous, Consumer
             $job = $this->getJob($queue, $pid);
             $owner = $this->commands->get($ownerKey);
             if ($job === false) {
-                if (\is_string($owner)) {
-                    throw new \RuntimeException('Queue delivery payload is missing');
+                if (!\is_string($owner)) {
+                    $this->commands->listRemove($processing, $pid);
+                    continue;
                 }
-                $this->commands->listRemove($processing, $pid);
+                // Owned, but nothing left to requeue or park. Dropped unless its
+                // handler still heartbeats (commit tolerates a missing payload).
+                // Throwing here ended the sweep before its cursor was saved, so
+                // every sweep stopped at the same orphan and never got past it.
+                $abandoned = $this->script($this->commands, 'abandon', [
+                    $ownerKey, "{$queue->namespace}.claims.{$queue->name}.{$pid}",
+                    "{$queue->namespace}.jobs.{$queue->name}.{$pid}", $processing,
+                    "{$queue->namespace}.stats.{$queue->name}.processing",
+                ], [$owner, $pid]);
+                if (!$abandoned) {
+                    $retained++;
+                }
                 continue;
             }
 
