@@ -105,10 +105,6 @@ const OAUTH2 = [
     { id: 'zoom', route: 'PATCH /v1/project/oauth2/zoom' },
 ];
 
-// Mock phones live in the project's `auths`, which every policy update rewrites
-// from the project as read: a concurrent write can drop a number just added.
-const RACE = 'a mock phone shares the project\'s `auths` with the policies, written read-modify-write: a concurrent policy update can drop the number first, then this answers 404';
-
 function phone() {
     return `+1${2000000000 + Math.floor(random() * 7999999999)}`;
 }
@@ -193,17 +189,17 @@ const bench = define({
             run(api) {
                 const res = api.call('POST', '/project/mock-phones', { number: phone(), otp: '123456' }, [201]);
                 if (res.status === 201) {
-                    api.prep('DELETE', `/project/mock-phones/${res.json('number')}`, null, [204, 404]);
+                    api.prep('DELETE', `/project/mock-phones/${res.json('number')}`, null, [204]);
                 }
             },
         },
         { name: 'project.mockPhones.update', route: 'PUT /v1/project/mock-phones/:number', run: (api, d) => api.call('PUT', `/project/mock-phones/${pick(d.phones)}`, { otp: '123456' }) },
         {
-            name: 'project.mockPhones.delete', route: 'DELETE /v1/project/mock-phones/:number', note: RACE,
+            name: 'project.mockPhones.delete', route: 'DELETE /v1/project/mock-phones/:number',
             run(api) {
                 const number = phone();
                 api.prep('POST', '/project/mock-phones', { number, otp: '123456' }, [201]);
-                api.call('DELETE', `/project/mock-phones/${number}`, null, [204, 404]);
+                api.call('DELETE', `/project/mock-phones/${number}`, null, [204]);
             },
         },
 
