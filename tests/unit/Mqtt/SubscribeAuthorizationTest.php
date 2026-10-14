@@ -77,12 +77,9 @@ final class SubscribeAuthorizationTest extends ReplayTestCase
         $this->appendLedger('news', 1, 5);
         $this->seedCursor('news', 0);
 
-        // Remove the membership while the ledger query yields and drift the access clock, as the
-        // unsubscribe control event would land mid-replay; the backlog must be withheld, not delivered.
-        $this->database->interleave('pushLedger', 1, function () use ($subscriber): void {
-            $this->database->deleteDocument('subscribers', $subscriber->getId());
-            $this->handler->revoke(self::PROJECT, self::USER);
-        });
+        // Delete the subscriber row while the ledger query yields, as a concurrent deleteSubscriber
+        // would; the backlog must be withheld whether or not the unsubscribe event has landed yet.
+        $this->database->interleave('pushLedger', 1, fn () => $this->database->deleteDocument('subscribers', $subscriber->getId()));
 
         $this->assertSame([Suback::DENIED], $this->subscribeCodes($this->connect(1), 'news'));
         $this->assertSame([], $this->payloads($this->drainPublishes(1)), 'a removed subscriber was handed the backlog');
