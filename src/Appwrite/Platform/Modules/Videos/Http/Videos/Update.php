@@ -58,7 +58,7 @@ class Update extends Base
                 ]
             ))
             ->param('videoId', '', new UID(), 'Video unique ID.')
-            ->param('name', '', new Text(128), 'Video name. Max length: 128 chars.')
+            ->param('name', '', new Text(2048), 'Video name. Max length: 2048 chars.')
             ->param('permissions', null, new Nullable(new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE])), 'An array of permission strings. By default, the current permissions are inherited. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->inject('response')
             ->inject('dbForProject')

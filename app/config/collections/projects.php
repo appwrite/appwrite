@@ -2819,7 +2819,7 @@ return [
                 '$id' => ID::custom('name'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
-                'size' => 128,
+                'size' => 2048,
                 'signed' => true,
                 'required' => false,
                 'default' => null,

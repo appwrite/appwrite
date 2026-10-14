@@ -49,7 +49,7 @@ The root resource. Points at a source file in Storage and holds probed media met
 | `$createdAt` / `$updatedAt` | string | ISO 8601 |
 | `bucketId` | string | Bucket holding the source file |
 | `fileId` | string | Source file ID |
-| `name` | string | Defaults to the source file name. Max 128 chars |
+| `name` | string | Defaults to the source file name. Max 2048 chars |
 | `size` | number | Source size in bytes |
 | `format` | string | Container format |
 | `duration` | number | Milliseconds |

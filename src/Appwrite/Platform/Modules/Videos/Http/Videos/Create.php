@@ -63,7 +63,7 @@ class Create extends Base
             ))
             ->param('bucketId', '', new UID(), 'Storage bucket unique ID holding the source file.')
             ->param('fileId', '', new UID(), 'Source file unique ID.')
-            ->param('name', '', new Text(128), 'Video name. Defaults to the source file name. Max length: 128 chars.', true)
+            ->param('name', '', new Text(2048), 'Video name. Defaults to the source file name. Max length: 2048 chars.', true)
             ->param('permissions', null, new Nullable(new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE])), 'An array of permission strings. By default, only the current user is granted all permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->inject('response')
             ->inject('dbForProject')
