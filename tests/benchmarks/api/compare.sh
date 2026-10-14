@@ -13,6 +13,13 @@
 #   TARGETS=php tests/benchmarks/api/compare.sh teams           # PHP only: Rust does not serve it yet
 #   RESULTS=tests/benchmarks/results/users.json tests/benchmarks/api/compare.sh users
 #   APPWRITE_BENCHMARK_ERROR_BUDGET=0.25 tests/benchmarks/api/compare.sh users  # a ladder past PHP's capacity
+#   ALLOW_BUSY=1 tests/benchmarks/api/compare.sh users          # run even when the machine is busy
+#
+# Other work on the machine skews every number (a run next to builds and test
+# suites measured both runtimes about 3x slower), so the run waits up to
+# LOAD_WAIT seconds (default 300) for the 1-minute load average to fall
+# below LOAD_MAX (default a quarter of the cores, at least 2), and refuses
+# to start otherwise. Each step records the load it started at.
 #
 # The Markdown report goes to stdout and $OUT/report.md; the same run as JSON
 # (per step and per endpoint, with the environment) to $RESULTS, by default
@@ -43,6 +50,31 @@ RUST_CONTAINER=${RUST_CONTAINER:-appwrite-rust}
 DB_CONTAINER=${DB_CONTAINER:-appwrite-postgresql}
 REDIS_CONTAINER=${REDIS_CONTAINER:-appwrite-redis}
 
+LOAD_MAX=${LOAD_MAX:-$(python3 -c 'import os; print(max(2, (os.cpu_count() or 8) // 4))')}
+LOAD_WAIT=${LOAD_WAIT:-300}
+
+load() {
+    python3 -c 'import os; print(round(os.getloadavg()[0], 2))'
+}
+
+quiet() {
+    local waited=0
+    while python3 -c "import os, sys; sys.exit(os.getloadavg()[0] < $LOAD_MAX)"; do
+        if [ "$waited" -ge "$LOAD_WAIT" ]; then
+            if [ -n "${ALLOW_BUSY:-}" ]; then
+                echo "compare.sh: load $(load) is above $LOAD_MAX; running anyway (ALLOW_BUSY)" >&2
+                return 0
+            fi
+            echo "compare.sh: load $(load) stayed above $LOAD_MAX for ${LOAD_WAIT}s; stop other work or set ALLOW_BUSY=1" >&2
+            exit 3
+        fi
+        [ "$waited" -eq 0 ] && echo "compare.sh: waiting for the load ($(load)) to fall below $LOAD_MAX" >&2
+        sleep 10
+        waited=$((waited + 10))
+    done
+}
+
+quiet
 mkdir -p "$OUT"
 FAILED=
 if [ -n "${RESULTS:-}" ]; then
@@ -72,6 +104,8 @@ sampler() {
 run_step() {
     local target=$1 endpoint=$2 container=$3 mode=$4 level=$5
     local label="${target}-${mode}-${level}"
+    local load_before
+    load_before=$(load)
     local stats="$OUT/$label.stats.csv"
     : > "$stats"
     docker stats --no-stream --format '{{.Name}},{{.MemUsage}}' "$container" > "$OUT/$label.baseline.txt" || true
@@ -107,7 +141,7 @@ run_step() {
     cpu_db_after=$(cgroup_cpu_usec "$DB_CONTAINER")
     cpu_redis_after=$(cgroup_cpu_usec "$REDIS_CONTAINER")
     cat > "$OUT/$label.meta.json" <<EOF
-{"target":"$target","mode":"$mode","level":$level,"container":"$container","start":$start,"end":$end,
+{"target":"$target","mode":"$mode","level":$level,"container":"$container","start":$start,"end":$end,"load_before":$load_before,
  "cpu_app_usec":"${cpu_app_before:-}:${cpu_app_after:-}",
  "cpu_db_usec":"${cpu_db_before:-}:${cpu_db_after:-}",
  "cpu_redis_usec":"${cpu_redis_before:-}:${cpu_redis_after:-}"}
@@ -133,11 +167,11 @@ done
 
 if [ -n "$FAILED" ]; then
     # Report what ran, but never write a failed run to $RESULTS.
-    SERVICE=$SERVICE DURATION=$DURATION HASHING=$HASHING PHP_ENDPOINT=$PHP_ENDPOINT RUST_ENDPOINT=$RUST_ENDPOINT DB_CONTAINER=$DB_CONTAINER \
+    LOAD_MAX=$LOAD_MAX SERVICE=$SERVICE DURATION=$DURATION HASHING=$HASHING PHP_ENDPOINT=$PHP_ENDPOINT RUST_ENDPOINT=$RUST_ENDPOINT DB_CONTAINER=$DB_CONTAINER \
         python3 "$HERE/report.py" "$OUT" | tee "$OUT/report.md"
     echo "compare.sh: failed steps:$FAILED; nothing written to ${RESULTS:-$OUT/$SERVICE.json}" >&2
     exit 1
 fi
 APPWRITE_BENCHMARK_ERROR_BUDGET=${APPWRITE_BENCHMARK_ERROR_BUDGET:-0.01} \
-    SERVICE=$SERVICE DURATION=$DURATION HASHING=$HASHING PHP_ENDPOINT=$PHP_ENDPOINT RUST_ENDPOINT=$RUST_ENDPOINT DB_CONTAINER=$DB_CONTAINER \
+    LOAD_MAX=$LOAD_MAX SERVICE=$SERVICE DURATION=$DURATION HASHING=$HASHING PHP_ENDPOINT=$PHP_ENDPOINT RUST_ENDPOINT=$RUST_ENDPOINT DB_CONTAINER=$DB_CONTAINER \
     python3 "$HERE/report.py" "$OUT" --json "${RESULTS:-$OUT/$SERVICE.json}" | tee "$OUT/report.md"

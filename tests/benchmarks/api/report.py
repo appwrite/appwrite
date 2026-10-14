@@ -182,6 +182,7 @@ def document(found, directory):
                 'avg': round(s['mem_avg'] / 2 ** 20, 1),
                 'peak': round(s['mem_peak'] / 2 ** 20, 1),
             },
+            **({'load_before': meta['load_before']} if meta.get('load_before') is not None else {}),
             'endpoints': endpoints,
         })
     service = os.environ.get('SERVICE', 'users')
@@ -208,6 +209,7 @@ def document(found, directory):
                 'cores': os.cpu_count(),
                 'memory_gib': round(int(memory) / 2 ** 30) if memory and memory.isdigit() else None,
             },
+            'load_max': float(os.environ['LOAD_MAX']) if os.environ.get('LOAD_MAX') else None,
             'docker': run('docker', 'version', '--format', '{{.Server.Version}}'),
             'k6': (run('k6', 'version') or '').split(' (')[0] or None,
             'cpu_source': found[0]['cpu_source'] if found else None,
