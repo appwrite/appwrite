@@ -1473,6 +1473,19 @@ const OWN_PLACEHOLDERS: &[&str] = &[
     "{other-project}",
 ];
 
+/// Whether a normalized text still names a twin project (a run stamp of ten
+/// digits then `p` or `r`): the twins of this run are placeholders by then,
+/// so it is another run's.
+fn names_another_twin(text: &str) -> bool {
+    let bytes = text.as_bytes();
+    bytes.windows(12).enumerate().any(|(i, w)| {
+        w[..10].iter().all(u8::is_ascii_digit)
+            && matches!(w[10], b'p' | b'r')
+            && !w[11].is_ascii_alphanumeric()
+            && (i == 0 || !bytes[i - 1].is_ascii_digit())
+    })
+}
+
 /// One runtime's record of a scenario.
 async fn record(
     api: &Api,
@@ -1540,7 +1553,7 @@ async fn record(
     // left out before generated values are numbered.
     let own = |item: &Value| {
         let text = Normalizer::new(twin, other).value(item).to_string();
-        OWN_PLACEHOLDERS.iter().any(|p| text.contains(p))
+        OWN_PLACEHOLDERS.iter().any(|p| text.contains(p)) && !names_another_twin(&text)
     };
     effects.retain(own);
     purges.retain(own);
