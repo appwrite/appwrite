@@ -183,4 +183,16 @@ final class UnsubscribeTest extends TestCase
     {
         $this->assertSame(0, $this->handler->unsubscribe($this->server, self::PROJECT, 'ghost', 'scores'));
     }
+
+    public function testFailsClosedWhenMembershipCannotBeChecked(): void
+    {
+        $this->connect(1, 'member', 'scores');
+        // Make the membership check throw (the collection is gone); the subscription must still drop.
+        $this->database->deleteCollection('topics');
+
+        $dropped = $this->handler->unsubscribe($this->server, self::PROJECT, 'member', 'scores');
+
+        $this->assertSame(1, $dropped);
+        $this->assertSame([], $this->store->getSubscribers(self::PROJECT, 'scores'));
+    }
 }

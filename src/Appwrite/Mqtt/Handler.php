@@ -258,6 +258,11 @@ class Handler implements MqttHandler
         // packet's topics rather than once per filter.
         $subscribedInternalIds = $this->subscribedTopics($projectDB, $authorization, $userId, $ordinaryInternalIds);
 
+        // Decide each filter first; the SUBACK is emitted last so an ordinary grant can be demoted
+        // after replay (below) without a yield between the final membership check and the grant.
+        // $decisions keeps one entry per filter, in order: the granted QoS, or null to deny, plus the
+        // ordinary topic's internal id to re-verify.
+        $decisions = [];
         $grantedTopics = [];
 
         foreach ($subscribe->filters() as $filter) {
@@ -266,10 +271,11 @@ class Handler implements MqttHandler
             // The reserved users/ namespace: refuse wildcards and other users' topics; an owned
             // users/<id> falls through and is served like any exact topic name below.
             if ($this->deniesUserTopic($filter->topic, $userId)) {
-                $suback->deny();
+                $decisions[] = ['qos' => null, 'ordinaryId' => null];
                 continue;
             }
 
+            $ordinaryId = null;
             if ($this->isReservedUserTopic($filter->topic)) {
                 // Authorised by ownership; its document may not exist yet (auto-provisioned on publish).
                 $document = $topicsByName[$filter->topic] ?? null;
@@ -279,14 +285,16 @@ class Handler implements MqttHandler
                 $document = $this->isWildcard($filter->topic) ? null : ($topicsByName[$filter->topic] ?? null);
 
                 if ($document === null || !isset($subscribedInternalIds[(string) $document->getSequence()])) {
-                    $suback->deny();
+                    $decisions[] = ['qos' => null, 'ordinaryId' => null];
                     continue;
                 }
+
+                $ordinaryId = (string) $document->getSequence();
             }
 
             $topicQos = $document?->getAttribute('qos');
             $grantedQos = \min($filter->qos, $topicQos === null ? Packet::QOS_1 : (int) $topicQos);
-            $suback->grant($grantedQos);
+            $decisions[] = ['qos' => $grantedQos, 'ordinaryId' => $ordinaryId];
 
             // Offline replay needs an exact topic; an owned user topic with no document yet is live only.
             if ($document !== null) {
@@ -296,6 +304,29 @@ class Handler implements MqttHandler
 
         if ($grantedTopics !== []) {
             $this->replayBacklog($connection, $projectDB, $grantedTopics);
+        }
+
+        // onSubscribe yields on the replay query above, during which the user could be removed as a
+        // subscriber. Re-verify the granted ordinary topics and demote any whose membership vanished,
+        // so Server never records a live subscription the user is no longer entered for.
+        $grantedOrdinaryIds = [];
+        foreach ($decisions as $decision) {
+            if ($decision['qos'] !== null && $decision['ordinaryId'] !== null) {
+                $grantedOrdinaryIds[] = $decision['ordinaryId'];
+            }
+        }
+
+        if ($grantedOrdinaryIds !== []) {
+            $stillSubscribed = $this->subscribedTopics($projectDB, $authorization, $userId, $grantedOrdinaryIds);
+            foreach ($decisions as $index => $decision) {
+                if ($decision['ordinaryId'] !== null && !isset($stillSubscribed[$decision['ordinaryId']])) {
+                    $decisions[$index]['qos'] = null;
+                }
+            }
+        }
+
+        foreach ($decisions as $decision) {
+            $decision['qos'] === null ? $suback->deny() : $suback->grant($decision['qos']);
         }
 
         return $suback;
@@ -435,16 +466,22 @@ class Handler implements MqttHandler
             return 0;
         }
 
-        $projectDB = $this->getProjectDB($projectId);
-        $authorization = new Authorization();
-        $projectDB->setAuthorization($authorization);
+        // Fail closed: if membership cannot be checked (database error), still drop the subscription
+        // rather than leave a removed user receiving the topic.
+        try {
+            $projectDB = $this->getProjectDB($projectId);
+            $authorization = new Authorization();
+            $projectDB->setAuthorization($authorization);
 
-        $document = $authorization->skip(fn () => $projectDB->findOne('topics', [
-            Query::equal('name', [$topic]),
-        ]));
+            $document = $authorization->skip(fn () => $projectDB->findOne('topics', [
+                Query::equal('name', [$topic]),
+            ]));
 
-        if (!$document->isEmpty() && $this->isSubscribed($projectDB, $authorization, $userId, (string) $document->getSequence())) {
-            return 0;
+            if (!$document->isEmpty() && $this->isSubscribed($projectDB, $authorization, $userId, (string) $document->getSequence())) {
+                return 0;
+            }
+        } catch (\Throwable $error) {
+            Console::error('MQTT unsubscribe membership check failed, dropping subscription: ' . $error->getMessage());
         }
 
         foreach ($connections as $connection) {

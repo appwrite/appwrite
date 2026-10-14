@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Mqtt;
 
+use Utopia\Database\Document;
+use Utopia\Database\Helpers\ID;
 use Utopia\Mqtt\Packet;
 use Utopia\Mqtt\Packet\Suback;
 
@@ -46,5 +48,21 @@ final class SubscribeAuthorizationTest extends ReplayTestCase
         $this->seedTopic($name, 0, id: \md5($name), subscribed: false);
 
         $this->assertSame([Packet::QOS_1], $this->subscribeCodes($this->connect(1), $name));
+    }
+
+    public function testGrantIsDemotedWhenMembershipVanishesDuringReplay(): void
+    {
+        $this->seedTopic('news', 12, subscribed: false);
+        $subscriber = $this->database->createDocument('subscribers', new Document([
+            '$id' => ID::unique(),
+            'topicInternalId' => $this->topicSequence('news'),
+            'userId' => self::USER,
+        ]));
+
+        // Remove the membership right before onSubscribe re-verifies it (the 2nd 'subscribers' find),
+        // as a concurrent deleteSubscriber would while the replay query yields.
+        $this->database->interleave('subscribers', 2, fn () => $this->database->deleteDocument('subscribers', $subscriber->getId()));
+
+        $this->assertSame([Suback::DENIED], $this->subscribeCodes($this->connect(1), 'news'));
     }
 }
