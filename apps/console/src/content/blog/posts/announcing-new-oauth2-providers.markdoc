@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Announcing six new OAuth2 login providers in Appwrite Auth"
-description: Appwrite Auth now supports OAuth2 login with Hugging Face, Resend, Cloudflare, TikTok, Kakao, and Webflow. See what each returns and how to add it in Node.js.
+description: Appwrite Auth now supports OAuth2 login with Hugging Face, Resend, Cloudflare, TikTok, Kakao, and Webflow. See what each returns and how to add it to a server-side app.
 date: 2026-10-13
 cover: /images/blog/announcing-new-oauth2-providers/cover.avif
 timeToRead: 8
@@ -111,11 +111,11 @@ Before you write any code:
 3. Copy the redirect URI shown in the modal into your app's settings on the provider's side.
 4. Add your app's domain as a web platform so Appwrite accepts your `success` and `failure` URLs.
 
-## Sign in from a Node.js server
+## Sign in from server-side apps
 
-Server-side OAuth2 login takes two routes. The first calls `createOAuth2Token` and redirects the user to the provider. The second receives the user back from Appwrite and exchanges the `userId` and `secret` URL parameters for a session with `createSession`. The [server-side rendering docs](/docs/products/auth/server-side-rendering#oauth2) cover the full flow in more languages.
+Server-side apps, including server-rendered (SSR) apps built with frameworks like Next.js, Nuxt, SvelteKit, and Astro, handle sign-in on the server and keep the session in a cookie. Server-side OAuth2 login takes two routes. The first calls `createOAuth2Token` and redirects the user to the provider. The second receives the user back from Appwrite and exchanges the `userId` and `secret` URL parameters for a session with `createSession`. The [server-side rendering docs](/docs/products/auth/server-side-rendering#oauth2) cover the full flow in more languages.
 
-The examples below use Express and `node-appwrite` 29.4.0 or later, which includes all six `OAuthProvider` values. Start with an admin client that uses an API key with the `sessions.write` scope.
+The examples below use Express and `node-appwrite` 29.4.0 or later, which includes all six `OAuthProvider` values. In a framework, the same two routes become route handlers or server endpoints. Start with an admin client that uses an API key with the `sessions.write` scope.
 
 ```server-nodejs
 import express from 'express';
