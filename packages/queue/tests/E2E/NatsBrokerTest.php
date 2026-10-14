@@ -1466,6 +1466,46 @@ final class NatsBrokerTest extends TestCase
         }
     }
 
+    /**
+     * A batch receive whose first fetch delivered and whose top-up fetch then failed
+     * returns what it already has. Dropping it would leave the delivery unacked until
+     * ackWait, spending an attempt no handler used.
+     */
+    public function testATopUpFetchThatFailsKeepsTheDeliveriesAlreadyFetched(): void
+    {
+        $state = new PublishFaults(0);
+        $broker = $this->receiveFaultBroker($state, 'stale');
+        $queue = new Queue('t_' . substr(md5(uniqid('', true)), 0, 8));
+
+        try {
+            foreach (['first', 'second', 'third'] as $task) {
+                $broker->publish($queue, ['task' => $task]);
+            }
+
+            // The first fetch goes through; the top-up fetch after it fails.
+            $state->skip = 1;
+            $state->faults = 1;
+            $batch = $broker->receive($queue, 2, 5);
+
+            $this->assertSame(0, $state->faults, 'the fault fired');
+            $this->assertCount(1, $batch, 'the delivery already fetched is returned');
+            $this->assertSame(['task' => 'first'], $batch[0]->getPayload());
+            $broker->commit($queue, $batch[0]);
+
+            // Past ackWait: a delivery dropped by the failed batch would be back by now.
+            usleep(2_500_000);
+            $rest = [];
+            while (($message = $broker->receive($queue, 1)[0] ?? null) instanceof Message) {
+                $rest[] = $message->getPayload()['task'];
+                $broker->commit($queue, $message);
+            }
+            sort($rest);
+            $this->assertSame(['second', 'third'], $rest, 'nothing is redelivered and nothing is lost');
+        } finally {
+            $broker->close();
+        }
+    }
+
     /** @return iterable<string, array{string}> */
     public static function lostReceiveConnection(): iterable
     {
@@ -1476,15 +1516,12 @@ final class NatsBrokerTest extends TestCase
     }
 
     /**
-     * A receive on a connection the server has already dropped reconnects and
-     * fetches again, instead of throwing. A fetch that never reached the server
-     * took nothing, so fetching again cannot duplicate a delivery.
+     * A broker whose transport fails the receive connection's fetch requests: it lets
+     * `$state->skip` of them through, then fails the next `$state->faults`.
      */
-    #[DataProvider('lostReceiveConnection')]
-    public function testAReceiveSurvivesTheServerHavingClosedItsConnection(string $fault): void
+    private function receiveFaultBroker(PublishFaults $state, string $fault): Nats
     {
         $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
-        $state = new PublishFaults(0);
         $fire = (static fn (TcpTransport $transport): Transport => new readonly class ($transport, $state, $fault) implements Transport {
             public function __construct(private TcpTransport $inner, private PublishFaults $state, private string $fault)
             {
@@ -1492,12 +1529,18 @@ final class NatsBrokerTest extends TestCase
 
             public function connect(string $host, int $port, float $timeout): void
             {
+                ++$this->state->connects;
                 $this->inner->connect($host, $port, $timeout);
             }
 
             public function write(string $data): int
             {
                 if ($this->state->faults > 0 && str_contains($data, '.CONSUMER.MSG.NEXT.')) {
+                    if ($this->state->skip > 0) {
+                        --$this->state->skip;
+
+                        return $this->inner->write($data);
+                    }
                     --$this->state->faults;
                     $this->inner->close();
                     if ($this->fault === 'before') {
@@ -1549,11 +1592,24 @@ final class NatsBrokerTest extends TestCase
                 $this->inner->close();
             }
         });
-        $broker = new Nats(static fn (): Connection => Connection::connect(new ConnectionOptions(
+
+        return new Nats(static fn (): Connection => Connection::connect(new ConnectionOptions(
             servers: $url,
             reconnectWait: 0.01,
             transportFactory: static fn (): Transport => $fire(new TcpTransport()),
         )), ackWait: 2.0, maxDeliver: 3);
+    }
+
+    /**
+     * A receive on a connection the server has already dropped reconnects and
+     * fetches again, instead of throwing. Only the receive connection is rebuilt:
+     * the commands connection a handler may be acking on is left alone.
+     */
+    #[DataProvider('lostReceiveConnection')]
+    public function testAReceiveSurvivesTheServerHavingClosedItsConnection(string $fault): void
+    {
+        $state = new PublishFaults(0);
+        $broker = $this->receiveFaultBroker($state, $fault);
         $queue = new Queue('t_' . substr(md5(uniqid('', true)), 0, 8));
 
         try {
@@ -1571,7 +1627,9 @@ final class NatsBrokerTest extends TestCase
             $this->assertSame(0, $state->faults, 'the fault fired');
             $this->assertInstanceOf(Message::class, $second, 'the next message is still received');
             $this->assertSame(['task' => 'second'], $second->getPayload());
+            $connects = $state->connects;
             $broker->commit($queue, $second);
+            $this->assertSame($connects, $state->connects, 'the commit rides the commands connection the reconnect left alone');
         } finally {
             $broker->close();
         }

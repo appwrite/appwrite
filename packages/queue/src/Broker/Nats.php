@@ -763,11 +763,13 @@ class Nats implements Synchronous, Consumer, Bounded
                 try {
                     return $this->pull($queue, $timeout, max(1, $n));
                 } catch (ConnectionException|ProtocolException $error) {
-                    // Once, on fresh connections. The server drops a receive socket
-                    // nobody serviced -- a Kubernetes Job's, while a long handler ran
-                    // -- and the next fetch finds out. A fetch that failed there took
-                    // nothing, so fetching again cannot duplicate a delivery.
-                    if (!$this->lostConnection($error) || !$this->reconnect()) {
+                    // Once, on a fresh receive connection. The server drops a receive
+                    // socket nobody serviced -- a Kubernetes Job's, while a long handler
+                    // ran -- and the next fetch finds out. pull() keeps whatever reached
+                    // this process, so only the first fetch fails here, and it handed
+                    // nothing over. Anything the server sent onto the dead socket comes
+                    // back after ackWait, as it did before this retry.
+                    if (!$this->lostConnection($error) || !$this->reconnectReceive()) {
                         throw $error;
                     }
 
@@ -795,9 +797,15 @@ class Nats implements Synchronous, Consumer, Bounded
         // Fetch one message first so a sparse queue never waits for a batch to fill.
         $deliveries = $this->fetch($this->consumers[$key], 1, (float) $timeout, false);
 
-        // Whatever else is already waiting, on a poll that cannot block.
+        // Whatever else is already waiting, on a poll that cannot block. Optional: if it
+        // fails, the deliveries already in hand are still returned rather than dropped
+        // to come back after ackWait, each having spent an attempt no handler used.
         if ($deliveries !== [] && \count($deliveries) < $max) {
-            $deliveries = array_merge($deliveries, $this->fetch($this->consumers[$key], $max - \count($deliveries), 0.25, true));
+            try {
+                $deliveries = array_merge($deliveries, $this->fetch($this->consumers[$key], $max - \count($deliveries), 0.25, true));
+            } catch (ConnectionException|ProtocolException $error) {
+                $this->report($error);
+            }
         }
 
         $messages = [];
@@ -1063,6 +1071,38 @@ class Nats implements Synchronous, Consumer, Bounded
         $this->commandsConnection = null;
         $this->commandsJs = null;
         $this->commandsConsumers = [];
+        $this->consumers = [];
+        $this->advisories = [];
+        $this->spareDelivery = [];
+        $this->provisioned = [];
+
+        return true;
+    }
+
+    /**
+     * Rebuild only the receive connection, under the receive lock receive() holds.
+     *
+     * The commands connection is left alone: a handler may be mid-ack on it under
+     * the commands lock, which this path does not hold, and closing it there would
+     * lose that ack. It recovers on its own in command() when it is the one that
+     * failed. Everything bound to the receive socket is dropped with it -- consumer
+     * handles, advisory subscriptions, and the provisioning that created them.
+     */
+    private function reconnectReceive(): bool
+    {
+        // One socket serves both roles here; rebuilding it is reconnect()'s job.
+        if (!$this->source instanceof \Closure) {
+            return false;
+        }
+
+        try {
+            $this->connection?->close();
+        } catch (\Throwable) {
+            // Already gone. The point is to stop using it, not to close it well.
+        }
+
+        $this->connection = null;
+        $this->js = null;
         $this->consumers = [];
         $this->advisories = [];
         $this->spareDelivery = [];
