@@ -1,5 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import { ArrowRight } from 'lucide-react'
+import { Circuit } from './Circuit'
 import { CodeBlock, CopyButton } from './Code'
 import { Factory, type Plan } from './Factory'
 import type { Index } from '@/lib/docs'
@@ -51,7 +52,7 @@ export function Hero({ index, factory }: { index: Index; factory: Plan | null })
     <section className="grid grid-cols-[minmax(0,1fr)] gap-24 pt-10 pb-4 sm:pt-20">
       {/* The opening: one centred column (claim, pitch, actions, install), and the board on the same axis below. */}
       <div className="relative grid min-w-0 grid-cols-[minmax(0,1fr)] gap-16">
-        <div className="circuit pointer-events-none absolute inset-x-0 top-48 h-[340px]" aria-hidden />
+        <Circuit className="pointer-events-none absolute inset-x-0 top-48 h-[340px] w-full" />
         <div className="relative mx-auto grid w-full max-w-[1000px] min-w-0 grid-cols-[minmax(0,1fr)] justify-items-center gap-8 text-center">
           <h1 className="m-0 text-[42px] leading-[1] tracking-[-0.04em] sm:text-[60px] xl:text-[72px]">
             Run at speed of Rust, <br className="hidden sm:block" />

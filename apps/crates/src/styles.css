@@ -279,18 +279,95 @@
     border-color: var(--highlight);
     background: var(--highlight);
   }
-  /* Circuitry behind the hero: traces and vias in the rule colour, fading out towards the middle. */
+  /* Circuitry behind the hero (src/components/Circuit.tsx): traces and vias in the rule colour,
+     fading out towards the middle, with current running along some of them into their vias. */
   .circuit {
-    background-color: var(--rule-strong);
-    opacity: 0.4;
-    -webkit-mask-image: url("data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20width=%27280%27%20height=%27280%27%20fill=%27none%27%20stroke=%27black%27%20stroke-width=%271%27%3E%3Cpath%20d=%27M0%2040h70l20%2020h60%27/%3E%3Ccircle%20cx=%27154%27%20cy=%2760%27%20r=%273.5%27/%3E%3Cpath%20d=%27M280%20120h-70l-20-20h-36%27/%3E%3Ccircle%20cx=%27150%27%20cy=%27100%27%20r=%273.5%27/%3E%3Cpath%20d=%27M60%20280v-70l20-20v-36%27/%3E%3Ccircle%20cx=%2780%27%20cy=%27150%27%20r=%273.5%27/%3E%3Cpath%20d=%27M200%200v50l-20%2020v36%27/%3E%3Ccircle%20cx=%27180%27%20cy=%27110%27%20r=%273.5%27/%3E%3Cpath%20d=%27M0%20220h40l20-20h50l20%2020h36%27/%3E%3Ccircle%20cx=%27170%27%20cy=%27220%27%20r=%273.5%27/%3E%3Cpath%20d=%27M234%20280v-36l20-20h26%27/%3E%3Cpath%20d=%27M120%200v20l-16%2016H70%27/%3E%3Ccircle%20cx=%2766%27%20cy=%2736%27%20r=%273.5%27/%3E%3C/svg%3E"), radial-gradient(ellipse 55% 65% at 50% 45%, transparent 35%, #000 85%);
-    mask-image: url("data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20width=%27280%27%20height=%27280%27%20fill=%27none%27%20stroke=%27black%27%20stroke-width=%271%27%3E%3Cpath%20d=%27M0%2040h70l20%2020h60%27/%3E%3Ccircle%20cx=%27154%27%20cy=%2760%27%20r=%273.5%27/%3E%3Cpath%20d=%27M280%20120h-70l-20-20h-36%27/%3E%3Ccircle%20cx=%27150%27%20cy=%27100%27%20r=%273.5%27/%3E%3Cpath%20d=%27M60%20280v-70l20-20v-36%27/%3E%3Ccircle%20cx=%2780%27%20cy=%27150%27%20r=%273.5%27/%3E%3Cpath%20d=%27M200%200v50l-20%2020v36%27/%3E%3Ccircle%20cx=%27180%27%20cy=%27110%27%20r=%273.5%27/%3E%3Cpath%20d=%27M0%20220h40l20-20h50l20%2020h36%27/%3E%3Ccircle%20cx=%27170%27%20cy=%27220%27%20r=%273.5%27/%3E%3Cpath%20d=%27M234%20280v-36l20-20h26%27/%3E%3Cpath%20d=%27M120%200v20l-16%2016H70%27/%3E%3Ccircle%20cx=%2766%27%20cy=%2736%27%20r=%273.5%27/%3E%3C/svg%3E"), radial-gradient(ellipse 55% 65% at 50% 45%, transparent 35%, #000 85%);
-    -webkit-mask-size: 280px 280px, 100% 100%;
-    mask-size: 280px 280px, 100% 100%;
-    -webkit-mask-repeat: repeat, no-repeat;
-    mask-repeat: repeat, no-repeat;
+    /* Clear behind the copy, and dissolving at every edge rather than cut off by the box. */
+    -webkit-mask-image:
+      radial-gradient(ellipse 55% 65% at 50% 45%, transparent 35%, #000 85%),
+      linear-gradient(to bottom, transparent, #000 18%, #000 58%, transparent),
+      linear-gradient(to right, transparent, #000 10%, #000 90%, transparent);
+    mask-image:
+      radial-gradient(ellipse 55% 65% at 50% 45%, transparent 35%, #000 85%),
+      linear-gradient(to bottom, transparent, #000 18%, #000 58%, transparent),
+      linear-gradient(to right, transparent, #000 10%, #000 90%, transparent);
     -webkit-mask-composite: source-in;
     mask-composite: intersect;
+  }
+  .circuit > rect {
+    opacity: 0.4;
+  }
+  .circuit .trace {
+    fill: none;
+    stroke: var(--rule-strong);
+    stroke-width: 1;
+  }
+  /* A faint pulse a sixth of the trace long, run from the tile's edge to the via in the first 15% of its clock: fast. */
+  .circuit .current {
+    fill: none;
+    stroke: var(--ink);
+    stroke-width: 1.25;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 0.16 2;
+    stroke-dashoffset: 0.16;
+    opacity: 0.45;
+    animation: circuit-current var(--t) linear var(--d) infinite;
+  }
+  .circuit .current.glow {
+    stroke-width: 5;
+    opacity: 0.06;
+  }
+  .circuit .hot .current {
+    stroke: var(--highlight);
+  }
+  .circuit .hot .current:not(.glow) {
+    opacity: 0.6;
+  }
+  .circuit .spark {
+    fill: var(--ink);
+    opacity: 0;
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: circuit-spark var(--t) ease-out var(--d) infinite;
+  }
+  .circuit .hot .spark {
+    fill: var(--highlight);
+  }
+  .circuit[data-idle] * {
+    animation-play-state: paused;
+  }
+  @keyframes circuit-current {
+    0% {
+      stroke-dashoffset: 0.16;
+    }
+    15%,
+    100% {
+      stroke-dashoffset: -1;
+    }
+  }
+  /* The via flares as the pulse arrives, then settles. */
+  @keyframes circuit-spark {
+    0%,
+    12% {
+      opacity: 0;
+      transform: scale(0.6);
+    }
+    14% {
+      opacity: 0.45;
+      transform: scale(1.2);
+    }
+    30%,
+    100% {
+      opacity: 0;
+      transform: scale(1);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .circuit .current,
+    .circuit .spark {
+      display: none;
+    }
   }
   /* The red square: the wordmark's dot as a marker. */
   .marker {
