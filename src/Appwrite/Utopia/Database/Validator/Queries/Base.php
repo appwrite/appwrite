@@ -4,6 +4,7 @@ namespace Appwrite\Utopia\Database\Validator\Queries;
 
 use Utopia\Config\Config;
 use Utopia\Database\Document;
+use Utopia\Database\Validator\Queries\Base as Queries;
 use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\Query\Filter;
 use Utopia\Database\Validator\Query\Limit;
@@ -12,7 +13,7 @@ use Utopia\Database\Validator\Query\Order;
 use Utopia\Database\Validator\Query\Select;
 use Utopia\Query\Schema\ColumnType;
 
-class Base extends DepthFirst
+class Base extends Queries
 {
     /**
      * Expression constructor
