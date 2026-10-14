@@ -42,12 +42,8 @@ class Handler implements MqttHandler
     /** @var array<string, array<string, array<int, Connection>>> project => userId => fd => connection */
     private array $connections = [];
 
-    private int $revocations = 0;
-
-    /** @var array<string, array<string, int>> project => userId => revocation, kept only while a CONNECT is in flight */
-    private array $revoked = [];
-
-    private int $connecting = 0;
+    /** Detects a revoke or removal that races a CONNECT or SUBSCRIBE; see the Clock class. */
+    private readonly Clock $accessClock;
 
     /** @param \Closure(): \DateTimeImmutable $clock */
     public function __construct(
@@ -57,6 +53,7 @@ class Handler implements MqttHandler
         private readonly \Closure $planForUser,
         private readonly \Closure $clock,
     ) {
+        $this->accessClock = new Clock();
     }
 
     public function onConnect(Connect $connect, Connection $connection): Connack|Auth
@@ -118,8 +115,7 @@ class Handler implements MqttHandler
      */
     private function admit(Connection $connection, string $authMethod, string $credential): array
     {
-        $this->connecting++;
-        $revocation = $this->revocations;
+        $reading = $this->accessClock->start();
 
         try {
             $authenticator = $this->container->get('authenticator');
@@ -135,8 +131,7 @@ class Handler implements MqttHandler
             $connection->identity = $identity;
             $this->track($connection);
 
-            $revokedAt = $this->revoked[$identity['projectId'] ?? ''][$identity['userId'] ?? ''] ?? 0;
-            if ($revokedAt > $revocation && !$this->authorized($identity)) {
+            if ($this->accessClock->isDrifted($identity['projectId'] ?? '', $identity['userId'] ?? '', $reading) && !$this->authorized($identity)) {
                 $this->untrack($connection);
                 $connection->identity = [];
 
@@ -145,9 +140,7 @@ class Handler implements MqttHandler
 
             return $identity;
         } finally {
-            if (--$this->connecting === 0) {
-                $this->revoked = [];
-            }
+            $this->accessClock->stop();
         }
     }
 
@@ -428,9 +421,7 @@ class Handler implements MqttHandler
     /** Disconnect the user's connections if they lost access; returns how many were disconnected. */
     public function revoke(string $projectId, string $userId): int
     {
-        if ($this->connecting > 0) {
-            $this->revoked[$projectId][$userId] = ++$this->revocations;
-        }
+        $this->accessClock->set($projectId, $userId);
 
         if ($this->connectionsOf($projectId, $userId) === []) {
             return 0;
