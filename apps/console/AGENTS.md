@@ -28,6 +28,12 @@ const projectSdk = sdk.forProject(projectId)
 const databases = await projectSdk.tablesDB.list() // Returns Models.DatabaseList
 ```
 
+**Unreleased API changes**: `@appwrite.io/console` is generated from the Cloud spec, so an endpoint added or changed in this repository is missing until Cloud releases the next Console SDK. Build the Console against it in the same PR:
+
+1. `bun run sdk:preview` lays this branch's console spec over the pinned SDK's `spec.json`, builds the SDK and installs it into `node_modules` (needs PHP with swoole and `composer install` at the repository root). `bun install --force` restores the pinned SDK.
+2. Push. On a PR that changes both `apps/console` and the API, the SDK Preview workflow publishes the same build to pkg.pr.new and comments its URL.
+3. Pin `@appwrite.io/console` to the build for your commit, `https://pkg.pr.new/appwrite/appwrite/@appwrite.io/console@<sha>`, so the Console build in CI uses it. The `@<pr>` URL in the comment follows the latest push, so it does not stay matched to the lockfile. Once a Console SDK release carries the change, pin that version instead.
+
 ### 2. File Organization
 
 - **Route-aligned structure**: Components match route paths
