@@ -179,7 +179,7 @@ abstract class Base extends VideosAction
 
         $audios = [];
         $streams = [];
-        $seenAudioLanguages = [];
+        $seenAudio = [];
 
         // Two passes: collect alternate-audio groups first so every video
         // STREAM-INF can reference them. ffmpeg's STREAM-INF CODECS only lists
@@ -193,20 +193,36 @@ abstract class Base extends VideosAction
                     continue;
                 }
 
-                // One EXT-X-MEDIA entry per language (including undetermined):
-                // a multi-rendition ladder repeats the same audio at every quality.
+                // One EXT-X-MEDIA entry per source track. A ladder repeats that
+                // track at every quality, and language is not an identity:
+                // several streams can share a tag, and streams with none all
+                // share the empty key. The packaged stream id is the track —
+                // every rendition lists the source tracks in the same order.
                 $language = $stream['language'] ?? null;
-                $languageKey = $language ?? '';
+                if (!\is_string($language) || $language === '') {
+                    $language = null;
+                }
 
-                if (isset($seenAudioLanguages[$languageKey])) {
+                $trackId = (string) ($stream['id'] ?? '');
+                // A missing id cannot tell tracks apart, so fall back to language.
+                // Prefix the key so a numeric id is not coerced onto an integer slot.
+                $key = $trackId !== '' ? 'id:' . $trackId : 'lang:' . ($language ?? '');
+
+                if (isset($seenAudio[$key])) {
                     continue;
                 }
 
-                $seenAudioLanguages[$languageKey] = true;
+                $seenAudio[$key] = true;
+
+                $name = $stream['name'] ?? $language;
+                if (!\is_string($name) || $name === '') {
+                    $name = null;
+                }
 
                 $audios[] = [
-                    'name' => $stream['name'] ?? $language,
+                    'name' => $name,
                     'language' => $language,
+                    'track' => $trackId,
                     'uri' => $this->withProject(
                         $baseUri . '/renditions/' . $rendition->getId() . '/streams/' . ($stream['id'] ?? 0) . '/playlist.m3u8',
                         $project
@@ -214,6 +230,8 @@ abstract class Base extends VideosAction
                 ];
             }
         }
+
+        $this->distinctAudioNames($audios);
 
         $hasAudioGroup = !empty($audios);
 
@@ -366,6 +384,10 @@ abstract class Base extends VideosAction
                 $entries[] = [
                     'attributes' => $adaptation['attributes'] ?? [],
                     'representation' => $representation,
+                    // Adaptation id is the source track. Every rendition repeats it
+                    // in the same order, so quality rungs of one track share a set
+                    // and a second track with the same language does not.
+                    'track' => (string) $streamId,
                     // Trailing slash matters: the init/media values above are resolved
                     // against this as a directory.
                     'baseUrl' => $baseUri . '/renditions/' . $rendition->getId() . '/segments/',
@@ -462,6 +484,36 @@ abstract class Base extends VideosAction
         ]);
 
         $this->sendManifest($response, $manifest, 'application/x-mpegurl');
+    }
+
+    /**
+     * Give audio renditions that share a label distinct NAME values.
+     *
+     * HLS requires NAME, and players present it as the track title. One
+     * undetermined track keeps a missing name. A second track with the same
+     * label would otherwise be indistinguishable.
+     *
+     * @param list<array{name: ?string, language: ?string, track: string, uri: string}> $audios
+     */
+    private function distinctAudioNames(array &$audios): void
+    {
+        $counts = [];
+
+        foreach ($audios as $audio) {
+            $label = \is_string($audio['name']) && $audio['name'] !== '' ? $audio['name'] : '';
+            $counts[$label] = ($counts[$label] ?? 0) + 1;
+        }
+
+        foreach ($audios as $index => $audio) {
+            $label = \is_string($audio['name']) && $audio['name'] !== '' ? $audio['name'] : '';
+
+            if (($counts[$label] ?? 0) > 1) {
+                $track = $audio['track'] !== '' ? $audio['track'] : (string) $index;
+                $audios[$index]['name'] = $label !== '' ? $label . ' ' . $track : 'Audio ' . $track;
+            }
+
+            unset($audios[$index]['track']);
+        }
     }
 
     /**

@@ -38,6 +38,18 @@ final class MigrationVersionsTest extends TestCase
         if (!(\str_contains(APP_VERSION_STABLE, 'RC'))) {
             $this->assertArrayHasKey(APP_VERSION_STABLE, Migration::$versions);
         }
+
+        // V26 creates the video collections. It belongs to 2.6.0 only: an earlier
+        // release mapped to V26 would create them too soon, and 2.6.0 mapped to
+        // V25 would skip them. Class existence does not catch either swap.
+        $this->assertSame(
+            [
+                '2.4.0' => 'V25',
+                '2.5.0' => 'V25',
+                '2.6.0' => 'V26',
+            ],
+            \array_intersect_key(Migration::$versions, \array_flip(['2.4.0', '2.5.0', '2.6.0']))
+        );
     }
 
     public function testV24CreatesAlertsCollectionForConsoleProject(): void

@@ -10,6 +10,8 @@ use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 use Tests\E2E\Scopes\VideoCustom;
 use Tests\E2E\Services\Realtime\RealtimeBase;
+use Utopia\Console\Command;
+use Utopia\Console\Console;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -122,6 +124,23 @@ final class VideosCustomClientTest extends Scope
         $this->assertEquals(200, $timeline['headers']['status-code']);
 
         return $videoId;
+    }
+
+    private function timeTravelRendition(string $projectId, string $renditionId, string $status): void
+    {
+        $command = (new Command('docker'))
+            ->argument('exec')
+            ->argument('appwrite')
+            ->argument('task-time-travel')
+            ->argument('--projectId=' . $projectId)
+            ->argument('--resourceType=videos_rendition')
+            ->argument('--resourceId=' . $renditionId)
+            ->argument('--status=' . $status);
+
+        $stdout = '';
+        $stderr = '';
+        $code = Console::execute($command, '', $stdout, $stderr);
+        $this->assertSame(0, $code, "Time-travel command failed with code $code: $stderr ($stdout)");
     }
 
     /**
@@ -945,6 +964,35 @@ final class VideosCustomClientTest extends Scope
 
         $timeline = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/timelines', $this->sessionHeaders());
         $this->assertEquals(200, $timeline['headers']['status-code']);
+    }
+
+    /**
+     * Document ACL is checked before the in-progress gate. A session that can
+     * read the video but not delete it must get 401 while a rendition is live.
+     * The API-key delete on the same row must still be 409, so a revert of that
+     * order cannot hide behind either check on its own.
+     */
+    public function testSessionDeleteRejectedWhileRenditionInProgress(): void
+    {
+        $videoId = $this->createPublicVideo();
+        $renditionId = $this->createRendition($videoId, 'hls');
+
+        // `uploading` is inside the in-progress gate, and it is not `pending`
+        // or `started`, so a worker that has not claimed drops the job and one
+        // that already claimed halts instead of settling the row to ready.
+        $this->timeTravelRendition($this->getProject()['$id'], $renditionId, 'uploading');
+
+        $delete = $this->client->call(Client::METHOD_DELETE, '/videos/' . $videoId, $this->sessionHeaders());
+        $this->assertEquals(401, $delete['headers']['status-code']);
+        $this->assertEquals('user_unauthorized', $delete['body']['type']);
+
+        $conflict = $this->client->call(Client::METHOD_DELETE, '/videos/' . $videoId, $this->serverHeaders());
+        $this->assertEquals(409, $conflict['headers']['status-code']);
+        $this->assertEquals('video_rendition_in_progress', $conflict['body']['type']);
+
+        $stillThere = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId, $this->serverHeaders());
+        $this->assertEquals(200, $stillThere['headers']['status-code']);
+        $this->assertEquals($videoId, $stillThere['body']['$id']);
     }
 
     /**

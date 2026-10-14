@@ -15,17 +15,19 @@ final class Dash
     /**
      * Group packaged stream entries into one AdaptationSet per switchable track.
      *
-     * Video streams share a set. Audio streams share a set per language so each
-     * language remains a player choice rather than an ABR alternative. Within a
-     * set, representations are ordered by ascending bandwidth. Each
-     * representation keeps its own BaseURL and SegmentList — segment bytes still
-     * live under that rendition.
+     * Video streams share a set. Audio streams share a set per source track and
+     * language, so each track stays a player choice and quality rungs of that
+     * track stay bitrate alternatives. A language tag is not an identity: two
+     * tracks can share one. Within a set, representations are ordered by
+     * ascending bandwidth. Each representation keeps its own BaseURL and
+     * SegmentList — segment bytes still live under that rendition.
      *
      * @param list<array{
      *     attributes?: array<string, string>,
      *     representation: array<string, mixed>,
-     *     baseUrl: string
-     * }> $entries One entry per packaged stream (unique representation id already set)
+     *     baseUrl: string,
+     *     track?: string
+     * }> $entries One entry per packaged stream (unique representation id already set). `track` is the source audio track.
      * @return list<array{
      *     id: int,
      *     attributes: array<string, string>,
@@ -39,8 +41,9 @@ final class Dash
         foreach ($entries as $entry) {
             $attributes = $entry['attributes'] ?? [];
             $contentType = (string) ($attributes['contentType'] ?? 'video');
+            $track = (string) ($entry['track'] ?? '');
             $key = $contentType === 'audio'
-                ? 'audio:' . (string) ($attributes['lang'] ?? '')
+                ? 'audio:' . $track . ':' . (string) ($attributes['lang'] ?? '')
                 : $contentType;
 
             $buckets[$key][] = $entry;
