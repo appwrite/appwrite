@@ -122,6 +122,11 @@ mod imp {
                 )));
             }
         };
+        // An empty slice's pointer is dangling, and LZ4's high-compression
+        // mode reads through it on x86-64 (a segfault); a zero-length view of
+        // a real byte compresses the same.
+        static BYTE: [u8; 1] = [0];
+        let data = if data.is_empty() { &BYTE[..0] } else { data };
         block::compress(data, mode, true).map_err(|_| Error::Codec("lz4_compress : data error".into()))
     }
 
@@ -188,6 +193,10 @@ mod tests {
     fn empty() {
         let lz4 = Lz4::new();
         assert_eq!(lz4.compress(b"").unwrap(), b"\0\0\0\0\0");
+        // High compression of an empty input crashed on x86-64.
+        for level in 1..=12 {
+            assert_eq!(Lz4::with_level(level).compress(b"").unwrap(), b"\0\0\0\0\0");
+        }
         assert_eq!(lz4.decompress(b"\0\0\0\0\0"), Err(Error::Codec("lz4_uncompress : data error".into())));
     }
 }
