@@ -105,7 +105,48 @@ final class JoinsTest extends TestCase
     public function testJoinByPhysicalNameIsLookedUpBySequence(): void
     {
         $this->assertSame('database_1_collection_3', $this->rewriteJoin('database_1_collection_3')->getAttribute());
-        $this->assertSame(['find'], $this->reads);
+        $this->assertSame(['getDocument', 'find'], $this->reads, 'a table name no collection is called by falls back to its sequence');
+    }
+
+    #[DataProvider('publicIdsShapedLikeTables')]
+    public function testJoinByAPublicIdShapedLikeATableReadsTheTableOfTheCollectionCalledThat(string $joined, string $table): void
+    {
+        $this->assertSame($table, $this->rewriteJoin($joined)->getAttribute());
+        $this->assertSame(['getDocument'], $this->reads, 'a collection called by the name is found without a sequence lookup');
+    }
+
+    /**
+     * @return Iterator<string, array{string, string}>
+     */
+    public static function publicIdsShapedLikeTables(): Iterator
+    {
+        yield 'shaped like the table of another collection' => ['database_1_collection_2', 'database_1_collection_6'];
+        yield 'shaped like the table of no collection' => ['database_1_collection_8', 'database_1_collection_7'];
+    }
+
+    public function testRewritingItsOwnOutputOfPublicIdsShapedLikeTablesChangesNothingAndReadsNothing(): void
+    {
+        $joins = $this->joins();
+        $once = $joins->rewrite(Event::DocumentFind, $this->customers(), [$this->join('database_1_collection_2'), $this->join('database_1_collection_8')]);
+        $reads = $this->reads;
+
+        $twice = $joins->rewrite(Event::DocumentFind, $this->customers(), $once);
+
+        $this->assertSame(['database_1_collection_6', 'database_1_collection_7'], \array_map(static fn (Query $query): string => $query->getAttribute(), $twice));
+        $this->assertSame($once, $twice, 'a join already pointing at its table is left as it is');
+        $this->assertSame($reads, $this->reads, 'a table name resolves to itself without another registry read');
+    }
+
+    public function testRewritingItsOwnOutputKeepsATableAnotherCollectionIsCalledBy(): void
+    {
+        $joins = $this->joins();
+        $once = $joins->rewrite(Event::DocumentFind, $this->customers(), [$this->join('shared')]);
+        $reads = $this->reads;
+
+        $twice = $joins->rewrite(Event::DocumentFind, $this->customers(), $once);
+
+        $this->assertSame('database_1_collection_2', $twice[0]->getAttribute(), 'the table of shared is not taken for the collection called database_1_collection_2');
+        $this->assertSame($reads, $this->reads, 'a table name resolves to itself without another registry read');
     }
 
     #[DataProvider('unknownPhysicalNames')]
@@ -232,6 +273,8 @@ final class JoinsTest extends TestCase
             self::collection('owned', '3', [Permission::create(Role::any())], documentSecurity: true),
             self::collection('closed', '4', [Permission::create(Role::any())], documentSecurity: false),
             self::collection('disabled', '5', [Permission::read(Role::any())], documentSecurity: true, enabled: false),
+            self::collection('database_1_collection_2', '6', [Permission::read(Role::any())], documentSecurity: false),
+            self::collection('database_1_collection_8', '7', [Permission::read(Role::any())], documentSecurity: false),
         ]], $record) extends Database {
             /**
              * @param  array<string, list<Document>>  $registries
