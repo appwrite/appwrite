@@ -38,7 +38,7 @@ redis.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 sha2.workspace = true
-syn.workspace = true
+syn = { workspace = true, features = ["visit"] }
 tokio = { workspace = true, features = ["fs", "io-std", "io-util", "rt", "macros"] }
 # A WebSocket client for the mqtt cases' MQTT-over-WebSocket steps.
 tokio-tungstenite.workspace = true

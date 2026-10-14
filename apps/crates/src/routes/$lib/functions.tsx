@@ -248,11 +248,20 @@ function FunctionTable({ list, slug, items, modules }: { list: PhpFunction[]; sl
                   <td className="px-3 py-2">
                     <div className="flex flex-wrap gap-1">
                       {f.used_by.length ? (
-                        f.used_by.map((u) => (
-                          <Link key={u} to="/$lib" params={{ lib: u }} className="rounded bg-muted px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground hover:text-foreground">
-                            {u}
-                          </Link>
-                        ))
+                        f.used_by.map((u) => {
+                          const via = f.used_via?.[u]
+                          const title = via ? `through ${via.join(', ')}` : undefined
+                          const style = `rounded bg-muted px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground${via ? ' italic' : ''}`
+                          return u.startsWith('appwrite-') ? (
+                            <span key={u} title={title} className={style}>
+                              {u}
+                            </span>
+                          ) : (
+                            <Link key={u} to="/$lib" params={{ lib: u }} title={title} className={`${style} hover:text-foreground`}>
+                              {u}
+                            </Link>
+                          )
+                        })
                       ) : (
                         <span className="text-muted-foreground">—</span>
                       )}

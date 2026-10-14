@@ -14,7 +14,8 @@
 //! - the proof: cases per operation (`cases/*.json`), fuzz profiles and
 //!   iterations (`spec.d`), quirks (by their pinning case's operation) and
 //!   deviations (by the functions their symbol names);
-//! - the users: the Utopia crates whose source calls the Rust function.
+//! - the users: the Utopia and Appwrite crates whose code reaches the Rust
+//!   function, directly or through other php-std functions ([`users`]).
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
@@ -24,6 +25,8 @@ use serde_json::{Value, json};
 use super::cases;
 use super::docs::RustItem;
 use super::spec::{self, FuzzSpec};
+
+mod users;
 
 const LIB: &str = "php-std";
 const CRATE: &str = "php_std";
@@ -536,6 +539,15 @@ fn snake(name: &str) -> String {
     out
 }
 
+/// Whether a function's rustdoc opens as a variant of PHP function `php`
+/// (`PHP \`max($a, $b)\``, `` `serialize($value)` ``) or of Rust item `base`
+/// (`` [`to_ascii`] with ... ``).
+fn variant_of(doc: &str, php: &str, base: &str) -> bool {
+    let doc = doc.trim_start();
+    let doc = doc.strip_prefix("PHP ").unwrap_or(doc);
+    doc.starts_with(&format!("`{php}(")) || doc.starts_with(&format!("[`{base}`]"))
+}
+
 /// Whether an item's rustdoc names the PHP function (`` `strtolower` ``,
 /// `` `strtolower($s)` ``, `strtolower()`).
 fn doc_names(doc: &str, php: &str) -> bool {
@@ -750,12 +762,11 @@ pub fn inventory(root: &Path, items: &[RustItem], modules: &BTreeMap<String, Str
                     }
                 }
             }
-            if found.iter().all(|p| resolve(p, items).is_none_or(|i| !matches!(i.kind, "fn" | "method"))) {
-                // The arm hands over to a helper of the adapter: what the helper calls.
-                for (name, body) in &fns {
-                    if arm.contains(&format!("{name}(")) {
-                        found.extend(crate_paths(body, &names));
-                    }
+            // The arm hands over to helpers of the adapter: what they call
+            // (`unserialize(` → `igbinary::unserialize`).
+            for (name, body) in &fns {
+                if arm.contains(&format!("{name}(")) {
+                    found.extend(crate_paths(body, &names));
                 }
             }
             rust_calls.entry(op).or_default().extend(found);
@@ -799,7 +810,8 @@ pub fn inventory(root: &Path, items: &[RustItem], modules: &BTreeMap<String, Str
                 .insert(op.clone());
         }
     }
-    let users = users(root, items);
+    let usage = users::Usage::scan(root);
+    let mut users_total: BTreeSet<String> = BTreeSet::new();
     let group_of = |areas: &[String]| {
         GROUPS.iter().find(|(_, _, a)| areas.iter().any(|x| a.contains(&x.as_str()))).map(|g| g.0).unwrap_or("other")
     };
@@ -830,6 +842,23 @@ pub fn inventory(root: &Path, items: &[RustItem], modules: &BTreeMap<String, Str
                 .filter(|i| !rust.iter().any(|r| r.path == i.path))
                 .collect();
             rust.splice(0..0, twin);
+            // Its variants beside it, documented as the PHP function or as the
+            // item (`max_pair`: "PHP `max($a, $b)` ...", `to_ascii_info`:
+            // "[`to_ascii`] with ..."), unless another PHP function is named so (`date_parse`).
+            let variants: Vec<&RustItem> = items
+                .iter()
+                .filter(|i| i.kind == "fn" && modules.contains(i.module.as_str()))
+                .filter(|i| !rust.iter().any(|r| r.path == i.path))
+                .filter(|i| i.name == e.name.name || !entries.contains_key(&i.name))
+                .filter(|i| {
+                    rust.iter().any(|r| {
+                        r.kind == "fn"
+                            && i.name.starts_with(&format!("{}_", r.name))
+                            && variant_of(&i.doc, &e.name.name, &r.name)
+                    })
+                })
+                .collect();
+            rust.extend(variants);
         }
         // Its group: that of the Rust module implementing it when an operation
         // area is named after it (`basename`: `path`), else its operations' most common area.
@@ -879,8 +908,24 @@ pub fn inventory(root: &Path, items: &[RustItem], modules: &BTreeMap<String, Str
             .filter(|d| token_match(&d.symbol))
             .map(|d| json!({ "symbol": d.symbol, "php": d.php, "reason": d.reason }))
             .collect();
-        let used_by: BTreeSet<&str> =
-            rust.iter().flat_map(|i| users.get(&i.path).into_iter().flatten()).map(String::as_str).collect();
+        // Each crate reaching it, and the php-std items it goes through when
+        // it calls none of `rust` itself.
+        let mut reach: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
+        for i in &rust {
+            for (krate, via) in usage.users(&i.path) {
+                match reach.get_mut(&krate) {
+                    Some(v) if v.is_empty() => {}
+                    Some(v) if via.is_empty() => v.clear(),
+                    Some(v) => v.extend(via),
+                    None => {
+                        reach.insert(krate, via);
+                    }
+                }
+            }
+        }
+        users_total.extend(reach.keys().cloned());
+        let used_by: Vec<&String> = reach.keys().collect();
+        let used_via: BTreeMap<&String, &BTreeSet<String>> = reach.iter().filter(|(_, v)| !v.is_empty()).collect();
         let docs: Vec<&str> = e.ops.iter().map(|o| spec.ops[o].doc.as_str()).filter(|d| !d.is_empty()).collect();
         let mut entry = json!({
             "name": e.name.name,
@@ -894,6 +939,7 @@ pub fn inventory(root: &Path, items: &[RustItem], modules: &BTreeMap<String, Str
             "quirks": quirks,
             "deviations": deviations,
             "used_by": used_by,
+            "used_via": used_via,
         });
         if e.name.name == "filter_var"
             && let Some(op) = spec.ops.get("filter.filter_var")
@@ -914,7 +960,6 @@ pub fn inventory(root: &Path, items: &[RustItem], modules: &BTreeMap<String, Str
     let fuzz_inputs: u64 = spec.ops.values().flat_map(|o| &o.fuzz).map(|f| f.iterations).sum();
     let fuzz_profiles: usize = spec.ops.values().map(|o| o.fuzz.len()).sum();
     let kinds = |k: &str| functions.iter().filter(|f| f["kind"] == k).count();
-    let users_total: BTreeSet<&str> = users.values().flatten().map(String::as_str).collect();
     let totals = json!({
         "entries": functions.len(),
         "functions": kinds("function"),
@@ -945,34 +990,6 @@ fn files(dir: &Path, ext: &str) -> Vec<std::path::PathBuf> {
     let mut out = Vec::new();
     walk(dir, ext, &mut out);
     out.sort();
-    out
-}
-
-fn subdirs(dir: &Path) -> Vec<std::path::PathBuf> {
-    let mut out: Vec<_> =
-        std::fs::read_dir(dir).into_iter().flatten().flatten().map(|e| e.path()).filter(|p| p.is_dir()).collect();
-    out.sort();
-    out
-}
-
-/// The Utopia crates using each `php_std` item (by item path).
-fn users(root: &Path, items: &[RustItem]) -> BTreeMap<String, BTreeSet<String>> {
-    let mut out: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
-    for krate in subdirs(&root.join("crates/utopia")) {
-        let name = krate.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
-        for file in files(&krate.join("src"), "rs") {
-            let text = std::fs::read_to_string(&file).unwrap_or_default();
-            if !text.contains(CRATE) {
-                continue;
-            }
-            let names = syn::parse_file(&text).map(|f| aliases(&f)).unwrap_or_default();
-            for path in crate_paths(&text, &names) {
-                if let Some(item) = resolve(&path, items) {
-                    out.entry(item.path.clone()).or_default().insert(name.clone());
-                }
-            }
-        }
-    }
     out
 }
 
@@ -1166,5 +1183,15 @@ mod tests {
             int_consts("pub const FILTER_VALIDATE_INT: i64 = 0x0101;\npub const X: i64 = 3;", "FILTER_"),
             [("FILTER_VALIDATE_INT".to_owned(), 257)]
         );
+    }
+
+    #[test]
+    fn variants_of_a_function() {
+        assert!(variant_of("PHP `max($a, $b)` of two floats", "max", "max"));
+        assert!(variant_of("`serialize($value)`, appended to `out`.", "serialize", "serialize"));
+        assert!(variant_of("[`to_ascii`] with what PHP's `$idna_info` receives.", "idn_to_ascii", "to_ascii"));
+        // An engine the function shares is not a variant of it.
+        assert!(!variant_of("PHP numeric-string parsing (`is_numeric` + `+ 0`).", "is_numeric", "numeric"));
+        assert!(!variant_of("[`numeric_str_ex`] on bytes.", "is_numeric", "numeric"));
     }
 }

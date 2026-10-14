@@ -97,8 +97,10 @@ export interface PhpFunction {
   fuzz: { profiles: number; inputs: number }
   quirks: { symbol: string; description: string; case: string }[]
   deviations: { symbol: string; php: string; reason: string }[]
-  /** Utopia crates calling the Rust items. */
+  /** Crates whose code reaches the Rust items (Utopia slugs; Appwrite crates as `appwrite-<name>`). */
   used_by: string[]
+  /** For a crate reaching them only through other php-std items, those items (older data leaves it out). */
+  used_via?: Record<string, string[]>
   /** `filter_var`: each filter, with its cases and fuzz inputs (a profile picking among filters shares its inputs). */
   variants?: { name: string; value: number; cases: number; fuzz: { profiles: number; inputs: number } }[]
 }
