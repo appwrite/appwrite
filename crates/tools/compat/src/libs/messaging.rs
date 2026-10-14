@@ -161,13 +161,14 @@ pub async fn bench(name: &str, _session: &mut Session) -> Result<crate::bench::B
         "send_sendgrid" => {
             let router = Arc::new(Router::bare());
             let sendgrid = Rc::new(Sendgrid::new("key").with_requester(router.clone()));
-            let accepted = [json!({"statusCode": 202, "response": null})];
+            // Shared, not copied per call: PHP queues an immutable array literal.
+            let accepted = Rc::new([json!({"statusCode": 202, "response": null})]);
             let message = Rc::new(Message::Email(bench_email()));
             Bench::future(move || {
                 let (sendgrid, message, router, accepted) =
                     (sendgrid.clone(), message.clone(), router.clone(), accepted.clone());
                 async move {
-                    router.queue(&accepted);
+                    router.queue(&*accepted);
                     black_box(sendgrid.send(&message).await.ok());
                 }
             })

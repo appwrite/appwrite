@@ -39,7 +39,8 @@ impl Sendgrid {
         let cc = email.cc().filter(|c| !c.is_empty());
         let bcc = email.bcc().filter(|c| !c.is_empty());
         let personalizations = list(email.to().iter().map(|to| {
-            let mut entries = vec![("to", list([entry(to)])), ("subject", text(email.subject()))];
+            let mut entries = Vec::with_capacity(4);
+            entries.extend([("to", list([entry(to)])), ("subject", text(email.subject()))]);
             if let Some(cc) = cc {
                 entries.push(("cc", list(cc.iter().map(entry))));
             }
@@ -66,7 +67,8 @@ impl Sendgrid {
             }
         }
 
-        let mut body = vec![
+        let mut body = Vec::with_capacity(6);
+        body.extend([
             ("personalizations", personalizations),
             ("reply_to", map([("name", text(email.reply_to_name())), ("email", text(email.reply_to_email()))])),
             ("from", map([("name", text(email.from_name())), ("email", text(email.from_email()))])),
@@ -77,7 +79,7 @@ impl Sendgrid {
                     ("value", text(email.content())),
                 ])]),
             ),
-        ];
+        ]);
         if !attachments.is_empty() {
             body.push(("attachments", list(attachments)));
         }

@@ -177,14 +177,16 @@ async fn send<A: Adapter + ?Sized>(adapter: &A, message: &Message) -> Result<Sen
 /// PHP: `recordSend()`, with `telemetryAttributes()`.
 fn record<A: Adapter + ?Sized>(adapter: &A, message: &Message, recipients: usize, delivered: usize) {
     let counter = adapter.base().counter();
-    let provider = String::from_utf8_lossy(&php_std::string::strtolower(adapter.name().as_bytes())).into_owned();
+    let lower = php_std::string::strtolower(adapter.name().as_bytes());
+    let provider = String::from_utf8_lossy(&lower);
     let attributes = |result: &'static str| {
-        let mut list: Vec<(&str, Attribute<'_>)> = vec![("result", result.into())];
+        let mut list: Vec<(&str, Attribute<'_>)> = Vec::with_capacity(4);
+        list.push(("result", result.into()));
         if let Some(origin) = message.origin() {
             list.push(("origin", origin.into()));
         }
         list.push(("type", adapter.kind().into()));
-        list.push(("provider", provider.as_str().into()));
+        list.push(("provider", provider.as_ref().into()));
         list
     };
     if delivered > 0 {
