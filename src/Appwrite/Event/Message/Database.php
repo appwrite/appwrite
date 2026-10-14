@@ -8,7 +8,6 @@ final class Database extends Base
 {
     public function __construct(
         public readonly ?Document $project = null,
-        public readonly ?Document $user = null,
         public readonly string $type = '',
         public readonly ?Document $table = null,
         public readonly ?Document $row = null,
@@ -22,8 +21,7 @@ final class Database extends Base
     public function toArray(): array
     {
         return [
-            'project' => $this->project?->getArrayCopy(),
-            'user' => $this->user?->getArrayCopy(),
+            'project' => $this->project === null ? null : ProjectContext::fromDocument($this->project)->toArray(),
             'type' => $this->type,
             'table' => $this->table?->getArrayCopy(),
             'row' => $this->row?->getArrayCopy(),
@@ -38,7 +36,6 @@ final class Database extends Base
     {
         return new self(
             project: !empty($data['project']) ? new Document($data['project']) : null,
-            user: !empty($data['user']) ? new Document($data['user']) : null,
             type: $data['type'] ?? '',
             table: !empty($data['table']) ? new Document($data['table']) : null,
             row: !empty($data['row']) ? new Document($data['row']) : null,
