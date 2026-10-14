@@ -15,7 +15,7 @@ use utopia_queue::{Publisher as _, Queue};
 use super::context::{Context, Mode};
 use super::{Route, State};
 use crate::auth::{KeyType, roles};
-use crate::database::documents::Attributes;
+use crate::database::documents::{Attributes, User};
 use crate::database::{Databases, Project, filters};
 use crate::datetime;
 use crate::event::{self, FunctionMessage, Metric, WebhookMessage};
@@ -46,8 +46,10 @@ struct Job {
     params: Vec<(String, String)>,
     payload: Bytes,
     created_users: Vec<(String, Bytes)>,
+    /// A function changed: its events cache is purged.
+    functions_changed: bool,
     deletes: Vec<Value>,
-    metrics: Vec<(&'static str, i64)>,
+    metrics: Vec<(String, i64)>,
     request: RequestInfo,
     status: StatusCode,
     response_size: usize,
@@ -83,6 +85,17 @@ pub(super) fn schedule(ctx: Context, status: StatusCode, body: Bytes, response_s
         (None, Some(u)) => u.message_payload(),
     };
     let payload = ctx.events.payload.clone().unwrap_or(body);
+    let listened = std::mem::take(&mut *ctx.listened.lock().unwrap_or_else(|e| e.into_inner()));
+    // `create-trigger-events`: each created user, as the listener renders it.
+    let created_users = listened
+        .users
+        .iter()
+        .map(|document| {
+            let user = User::from(document);
+            let payload = crate::response::current(&crate::response::UserModel { user: &user, render: ctx.render() });
+            (user.id.clone(), Bytes::from(payload))
+        })
+        .collect();
     let job = Job {
         state: ctx.state.clone(),
         project: ctx.project.clone(),
@@ -94,9 +107,10 @@ pub(super) fn schedule(ctx: Context, status: StatusCode, body: Bytes, response_s
         privileged: roles::is_privileged(&ctx.roles),
         params: ctx.events.params,
         payload,
-        created_users: ctx.events.created_users,
+        created_users,
+        functions_changed: listened.functions,
         deletes: ctx.events.deletes,
-        metrics: ctx.metrics,
+        metrics: listened.metrics,
         request: info,
         status,
         response_size,
@@ -115,6 +129,13 @@ impl Job {
         // Functions, webhooks and events all carry the project's context.
         let project_payload = self.project.message_payload();
         let trimmed = project_payload.clone();
+
+        // `purge-function-events-cache`.
+        if self.functions_changed
+            && let Some(key) = self.function_events_key()
+        {
+            let _ = self.state.cache.purge(&key, "").await;
+        }
 
         for delete in &self.deletes {
             self.publish(&self.state.config.queue_deletes, delete).await;
@@ -207,22 +228,28 @@ impl Job {
         }
     }
 
-    /// Union of `functions.events` for the project, cached in the same Redis
-    /// hash PHP uses (`...:project:<id>:functions:events`), so PHP's purges
-    /// drop it, under a field only Rust reads: a native entry.
-    async fn function_events(&self) -> Vec<String> {
+    /// The project's functions events cache key (none for the console).
+    fn function_events_key(&self) -> Option<String> {
         if self.project.is_console() {
-            return Vec::new();
+            return None;
         }
-        let Ok(db) = self.state.databases.project(&self.project, Databases::unchecked()) else { return Vec::new() };
-        let key = format!(
+        let db = self.state.databases.project(&self.project, Databases::unchecked()).ok()?;
+        Some(format!(
             "{}-cache-{}:{}:{}:project:{}:functions:events",
             db.cache_name(),
             db.adapter().hostname(),
             db.namespace(),
             to_text(&db.tenant()),
             self.project.id
-        );
+        ))
+    }
+
+    /// Union of `functions.events` for the project, cached in the same Redis
+    /// hash PHP uses (`...:project:<id>:functions:events`), so PHP's purges
+    /// drop it, under a field only Rust reads: a native entry.
+    async fn function_events(&self) -> Vec<String> {
+        let Some(key) = self.function_events_key() else { return Vec::new() };
+        let Ok(db) = self.state.databases.project(&self.project, Databases::unchecked()) else { return Vec::new() };
         // `v2` held a PHP array; `v3` is a native `Vec<String>`.
         const FIELD: &str = "rust:functions:events:v3";
         if let Ok(Some(cached)) = self.state.cache.load_native::<Vec<String>>(&key, 3600, FIELD).await {

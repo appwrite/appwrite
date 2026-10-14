@@ -204,7 +204,7 @@ async fn console(api: &Api, stack: &Stack) -> Result<Console, String> {
 
 /// The account's and the organization's keys the scenarios use (each twin
 /// has its own console account, so its account's `keys` are its own). No route
-/// creates them on a self-hosted instance, so `tests/compat/appwrite/keys.php`
+/// creates them on a self-hosted instance, so `tests/compat/appwrite/fixtures.php`
 /// writes them to the platform database in the API container. Each twin
 /// has its own, so the first use of a key (which records its access) is
 /// each runtime's.
@@ -220,9 +220,9 @@ struct OwnedKeys {
     organization: String,
 }
 
-fn owned_keys(input: &Value) -> Result<Value, String> {
+fn fixtures(input: &Value) -> Result<Value, String> {
     let mut child = std::process::Command::new("docker")
-        .args(["exec", "-i", "appwrite", "php", "/usr/src/code/tests/compat/appwrite/keys.php"])
+        .args(["exec", "-i", "appwrite", "php", "/usr/src/code/tests/compat/appwrite/fixtures.php"])
         .stdin(std::process::Stdio::piped())
         .stdout(std::process::Stdio::piped())
         .stderr(std::process::Stdio::piped())
@@ -230,12 +230,12 @@ fn owned_keys(input: &Value) -> Result<Value, String> {
         .map_err(|e| format!("docker: {e}"))?;
     if let Some(mut stdin) = child.stdin.take() {
         use std::io::Write;
-        stdin.write_all(input.to_string().as_bytes()).map_err(|e| format!("keys.php: {e}"))?;
+        stdin.write_all(input.to_string().as_bytes()).map_err(|e| format!("fixtures.php: {e}"))?;
     }
-    let out = child.wait_with_output().map_err(|e| format!("keys.php: {e}"))?;
+    let out = child.wait_with_output().map_err(|e| format!("fixtures.php: {e}"))?;
     let text = String::from_utf8_lossy(&out.stdout);
     let last = text.lines().rev().find(|l| l.starts_with('{')).unwrap_or_default();
-    serde_json::from_str(last).map_err(|_| format!("keys.php: {text}{}", String::from_utf8_lossy(&out.stderr)))
+    serde_json::from_str(last).map_err(|_| format!("fixtures.php: {text}{}", String::from_utf8_lossy(&out.stderr)))
 }
 
 fn seed_owned_keys(
@@ -249,7 +249,7 @@ fn seed_owned_keys(
     let account = format!("account_diff{run}");
     let expired_account = format!("account_diff{run}expired");
     let organization = format!("organization_diff{run}");
-    let created = owned_keys(&json!({"create": [
+    let created = fixtures(&json!({"create": [
         {"resourceType": "users", "resourceId": user, "secret": account, "scopes": SCOPES},
         {"resourceType": "users", "resourceId": user, "secret": expired_account, "scopes": SCOPES,
             "expire": "2020-01-01T00:00:00.000+00:00"},
@@ -257,7 +257,7 @@ fn seed_owned_keys(
     ]}))?;
     let ids = created["keys"]
         .as_array()
-        .ok_or(format!("keys.php: {created}"))?
+        .ok_or(format!("fixtures.php: {created}"))?
         .iter()
         .filter_map(|id| id.as_str().map(str::to_owned))
         .collect();
@@ -356,6 +356,7 @@ async fn twin(
         .map_err(|e| format!("organization sequence: {e}"))?
         .get::<_, String>(0);
     let keys = seed_owned_keys(console, &project, user, user_sequence, team_sequence)?;
+    fixtures(&json!({"rules": [{"projectId": project, "domain": rule_domain(&project)}]}))?;
     let (endpoint, container) =
         if runtime == "php" { (stack.php.clone(), "appwrite") } else { (stack.rust.clone(), "appwrite-rust") };
     Ok(Twin {
@@ -423,9 +424,23 @@ enum Origin {
     None,
     Platform,
     Foreign,
+    /// The twin's custom domain rule (an allowed hostname).
+    Rule,
+    /// The other twin's custom domain rule (not this project's).
+    OtherRule,
 }
 
 const ORIGINS: [Origin; 3] = [Origin::None, Origin::Platform, Origin::Foreign];
+
+/// The custom domain origins, under fewer identities (the rule depends on
+/// the project, not on who calls).
+const RULE_ORIGINS: [Origin; 2] = [Origin::Rule, Origin::OtherRule];
+const RULE_IDENTITIES: [Identity; 3] = [Identity::Guest, Identity::Key, Identity::Session];
+
+/// A twin's custom domain.
+fn rule_domain(project: &str) -> String {
+    format!("{project}.compat-diff.test")
+}
 
 /// A route under test: its request, with `{n}` replaced by the scenario's
 /// number (to create distinct resources).
@@ -450,6 +465,9 @@ const ROUTES: &[Route] = &[
         body: Some(r#"{"userId":"c{n}","email":"c{n}@example.com","password":"password-1234","name":"Created {n}"}"#),
     },
     Route { name: "users.delete.missing", method: "DELETE", path: "/users/missing", body: None },
+    // Sessions: the database listener counts them in usage.
+    Route { name: "users.sessions.create", method: "POST", path: "/users/u2/sessions", body: None },
+    Route { name: "users.sessions.delete", method: "DELETE", path: "/users/u2/sessions", body: None },
 ];
 
 /// What else a request carries, beyond its identity and origin: the hooks
@@ -483,6 +501,16 @@ fn scenarios(filter: Option<&str>) -> Vec<Scenario> {
     for route in ROUTES {
         for identity in IDENTITIES {
             for origin in ORIGINS {
+                let n = out.len();
+                let id = format!("{} {identity:?} origin:{origin:?}", route.name).to_ascii_lowercase();
+                if filter.is_some_and(|f| !id.contains(&f.to_ascii_lowercase())) {
+                    continue;
+                }
+                out.push(Scenario { id, n, route, identity, origin, variant: Variant::Plain });
+            }
+        }
+        for identity in RULE_IDENTITIES {
+            for origin in RULE_ORIGINS {
                 let n = out.len();
                 let id = format!("{} {identity:?} origin:{origin:?}", route.name).to_ascii_lowercase();
                 if filter.is_some_and(|f| !id.contains(&f.to_ascii_lowercase())) {
@@ -593,6 +621,8 @@ fn request(
         Origin::None => {}
         Origin::Platform => headers.push(("origin".into(), "http://localhost".into())),
         Origin::Foreign => headers.push(("origin".into(), "https://foreign.example".into())),
+        Origin::Rule => headers.push(("origin".into(), format!("https://{}", rule_domain(&twin.project)))),
+        Origin::OtherRule => headers.push(("origin".into(), format!("https://{}", rule_domain(&other.project)))),
     }
     let mut method = route.method.to_owned();
     let mut body = body;
@@ -806,6 +836,7 @@ impl Normalizer {
             (twin.narrow_key.clone(), "{narrow-key}".to_owned()),
             (twin.seed_key.clone(), "{seed-key}".to_owned()),
             (other.key.clone(), "{other-key}".to_owned()),
+            (other.project.clone(), "{other-project}".to_owned()),
             (twin.session.clone(), "{session}".to_owned()),
             (twin.jwt.clone(), "{jwt}".to_owned()),
             (twin.project.clone(), "{project}".to_owned()),
@@ -847,7 +878,7 @@ impl Normalizer {
                 out = out.replace(from.as_str(), to);
             }
         }
-        if let Some(shape) = hash_shape(&out).or_else(|| envelope_shape(&out)) {
+        if let Some(shape) = hash_shape(&out).or_else(|| envelope_shape(&out)).or_else(|| session_shape(&out)) {
             return shape;
         }
         if let Some(kind) = generated(&out) {
@@ -983,6 +1014,20 @@ fn hash_shape(s: &str) -> Option<String> {
 /// An `encrypt` filter envelope (`{"data","method","iv","tag","version"}`)
 /// with its random parts replaced, keeping the method, the version and how
 /// the JSON was written (escaped slashes).
+/// A session secret (base64 of `{"id": <user>, "secret": <random hex>}`):
+/// its user and the secret's length, which are not random.
+fn session_shape(s: &str) -> Option<String> {
+    if !s.starts_with("eyJ") {
+        return None;
+    }
+    let decoded = php_std::encoding::base64_decode(s.as_bytes(), true)?;
+    let v: Value = serde_json::from_slice(&decoded).ok()?;
+    let o = v.as_object()?;
+    let (id, secret) = (o.get("id")?.as_str()?, o.get("secret")?.as_str()?);
+    let keys: Vec<&str> = o.keys().map(String::as_str).collect();
+    Some(format!("{{session keys={} id={id} secret-length={}}}", keys.join(","), secret.len()))
+}
+
 fn envelope_shape(s: &str) -> Option<String> {
     if !s.starts_with("{\"data\"") {
         return None;
@@ -1183,7 +1228,7 @@ pub fn run(_root: &Path, filter: Option<&str>, verbose: bool) -> Result<Value, S
                 api.send("DELETE", &format!("{}/projects/{id}", stack.php), &console.headers, None).await?;
             }
         }
-        owned_keys(&json!({"prune": true}))?;
+        fixtures(&json!({"prune": true}))?;
         let run = chrono::Utc::now().format("%m%d%H%M%S").to_string();
         let php = twin(&api, &stack, &console, &db, "php", &run).await?;
         let rust = twin(&api, &stack, &console, &db, "rust", &run).await?;
@@ -1220,7 +1265,7 @@ pub fn run(_root: &Path, filter: Option<&str>, verbose: bool) -> Result<Value, S
         for twin in [&php, &rust] {
             api.send("DELETE", &format!("{}/projects/{}", stack.php, twin.project), &console.headers, None).await?;
         }
-        owned_keys(&json!({"prune": true}))?;
+        fixtures(&json!({"prune": true}))?;
         Ok(json!({
             "projects": {"php": php.project, "rust": rust.project},
             "scenarios": list.len(),

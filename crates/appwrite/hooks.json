@@ -430,8 +430,8 @@
       "description": "Hostnames CORS and the origin check accept: platform and console hosts, the project's platforms, the origin on preflight, and a custom domain rule's domain.",
       "php": { "file": "app/init/resources/request.php", "kind": "resource", "anchor": "$context->set('allowedHostnames'" },
       "rust": {
-        "status": "partial",
-        "note": "Custom domain rules are not consulted.",
+        "status": "done",
+        "note": "Platform and console hosts, the project's platforms, the preflight origin and the custom domain rule the origin (or referer) names, when it serves the project or a trusted one (`_APP_CONSOLE_TRUSTED_PROJECTS`, `_APP_RULES_FORMAT=md5`). Proved by `appwrite diff` from the twin's own rule domain and the other twin's.",
         "where": [{ "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "fn allowed_hostnames" }]
       }
     },
@@ -442,10 +442,10 @@
       "php": { "file": "app/init/resources/request.php", "kind": "resource", "anchor": "$context->set('dbForProject'" },
       "rust": {
         "status": "partial",
-        "note": "Actions record the user creation event and their usage metrics explicitly; there is no generic listener.",
+        "note": "The project database registers PHP's listeners: `create-trigger-events` (every created user's `users.[userId].create`), `calculate-usage` (sessions and deployments, counted per event) and `purge-function-events-cache`. A deployment's usage resource (`setResource`/`setResourceInternalId`) is not applied yet: no route Rust serves writes deployments.",
         "where": [
           { "file": "crates/appwrite/core/src/platform/shutdown.rs", "anchor": "// Database listener" },
-          { "file": "crates/appwrite/core/src/platform/context.rs", "anchor": "pub fn metric" }
+          { "file": "crates/appwrite/core/src/platform/context.rs", "anchor": "fn listen(" }
         ]
       }
     }

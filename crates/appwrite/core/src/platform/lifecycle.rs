@@ -15,7 +15,7 @@ use utopia_http::{Compression, Request, Response};
 use super::context::{Context, Mode};
 use super::{Platform, Route, shutdown};
 use crate::auth::{self, ApiKey, KeyType, Owners, roles};
-use crate::database::documents::{self, User};
+use crate::database::documents::{self, Attributes, User};
 use crate::database::project;
 use crate::database::{Databases, Project, filters};
 use crate::error::{Error, ErrorType};
@@ -68,6 +68,7 @@ fn allowed_hostnames(
     project: &Project,
     project_found: bool,
     request: &Request,
+    rule_domain: Option<&str>,
 ) -> Vec<String> {
     let mut allowed = ctx_state.config.platform_hostnames();
     if let Some(host) = network::url_host(&ctx_state.config.console_url) {
@@ -82,6 +83,9 @@ fn allowed_hostnames(
             allowed.push(host);
         }
     }
+    if let Some(domain) = rule_domain.filter(|d| !d.is_empty()) {
+        allowed.push(domain.to_owned());
+    }
     let mut unique: Vec<String> = Vec::with_capacity(allowed.len());
     for h in allowed {
         if !unique.contains(&h) {
@@ -94,7 +98,7 @@ fn allowed_hostnames(
 fn preflight(state: &Arc<super::State>, request: &Request) -> Response {
     let mut response = Response::no_content_response();
     let console = state.projects.console();
-    let allowed = allowed_hostnames(state, &console, true, request);
+    let allowed = allowed_hostnames(state, &console, true, request, None);
     for (k, v) in network::cors_headers(request.header_or_empty("origin"), &allowed) {
         response.add(k, &v);
     }
@@ -151,6 +155,9 @@ pub(super) async fn authenticate(ctx: &mut Context) -> Result<()> {
             }
         }
     }
+
+    // -- rule (the custom domain the request comes from) -------------------
+    ctx.rule_domain = rule_domain(&state, &platform_db, &ctx.project, &ctx.request).await?;
 
     // -- mode --------------------------------------------------------------
     let mode = string_param(&ctx.request, "mode")
@@ -256,7 +263,8 @@ pub(super) async fn authenticate(ctx: &mut Context) -> Result<()> {
     // -- CORS / origin (I4) ----------------------------------------------------
     let origin = ctx.request.header_or_empty("origin").to_owned();
     if !origin.is_empty() && key_header.is_empty() {
-        let allowed = allowed_hostnames(&state, &ctx.project, ctx.project_found, &ctx.request);
+        let allowed =
+            allowed_hostnames(&state, &ctx.project, ctx.project_found, &ctx.request, ctx.rule_domain.as_deref());
         let mut schemes = state.config.console_schemas.clone();
         if ctx.project_found && !ctx.project.is_console() {
             schemes.push("exp".to_owned());
@@ -444,6 +452,41 @@ pub(super) async fn authenticate(ctx: &mut Context) -> Result<()> {
 
 /// The `$id` of the project's team (the `team` resource:
 /// `findOne('teams', [equal('$sequence', [$teamInternalId])])`).
+/// PHP's `rule` resource: the custom domain rule of the request's origin
+/// (or referer), when it serves the project or a trusted one.
+async fn rule_domain(
+    state: &super::State,
+    platform_db: &Database,
+    project: &Project,
+    request: &Request,
+) -> Result<Option<String>> {
+    let source = request.header("origin").and_then(network::url_host).filter(|h| !h.is_empty());
+    let Some(domain) =
+        source.or_else(|| request.header("referer").and_then(network::url_host)).filter(|h| !h.is_empty())
+    else {
+        return Ok(None);
+    };
+    let authorization = platform_db.authorization();
+    let rule = if state.config.rules_md5 {
+        use md5::{Digest, Md5};
+        let id = hex::encode(Md5::digest(domain.as_bytes()));
+        authorization.skip(|| platform_db.get_document("rules", &id, Vec::new(), false)).await?
+    } else {
+        authorization.skip(|| platform_db.find_one("rules", vec![Query::equal("domain", [domain.as_str()])])).await?
+    };
+    if rule.is_empty() {
+        return Ok(None);
+    }
+    // A project without a sequence (the console's) matches no rule.
+    let permits = !project.sequence.is_empty() && rule.string_or_empty("projectInternalId") == project.sequence;
+    let rule_project = rule.string_or_empty("projectId");
+    let trusted = !rule_project.is_empty() && state.config.console_trusted_projects.contains(&rule_project);
+    if !permits && !trusted {
+        return Ok(None);
+    }
+    Ok(Some(rule.string_or_empty("domain")))
+}
+
 async fn load_team_id(platform_db: &Database, team_internal_id: &str) -> Result<Option<String>> {
     if team_internal_id.is_empty() {
         return Ok(None);
@@ -763,7 +806,7 @@ fn track_access(ctx: &Context) {
 /// Builds the final response (success or error) and schedules shutdown work.
 pub(super) fn finalize(ctx: Context, result: Result<Response>) -> Response {
     let state = ctx.state.clone();
-    let allowed = allowed_hostnames(&state, &ctx.project, ctx.project_found, &ctx.request);
+    let allowed = allowed_hostnames(&state, &ctx.project, ctx.project_found, &ctx.request, ctx.rule_domain.as_deref());
     let cors = network::cors_headers(ctx.request.header_or_empty("origin"), &allowed);
     let https = ctx
         .request

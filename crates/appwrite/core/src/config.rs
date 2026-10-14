@@ -92,6 +92,9 @@ pub struct Config {
     pub queue_usage: String,
     pub queue_audits: String,
     pub console_trusted_projects: Vec<String>,
+    /// `_APP_RULES_FORMAT=md5`: rules are stored under the MD5 of their
+    /// domain (before the 1.7 migration).
+    pub rules_md5: bool,
     pub locking: bool,
 }
 
@@ -186,6 +189,7 @@ impl Config {
             queue_usage: env_or("_APP_STATS_USAGE_QUEUE_NAME", "v1-stats-usage").into_owned(),
             queue_audits: env_or("_APP_AUDITS_QUEUE_NAME", "v1-audits").into_owned(),
             console_trusted_projects: list(env("_APP_CONSOLE_TRUSTED_PROJECTS")),
+            rules_md5: env_or("_APP_RULES_FORMAT", "") == "md5",
             locking: env_or("_APP_LOCKING_ENABLED", "enabled") == "enabled",
             domain,
             console_domain,

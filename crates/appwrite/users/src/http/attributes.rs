@@ -205,9 +205,7 @@ async fn finish_password(ctx: &mut Context, user: &User, password: String, pwned
 async fn invalidate_sessions(ctx: &mut Context, user: &User) -> Result<()> {
     let db = ctx.db()?;
     for session in &user.sessions {
-        if db.delete_document("sessions", &session.id).await? {
-            ctx.metric("sessions", -1);
-        }
+        db.delete_document("sessions", &session.id).await?;
     }
     db.delete_documents(
         "challenges",

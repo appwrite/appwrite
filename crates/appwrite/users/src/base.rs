@@ -381,12 +381,6 @@ pub async fn create_user(ctx: &mut Context, input: NewUser) -> Result<User> {
     };
     let mut user = User::from(&created);
 
-    // Database listener: `users.[userId].create` with the user as stored.
-    if !ctx.project.is_console() {
-        let payload = user_payload(ctx, &user);
-        ctx.events.created_users.push((user.id.clone(), payload));
-    }
-
     if let Some(email) = &email
         && let Some(t) = create_target(&db, &user, "email", email).await?
     {

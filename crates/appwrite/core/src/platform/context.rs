@@ -1,6 +1,6 @@
 //! Per-request context handed to actions.
 
-use std::sync::{Arc, OnceLock};
+use std::sync::{Arc, Mutex, OnceLock};
 use std::time::Instant;
 
 use bytes::Bytes;
@@ -32,8 +32,6 @@ pub struct EventState {
     pub params: Vec<(String, String)>,
     /// Explicit payload (`setPayload`); defaults to the response body.
     pub payload: Option<Bytes>,
-    /// Users created during the request (database listener events).
-    pub created_users: Vec<(String, Bytes)>,
     /// Extra delete messages to publish.
     pub deletes: Vec<Value>,
 }
@@ -69,14 +67,18 @@ pub struct Context {
     pub ip: String,
     pub hostname: String,
     pub events: EventState,
-    /// Usage metrics added by the action (e.g. `sessions` ±1).
-    pub metrics: Vec<(&'static str, i64)>,
+    /// What the project database's listeners recorded, and the usage
+    /// metrics actions add, in the order they happened.
+    pub listened: Arc<Mutex<Listened>>,
     pub response_headers: Vec<(&'static str, String)>,
     /// Whether the security headers (`Server`, `X-Content-Type-Options`,
     /// HSTS) apply. PHP's `general.php` adds them after it resolved the
     /// project, the mode and the API key; an error before that is sent
     /// without them.
     pub secured: bool,
+    /// The domain of the custom domain rule the request comes from, when it
+    /// serves the project (the `rule` resource).
+    pub rule_domain: Option<String>,
     /// The keys of the account API key's user (see the `user` resource).
     pub account_keys: Vec<crate::database::project::Key>,
     db: Option<Database>,
@@ -108,6 +110,7 @@ impl Context {
             project: console,
             project_found: true,
             secured: false,
+            rule_domain: None,
             account_keys: Vec::new(),
             mode: Mode::Default,
             locale,
@@ -123,7 +126,7 @@ impl Context {
             ip,
             hostname,
             events: EventState::default(),
-            metrics: Vec::new(),
+            listened: Arc::default(),
             response_headers: Vec::new(),
             db: None,
             platform_db: OnceLock::new(),
@@ -136,6 +139,10 @@ impl Context {
             return Ok(db.clone());
         }
         let db = self.state.databases.project(&self.project, self.authorization.clone())?;
+        // The console's database is the platform's, without listeners.
+        if !self.project.is_console() && !self.project.id.is_empty() {
+            listen(&db, &self.listened);
+        }
         self.db = Some(db.clone());
         Ok(db)
     }
@@ -258,13 +265,15 @@ impl Context {
     }
 
     /// `$queueForEvents->setPayload(...)`.
+    /// `setPayload($response->output(...))`: rendered before the response
+    /// format's filters, as PHP's `output()` renders it.
     pub fn event_payload<T: Serialize>(&mut self, payload: &T) {
-        self.events.payload = Some(Bytes::from(crate::json::to_vec(payload)));
+        self.events.payload = Some(Bytes::from(crate::response::current(payload)));
     }
 
     /// Records a usage metric (database listener equivalent).
-    pub fn metric(&mut self, key: &'static str, value: i64) {
-        self.metrics.push((key, value));
+    pub fn metric(&mut self, key: &str, value: i64) {
+        self.listened.lock().unwrap_or_else(|e| e.into_inner()).metrics.push((key.to_owned(), value));
     }
 
     // ---- responses --------------------------------------------------------
@@ -283,7 +292,10 @@ impl Context {
     }
 
     pub fn no_content(&self) -> Response {
-        Response::no_content_response()
+        // `noContent()` sends the default content type.
+        let mut response = Response::no_content_response();
+        response.set("content-type", "text/html");
+        response
     }
 
     /// The `User-Agent` (with `X-Forwarded-User-Agent` for API keys).
@@ -324,4 +336,91 @@ fn request_hostname(request: &Request) -> String {
         raw.split(':').next().unwrap_or("").to_owned()
     };
     host.to_lowercase()
+}
+
+/// What the project database's listeners saw during a request (PHP's
+/// `dbForProject` listeners).
+#[derive(Debug, Default)]
+pub struct Listened {
+    /// Users created (`create-trigger-events`): their
+    /// `users.[userId].create` events.
+    pub users: Vec<utopia_database::Document>,
+    /// Usage metrics (`calculate-usage`, and [`Context::metric`]).
+    pub metrics: Vec<(String, i64)>,
+    /// A function was created, updated or deleted
+    /// (`purge-function-events-cache`).
+    pub functions: bool,
+}
+
+/// Registers PHP's listeners on a project database.
+fn listen(db: &Database, listened: &Arc<Mutex<Listened>>) {
+    let usage_events = [
+        Database::EVENT_DOCUMENT_CREATE,
+        Database::EVENT_DOCUMENT_DELETE,
+        Database::EVENT_DOCUMENTS_CREATE,
+        Database::EVENT_DOCUMENTS_DELETE,
+        Database::EVENT_DOCUMENTS_UPSERT,
+    ];
+    for event in usage_events {
+        let listened = listened.clone();
+        db.on(
+            event,
+            "calculate-usage",
+            Some(Arc::new(move |event: &str, value: &utopia_database::Value| {
+                usage(&listened, event, value);
+                Ok(())
+            })),
+        );
+    }
+    let created = listened.clone();
+    db.on(
+        Database::EVENT_DOCUMENT_CREATE,
+        "create-trigger-events",
+        Some(Arc::new(move |_: &str, value: &utopia_database::Value| {
+            if let Some(document) = utopia_database::value::as_document(value)
+                && document.collection() == "users"
+            {
+                created.lock().unwrap_or_else(|e| e.into_inner()).users.push(document.clone());
+            }
+            Ok(())
+        })),
+    );
+    for event in [Database::EVENT_DOCUMENT_CREATE, Database::EVENT_DOCUMENT_UPDATE, Database::EVENT_DOCUMENT_DELETE] {
+        let listened = listened.clone();
+        db.on(
+            event,
+            "purge-function-events-cache",
+            Some(Arc::new(move |_: &str, value: &utopia_database::Value| {
+                if utopia_database::value::as_document(value).is_some_and(|d| d.collection() == "functions") {
+                    listened.lock().unwrap_or_else(|e| e.into_inner()).functions = true;
+                }
+                Ok(())
+            })),
+        );
+    }
+}
+
+/// `calculate-usage`: sessions and deployments counted as they are
+/// created and deleted.
+fn usage(listened: &Mutex<Listened>, event: &str, value: &utopia_database::Value) {
+    let Some(document) = utopia_database::value::as_document(value) else { return };
+    let count = |key: &str| document.get(key).map(utopia_database::value::to_long).unwrap_or(0);
+    let value = match event {
+        Database::EVENT_DOCUMENT_DELETE => -1,
+        Database::EVENT_DOCUMENTS_DELETE => -count("modified"),
+        Database::EVENT_DOCUMENTS_CREATE => count("modified"),
+        Database::EVENT_DOCUMENTS_UPSERT => count("created"),
+        _ => 1,
+    };
+    let mut listened = listened.lock().unwrap_or_else(|e| e.into_inner());
+    match document.collection() {
+        "sessions" => listened.metrics.push(("sessions".to_owned(), value)),
+        "deployments" => {
+            let kind = document.get("resourceType").and_then(utopia_database::value::as_str).unwrap_or("").to_owned();
+            let size = count("size");
+            listened.metrics.push((format!("{kind}.deployments"), value));
+            listened.metrics.push((format!("{kind}.deployments.storage"), size * value));
+        }
+        _ => {}
+    }
 }

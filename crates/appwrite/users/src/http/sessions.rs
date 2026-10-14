@@ -64,7 +64,6 @@ pub async fn create(ctx: &mut Context) -> Result<Response> {
     let db = ctx.db()?;
     let session = Session::from(&db.create_document("sessions", session).await?);
     db.purge_cached_document("users", Some(&user.id)).await?;
-    ctx.metric("sessions", 1);
 
     let encoded = base::session_store(&user.id, &secret)?;
     let country_name = country_name(ctx, &country);
@@ -110,9 +109,7 @@ pub async fn delete(ctx: &mut Context) -> Result<Response> {
         Some(s) if s.user_id == user.id => s,
         _ => return Err(Error::new(ErrorType::UserSessionNotFound)),
     };
-    if db.delete_document("sessions", &session.id).await? {
-        ctx.metric("sessions", -1);
-    }
+    db.delete_document("sessions", &session.id).await?;
     db.purge_cached_document("users", Some(&user.id)).await?;
     let country = country_name(ctx, session.country_code.as_deref().unwrap_or(""));
     let model =
@@ -130,9 +127,7 @@ pub async fn delete_all(ctx: &mut Context) -> Result<Response> {
     let user = base::user_or_404(ctx, &user_id, &[base::SESSIONS, base::TARGETS]).await?;
     let db = ctx.db()?;
     for session in &user.sessions {
-        if db.delete_document("sessions", &session.id).await? {
-            ctx.metric("sessions", -1);
-        }
+        db.delete_document("sessions", &session.id).await?;
     }
     db.purge_cached_document("users", Some(&user.id)).await?;
     ctx.event_param("userId", user.id.clone());
