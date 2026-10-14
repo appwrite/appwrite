@@ -6,6 +6,7 @@ require_once \dirname(__DIR__, 3).'/bin/MigrationCLI.php';
 
 use Override;
 use PHPUnit\Framework\Attributes\BackupGlobals;
+use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\TestCase;
 use Utopia\Cache\Adapter\Memory as MemoryCache;
 use Utopia\Cache\Cache;
@@ -63,11 +64,6 @@ final class TestMigrationCLI extends \MigrationCLI
 #[BackupGlobals(true)]
 final class MigrationCLITest extends TestCase
 {
-    private const array FILTER_STATE = ['filters', 'defaultFiltersRegistered'];
-
-    /** @var array<string, mixed> */
-    private array $filterState = [];
-
     public function testStartFinalizesSuccessfulAppwriteDatabase(): void
     {
         $database = $this->createProjectDatabase();
@@ -120,6 +116,7 @@ final class MigrationCLITest extends TestCase
         $this->assertNotNull($database->findCollection('database_'.$created->getSequence()));
     }
 
+    #[RunInSeparateProcess]
     public function testTheMetadataSubqueryFiltersLoadTheTableColumnsAndIndexes(): void
     {
         \MigrationCLI::registerFilters();
@@ -255,22 +252,10 @@ final class MigrationCLITest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        foreach (self::FILTER_STATE as $property) {
-            $this->filterState[$property] = (new \ReflectionProperty(Database::class, $property))->getValue();
-        }
         $_ENV['DESTINATION_PROVIDER'] = 'appwrite';
         $_ENV['DESTINATION_APPWRITE_TEST_PROJECT'] = 'destination-project';
         $_ENV['DESTINATION_APPWRITE_TEST_ENDPOINT'] = 'http://example.test/v1';
         $_ENV['DESTINATION_APPWRITE_TEST_KEY'] = 'test-key';
         $_ENV['DESTINATION_APPWRITE_TEST_PROJECT_INTERNAL_ID'] = '1';
-    }
-
-    #[Override]
-    protected function tearDown(): void
-    {
-        foreach ($this->filterState as $property => $value) {
-            (new \ReflectionProperty(Database::class, $property))->setValue(null, $value);
-        }
-        parent::tearDown();
     }
 }
