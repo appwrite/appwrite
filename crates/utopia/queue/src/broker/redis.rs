@@ -34,6 +34,7 @@ const EXTEND: &str = include_str!("redis/extend.lua");
 const EXPIRED: &str = include_str!("redis/expired.lua");
 const RECOVER: &str = include_str!("redis/recover.lua");
 const RECLAIM: &str = include_str!("redis/reclaim.lua");
+const ABANDON: &str = include_str!("redis/abandon.lua");
 
 /// Called when a receive fails on the transport: the queue, the error, the
 /// attempt number and the milliseconds the broker sleeps before returning.
@@ -264,9 +265,11 @@ impl Redis {
         let mut pairs = Vec::with_capacity(batch.len() * 2);
         let mut poison = Vec::new();
         for raw in batch {
+            let size = raw.len() as i64;
+            Message::warn_if_large(queue.name(), size);
             match self.codec.decode(&raw).ok().and_then(|v| claimed(&v)) {
                 Some(mut message) => {
-                    message.set_receipt(token);
+                    message.set_receipt(token).set_size(Some(size));
                     let pid = message.pid().as_bytes().to_vec();
                     keys.push(Self::pid_key(queue, "jobs", &pid));
                     keys.push(Self::pid_key(queue, "claims", &pid));
@@ -486,10 +489,25 @@ impl Redis {
             let job = self.job(queue, &pid).await?;
             let owner = self.commands.get(&owner_key).await?;
             let Some(job) = job else {
-                if owner.is_some() {
-                    return Err(Error::Runtime("Queue delivery payload is missing".into()));
+                let Some(owner) = owner else {
+                    self.commands.list_remove(&processing, &pid).await?;
+                    continue;
+                };
+                // Owned, but nothing left to requeue or park: dropped unless
+                // its handler still heartbeats (commit tolerates a missing
+                // payload). Failing here would end the sweep before its cursor
+                // is saved, so every sweep would stop at the same orphan.
+                let keys = vec![
+                    owner_key,
+                    claim_key,
+                    Self::pid_key(queue, "jobs", &pid),
+                    processing.clone(),
+                    Self::stat(queue, "processing"),
+                ];
+                let args = vec![owner, pid.clone()];
+                if !truthy(&self.commands.execute(ABANDON, &keys, &args).await?) {
+                    retained += 1;
                 }
-                self.commands.list_remove(&processing, &pid).await?;
                 continue;
             };
             if job.timestamp() > cutoff || self.commands.get(&claim_key).await?.is_some() {

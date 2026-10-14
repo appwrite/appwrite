@@ -4828,6 +4828,497 @@
           ]
         ]
       }
+    },
+    {
+      "name": "a server-initiated unsubscribe stops delivery to that connection only; absent filters and connections are a no-op",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "timer": "timeline"
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.new",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "server.start",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.open",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 1
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.open",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 2
+          },
+          "expect": null
+        },
+        {
+          "op": "v5.connect",
+          "args": {
+            "client_id": "one",
+            "keep_alive": 0,
+            "clean_start": true,
+            "properties": [
+              {
+                "id": 38,
+                "value": {
+                  "pair": [
+                    [
+                      "prefix",
+                      "p1"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "bind": "c1",
+          "expect": "\u0010\u001d\u0000\u0004MQTT\u0005\u0002\u0000\u0000\r&\u0000\u0006prefix\u0000\u0002p1\u0000\u0003one"
+        },
+        {
+          "op": "v5.connect",
+          "args": {
+            "client_id": "two",
+            "keep_alive": 0,
+            "clean_start": true,
+            "properties": [
+              {
+                "id": 38,
+                "value": {
+                  "pair": [
+                    [
+                      "prefix",
+                      "p1"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "bind": "c2",
+          "expect": "\u0010\u001d\u0000\u0004MQTT\u0005\u0002\u0000\u0000\r&\u0000\u0006prefix\u0000\u0002p1\u0000\u0003two"
+        },
+        {
+          "op": "v5.subscribe",
+          "args": {
+            "packet_id": 1,
+            "filters": [
+              "a/+",
+              "b"
+            ],
+            "qos": 1
+          },
+          "bind": "s",
+          "expect": {
+            "$bytes": "gg0AAQAAA2EvKwEAAWIB"
+          }
+        },
+        {
+          "op": "v5.publish",
+          "args": {
+            "topic": "a/b",
+            "payload": "hello",
+            "qos": 0,
+            "packet_id": 0
+          },
+          "bind": "p",
+          "expect": "0\u000b\u0000\u0003a/b\u0000hello"
+        },
+        {
+          "op": "memory.receive",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 1,
+            "data": {
+              "$ref": "c1"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.receive",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 2,
+            "data": {
+              "$ref": "c2"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.receive",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 1,
+            "data": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.receive",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 2,
+            "data": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "server.subscribers",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "prefix": "p1",
+            "topic": "a/b"
+          },
+          "expect": [
+            [
+              1,
+              1,
+              1
+            ],
+            [
+              2,
+              2,
+              1
+            ]
+          ]
+        },
+        {
+          "op": "server.unsubscribe",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "topic": "a/+",
+            "fd": 1
+          },
+          "expect": null
+        },
+        {
+          "op": "server.unsubscribe",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "topic": "a/+",
+            "fd": 1
+          },
+          "expect": null
+        },
+        {
+          "op": "server.unsubscribe",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "topic": "c/#",
+            "fd": 2
+          },
+          "expect": null
+        },
+        {
+          "op": "server.unsubscribe",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "topic": "a/+",
+            "fd": 9
+          },
+          "expect": null
+        },
+        {
+          "op": "server.subscribers",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "prefix": "p1",
+            "topic": "a/b"
+          },
+          "expect": [
+            [
+              2,
+              2,
+              1
+            ]
+          ]
+        },
+        {
+          "op": "server.subscribers",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "prefix": "p1",
+            "topic": "b"
+          },
+          "expect": [
+            [
+              1,
+              1,
+              1
+            ],
+            [
+              2,
+              2,
+              1
+            ]
+          ]
+        },
+        {
+          "op": "memory.receive",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 2,
+            "data": {
+              "$ref": "p"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "server.unsubscribe",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "topic": "b",
+            "fd": 1
+          },
+          "expect": null
+        },
+        {
+          "op": "server.subscribers",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "prefix": "p1",
+            "topic": "b"
+          },
+          "expect": [
+            [
+              2,
+              2,
+              1
+            ]
+          ]
+        },
+        {
+          "op": "memory.state",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": {
+            "started": true,
+            "open": [
+              1,
+              2
+            ],
+            "sent": [
+              [
+                1,
+                " \u0003\u0000\u0000\u0000"
+              ],
+              [
+                2,
+                " \u0003\u0000\u0000\u0000"
+              ],
+              [
+                1,
+                {
+                  "$bytes": "kAUAAQABAQ=="
+                }
+              ],
+              [
+                2,
+                {
+                  "$bytes": "kAUAAQABAQ=="
+                }
+              ],
+              [
+                2,
+                "0\u000b\u0000\u0003a/b\u0000hello"
+              ]
+            ],
+            "closed": [],
+            "timer": [
+              [
+                "schedule",
+                1,
+                30
+              ],
+              [
+                "schedule",
+                2,
+                30
+              ],
+              [
+                "schedule",
+                1,
+                0
+              ],
+              [
+                "schedule",
+                2,
+                0
+              ],
+              [
+                "schedule",
+                1,
+                0
+              ],
+              [
+                "schedule",
+                2,
+                0
+              ],
+              [
+                "schedule",
+                2,
+                0
+              ]
+            ],
+            "log": [
+              [
+                "connect",
+                1,
+                5,
+                "one",
+                true,
+                0,
+                null,
+                null,
+                null,
+                null,
+                null,
+                [
+                  [
+                    "prefix",
+                    "p1"
+                  ]
+                ],
+                "one"
+              ],
+              [
+                "connect",
+                2,
+                5,
+                "two",
+                true,
+                0,
+                null,
+                null,
+                null,
+                null,
+                null,
+                [
+                  [
+                    "prefix",
+                    "p1"
+                  ]
+                ],
+                "two"
+              ],
+              [
+                "subscribe",
+                1,
+                1,
+                [
+                  [
+                    "a/+",
+                    1
+                  ],
+                  [
+                    "b",
+                    1
+                  ]
+                ]
+              ],
+              [
+                "subscribe",
+                2,
+                1,
+                [
+                  [
+                    "a/+",
+                    1
+                  ],
+                  [
+                    "b",
+                    1
+                  ]
+                ]
+              ],
+              [
+                "publish",
+                2,
+                "a/b",
+                "hello",
+                0,
+                false,
+                false,
+                0,
+                [],
+                [
+                  [
+                    2,
+                    1
+                  ]
+                ]
+              ]
+            ]
+          }
+        }
+      ]
     }
   ]
 }

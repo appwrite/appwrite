@@ -127,6 +127,7 @@ pub const OPS: &[&str] = &[
     "server.start",
     "server.stop",
     "server.subscribers",
+    "server.unsubscribe",
     "server.log",
     "server.metrics",
     "server.session",
@@ -1348,6 +1349,10 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
         "server.subscribers" => {
             let subscribers = rig(session, &a)?.server()?.subscribers(&a.bytes("prefix")?, &a.bytes("topic")?);
             Outcome::Ok(Value::Array(subscribers.iter().map(|(c, q)| json!([c.fd(), c.fd(), q])).collect()))
+        }
+        "server.unsubscribe" => {
+            rig(session, &a)?.server()?.unsubscribe(&a.bytes("topic")?, a.i64("fd")?);
+            Outcome::Ok(Value::Null)
         }
         "server.log" => Outcome::Ok(snapshot(&rig(session, &a)?.log)),
         "server.metrics" => Outcome::Ok(rig(session, &a)?.metrics()),

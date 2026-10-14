@@ -67,6 +67,7 @@
                   "count": 2,
                   "non_negative": true
                 },
+                "messaging.process.message.size": [],
                 "messaging.queue.depth": [],
                 "messaging.queue.failed.depth": []
               }
@@ -147,6 +148,10 @@
                   "count": 2,
                   "non_negative": true
                 },
+                "messaging.process.message.size": [
+                  75,
+                  75
+                ],
                 "messaging.queue.depth": [
                   [
                     0,
@@ -234,6 +239,7 @@
                   "count": 1,
                   "non_negative": true
                 },
+                "messaging.process.message.size": [],
                 "messaging.queue.depth": [],
                 "messaging.queue.failed.depth": []
               }
@@ -384,6 +390,290 @@
               ]
             ]
           ]
+        }
+      ]
+    },
+    {
+      "name": "consumed message sizes are recorded from the Redis broker",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish_many",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "emails",
+              "namespace": "${ns}"
+            },
+            "payloads": [
+              {
+                "n": 1
+              },
+              {
+                "text": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+              },
+              {
+                "list": [
+                  0,
+                  1,
+                  2,
+                  3,
+                  4,
+                  5,
+                  6,
+                  7,
+                  8,
+                  9,
+                  10,
+                  11,
+                  12,
+                  13,
+                  14,
+                  15,
+                  16,
+                  17,
+                  18,
+                  19,
+                  20,
+                  21,
+                  22,
+                  23,
+                  24,
+                  25,
+                  26,
+                  27,
+                  28,
+                  29,
+                  30,
+                  31,
+                  32,
+                  33,
+                  34,
+                  35,
+                  36,
+                  37,
+                  38,
+                  39
+                ]
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "server.run",
+          "args": {
+            "consumer": {
+              "$ref": "b"
+            },
+            "jobs": [
+              {
+                "queue": "emails"
+              }
+            ],
+            "namespace": "${ns}",
+            "telemetry": true
+          },
+          "expect": [
+            [
+              "job:emails",
+              []
+            ],
+            [
+              "job:emails",
+              []
+            ],
+            [
+              "job:emails",
+              []
+            ],
+            [
+              "telemetry",
+              {
+                "messaging.process.wait.duration": {
+                  "count": 3,
+                  "non_negative": true
+                },
+                "messaging.process.duration": {
+                  "count": 3,
+                  "non_negative": true
+                },
+                "messaging.process.message.size": [
+                  75,
+                  188,
+                  379
+                ],
+                "messaging.queue.depth": [
+                  [
+                    0,
+                    {
+                      "messaging.destination.name": "emails",
+                      "messaging.destination.namespace": "${ns}"
+                    }
+                  ],
+                  [
+                    0,
+                    {
+                      "messaging.destination.name": "emails",
+                      "messaging.destination.namespace": "${ns}"
+                    }
+                  ]
+                ],
+                "messaging.queue.failed.depth": [
+                  [
+                    0,
+                    {
+                      "messaging.destination.name": "emails",
+                      "messaging.destination.namespace": "${ns}"
+                    }
+                  ],
+                  [
+                    0,
+                    {
+                      "messaging.destination.name": "emails",
+                      "messaging.destination.namespace": "${ns}"
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "consumed message sizes are recorded from the NATS broker",
+      "steps": [
+        {
+          "op": "nats.broker",
+          "args": {
+            "time": 1700000000,
+            "ack_wait": 2.0,
+            "max_deliver": 3
+          },
+          "bind": "n",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "n"
+            },
+            "queue": {
+              "name": "${ns}-sizes",
+              "namespace": "utopia-queue"
+            },
+            "payload": {
+              "n": 1
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "n"
+            },
+            "queue": {
+              "name": "${ns}-sizes",
+              "namespace": "utopia-queue"
+            },
+            "payload": {
+              "text": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "server.run",
+          "args": {
+            "consumer": {
+              "$ref": "n"
+            },
+            "slow": true,
+            "jobs": [
+              {
+                "queue": "${ns}-sizes"
+              }
+            ],
+            "telemetry": true
+          },
+          "expect": [
+            [
+              "job:${ns}-sizes",
+              []
+            ],
+            [
+              "job:${ns}-sizes",
+              []
+            ],
+            [
+              "telemetry",
+              {
+                "messaging.process.wait.duration": {
+                  "count": 2,
+                  "non_negative": true
+                },
+                "messaging.process.duration": {
+                  "count": 2,
+                  "non_negative": true
+                },
+                "messaging.process.message.size": [
+                  89,
+                  393
+                ],
+                "messaging.queue.depth": [
+                  [
+                    0,
+                    {
+                      "messaging.destination.name": "${ns}-sizes",
+                      "messaging.destination.namespace": "utopia-queue"
+                    }
+                  ]
+                ],
+                "messaging.queue.failed.depth": [
+                  [
+                    0,
+                    {
+                      "messaging.destination.name": "${ns}-sizes",
+                      "messaging.destination.namespace": "utopia-queue"
+                    }
+                  ],
+                  [
+                    0,
+                    {
+                      "messaging.destination.name": "${ns}-sizes",
+                      "messaging.destination.namespace": "utopia-queue"
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        },
+        {
+          "op": "nats.delete",
+          "args": {
+            "queues": [
+              "${ns}-sizes"
+            ]
+          },
+          "expect": null
         }
       ]
     }

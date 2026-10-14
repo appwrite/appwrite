@@ -130,6 +130,7 @@ final class Adapter implements Base, Benchmarks
                 \array_key_exists('sequence', $a) && $m->setSequence($a['sequence']);
                 isset($a['receipt']) && $m->setReceipt($a['receipt']);
                 isset($a['terminal']) && $m->terminal($a['terminal']);
+                \array_key_exists('size', $a) && $m->setSize($a['size']);
 
                 return Typed::dump([
                     'pid' => $m->getPid(),
@@ -140,8 +141,24 @@ final class Adapter implements Base, Benchmarks
                     'sequence' => $m->getSequence(),
                     'receipt' => $m->getReceipt(),
                     'terminal' => $m->isTerminal(),
+                    'size' => $m->getSize(),
                     'array' => $m->asArray(),
                 ]);
+            },
+            // What warnIfLarge() logs, read back from a scratch error_log file,
+            // without the date error_log() prefixes there; null when nothing.
+            'message.warn_if_large' => function (array $a): ?string {
+                $file = \tempnam(\sys_get_temp_dir(), 'compat-queue-log');
+                $previous = \ini_set('error_log', $file);
+                try {
+                    Message::warnIfLarge($a['queue'], $a['size']);
+                } finally {
+                    \ini_set('error_log', $previous === false ? '' : $previous);
+                }
+                $logged = (string) \file_get_contents($file);
+                \unlink($file);
+
+                return $logged === '' ? null : \rtrim(\substr($logged, \strpos($logged, '] ') + 2), "\n");
             },
 
             'codec.encode' => fn (array $a) => self::codec($a['codec'])->encode(Typed::decode($a['value'])),
@@ -547,7 +564,7 @@ final class Adapter implements Base, Benchmarks
         $out = ['handles' => [], 'messages' => []];
         foreach ($messages as $message) {
             $out['handles'][] = $s->handle($message);
-            $out['messages'][] = Typed::dump([...$message->asArray(), 'receipt' => $message->getReceipt()]);
+            $out['messages'][] = Typed::dump([...$message->asArray(), 'receipt' => $message->getReceipt(), 'size' => $message->getSize()]);
         }
 
         return $out;
@@ -733,7 +750,7 @@ final class Adapter implements Base, Benchmarks
         return $events;
     }
 
-    /** What a run recorded: each duration histogram's size and sign, each depth gauge observed twice. */
+    /** What a run recorded: each duration histogram's size and sign, the message sizes (sorted), each depth gauge observed twice. */
     private static function telemetry(TestTelemetry $telemetry): array
     {
         $out = [];
@@ -742,6 +759,11 @@ final class Adapter implements Base, Benchmarks
             $values = isset($telemetry->histograms[$name]) ? get_object_vars($telemetry->histograms[$name])['values'] ?? [] : [];
             $out[$name] = ['count' => \count($values), 'non_negative' => array_filter($values, fn (float|int $v): bool => $v < 0) === []];
         }
+        $name = 'messaging.process.message.size';
+        /** @var list<int> $sizes */
+        $sizes = isset($telemetry->histograms[$name]) ? get_object_vars($telemetry->histograms[$name])['values'] ?? [] : [];
+        sort($sizes);
+        $out[$name] = $sizes;
         foreach (['messaging.queue.depth', 'messaging.queue.failed.depth'] as $name) {
             $observed = [];
             for ($round = 0; $round < 2; $round++) {

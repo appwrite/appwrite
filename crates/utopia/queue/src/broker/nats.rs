@@ -262,6 +262,19 @@ fn jetstream_error(e: impl std::fmt::Display) -> Error {
     nats_error("Utopia\\NATS\\Exception\\JetStreamException", e)
 }
 
+/// A failed publish as the PHP NATS client's exception: no stream answered,
+/// the ack timed out, the socket closed, or the server refused the message.
+fn publish_error(error: async_nats::jetstream::context::PublishError) -> Error {
+    use async_nats::jetstream::context::PublishErrorKind as Kind;
+    let class = match error.kind() {
+        Kind::StreamNotFound => "Utopia\\NATS\\Exception\\NoRespondersException",
+        Kind::TimedOut => "Utopia\\NATS\\Exception\\TimeoutException",
+        Kind::BrokenPipe => "Utopia\\NATS\\Exception\\ConnectionException",
+        _ => "Utopia\\NATS\\Exception\\JetStreamException",
+    };
+    nats_error(class, error)
+}
+
 fn not_found(e: &impl std::fmt::Display) -> bool {
     let text = e.to_string();
     text.contains("not found") || text.contains("10059") || text.contains("10014")
@@ -373,33 +386,27 @@ impl Nats {
         h
     }
 
-    /// Publishes on the stream, retrying while the server could not take the
-    /// message yet (no stream leader, a closed socket), within a budget.
-    async fn publish_acked(
-        &self,
-        subject: &str,
-        data: &[u8],
-        headers: HeaderMap,
-    ) -> Result<jetstream::publish::PublishAck> {
+    /// Runs `publish` again while the server could not take the message yet
+    /// (no stream leader, a closed socket), within a budget. Every attempt is
+    /// whole: a payload keeps its id, so the ones that did land collapse.
+    async fn republishing<T, F, Fut>(&self, mut publish: F) -> Result<T>
+    where
+        F: FnMut() -> Fut,
+        Fut: std::future::Future<Output = Result<T>>,
+    {
         let deadline = Instant::now() + Duration::from_secs_f64(PUBLISH_RETRY_BUDGET);
         let mut republishes = 0;
         loop {
-            let js = self.js().await?;
-            let attempt = async {
-                js.publish_with_headers(subject.to_owned(), headers.clone(), data.to_vec().into()).await?.await
-            };
-            let error = match attempt.await {
-                Ok(ack) => return Ok(ack),
+            let error = match publish().await {
+                Ok(value) => return Ok(value),
                 Err(e) => e,
             };
-            use async_nats::jetstream::context::PublishErrorKind as Kind;
-            let retryable = matches!(error.kind(), Kind::StreamNotFound | Kind::TimedOut | Kind::BrokenPipe);
-            let class = match error.kind() {
-                Kind::StreamNotFound => "Utopia\\NATS\\Exception\\NoRespondersException",
-                Kind::TimedOut => "Utopia\\NATS\\Exception\\TimeoutException",
-                Kind::BrokenPipe => "Utopia\\NATS\\Exception\\ConnectionException",
-                _ => "Utopia\\NATS\\Exception\\JetStreamException",
-            };
+            let retryable = matches!(&error, Error::Nats { class, .. } if [
+                "Utopia\\NATS\\Exception\\NoRespondersException",
+                "Utopia\\NATS\\Exception\\TimeoutException",
+                "Utopia\\NATS\\Exception\\ConnectionException",
+            ]
+            .contains(class));
             let delay = PUBLISH_RETRY_DELAYS.get(republishes).copied();
             republishes += 1;
             match delay {
@@ -408,15 +415,49 @@ impl Nats {
                         tokio::time::sleep(Duration::from_secs_f64(d)).await;
                     }
                 }
-                _ => return Err(nats_error(class, error)),
+                _ => return Err(error),
             }
         }
     }
 
-    async fn publish_envelope(&self, subject: &str, pid: &str, value: &Value) -> Result<()> {
+    /// One attempt at the stream, waiting for its ack.
+    async fn publish_once(
+        &self,
+        subject: &str,
+        data: &[u8],
+        headers: HeaderMap,
+    ) -> Result<jetstream::publish::PublishAck> {
+        let js = self.js().await?;
+        let attempt = async { js.publish_with_headers(subject.to_owned(), headers, data.to_vec().into()).await?.await };
+        attempt.await.map_err(publish_error)
+    }
+
+    /// Publishes on the stream with [`Nats::republishing`]. With a queue, it
+    /// is provisioned inside each attempt, not before: in a rolling restart
+    /// the provisioning request is what meets the next server going away.
+    async fn publish_acked(
+        &self,
+        queue: Option<&Queue>,
+        subject: &str,
+        data: &[u8],
+        headers: HeaderMap,
+    ) -> Result<jetstream::publish::PublishAck> {
+        self.republishing(|| {
+            let headers = headers.clone();
+            async move {
+                if let Some(queue) = queue {
+                    self.ensure(queue).await?;
+                }
+                self.publish_once(subject, data, headers).await
+            }
+        })
+        .await
+    }
+
+    async fn publish_envelope(&self, queue: &Queue, subject: &str, pid: &str, value: &Value) -> Result<()> {
         let data = self.config.codec.encode(value)?;
         let headers = self.headers(Some(self.config.codec.content_type()), Some(pid));
-        let ack = self.publish_acked(subject, &data, headers).await?;
+        let ack = self.publish_acked(Some(queue), subject, &data, headers).await?;
         if ack.duplicate {
             self.duplicates.fetch_add(1, Ordering::SeqCst);
         }
@@ -456,6 +497,8 @@ impl Nats {
                     continue;
                 }
             }
+            let size = delivery.payload.len() as i64;
+            Message::warn_if_large(queue.name(), size);
             let data = self.config.codec.decode(&delivery.payload).ok();
             let envelope = match data {
                 Some(Value::Array(a))
@@ -471,7 +514,7 @@ impl Nats {
                 }
             };
             let mut message = Message::from_envelope(&envelope)?;
-            message.set_attempts((delivered - 1).max(0)).set_sequence(Some(sequence));
+            message.set_attempts((delivered - 1).max(0)).set_sequence(Some(sequence)).set_size(Some(size));
             self.state().in_flight.insert(message.pid().as_bytes().to_vec(), delivery);
             messages.push(message);
         }
@@ -559,6 +602,7 @@ impl Nats {
                         delivery.headers.as_ref().and_then(|h| h.get(CONTENT_TYPE)).map(|v| v.to_string());
                     let id = format!("{}.released.{sequence}", String::from_utf8_lossy(message.pid().as_bytes()));
                     self.publish_acked(
+                        None,
                         &work_subject(queue),
                         &delivery.payload,
                         self.headers(content_type.as_deref(), Some(&id)),
@@ -966,8 +1010,7 @@ impl Publisher for Nats {
             let (pid, value) = self.envelope(queue, payload)?;
             self.reopen().await?;
             let _guard = self.receive.lock().await;
-            self.ensure(queue).await?;
-            self.publish_envelope(&subject, &pid, &value).await?;
+            self.publish_envelope(queue, &subject, &pid, &value).await?;
             Ok(true)
         })
     }
@@ -985,19 +1028,35 @@ impl Publisher for Nats {
             }
             self.reopen().await?;
             let _guard = self.receive.lock().await;
-            self.ensure(queue).await?;
-            let js = self.js().await?;
-            let mut pending = Vec::with_capacity(prepared.len());
-            for (pid, data) in &prepared {
-                let headers = self.headers(Some(self.config.codec.content_type()), Some(pid));
-                pending.push(
-                    js.publish_with_headers(subject.clone(), headers, data.clone().into())
-                        .await
-                        .map_err(jetstream_error)?,
-                );
-            }
-            for ack in pending {
-                if ack.await.map_err(jetstream_error)?.duplicate {
+            // One round trip per window: the whole batch is written before any
+            // ack is read, and republished whole (every payload keeps its id,
+            // so the ones that did land collapse), provisioned inside the
+            // republish for the reason publish_acked() gives.
+            let acks = self
+                .republishing(|| {
+                    let (subject, prepared) = (&subject, &prepared);
+                    async move {
+                        self.ensure(queue).await?;
+                        let js = self.js().await?;
+                        let mut pending = Vec::with_capacity(prepared.len());
+                        for (pid, data) in prepared {
+                            let headers = self.headers(Some(self.config.codec.content_type()), Some(pid));
+                            pending.push(
+                                js.publish_with_headers(subject.clone(), headers, data.clone().into())
+                                    .await
+                                    .map_err(publish_error)?,
+                            );
+                        }
+                        let mut acks = Vec::with_capacity(pending.len());
+                        for ack in pending {
+                            acks.push(ack.await.map_err(publish_error)?);
+                        }
+                        Ok(acks)
+                    }
+                })
+                .await?;
+            for ack in acks {
+                if ack.duplicate {
                     self.duplicates.fetch_add(1, Ordering::SeqCst);
                 }
             }

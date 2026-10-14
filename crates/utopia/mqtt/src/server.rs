@@ -350,6 +350,14 @@ impl<A: Adapter + Send + Sync, H: Handler> Server<A, H> {
             .collect()
     }
 
+    /// Removes connection `fd`'s subscription to the filter `topic` on the
+    /// server's own initiative, so delivery to it stops; a no-op if absent.
+    ///
+    /// PHP: `unsubscribe(string $topic, int $fd)`.
+    pub fn unsubscribe(&self, topic: &[u8], fd: i64) {
+        self.state().store.unsubscribe(topic, fd);
+    }
+
     /// The broker's record of an open connection.
     pub fn connection(&self, fd: i64) -> Option<Arc<Connection>> {
         self.state().connections.get(&fd).cloned()
