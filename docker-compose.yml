@@ -1964,6 +1964,7 @@ services:
   postgresql:
     image: appwrite/postgres:0.1.0
     container_name: appwrite-postgresql
+    shm_size: 1g
     logging:
       driver: json-file
       options:

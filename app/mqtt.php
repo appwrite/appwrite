@@ -290,7 +290,97 @@ $server->onWorkerStart(function (int $workerId) use ($server, $handler, $mqtt, $
         });
     });
 
-    go(function () use ($server, $handler, $mqtt, $register): void {
+    // Per-action handlers for the 'mqtt' control/delivery channel. Span init/finish and the Swoole
+    // coroutine orchestration live here (the entrypoint), not in Handler, which only Span::add()s.
+    // Each takes the resolved projectId and the decoded event.
+
+    // Revoke a user's connections after they were blocked or deleted. Runs in a child coroutine so the
+    // project databases revoke() opens leave with its context instead of piling up in this subscriber.
+    $onRevoke = function (string $projectId, array $event) use ($handler): void {
+        $userId = (string) ($event['userId'] ?? '');
+
+        $revoke = function () use ($handler, $projectId, $userId): void {
+            $span = null;
+
+            try {
+                $span = Span::init('mqtt.revoke');
+                $span->set('project.id', $projectId);
+                $span->set('user.id', $userId);
+                $span->set('mqtt.is_broker', true);
+                $span->set('mqtt.disconnected', $handler->revoke($projectId, $userId));
+            } catch (\Throwable $error) {
+                $span?->setError($error);
+                Console::error('Failed to revoke MQTT connections: ' . $error->getMessage());
+            } finally {
+                $span?->finish();
+            }
+        };
+
+        $revoked = new Channel(1);
+        $started = go(function () use ($revoke, $revoked): void {
+            try {
+                $revoke();
+            } finally {
+                $revoked->push(true);
+            }
+        });
+
+        if ($started === false) {
+            Console::warning('Coroutine limit reached, revoking MQTT connections inline');
+            $revoke();
+
+            return;
+        }
+
+        $revoked->pop();
+    };
+
+    // Drop a user's live subscription to a topic after they were removed as a subscriber.
+    $onUnsubscribe = function (string $projectId, array $event) use ($server, $handler): void {
+        $userId = (string) ($event['userId'] ?? '');
+        $topic = (string) ($event['topic'] ?? '');
+
+        $span = Span::init('mqtt.unsubscribe');
+        $span->set('project.id', $projectId);
+        $span->set('user.id', $userId);
+        $span->set('mqtt.topic', $topic);
+        $span->set('mqtt.is_broker', true);
+
+        try {
+            $span->set('mqtt.unsubscribed', $handler->unsubscribe($server, $projectId, $userId, $topic));
+        } catch (\Throwable $error) {
+            $span->setError($error);
+            Console::error('Failed to unsubscribe MQTT connections: ' . $error->getMessage());
+        } finally {
+            $span->finish();
+        }
+    };
+
+    // Fan a produced message out to this worker's local subscribers of the topic.
+    $onDeliver = function (string $projectId, array $event) use ($server, $handler, $mqtt): void {
+        $topic = (string) ($event['topic'] ?? '');
+        $qos = (int) ($event['qos'] ?? 0);
+        $sequence = (int) ($event['sequence'] ?? 0);
+        $publishedAt = (float) ($event['publishedAt'] ?? 0.0);
+        $message = base64_decode((string) ($event['payload'] ?? ''));
+
+        $span = Span::init('mqtt.deliver');
+        $span->set('project.id', $projectId);
+        $span->set('mqtt.topic', $topic);
+        $span->set('mqtt.qos', $qos);
+        $span->set('mqtt.is_broker', true);
+
+        $delivered = $handler->deliver($server, $projectId, $topic, $message, $qos, $sequence, $publishedAt);
+
+        $span->set('mqtt.subscribers', $delivered);
+        if ($delivered === 0) {
+            $mqtt->messagesDropped->add(1, ['reason' => 'no_subscriber']);
+        }
+
+        $span->finish();
+    };
+
+    go(function () use ($register, $onRevoke, $onUnsubscribe, $onDeliver): void {
         $attempts = 0;
         while ($attempts < 60) {
             try {
@@ -300,7 +390,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $handler, $mqtt, $
                     $attempts = 0;
                 }
 
-                $pubsub->subscribe(['mqtt'], function (mixed $redis, string $channel, string $payload) use ($server, $handler, $mqtt): void {
+                $pubsub->subscribe(['mqtt'], function (mixed $redis, string $channel, string $payload) use ($onRevoke, $onUnsubscribe, $onDeliver): void {
                     $event = json_decode($payload, true);
                     if (!\is_array($event)) {
                         return;
@@ -308,69 +398,11 @@ $server->onWorkerStart(function (int $workerId) use ($server, $handler, $mqtt, $
 
                     $projectId = (string) ($event['project'] ?? '');
 
-                    if (($event['action'] ?? '') === Mqtt::ACTION_REVOKE) {
-                        $userId = (string) ($event['userId'] ?? '');
-
-                        $revoke = function () use ($handler, $projectId, $userId): void {
-                            $span = null;
-
-                            try {
-                                $span = Span::init('mqtt.revoke');
-                                $span->set('project.id', $projectId);
-                                $span->set('user.id', $userId);
-                                $span->set('mqtt.is_broker', true);
-                                $span->set('mqtt.disconnected', $handler->revoke($projectId, $userId));
-                            } catch (\Throwable $error) {
-                                $span?->setError($error);
-                                Console::error('Failed to revoke MQTT connections: ' . $error->getMessage());
-                            } finally {
-                                $span?->finish();
-                            }
-                        };
-
-                        // A child coroutine, so the databases revoke() opens leave with its context
-                        // instead of piling up in this never-ending subscriber's.
-                        $revoked = new Channel(1);
-                        $started = go(function () use ($revoke, $revoked): void {
-                            try {
-                                $revoke();
-                            } finally {
-                                $revoked->push(true);
-                            }
-                        });
-
-                        if ($started === false) {
-                            Console::warning('Coroutine limit reached, revoking MQTT connections inline');
-                            $revoke();
-
-                            return;
-                        }
-
-                        $revoked->pop();
-
-                        return;
-                    }
-
-                    $topic = (string) ($event['topic'] ?? '');
-                    $qos = (int) ($event['qos'] ?? 0);
-                    $sequence = (int) ($event['sequence'] ?? 0);
-                    $publishedAt = (float) ($event['publishedAt'] ?? 0.0);
-                    $message = base64_decode((string) ($event['payload'] ?? ''));
-
-                    $span = Span::init('mqtt.deliver');
-                    $span->set('project.id', $projectId);
-                    $span->set('mqtt.topic', $topic);
-                    $span->set('mqtt.qos', $qos);
-                    $span->set('mqtt.is_broker', true);
-
-                    $delivered = $handler->deliver($server, $projectId, $topic, $message, $qos, $sequence, $publishedAt);
-
-                    $span->set('mqtt.subscribers', $delivered);
-                    if ($delivered === 0) {
-                        $mqtt->messagesDropped->add(1, ['reason' => 'no_subscriber']);
-                    }
-
-                    $span->finish();
+                    match ($event['action'] ?? '') {
+                        Mqtt::ACTION_REVOKE => $onRevoke($projectId, $event),
+                        Mqtt::ACTION_UNSUBSCRIBE => $onUnsubscribe($projectId, $event),
+                        default => $onDeliver($projectId, $event),
+                    };
                 });
             } catch (\Throwable $error) {
                 $attempts++;

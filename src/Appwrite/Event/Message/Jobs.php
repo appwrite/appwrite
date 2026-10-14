@@ -23,7 +23,7 @@ final class Jobs extends Base
     public function toArray(): array
     {
         return [
-            'project' => $this->project->getArrayCopy(),
+            'project' => ProjectContext::fromDocument($this->project)->toArray(),
             'id' => $this->id,
             'event' => $this->event,
             'data' => $this->data,

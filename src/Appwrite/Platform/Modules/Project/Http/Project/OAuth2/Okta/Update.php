@@ -121,8 +121,8 @@ class Update extends Base
             ->param(static::getClientSecretParamName(), null, new Nullable(new Text(512, 0)), static::getClientSecretDescription(), optional: true)
             ->param('domain', null, new Nullable(new ValidatorDomain(allowEmpty: true)), 'Okta company domain. Required when enabling the provider. For example: trial-6400025.okta.com. Example of wrong value: trial-6400025-admin.okta.com, or https://trial-6400025.okta.com/', optional: true)
             ->param('authorizationServerId', null, new Nullable(new Text(256, 0)), 'Custom Authorization Servers. Optional, can be left empty or unconfigured. For example: aus000000000000000h7z', optional: true)
-            ->param('prompt', null, static::getPromptValidator(), static::getPromptDescription(), optional: true, enum: static::getPromptEnum())
             ->param('enabled', null, new Nullable(new Boolean()), 'OAuth2 sign-in method status. Set to true to enable new session creation. Setting to true will trigger end-to-end credentials validation, and will throw if the credentials are invalid.', true)
+            ->param('prompt', null, static::getPromptValidator(), static::getPromptDescription(), optional: true, enum: static::getPromptEnum())
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('project')
@@ -161,8 +161,8 @@ class Update extends Base
         ?string $clientSecret,
         ?string $domain,
         ?string $authorizationServerId,
-        ?array $prompt,
         ?bool $enabled,
+        ?array $prompt,
         Response $response,
         Database $dbForPlatform,
         Document $project,

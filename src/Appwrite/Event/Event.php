@@ -2,6 +2,8 @@
 
 namespace Appwrite\Event;
 
+use Appwrite\Event\Message\ProjectContext;
+use Appwrite\Event\Message\UserContext;
 use InvalidArgumentException;
 use Utopia\Database\Document;
 use Utopia\Queue\Publisher\Synchronous as Publisher;
@@ -336,12 +338,12 @@ class Event
     {
         $trimmed = [];
 
-        if ($this->project) {
-            $trimmed['project'] = new Document([
-                '$id' => $this->project->getId(),
-                '$sequence' => $this->project->getSequence(),
-                'database' => $this->project->getAttribute('database')
-            ]);
+        if ($this->project !== null) {
+            $trimmed['project'] = ProjectContext::fromDocument($this->project)->toArray();
+        }
+
+        if ($this->user !== null) {
+            $trimmed['user'] = UserContext::fromDocument($this->user)->toArray();
         }
 
         return $trimmed;
