@@ -15,12 +15,17 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Permissions;
+use Utopia\Lock\Distributed;
 use Utopia\Platform\Action;
+use Utopia\Pools\Group;
 use Utopia\Validator\JSON\ObjectValidator as JSONObject;
 use Utopia\Validator\Text;
 
 class Presence extends Action
 {
+    public const int LOCK_TTL = 10;
+    public const int LOCK_TIMEOUT = 5;
+
     public function __construct()
     {
         $this
@@ -36,6 +41,7 @@ class Presence extends Action
             ->inject('authorization')
             ->inject('presenceState')
             ->inject('project')
+            ->inject('pools')
             ->inject('publisherForUsage')
             ->inject('queueForEvents')
             ->inject('queueForRealtime')
@@ -57,6 +63,7 @@ class Presence extends Action
         Authorization $authorization,
         PresenceState $presenceState,
         ?Document $project,
+        Group $pools,
         UsagePublisher $publisherForUsage,
         QueueEvent $queueForEvents,
         QueueRealtime $queueForRealtime,
@@ -80,7 +87,7 @@ class Presence extends Action
             'userId' => $user->getId(),
             'source' => 'realtime',
             'status' => $status,
-            'expiresAt' => DateTime::addSeconds(new \DateTime(), PresenceState::LEASE),
+            'expiresAt' => DateTime::format((new \DateTime())->modify('+30 days')),
             'hostname' => \gethostname() ?: null,
         ];
         if ($metadata !== null) {
@@ -90,27 +97,37 @@ class Presence extends Action
         $presenceDocument = new Document($presenceData);
         $presenceState->setPermissions($presenceDocument, $permissions, $user, $authorization);
 
-        // Hold before writing, so another connection of this user that closes meanwhile
-        // either sees this one or deletes only what was written before it.
-        $presenceState->hold($database, $project->getId(), $user->getId(), $connectionId);
+        $firstHold = empty($realtime->connections[$connectionId]['presences']);
+        $projectId = $project->getId();
+        $userId = $user->getId();
+        $lockKey = 'presence:' . $projectId . ':' . $userId;
 
-        try {
-            $presence = $presenceState->upsertForUser(
-                $database,
-                $presenceDocument,
-                $presenceId,
-                (string) $user->getSequence(),
-                function () use ($presenceState, $publisherForUsage, $project): void {
-                    $presenceState->triggerUsage($publisherForUsage, $project, 1);
-                },
-            );
-        } catch (\Throwable $th) {
-            if (empty($realtime->connections[$connectionId]['presences'])) {
-                $presenceState->release($database, $project->getId(), $user->getId(), $connectionId);
+        $upsert = fn (): Document => $presenceState->upsertForUser(
+            $database,
+            $presenceDocument,
+            $presenceId,
+            (string) $user->getSequence(),
+            fn () => $presenceState->triggerUsage($publisherForUsage, $project, 1),
+        );
+
+        // The lock keeps counting a new holder from racing a close that deletes the row.
+        $presence = $pools->get('lock')->use(function (\Redis $redis) use ($upsert, $firstHold, $lockKey, $presenceState, $projectId, $userId): Document {
+            $lock = new Distributed($redis, $lockKey, ttl: self::LOCK_TTL);
+            $locked = $lock->acquire(self::LOCK_TIMEOUT);
+
+            try {
+                $presence = $upsert();
+                if ($firstHold) {
+                    $presenceState->incrementConnections($redis, $projectId, $userId);
+                }
+
+                return $presence;
+            } finally {
+                if ($locked) {
+                    $lock->release();
+                }
             }
-
-            throw $th;
-        }
+        });
 
         $presence->removeAttribute('$collection');
         $presence->removeAttribute('$tenant');

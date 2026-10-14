@@ -48,6 +48,7 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
 use Utopia\DSN\DSN;
+use Utopia\Lock\Distributed;
 use Utopia\Pools\Group;
 use Utopia\Queue\Broker\Pool as BrokerPool;
 use Utopia\Queue\Queue;
@@ -97,6 +98,7 @@ if (!$container->has('pools')) {
         return $register->get('pools');
     }, ['register']);
 }
+
 
 if (!$container->has('publisherForUsage')) {
     $container->set('publisherForUsage', function (Group $pools): UsagePublisher {
@@ -462,7 +464,7 @@ $unauthorizedPayloadJson = json_encode([
     ],
 ]);
 
-$server->onWorkerStart(function (int $workerId) use ($server, $register, $stats, $realtime, $eventTailRegistry, $presenceState, $unauthorized, $unauthorizedPayloadJson) {
+$server->onWorkerStart(function (int $workerId) use ($server, $register, $stats, $realtime, $eventTailRegistry, $unauthorized, $unauthorizedPayloadJson) {
     Console::success('Worker ' . $workerId . ' started successfully');
 
     $telemetry = getTelemetry($workerId);
@@ -604,38 +606,6 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                     'type' => 'event',
                     'data' => $data
                 ]));
-            }
-        }
-    });
-
-    // Renew what this worker's connections hold, so the presences of a server that dies
-    // without closing its connections (crash, OOM kill) expire within a lease.
-    Timer::tick(PresenceState::LEASE_RENEWAL * 1000, function () use ($realtime, $presenceState) {
-        /** @var array<string, array<string, array<int, array<int|string, true>>>> $held projectId => userId => connection => set of presence IDs */
-        $held = [];
-        foreach ($realtime->connections as $connection => $state) {
-            $projectId = $state['projectId'] ?? '';
-            $userId = $state['userId'] ?? '';
-            if (empty($state['presences']) || empty($projectId) || $projectId === 'console' || empty($userId)) {
-                continue;
-            }
-            $held[$projectId][$userId][$connection] = $state['presences'];
-        }
-
-        foreach ($held as $projectId => $holders) {
-            $span = Span::init('realtime.presence.renew');
-            Span::add('project.id', $projectId);
-
-            try {
-                $dbForPlatform = getConsoleDB();
-                $project = $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
-                if (!$project->isEmpty()) {
-                    $presenceState->renew(getProjectDB($project), $projectId, $holders);
-                }
-            } catch (Throwable $th) {
-                $span->setError($th);
-            } finally {
-                $span->finish();
             }
         }
     });
@@ -1528,7 +1498,7 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register, $
                 && !empty($projectId)
                 && $projectId !== 'console'
             ) {
-                go(function () use ($connection, $presencesById, $projectId, $userId, $container, $presenceState): void {
+                go(function () use ($presencesById, $projectId, $userId, $container, $presenceState): void {
                     // Fresh span: the parent realtime.close span finishes before this coroutine
                     Span::init('realtime.close.presenceCleanup');
                     Span::add('project.id', $projectId);
@@ -1546,15 +1516,6 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register, $
                         $presenceIds = \array_map(strval(...), \array_keys($presencesById));
                         $dbForProject = getProjectDB($project);
 
-                        // The user's presence stays while another of their connections, here
-                        // or on another server, still holds it. One that starts holding it
-                        // after this check writes it after this point, so leave such rows.
-                        $releasedAt = DateTime::now();
-                        if ($presenceState->release($dbForProject, $projectId, (string) $userId, $connection)) {
-                            Span::add('presence.held', true);
-                            return;
-                        }
-
                         $user = new User([]);
                         if (!empty($userId)) {
                             try {
@@ -1571,29 +1532,42 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register, $
 
                         /** @var UsagePublisher $publisherForUsage */
                         $publisherForUsage = $container->get('publisherForUsage');
+                        /** @var Group $pools */
+                        $pools = $container->get('pools');
 
+                        $lockKey = 'presence:' . $projectId . ':' . ((string) $userId);
+
+                        // Drop this connection's hold; delete the presence only when the last
+                        // holder leaves. The lock keeps this decrement from racing an upsert.
                         /** @var array<string, Document> $deletedPresences */
                         $deletedPresences = [];
-                        try {
-                            $deletionCount = $dbForProject->getAuthorization()->skip(
-                                function () use ($dbForProject, $presenceIds, $releasedAt, &$deletedPresences): int {
-                                    return $dbForProject->deleteDocuments(
-                                        'presenceLogs',
-                                        [
-                                            Query::equal('$id', $presenceIds),
-                                            Query::lessThan('$updatedAt', $releasedAt),
-                                        ],
-                                        onNext: function (Document $deleted) use (&$deletedPresences): void {
-                                            $deletedPresences[$deleted->getId()] = $deleted;
-                                        },
-                                    );
+                        $pools->get('lock')->use(function (\Redis $redis) use ($dbForProject, $presenceIds, $lockKey, $presenceState, $projectId, $userId, &$deletedPresences): void {
+                            $lock = new Distributed($redis, $lockKey, ttl: PresenceHandler::LOCK_TTL);
+                            $locked = $lock->acquire(PresenceHandler::LOCK_TIMEOUT);
+
+                            try {
+                                if ($presenceState->decrementConnections($redis, $projectId, (string) $userId) > 0) {
+                                    return;
                                 }
-                            );
-                            $presenceState->triggerUsage($publisherForUsage, $project, -$deletionCount);
-                        } catch (Throwable $th) {
-                            Span::current()?->setError($th);
-                            Span::add('presence.delete_count', \count($presenceIds));
-                            Span::add('presence.delete_ids', \implode(',', \array_slice($presenceIds, 0, 10)));
+
+                                foreach ($presenceIds as $presenceId) {
+                                    $presence = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->getDocument('presenceLogs', $presenceId));
+                                    if ($presence->isEmpty()) {
+                                        continue;
+                                    }
+
+                                    $dbForProject->getAuthorization()->skip(fn () => $dbForProject->deleteDocument('presenceLogs', $presenceId));
+                                    $deletedPresences[$presence->getId()] = $presence;
+                                }
+                            } finally {
+                                if ($locked) {
+                                    $lock->release();
+                                }
+                            }
+                        });
+
+                        if (!empty($deletedPresences)) {
+                            $presenceState->triggerUsage($publisherForUsage, $project, -\count($deletedPresences));
                         }
 
                         $queueForEvents = getQueueForEvents();
