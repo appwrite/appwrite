@@ -152,6 +152,7 @@ class Redis implements Synchronous, Consumer
             "{$queue->namespace}.poison.{$queue->name}"];
         $messages = $args = $poison = [];
         foreach ($batch as $raw) {
+            Message::warnIfLarge($queue->name, \strlen($raw));
             try {
                 $envelope = $this->codec->decode($raw);
                 if (!\is_array($envelope) || !isset($envelope['pid'], $envelope['queue'], $envelope['timestamp'])) {
@@ -163,7 +164,7 @@ class Redis implements Synchronous, Consumer
                 $poison[] = $raw;
                 continue;
             }
-            $message->setReceipt($token);
+            $message->setReceipt($token)->setSize(\strlen($raw));
             $messages[] = $message;
             $pid = $message->getPid();
             $keys[] = "{$queue->namespace}.jobs.{$queue->name}.{$pid}";

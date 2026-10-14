@@ -4,6 +4,8 @@ namespace Utopia\Queue;
 
 class Message
 {
+    public const int LARGE_SIZE = 1048576;
+
     protected string $pid;
     protected string $queue;
     protected int $timestamp;
@@ -11,6 +13,7 @@ class Message
     protected int $attempts = 0;
     protected ?int $sequence = null;
     protected bool $terminal = false;
+    protected ?int $size = null;
 
     public function __construct(array $array = [])
     {
@@ -122,6 +125,25 @@ class Message
         $this->sequence = $sequence;
 
         return $this;
+    }
+
+    public function getSize(): ?int
+    {
+        return $this->size;
+    }
+
+    public function setSize(?int $size): self
+    {
+        $this->size = $size;
+
+        return $this;
+    }
+
+    public static function warnIfLarge(string $queue, int $size): void
+    {
+        if ($size > self::LARGE_SIZE) {
+            \error_log(\sprintf('Large queue message: %d bytes on queue "%s"', $size, $queue));
+        }
     }
 
     /**
