@@ -21,8 +21,6 @@ return [
             Attribute::string(key: 'type', size: 128, default: 'tablesdb'),
             Attribute::string(key: 'database', size: 2000),
             Attribute::string(key: 'status', size: 16),
-            Attribute::string(key: 'migrationId', size: Database::LENGTH_KEY),
-            Attribute::string(key: 'migrationAttemptId', size: Database::LENGTH_KEY),
         ],
         'indexes' => [
             Index::fulltext(key: '_fulltext_search', attributes: ['search']),
@@ -325,7 +323,6 @@ return [
             Attribute::string(key: 'destinationResourceId'),
             Attribute::string(key: 'destinationResourceInternalId'),
             Attribute::string(key: 'destinationResourceType'),
-            Attribute::string(key: 'attemptId', size: Database::LENGTH_KEY),
         ],
         'indexes' => [
             Index::key(key: '_key_status', attributes: ['status'], lengths: [Database::LENGTH_KEY], orders: [OrderDirection::Asc]),
