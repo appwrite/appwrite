@@ -13,7 +13,6 @@ use Utopia\Database\Collection;
 use Utopia\Database\Database as UtopiaDatabase;
 use Utopia\Database\Document as UtopiaDocument;
 use Utopia\Migration\Destinations\Appwrite as AppwriteDestination;
-use Utopia\Migration\Destinations\Appwrite\ProvisioningOwner;
 use Utopia\Migration\Destinations\OnDuplicate;
 use Utopia\Migration\Resource;
 use Utopia\Migration\Resources\Database\Database as DatabaseResource;
@@ -97,8 +96,6 @@ final class AppwriteDestinationDsnTest extends TestCase
             collectionStructure: ['attributes' => [], 'indexes' => []],
             dbForPlatform: $database,
             projectInternalId: '1',
-            owner: new ProvisioningOwner('migration-test', 'attempt-test'),
-            getRecoverableOwner: static fn (UtopiaDocument $document): ?ProvisioningOwner => null,
             onDuplicate: OnDuplicate::Fail,
             getDatabaseDSN: $getDatabaseDSN,
         );

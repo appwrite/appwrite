@@ -1,5 +1,21 @@
 # Changelog
 
+## 3.1.2
+
+### Breaking changes
+
+- Provisioning ownership fencing is removed. The Appwrite destination is back on the 2.x status-only database
+  lifecycle.
+  - `Destinations\Appwrite\ProvisioningOwner` is removed.
+  - `Destinations\Appwrite::__construct()` no longer takes `owner`, `getRecoverableOwner` or `provisioningLease`, and
+    `Destinations\Appwrite::DEFAULT_PROVISIONING_LEASE` is removed. `onDuplicate` and the arguments after it move up
+    two places for positional callers.
+  - The destination no longer reads or writes the `migrationId` and `migrationAttemptId` database attributes.
+  - A `provisioning` or `failed` database is recovered by the next run at once, without owner attestation or a lease
+    wait.
+- The standalone CLI no longer accepts `--migration-id`, `--migration-attempt-id`, `--recover-migration-id`,
+  `--recover-migration-attempt-id` or `-h`/`--help`.
+
 ## 3.0.0 (unreleased)
 
 3.0 is a major release. The breaking changes below all concern the Appwrite destination's lifecycle and the

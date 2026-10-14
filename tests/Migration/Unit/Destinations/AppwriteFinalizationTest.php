@@ -14,7 +14,6 @@ use Utopia\Database\Database as UtopiaDatabase;
 use Utopia\Database\Document as UtopiaDocument;
 use Utopia\Database\Query;
 use Utopia\Migration\Destinations\Appwrite as AppwriteDestination;
-use Utopia\Migration\Destinations\Appwrite\ProvisioningOwner;
 use Utopia\Migration\Destinations\OnDuplicate;
 use Utopia\Migration\Exception\Aborted;
 use Utopia\Migration\Exception as MigrationException;
@@ -138,7 +137,7 @@ final class AppwriteFinalizationTest extends TestCase
         $this->seedTablesWithLegacyColumns($database);
 
         $abort = new Aborted('Migration attempt was superseded');
-        $destination = $this->destination($database, 'attempt-overwrite', OnDuplicate::Overwrite);
+        $destination = $this->destination($database, OnDuplicate::Overwrite);
 
         try {
             $this->importSwallowingAbort($database, $destination, $this->newerSchemaWithoutLegacyColumns(), $abort);
@@ -203,7 +202,7 @@ final class AppwriteFinalizationTest extends TestCase
         $this->seedTablesWithLegacyColumns($database);
         $database->failReadyWrites = ['first'];
 
-        $destination = $this->destination($database, 'attempt-overwrite', OnDuplicate::Overwrite);
+        $destination = $this->destination($database, OnDuplicate::Overwrite);
         $this->import($database, $destination, $this->newerSchemaWithoutLegacyColumns());
 
         $failure = $this->finalize($database, $destination);
@@ -224,7 +223,7 @@ final class AppwriteFinalizationTest extends TestCase
         $database = $this->projectDatabase();
         $this->seedTablesWithLegacyColumns($database);
 
-        $destination = $this->destination($database, 'attempt-overwrite', OnDuplicate::Overwrite);
+        $destination = $this->destination($database, OnDuplicate::Overwrite);
         $this->import($database, $destination, $this->newerSchemaWithoutLegacyColumns());
         $database->failAttributeScanOf = $this->table($database, 'first', 'first-items');
 
@@ -303,7 +302,7 @@ final class AppwriteFinalizationTest extends TestCase
             );
         }
 
-        $destination = $this->destination($database, 'attempt-seed');
+        $destination = $this->destination($database);
         $this->import($database, $destination, $resources);
 
         $this->assertNull($this->finalize($database, $destination));
@@ -348,7 +347,6 @@ final class AppwriteFinalizationTest extends TestCase
 
     private function destination(
         FailingFinalizationDatabase $database,
-        string $attemptId = 'attempt-current',
         OnDuplicate $onDuplicate = OnDuplicate::Fail,
     ): AppwriteDestination {
         return new AppwriteDestination(
@@ -370,8 +368,6 @@ final class AppwriteFinalizationTest extends TestCase
             ],
             dbForPlatform: $database,
             projectInternalId: '1',
-            owner: new ProvisioningOwner('migration-finalization', $attemptId),
-            getRecoverableOwner: static fn (UtopiaDocument $document): ?ProvisioningOwner => null,
             onDuplicate: $onDuplicate,
         );
     }
@@ -485,8 +481,6 @@ final class AppwriteFinalizationTest extends TestCase
                 $this->attribute('type', ColumnType::String, default: 'tablesdb', size: 128),
                 $this->attribute('database', ColumnType::String, size: 2000),
                 $this->attribute('status', ColumnType::String, size: 16),
-                $this->attribute('migrationId', ColumnType::String, size: UtopiaDatabase::LENGTH_KEY),
-                $this->attribute('migrationAttemptId', ColumnType::String, size: UtopiaDatabase::LENGTH_KEY),
             ],
         ));
 

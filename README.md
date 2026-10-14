@@ -44,18 +44,6 @@ $transfer->run(
 );
 ```
 
-## Appwrite database recovery
-
-Appwrite database destinations use a `ProvisioningOwner` made from a stable logical migration identifier and a fresh attempt identifier for every execution. The required `getRecoverableOwner` callback is the recovery authority for an existing database whose status is `provisioning` or `failed`.
-
-A database status is local to that resource. It does not prove that the migration attempt which owns it has stopped, because an import can continue with other resources after recording a database failure. The callback must therefore consult the caller's authoritative operation lifecycle and return the exact stored owner only after that attempt is terminal. Return `null` while it is active or unknown; recovery then fails closed. This rule also applies when the retry uses the same logical migration identifier.
-
-Owners are written and enforced only when the destination's `databases` metadata declares both `migrationId` and `migrationAttemptId`; metadata with `status` alone gets status tracking without ownership. A `provisioning` or `failed` database that names no owner at all has nothing for the callback to judge, so its update timestamp stands in: it is recovered only once it has gone a whole `provisioningLease` without a write, since a fresher one may still belong to a migration that is provisioning it. A row still within the lease is refused with an error naming the database. Past the lease it is recovered as it was before ownership existed: a `failed` database is overwritten, a `provisioning` one is resolved like any existing database under the `OnDuplicate` policy (`fail` keeps it instead of colliding) and marked `ready` when the run succeeds, and either is claimed by the current attempt when the metadata can record it. A database naming only part of an owner is refused.
-
-The `provisioningLease` constructor argument is the lease in seconds and defaults to `86400` (24 hours), the longest lease a live Appwrite migration attempt holds; `0` recovers an ownerless database at once, and a negative value is rejected with an `InvalidArgumentException`.
-
-The standalone CLI requires `--migration-id` and a fresh `--migration-attempt-id`. Recovering an incomplete database that names an owner additionally requires both `--recover-migration-id` and `--recover-migration-attempt-id` for the exact terminal prior attempt.
-
 ## Supported Resources Chart
 
 Sources:
