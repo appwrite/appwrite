@@ -97,16 +97,6 @@ abstract class Destination extends Target
     }
 
     /**
-     * Report an abort that a source swallowed and Transfer latched, before Transfer rethrows it;
-     * an abort that propagates straight out of run() never reaches here. A destination that
-     * defers its terminal state to success() drops that state here, so a later success()
-     * finalizes nothing, exactly as after a run that threw.
-     */
-    public function markAborted(): void
-    {
-    }
-
-    /**
      * Import Resources
      *
      * @param  Resource[]  $resources  Resources to import

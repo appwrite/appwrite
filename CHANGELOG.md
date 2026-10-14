@@ -15,6 +15,16 @@
     wait.
 - The standalone CLI no longer accepts `--migration-id`, `--migration-attempt-id`, `--recover-migration-id`,
   `--recover-migration-attempt-id` or `-h`/`--help`.
+- `Destinations\Appwrite::run()` finalizes again, as in 2.x: once the transfer returns it flips the databases it
+  provisioned to `ready`, then runs the overwrite orphan sweep.
+  - `success()`, `error()` and `cleanUp()` are no-op lifecycle hooks again. Callers no longer call `success()` to
+    finalize, and `cleanUp()` no longer reports a skipped `success()`.
+  - A failed `ready` flip is recorded with `addError()`; a failed orphan sweep throws from `run()`.
+  - `Utopia\Migration\Exception\Finalization` is removed.
+- The abort mechanism is removed.
+  - `Utopia\Migration\Exception\Aborted` and `Destination::markAborted()` are removed.
+  - `Transfer::run()` no longer latches an exception thrown from its progress callback, and the library sources no
+    longer rethrow one: each source handles it as in 2.x.
 
 ## 3.0.0 (unreleased)
 

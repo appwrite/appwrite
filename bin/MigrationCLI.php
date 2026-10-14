@@ -441,8 +441,6 @@ class MigrationCLI
                 $this->drawFrame();
             }
         );
-
-        $this->destination->success();
     }
 
     protected function loadEnvironment(): void

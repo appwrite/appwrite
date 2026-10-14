@@ -6,7 +6,6 @@ use Utopia\Database\Database as UtopiaDatabase;
 use Utopia\Database\RelationshipSide;
 use Utopia\Database\RelationshipType;
 use Utopia\Migration\Exception;
-use Utopia\Migration\Exception\Aborted;
 use Utopia\Migration\Resource;
 use Utopia\Migration\Resource as UtopiaResource;
 use Utopia\Migration\Resources\Database\Column;
@@ -132,8 +131,6 @@ class CSV extends Source
             if (UtopiaResource::isSupported($this->getSupportedResources(), $resources)) {
                 $this->exportRows($batchSize);
             }
-        } catch (Aborted $abort) {
-            throw $abort;
         } catch (\Throwable $e) {
             $this->addError(
                 new Exception(

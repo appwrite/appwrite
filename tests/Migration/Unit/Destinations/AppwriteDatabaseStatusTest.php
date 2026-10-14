@@ -15,7 +15,6 @@ use Utopia\Database\Document as UtopiaDocument;
 use Utopia\Database\Exception as DatabaseException;
 use Utopia\Migration\Destinations\Appwrite as AppwriteDestination;
 use Utopia\Migration\Exception as MigrationException;
-use Utopia\Migration\Exception\Finalization;
 use Utopia\Migration\Resource;
 use Utopia\Migration\Resources\Database\Database as DatabaseResource;
 use Utopia\Migration\Transfer;
@@ -154,20 +153,37 @@ final class AppwriteDatabaseStatusTest extends TestCase
         }
     }
 
-    public function testDatabaseFinalizersRunOnlyAfterSuccess(): void
+    public function testRunAloneMarksProvisionedDatabasesReady(): void
     {
         $database = $this->createProjectDatabase(withStatus: true);
+        $source = new class () extends MockSource {
+            #[Override]
+            public function supportsDatabaseStatus(): bool
+            {
+                return true;
+            }
+        };
+        foreach (['database-first', 'database-second'] as $databaseId) {
+            $source->pushMockResource(new DatabaseResource(
+                id: $databaseId,
+                name: 'Database',
+                type: 'tablesdb',
+                database: 'source-dsn',
+                databaseStatus: 'ready',
+            ));
+        }
+        $transfer = new Transfer($source, $this->createDestination($database));
 
-        $destination = $this->runDatabaseTransfer($database, explicit: false, success: false);
+        $database->getAuthorization()->skip(
+            static fn () => $transfer->run([Resource::TYPE_DATABASE], static function (): void {
+            }),
+        );
 
-        $this->assertSame('provisioning', $this->getDatabaseDocument($database)->getAttribute('status'));
-
-        $database->getAuthorization()->skip($destination->success(...));
-
-        $this->assertSame('ready', $this->getDatabaseDocument($database)->getAttribute('status'));
+        $this->assertSame('ready', $this->getDatabaseDocument($database, 'database-first')->getAttribute('status'), 'run() must flip every database it provisioned to ready');
+        $this->assertSame('ready', $this->getDatabaseDocument($database, 'database-second')->getAttribute('status'), 'run() must flip every database it provisioned to ready');
     }
 
-    public function testReadyFinalizationAttemptsEveryDatabaseAndReportsEveryFailure(): void
+    public function testReadyFlipAttemptsEveryDatabaseAndReportsEveryFailure(): void
     {
         $database = new ReadyFailingProjectDatabase(new MemoryAdapter(), new Cache(new MemoryCache()));
         $this->createProjectDatabase(withStatus: true, database: $database);
@@ -177,19 +193,15 @@ final class AppwriteDatabaseStatusTest extends TestCase
             $database,
             explicit: false,
             databaseIds: ['database-first', 'database-second', 'database-third'],
-            success: false,
         );
-        $failure = $this->finalizeExpectingFailure($database, $destination);
 
-        $errors = $destination->getErrors();
         $errorIds = \array_map(
             static fn (MigrationException $error): string => $error->getResourceId(),
-            $errors,
+            $destination->getErrors(),
         );
 
         $this->assertSame(['database-first', 'database-second', 'database-third'], $database->readyWrites);
         $this->assertSame(['database-first', 'database-third'], $errorIds);
-        $this->assertSame($errors, $failure->failures);
         $this->assertSame('provisioning', $this->getDatabaseDocument($database, 'database-first')->getAttribute('status'));
         $this->assertSame('ready', $this->getDatabaseDocument($database, 'database-second')->getAttribute('status'));
         $this->assertSame('provisioning', $this->getDatabaseDocument($database, 'database-third')->getAttribute('status'));
@@ -394,7 +406,6 @@ final class AppwriteDatabaseStatusTest extends TestCase
         UtopiaDatabase $database,
         bool $explicit,
         array $databaseIds = ['database'],
-        bool $success = true,
     ): CountingAppwriteDestination {
         $source = new class () extends MockSource {
             #[Override]
@@ -413,20 +424,11 @@ final class AppwriteDatabaseStatusTest extends TestCase
             ));
         }
 
-        $destination = new CountingAppwriteDestination(
-            project: 'destination-project',
-            endpoint: 'http://example.test/v1',
-            key: 'test-key',
-            dbForProject: $database,
-            getDatabasesDB: static fn (UtopiaDocument $document): UtopiaDatabase => $database,
-            collectionStructure: ['attributes' => [], 'indexes' => []],
-            dbForPlatform: $database,
-            projectInternalId: '1',
-        );
+        $destination = $this->createDestination($database);
 
         $transfer = new Transfer($source, $destination);
         $database->getAuthorization()->skip(
-            static function () use ($destination, $explicit, $success, $transfer): void {
+            static function () use ($explicit, $transfer): void {
                 if ($explicit) {
                     $transfer->runWithResourceSelector(
                         [Resource::TYPE_DATABASE],
@@ -446,25 +448,24 @@ final class AppwriteDatabaseStatusTest extends TestCase
                         },
                     );
                 }
-
-                if ($success) {
-                    $destination->success();
-                }
             },
         );
 
         return $destination;
     }
 
-    private function finalizeExpectingFailure(UtopiaDatabase $database, AppwriteDestination $destination): Finalization
+    private function createDestination(UtopiaDatabase $database): CountingAppwriteDestination
     {
-        try {
-            $database->getAuthorization()->skip($destination->success(...));
-        } catch (Finalization $failure) {
-            return $failure;
-        }
-
-        $this->fail('A failed finalization must throw');
+        return new CountingAppwriteDestination(
+            project: 'destination-project',
+            endpoint: 'http://example.test/v1',
+            key: 'test-key',
+            dbForProject: $database,
+            getDatabasesDB: static fn (UtopiaDocument $document): UtopiaDatabase => $database,
+            collectionStructure: ['attributes' => [], 'indexes' => []],
+            dbForPlatform: $database,
+            projectInternalId: '1',
+        );
     }
 
     private function getDatabaseDocument(UtopiaDatabase $database, string $databaseId = 'database'): UtopiaDocument

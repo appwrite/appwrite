@@ -51,7 +51,6 @@ use Utopia\Database\Validator\Structure;
 use Utopia\Database\Validator\UID;
 use Utopia\Migration\Destination;
 use Utopia\Migration\Exception;
-use Utopia\Migration\Exception\Finalization;
 use Utopia\Migration\Resource;
 use Utopia\Migration\Resources\Auth\AuthMethods;
 use Utopia\Migration\Resources\Auth\Hash;
@@ -208,14 +207,12 @@ class Appwrite extends Destination
     private array $processedTwoWayPairs = [];
 
     /**
-     * Databases created this run, held in `provisioning` until success() flips
-     * each to `ready`. Keyed by database id.
+     * Databases created this run, held in `provisioning` until the run finishes
+     * successfully. The end-of-run sweep flips each to `ready`. Keyed by database id.
      *
      * @var array<string, true>
      */
     private array $provisioningDatabases = [];
-
-    private bool $finalizationPending = false;
 
     /** Whether the destination project's database metadata supports lifecycle status. */
     private ?bool $databaseStatusSupported = null;
@@ -305,11 +302,7 @@ class Appwrite extends Destination
         return $this->databaseStatusSupported = false;
     }
 
-    /**
-     * Transfer resources without committing terminal destination state. The
-     * caller must first persist its own finalization claim, then invoke
-     * success() while that generation is still authoritative.
-     */
+    /** Orphan cleanup runs only after a successful migration — a mid-run throw preserves the destination as-is. */
     #[Override]
     public function run(
         array $resources,
@@ -317,58 +310,12 @@ class Appwrite extends Destination
         string $rootResourceId = '',
         string $rootResourceType = '',
     ): void {
-        $this->reportSkippedFinalization();
         $this->resetRunState();
         parent::run($resources, $callback, $rootResourceId, $rootResourceType);
-        $this->finalizationPending = $this->provisioningDatabases !== [] || $this->orphansByTable !== [];
-    }
-
-    /**
-     * Finalize destination state only after the caller has fenced terminal ownership.
-     * Only a run that returned is finalized: an interrupted one keeps its databases in
-     * `provisioning` for a later attempt to recover.
-     *
-     * @throws Finalization
-     */
-    #[Override]
-    public function success(): void
-    {
-        if (! $this->finalizationPending) {
-            return;
-        }
-        $this->finalizationPending = false;
-
-        // Flip status before the orphan sweep so a cleanup failure can't strand databases in `provisioning`.
-        $failures = $this->markProvisionedDatabasesReady();
-        \array_push($failures, ...$this->cleanupOverwriteOrphans());
-
-        if ($failures !== []) {
-            throw new Finalization($failures);
-        }
-    }
-
-    #[Override]
-    public function error(): void
-    {
-        $this->finalizationPending = false;
-        parent::error();
-    }
-
-    /**
-     * An aborted run is not finalized, whatever the source did with the abort: its databases stay
-     * in `provisioning` for a later attempt, as after an interrupted run.
-     */
-    #[Override]
-    public function markAborted(): void
-    {
-        $this->finalizationPending = false;
-    }
-
-    #[Override]
-    public function cleanUp(): void
-    {
-        $this->reportSkippedFinalization();
-        parent::cleanUp();
+        // parent::run() returning means every resource transferred, so the databases are usable.
+        // Flip status before the orphan sweep so a cleanup failure can't strand them in `provisioning`.
+        $this->markProvisionedDatabasesReady();
+        $this->cleanupOverwriteOrphans();
     }
 
     /** Per-run state must not leak across run() invocations on a reused instance. */
@@ -378,63 +325,24 @@ class Appwrite extends Destination
         $this->orphansByTable = [];
         $this->processedTwoWayPairs = [];
         $this->provisioningDatabases = [];
-        $this->finalizationPending = false;
     }
 
-    /** A returned run that is neither finalized nor abandoned would otherwise leave its databases unusable without a trace. */
-    private function reportSkippedFinalization(): void
+    private function markProvisionedDatabasesReady(): void
     {
-        if (! $this->finalizationPending) {
-            return;
-        }
-        $this->finalizationPending = false;
-
-        $databaseIds = \array_map(\strval(...), \array_keys($this->provisioningDatabases));
-        foreach ($this->orphansByTable as $tracked) {
-            $databaseIds[] = $tracked['database']->getId();
-        }
-
-        foreach (\array_unique($databaseIds) as $databaseId) {
-            $this->addError(new Exception(
-                resourceName: Resource::TYPE_DATABASE,
-                resourceGroup: Transfer::GROUP_DATABASES,
-                resourceId: $databaseId,
-                message: 'Database was not finalized: success() was not called after the transfer',
-                code: Exception::CODE_INTERNAL,
-            ));
-        }
-    }
-
-    /**
-     * @return list<Exception>
-     */
-    private function markProvisionedDatabasesReady(): array
-    {
-        $failures = [];
         foreach (\array_keys($this->provisioningDatabases) as $databaseId) {
             try {
                 $this->setDatabaseStatus($databaseId, self::DATABASE_STATUS_READY);
             } catch (\Throwable $error) {
-                $failures[] = $this->recordFinalizationFailure(Resource::TYPE_DATABASE, (string) $databaseId, $error);
+                $this->addError(new Exception(
+                    resourceName: Resource::TYPE_DATABASE,
+                    resourceGroup: Transfer::GROUP_DATABASES,
+                    resourceId: (string) $databaseId,
+                    message: $error->getMessage(),
+                    code: $error->getCode(),
+                    previous: $error,
+                ));
             }
         }
-
-        return $failures;
-    }
-
-    private function recordFinalizationFailure(string $resourceName, string $resourceId, \Throwable $error): Exception
-    {
-        $failure = new Exception(
-            resourceName: $resourceName,
-            resourceGroup: Transfer::GROUP_DATABASES,
-            resourceId: $resourceId,
-            message: $error->getMessage(),
-            code: $error->getCode(),
-            previous: $error,
-        );
-        $this->addError($failure);
-
-        return $failure;
     }
 
     private function setDatabaseStatus(string $databaseId, string $status): void
@@ -2322,23 +2230,12 @@ class Appwrite extends Destination
         $this->orphansByTable[$tableId][$kind][] = $key;
     }
 
-    /**
-     * End-of-migration sweep — only visits tables that had no rows (rest were cleaned per-table in createRecord).
-     *
-     * @return list<Exception>
-     */
-    private function cleanupOverwriteOrphans(): array
+    /** End-of-migration sweep — only visits tables that had no rows (rest were cleaned per-table in createRecord). */
+    private function cleanupOverwriteOrphans(): void
     {
-        $failures = [];
-        foreach ($this->orphansByTable as $tableId => $tracked) {
-            try {
-                $this->cleanupOverwriteOrphansForTable($tableId);
-            } catch (\Throwable $error) {
-                $failures[] = $this->recordFinalizationFailure(Resource::TYPE_TABLE, $tracked['table']->getId(), $error);
-            }
+        foreach (\array_keys($this->orphansByTable) as $tableId) {
+            $this->cleanupOverwriteOrphansForTable($tableId);
         }
-
-        return $failures;
     }
 
     /** Called per-table from createRecord before rows land so Structure validator sees the post-cleanup schema. */

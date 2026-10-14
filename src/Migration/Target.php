@@ -230,33 +230,21 @@ abstract class Target
     }
 
     /**
-     * Commit the terminal state of the last run() that returned.
-     *
-     * run() may leave that state uncommitted — the Appwrite destination keeps the databases
-     * it provisions in `provisioning` and defers its overwrite cleanup — so once run() has
-     * returned, the caller persists whatever claim must precede those side effects and then
-     * calls success(). Every step is attempted; if any fails, each failure is recorded with
-     * addError() and success() throws Exception\Finalization carrying them, so a failed
-     * finalization cannot pass for a completed one. Call error() instead for a run that will
-     * not be finalized.
-     *
-     * @throws Exception\Finalization
+     * Success callback
      */
     public function success(): void
     {
     }
 
     /**
-     * Called instead of success() when the run failed or will not be finalized.
+     * Error callback
      */
     public function error(): void
     {
     }
 
     /**
-     * End the lifecycle. A target that defers work to success() records an error here for
-     * each resource a returned run left unfinalized when neither success() nor error() was
-     * called, so skipping success() is reported rather than passing silently.
+     * Clean up callback
      */
     public function cleanUp(): void
     {

@@ -107,7 +107,17 @@ trait TransfersColumns
      */
     private function transferSchema(callable $makeResources, UtopiaDatabase $database, OnDuplicate $onDuplicate, string $updatedAt): array
     {
-        $source = new MockSource();
+        $source = new class () extends MockSource {
+            #[\Override]
+            protected function exportGroupDatabases(int $batchSize, array $resources): void
+            {
+                foreach ([Resource::TYPE_DATABASE, Resource::TYPE_TABLE, Resource::TYPE_COLUMN, Resource::TYPE_INDEX] as $type) {
+                    if (Resource::isSupported($type, $resources)) {
+                        parent::exportGroupDatabases($batchSize, [$type]);
+                    }
+                }
+            }
+        };
         $databaseResource = new DatabaseResource(
             id: 'shop',
             name: 'Shop',
@@ -128,12 +138,11 @@ trait TransfersColumns
         $destination = $this->destination($database, $onDuplicate);
         $transfer = new Transfer($source, $destination);
         $database->getAuthorization()->skip(
-            static function () use ($transfer): void {
-                $noop = static function (): void {
-                };
-                $transfer->run([Resource::TYPE_DATABASE, Resource::TYPE_TABLE, Resource::TYPE_COLUMN], $noop);
-                $transfer->run([Resource::TYPE_INDEX], $noop);
-            },
+            static fn () => $transfer->run(
+                [Resource::TYPE_DATABASE, Resource::TYPE_TABLE, Resource::TYPE_COLUMN, Resource::TYPE_INDEX],
+                static function (): void {
+                },
+            ),
         );
 
         return [$destination, $resources];
