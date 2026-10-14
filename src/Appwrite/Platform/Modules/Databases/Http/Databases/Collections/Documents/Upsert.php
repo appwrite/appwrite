@@ -207,6 +207,15 @@ class Upsert extends Action
         $data = $this->removeReadonlyAttributes($data, $isAPIKey || $isPrivilegedUser);
         $newDocument = new Document($data);
 
+        $writes = Operations::writes($collection, [$data], fn (string $id): Document => $authorization->skip(
+            fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $id)
+        ));
+        $usage
+            ->setResource('database')
+            ->setResourceId($database->getId())
+            ->setResourceInternalId((string) $database->getSequence())
+            ->addMetric($this->getDatabasesOperationWriteMetric(), \max(1, $writes));
+
         // Handle transaction staging
         if ($transactionId !== null) {
             $transaction = ($isAPIKey || $isPrivilegedUser)
@@ -329,15 +338,6 @@ class Upsert extends Action
         }
 
         $document = $upserted[0];
-
-        $writes = Operations::writes($collection, [$data], fn (string $id): Document => $authorization->skip(
-            fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $id)
-        ));
-        $usage
-            ->setResource('database')
-            ->setResourceId($database->getId())
-            ->setResourceInternalId((string) $database->getSequence())
-            ->addMetric($this->getDatabasesOperationWriteMetric(), $writes);
 
         $relationships = \array_map(
             fn ($document) => $document->getAttribute('key'),
