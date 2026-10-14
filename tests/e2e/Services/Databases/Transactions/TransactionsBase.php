@@ -4574,7 +4574,7 @@ trait TransactionsBase
         $this->assertEquals(100, $jane['body']['balance'], 'Jane should have 50 + 50 = 100');
     }
 
-    public function testStagedFractionalChangeIsRoundedAtCommitAndAFractionalMaxBoundsAtItsWholePart(): void
+    public function testStagedFractionalChangeRoundsHalfAwayFromZeroAtCommitAndAFractionalMaxIsFloored(): void
     {
         $keyHeaders = [
             'content-type' => 'application/json',
@@ -4612,8 +4612,6 @@ trait TransactionsBase
             $this->waitForAllAttributes($databaseId, $collectionId);
         }
 
-        $postgres = getenv('_APP_DB_ADAPTER') === 'postgresql' && $this->getSupportForAttributes();
-
         $document = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId, null), $headers, [
             $this->getRecordIdParam() => 'meter',
             'data' => ['counter' => 8],
@@ -4630,38 +4628,41 @@ trait TransactionsBase
                 'transactionId' => $fractionalTransactionId,
                 'value' => 1.5,
             ]);
-            $this->assertSame(200, $fractional['headers']['status-code'], 'a fractional change value on an integer is staged as on main');
+            $this->assertSame(200, $fractional['headers']['status-code'], 'a fractional change value on an integer is staged as given');
             $this->assertSame(1.5, $fractional['body']['counter']);
 
             $fractionalOperation = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl($fractionalTransactionId) . '/operations', $headers, [
-                'operations' => [[
-                    'databaseId' => $databaseId,
-                    $this->getContainerIdParam() => $collectionId,
-                    'action' => 'decrement',
-                    $this->getRecordIdParam() => 'meter',
-                    'data' => [
-                        $this->getSchemaParam() => 'counter',
-                        'value' => 1.5,
+                'operations' => [
+                    [
+                        'databaseId' => $databaseId,
+                        $this->getContainerIdParam() => $collectionId,
+                        'action' => 'decrement',
+                        $this->getRecordIdParam() => 'meter',
+                        'data' => [
+                            $this->getSchemaParam() => 'counter',
+                            'value' => 2.5,
+                        ],
                     ],
-                ]],
+                    [
+                        'databaseId' => $databaseId,
+                        $this->getContainerIdParam() => $collectionId,
+                        'action' => 'increment',
+                        $this->getRecordIdParam() => 'meter',
+                        'data' => [
+                            $this->getSchemaParam() => 'counter',
+                            'value' => 0.4,
+                        ],
+                    ],
+                ],
             ]);
-            $this->assertSame(201, $fractionalOperation['headers']['status-code'], 'a fractional change value on an integer is staged as an operation as on main');
+            $this->assertSame(201, $fractionalOperation['headers']['status-code'], 'a fractional change value on an integer is staged as an operation');
 
             $fractionalCommit = $this->client->call(Client::METHOD_PATCH, $this->getTransactionUrl($fractionalTransactionId), $headers, [
                 'commit' => true,
             ]);
+            $this->assertSame(200, $fractionalCommit['headers']['status-code'], $fractionalCommit['body']['message'] ?? '');
             $rounded = $this->client->call(Client::METHOD_GET, $url, $headers);
-            if ($postgres) {
-                $this->assertSame(400, $fractionalCommit['headers']['status-code'], 'PostgreSQL refuses a fractional counter change at commit as the counter route does');
-                $this->assertSame('attribute_type_invalid', $fractionalCommit['body']['type']);
-                $this->assertStringEndsWith('"counter" is not a number', $fractionalCommit['body']['message']);
-                $this->assertSame(8, $rounded['body']['counter']);
-            } else {
-                $this->assertSame(200, $fractionalCommit['headers']['status-code']);
-                // MongoDB cuts each fractional result toward zero (9, then 7). Main kept the double 9.5 in the integer
-                // field and only cut it when read, so its next change started from 9.5; an integer column cannot hold that.
-                $this->assertSame(getenv('_APP_DB_ADAPTER') === 'mongodb' ? 7 : 8, $rounded['body']['counter'], 'main stores 8 + 1.5 as 10 and 10 - 1.5 as 8, rounding half to even');
-            }
+            $this->assertSame(7, $rounded['body']['counter'], 'the commit adds 2 for 1.5, subtracts 3 for 2.5 and changes nothing for 0.4');
 
             $reset = $this->client->call(Client::METHOD_PATCH, $url, $keyHeaders, [
                 'data' => ['counter' => 8],
@@ -4699,14 +4700,6 @@ trait TransactionsBase
             'commit' => true,
         ]);
         $committed = $this->client->call(Client::METHOD_GET, $url, $headers);
-        if ($postgres) {
-            $this->assertSame(400, $commit['headers']['status-code'], 'PostgreSQL refuses a whole change with a fractional max at commit as the counter route does');
-            $this->assertSame('attribute_type_invalid', $commit['body']['type']);
-            $this->assertStringEndsWith('"counter" is not a number', $commit['body']['message']);
-            $this->assertSame(8, $committed['body']['counter']);
-
-            return;
-        }
         $this->assertSame(200, $commit['headers']['status-code'], 'a staged fractional max on an integer admits the integers up to its whole part');
         $this->assertSame(10, $committed['body']['counter']);
 

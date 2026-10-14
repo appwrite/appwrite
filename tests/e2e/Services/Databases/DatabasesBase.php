@@ -6365,24 +6365,13 @@ trait DatabasesBase
         }
     }
 
-    /**
-     * Every expectation is what main (database 7.4.1) stored on each engine for the same operator on an integer
-     * column: MariaDB rounded a DOUBLE half to even (an exact DECIMAL half away from zero when dividing by a whole
-     * number), PostgreSQL rounded NUMERIC half away from zero and refused a fractional amount without a limit, and
-     * MongoDB read the stored double back cut toward zero. null is a refusal.
-     */
-    public function testFractionalOperandsOnAnIntegerColumnStoreWhatMainStored(): void
+    public function testFractionalOperandsOnAnIntegerColumnRoundOnceForEveryEngine(): void
     {
         if (!$this->getSupportForOperators()) {
             $this->expectNotToPerformAssertions();
             return;
         }
 
-        $engine = match (getenv('_APP_DB_ADAPTER')) {
-            'postgresql' => 1,
-            'mongodb' => 2,
-            default => 0,
-        };
         $databaseId = $this->setupDatabase()['databaseId'];
         $keyHeaders = [
             'content-type' => 'application/json',
@@ -6422,61 +6411,40 @@ trait DatabasesBase
         /**
          * Test for SUCCESS
          */
-        // [stored, operator, [MariaDB, PostgreSQL, MongoDB]]
-        $cases = [
-            'increment ties' => [11, Operator::increment(1.5), [12, null, 12]],
-            'increment tie to even' => [10, Operator::increment(1.5), [12, null, 11]],
-            'increment negative tie' => [-12, Operator::increment(0.5), [-12, null, -11]],
-            'decrement tie' => [11, Operator::decrement(0.5), [10, null, 10]],
-            'increment tie within a limit' => [11, Operator::increment(1.5, 20), [12, 13, 12]],
-            'decrement tie within a limit' => [11, Operator::decrement(0.5, 0), [10, 11, 10]],
-            'increment onto a fractional limit' => [12, Operator::increment(1.5, 13.5), [14, 14, 13]],
-            'increment past a fractional limit' => [12, Operator::increment(2, 13.9), [12, 12, 12]],
-            'increment within a fractional limit' => [10, Operator::increment(2, 13.9), [12, 12, 12]],
-            'multiply tie' => [5, Operator::multiply(2.5), [12, null, 12]],
-            'multiply tie within a limit' => [5, Operator::multiply(2.5, 100), [12, 13, 12]],
-            'multiply negative tie within a limit' => [7, Operator::multiply(-1.5, 100), [-10, -11, -10]],
-            'multiply past a fractional limit' => [13, Operator::multiply(2, 25.5), [13, 13, 13]],
-            'divide tie by a fraction' => [5, Operator::divide(0.4, 0), [12, 13, 12]],
-            'divide by a fraction' => [10, Operator::divide(1.5), [7, null, 6]],
-            'divide tie by a whole number with a fractional limit' => [5, Operator::divide(2, 0.5), [3, 3, 2]],
-            'modulo tie' => [13, Operator::modulo(3.5), [2, 3, 2]],
-            'modulo negative' => [-11, Operator::modulo(3.5), [0, -1, 0]],
-            'power by a fraction' => [2, Operator::power(2.5), [6, 6, 5]],
-            'power past a fractional limit' => [3, Operator::power(2, 8.5), [3, 3, 3]],
-            'power to a negative fraction' => [4, Operator::power(-0.5), [0, 0, 0]],
+        // [stored, operator, expected]
+        $rounded = [
+            'increment rounds a half away from zero' => [11, Operator::increment(1.5), 13],
+            'increment rounds a half away from zero on an even count' => [10, Operator::increment(1.5), 12],
+            'increment of a half onto a negative count' => [-12, Operator::increment(0.5), -11],
+            'negative increment rounds a half away from zero' => [10, Operator::increment(-2.5), 7],
+            'decrement rounds a half away from zero' => [11, Operator::decrement(0.5), 10],
+            'increment below a half changes nothing' => [10, Operator::increment(0.4), 10],
+            'decrement below a half changes nothing' => [10, Operator::decrement(0.4), 10],
+            'increment below a half ignores its limit' => [10, Operator::increment(0.4, 5), 10],
+            'increment within a limit' => [11, Operator::increment(1.5, 20), 13],
+            'decrement within a limit' => [11, Operator::decrement(0.5, 0), 10],
+            'increment onto a floored limit' => [11, Operator::increment(1.5, 13.5), 13],
+            'increment past a floored limit' => [12, Operator::increment(1.5, 13.9), 12],
+            'decrement onto a ceiled limit' => [5, Operator::decrement(2, 2.1), 3],
+            'decrement past a ceiled limit' => [4, Operator::decrement(1.5, 2.1), 4],
         ];
-        foreach ($cases as $name => [$stored, $operator, $expectations]) {
-            $expected = $expectations[$engine];
+        foreach ($rounded as $name => [$stored, $operator, $expected]) {
             $recordId = $record(['count' => $stored]);
             $updated = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $recordId), $userHeaders, [
                 'data' => ['count' => $operator->toString()],
             ]);
-
-            if ($expected === null) {
-                $this->assertSame(400, $updated['headers']['status-code'], "{$name}: main's engine refused it");
-                $this->assertSame($stored, $read($recordId)['count'], $name);
-                continue;
-            }
 
             $this->assertSame(200, $updated['headers']['status-code'], "{$name}: " . ($updated['body']['message'] ?? ''));
             $this->assertSame($expected, $updated['body']['count'], $name);
             $this->assertSame($expected, $read($recordId)['count'], $name);
         }
 
-        $recordId = $record(['counts' => [1]]);
-        $updated = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $recordId), $userHeaders, [
-            'data' => ['counts' => Operator::arrayAppend([1.5, -2.5, 0.9999])->toString()],
-        ]);
-        $this->assertSame(200, $updated['headers']['status-code'], $updated['body']['message'] ?? '');
-        $this->assertSame([1, 1, -2, 0], $read($recordId)['counts'], 'Every engine read fractional array items back cut toward zero');
-
         $recordId = $record(['count' => 11]);
         $upserted = $this->client->call(Client::METHOD_PUT, $this->getRecordUrl($databaseId, $collectionId, $recordId), $userHeaders, [
             'data' => ['count' => Operator::increment(1.5, 20)->toString()],
         ]);
         $this->assertSame(200, $upserted['headers']['status-code'], $upserted['body']['message'] ?? '');
-        $this->assertSame([12, 13, 12][$engine], $read($recordId)['count']);
+        $this->assertSame(13, $read($recordId)['count'], 'An upsert rounds the amount as an update does');
 
         $even = $record(['count' => 10]);
         $odd = $record(['count' => 11]);
@@ -6486,21 +6454,48 @@ trait DatabasesBase
         ]);
         $this->assertSame(200, $bulk['headers']['status-code'], $bulk['body']['message'] ?? '');
         $this->assertSame(2, $bulk['body']['total']);
-        $this->assertSame([12, 12, 11][$engine], $read($even)['count'], 'Each document of a bulk update rounds from its own stored value');
-        $this->assertSame([12, 13, 12][$engine], $read($odd)['count']);
+        $this->assertSame(12, $read($even)['count'], 'A bulk update adds the rounded amount to every document');
+        $this->assertSame(13, $read($odd)['count'], 'A bulk update adds the rounded amount to every document');
 
         $recordId = $record(['count' => 10]);
         $increased = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $recordId) . '/count/increment', $userHeaders, [
             'value' => 1.5,
         ]);
-        $expected = [12, null, 11][$engine];
-        if ($expected === null) {
-            $this->assertSame(400, $increased['headers']['status-code'], 'PostgreSQL refused a fractional counter change on main');
-            $this->assertSame(10, $read($recordId)['count']);
-            return;
-        }
         $this->assertSame(200, $increased['headers']['status-code'], $increased['body']['message'] ?? '');
-        $this->assertSame($expected, $read($recordId)['count'], 'A counter rounds as the engine stored it on main');
+        $this->assertSame(12, $increased['body']['count']);
+        $this->assertSame(12, $read($recordId)['count'], 'A counter rounds its change as the operator does');
+
+        /**
+         * Test for FAILURE
+         */
+        $refused = [
+            'multiply by a fraction' => [5, Operator::multiply(2.5)],
+            'multiply by a fraction within a limit' => [5, Operator::multiply(2.5, 100)],
+            'multiply with a fractional limit' => [13, Operator::multiply(2, 25.5)],
+            'divide by a fraction' => [10, Operator::divide(1.5)],
+            'divide by a fraction with a limit' => [5, Operator::divide(0.4, 0)],
+            'divide with a fractional limit' => [5, Operator::divide(2, 0.5)],
+            'modulo by a fraction' => [13, Operator::modulo(3.5)],
+            'power by a fraction' => [2, Operator::power(2.5)],
+            'power with a fractional limit' => [3, Operator::power(2, 8.5)],
+            'power by a negative fraction' => [4, Operator::power(-0.5)],
+        ];
+        foreach ($refused as $name => [$stored, $operator]) {
+            $recordId = $record(['count' => $stored]);
+            $updated = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $recordId), $userHeaders, [
+                'data' => ['count' => $operator->toString()],
+            ]);
+
+            $this->assertSame(400, $updated['headers']['status-code'], "{$name}: a fractional operand of this operator on an integer is refused");
+            $this->assertSame($stored, $read($recordId)['count'], $name);
+        }
+
+        $recordId = $record(['counts' => [1]]);
+        $updated = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $recordId), $userHeaders, [
+            'data' => ['counts' => Operator::arrayAppend([1.5, -2.5, 0.9999])->toString()],
+        ]);
+        $this->assertSame(400, $updated['headers']['status-code'], 'A fractional item added to an integer array is refused');
+        $this->assertSame([1], $read($recordId)['counts']);
     }
 
     public function testOperators(): void
@@ -10641,19 +10636,6 @@ trait DatabasesBase
         $this->assertSame(201, $document['headers']['status-code']);
         $url = $this->getRecordUrl($databaseId, $collectionId, $document['body']['$id']);
 
-        if (getenv('_APP_DB_ADAPTER') === 'postgresql' && $this->getSupportForAttributes()) {
-            foreach ([['increment', 2, 'max', 10.5], ['increment', 1, 'max', 10.5], ['decrement', 7, 'min', 2.5], ['decrement', 1, 'min', 2.5]] as [$method, $value, $bound, $limit]) {
-                $refused = $this->client->call(Client::METHOD_PATCH, $url . '/count/' . $method, $headers, [
-                    'value' => $value,
-                    $bound => $limit,
-                ]);
-                $this->assertSame(400, $refused['headers']['status-code'], "PostgreSQL refused a whole {$method} with a fractional {$bound} on main");
-            }
-            $this->assertSame(8, $this->client->call(Client::METHOD_GET, $url, $headers)['body']['count']);
-
-            return;
-        }
-
         $increased = $this->client->call(Client::METHOD_PATCH, $url . '/count/increment', $headers, [
             'value' => 2,
             'max' => 10.5,
@@ -10685,7 +10667,7 @@ trait DatabasesBase
         $this->assertSame(3, $stored['body']['count']);
     }
 
-    public function testFractionalIncrementAndDecrementOnAnIntegerRoundAsOnMain(): void
+    public function testFractionalIncrementAndDecrementOnAnIntegerRoundHalfAwayFromZero(): void
     {
         if (!$this->getSupportForAttributes()) {
             $this->markTestSkipped('Rounding applies to declared integer attributes only.');
@@ -10732,37 +10714,59 @@ trait DatabasesBase
         $this->assertSame(201, $document['headers']['status-code']);
         $url = $this->getRecordUrl($databaseId, $collectionId, $document['body']['$id']);
 
-        $postgres = getenv('_APP_DB_ADAPTER') === 'postgresql';
+        $count = fn (): int => $this->client->call(Client::METHOD_GET, $url, $headers)['body']['count'];
 
         $increased = $this->client->call(Client::METHOD_PATCH, $url . '/count/increment', $headers, [
             'value' => 1.5,
         ]);
-        if ($postgres) {
-            $this->assertSame(400, $increased['headers']['status-code'], 'PostgreSQL refused a fractional counter change on main');
-        } else {
-            $this->assertSame(200, $increased['headers']['status-code'], 'main accepts a fractional change on an integer');
-            $this->assertSame(6.5, $increased['body']['count'], 'main returns the exact result');
-        }
-        $this->assertSame($postgres ? 5 : 6, $this->client->call(Client::METHOD_GET, $url, $headers)['body']['count'], 'main stores 6.5 rounded half to even, or nothing on PostgreSQL');
+        $this->assertSame(200, $increased['headers']['status-code'], $increased['body']['message'] ?? '');
+        $this->assertSame(7, $increased['body']['count'], 'an increment of 1.5 adds 2');
+        $this->assertSame(7, $count());
 
         $decreased = $this->client->call(Client::METHOD_PATCH, $url . '/count/decrement', $headers, [
-            'value' => 1.5,
+            'value' => 2.5,
         ]);
-        if ($postgres) {
-            $this->assertSame(400, $decreased['headers']['status-code'], 'PostgreSQL refused a fractional counter change on main');
-        } else {
-            $this->assertSame(200, $decreased['headers']['status-code']);
-            $this->assertSame(4.5, $decreased['body']['count']);
+        $this->assertSame(200, $decreased['headers']['status-code'], $decreased['body']['message'] ?? '');
+        $this->assertSame(4, $decreased['body']['count'], 'a decrement of 2.5 subtracts 3');
+        $this->assertSame(4, $count());
+
+        foreach (['increment' => 'max', 'decrement' => 'min'] as $method => $bound) {
+            $unchanged = $this->client->call(Client::METHOD_PATCH, $url . '/count/' . $method, $headers, [
+                'value' => 0.4,
+            ]);
+            $this->assertSame(200, $unchanged['headers']['status-code'], $unchanged['body']['message'] ?? '');
+            $this->assertSame(4, $unchanged['body']['count'], "a {$method} of 0.4 changes nothing");
+
+            $unbounded = $this->client->call(Client::METHOD_PATCH, $url . '/count/' . $method, $headers, [
+                'value' => 0.4,
+                $bound => $method === 'increment' ? 1 : 10,
+            ]);
+            $this->assertSame(200, $unbounded['headers']['status-code'], "a {$method} that changes nothing does not check its {$bound}");
+            $this->assertSame(4, $unbounded['body']['count']);
         }
-        $stored = $postgres ? 5 : 4;
-        $this->assertSame($stored, $this->client->call(Client::METHOD_GET, $url, $headers)['body']['count'], 'main stores 4.5 rounded half to even, or nothing on PostgreSQL');
+        $this->assertSame(4, $count());
 
         $pastMax = $this->client->call(Client::METHOD_PATCH, $url . '/count/increment', $headers, [
             'value' => 1.5,
-            'max' => 5,
+            'max' => 5.9,
         ]);
-        $this->assertSame(400, $pastMax['headers']['status-code'], 'main compares the exact result with the max');
-        $this->assertSame($stored, $this->client->call(Client::METHOD_GET, $url, $headers)['body']['count']);
+        $this->assertSame(400, $pastMax['headers']['status-code'], 'the rounded change is compared with the floored max');
+        $this->assertSame(4, $count());
+
+        $pastMin = $this->client->call(Client::METHOD_PATCH, $url . '/count/decrement', $headers, [
+            'value' => 1.5,
+            'min' => 2.1,
+        ]);
+        $this->assertSame(400, $pastMin['headers']['status-code'], 'the rounded change is compared with the ceiled min');
+        $this->assertSame(4, $count());
+
+        $ontoMin = $this->client->call(Client::METHOD_PATCH, $url . '/count/decrement', $headers, [
+            'value' => 0.5,
+            'min' => 2.1,
+        ]);
+        $this->assertSame(200, $ontoMin['headers']['status-code'], $ontoMin['body']['message'] ?? '');
+        $this->assertSame(3, $ontoMin['body']['count'], 'a decrement of 0.5 subtracts 1 down to the ceiled min');
+        $this->assertSame(3, $count());
 
         $zero = $this->client->call(Client::METHOD_PATCH, $url . '/count/increment', $headers, [
             'value' => 0,
