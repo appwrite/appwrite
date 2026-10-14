@@ -13,6 +13,7 @@ use Utopia\Database\Event;
 use Utopia\Database\Hook\Queries;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use WeakMap;
 
 /**
  * Points each join at the table of the collection it names, refusing unknown collections and, unless the caller is privileged, disabled ones.
@@ -21,6 +22,9 @@ final class Joins implements Queries
 {
     /** @var array<string, string> */
     private array $tables = [];
+
+    /** @var WeakMap<Query, string> */
+    private WeakMap $resolved;
 
     /**
      * @param  Closure(): string  $notFound  The not-found exception type of the request being served
@@ -32,6 +36,7 @@ final class Joins implements Queries
         private readonly User $user,
         private readonly Closure $notFound,
     ) {
+        $this->resolved = new WeakMap();
     }
 
     #[Override]
@@ -39,14 +44,14 @@ final class Joins implements Queries
     {
         foreach ($queries as $index => $query) {
             $joined = $query->getAttribute();
-            if ($joined === '' || !$query->getMethod()->isJoin()) {
+            if ($joined === '' || !$query->getMethod()->isJoin() || ($this->resolved[$query] ?? null) === $joined) {
                 continue;
             }
 
             $table = $this->table($joined);
-            if ($table !== $joined) {
-                $queries[$index] = (clone $query)->setAttribute($table);
-            }
+            $resolved = $table === $joined ? $query : (clone $query)->setAttribute($table);
+            $this->resolved[$resolved] = $table;
+            $queries[$index] = $resolved;
         }
 
         return $queries;
@@ -63,11 +68,7 @@ final class Joins implements Queries
             throw new Exception(($this->notFound)(), params: [$joined]);
         }
 
-        $table = $this->prefix() . $related->getSequence();
-        $this->tables[$joined] = $table;
-        $this->tables[$table] = $table;
-
-        return $table;
+        return $this->tables[$joined] = $this->prefix() . $related->getSequence();
     }
 
     private function lookup(string $joined): Document
