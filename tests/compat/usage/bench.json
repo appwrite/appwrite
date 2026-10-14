@@ -1,8 +1,8 @@
 {
   "lib": "usage",
   "environment": {
-    "date": "2026-10-13T18:44:25Z",
-    "commit": "49c7de0698",
+    "date": "2026-10-14T03:05:05Z",
+    "commit": "166fb09a99",
     "machine": {
       "os": "macos",
       "arch": "aarch64",
@@ -18,12 +18,12 @@
       "kernel": "6.10.14-linuxkit"
     },
     "rust": {
-      "version": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+      "version": "rustc 1.88.0 (6b00bc388 2025-06-23)",
       "profile": "release",
-      "runs": "natively on the host",
-      "image": null,
-      "os": "macos",
-      "kernel": "25.6.0"
+      "runs": "in a container on the same Docker network (bin/compat-rust)",
+      "image": "compat-rust:1.88",
+      "os": "Debian GNU/Linux 12 (bookworm)",
+      "kernel": "6.10.14-linuxkit"
     }
   },
   "results": [
@@ -31,22 +31,30 @@
       "name": "accumulator_collect",
       "description": "Fold 100 tagged events and gauges into an accumulator (the worker hot path)",
       "php": {
-        "ns": 104160.05291005291,
-        "min": 103221.77777777778,
-        "max": 106884.04232804233,
+        "ns": 86136.93162393162,
+        "min": 85588.85042735042,
+        "max": 90403.31196581197,
         "samples": 15,
-        "calls": 189
+        "calls": 234,
+        "cpu": 86483.19088319088,
+        "peak": 3008.0,
+        "retained": 0.10712250712250712,
+        "rss": 106643456.0
       },
       "rust": {
-        "ns": 93441.35648148147,
-        "min": 88765.23611111111,
-        "max": 95327.93518518518,
+        "ns": 99497.69849246231,
+        "min": 98802.13567839196,
+        "max": 102795.22613065326,
         "samples": 15,
-        "calls": 216,
-        "allocations": 2100.000308641975,
-        "bytes": 361700.037037037
+        "calls": 199,
+        "cpu": 100212.98123953099,
+        "rss": 27144192.0,
+        "allocations": 2100.0036850921274,
+        "bytes": 361700.94103852595,
+        "peak": 1650.0,
+        "retained": 0.5541038525963149
       },
-      "speedup": 1.1147104112374022,
+      "speedup": 0.8657178299501785,
       "bound": null,
       "compat": null
     },
@@ -54,22 +62,30 @@
       "name": "extract_columns",
       "description": "Extract the dimension columns of an event row from its tags",
       "php": {
-        "ns": 1156.3836102406433,
-        "min": 1141.195589191746,
-        "max": 1163.3852066457755,
+        "ns": 951.9302347730844,
+        "min": 939.3522548692795,
+        "max": 999.2460117148436,
         "samples": 15,
-        "calls": 16913
+        "calls": 20999,
+        "cpu": 953.2263441116244,
+        "peak": 4712.0,
+        "retained": 0.0011937076368715971,
+        "rss": 106774528.0
       },
       "rust": {
-        "ns": 847.8403007641698,
-        "min": 796.825834661436,
-        "max": 890.8044215602141,
+        "ns": 1120.2158868578456,
+        "min": 1108.549052490357,
+        "max": 1139.114819162614,
         "samples": 15,
-        "calls": 24471,
-        "allocations": 4.000002724313132,
-        "bytes": 2613.000326917576
+        "calls": 17889,
+        "cpu": 1121.687595729219,
+        "rss": 27275264.0,
+        "allocations": 4.000040993534202,
+        "bytes": 2613.0104682579613,
+        "peak": 2604.0,
+        "retained": 0.006163936869957329
       },
-      "speedup": 1.3639167767778664,
+      "speedup": 0.849773910494347,
       "bound": null,
       "compat": null
     },
@@ -77,22 +93,30 @@
       "name": "sample_payload_hash",
       "description": "Hash a canonical sample: its identity and payload",
       "php": {
-        "ns": 4925.526501766784,
-        "min": 4116.252754105176,
-        "max": 5245.314695489503,
+        "ns": 3113.2718836993504,
+        "min": 3078.010671203217,
+        "max": 3254.2208475100524,
         "samples": 15,
-        "calls": 4811
+        "calls": 6466,
+        "cpu": 3128.0028868955565,
+        "peak": 3008.0,
+        "retained": 0.0038766883183833385,
+        "rss": 106774528.0
       },
       "rust": {
-        "ns": 1644.9056745898895,
-        "min": 1581.893036491463,
-        "max": 1807.9839303649146,
+        "ns": 1635.2359201047807,
+        "min": 1620.316879502292,
+        "max": 1671.8375081859856,
         "samples": 15,
-        "calls": 11948,
-        "allocations": 48.000005579734406,
-        "bytes": 488.00066956812856
+        "calls": 12216,
+        "cpu": 1636.7368751364331,
+        "rss": 31715328.0,
+        "allocations": 48.000060030561016,
+        "bytes": 540.0153296223532,
+        "peak": 1650.0,
+        "retained": 0.009026413446845667
       },
-      "speedup": 2.994412736155722,
+      "speedup": 1.9038671089734023,
       "bound": null,
       "compat": null
     },
@@ -100,22 +124,30 @@
       "name": "clickhouse_add_batch",
       "description": "Insert 100 events into ClickHouse in one JSONEachRow batch",
       "php": {
-        "ns": 66112416.0,
-        "min": 63905541.0,
-        "max": 70938084.0,
-        "samples": 15,
-        "calls": 1
-      },
-      "rust": {
-        "ns": 65104042.0,
-        "min": 63762500.0,
-        "max": 68242042.0,
+        "ns": 70024500.0,
+        "min": 64791958.0,
+        "max": 80388583.0,
         "samples": 15,
         "calls": 1,
-        "allocations": 3739.0666666666666,
-        "bytes": 1702050.0
+        "cpu": 843000.0,
+        "peak": 643592.0,
+        "retained": 25.066666666666666,
+        "rss": 115998720.0
       },
-      "speedup": 1.0154886542989143,
+      "rust": {
+        "ns": 70590458.0,
+        "min": 64292000.0,
+        "max": 78744875.0,
+        "samples": 15,
+        "calls": 1,
+        "cpu": 760766.6,
+        "rss": 32526336.0,
+        "allocations": 3739.733333333333,
+        "bytes": 1702438.2666666666,
+        "peak": 235218.0,
+        "retained": 110.26666666666667
+      },
+      "speedup": 0.9919825141239345,
       "bound": "A ClickHouse insert round trip, the same server work on both runtimes, dominates the call",
       "compat": null
     },
@@ -123,22 +155,30 @@
       "name": "clickhouse_aggregate",
       "description": "Read an hourly time-bucketed aggregate grouped by service over seeded events",
       "php": {
-        "ns": 4522937.5,
-        "min": 4003281.25,
-        "max": 5435333.25,
-        "samples": 15,
-        "calls": 4
-      },
-      "rust": {
-        "ns": 3747425.0,
-        "min": 3577391.6,
-        "max": 3933100.0,
+        "ns": 2971491.6,
+        "min": 2761575.0,
+        "max": 4481508.2,
         "samples": 15,
         "calls": 5,
-        "allocations": 1414.0133333333333,
-        "bytes": 255727.88
+        "cpu": 397040.0,
+        "peak": 519024.0,
+        "retained": 5.013333333333334,
+        "rss": 116158464.0
       },
-      "speedup": 1.2069454358659613,
+      "rust": {
+        "ns": 2673196.4285714286,
+        "min": 2507637.0,
+        "max": 3046863.0,
+        "samples": 15,
+        "calls": 7,
+        "cpu": 109409.49523809523,
+        "rss": 32526336.0,
+        "allocations": 1414.104761904762,
+        "bytes": 255911.06666666668,
+        "peak": 84850.0,
+        "retained": 15.752380952380953
+      },
+      "speedup": 1.1115874494819604,
       "bound": "A ClickHouse query round trip (the server aggregates), the same on both runtimes, dominates the call",
       "compat": null
     },
@@ -146,22 +186,30 @@
       "name": "clickhouse_total_batch",
       "description": "Read routed totals of three metrics over a closed window (the daily rollup)",
       "php": {
-        "ns": 1941962.5,
-        "min": 1708791.7,
-        "max": 2065041.7,
+        "ns": 1361502.8,
+        "min": 1253113.9333333333,
+        "max": 1505297.2,
         "samples": 15,
-        "calls": 10
+        "calls": 15,
+        "cpu": 245093.33333333334,
+        "peak": 281696.0,
+        "retained": 395.87555555555554,
+        "rss": 116723712.0
       },
       "rust": {
-        "ns": 1958134.2222222222,
-        "min": 1811828.6666666667,
-        "max": 2150921.3333333335,
+        "ns": 1263864.5833333333,
+        "min": 1150298.5833333333,
+        "max": 1339350.75,
         "samples": 15,
-        "calls": 9,
-        "allocations": 616.0148148148148,
-        "bytes": 85617.84444444445
+        "calls": 12,
+        "cpu": 57793.333333333336,
+        "rss": 32526336.0,
+        "allocations": 616.0666666666667,
+        "bytes": 85948.38888888889,
+        "peak": 110178.0,
+        "retained": 304.1222222222222
       },
-      "speedup": 0.9917412595935995,
+      "speedup": 1.0772537010327123,
       "bound": "A ClickHouse query round trip over the daily rollup, the same on both runtimes, dominates the call",
       "compat": null
     }

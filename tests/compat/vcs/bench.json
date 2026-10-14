@@ -1,8 +1,8 @@
 {
   "lib": "vcs",
   "environment": {
-    "date": "2026-10-13T18:08:04Z",
-    "commit": "bd3a670c30",
+    "date": "2026-10-14T03:05:05Z",
+    "commit": "166fb09a99",
     "machine": {
       "os": "macos",
       "arch": "aarch64",
@@ -18,12 +18,12 @@
       "kernel": "6.10.14-linuxkit"
     },
     "rust": {
-      "version": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+      "version": "rustc 1.88.0 (6b00bc388 2025-06-23)",
       "profile": "release",
-      "runs": "natively on the host",
-      "image": null,
-      "os": "macos",
-      "kernel": "25.6.0"
+      "runs": "in a container on the same Docker network (bin/compat-rust)",
+      "image": "compat-rust:1.88",
+      "os": "Debian GNU/Linux 12 (bookworm)",
+      "kernel": "6.10.14-linuxkit"
     }
   },
   "results": [
@@ -31,22 +31,30 @@
       "name": "github_push_event",
       "description": "Parse a GitHub push delivery into its event",
       "php": {
-        "ns": 24362.10433763189,
-        "min": 23877.93083235639,
-        "max": 25055.392731535758,
+        "ns": 12143.763997591812,
+        "min": 12103.552077062011,
+        "max": 12251.555087296809,
         "samples": 15,
-        "calls": 853
+        "calls": 1661,
+        "cpu": 12166.887417218542,
+        "peak": 113304.0,
+        "retained": 0.015091310455548866,
+        "rss": 105201664.0
       },
       "rust": {
-        "ns": 15664.225653206651,
-        "min": 15475.58749010293,
-        "max": 17423.03325415677,
+        "ns": 13357.304578633046,
+        "min": 13246.820172528202,
+        "max": 14432.564698075646,
         "samples": 15,
-        "calls": 1263,
-        "allocations": 163.0000527843758,
-        "bytes": 35181.0063341251
+        "calls": 1507,
+        "cpu": 13522.083919486839,
+        "rss": 26312704.0,
+        "allocations": 163.00048661800486,
+        "bytes": 35064.12426454324,
+        "peak": 25427.0,
+        "retained": 0.07316965273169652
       },
-      "speedup": 1.5552702621239805,
+      "speedup": 0.9091477944597843,
       "bound": null,
       "compat": null
     },
@@ -54,22 +62,30 @@
       "name": "github_validate_webhook",
       "description": "Validate a GitHub push delivery's HMAC-SHA256 signature",
       "php": {
-        "ns": 42252.45991561181,
-        "min": 41618.84599156118,
-        "max": 47398.90928270042,
+        "ns": 23855.700712589074,
+        "min": 23228.077197149643,
+        "max": 24063.143705463182,
         "samples": 15,
-        "calls": 474
+        "calls": 842,
+        "cpu": 23745.922406967537,
+        "peak": 3008.0,
+        "retained": 0.029770387965162314,
+        "rss": 105201664.0
       },
       "rust": {
-        "ns": 15060.220889202541,
-        "min": 14043.783345095271,
-        "max": 16122.441778405082,
+        "ns": 8714.918154114062,
+        "min": 8658.920766216805,
+        "max": 9183.863299956465,
         "samples": 15,
-        "calls": 1417,
-        "allocations": 31.00004704775347,
-        "bytes": 2144.0056457304163
+        "calls": 2297,
+        "cpu": 8775.544101001306,
+        "rss": 26312704.0,
+        "allocations": 31.000319257001888,
+        "bytes": 2048.0815266289364,
+        "peak": 1650.0,
+        "retained": 0.04800464373820926
       },
-      "speedup": 2.805567078096763,
+      "speedup": 2.7373407633584583,
       "bound": null,
       "compat": null
     },
@@ -77,22 +93,30 @@
       "name": "gitlab_merge_request_event",
       "description": "Parse a GitLab merge request delivery into its event",
       "php": {
-        "ns": 9665.802219006271,
-        "min": 9546.711529184757,
-        "max": 9738.96526772793,
+        "ns": 5490.981298129813,
+        "min": 5450.105335533553,
+        "max": 5548.645489548955,
         "samples": 15,
-        "calls": 2073
+        "calls": 3636,
+        "cpu": 5488.173817381738,
+        "peak": 11112.0,
+        "retained": 0.006894022735606894,
+        "rss": 105725952.0
       },
       "rust": {
-        "ns": 6790.296052631579,
-        "min": 6695.406163434903,
-        "max": 6864.597645429363,
+        "ns": 5685.82932416953,
+        "min": 5638.363974799542,
+        "max": 6222.950171821306,
         "samples": 15,
-        "calls": 2888,
-        "allocations": 55.000023084025855,
-        "bytes": 16415.0027700831
+        "calls": 3492,
+        "cpu": 5721.413211149294,
+        "rss": 26312704.0,
+        "allocations": 55.00021000381825,
+        "bytes": 16404.05362733868,
+        "peak": 13420.0,
+        "retained": 0.031576937762504774
       },
-      "speedup": 1.4234728712984892,
+      "speedup": 0.9657309400386941,
       "bound": null,
       "compat": null
     },
@@ -100,22 +124,30 @@
       "name": "bitbucket_push_event",
       "description": "Parse a Bitbucket push delivery naming three refs into its events",
       "php": {
-        "ns": 50220.11616161616,
-        "min": 49168.666666666664,
-        "max": 51621.73737373737,
+        "ns": 28816.665693430656,
+        "min": 28660.94890510949,
+        "max": 30019.28321167883,
         "samples": 15,
-        "calls": 396
+        "calls": 685,
+        "cpu": 29042.822384428226,
+        "peak": 79432.0,
+        "retained": 0.03659367396593674,
+        "rss": 105725952.0
       },
       "rust": {
-        "ns": 30205.172989377847,
-        "min": 29544.5751138088,
-        "max": 38147.38239757208,
+        "ns": 29702.55728429986,
+        "min": 28075.435643564357,
+        "max": 32157.472418670437,
         "samples": 15,
-        "calls": 659,
-        "allocations": 430.0001011633789,
-        "bytes": 64780.01213960546
+        "calls": 707,
+        "cpu": 29500.208297972655,
+        "rss": 26443776.0,
+        "allocations": 430.0010372465818,
+        "bytes": 64780.264875058936,
+        "peak": 55943.0,
+        "retained": 0.15596416784535597
       },
-      "speedup": 1.6626329595687768,
+      "speedup": 0.9701745683918783,
       "bound": null,
       "compat": null
     },
@@ -123,22 +155,30 @@
       "name": "clone_command",
       "description": "Build the sparse shallow clone command of a tag glob",
       "php": {
-        "ns": 19559.529885057473,
-        "min": 17110.393103448278,
-        "max": 42630.363218390805,
+        "ns": 9603.67088607595,
+        "min": 9507.44759493671,
+        "max": 10001.20253164557,
         "samples": 15,
-        "calls": 870
+        "calls": 1975,
+        "cpu": 9617.282700421942,
+        "peak": 8344.0,
+        "retained": 0.012691983122362869,
+        "rss": 106250240.0
       },
       "rust": {
-        "ns": 6840.244752877455,
-        "min": 6710.660798916723,
-        "max": 7163.210900473934,
+        "ns": 4210.986925347955,
+        "min": 4194.204344158583,
+        "max": 4522.555461830451,
         "samples": 15,
-        "calls": 2954,
-        "allocations": 167.000022568269,
-        "bytes": 7671.002708192282
+        "calls": 4742,
+        "cpu": 4239.530873049346,
+        "rss": 26574848.0,
+        "allocations": 167.00015464642203,
+        "bytes": 7671.039491072684,
+        "peak": 4202.0,
+        "retained": 0.023253198369183187
       },
-      "speedup": 2.8594780730367075,
+      "speedup": 2.280622347285582,
       "bound": null,
       "compat": null
     },
@@ -146,22 +186,30 @@
       "name": "gitea_latest_commit",
       "description": "Read a branch's latest commit from the fixture server (one API call)",
       "php": {
-        "ns": 4566021.0,
-        "min": 3677833.0,
-        "max": 9763604.0,
+        "ns": 2069601.888888889,
+        "min": 2015175.888888889,
+        "max": 2129041.6666666665,
         "samples": 15,
-        "calls": 2
+        "calls": 9,
+        "cpu": 225540.74074074073,
+        "peak": 177912.0,
+        "retained": 2.785185185185185,
+        "rss": 106512384.0
       },
       "rust": {
-        "ns": 4391270.75,
-        "min": 4058500.0,
-        "max": 8146406.25,
+        "ns": 2001791.7,
+        "min": 1933391.7,
+        "max": 2959291.7,
         "samples": 15,
-        "calls": 4,
-        "allocations": 165.01666666666668,
-        "bytes": 42081.0
+        "calls": 10,
+        "cpu": 149559.64,
+        "rss": 26705920.0,
+        "allocations": 165.07333333333332,
+        "bytes": 42148.72666666667,
+        "peak": 25420.0,
+        "retained": 11.026666666666667
       },
-      "speedup": 1.0397949158566457,
+      "speedup": 1.0338747477516712,
       "bound": "A loopback round trip to the fixture server (a Swoole worker reading the commit from a git repository), the same on both runtimes, dominates the call",
       "compat": null
     }

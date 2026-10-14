@@ -1,8 +1,8 @@
 {
   "lib": "agents",
   "environment": {
-    "date": "2026-10-13T14:52:50Z",
-    "commit": "ff42b2f326",
+    "date": "2026-10-14T03:05:05Z",
+    "commit": "166fb09a99",
     "machine": {
       "os": "macos",
       "arch": "aarch64",
@@ -18,12 +18,12 @@
       "kernel": "6.10.14-linuxkit"
     },
     "rust": {
-      "version": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+      "version": "rustc 1.88.0 (6b00bc388 2025-06-23)",
       "profile": "release",
-      "runs": "natively on the host",
-      "image": null,
-      "os": "macos",
-      "kernel": "25.6.0"
+      "runs": "in a container on the same Docker network (bin/compat-rust)",
+      "image": "compat-rust:1.88",
+      "os": "Debian GNU/Linux 12 (bookworm)",
+      "kernel": "6.10.14-linuxkit"
     }
   },
   "results": [
@@ -31,22 +31,30 @@
       "name": "openai_stream",
       "description": "Send a conversation and parse a 50-token OpenAI stream cut in 97-byte chunks (in-memory client)",
       "php": {
-        "ns": 307682.8611111111,
-        "min": 112790.52777777778,
-        "max": 458008.1111111111,
+        "ns": 39863.86772486773,
+        "min": 38993.93650793651,
+        "max": 56734.23809523809,
         "samples": 15,
-        "calls": 36
+        "calls": 378,
+        "cpu": 40741.97530864197,
+        "peak": 45368.0,
+        "retained": 0.06631393298059965,
+        "rss": 100470784.0
       },
       "rust": {
-        "ns": 34399.67512690355,
-        "min": 33280.66835871404,
-        "max": 41302.38240270728,
+        "ns": 26086.900129701688,
+        "min": 25756.86381322957,
+        "max": 32471.789883268484,
         "samples": 15,
-        "calls": 591,
-        "allocations": 817.0001128031585,
-        "bytes": 100634.01353637902
+        "calls": 771,
+        "cpu": 26607.39290964116,
+        "rss": 22913024.0,
+        "allocations": 817.0009511456982,
+        "bytes": 100634.24288802421,
+        "peak": 4491.0,
+        "retained": 0.14301772589710332
       },
-      "speedup": 8.94435368869156,
+      "speedup": 1.5281182327784526,
       "bound": null,
       "compat": null
     },
@@ -54,22 +62,30 @@
       "name": "anthropic_stream",
       "description": "Send a conversation and parse a 50-token Anthropic stream cut in 97-byte chunks (in-memory client)",
       "php": {
-        "ns": 109532.01578947369,
-        "min": 101066.44736842105,
-        "max": 198354.16315789474,
+        "ns": 41895.10472279261,
+        "min": 39391.59753593429,
+        "max": 43063.22792607803,
         "samples": 15,
-        "calls": 190
+        "calls": 487,
+        "cpu": 41655.30458590007,
+        "peak": 8176.0,
+        "retained": 0.051471594798083505,
+        "rss": 100470784.0
       },
       "rust": {
-        "ns": 41745.603375527426,
-        "min": 41015.82278481012,
-        "max": 43894.603375527426,
+        "ns": 24755.4012345679,
+        "min": 24593.004938271606,
+        "max": 25347.582716049383,
         "samples": 15,
-        "calls": 474,
-        "allocations": 586.0001406469761,
-        "bytes": 91853.01687763713
+        "calls": 810,
+        "cpu": 24789.52650205761,
+        "rss": 22913024.0,
+        "allocations": 586.0009053497943,
+        "bytes": 91853.23119341563,
+        "peak": 4163.0,
+        "retained": 0.13613168724279837
       },
-      "speedup": 2.6237976441295077,
+      "speedup": 1.6923621768768264,
       "bound": null,
       "compat": null
     },
@@ -77,22 +93,30 @@
       "name": "conversation_message",
       "description": "Add a message with a PNG attachment to a conversation (attachment validation and MIME detection)",
       "php": {
-        "ns": 26852.35618729097,
-        "min": 21088.69899665552,
-        "max": 89287.97491638796,
+        "ns": 10252.328801611278,
+        "min": 10021.16918429003,
+        "max": 10383.39224572004,
         "samples": 15,
-        "calls": 598
+        "calls": 1986,
+        "cpu": 10213.460892917086,
+        "peak": 3181760.0,
+        "retained": -7.702181940248406,
+        "rss": 102367232.0
       },
       "rust": {
-        "ns": 171.08907761539166,
-        "min": 165.89517638349372,
-        "max": 392.3156769615957,
+        "ns": 138.80645051496566,
+        "min": 137.597319319551,
+        "max": 145.01604460085906,
         "samples": 15,
-        "calls": 120221,
-        "allocations": 11.000000554534289,
-        "bytes": 844.0000665441146
+        "calls": 146903,
+        "cpu": 139.29709490843163,
+        "rss": 22913024.0,
+        "allocations": 11.000004991956143,
+        "bytes": 844.0012747640734,
+        "peak": 1650.0,
+        "retained": 0.0007506086782888482
       },
-      "speedup": 156.949564294543,
+      "speedup": 73.86060780011016,
       "bound": null,
       "compat": null
     },
@@ -100,22 +124,30 @@
       "name": "schema_to_json",
       "description": "Describe a three-property schema as JSON",
       "php": {
-        "ns": 732.1681208767823,
-        "min": 684.2368589061502,
-        "max": 1866.5274526495,
+        "ns": 289.0790993400091,
+        "min": 286.32261322257625,
+        "max": 300.24726900318615,
         "samples": 15,
-        "calls": 9398
+        "calls": 70304,
+        "cpu": 291.820285237445,
+        "peak": 57376.0,
+        "retained": 0.0003565468062509483,
+        "rss": 102629376.0
       },
       "rust": {
-        "ns": 588.3800635638871,
-        "min": 534.4843244990304,
-        "max": 829.0059523809524,
+        "ns": 338.78643664485423,
+        "min": 333.471032454227,
+        "max": 345.8431158701831,
         "samples": 15,
-        "calls": 37128,
-        "allocations": 16.00000179559003,
-        "bytes": 1254.0002154708036
+        "calls": 60516,
+        "cpu": 338.84468460131757,
+        "rss": 22913024.0,
+        "allocations": 16.00001211800736,
+        "bytes": 1254.0030944984246,
+        "peak": 1650.0,
+        "retained": 0.0018221076519708286
       },
-      "speedup": 1.2443795536544084,
+      "speedup": 0.8532782545927223,
       "bound": null,
       "compat": null
     },
@@ -123,22 +155,30 @@
       "name": "fixture_send",
       "description": "Send a conversation to the fixture server and parse its streamed answer (one HTTP round trip)",
       "php": {
-        "ns": 6739687.5,
-        "min": 1468625.0,
-        "max": 26964416.5,
+        "ns": 217224.7340425532,
+        "min": 202863.03191489363,
+        "max": 234665.3404255319,
         "samples": 15,
-        "calls": 2
+        "calls": 94,
+        "cpu": 107321.98581560283,
+        "peak": 22600.0,
+        "retained": 0.26666666666666666,
+        "rss": 103858176.0
       },
       "rust": {
-        "ns": 3450366.8,
-        "min": 1892900.0,
-        "max": 9805700.0,
+        "ns": 115665.92941176471,
+        "min": 112532.84117647058,
+        "max": 119409.55882352941,
         "samples": 15,
-        "calls": 5,
-        "allocations": 151.01333333333332,
-        "bytes": 20562.6
+        "calls": 170,
+        "cpu": 50532.78588235294,
+        "rss": 22913024.0,
+        "allocations": 151.0043137254902,
+        "bytes": 20716.10156862745,
+        "peak": 15623.0,
+        "retained": 0.6486274509803922
       },
-      "speedup": 1.9533249334534522,
+      "speedup": 1.8780356077825167,
       "bound": "Two HTTP round trips to the fixture server (queueing the answer, then the request and its streamed answer), which both runtimes wait on equally",
       "compat": null
     }

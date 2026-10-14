@@ -1,8 +1,8 @@
 {
   "lib": "migration",
   "environment": {
-    "date": "2026-10-13T18:58:38Z",
-    "commit": "193bd31c21",
+    "date": "2026-10-14T03:05:05Z",
+    "commit": "166fb09a99",
     "machine": {
       "os": "macos",
       "arch": "aarch64",
@@ -18,12 +18,12 @@
       "kernel": "6.10.14-linuxkit"
     },
     "rust": {
-      "version": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+      "version": "rustc 1.88.0 (6b00bc388 2025-06-23)",
       "profile": "release",
-      "runs": "natively on the host",
-      "image": null,
-      "os": "macos",
-      "kernel": "25.6.0"
+      "runs": "in a container on the same Docker network (bin/compat-rust)",
+      "image": "compat-rust:1.88",
+      "os": "Debian GNU/Linux 12 (bookworm)",
+      "kernel": "6.10.14-linuxkit"
     }
   },
   "results": [
@@ -31,22 +31,30 @@
       "name": "json_items",
       "description": "Stream the 1,000 rows of a JSON export (json-machine, associative arrays)",
       "php": {
-        "ns": 4620062.5,
-        "min": 4259437.5,
-        "max": 4933885.5,
+        "ns": 3190819.5,
+        "min": 3059326.3333333335,
+        "max": 3775076.3333333335,
         "samples": 15,
-        "calls": 4
+        "calls": 6,
+        "cpu": 3200000.0,
+        "peak": 1544472.0,
+        "retained": 15284.177777777777,
+        "rss": 116723712.0
       },
       "rust": {
-        "ns": 1268683.3333333333,
-        "min": 1243961.1333333333,
-        "max": 1300702.8,
+        "ns": 1386520.857142857,
+        "min": 1377842.2142857143,
+        "max": 1414369.0,
         "samples": 15,
-        "calls": 15,
-        "allocations": 72035.00444444445,
-        "bytes": 6256284.533333333
+        "calls": 14,
+        "cpu": 1388081.9333333333,
+        "rss": 43098112.0,
+        "allocations": 72035.05238095239,
+        "bytes": 6256289.376190476,
+        "peak": 1535254.0,
+        "retained": 7.876190476190477
       },
-      "speedup": 3.641619920915385,
+      "speedup": 2.3013137404764197,
       "bound": null,
       "compat": null
     },
@@ -54,22 +62,30 @@
       "name": "on_duplicate",
       "description": "Resolve an overwrite of an existing resource from two update times",
       "php": {
-        "ns": 1006.8808247221681,
-        "min": 948.9118249171379,
-        "max": 1070.6014330278806,
+        "ns": 622.6018905935224,
+        "min": 614.2323880365722,
+        "max": 632.1155741515574,
         "samples": 15,
-        "calls": 20516
+        "calls": 32265,
+        "cpu": 623.6313859186941,
+        "peak": 3008.0,
+        "retained": 0.0007768996332455189,
+        "rss": 116723712.0
       },
       "rust": {
-        "ns": 504.02186162996975,
-        "min": 481.4308671605969,
-        "max": 518.5267400605238,
+        "ns": 418.00970752176363,
+        "min": 413.7370201039644,
+        "max": 437.6274399281852,
         "samples": 15,
-        "calls": 38332,
-        "allocations": 9.000001739190928,
-        "bytes": 69.00020870291141
+        "calls": 47901,
+        "cpu": 420.2858757298038,
+        "rss": 43098112.0,
+        "allocations": 9.00001530935332,
+        "bytes": 69.00390945213391,
+        "peak": 1650.0,
+        "retained": 0.0023019700354202765
       },
-      "speedup": 1.9976927617107507,
+      "speedup": 1.4894436167157834,
       "bound": null,
       "compat": null
     },
@@ -77,23 +93,31 @@
       "name": "transfer_json_csv",
       "description": "Transfer 100 rows from a JSON file into a CSV file on the local disk (the source deletes its file, so each call writes it first)",
       "php": {
-        "ns": 2986607.1428571427,
-        "min": 2416970.285714286,
-        "max": 4267851.142857143,
+        "ns": 1737784.6666666667,
+        "min": 1646767.4166666667,
+        "max": 2065572.9166666667,
         "samples": 15,
-        "calls": 7
+        "calls": 12,
+        "cpu": 950872.2222222222,
+        "peak": 22994976.0,
+        "retained": 86690.08888888889,
+        "rss": 137134080.0
       },
       "rust": {
-        "ns": 2472750.0,
-        "min": 2051708.2857142857,
-        "max": 4954428.571428572,
+        "ns": 1665450.0,
+        "min": 1576225.0,
+        "max": 1870604.2,
         "samples": 15,
-        "calls": 7,
-        "allocations": 11644.009523809524,
-        "bytes": 1096533.142857143
+        "calls": 10,
+        "cpu": 864741.7066666667,
+        "rss": 43098112.0,
+        "allocations": 11542.073333333334,
+        "bytes": 1087890.7266666666,
+        "peak": 264465.0,
+        "retained": 11.026666666666667
       },
-      "speedup": 1.207807963949911,
-      "bound": null,
+      "speedup": 1.0434325057291824,
+      "bound": "File system calls (write the source file, create the temporary export directory, write, move and delete files) on the mounted /tmp/compat-fs, the same on both runtimes, dominate the call",
       "compat": null
     }
   ]

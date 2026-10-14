@@ -14,6 +14,11 @@
 # incremental and worktrees never run each other's driver. The checkout is
 # mounted at /usr/src/code, as in bin/compat-php, with /tmp/compat-fs.
 # Works from any git worktree, not only the checkout the stack runs from.
+#
+# The driver links every library: with the workspace's fat LTO its single link
+# step needs more memory than Docker Desktop's VM has, so it builds with thin
+# LTO (cross-crate inlining, in parallel pieces). COMPAT_RUST_LTO=fat restores
+# the workspace profile on a larger machine.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -30,6 +35,7 @@ build)
         -v compat-rust-registry:/usr/local/cargo/registry \
         -v "$target:/target" \
         -e CARGO_TARGET_DIR=/target \
+        -e CARGO_PROFILE_RELEASE_LTO="${COMPAT_RUST_LTO:-thin}" \
         -w /usr/src/code \
         "$image" \
         cargo build --quiet --release --locked -p compat --bin compat-driver
