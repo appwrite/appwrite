@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Attribute;
 
+use Appwrite\Databases\TransactionState;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents\Action;
@@ -12,6 +13,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Database\Documents\User;
+use Appwrite\Utopia\Database\Operators;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use InvalidArgumentException;
 use Utopia\Database\Database;
@@ -89,10 +91,11 @@ class Decrement extends Action
             ->inject('plan')
             ->inject('authorization')
             ->inject('user')
+            ->inject('transactionState')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $documentId, string $attribute, int|float $value, int|float|null $min, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Event $queueForEvents, Context $usage, array $plan, Authorization $authorization, User $user): void
+    public function action(string $databaseId, string $collectionId, string $documentId, string $attribute, int|float $value, int|float|null $min, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Event $queueForEvents, Context $usage, array $plan, Authorization $authorization, User $user, TransactionState $transactionState): void
     {
         $isAPIKey = $user->isKey($authorization->getRoles());
         $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
@@ -130,6 +133,20 @@ class Decrement extends Action
                     Exception::TRANSACTION_LIMIT_EXCEEDED,
                     'Transaction already has ' . $existing . ' operations, adding 1 would exceed the maximum of ' . $maxBatch
                 );
+            }
+
+            $dbForDatabases = $getDatabasesDB($database);
+            $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
+            if (
+                $dbForDatabases->getAdapter()->getSupportForAttributes()
+                && Operators::find($collection, $attribute) === null
+            ) {
+                throw new Exception($this->getStructureNotFoundException(), params: [$attribute]);
+            }
+            $existingRow = $authorization->skip(fn () => $transactionState->getDocument($database, $collectionTableId, $documentId, $transactionId));
+            if (!$existingRow->isEmpty()) {
+                $this->authorizeUpdate($collection, $existingRow, $authorization, $isAPIKey || $isPrivilegedUser);
+                $min = $this->applyColumnLimit($collection, $existingRow, $attribute, $value, $min, false);
             }
 
             // Stage the operation in transaction logs
@@ -174,9 +191,27 @@ class Decrement extends Action
         }
 
         $dbForDatabases = $getDatabasesDB($database);
+        $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
+        if (
+            $dbForDatabases->getAdapter()->getSupportForAttributes()
+            && Operators::find($collection, $attribute) === null
+        ) {
+            throw new Exception($this->getStructureNotFoundException(), params: [$attribute]);
+        }
+
+        $existingRow = $authorization->skip(fn () => $dbForDatabases->getDocument($collectionTableId, $documentId));
+        if ($existingRow->isEmpty()) {
+            throw new Exception($this->getNotFoundException(), params: [$documentId]);
+        }
+
+        $this->authorizeUpdate($collection, $existingRow, $authorization, $isAPIKey || $isPrivilegedUser);
+        $column = Operators::find($collection, $attribute);
+        $wasNull = $column !== null && $existingRow->getAttribute($attribute) === null;
+        $min = $this->applyColumnLimit($collection, $existingRow, $attribute, $value, $min, false);
+
         try {
             $document = $dbForDatabases->decreaseDocumentAttribute(
-                collection: 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
+                collection: $collectionTableId,
                 id: $documentId,
                 attribute: $attribute,
                 value: $value,
@@ -184,10 +219,18 @@ class Decrement extends Action
             );
             $document->setAttribute('$databaseId', $database->getId());
             $document->setAttribute('$' . $this->getCollectionsEventsContext() . 'Id', $collectionId);
+            // The library returns the PHP difference. SQL leaves NULL unchanged, so read the stored value back.
+            if ($wasNull) {
+                $stored = $authorization->skip(fn () => $dbForDatabases->getDocument($collectionTableId, $documentId));
+                $document->setAttribute($attribute, $stored->getAttribute($attribute));
+            }
         } catch (ConflictException) {
             throw new Exception($this->getConflictException());
-        } catch (NotFoundException) {
-            throw new Exception($this->getStructureNotFoundException());
+        } catch (NotFoundException $e) {
+            if ($e->getMessage() === 'Document not found') {
+                throw new Exception($this->getNotFoundException(), params: [$documentId]);
+            }
+            throw new Exception($this->getStructureNotFoundException(), params: [$attribute]);
         } catch (LimitException) {
             throw new Exception($this->getLimitException(), $this->getSDKNamespace() . ' "' . $attribute . '" has reached the minimum value of ' . $min);
         } catch (TypeException) {

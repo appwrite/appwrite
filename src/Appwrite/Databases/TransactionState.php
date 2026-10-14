@@ -429,7 +429,7 @@ class TransactionState
 
                 case 'increment':
                 case 'decrement':
-                    $attribute = $data['attribute'] ?? null;
+                    $attribute = $data['attribute'] ?? $data['column'] ?? null;
                     $value = $data['value'] ?? 1;
 
                     if ($attribute) {

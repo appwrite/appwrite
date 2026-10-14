@@ -72,6 +72,7 @@ class Decrement extends DecrementDocumentAttribute
             ->inject('plan')
             ->inject('authorization')
             ->inject('user')
+            ->inject('transactionState')
             ->callback($this->action(...));
     }
 }
