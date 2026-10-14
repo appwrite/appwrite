@@ -32,7 +32,7 @@ Rust crates live in `crates/`, not `packages/`. `packages/` is wired into Compos
 
 `crates/utopia/<name>` and `crates/support/php-std` are the writable home. `crates/appwrite/*` and `crates/tools/*` stay in this repository only.
 
-On every push to `main`, `split.yml` synthesizes each crate's history and pushes it to the mirror. Workspace inheritance (`version.workspace = true`, `bytes.workspace = true`) is expanded in that synthesized tree so a clone of the mirror builds standalone: third-party crates keep their crates.io versions, sibling Utopia crates become `git = "https://github.com/utopia-rs/<name>"`. Appwrite never sees that rewrite; it keeps using the workspace `path` entries.
+On every push to `main`, `split.yml` synthesizes each crate's history and pushes it to the mirror. Workspace inheritance (`version.workspace = true`, `bytes.workspace = true`) is expanded in that synthesized tree so a clone of the mirror builds standalone: third-party crates keep their crates.io versions, sibling Utopia crates become `git = "https://github.com/utopia-rs/<name>"`. Appwrite never sees that rewrite; it keeps using the workspace `path` entries. The mirrors are published under the license in `[workspace.metadata.utopia] mirror-license` of the root `Cargo.toml` (MIT): the split writes it into each mirror's `Cargo.toml`, `LICENSE` and README, while the source in this repository stays under the workspace's own license (BSD-3-Clause). Commits from before the setting keep their trees, so the mirrors' history is unchanged.
 
 | | PHP (`packages/<name>`) | Rust (`crates/utopia/<name>`) |
 |---|---|---|
