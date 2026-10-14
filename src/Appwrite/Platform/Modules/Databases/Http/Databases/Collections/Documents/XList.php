@@ -3,7 +3,6 @@
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents;
 
 use Appwrite\Databases\Joins;
-use Appwrite\Databases\Queries;
 use Appwrite\Databases\TransactionState;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
@@ -28,7 +27,6 @@ use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Http\Http;
 use Utopia\Query\CursorDirection;
-use Utopia\Query\Exception as QueryLibraryException;
 use Utopia\Query\Method as QueryMethod;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
@@ -109,7 +107,11 @@ class XList extends Action
             throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
         }
 
-        $queries = Queries::parse($queries);
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
 
         $queries = (new Joins(
             $dbForProject,
@@ -144,8 +146,8 @@ class XList extends Action
                 // dedicated DocumentsDB shard) has no table for it. Treat this as a
                 // not-found on the collection so the caller sees a 404 instead of a 500.
                 throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
-            } catch (QueryException|QueryLibraryException $failure) {
-                throw Queries::failure($failure);
+            } catch (QueryException $e) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
             }
 
             if ($cursorDocument->isEmpty()) {
@@ -247,8 +249,8 @@ class XList extends Action
             $attribute = $this->isCollectionsAPI() ? 'attribute' : 'column';
             $message = "The order $attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all $documents order $attribute values are non-null.";
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, $message);
-        } catch (QueryException|QueryLibraryException $failure) {
-            throw Queries::failure($failure);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         } catch (Timeout) {
             throw new Exception(Exception::DATABASE_TIMEOUT);
         }
