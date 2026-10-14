@@ -8,9 +8,10 @@ import { MIGRATION_TITLE, item, menuCategories } from './Sidebar'
 
 const root = getRouteApi('__root__')
 
-// A page in the header's menu: the menu's ink, and when active the red square before it, as in the library menu.
-const link = 'relative inline-flex h-8 items-center gap-1.5 px-3 text-[13px] text-sidebar-ink transition-colors hover:text-sidebar-strong'
-const on = 'font-medium text-sidebar-strong before:absolute before:top-1/2 before:left-0 before:size-[6px] before:-translate-y-1/2 before:bg-highlight'
+const link =
+  'inline-flex h-8 items-center gap-1.5 rounded-sm px-3.5 text-[13px] text-sidebar-ink transition-colors hover:bg-sidebar-accent/60 hover:text-sidebar-strong'
+const active = 'bg-sidebar-accent text-sidebar-strong'
+const pressed = 'bg-sidebar-accent/60 text-sidebar-strong'
 
 /** The categories, from the header: a panel of the same rows as the drawer's, opened on click. */
 function CategoriesMenu() {
@@ -39,7 +40,7 @@ function CategoriesMenu() {
   if (!index) return null
   return (
     <div ref={box} className="relative flex h-14 items-center">
-      <button ref={button} type="button" aria-expanded={open} aria-controls="categories-menu" onClick={() => setOpen((o) => !o)} className={`${link} cursor-pointer ${path.startsWith('/categories/') ? on : ''}`}>
+      <button ref={button} type="button" aria-expanded={open} aria-controls="categories-menu" onClick={() => setOpen((o) => !o)} className={`${link} cursor-pointer ${path.startsWith('/categories/') ? active : open ? pressed : ''}`}>
         Categories
         <ChevronDown className={`size-3.5 text-muted-foreground transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
@@ -62,19 +63,19 @@ function Menu() {
   // A library's pages sit under Libraries.
   const library = !!useMatch({ from: '/$lib', shouldThrow: false })
   return (
-    <nav className="hidden h-14 items-center gap-1 pl-3 lg:flex" aria-label="Site">
-      <Link to="/libraries" activeOptions={{ includeSearch: false }} className={`${link} ${library ? on : ''}`} activeProps={{ className: on }}>
+    <nav className="hidden h-14 items-center gap-0.5 pl-2 lg:flex" aria-label="Site">
+      <Link to="/libraries" activeOptions={{ includeSearch: false }} className={`${link} ${library ? active : ''}`} activeProps={{ className: active }}>
         Libraries
       </Link>
       <CategoriesMenu />
-      <Link to="/map" className={link} activeProps={{ className: on }}>
+      <Link to="/map" className={link} activeProps={{ className: active }}>
         Map
       </Link>
-      <Link to="/changelog" className={link} activeProps={{ className: on }}>
+      <Link to="/changelog" className={link} activeProps={{ className: active }}>
         Changelog
       </Link>
       <MigrationOnly>
-        <Link to="/appwrite" className={`${link} nav-migration`} activeProps={{ className: on }} title={MIGRATION_TITLE}>
+        <Link to="/appwrite" className={`${link} nav-migration`} activeProps={{ className: active }} title={MIGRATION_TITLE}>
           <ArrowLeftRight className="size-3.5 flex-none text-migration-ink" />
           Appwrite migration
         </Link>

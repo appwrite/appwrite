@@ -77,7 +77,7 @@ function Layout() {
           </div>
         ) : null}
         <main className="min-w-0 px-5 pt-8 pb-16 md:px-10">
-          <Crumbs />
+          {nav ? null : <Crumbs />}
           <Outlet />
           {index ? <Footer index={index} /> : null}
         </main>
