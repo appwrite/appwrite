@@ -333,11 +333,17 @@ abstract class Base extends Action
                 ],
             ))
             ->param(static::getClientIdParamName(), null, new Nullable(new Text(256, 0)), static::getClientIdDescription(), optional: true)
-            ->param(static::getClientSecretParamName(), null, new Nullable(new Text(512, 0)), static::getClientSecretDescription(), optional: true)
-            ->param('enabled', null, new Nullable(new Boolean()), 'OAuth2 sign-in method status. Set to true to enable new session creation. Setting to true will trigger end-to-end credentials validation, and will throw if the credentials are invalid.', true);
+            ->param(static::getClientSecretParamName(), null, new Nullable(new Text(512, 0)), static::getClientSecretDescription(), optional: true);
 
         $prompt = !empty(static::getPromptValues());
-        if ($prompt) {
+        $promptFirst = $prompt && static::isPromptBeforeEnabled();
+        if ($promptFirst) {
+            $this->param('prompt', null, static::getPromptValidator(), static::getPromptDescription(), optional: true, enum: static::getPromptEnum());
+        }
+
+        $this->param('enabled', null, new Nullable(new Boolean()), 'OAuth2 sign-in method status. Set to true to enable new session creation. Setting to true will trigger end-to-end credentials validation, and will throw if the credentials are invalid.', true);
+
+        if ($prompt && !$promptFirst) {
             $this->param('prompt', null, static::getPromptValidator(), static::getPromptDescription(), optional: true, enum: static::getPromptEnum());
         }
 
@@ -348,7 +354,20 @@ abstract class Base extends Action
             ->inject('authorization')
             ->inject('queueForEvents')
             ->inject('clientForOAuth2')
-            ->callback($prompt ? $this->updateWithPrompt(...) : $this->action(...));
+            ->callback(match (true) {
+                $promptFirst => $this->updateWithPromptFirst(...),
+                $prompt => $this->updateWithPrompt(...),
+                default => $this->action(...),
+            });
+    }
+
+    /**
+     * Whether `prompt` is declared before `enabled`. SDKs pass params positionally,
+     * so a provider whose SDK method shipped with that order must keep it.
+     */
+    public static function isPromptBeforeEnabled(): bool
+    {
+        return false;
     }
 
     /**
@@ -619,6 +638,21 @@ abstract class Base extends Action
      * prompt as JSON `{"clientSecret": "...", "prompt": [...]}`, reading a
      * secret stored before prompt support as a plain client secret.
      */
+    public function updateWithPromptFirst(
+        ?string $clientId,
+        ?string $clientSecret,
+        ?array $prompt,
+        ?bool $enabled,
+        Response $response,
+        Database $dbForPlatform,
+        Document $project,
+        Authorization $authorization,
+        QueueEvent $queueForEvents,
+        Client $clientForOAuth2
+    ): void {
+        $this->updateWithPrompt($clientId, $clientSecret, $enabled, $prompt, $response, $dbForPlatform, $project, $authorization, $queueForEvents, $clientForOAuth2);
+    }
+
     public function updateWithPrompt(
         ?string $clientId,
         ?string $clientSecret,

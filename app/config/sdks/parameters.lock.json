@@ -3112,8 +3112,8 @@
         "project.updateOAuth2Kakao": [
             "clientId",
             "clientSecret",
-            "enabled",
-            "prompt"
+            "prompt",
+            "enabled"
         ],
         "project.updateOAuth2Keycloak": [
             "clientId",
@@ -6917,8 +6917,8 @@
         "project.updateOAuth2Kakao": [
             "clientId",
             "clientSecret",
-            "enabled",
-            "prompt"
+            "prompt",
+            "enabled"
         ],
         "project.updateOAuth2Keycloak": [
             "clientId",

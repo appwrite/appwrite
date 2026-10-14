@@ -58,6 +58,12 @@ class Update extends Base
         return 'Generate it under Kakao Login > Security and set its status to enabled';
     }
 
+    public static function isPromptBeforeEnabled(): bool
+    {
+        // Released SDKs take `prompt` before `enabled` for Kakao
+        return true;
+    }
+
     public static function getPromptValues(): array
     {
         return ['none', 'login', 'create', 'select_account'];
