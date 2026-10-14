@@ -351,6 +351,28 @@ $server->onWorkerStart(function (int $workerId) use ($server, $handler, $mqtt, $
                         return;
                     }
 
+                    if (($event['action'] ?? '') === Mqtt::ACTION_UNSUBSCRIBE) {
+                        $userId = (string) ($event['userId'] ?? '');
+                        $topic = (string) ($event['topic'] ?? '');
+
+                        $span = Span::init('mqtt.unsubscribe');
+                        $span->set('project.id', $projectId);
+                        $span->set('user.id', $userId);
+                        $span->set('mqtt.topic', $topic);
+                        $span->set('mqtt.is_broker', true);
+
+                        try {
+                            $span->set('mqtt.unsubscribed', $handler->unsubscribe($server, $projectId, $userId, $topic));
+                        } catch (\Throwable $error) {
+                            $span->setError($error);
+                            Console::error('Failed to unsubscribe MQTT connections: ' . $error->getMessage());
+                        } finally {
+                            $span->finish();
+                        }
+
+                        return;
+                    }
+
                     $topic = (string) ($event['topic'] ?? '');
                     $qos = (int) ($event['qos'] ?? 0);
                     $sequence = (int) ($event['sequence'] ?? 0);

@@ -17,6 +17,8 @@ class Mqtt extends MessagingAdapter
 {
     public const ACTION_REVOKE = 'revoke';
 
+    public const ACTION_UNSUBSCRIBE = 'unsubscribe';
+
     private const CHANNEL = 'mqtt';
 
     public readonly Counter $messagesPublished;
@@ -97,6 +99,17 @@ class Mqtt extends MessagingAdapter
             'action' => self::ACTION_REVOKE,
             'project' => $projectId,
             'userId' => $userId,
+        ]));
+    }
+
+    /** Ask every broker to drop the user's live subscription to a topic (removed as a subscriber). */
+    public function revokeTopic(string $projectId, string $userId, string $topic): void
+    {
+        $this->pubsub->publish(self::CHANNEL, (string) \json_encode([
+            'action' => self::ACTION_UNSUBSCRIBE,
+            'project' => $projectId,
+            'userId' => $userId,
+            'topic' => $topic,
         ]));
     }
 

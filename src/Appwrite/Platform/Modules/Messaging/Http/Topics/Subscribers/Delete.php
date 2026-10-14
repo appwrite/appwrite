@@ -4,12 +4,16 @@ namespace Appwrite\Platform\Modules\Messaging\Http\Topics\Subscribers;
 
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
+use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
@@ -56,10 +60,12 @@ class Delete extends Action
             ->inject('dbForProject')
             ->inject('authorization')
             ->inject('response')
+            ->inject('project')
+            ->inject('mqtt')
             ->callback($this->action(...));
     }
 
-    public function action(string $topicId, string $subscriberId, Event $queueForEvents, Database $dbForProject, Authorization $authorization, Response $response)
+    public function action(string $topicId, string $subscriberId, Event $queueForEvents, Database $dbForProject, Authorization $authorization, Response $response, Document $project, Mqtt $mqtt)
     {
         $topic = $authorization->skip(fn () => $dbForProject->getDocument('topics', $topicId));
 
@@ -93,6 +99,22 @@ class Delete extends Action
             ),
             APP_TOPICS_SUBQUERIES
         ));
+
+        // Drop the user's live MQTT subscription once they hold no other subscriber row for the topic,
+        // matching the subscribe gate (membership is per user, not per target).
+        $userId = $subscriber->getAttribute('userId');
+        $stillSubscribed = $authorization->skip(fn () => $dbForProject->findOne('subscribers', [
+            Query::equal('topicInternalId', [$topic->getSequence()]),
+            Query::equal('userId', [$userId]),
+        ]));
+
+        if ($stillSubscribed->isEmpty()) {
+            try {
+                $mqtt->revokeTopic($project->getId(), $userId, $topic->getAttribute('name'));
+            } catch (\Throwable $error) {
+                Console::error('Failed to unsubscribe MQTT connection: ' . $error->getMessage());
+            }
+        }
 
         $queueForEvents
             ->setParam('topicId', $topic->getId())

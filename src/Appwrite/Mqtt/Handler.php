@@ -412,6 +412,22 @@ class Handler implements MqttHandler
         return \count($connections);
     }
 
+    /**
+     * Drop the user's live subscription to a topic after they were removed as a subscriber, so an
+     * already-open connection stops receiving it. Returns how many connections were touched. The
+     * connection stays open and keeps its other subscriptions; a topic it never held is a no-op.
+     */
+    public function unsubscribe(Server $server, string $projectId, string $userId, string $topic): int
+    {
+        $connections = $this->connectionsOf($projectId, $userId);
+
+        foreach ($connections as $connection) {
+            $server->unsubscribe($topic, $connection->fd);
+        }
+
+        return \count($connections);
+    }
+
     /** @param array<string, mixed> $identity */
     private function authorized(array $identity): bool
     {
