@@ -11,6 +11,7 @@ use Utopia\Database\Attribute as UtopiaAttribute;
 use Utopia\Database\Collection;
 use Utopia\Database\Database as UtopiaDatabase;
 use Utopia\Database\Document as UtopiaDocument;
+use Utopia\Database\Exception as DatabaseException;
 use Utopia\Database\Query;
 use Utopia\Migration\Destinations\Appwrite as AppwriteDestination;
 use Utopia\Migration\Destinations\OnDuplicate;
@@ -40,8 +41,8 @@ final class AppwriteRunCompletionTest extends TestCase
         ]);
 
         $this->assertSame([], $destination->getErrors());
-        $this->assertSame('ready', $this->databaseStatus($database, 'first'));
-        $this->assertSame('ready', $this->databaseStatus($database, 'second'));
+        $this->assertSame('ready', $this->databaseStatus($database, 'first'), 'run() must flip every database it provisioned to ready');
+        $this->assertSame('ready', $this->databaseStatus($database, 'second'), 'run() must flip every database it provisioned to ready');
     }
 
     public function testInterruptedRunLeavesItsDatabasesProvisioning(): void
@@ -55,11 +56,11 @@ final class AppwriteRunCompletionTest extends TestCase
                 $destination,
                 [$this->databaseResource('first')],
                 static function (): void {
-                    throw new \RuntimeException('transfer interrupted');
+                    throw new TransferInterrupted('transfer interrupted');
                 },
             );
             $this->fail('The interrupted transfer must throw');
-        } catch (\RuntimeException $error) {
+        } catch (TransferInterrupted $error) {
             $this->assertSame('transfer interrupted', $error->getMessage());
         }
 
@@ -98,7 +99,7 @@ final class AppwriteRunCompletionTest extends TestCase
         try {
             $this->import($database, $destination, $this->newerSchemaWithoutLegacyColumns());
             $this->fail('A failed sweep must fail the run');
-        } catch (\Throwable $error) {
+        } catch (DatabaseException $error) {
             $this->assertSame('attribute scan unavailable', $error->getMessage());
         }
 

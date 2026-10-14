@@ -3,6 +3,7 @@
 namespace Utopia\Tests\Unit\Destinations;
 
 use Override;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\Cache\Adapter\Memory as MemoryCache;
 use Utopia\Cache\Cache;
@@ -14,6 +15,7 @@ use Utopia\Database\DateTime as UtopiaDateTime;
 use Utopia\Database\Document as UtopiaDocument;
 use Utopia\Database\Exception as DatabaseException;
 use Utopia\Migration\Destinations\Appwrite as AppwriteDestination;
+use Utopia\Migration\Destinations\OnDuplicate;
 use Utopia\Migration\Exception as MigrationException;
 use Utopia\Migration\Resource;
 use Utopia\Migration\Resources\Database\Database as DatabaseResource;
@@ -153,36 +155,6 @@ final class AppwriteDatabaseStatusTest extends TestCase
         }
     }
 
-    public function testRunAloneMarksProvisionedDatabasesReady(): void
-    {
-        $database = $this->createProjectDatabase(withStatus: true);
-        $source = new class () extends MockSource {
-            #[Override]
-            public function supportsDatabaseStatus(): bool
-            {
-                return true;
-            }
-        };
-        foreach (['database-first', 'database-second'] as $databaseId) {
-            $source->pushMockResource(new DatabaseResource(
-                id: $databaseId,
-                name: 'Database',
-                type: 'tablesdb',
-                database: 'source-dsn',
-                databaseStatus: 'ready',
-            ));
-        }
-        $transfer = new Transfer($source, $this->createDestination($database));
-
-        $database->getAuthorization()->skip(
-            static fn () => $transfer->run([Resource::TYPE_DATABASE], static function (): void {
-            }),
-        );
-
-        $this->assertSame('ready', $this->getDatabaseDocument($database, 'database-first')->getAttribute('status'), 'run() must flip every database it provisioned to ready');
-        $this->assertSame('ready', $this->getDatabaseDocument($database, 'database-second')->getAttribute('status'), 'run() must flip every database it provisioned to ready');
-    }
-
     public function testReadyFlipAttemptsEveryDatabaseAndReportsEveryFailure(): void
     {
         $database = new ReadyFailingProjectDatabase(new MemoryAdapter(), new Cache(new MemoryCache()));
@@ -293,22 +265,37 @@ final class AppwriteDatabaseStatusTest extends TestCase
         );
     }
 
-    public function testIncompleteDatabasesAreRecoveredImmediately(): void
+    /** @return array<string, array{OnDuplicate, string}> */
+    public static function duplicatePolicies(): array
+    {
+        return [
+            'fail' => [OnDuplicate::Fail, ''],
+            'skip' => [OnDuplicate::Skip, ''],
+            'overwrite with an older source' => [OnDuplicate::Overwrite, '2000-01-01T00:00:00.000+00:00'],
+            'overwrite with a newer source' => [OnDuplicate::Overwrite, '2099-01-01T00:00:00.000+00:00'],
+        ];
+    }
+
+    #[DataProvider('duplicatePolicies')]
+    public function testIncompleteDatabasesAreRecoveredImmediately(OnDuplicate $onDuplicate, string $resourceUpdatedAt): void
     {
         $database = $this->createProjectDatabase(withStatus: true);
-        $provisioning = $this->seedIncompleteDatabase($database, 'database-provisioning', 'provisioning', withCollection: true, updatedAt: $this->secondsAgo(1));
-        $failed = $this->seedIncompleteDatabase($database, 'database-failed', 'failed', updatedAt: $this->secondsAgo(1));
+        $provisioning = $this->seedIncompleteDatabase($database, 'database-provisioning', 'provisioning', name: 'Incomplete database', withCollection: true, updatedAt: $this->secondsAgo(1));
+        $failed = $this->seedIncompleteDatabase($database, 'database-failed', 'failed', name: 'Incomplete database', updatedAt: $this->secondsAgo(1));
 
         $destination = $this->runDatabaseTransfer(
             $database,
             explicit: false,
             databaseIds: ['database-provisioning', 'database-failed'],
+            onDuplicate: $onDuplicate,
+            resourceUpdatedAt: $resourceUpdatedAt,
         );
 
         $this->assertSame([], $this->errorMessages($destination));
         foreach ([$provisioning, $failed] as $seeded) {
             $recovered = $this->getDatabaseDocument($database, $seeded->getId());
             $this->assertSame('ready', $recovered->getAttribute('status'), $seeded->getId());
+            $this->assertSame('Database', $recovered->getAttribute('name'), $seeded->getId().' must be overwritten from the source whatever the duplicate policy');
             $this->assertSame($seeded->getSequence(), $recovered->getSequence(), $seeded->getId());
             $this->assertNotNull($database->findCollection('database_'.$recovered->getSequence()), $seeded->getId());
         }
@@ -350,6 +337,7 @@ final class AppwriteDatabaseStatusTest extends TestCase
         UtopiaDatabase $database,
         string $databaseId,
         string $status,
+        string $name = 'Database',
         bool $withCollection = false,
         string $updatedAt = '',
     ): UtopiaDocument {
@@ -358,9 +346,9 @@ final class AppwriteDatabaseStatusTest extends TestCase
                 true,
                 static fn (): UtopiaDocument => $database->createDocument('databases', new UtopiaDocument([
                     '$id' => $databaseId,
-                    'name' => 'Database',
+                    'name' => $name,
                     'enabled' => true,
-                    'search' => $databaseId.' Database',
+                    'search' => $databaseId.' '.$name,
                     'originalId' => null,
                     'type' => 'tablesdb',
                     'database' => '',
@@ -406,6 +394,8 @@ final class AppwriteDatabaseStatusTest extends TestCase
         UtopiaDatabase $database,
         bool $explicit,
         array $databaseIds = ['database'],
+        OnDuplicate $onDuplicate = OnDuplicate::Fail,
+        string $resourceUpdatedAt = '',
     ): CountingAppwriteDestination {
         $source = new class () extends MockSource {
             #[Override]
@@ -418,13 +408,14 @@ final class AppwriteDatabaseStatusTest extends TestCase
             $source->pushMockResource(new DatabaseResource(
                 id: $databaseId,
                 name: 'Database',
+                updatedAt: $resourceUpdatedAt,
                 type: 'tablesdb',
                 database: 'source-dsn',
                 databaseStatus: 'ready',
             ));
         }
 
-        $destination = $this->createDestination($database);
+        $destination = $this->createDestination($database, $onDuplicate);
 
         $transfer = new Transfer($source, $destination);
         $database->getAuthorization()->skip(
@@ -454,7 +445,7 @@ final class AppwriteDatabaseStatusTest extends TestCase
         return $destination;
     }
 
-    private function createDestination(UtopiaDatabase $database): CountingAppwriteDestination
+    private function createDestination(UtopiaDatabase $database, OnDuplicate $onDuplicate): CountingAppwriteDestination
     {
         return new CountingAppwriteDestination(
             project: 'destination-project',
@@ -465,6 +456,7 @@ final class AppwriteDatabaseStatusTest extends TestCase
             collectionStructure: ['attributes' => [], 'indexes' => []],
             dbForPlatform: $database,
             projectInternalId: '1',
+            onDuplicate: $onDuplicate,
         );
     }
 
