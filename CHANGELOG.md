@@ -2,31 +2,44 @@
 
 ## 3.1.2
 
+3.1.2 reverses the 3.0.0 notes below on `Aborted`, `markAborted()` and finalizing with `success()`.
+
 ### Breaking changes
 
-- Provisioning ownership fencing is removed. The Appwrite destination is back on the 2.x status-only database
-  lifecycle.
+- Provisioning ownership fencing is removed. The Appwrite destination tracks a database's lifecycle with `status`
+  alone again, but recovers incomplete databases differently from 2.x.
   - `Destinations\Appwrite\ProvisioningOwner` is removed.
   - `Destinations\Appwrite::__construct()` no longer takes `owner`, `getRecoverableOwner` or `provisioningLease`, and
     `Destinations\Appwrite::DEFAULT_PROVISIONING_LEASE` is removed. `onDuplicate` and the arguments after it move up
     two places for positional callers.
   - The destination no longer reads or writes the `migrationId` and `migrationAttemptId` database attributes.
   - A `provisioning` or `failed` database is recovered by the next run at once, without owner attestation or a lease
-    wait.
+    wait. It is always overwritten from the source, whatever `OnDuplicate` is and whatever the timestamps say. 2.1.0
+    forced the overwrite only for a `failed` database and never under `OnDuplicate::Fail`; it skipped a
+    `provisioning` database whose spec matched the source and only re-enrolled it for the `ready` flip.
 - The standalone CLI no longer accepts `--migration-id`, `--migration-attempt-id`, `--recover-migration-id`,
-  `--recover-migration-attempt-id` or `-h`/`--help`.
+  `--recover-migration-attempt-id` or `-h`/`--help`. `MigrationCLI::__construct(array $arguments)` and
+  `MigrationCLI::getHelp()` are removed.
 - `Destinations\Appwrite::run()` finalizes again, as in 2.x: once the transfer returns it flips the databases it
   provisioned to `ready`, then runs the overwrite orphan sweep.
   - `success()`, `error()` and `cleanUp()` are no-op lifecycle hooks again. Callers no longer call `success()` to
     finalize, and `cleanUp()` no longer reports a skipped `success()`.
-  - A failed `ready` flip is recorded with `addError()`; a failed orphan sweep throws from `run()`.
+  - A failed `ready` flip is recorded with `addError()`, and the sweep still runs.
+  - The orphan sweep stops at the first table that fails, and `run()` throws that table's database exception as is.
+    3.1.1's `success()` tried every table, recorded each failure with `addError()` and threw `Finalization`.
   - `Utopia\Migration\Exception\Finalization` is removed.
 - The abort mechanism is removed.
   - `Utopia\Migration\Exception\Aborted` and `Destination::markAborted()` are removed.
   - `Transfer::run()` no longer latches an exception thrown from its progress callback, and the library sources no
     longer rethrow one: each source handles it as in 2.x.
 
-## 3.0.0 (unreleased)
+### Concurrency
+
+- The Appwrite destination treats every `provisioning` or `failed` database as abandoned by an earlier run. Callers
+  must serialise migrations per destination project. A concurrent run overwrites another run's incomplete databases
+  from its own source under any `OnDuplicate`, and may flip them to `ready` before the other run finishes.
+
+## 3.0.0
 
 3.0 is a major release. The breaking changes below all concern the Appwrite destination's lifecycle and the
 database library it builds on; read the upgrade notes before you upgrade from 2.x.
