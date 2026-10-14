@@ -14,13 +14,13 @@ faqs:
   - question: "Which Appwrite version does the Helm chart deploy?"
     answer: "Each chart version deploys one Appwrite version, its `appVersion`, so upgrading the chart upgrades Appwrite. Run `helm show chart oci://ghcr.io/appwrite/charts/appwrite` to see the Appwrite version of the latest chart, and check the [version table](/docs/advanced/self-hosting/platforms/kubernetes#versions) in the docs."
   - question: "Can I use managed PostgreSQL, Redis, and S3 with the Appwrite Helm chart?"
-    answer: "Yes. The chart runs built-in PostgreSQL, Redis, and ClickHouse by default, and each one has a `mode` switch you set to `external` on its own. It works with Amazon RDS and Aurora, Cloud SQL, Azure Database for PostgreSQL, CloudNativePG, ElastiCache, Memorystore, Valkey, ClickHouse Cloud, and any S3-compatible object store. External PostgreSQL needs the `postgis`, `vector`, and `pg_trgm` extensions. See [built-in or external services](/docs/advanced/self-hosting/platforms/kubernetes#external-services)."
+    answer: "Yes. The chart runs built-in PostgreSQL, Redis, ClickHouse, and object storage by default, and each one has a `mode` switch you set to `external` on its own. It works with Amazon RDS and Aurora, Cloud SQL, Azure Database for PostgreSQL, CloudNativePG, ElastiCache, Memorystore, Valkey, ClickHouse Cloud, and any S3-compatible object store. External PostgreSQL needs the `postgis`, `vector`, and `pg_trgm` extensions. See [built-in or external services](/docs/advanced/self-hosting/platforms/kubernetes#external-services)."
   - question: "Why does the Appwrite executor need a privileged pod on Kubernetes?"
-    answer: "Builds run as unprivileged Kubernetes Jobs, but executions run on the Open Runtimes executor, which starts a container per runtime through a Docker daemon. The chart gives each executor pod its own Docker daemon, which runs as a privileged container. Functions and Sites are off by default, and you accept the privileged pod explicitly with `compute.executor.privileged: true`. Run it on dedicated nodes, or use Sysbox through `compute.executor.runtimeClassName` where privileged pods aren't allowed."
+    answer: "Builds run as unprivileged Kubernetes Jobs, but executions run on the Open Runtimes executor, which starts a container per runtime through a Docker daemon. The chart gives each executor pod its own Docker daemon, which runs as a privileged container in a namespace of its own. Functions and Sites are on by default, so a plain install runs one. Run it on dedicated nodes. Where privileged pods aren't allowed, set `compute.enabled: false`, or use Sysbox through `compute.executor.runtimeClassName`."
   - question: "Can I migrate an existing Docker installation of Appwrite to Kubernetes?"
     answer: "Yes. Upgrade the Docker installation to the Appwrite version the chart deploys, put its encryption key and core secrets in a Kubernetes Secret, dump PostgreSQL and the file volumes, install the chart with the API scaled to zero, restore the data, and then start Appwrite with `helm upgrade`. The chart's [migration guide](https://github.com/appwrite/helm-chart/blob/main/docs/migrating-from-docker.md) has every command."
   - question: "Should I self-host Appwrite with Docker or with the Helm chart?"
-    answer: "Use the [Docker installation](/docs/advanced/self-hosting/installation) when one server is enough. It's simpler to run, and Functions and Sites work without S3 or a privileged pod. Use the Helm chart when you already operate Kubernetes and want managed datastores, replicas across nodes, rolling upgrades, or GitOps with Argo CD or Flux. If you'd rather not operate Appwrite at all, use [Appwrite Cloud](https://cloud.appwrite.io)."
+    answer: "Use the [Docker installation](/docs/advanced/self-hosting/installation) when one server is enough. It's simpler to run, and Functions and Sites work without a privileged pod. Use the Helm chart when you already operate Kubernetes and want managed datastores, replicas across nodes, rolling upgrades, or GitOps with Argo CD or Flux. If you'd rather not operate Appwrite at all, use [Appwrite Cloud](https://cloud.appwrite.io)."
 ---
 
 Self-hosted Appwrite has always shipped as a Docker Compose stack. On one server, that's the right shape: one installer, one `docker-compose.yml`, and an upgrade command that rewrites it. Teams that run everything else on [Kubernetes](/blog/post/what-is-kubernetes-an-expert-guide-for-developers) had a harder time. They translated the Compose file into manifests or Helm charts of their own, then kept that translation working through every Appwrite release.
@@ -35,10 +35,10 @@ It installs self-hosted Appwrite on your own Kubernetes cluster with one command
 
 The chart deploys the same images as the Docker installation, wired together the way Kubernetes expects:
 
-- **Everything in one install.** The API, console, realtime, workers, schedulers, and geo service, plus built-in PostgreSQL, Redis, and ClickHouse, so a plain install works on an empty cluster.
+- **Everything in one install.** The API, console, realtime, workers, schedulers, and geo service, plus built-in PostgreSQL, Redis, ClickHouse, and S3-compatible object storage, so a plain install works on an empty cluster.
 - **Managed services, one at a time.** Each datastore has its own `mode` switch. Move PostgreSQL to RDS, Cloud SQL, or CloudNativePG while keeping the built-in Redis, and move Redis later.
 - **Ingress or Gateway API routes** for the API, console, realtime, function and site previews, and custom domains.
-- **Functions and Sites in the cluster.** Builds run as Kubernetes Jobs, and executions run on the Open Runtimes executor in a namespace of its own.
+- **Functions and Sites in the cluster, on by default.** Builds run as Kubernetes Jobs, and executions run on the Open Runtimes executor in a namespace of its own.
 - **Three worker topologies.** `combined` and `separate` match the Docker installation, and `grouped` is new.
 - **Credentials that survive upgrades.** The chart generates the encryption key and datastore passwords once, keeps them across upgrades and uninstalls, and refuses changes that would make your data unreadable.
 - **Data migrations on upgrade.** When the Appwrite version changes, `helm upgrade` runs the migration and waits for it to finish.
@@ -143,11 +143,11 @@ Most of the chart's work goes into details that a hand-written set of manifests 
 
 # Functions and Sites on Kubernetes
 
-Functions and Sites are off by default. Builds run as ordinary, unprivileged Kubernetes Jobs in a namespace of their own, started by the Open Runtimes orchestrator. Executions are harder. The [Open Runtimes executor](https://github.com/open-runtimes/executor) starts a container per runtime through a Docker daemon, and Kubernetes has no Docker daemon to offer. The chart gives each executor pod its own, and that daemon runs as a privileged container, which is root on its node.
+Functions and Sites are on by default. Builds run as ordinary, unprivileged Kubernetes Jobs in a namespace of their own, started by the Open Runtimes orchestrator. Executions are harder. The [Open Runtimes executor](https://github.com/open-runtimes/executor) starts a container per runtime through a Docker daemon, and Kubernetes has no Docker daemon to offer. The chart gives each executor pod its own, and that daemon runs as a privileged container, which is root on its node.
 
-We kept that trade-off visible. You turn it on with `compute.executor.privileged: true`. The executor gets its own namespace with its own copy of its credentials, and a NetworkPolicy, on by default, only lets Appwrite in and only lets the executor reach DNS, S3, and public addresses. Give it dedicated nodes. Where your policies forbid privileged pods, [Sysbox](https://github.com/nestybox/sysbox) can run the daemon without `privileged` on nodes where you can install it, though the chart's CI doesn't test that path yet.
+We kept that trade-off contained. The executor gets its own namespace with its own copy of its credentials, and a NetworkPolicy, on by default, only lets Appwrite in and only lets the executor reach DNS, S3, and public addresses. Give it dedicated nodes. Where your policies forbid privileged pods, set `compute.enabled: false`, or let [Sysbox](https://github.com/nestybox/sysbox) run the daemon without `privileged` on nodes where you can install it, though the chart's CI doesn't test that path yet.
 
-Functions and Sites also need S3 storage, because builds and the executor exchange code through a bucket, and wildcard certificates for preview URLs. The [Functions and Sites section](/docs/advanced/self-hosting/platforms/kubernetes#functions-and-sites) of the docs has the values to add.
+Builds and the executor exchange code through a bucket, which the chart's built-in object storage provides out of the box: [SeaweedFS](https://github.com/seaweedfs/seaweedfs), one replica, with its keys generated and its bucket created for you. For production, point the chart at an S3 store with redundancy, and add wildcard certificates for preview URLs. The [Functions and Sites section](/docs/advanced/self-hosting/platforms/kubernetes#functions-and-sites) of the docs has the values.
 
 # Scale workers the way your queues need
 
@@ -170,17 +170,17 @@ Here the usage queues run on two replicas of their own, builds and executions ge
 
 # How we test the Helm chart
 
-Every change is linted with chart-testing and `helm lint --strict` on Helm 3.18 and Helm 4, unit tested with helm-unittest, and validated with kubeconform against several Kubernetes versions. CI then installs the chart on kind, in a namespace that enforces the `restricted` profile. The scenarios cover built-in and external datastores, every worker topology, Ingress and Gateway API routing, NetworkPolicies with restricted egress, and an upgrade from Appwrite 2.2.0 that runs the data migration. A nightly run adds S3 and builds and executes a function inside the cluster.
+Every change is linted with chart-testing and `helm lint --strict` on Helm 3.18 and Helm 4, unit tested with helm-unittest, and validated with kubeconform against several Kubernetes versions. CI then installs the chart on kind, in a namespace that enforces the `restricted` profile. The scenarios cover built-in and external datastores, every worker topology, Ingress and Gateway API routing, NetworkPolicies with restricted egress, and an upgrade from the published chart 1.0.0 that runs the data migration. Every install runs Functions and Sites on the built-in object storage, and a nightly run builds and executes a function inside the cluster.
 
 Each install runs `helm test`, an end-to-end smoke test, and a second upgrade that must keep the credentials and leave every pod alone.
 
-The first release is 1.0.0, and the chart follows semantic versioning: only a new major version changes or renames values. Read the version notes before you upgrade.
+The first release was 1.0.0, for Appwrite 2.3.0. 2.0.0 brings Appwrite 2.5.0, the built-in object storage, and Functions and Sites on by default. The chart follows semantic versioning: only a new major version changes or renames values. Read the version notes before you upgrade.
 
 # When to use the Helm chart
 
 Use the Helm chart when you already operate Kubernetes and want managed datastores, replicas across nodes, rolling upgrades, or GitOps with Argo CD or Flux.
 
-Stay on the [Docker installation](/docs/advanced/self-hosting/installation) when one server is enough. It's simpler to run, and Functions and Sites work there without a privileged pod or S3.
+Stay on the [Docker installation](/docs/advanced/self-hosting/installation) when one server is enough. It's simpler to run, and Functions and Sites work there without a privileged pod.
 
 Already on Docker and ready to move? The chart's [migration guide](https://github.com/appwrite/helm-chart/blob/main/docs/migrating-from-docker.md) moves an existing installation with its data. You dump PostgreSQL and the file volumes, install the chart with the API scaled to zero, restore, and then start Appwrite.
 

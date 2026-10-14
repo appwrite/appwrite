@@ -23,15 +23,16 @@ The [Docker installation](/docs/advanced/self-hosting/installation) runs every A
 - Rolling upgrades, with Appwrite's data migration run as part of `helm upgrade`
 - GitOps deployments with Argo CD or Flux
 
-Functions and Sites ask more of a Kubernetes cluster than of a Docker host. They need S3 storage and an executor that runs as a privileged pod. See [Functions and Sites](#functions-and-sites).
+Functions and Sites are on by default. The chart keeps code and build output in its built-in object storage and runs the executor as a privileged pod, in a namespace of its own. On clusters that don't allow privileged pods, turn them off. See [Functions and Sites](#functions-and-sites).
 
 # Requirements {% #requirements %}
 
 - Kubernetes 1.29 or later, with a default StorageClass
 - [Helm](https://helm.sh/docs/intro/install/) 4, or Helm 3.18 or later
 - `kubectl` connected to the cluster
-- About 2 CPUs and 4 GiB of memory free for Appwrite
+- About 2 CPUs and 4 GiB of memory free for Appwrite, plus room for builds and executions
 - An ingress controller, or a Gateway API implementation
+- For Functions and Sites, a cluster that admits a privileged pod in the executor's namespace
 
 The console and the API share one hostname. Requests to `/v1` go to the API, and everything else goes to the console. An ingress controller or Gateway splits that traffic. A `kubectl port-forward` to the console alone doesn't work, because the console would send its API calls to itself.
 
@@ -42,6 +43,7 @@ Each chart version deploys one Appwrite version, its `appVersion`, so upgrading 
 | Chart | Appwrite |
 | ----- | -------- |
 | 1.0.0 | 2.3.0    |
+| 2.0.0 | 2.5.0    |
 
 To see which Appwrite version the latest chart deploys:
 
@@ -125,7 +127,7 @@ These settings are hard to change once Appwrite holds data:
 | Encryption key | The chart generates `_APP_OPENSSL_KEY_V1` once. Without it, a database backup can't be read. Back it up after installing, or create it yourself and pass it through `appwrite.secrets.existingSecret`. |
 | `appwrite.domain` | It ends up in OAuth redirect URLs, Git webhooks, the CNAME target of custom domains, and the preview domains stored in the database. Changing it breaks all of them. |
 | Database engine | PostgreSQL, built-in or external, is recommended and is the engine the chart's CI tests. Moving to another engine later is a data migration, not a values change. |
-| `storage.device` | `local` keeps files on a volume, `s3` in a bucket. Files stay where they were written, so switching later leaves them behind. Functions and Sites need `s3`. |
+| `storage.device` | `s3`, the default, keeps files in a bucket: the chart's built-in object storage or your own. `local` keeps them on a volume. Files stay where they were written, so switching later leaves them behind. Functions and Sites need `s3`. |
 | `/storage` access mode | ReadWriteOnce keeps every pod that mounts `/storage` on one node. ReadWriteMany lets them spread across nodes. A claim's access mode can't be changed, only replaced with a new claim. |
 
 {% section #install-values step=1 title="Write a values file" %}
@@ -212,10 +214,10 @@ By default, the chart runs every service Appwrite depends on. You can replace ea
 | PostgreSQL | Built-in StatefulSet | Amazon RDS and Aurora, Cloud SQL, Azure Database for PostgreSQL, CloudNativePG | `database.mode` |
 | Redis | Built-in StatefulSet | ElastiCache, Memorystore, Azure Cache for Redis, Valkey | `redis.mode` |
 | ClickHouse | Built-in StatefulSet | ClickHouse Cloud, the Altinity operator | `clickhouse.mode` |
-| File storage | PersistentVolumeClaim | AWS S3, Cloudflare R2, Google Cloud Storage, DigitalOcean Spaces, MinIO, and other S3-compatible stores | `storage.device` |
+| File storage | Built-in object storage (SeaweedFS) | AWS S3, Cloudflare R2, Google Cloud Storage, DigitalOcean Spaces, MinIO, and other S3-compatible stores; or a PersistentVolumeClaim | `storage.s3.mode`, `storage.device` |
 | Email | Off | Any SMTP server | `smtp` |
 
-The built-in datastores each run a single replica, without replication or failover. They suit evaluation and small installs. For data you can't afford to lose, use managed services or operators. To run MariaDB, MySQL, or MongoDB instead of PostgreSQL, set `database.adapter` on an external database.
+The built-in datastores and object storage each run a single replica, without replication or failover. They suit evaluation and small installs. For data you can't afford to lose, use managed services or operators. To run MariaDB, MySQL, or MongoDB instead of PostgreSQL, set `database.adapter` on an external database.
 
 Every external service takes a `mode` switch, an `external` block with its address, and a password. Every password and key in the chart accepts the same three fields, `value`, `secretName`, and `secretKey`. An inline `value` ends up in your values file, so keep credentials in a Secret instead:
 
@@ -246,12 +248,16 @@ An external PostgreSQL needs the `postgis`, `vector`, and `pg_trgm` extensions a
 
 ## S3 storage {% #s3 %}
 
+By default, files, deployment code, and build output go to the chart's built-in object storage: [SeaweedFS](https://github.com/seaweedfs/seaweedfs) as a single-replica StatefulSet that creates its bucket and generates its keys. For production, point the chart at a store with redundancy:
+
 ```yaml
 storage:
   device: s3
   s3:
-    endpoint: https://<account-id>.r2.cloudflarestorage.com   # empty for AWS S3
-    region: auto
+    mode: external
+    external:
+      endpoint: https://<account-id>.r2.cloudflarestorage.com   # empty for AWS S3
+      region: auto
     bucket: appwrite
     accessKeyId:
       secretName: appwrite-s3           # reads the key s3-access-key
@@ -259,7 +265,7 @@ storage:
       secretName: appwrite-s3           # reads the key s3-secret-key
 ```
 
-Appwrite doesn't create the bucket, and it signs requests with static keys. IAM roles for service accounts, such as IRSA, EKS Pod Identity, and GKE Workload Identity, aren't supported. With S3, the API and workers still mount a small `/storage` volume for TLS certificates and ACME challenges. The [storage guide](https://github.com/appwrite/helm-chart/blob/main/docs/storage.md#s3) lists the endpoint and region for each provider.
+Appwrite doesn't create the bucket in your store, and it signs requests with static keys. IAM roles for service accounts, such as IRSA, EKS Pod Identity, and GKE Workload Identity, aren't supported. With S3, the API and workers still mount a small `/storage` volume for TLS certificates and ACME challenges. The [storage guide](https://github.com/appwrite/helm-chart/blob/main/docs/storage.md#s3) lists the endpoint and region for each provider.
 
 ## Appwrite settings and email {% #appwrite-settings %}
 
@@ -349,26 +355,27 @@ The `databases` queue applies schema changes in order, so the Deployment that co
 
 # Functions and Sites {% #functions-and-sites %}
 
-Functions and Sites are off by default, and the rest of Appwrite works without them. They need:
+Functions and Sites are on by default:
 
-- **S3 storage.** Builds and the executor exchange code and build output through a bucket. The chart refuses to enable compute with `local` storage.
-- **A privileged executor.** Builds run as unprivileged Kubernetes Jobs in a namespace of their own. Executions run on the [Open Runtimes executor](https://github.com/open-runtimes/executor), which starts runtime containers through its own Docker daemon. That daemon runs in a privileged container, which is root on its node, so you accept it with `compute.executor.privileged` and give it dedicated nodes. Where privileged pods aren't allowed, [Sysbox](https://github.com/nestybox/sysbox) can run the daemon instead, through `compute.executor.runtimeClassName`.
-- **Wildcard DNS and certificates** for previews at `*.functions.<domain>` and `*.sites.<domain>`.
+- **Storage.** Builds and the executor exchange code and build output through a bucket, by default in the built-in [object storage](#s3). The chart refuses to run them with `local` storage.
+- **Builds** run as unprivileged Kubernetes Jobs in a namespace of their own.
+- **Executions** run on the [Open Runtimes executor](https://github.com/open-runtimes/executor), which starts runtime containers through its own Docker daemon. That daemon runs in a privileged container, which is root on its node, in a namespace of its own.
 
-Label and taint the nodes for the executor:
+Where privileged pods aren't allowed, set `compute.enabled: false`, or run the daemon without privileges through [Sysbox](https://github.com/nestybox/sysbox) with `compute.executor.runtimeClassName`. With compute off, the console still shows Functions and Sites, but creating one fails.
+
+For production, give the executor dedicated nodes, choose the runtimes you need, and set up wildcard DNS and certificates for previews at `*.functions.<domain>` and `*.sites.<domain>`. Label and taint the nodes for the executor:
 
 ```bash
 kubectl label node <node> workload=executor
 kubectl taint node <node> workload=executor:NoSchedule
 ```
 
-Then add compute to values that already configure [S3 storage](#s3):
+Then pin the executor to them:
 
 ```yaml
 compute:
-  enabled: true
   executor:
-    privileged: true                    # accepts Docker-in-Docker: root on the node
+    privileged: true                    # the default: Docker-in-Docker, root on the node
     nodeSelector:
       workload: executor
     tolerations:
@@ -389,13 +396,14 @@ ingress:
 
 Without nodes that match the selector, the executor pod stays `Pending`.
 
-The executor runs in a namespace of its own and can't read Secrets in the Appwrite namespace. When your S3 keys are inline values, the chart copies them over. When they come from a Secret you manage, create a copy for the executor, as the [executor guide](https://github.com/appwrite/helm-chart/blob/main/docs/executor.md#existing-secrets) shows. Runtime options that the Docker installation sets with environment variables are covered in [Functions](/docs/advanced/self-hosting/configuration/functions) and [Sites](/docs/advanced/self-hosting/configuration/sites).
+The executor runs in a namespace of its own and can't read Secrets in the Appwrite namespace. When the S3 keys are generated by the chart or set inline, the chart copies them over. When they come from a Secret you manage, create a copy for the executor, as the [executor guide](https://github.com/appwrite/helm-chart/blob/main/docs/executor.md#existing-secrets) shows. Runtime options that the Docker installation sets with environment variables are covered in [Functions](/docs/advanced/self-hosting/configuration/functions) and [Sites](/docs/advanced/self-hosting/configuration/sites).
 
 # Production checklist {% #production %}
 
 Before real users depend on the install:
 
-- Move PostgreSQL, Redis, and ClickHouse to managed services or operators, with replication and backups.
+- Move PostgreSQL, Redis, and ClickHouse to managed services or operators, with replication and backups, and files to an S3 store with redundancy.
+- Give the executor dedicated nodes, or set `compute.enabled: false` if you don't use Functions and Sites.
 - Back up the chart's whole Secret outside the cluster, not only the encryption key, because the built-in PostgreSQL's password is tied to its volume. Or provide every credential from your secret manager with `appwrite.secrets.existingSecret` and each credential's `secretName`.
 - Back up the database and files, and test a restore.
 - Use a ReadWriteMany volume for `/storage`, so API and worker pods can spread across nodes.
@@ -442,7 +450,7 @@ Each migration run applies only the migration of the version it installs, so don
 You can move an existing Docker Compose installation to the chart and keep all of its data. Before you start:
 
 - Upgrade the Docker installation to the Appwrite version the chart deploys, including its data migration.
-- Keep the same storage device. Switching between `local` and `s3` during the move breaks the file paths stored in the database.
+- Keep the same storage device. Switching between `local` and `s3` during the move breaks the file paths stored in the database. A Docker installation stores files locally by default, so set `storage.device: local`, and with it `compute.enabled: false`, unless it already uses S3.
 - Plan for downtime. Appwrite is unavailable from step 2 until step 5 finishes.
 
 The move has five steps:

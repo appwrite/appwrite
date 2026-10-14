@@ -434,7 +434,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Kubernetes",
     "description": "Install self-hosted Appwrite on Kubernetes with the official Helm chart, using built-in or managed PostgreSQL, Redis, ClickHouse, and S3 storage.",
     "layout": "article",
-    "readingTimeMinutes": 14
+    "readingTimeMinutes": 15
   },
   {
     "slug": "advanced/self-hosting/production",

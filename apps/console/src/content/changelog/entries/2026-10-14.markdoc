@@ -8,7 +8,7 @@ tags: infrastructure
 
 Self-hosted Appwrite now has an official Helm chart. It installs the API, console, realtime, workers, and schedulers on your own [Kubernetes](/docs/advanced/self-hosting/platforms/kubernetes) cluster from `oci://ghcr.io/appwrite/charts/appwrite`, and runs Appwrite's data migration as part of `helm upgrade`.
 
-A plain install includes built-in PostgreSQL, Redis, and ClickHouse. For production, switch each one to a managed service on its own, store files in S3, and route traffic through an ingress controller or the Gateway API. Functions and Sites run in the cluster too, with builds as Kubernetes Jobs and the executor in a namespace of its own.
+A plain install includes built-in PostgreSQL, Redis, ClickHouse, and S3-compatible object storage, and runs Functions and Sites in the cluster, with builds as Kubernetes Jobs and the executor in a namespace of its own. For production, switch each service to a managed one on its own and route traffic through an ingress controller or the Gateway API. Chart 2.0.0 deploys Appwrite 2.5.0.
 
 ```bash
 helm install appwrite oci://ghcr.io/appwrite/charts/appwrite \
