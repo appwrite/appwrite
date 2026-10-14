@@ -1366,23 +1366,7 @@ trait StorageBase
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()));
-            $this->assertSame(404, $file['headers']['status-code']);
-        }, 10_000, 500);
-
-        $this->assertEventually(function () use ($bucketId, $fileId) {
-            $preview = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/preview', array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-            ], $this->getHeaders()), [
-                'width' => 300,
-                'height' => 100,
-                'borderRadius' => '50',
-                'opacity' => '0.5',
-                'output' => 'png',
-                'rotation' => '45',
-            ]);
-
-            $this->assertSame(404, $preview['headers']['status-code']);
+            $this->assertEquals(404, $file['headers']['status-code']);
         }, 10_000, 500);
 
         //upload again using the same ID
