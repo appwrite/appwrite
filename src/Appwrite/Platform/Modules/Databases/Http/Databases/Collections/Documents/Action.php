@@ -8,6 +8,9 @@ use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Functions\EventProcessor;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Action as DatabasesAction;
+use Appwrite\Utopia\Database\Attribute;
+use Appwrite\Utopia\Database\Hook\UniqueId;
+use Appwrite\Utopia\Database\Validator\CustomId;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
@@ -387,6 +390,79 @@ abstract class Action extends DatabasesAction
         }
 
         return $document;
+    }
+
+    /**
+     * Validates the relationship values of a write at every depth and strips the readonly attributes of each nested
+     * related document. A staged write logs what its commit will write, so it gives nested related documents their
+     * IDs now; any other write leaves that to the database's UniqueId hook.
+     *
+     * @param array<string, mixed> $document
+     * @return array<string, mixed>
+     */
+    protected function prepareRelationships(array $document, Document $collection, Database $dbForProject, Document $database, bool $privileged, bool $staged): array
+    {
+        foreach (Attribute::relationships($collection) as $key => $relationship) {
+            $value = $document[$key] ?? null;
+            if (empty($value)) {
+                continue;
+            }
+
+            $isList = \is_array($value) && \array_is_list($value);
+            $relations = $isList ? $value : [$value];
+            $relatedCollection = null;
+
+            foreach ($relations as $index => $relation) {
+                $this->validateRelationship($relation);
+
+                if (\is_array($relation) && !\array_is_list($relation)) {
+                    $relatedCollection ??= $dbForProject->getAuthorization()->skip(fn (): Document => $dbForProject->getDocument(
+                        'database_' . $database->getSequence(),
+                        (string) $relationship->getAttribute('relatedCollection', '')
+                    ));
+                    if ($staged) {
+                        $relation = (new UniqueId())->prepare($relatedCollection, new Document($relation))->getArrayCopy();
+                    }
+                    $relation = $this->removeReadonlyAttributes($relation, $privileged);
+                    $relation = $this->prepareRelationships($relation, $relatedCollection, $dbForProject, $database, $privileged, $staged);
+                }
+
+                $relations[$index] = $relation;
+            }
+
+            $document[$key] = $isList ? $relations : $relations[0];
+        }
+
+        return $document;
+    }
+
+    /**
+     * Validate relationship values.
+     * Handles Document objects, ID strings, and associative arrays.
+     */
+    protected function validateRelationship(mixed $relation): void
+    {
+        $relationId = null;
+
+        if ($relation instanceof Document) {
+            $relationId = $relation->getId();
+        } elseif (\is_string($relation)) {
+            $relationId = $relation;
+        } elseif (\is_array($relation) && !\array_is_list($relation)) {
+            $relationId = $relation['$id'] ?? null;
+        } else {
+            throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, 'Relationship value must be an object, document ID string, or associative array');
+        }
+
+        if ($relationId !== null) {
+            if (!\is_string($relationId)) {
+                throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, 'Relationship $id must be a string');
+            }
+            $validator = new CustomId();
+            if (!$validator->isValid($relationId)) {
+                throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, $validator->getDescription());
+            }
+        }
     }
 
     /**

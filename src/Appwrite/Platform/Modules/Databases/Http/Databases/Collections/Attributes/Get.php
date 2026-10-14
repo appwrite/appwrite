@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes;
 
-use Appwrite\Databases\FormatOptions;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Deprecated;
@@ -107,7 +106,20 @@ class Get extends Action
             $attribute->setAttribute($key, $option);
         }
 
-        FormatOptions::apply($attribute);
+        $formatOptions = $attribute->getAttribute('formatOptions', []);
+        if (\is_string($formatOptions)) {
+            $formatOptions = \json_decode($formatOptions, true) ?? [];
+        }
+        if (\is_array($formatOptions)) {
+            if (isset($formatOptions['min']) || isset($formatOptions['max'])) {
+                $attribute
+                    ->setAttribute('min', $formatOptions['min'] ?? null)
+                    ->setAttribute('max', $formatOptions['max'] ?? null);
+            }
+            if (isset($formatOptions['elements'])) {
+                $attribute->setAttribute('elements', $formatOptions['elements']);
+            }
+        }
 
         $model = $this->getModel($type, $format);
 
