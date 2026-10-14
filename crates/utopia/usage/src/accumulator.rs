@@ -1,7 +1,6 @@
 //! [`Accumulator`]: metrics buffered in memory and written in batches.
 
 use indexmap::IndexMap;
-use md5::{Digest, Md5};
 use php_std::datetime::DateTime;
 use php_std::json::{self, Flags};
 use php_std::sort::{SortFlags, ksort};
@@ -158,8 +157,8 @@ impl Accumulator {
     }
 }
 
-/// `md5(json_encode([$tenant, $metric, $type, ksort($tags)]))`: the
-/// identity of an entry, tags in key order.
+/// `json_encode([$tenant, $metric, $type, ksort($tags)])`, which PHP keys
+/// its buffer by the MD5 of: the identity of an entry, tags in key order.
 fn key(tenant: &str, metric: &str, kind: Kind, tags: &Array) -> Result<String> {
     let mut canonical = tags.clone();
     ksort(&mut canonical, SortFlags::Regular);
@@ -169,7 +168,7 @@ fn key(tenant: &str, metric: &str, kind: Kind, tags: &Array) -> Result<String> {
         Value::from(kind.as_str()),
         Value::Array(canonical),
     ]));
-    let encoded = json::encode(&identity, Flags::THROW_ON_ERROR, json::DEFAULT_DEPTH)
-        .map_err(|e| Error::Json(e.message().into()))?;
-    Ok(hex::encode(Md5::digest(encoded.as_bytes())))
+    // PHP keys the buffer by the MD5 of this JSON; the JSON itself is the
+    // same identity, without hashing it.
+    json::encode(&identity, Flags::THROW_ON_ERROR, json::DEFAULT_DEPTH).map_err(|e| Error::Json(e.message().into()))
 }
