@@ -10,8 +10,8 @@ A plain install includes everything Appwrite needs, PostgreSQL, Redis, and Click
 
 The chart is published to `oci://ghcr.io/appwrite/charts/appwrite`, and its source, guides, and example values files live in the [appwrite/helm-chart](https://github.com/appwrite/helm-chart) repository.
 
-{% info title="Pre-release" %}
-Chart versions before 1.0 are pre-releases, and a new minor version can change or rename values. Read the [version notes](https://github.com/appwrite/helm-chart/blob/main/docs/upgrading.md#version-notes) before each upgrade.
+{% info title="Chart versions" %}
+The chart follows semantic versioning: only a new major version changes or renames values. Read the [version notes](https://github.com/appwrite/helm-chart/blob/main/docs/upgrading.md#version-notes) before each upgrade.
 {% /info %}
 
 # Docker or Kubernetes {% #docker-or-kubernetes %}
@@ -41,7 +41,7 @@ Each chart version deploys one Appwrite version, its `appVersion`, so upgrading 
 
 | Chart | Appwrite |
 | ----- | -------- |
-| 0.1.0 | 2.3.0    |
+| 1.0.0 | 2.3.0    |
 
 To see which Appwrite version the latest chart deploys:
 

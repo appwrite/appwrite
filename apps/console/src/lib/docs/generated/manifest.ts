@@ -378,7 +378,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Installation",
     "description": "Step-by-step guide to install Appwrite using Docker. Learn how to set up a self-hosted Appwrite instance with Docker Compose on any operating system.",
     "layout": "article",
-    "readingTimeMinutes": 7
+    "readingTimeMinutes": 8
   },
   {
     "slug": "advanced/self-hosting/mcp",
@@ -2902,7 +2902,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Execution",
     "description": "Understand serverless function execution in Appwrite. Explore how triggers, events, and data flow enable dynamic execution of your code.",
     "layout": "article",
-    "readingTimeMinutes": 5
+    "readingTimeMinutes": 7
   },
   {
     "slug": "products/functions/executions",
@@ -3336,7 +3336,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Deploy a TanStack Start app to Appwrite Sites",
     "description": "Learn how to setup and deploy TanStack Start apps on Appwrite Sites.",
     "layout": "article",
-    "readingTimeMinutes": 1
+    "readingTimeMinutes": 2
   },
   {
     "slug": "products/sites/quick-start/vanilla",

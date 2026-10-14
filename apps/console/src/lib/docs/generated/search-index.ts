@@ -5200,7 +5200,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "products/sites/quick-start/tanstack-start",
     "title": "Deploy a TanStack Start app to Appwrite Sites",
     "description": "Learn how to setup and deploy TanStack Start apps on Appwrite Sites.",
-    "excerpt": "First, you must either create a TanStack Start app or setup the TanStack Start starter template. Open your terminal, and run the following command. Push this project to a GitHub repository. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Head to the **Sites** page in your Appwrite project, click on the **Create site** button, and select **Connect a repository**. Connect your GitHub account and select the repository…",
+    "excerpt": "First, you must either create a TanStack Start app or setup the TanStack Start starter template. Open your terminal, and run the following command. When the CLI asks for a deployment adapter, select **Nitro (agnostic)** or **None**. Appwrite Sites runs both. The adapter sets the output directory you confirm in step 3. Push this project to a GitHub repository. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project.…",
     "breadcrumbs": [
       "Sites",
       "Start with Sites",

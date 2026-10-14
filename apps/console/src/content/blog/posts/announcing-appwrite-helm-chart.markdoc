@@ -2,7 +2,7 @@
 layout: post
 title: "Announcing the official Appwrite Helm chart for Kubernetes"
 description: Self-host Appwrite on Kubernetes with the official Helm chart, using built-in or managed PostgreSQL, Redis, and ClickHouse, S3, and Functions and Sites.
-date: 2026-10-13
+date: 2026-10-14
 cover: /images/blog/announcing-appwrite-helm-chart/cover.avif
 timeToRead: 8
 author: levi-van-noort
@@ -174,7 +174,7 @@ Every change is linted with chart-testing and `helm lint --strict` on Helm 3.18 
 
 Each install runs `helm test`, an end-to-end smoke test, and a second upgrade that must keep the credentials and leave every pod alone.
 
-The chart starts at version 0.1.0. Until 1.0, a new minor version can change or rename values, so read the version notes before you upgrade.
+The first release is 1.0.0, and the chart follows semantic versioning: only a new major version changes or renames values. Read the version notes before you upgrade.
 
 # When to use the Helm chart
 
