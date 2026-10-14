@@ -13,7 +13,7 @@ const row =
   'flex min-w-0 items-center gap-2 rounded-md px-2 py-1.5 text-[13px] text-sidebar-ink transition-colors hover:bg-sidebar-accent hover:text-sidebar-strong data-[status=active]:bg-sidebar-accent data-[status=active]:text-sidebar-strong'
 
 /**
- * A menu item shown only in migration mode carries the migration marking (a yellow rule and tint), so the
+ * A menu item shown only in migration mode carries the migration marking (a yellow tint), so the
  * menu reads as the Rust docs plus what migration mode adds. Every such row and group goes through this.
  */
 const MIGRATION_TITLE = 'Shown in migration mode'
@@ -57,7 +57,7 @@ function Group({
   children: ReactNode
   depth?: number
   badge?: ReactNode
-  /** Shown only in migration mode: the header gets the marking, the rail of its items turns yellow. */
+  /** Shown only in migration mode: the header gets the marking. */
   migration?: boolean
 }) {
   const [open, setOpen] = useState(initial)
@@ -81,7 +81,7 @@ function Group({
         <span className="min-w-0 flex-1 truncate">{label}</span>
         {badge}
       </button>
-      {open ? <div className={`ml-[13px] grid border-l pl-2 ${migration ? 'border-migration-accent' : 'border-border'}`}>{children}</div> : null}
+      {open ? <div className="ml-[13px] grid border-l border-border pl-2">{children}</div> : null}
     </div>
   )
 }
