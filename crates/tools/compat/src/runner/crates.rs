@@ -545,6 +545,11 @@ pub fn write(mut engine: Option<&mut Engine>, root: &Path, out: &Path) -> Result
         "rust": null,
         "php": root_manifest["name"],
         "crates": appwrite.crates,
+        "components": appwrite
+            .components
+            .iter()
+            .map(|((kind, name), libraries)| json!({ "kind": kind, "name": name, "libraries": libraries }))
+            .collect::<Vec<_>>(),
     }));
     write_json(
         &out.join("graph.json"),

@@ -37,6 +37,12 @@ pub struct Appwrite {
     /// autoload, or one installed through another package); `files` counts
     /// the PHP files importing it.
     pub php: BTreeMap<String, Value>,
+    /// (kind, name) → slug → the files of that part of Appwrite importing the
+    /// library, merged with the Utopia dependencies of its Rust crate
+    /// (`crates/appwrite/<name>`, counted as one file): what each of
+    /// Appwrite's services is built from. The kinds are those of
+    /// [`component_of`]: `http`, `worker`, `schedule`, `realtime` and `mqtt`.
+    pub components: BTreeMap<(String, String), BTreeMap<String, usize>>,
 }
 
 /// The node id of Appwrite in the ecosystem graph.
@@ -278,6 +284,8 @@ impl Workspace {
     /// namespace prefixes to slugs (see [`Workspace::namespaces`]).
     pub fn appwrite(&self, root: &Path, namespaces: &[(String, String)]) -> Appwrite {
         let mut out = Appwrite::default();
+        // `crates/appwrite/<name>` → the libraries its code depends on.
+        let mut rust_of: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
         let mut dirs: Vec<String> = std::fs::read_dir(root.join("crates/appwrite"))
             .into_iter()
             .flatten()
@@ -307,6 +315,9 @@ impl Workspace {
                 }
             }
             for (slug, kinds) in kinds {
+                if kinds.iter().any(|k| k == "normal") {
+                    rust_of.entry(name.clone()).or_default().insert(slug.clone());
+                }
                 out.rust.entry(slug).or_default().push(json!({ "crate": package, "dir": dir, "kinds": kinds }));
             }
         }
@@ -342,8 +353,13 @@ impl Workspace {
                     let text = std::fs::read_to_string(&path).unwrap_or_default();
                     let found: BTreeSet<&str> =
                         imports(&text).iter().filter_map(|n| namespace_of(n, namespaces)).collect();
+                    let component = path.strip_prefix(root).ok().and_then(component_of);
                     for slug in found {
                         *files.entry(slug.to_owned()).or_default() += 1;
+                        if let Some((kind, name)) = &component {
+                            let libraries = out.components.entry(((*kind).to_owned(), name.clone())).or_default();
+                            *libraries.entry(slug.to_owned()).or_default() += 1;
+                        }
                     }
                 }
             }
@@ -352,6 +368,12 @@ impl Workspace {
             let entry =
                 out.php.entry(slug).or_insert_with(|| json!({ "via": "import", "kinds": ["normal"], "files": 0 }));
             entry["files"] = json!(count);
+        }
+        // A component's Rust crate shares its name, lowercased (`Users` → `crates/appwrite/users`).
+        for ((_, name), slugs) in out.components.iter_mut() {
+            for slug in rust_of.get(&name.to_lowercase()).into_iter().flatten() {
+                slugs.entry(slug.clone()).or_insert(1);
+            }
         }
         out
     }
@@ -718,6 +740,45 @@ fn imports(text: &str) -> Vec<String> {
     out
 }
 
+/// The part of Appwrite a file belongs to, as (kind, name), from its path
+/// relative to the repository:
+///
+/// - `http`: an API module, `src/Appwrite/Platform/Modules/<Module>/...`
+/// - `worker`: a queue worker, `src/Appwrite/Platform/Workers/<Worker>.php`
+///   or a module's `Workers/<Worker>.php` (not its exceptions)
+/// - `schedule`: the schedulers, `src/Appwrite/Platform/Tasks/Schedule*.php`
+/// - `realtime`: the realtime server, `app/realtime.php` and `src/Appwrite/Realtime`
+/// - `mqtt`: the MQTT broker, `app/mqtt.php` and `src/Appwrite/Mqtt`
+///
+/// Anything else (`Modules/Core.php`, shared libraries, other tasks) belongs to none.
+fn component_of(path: &Path) -> Option<(&'static str, String)> {
+    let stem = path.file_stem()?.to_str()?;
+    if let Ok(rest) = path.strip_prefix("src/Appwrite/Platform/Modules") {
+        let parts: Vec<&str> = rest.components().filter_map(|c| c.as_os_str().to_str()).collect();
+        return match parts.as_slice() {
+            [_, "Workers", file] if !stem.ends_with("Exception") && file.ends_with(".php") => {
+                Some(("worker", stem.to_owned()))
+            }
+            [_, "Workers", ..] => None,
+            [module, _, ..] => Some(("http", (*module).to_owned())),
+            _ => None,
+        };
+    }
+    if path.parent() == Some(Path::new("src/Appwrite/Platform/Workers")) {
+        return Some(("worker", stem.to_owned()));
+    }
+    if path.parent() == Some(Path::new("src/Appwrite/Platform/Tasks")) && stem.starts_with("Schedule") {
+        return Some(("schedule", "Schedulers".to_owned()));
+    }
+    if path == Path::new("app/realtime.php") || path.starts_with("src/Appwrite/Realtime") {
+        return Some(("realtime", "Realtime".to_owned()));
+    }
+    if path == Path::new("app/mqtt.php") || path.starts_with("src/Appwrite/Mqtt") {
+        return Some(("mqtt", "MQTT".to_owned()));
+    }
+    None
+}
+
 /// The library whose namespace holds `name`: the longest matching prefix.
 fn namespace_of<'a>(name: &str, namespaces: &'a [(String, String)]) -> Option<&'a str> {
     namespaces
@@ -882,6 +943,7 @@ mod tests {
                 "validators".to_owned(),
                 json!({ "via": "import", "kinds": ["normal"], "files": 3 }),
             )]),
+            components: BTreeMap::new(),
         };
         let edges = edges(&rust, &php, &appwrite);
         let brief: Vec<(String, String, String, String)> = edges
@@ -908,6 +970,27 @@ mod tests {
         );
         assert_eq!(edges[0]["crates"], json!(["appwrite-core", "appwrite-users"]));
         assert_eq!(edges[1]["via"], json!("import"));
+    }
+
+    #[test]
+    fn components() {
+        let of = |p: &str| component_of(Path::new(p)).map(|(kind, name)| format!("{kind}/{name}"));
+        assert_eq!(
+            of("src/Appwrite/Platform/Modules/Databases/Http/Databases/Create.php").as_deref(),
+            Some("http/Databases")
+        );
+        assert_eq!(of("src/Appwrite/Platform/Modules/VCS/Module.php").as_deref(), Some("http/VCS"));
+        assert_eq!(of("src/Appwrite/Platform/Modules/Functions/Workers/Builds.php").as_deref(), Some("worker/Builds"));
+        assert_eq!(of("src/Appwrite/Platform/Modules/Functions/Workers/BuildException.php"), None);
+        assert_eq!(of("src/Appwrite/Platform/Workers/Mails.php").as_deref(), Some("worker/Mails"));
+        assert_eq!(of("src/Appwrite/Platform/Tasks/ScheduleFunctions.php").as_deref(), Some("schedule/Schedulers"));
+        assert_eq!(of("src/Appwrite/Platform/Tasks/Maintenance.php"), None);
+        assert_eq!(of("app/realtime.php").as_deref(), Some("realtime/Realtime"));
+        assert_eq!(of("src/Appwrite/Realtime/Message/Envelope.php").as_deref(), Some("realtime/Realtime"));
+        assert_eq!(of("app/mqtt.php").as_deref(), Some("mqtt/MQTT"));
+        assert_eq!(of("src/Appwrite/Platform/Modules/Core.php"), None);
+        assert_eq!(of("src/Appwrite/Event/Event.php"), None);
+        assert_eq!(of("app/init.php"), None);
     }
 
     #[test]
