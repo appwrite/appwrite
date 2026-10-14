@@ -33,6 +33,7 @@
     "lint:types": "bun run scripts/lint-types.ts",
     "prune:removed-blog-assets": "bun run scripts/prune-removed-blog-assets.ts",
     "release:self-hosted": "bun run scripts/release-self-hosted.ts",
+    "sdk:preview": "bun run scripts/sdk-preview.ts",
     "serve": "vite preview",
     "start": "bun --preload ./src/lib/sentry/init-server.ts ./server.ts",
     "test": "playwright test",

@@ -97,6 +97,10 @@ abstract class ReplayTestCase extends TestCase
         $this->database->createAttribute('pushLedger', 'messageId', Database::VAR_STRING, 255, false);
         $this->database->createAttribute('pushLedger', 'sequence', Database::VAR_INTEGER, 0, true);
 
+        $this->database->createCollection('subscribers', [], [], $any, false);
+        $this->database->createAttribute('subscribers', 'topicInternalId', Database::VAR_STRING, 255, true);
+        $this->database->createAttribute('subscribers', 'userId', Database::VAR_STRING, 255, true);
+
         $container = new Container();
         $container->set('getConsoleDB', fn () => fn (): Database => $this->database, []);
         $container->set('getProjectDB', fn () => fn (Document $project): Database => $this->database, []);
@@ -114,15 +118,27 @@ abstract class ReplayTestCase extends TestCase
         );
     }
 
-    protected function seedTopic(string $name, int $tail, ?int $expiry = null, ?string $id = null): string
+    protected function seedTopic(string $name, int $tail, ?int $expiry = null, ?string $id = null, bool $subscribed = true): string
     {
-        return $this->database->createDocument('topics', new Document([
+        $topic = $this->database->createDocument('topics', new Document([
             '$id' => $id ?? $name,
             'name' => $name,
             'sequence' => $tail,
             'qos' => Packet::QOS_1,
             'expiry' => $expiry,
-        ]))->getId();
+        ]));
+
+        // Ordinary topics are gated by the subscriber list; seed the test user's membership so replay
+        // is granted. Reserved users/<id> topics are owner-gated and ignore this.
+        if ($subscribed) {
+            $this->database->createDocument('subscribers', new Document([
+                '$id' => ID::unique(),
+                'topicInternalId' => (string) $topic->getSequence(),
+                'userId' => self::USER,
+            ]));
+        }
+
+        return $topic->getId();
     }
 
     protected function updateTail(string $topic, int $tail): void
@@ -206,9 +222,19 @@ abstract class ReplayTestCase extends TestCase
 
     protected function subscribe(Connection $connection, string ...$topics): void
     {
+        $this->subscribeCodes($connection, ...$topics);
+    }
+
+    /**
+     * Subscribe and return the SUBACK reason code per filter (QoS granted, or Suback::DENIED).
+     *
+     * @return list<int>
+     */
+    protected function subscribeCodes(Connection $connection, string ...$topics): array
+    {
         $packet = Packet::parse(V5::subscribe(1, $topics, Packet::QOS_1));
 
-        $this->handler->onSubscribe(Subscribe::decode($packet->body, V5::PROTOCOL_LEVEL), $connection);
+        return $this->handler->onSubscribe(Subscribe::decode($packet->body, V5::PROTOCOL_LEVEL), $connection)->codes();
     }
 
     /** @return list<Publish> */

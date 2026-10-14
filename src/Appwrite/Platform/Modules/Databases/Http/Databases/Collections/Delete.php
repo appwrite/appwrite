@@ -99,7 +99,6 @@ class Delete extends Action
 
         $publisherForDatabase->enqueue(new DatabaseMessage(
             project: $queueForEvents->getProject(),
-            user: $queueForEvents->getUser(),
             type: DATABASE_TYPE_DELETE_COLLECTION,
             database: $database,
             collection: $this->isCollectionsAPI() ? $collection : null,
