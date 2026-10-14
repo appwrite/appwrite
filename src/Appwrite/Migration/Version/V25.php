@@ -412,6 +412,9 @@ class V25 extends Migration
                     }
                     break;
 
+                case 'presenceLogs':
+                    // Added in 1.9.5 and created only by V24, which an install that ran
+                    // the 1.9.6 migration or upgraded straight from 1.8.x never ran.
                 case 'pushLedger':
                     // Added in 2.3.0 for every project; an install upgraded from 2.2.0
                     // has no table yet, and migrating its documents fails without one.

@@ -814,6 +814,7 @@ class Nats implements Synchronous, Consumer, Bounded
                 }
             }
 
+            Message::warnIfLarge($queue->name, \strlen($jsMessage->getData()));
             try {
                 $data = $this->codec->decode($jsMessage->getData());
             } catch (\Throwable) {
@@ -835,7 +836,8 @@ class Nats implements Synchronous, Consumer, Bounded
             $messages[] = new Message($data)
                 // JetStream counts deliveries from 1; expose it as the Redis-style attempt count.
                 ->setAttempts(max(0, $jsMessage->metadata()->numDelivered - 1))
-                ->setSequence($jsMessage->metadata()->streamSequence);
+                ->setSequence($jsMessage->metadata()->streamSequence)
+                ->setSize(\strlen($jsMessage->getData()));
         }
 
         return $messages;
