@@ -682,6 +682,12 @@ fn request(
         Origin::Rule => headers.push(("origin".into(), format!("https://{}", rule_domain(&twin.project)))),
         Origin::OtherRule => headers.push(("origin".into(), format!("https://{}", rule_domain(&other.project)))),
     }
+    // A Rust server run on the host sees the client as localhost: it is
+    // told the address the containers see (`COMPAT_DIFF_RUST_FORWARDED_FOR`).
+    // Both twins get it, so the requests (and their counted size) match.
+    if let Ok(ip) = std::env::var("COMPAT_DIFF_RUST_FORWARDED_FOR") {
+        headers.push(("x-forwarded-for".into(), ip));
+    }
     let mut method = route.method.to_owned();
     let mut body = body;
     match scenario.variant {
@@ -921,6 +927,11 @@ impl Normalizer {
             };
             fixed.push((format!("platform:{owner}:keys:{id}"), format!("platform:{placeholder}:keys:{name}")));
             fixed.push((id.clone(), name.to_owned()));
+        }
+        // A Rust server run on the host reaches PostgreSQL as `localhost`,
+        // which names its cache keys; the containers name it `postgresql`.
+        if twin.runtime == "rust" && std::env::var_os("COMPAT_DIFF_RUST_IPS").is_some() {
+            fixed.push(("-cache-localhost:".to_owned(), "-cache-postgresql:".to_owned()));
         }
         fixed.retain(|(from, _)| !from.is_empty());
         // Longest first, so a secret is replaced before a project ID it may contain.

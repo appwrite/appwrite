@@ -22,8 +22,8 @@
       "description": "Rate limits a route by its `abuse-key`, `abuse-limit` and `abuse-time` labels (raised 100 times for listed projects), skipping keys and privileged users and when `_APP_OPTIONS_ABUSE` is disabled; sets the X-RateLimit headers and throws a rate limit error past the limit. Also hands the user to the request and response.",
       "php": { "file": "app/controllers/shared/api.php", "kind": "init", "anchor": "GENERAL_RATE_LIMIT_EXCEEDED" },
       "rust": {
-        "status": "missing",
-        "note": "Not implemented; the Users routes declare no abuse labels, so PHP sets no limit or header for them either.",
+        "status": "partial",
+        "note": "Implemented in `platform/guards.rs` (route labels in `platform::Labels`); no route Rust serves carries its labels yet, so Teams and Account prove it.",
         "where": []
       }
     },
@@ -45,14 +45,14 @@
       "title": "One session at a time",
       "description": "Refuses to create a session for a caller who already has one, unless the route is labelled `session.allowActive`.",
       "php": { "file": "app/controllers/shared/api.php", "kind": "init", "anchor": "session.allowActive" },
-      "rust": { "status": "missing", "note": null, "where": [] }
+      "rust": { "status": "partial", "note": "Implemented in `platform/guards.rs` (route labels in `platform::Labels`); no route Rust serves carries its labels yet, so Teams and Account prove it.", "note": null, "where": [] }
     },
     {
       "id": "session-limit",
       "title": "Session limit",
       "description": "After a session is created, deletes the user's oldest sessions beyond the project's `maxSessions` and purges the cached user.",
       "php": { "file": "app/controllers/shared/api.php", "kind": "shutdown", "anchor": "maxSessions" },
-      "rust": { "status": "missing", "note": null, "where": [] }
+      "rust": { "status": "partial", "note": "Implemented in `platform/guards.rs` (route labels in `platform::Labels`); no route Rust serves carries its labels yet, so Teams and Account prove it.", "note": null, "where": [] }
     },
     {
       "id": "events",
@@ -73,7 +73,7 @@
       "title": "Abuse counter reset",
       "description": "Resets the route's abuse counters when the response status is one of its `abuse-reset` codes.",
       "php": { "file": "app/controllers/shared/api.php", "kind": "shutdown", "anchor": "abuse-reset" },
-      "rust": { "status": "missing", "note": "No Users route has `abuse-reset`.", "where": [] }
+      "rust": { "status": "partial", "note": "Implemented in `platform/guards.rs` (route labels in `platform::Labels`); no route Rust serves carries its labels yet, so Teams and Account prove it.", "where": [] }
     },
     {
       "id": "audits",
@@ -99,8 +99,8 @@
       "description": "Outside the console, dispatches RequestCompleted (network requests, inbound and outbound bytes) for non-privileged callers and enqueues the request's usage metrics, without the ones the API key disables.",
       "php": { "file": "app/controllers/shared/api.php", "kind": "shutdown", "anchor": "publisherForUsage->enqueue" },
       "rust": {
-        "status": "partial",
-        "note": "Network and resource metrics are published; an API key's disabled metrics are read but not filtered out yet.",
+        "status": "done",
+        "note": "Network and resource metrics, without the metrics an API key disabled (suffix match), and still published when the key disabled them all. Proved by `appwrite diff` with an ephemeral key.",
         "where": [{ "file": "crates/appwrite/core/src/platform/shutdown.rs", "anchor": "async fn usage" }]
       }
     },
@@ -110,8 +110,8 @@
       "description": "After a successful SDK, CLI or MCP request, marks the matching onboarding stage of the project (or the project in the path on the console) as completed, with the actor type, under a lock.",
       "php": { "file": "app/controllers/shared/api.php", "kind": "shutdown", "anchor": "ONBOARDING_STATUS_COMPLETED" },
       "rust": {
-        "status": "partial",
-        "note": "Records `users.create`, the only Users stage; the CLI and MCP install stages are not recorded.",
+        "status": "done",
+        "note": "Every stage of `app/config/onboarding.php` (a unit test pins the list) and the CLI and MCP install stages from `X-SDK-Name` / `X-SDK-Language`. Proved by `appwrite diff` (CLI and MCP variants).",
         "where": [{ "file": "crates/appwrite/core/src/platform/shutdown.rs", "anchor": "async fn onboarding" }]
       }
     },
@@ -236,21 +236,21 @@
       "title": "Recent MFA challenge",
       "description": "For `mfaProtected` routes, requires an MFA challenge completed within the recent window.",
       "php": { "file": "app/controllers/shared/api/auth.php", "kind": "init", "anchor": "USER_CHALLENGE_REQUIRED" },
-      "rust": { "status": "missing", "note": null, "where": [] }
+      "rust": { "status": "partial", "note": "Implemented in `platform/guards.rs` (route labels in `platform::Labels`); no route Rust serves carries its labels yet, so Teams and Account prove it.", "note": null, "where": [] }
     },
     {
       "id": "recent-session",
       "title": "Recent sign-in",
       "description": "For `recentSession` routes, requires a session created or MFA-verified within the recent window.",
       "php": { "file": "app/controllers/shared/api/auth.php", "kind": "init", "anchor": "USER_REAUTHENTICATION_REQUIRED" },
-      "rust": { "status": "missing", "note": null, "where": [] }
+      "rust": { "status": "partial", "note": "Implemented in `platform/guards.rs` (route labels in `platform::Labels`); no route Rust serves carries its labels yet, so Teams and Account prove it.", "note": null, "where": [] }
     },
     {
       "id": "auth-methods",
       "title": "Authentication methods",
       "description": "For `auth` routes, refuses console access from denied countries and, except for keys and privileged users, an authentication method the project disabled (`auth.type` label).",
       "php": { "file": "app/controllers/shared/api/auth.php", "kind": "init", "anchor": "auth.type" },
-      "rust": { "status": "missing", "note": null, "where": [] }
+      "rust": { "status": "partial", "note": "Implemented in `platform/guards.rs` (route labels in `platform::Labels`); no route Rust serves carries its labels yet, so Teams and Account prove it.", "note": null, "where": [] }
     },
     {
       "id": "graphql-api",
@@ -300,8 +300,8 @@
       "description": "In development, applies the `X-Appwrite-Timeout` header as the project database's query timeout.",
       "php": { "file": "src/Appwrite/Platform/Modules/Databases/Http/Init/Timeout.php", "kind": "init" },
       "rust": {
-        "status": "missing",
-        "note": "Its `api` group makes it run for every API route, Users included; it only acts in development.",
+        "status": "done",
+        "note": "`X-Appwrite-Timeout` sets the project database timeout in development. Proved by `appwrite diff` (timeout variant).",
         "where": []
       }
     },
