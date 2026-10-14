@@ -84,51 +84,74 @@ export function Hero({ index }: { index: Index }) {
   // The crates live in the Appwrite repository, not on crates.io.
   const install = `cargo add ${http?.rust?.name ?? 'utopia-http'} --git https://github.com/appwrite/appwrite`
   return (
-    <section className="grid gap-16 pt-10 pb-6 sm:pt-16">
-      <div className="mx-auto grid w-full max-w-[820px] grid-cols-[minmax(0,1fr)] justify-items-center gap-7 text-center">
+    <section className="relative grid gap-16 pt-10 pb-6 sm:pt-16">
+      {/* The blueprint grid and the accent's glow, behind the opening. */}
+      <div className="pointer-events-none absolute -inset-x-5 -top-8 h-[560px] md:-inset-x-10" aria-hidden>
+        <div className="grid-backdrop absolute inset-0" />
+        <div className="glow absolute inset-0" />
+      </div>
+      <div className="relative mx-auto grid w-full max-w-[860px] grid-cols-[minmax(0,1fr)] justify-items-center gap-7 text-center">
         <a
           href="https://appwrite.io"
           target="_blank"
           rel="noreferrer"
-          className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1 text-[12.5px] text-muted-foreground transition-colors hover:border-ring hover:text-foreground"
+          className="inline-flex items-center gap-2 rounded-full border border-border bg-background/70 py-1 pr-3 pl-1.5 font-mono text-[11.5px] text-muted-foreground backdrop-blur transition-colors hover:border-highlight-line hover:text-foreground"
         >
-          <AppwriteMark className="size-4" />
+          <span className="inline-flex size-5 items-center justify-center rounded-full bg-muted">
+            <AppwriteMark className="size-3" />
+          </span>
           From the team behind Appwrite
           <ArrowUpRight className="size-3.5" />
         </a>
-        <h1 className="m-0 text-[36px] leading-[1.05] tracking-[-0.035em] sm:text-[56px] lg:text-[64px]">Build services, one crate at a time</h1>
-        <p className="m-0 max-w-[58ch] text-[16.5px] leading-relaxed text-muted-foreground">
+        <h1 className="m-0 text-[40px] leading-[1.02] tracking-[-0.045em] sm:text-[60px] lg:text-[72px]">
+          <span className="text-gradient">Build services,</span>
+          <br />
+          <span className="bg-gradient-to-r from-highlight via-[#a78bfa] to-[#FF1650] bg-clip-text text-transparent">one crate at a time</span>
+        </h1>
+        <p className="m-0 max-w-[60ch] text-[16.5px] leading-relaxed text-muted-foreground">
           Small, focused crates for HTTP, validation, authentication, databases, queues and storage. Use one on its own, or combine them into a
           complete API server. Built and maintained by Appwrite, the open-source cloud platform.
         </p>
         <div className="flex flex-wrap items-center justify-center gap-2">
-          <a href="#libraries" className="inline-flex h-9 items-center rounded-md bg-primary px-3.5 text-[13.5px] font-medium text-primary-foreground hover:opacity-90">
+          <a
+            href="#libraries"
+            className="inline-flex h-10 items-center rounded-lg bg-primary px-4 text-[13.5px] font-medium text-primary-foreground shadow-[0_1px_0_oklch(1_0_0/0.15)_inset,0_8px_24px_-8px_var(--highlight-line)] transition-opacity hover:opacity-90"
+          >
             Browse libraries
           </a>
           {http ? (
-            <Link to="/$lib" params={{ lib: http.slug }} className="inline-flex h-9 items-center gap-1.5 rounded-md px-3 text-[13.5px] font-medium hover:bg-accent">
+            <Link
+              to="/$lib"
+              params={{ lib: http.slug }}
+              className="inline-flex h-10 items-center gap-1.5 rounded-lg border border-border bg-background/70 px-4 text-[13.5px] font-medium backdrop-blur transition-colors hover:border-ring hover:bg-accent"
+            >
               Start with HTTP
               <ArrowRight className="size-3.5" />
             </Link>
           ) : null}
         </div>
-        <div className="flex max-w-full items-center gap-1 rounded-md border border-code-border bg-code py-0.5 pr-0.5 pl-3 text-left font-mono text-[12.5px] text-zinc-100">
-          <span className="text-zinc-500 select-none">$</span>
+        <div className="flex max-w-full items-center gap-1 rounded-lg border border-code-border bg-code py-1 pr-1 pl-3.5 text-left font-mono text-[12.5px] text-zinc-100 shadow-[0_12px_32px_-16px_oklch(0_0_0/0.5)]">
+          <span className="text-highlight select-none">$</span>
           <span className="min-w-0 truncate px-1.5">{install}</span>
           <CopyButton text={install} label="Copy" />
         </div>
-        <div className="mt-8 w-full min-w-0 text-left">
+        <div className="relative mt-8 w-full min-w-0 text-left">
+          {/* A soft halo of the accent under the example. */}
+          <div className="pointer-events-none absolute -inset-x-6 -inset-y-4 -z-10 rounded-[28px] bg-highlight-soft blur-2xl" aria-hidden />
           <CodeBlock code={EXAMPLE} program={PROGRAM} lang="rust" title="main.rs" />
         </div>
       </div>
 
-      <ul className="m-0 grid list-none gap-x-10 gap-y-8 border-t border-border p-0 pt-12 sm:grid-cols-2 lg:grid-cols-4">
-        {VALUES.map(({ icon: Icon, title, text }) => (
-          <li key={title} className="grid content-start gap-2">
-            <span className="inline-flex size-8 items-center justify-center rounded-md border border-border text-foreground">
-              <Icon className="size-4" strokeWidth={1.75} />
-            </span>
-            <h3 className="m-0 text-[14.5px]">{title}</h3>
+      <ul className="relative m-0 grid list-none gap-px overflow-hidden rounded-xl border border-border bg-border p-0 sm:grid-cols-2 lg:grid-cols-4">
+        {VALUES.map(({ icon: Icon, title, text }, i) => (
+          <li key={title} className="grid content-start gap-2.5 bg-background p-5">
+            <div className="flex items-center justify-between">
+              <span className="inline-flex size-8 items-center justify-center rounded-lg border border-highlight-line bg-highlight-soft text-highlight">
+                <Icon className="size-4" strokeWidth={1.75} />
+              </span>
+              <span className="font-mono text-[11px] text-muted-foreground/60 tabular-nums">{String(i + 1).padStart(2, '0')}</span>
+            </div>
+            <h3 className="m-0 text-[14.5px] tracking-tight">{title}</h3>
             <p className="m-0 text-[13px] leading-relaxed text-muted-foreground">{text}</p>
           </li>
         ))}

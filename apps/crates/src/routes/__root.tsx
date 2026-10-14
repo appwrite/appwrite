@@ -22,8 +22,8 @@ export const Route = createRootRoute({
       { rel: 'icon', type: 'image/svg+xml', href: FAVICON },
       { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
       { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossOrigin: 'anonymous' },
-      // Poppins, as the design system loads it; body and code use system fonts.
-      { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap' },
+      // Geist for text and headings, Geist Mono for code and labels.
+      { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap' },
     ],
     scripts: [{ children: THEME_SCRIPT }],
   }),
@@ -69,13 +69,13 @@ function Layout() {
           <Sidebar />
         </aside>
         {nav ? (
-          <aside className="sticky top-14 hidden h-[calc(100vh-3.5rem)] overflow-y-auto border-r border-border bg-background lg:block">
+          <aside className="sticky top-14 hidden h-[calc(100vh-3.5rem)] overflow-y-auto border-r border-border bg-sidebar lg:block">
             <LibraryMenu key={nav.library.slug} nav={nav} />
           </aside>
         ) : null}
         {menu ? (
           <div className="fixed inset-0 z-40 lg:hidden">
-            <button type="button" className="absolute inset-0 bg-black/40" aria-label="Close navigation" onClick={() => setMenu(false)} />
+            <button type="button" className="absolute inset-0 bg-black/50 backdrop-blur-sm" aria-label="Close navigation" onClick={() => setMenu(false)} />
             <aside className="absolute inset-y-0 left-0 w-[300px] max-w-[85vw] overflow-y-auto border-r border-border bg-sidebar">
               {nav ? (
                 <div className="border-b border-border">
@@ -90,13 +90,14 @@ function Layout() {
           {index ? (
             <>
               <Outlet />
-              <footer className="mt-16 border-t border-border pt-4 text-[12px] text-muted-foreground">
+              <footer className="mt-20 flex flex-wrap items-center gap-x-1 border-t border-border pt-5 font-mono text-[11.5px] text-muted-foreground">
+                <span className="mr-1.5 size-1.5 rounded-full bg-ok shadow-[0_0_8px_var(--ok)]" aria-hidden />
                 <Generated at={index.generated_at} commit={index.commit} commitDate={index.commit_date} />
                 {index.branch ? <span> on {index.branch}</span> : null}
               </footer>
             </>
           ) : (
-            <div className="max-w-2xl rounded-lg border border-border bg-card p-5">
+            <div className="max-w-2xl rounded-xl border border-border bg-card p-5 shadow-card">
               <h1 className="text-xl">No documentation yet</h1>
               <p className="mt-2 text-muted-foreground">
                 Generate it from the repository root with <code className="font-mono">bin/compat crates</code> (or <code className="font-mono">bun run generate</code> here), then reload.

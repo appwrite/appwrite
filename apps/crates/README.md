@@ -1,6 +1,6 @@
 # Crates
 
-The documentation of the Utopia libraries in Rust, as a TanStack Start app in the Appwrite console's style. It is written to become the official Utopia docs: by default it shows only the Rust crates, their getting started guides, namespaces, items and examples.
+The documentation of the Utopia libraries in Rust, as a TanStack Start app: Geist and Geist Mono, zinc neutrals with an indigo accent, and dark code panels (tokens in `src/styles.css`). It is written to become the official Utopia docs: by default it shows only the Rust crates, their getting started guides, namespaces, items and examples.
 
 **Migration** mode (the switch in the header) adds everything about the move from PHP, each piece in a yellow migration card: the libraries not converted yet and their PHP API, each library's conversion status and sync with PHP, the PHP twin of every example, the PHP method each item ports, and the PHP notes the generator moves out of the Rust docs (paragraphs that mention PHP, sections under a PHP heading, and a leading PHP name such as `` `getHost()`: ``). Libraries are grouped by category; inside one, a second menu lists its namespaces.
 

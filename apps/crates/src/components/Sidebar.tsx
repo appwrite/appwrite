@@ -9,8 +9,9 @@ import { SERVICE_STATUS, loadMigration, type Migration, type ServiceStatus } fro
 
 const root = getRouteApi('__root__')
 
+// The active row: the accent's tint and a bar on its left edge.
 const row =
-  'flex min-w-0 items-center gap-2 rounded-md px-2 py-1.5 text-[13px] text-sidebar-ink transition-colors hover:bg-sidebar-accent hover:text-sidebar-strong data-[status=active]:bg-sidebar-accent data-[status=active]:text-sidebar-strong'
+  'relative flex min-w-0 items-center gap-2 rounded-md px-2 py-[5px] text-[13px] text-sidebar-ink transition-colors hover:bg-sidebar-accent hover:text-sidebar-strong data-[status=active]:bg-highlight-soft data-[status=active]:font-medium data-[status=active]:text-sidebar-strong data-[status=active]:before:absolute data-[status=active]:before:inset-y-1.5 data-[status=active]:before:left-0 data-[status=active]:before:w-[2px] data-[status=active]:before:rounded-full data-[status=active]:before:bg-highlight'
 
 /**
  * A menu item shown only in migration mode carries the migration marking (a yellow tint), so the
@@ -75,20 +76,19 @@ function Group({
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
         title={migration ? MIGRATION_TITLE : undefined}
-        className={`flex min-w-0 items-center gap-1.5 rounded-md py-1.5 pr-2 text-left text-[13px] transition-colors hover:bg-sidebar-accent ${depth === 0 ? 'pl-2 font-medium text-sidebar-strong' : 'pl-2 text-sidebar-ink hover:text-sidebar-strong'} ${migration ? 'nav-migration' : ''}`}
+        className={`flex min-w-0 items-center gap-1.5 rounded-md py-[5px] pr-2 text-left text-[13px] transition-colors hover:bg-sidebar-accent ${depth === 0 ? 'pl-2 font-medium text-sidebar-strong' : 'pl-2 text-sidebar-ink hover:text-sidebar-strong'} ${migration ? 'nav-migration' : ''}`}
       >
         <ChevronRight className={`size-3.5 flex-none text-muted-foreground transition-transform ${open ? 'rotate-90' : ''}`} />
         <span className="min-w-0 flex-1 truncate">{label}</span>
         {badge}
       </button>
-      {open ? <div className="ml-[13px] grid border-l border-border pl-2">{children}</div> : null}
+      {open ? <div className="ml-[13px] grid gap-px border-l border-border py-0.5 pl-2">{children}</div> : null}
     </div>
   )
 }
 
 // A group's title: strong ink and a rule above it, so it never reads as one of the rows below.
-const heading =
-  'mt-2 border-t border-border px-2 pt-3 pb-1 text-[11px] font-semibold tracking-wider text-sidebar-strong uppercase first:mt-0 first:border-t-0 first:pt-1'
+const heading = 'label mt-3 px-2 pt-2 pb-1 text-muted-foreground first:mt-0 first:pt-1'
 
 /** A library's own menu, a second column beside the catalog: its sections, modules (PHP: namespaces) and items. */
 export function LibraryMenu({ nav, onNavigate }: { nav: Navigation; onNavigate?: () => void }) {
@@ -164,7 +164,7 @@ export function LibraryMenu({ nav, onNavigate }: { nav: Navigation; onNavigate?:
           return (
             <Link key={m.path} to="/$lib/$" params={{ lib: slug, _splat: moduleSplat(m.path) }} className={row} title={m.summary || m.path}>
               <span className="truncate font-mono text-[12.5px]">{m.path}</span>
-              {parts ? <span className="ml-auto text-[10.5px] whitespace-nowrap text-muted-foreground">{parts} {parts === 1 ? 'submodule' : 'submodules'}</span> : null}
+              {parts ? <span className="ml-auto font-mono text-[10px] whitespace-nowrap text-muted-foreground">{parts} {parts === 1 ? 'submodule' : 'submodules'}</span> : null}
             </Link>
           )
         })}
@@ -175,18 +175,18 @@ export function LibraryMenu({ nav, onNavigate }: { nav: Navigation; onNavigate?:
 
   return (
     <nav className="grid content-start gap-3 p-3" onClick={(e) => (e.target as HTMLElement).closest('a') && onNavigate?.()}>
-      <div className="grid gap-2 rounded-lg border border-border bg-background p-2.5">
+      <div className="grid gap-1 rounded-lg border border-border bg-background p-3 shadow-card">
         <div className="flex items-center justify-between gap-2">
-          <Link to="/$lib" params={{ lib: slug }} className="truncate font-display text-[15px] font-medium">
+          <Link to="/$lib" params={{ lib: slug }} className="truncate font-display text-[15px] font-semibold tracking-tight">
             {nav.library.title}
           </Link>
           <MigrationOnly>
             <StatusBadge status={nav.library.status} />
           </MigrationOnly>
         </div>
-        <span className="truncate font-mono text-[11px] text-muted-foreground">{nav.library.rust?.crate ?? (migration ? nav.library.php?.package : nav.library.slug)}</span>
+        <span className="truncate font-mono text-[11px] text-highlight">{nav.library.rust?.crate ?? (migration ? nav.library.php?.package : nav.library.slug)}</span>
       </div>
-      <label className="flex items-center gap-2 rounded-md border border-border bg-background px-2.5 py-1.5 text-muted-foreground focus-within:border-ring">
+      <label className="flex h-8 items-center gap-2 rounded-md border border-border bg-background px-2.5 text-muted-foreground shadow-[0_1px_2px_oklch(0_0_0/0.04)] transition-colors focus-within:border-highlight-line focus-within:ring-3 focus-within:ring-highlight-soft">
         <Search className="size-3.5" />
         <input
           type="search"
@@ -205,7 +205,7 @@ export function LibraryMenu({ nav, onNavigate }: { nav: Navigation; onNavigate?:
         {nav.library.rust || migration || dependents ? (
           <Link to="/$lib/dependencies" params={{ lib: slug }} className={item(depsMigration)} title={depsMigration ? MIGRATION_TITLE : undefined}>
             <span className="truncate">Dependencies</span>
-            <span className="ml-auto flex items-center gap-1.5 text-[10.5px] whitespace-nowrap text-muted-foreground tabular-nums">
+            <span className="ml-auto flex items-center gap-1.5 font-mono text-[10px] whitespace-nowrap text-muted-foreground tabular-nums">
               {deps !== undefined ? <span title={`${deps} ${deps === 1 ? 'dependency' : 'dependencies'}`}>{deps}</span> : null}
               {dependents !== undefined ? (
                 <span title={`Used by ${dependents} across the ecosystem`} className={deps !== undefined ? 'border-l border-border pl-1.5' : ''}>
@@ -218,7 +218,7 @@ export function LibraryMenu({ nav, onNavigate }: { nav: Navigation; onNavigate?:
         {nav.library.counts.php_functions ? (
           <Link to="/$lib/functions" params={{ lib: slug }} className={row}>
             <span className="truncate">PHP functions</span>
-            <span className="ml-auto text-[10.5px] whitespace-nowrap text-muted-foreground tabular-nums">{nav.library.counts.php_functions.entries}</span>
+            <span className="ml-auto font-mono text-[10px] whitespace-nowrap text-muted-foreground tabular-nums">{nav.library.counts.php_functions.entries}</span>
           </Link>
         ) : null}
         {migration && nav.library.bench ? (
@@ -270,7 +270,7 @@ function AppwriteGroup() {
       }
       open={path.startsWith('/appwrite')}
       migration
-      badge={services.length ? <span className="text-[11px] text-muted-foreground tabular-nums">{services.length}</span> : undefined}
+      badge={services.length ? <span className="font-mono text-[10.5px] text-muted-foreground tabular-nums">{services.length}</span> : undefined}
     >
       <Link to="/appwrite" activeOptions={{ exact: true }} className={row}>
         Overview
@@ -305,7 +305,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
 
   return (
     <nav className="grid content-start gap-3 p-3" onClick={(e) => (e.target as HTMLElement).closest('a') && onNavigate?.()}>
-      <label className="flex items-center gap-2 rounded-md border border-border bg-background px-2.5 py-1.5 text-muted-foreground focus-within:border-ring">
+      <label className="flex h-8 items-center gap-2 rounded-md border border-border bg-background px-2.5 text-muted-foreground shadow-[0_1px_2px_oklch(0_0_0/0.04)] transition-colors focus-within:border-highlight-line focus-within:ring-3 focus-within:ring-highlight-soft">
         <Search className="size-3.5" />
         <input
           type="search"
@@ -336,7 +336,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
           .filter((l) => l && (migration || l.rust) && (!term || `${l.title} ${l.slug} ${l.description}`.toLowerCase().includes(term)))
         if (!libs.length) return null
         return (
-          <Group key={c.id} label={c.title} open={!!term || c.id === activeCategory} migration={!libs.some((l) => l?.rust)} badge={<span className="text-[11px] text-muted-foreground tabular-nums">{libs.length}</span>}>
+          <Group key={c.id} label={c.title} open={!!term || c.id === activeCategory} migration={!libs.some((l) => l?.rust)} badge={<span className="font-mono text-[10.5px] text-muted-foreground tabular-nums">{libs.length}</span>}>
             <Link to="/categories/$category" params={{ category: c.id }} className={row}>
               Overview
             </Link>

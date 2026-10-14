@@ -81,12 +81,12 @@ function Totals({ index }: { index: Index }) {
   if (!r?.libraries) return null
   const item = (value: number, label: string) => (
     <span className="inline-flex items-baseline gap-1.5">
-      <span className="font-display text-[15px] font-medium text-foreground tabular-nums">{formatCount(value)}</span>
+      <span className="font-mono text-[15px] font-medium text-foreground tabular-nums">{formatCount(value)}</span>
       {label}
     </span>
   )
   return (
-    <div className="flex flex-wrap items-baseline justify-center gap-x-6 gap-y-1 text-[12.5px] text-muted-foreground">
+    <div className="flex flex-wrap items-baseline justify-center gap-x-8 gap-y-1 font-mono text-[11.5px] text-muted-foreground">
       {item(r.libraries, 'crates')}
       {item(r.total, 'lines of Rust')}
       {item(r.code, 'code')}
@@ -159,9 +159,9 @@ function Home() {
           ))}
         </div>
       </MigrationCard>
-      <div id="libraries" className="sticky top-14 z-10 -mx-2 grid scroll-mt-14 gap-3 border-b border-border bg-background/95 px-2 py-3 backdrop-blur">
+      <div id="libraries" className="sticky top-14 z-10 -mx-2 grid scroll-mt-14 gap-3 border-b border-border bg-background/80 px-2 py-3 backdrop-blur-xl">
         <div className="flex flex-wrap items-center gap-2">
-          <label className="flex h-9 min-w-0 flex-[1_1_280px] items-center gap-2 rounded-md border border-border bg-card px-3 text-muted-foreground focus-within:border-ring">
+          <label className="flex h-9 min-w-0 flex-[1_1_280px] items-center gap-2 rounded-lg border border-border bg-card px-3 text-muted-foreground transition-colors focus-within:border-highlight-line focus-within:ring-3 focus-within:ring-highlight-soft">
             <Search className="size-4 flex-none" />
             <input
               type="search"
@@ -176,7 +176,7 @@ function Home() {
             value={filters.category ?? ''}
             onChange={(e) => set({ category: e.target.value || undefined })}
             aria-label="Category"
-            className="h-9 rounded-md border border-border bg-card pr-8 pl-2.5 text-[13px] text-foreground"
+            className="h-9 rounded-lg border border-border bg-card pr-8 pl-2.5 text-[13px] text-foreground"
           >
             <option value="">All categories</option>
             {index.categories.map((c) => (
@@ -190,7 +190,7 @@ function Home() {
             onChange={(e) => set({ sort: e.target.value === 'category' ? undefined : (e.target.value as Sort) })}
             aria-label="Sort by"
             title="Sort by"
-            className="h-9 rounded-md border border-border bg-card pr-8 pl-2.5 text-[13px] text-foreground"
+            className="h-9 rounded-lg border border-border bg-card pr-8 pl-2.5 text-[13px] text-foreground"
           >
             {SORTS.filter((o) => migration || !o.migration).map((o) => (
               <option key={o.id} value={o.id}>
@@ -235,7 +235,7 @@ function Home() {
           </button>
         </div>
         ) : null}
-        <span className="justify-self-end text-[12.5px] text-muted-foreground tabular-nums">
+        <span className="justify-self-end font-mono text-[11px] text-muted-foreground tabular-nums">
           {shown.length} of {total} libraries
         </span>
       </div>
@@ -258,7 +258,7 @@ function Home() {
         return libs.length ? (
         <Section key={c.id} id={c.id} title={c.title} description={c.description}>
           <LibraryList libs={libs} />
-          <Link to="/categories/$category" params={{ category: c.id }} className="justify-self-start text-[13px] text-muted-foreground hover:text-foreground">
+          <Link to="/categories/$category" params={{ category: c.id }} className="justify-self-start text-[13px] text-muted-foreground transition-colors hover:text-highlight">
             About {c.title.toLowerCase()} →
           </Link>
         </Section>

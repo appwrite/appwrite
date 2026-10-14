@@ -1,14 +1,15 @@
 @import 'tailwindcss';
 
-/* The Utopia.php design system: shadcn zinc neutrals, near-black primary,
-   Poppins headings (500, tight tracking), the OS system stack for body text,
-   source-code-pro for code, and dark code panels with Monokai tokens.
-   Periwinkle belongs to the wordmark; colour otherwise comes only from the
+/* The Utopia docs design system: cool zinc neutrals with a near-black dark
+   theme, Geist for text and headings, Geist Mono for code, labels and numbers,
+   and an electric indigo accent taken from the wordmark's periwinkle. Code
+   panels stay dark in both themes. Colour otherwise comes only from the
    callout triplets (status, and the yellow migration cards). */
 @custom-variant dark (&:is(.dark *));
 
 :root {
   --zinc-0: oklch(1 0 0);
+  --zinc-25: oklch(0.992 0.001 286);
   --zinc-50: oklch(0.985 0 0);
   --zinc-100: oklch(0.967 0.001 286.375);
   --zinc-200: oklch(0.92 0.004 286.32);
@@ -27,30 +28,36 @@
   --muted-foreground: var(--zinc-500);
   --accent: var(--zinc-100);
   --accent-foreground: var(--zinc-800);
-  --primary: var(--zinc-800);
+  --primary: var(--zinc-900);
   --primary-foreground: var(--zinc-50);
-  --border: var(--zinc-200);
+  --border: oklch(0.925 0.004 286.32);
   --ring: var(--zinc-300);
-  --sidebar: var(--background);
-  --sidebar-accent: var(--zinc-100);
+  --sidebar: var(--zinc-25);
+  --sidebar-accent: oklch(0.955 0.003 286.35);
   /* Menu text sits in a narrow band, so headings and links read as one list. */
   --sidebar-ink: var(--zinc-600);
-  --sidebar-strong: var(--zinc-700);
+  --sidebar-strong: var(--zinc-900);
   --brand: #6474ce;
+  /* The accent: links, the active menu row, focus and the hero's glow. */
+  --highlight: oklch(0.54 0.2 272);
+  --highlight-soft: oklch(0.54 0.2 272 / 0.08);
+  --highlight-line: oklch(0.54 0.2 272 / 0.35);
+  --grid-line: oklch(0.141 0.005 285.823 / 0.06);
+  --shadow-card: 0 1px 2px oklch(0 0 0 / 0.04), 0 8px 24px -12px oklch(0 0 0 / 0.08);
 
   /* Code panels stay dark in both themes: the code block is this brand's image. */
-  --code-bg: var(--zinc-900);
-  --code-header: #18181b;
-  --code-border: rgba(75, 85, 99, 0.3);
-  --code-header-fg: #d1d5db;
-  --code-plain: #f8f8f2;
-  --code-module-keyword: #a6e22e;
-  --code-function: #a6e22e;
-  --code-keyword: #66d9ef;
-  --code-comment: #75715e;
-  --code-property: #f92672;
-  --code-string: #e6db74;
-  --code-number: #ae81ff;
+  --code-bg: #0b0b0e;
+  --code-header: #111115;
+  --code-border: oklch(1 0 0 / 0.08);
+  --code-header-fg: #a1a1aa;
+  --code-plain: #e4e4e7;
+  --code-module-keyword: #67e8f9;
+  --code-function: #93c5fd;
+  --code-keyword: #c4b5fd;
+  --code-comment: #71717a;
+  --code-property: #f9a8d4;
+  --code-string: #86efac;
+  --code-number: #fdba74;
 
   /* Callout triplets: success, warning, info; planned is neutral. */
   --ok: #22c55e;
@@ -80,36 +87,41 @@
   --migration-border: #fef08a;
   --migration-ink: #713f12;
 
-  --font-display: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
-  --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
-  --font-code: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+  --font-display: 'Geist', ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+  --font-body: 'Geist', ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+  --font-code: 'Geist Mono', ui-monospace, 'SF Mono', Menlo, Monaco, Consolas, monospace;
 }
 
 .dark {
-  --background: var(--zinc-900);
-  --foreground: var(--zinc-50);
-  --card: var(--zinc-900);
-  --muted: var(--zinc-700);
-  --muted-foreground: var(--zinc-400);
-  --accent: var(--zinc-700);
-  --accent-foreground: var(--zinc-50);
-  --primary: var(--zinc-50);
-  --primary-foreground: var(--zinc-800);
-  --border: var(--zinc-700);
-  --ring: var(--zinc-600);
-  --sidebar: var(--background);
-  --sidebar-accent: var(--zinc-800);
-  --sidebar-ink: var(--zinc-400);
-  --sidebar-strong: var(--zinc-300);
-  --code-bg: #0c0c0e;
-  --code-header: #131316;
+  --background: #09090b;
+  --foreground: #fafafa;
+  --card: #0e0e11;
+  --muted: #18181b;
+  --muted-foreground: #8b8b94;
+  --accent: #18181c;
+  --accent-foreground: #fafafa;
+  --primary: #fafafa;
+  --primary-foreground: #09090b;
+  --border: oklch(1 0 0 / 0.08);
+  --ring: oklch(1 0 0 / 0.2);
+  --sidebar: #09090b;
+  --sidebar-accent: oklch(1 0 0 / 0.05);
+  --sidebar-ink: #8b8b94;
+  --sidebar-strong: #f4f4f5;
+  --highlight: oklch(0.74 0.15 275);
+  --highlight-soft: oklch(0.74 0.15 275 / 0.1);
+  --highlight-line: oklch(0.74 0.15 275 / 0.4);
+  --grid-line: oklch(1 0 0 / 0.045);
+  --shadow-card: 0 1px 0 oklch(1 0 0 / 0.03) inset, 0 12px 32px -16px oklch(0 0 0 / 0.6);
+  --code-bg: #0b0b0e;
+  --code-header: #101014;
   --ok-soft: rgba(5, 46, 22, 0.3);
   --ok-ink: #dcfce7;
   --progress-soft: rgba(66, 32, 6, 0.3);
   --progress-ink: #fef9c3;
   --started-soft: rgba(23, 37, 84, 0.3);
   --started-ink: #dbeafe;
-  --planned-soft: var(--zinc-700);
+  --planned-soft: #1c1c20;
   --planned-ink: var(--zinc-400);
   --migration: rgba(66, 32, 6, 0.3);
   --php: #9aa3d6;
@@ -142,6 +154,9 @@
   --color-sidebar-ink: var(--sidebar-ink);
   --color-sidebar-strong: var(--sidebar-strong);
   --color-brand: var(--brand);
+  --color-highlight: var(--highlight);
+  --color-highlight-soft: var(--highlight-soft);
+  --color-highlight-line: var(--highlight-line);
   --color-code: var(--code-bg);
   --color-code-header: var(--code-header);
   --color-code-header-fg: var(--code-header-fg);
@@ -183,14 +198,18 @@
     @apply bg-background text-foreground font-sans antialiased;
     font-size: 14px;
     line-height: 1.625;
+    font-feature-settings: 'ss01', 'cv11';
   }
   h1,
   h2,
   h3,
   h4 {
-    @apply font-display font-medium;
-    letter-spacing: -0.025em;
+    @apply font-display font-semibold;
+    letter-spacing: -0.03em;
     text-wrap: balance;
+  }
+  ::selection {
+    background: var(--highlight-line);
   }
   /* Native selects draw their arrow against the edge; draw our own with room. */
   select {
@@ -202,7 +221,7 @@
     background-size: 0.875rem;
   }
   :focus-visible {
-    outline: 2px solid var(--ring);
+    outline: 2px solid var(--highlight-line);
     outline-offset: 2px;
     border-radius: 6px;
   }
@@ -220,9 +239,38 @@
   .nav-migration {
     background-color: var(--migration);
   }
+  /* A small label in mono capitals: section eyebrows, menu headings, table heads. */
+  .label {
+    font-family: var(--font-code);
+    font-size: 10.5px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  /* The blueprint grid behind the hero, fading out at its edges. */
+  .grid-backdrop {
+    background-image:
+      linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+    background-size: 44px 44px;
+    mask-image: radial-gradient(ellipse 70% 60% at 50% 30%, #000 30%, transparent 75%);
+  }
+  .glow {
+    background: radial-gradient(ellipse 50% 45% at 50% 0%, var(--highlight-soft), transparent 70%);
+  }
+  /* Headline text in a soft foreground gradient. */
+  .text-gradient {
+    background: linear-gradient(180deg, var(--foreground) 30%, color-mix(in oklch, var(--foreground) 55%, transparent));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .shadow-card {
+    box-shadow: var(--shadow-card);
+  }
 }
 
-/* Prism tokens in the console's palette. Tokens stay inline: their class
+/* Prism tokens in the docs' palette. Tokens stay inline: their class
    names (a TOML `table`) must not pick up Tailwind utilities of the same name. */
 .code .token {
   display: inline;
@@ -232,7 +280,10 @@
 .code .token.prolog,
 .code .token.doctype {
   color: var(--code-comment);
-  font-style: italic;
+}
+.code .token.punctuation,
+.code .token.operator {
+  color: #a1a1aa;
 }
 .code .token.keyword,
 .code .token.boolean,

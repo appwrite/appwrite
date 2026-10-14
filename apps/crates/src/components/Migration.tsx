@@ -11,8 +11,8 @@ export function MigrationCard({ title, children, className = '', id }: { title?:
   const on = useMigration()
   if (!on) return null
   return (
-    <div id={id} className={`grid min-w-0 scroll-mt-20 gap-3 rounded-lg border border-migration-border bg-migration p-4 ${className}`}>
-      <div className="flex items-center gap-1.5 text-[11px] font-semibold tracking-wider text-migration-ink uppercase">
+    <div id={id} className={`grid min-w-0 scroll-mt-20 gap-3 rounded-xl border border-migration-border bg-migration p-4 ${className}`}>
+      <div className="label flex items-center gap-1.5 text-migration-ink">
         <ArrowLeftRight className="size-3.5" />
         Migration{title ? <span className="tracking-normal normal-case">· {title}</span> : null}
       </div>

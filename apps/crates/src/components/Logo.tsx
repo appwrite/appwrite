@@ -22,7 +22,7 @@ export function Logo() {
   return (
     <span className="flex items-center gap-2.5">
       <Wordmark />
-      <span className="rounded-md border border-border px-1.5 py-0.5 text-[11px] leading-none font-medium text-muted-foreground">for Rust</span>
+      <span className="rounded-full border border-highlight-line bg-highlight-soft px-2 py-[3px] font-mono text-[10.5px] leading-none font-medium text-highlight">rust</span>
     </span>
   )
 }

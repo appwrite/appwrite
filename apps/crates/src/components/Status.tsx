@@ -22,7 +22,7 @@ export function StatusDot({ status, className = '' }: { status: Status; classNam
 
 export function StatusBadge({ status }: { status: Status }) {
   return (
-    <span className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-medium whitespace-nowrap ${BADGE[status]}`} title={STATUS[status].note}>
+    <span className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 font-mono text-[10.5px] font-medium whitespace-nowrap ${BADGE[status]}`} title={STATUS[status].note}>
       <StatusDot status={status} />
       {STATUS[status].label}
     </span>

@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { BookOpen, Code2, FlaskConical, LayoutGrid, List, Package } from 'lucide-react'
+import { ArrowUpRight, BookOpen, Code2, FlaskConical, LayoutGrid, List, Package } from 'lucide-react'
 import type { ReactNode } from 'react'
 import type { LibrarySummary } from '@/lib/docs'
 import { setLayout, useLayout, useMigration, type Layout } from '@/lib/prefs'
@@ -10,26 +10,33 @@ import { SpeedupBadge } from './Bench'
 import { Time } from './Time'
 import { LinesBadge } from './Size'
 
-/** Page title block in the console's style. */
+/** Page title block: a mono eyebrow in the accent, the title, and its lead. */
 export function PageHeader({ eyebrow, title, mono, children, aside }: { eyebrow?: ReactNode; title: ReactNode; mono?: boolean; children?: ReactNode; aside?: ReactNode }) {
   return (
-    <div className="grid gap-2">
-      {eyebrow ? <div className="text-[13px] text-muted-foreground">{eyebrow}</div> : null}
+    <div className="grid gap-3 border-b border-border pb-7">
+      {eyebrow ? <div className="label text-highlight">{eyebrow}</div> : null}
       <div className="flex flex-wrap items-center gap-3">
-        <h1 className={mono ? 'font-mono text-[26px] font-medium tracking-tight' : 'text-[28px] leading-tight'}>{title}</h1>
+        <h1 className={mono ? 'font-mono text-[28px] font-semibold tracking-tight' : 'text-[34px] leading-[1.1]'}>{title}</h1>
         {aside}
       </div>
-      {children ? <div className="max-w-[72ch] text-[15px] text-muted-foreground">{children}</div> : null}
+      {children ? <div className="max-w-[72ch] text-[15.5px] leading-relaxed text-muted-foreground">{children}</div> : null}
     </div>
   )
 }
 
 export function Section({ id, title, children, description }: { id?: string; title: string; children: ReactNode; description?: ReactNode }) {
   return (
-    <section id={id} className="grid scroll-mt-20 gap-3">
-      <div className="grid gap-1">
-        <h2 className="text-xl">{title}</h2>
-        {description ? <p className="m-0 max-w-[72ch] text-[13px] text-muted-foreground">{description}</p> : null}
+    <section id={id} className="grid scroll-mt-20 gap-4">
+      <div className="grid gap-1.5">
+        <h2 className="group flex items-center gap-2 text-[21px]">
+          {title}
+          {id ? (
+            <a href={`#${id}`} className="font-mono text-[15px] font-normal text-muted-foreground/0 transition-colors group-hover:text-muted-foreground hover:text-highlight" aria-label={`Link to ${title}`}>
+              #
+            </a>
+          ) : null}
+        </h2>
+        {description ? <p className="m-0 max-w-[72ch] text-[13.5px] text-muted-foreground">{description}</p> : null}
       </div>
       {children}
     </section>
@@ -39,10 +46,19 @@ export function Section({ id, title, children, description }: { id?: string; tit
 /** A library in a grid of cards. */
 export function LibraryCard({ lib }: { lib: LibrarySummary }) {
   return (
-    <Link to="/$lib" params={{ lib: lib.slug }} className="group grid content-start gap-2.5 rounded-lg border border-border bg-card p-4 transition-colors hover:border-ring hover:bg-accent/40">
+    <Link
+      to="/$lib"
+      params={{ lib: lib.slug }}
+      className="group relative grid content-start gap-3 overflow-hidden rounded-xl border border-border bg-card p-4 transition-all duration-200 hover:-translate-y-px hover:border-highlight-line hover:shadow-card"
+    >
+      {/* The accent's glow, from the card's top edge on hover. */}
+      <span className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-highlight to-transparent opacity-0 transition-opacity group-hover:opacity-100" aria-hidden />
       <div className="flex items-start justify-between gap-2">
-        <div className="grid gap-0.5">
-          <span className="font-display text-[16px] font-medium">{lib.title}</span>
+        <div className="grid gap-1">
+          <span className="flex items-center gap-1 font-display text-[15.5px] font-semibold tracking-tight">
+            {lib.title}
+            <ArrowUpRight className="size-3.5 -translate-x-1 text-highlight opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100" />
+          </span>
           <span className="font-mono text-[11px] text-muted-foreground">{lib.rust?.crate ?? lib.php?.package ?? lib.slug}</span>
         </div>
         <MigrationOnly>
@@ -53,8 +69,8 @@ export function LibraryCard({ lib }: { lib: LibrarySummary }) {
           </div>
         </MigrationOnly>
       </div>
-      <p className="m-0 line-clamp-2 text-[13px] text-muted-foreground">{lib.description}</p>
-      <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
+      <p className="m-0 line-clamp-2 text-[13px] leading-relaxed text-muted-foreground">{lib.description}</p>
+      <div className="flex flex-wrap gap-x-3 gap-y-1 border-t border-dashed border-border pt-3 font-mono text-[10.5px] text-muted-foreground">
         {lib.rust ? (
           <span className="inline-flex items-center gap-1">
             <Package className="size-3" />
@@ -99,14 +115,14 @@ export function LibraryRow({ lib }: { lib: LibrarySummary }) {
     <Link
       to="/$lib"
       params={{ lib: lib.slug }}
-      className="grid items-center gap-x-4 gap-y-1 px-4 py-2.5 transition-colors hover:bg-accent/40 sm:grid-cols-[minmax(150px,220px)_minmax(0,1fr)_auto]"
+      className="grid items-center gap-x-4 gap-y-1 px-4 py-3 transition-colors hover:bg-highlight-soft sm:grid-cols-[minmax(150px,220px)_minmax(0,1fr)_auto]"
     >
       <span className="grid min-w-0 gap-0.5">
-        <span className="truncate font-display text-[14.5px] font-medium">{lib.title}</span>
+        <span className="truncate font-display text-[14.5px] font-semibold tracking-tight">{lib.title}</span>
         <span className="truncate font-mono text-[11px] text-muted-foreground">{lib.rust?.crate ?? lib.php?.package ?? lib.slug}</span>
       </span>
       <span className="min-w-0 truncate text-[13px] text-muted-foreground">{lib.description}</span>
-      <span className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] whitespace-nowrap text-muted-foreground sm:justify-end">
+      <span className="flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[10.5px] whitespace-nowrap text-muted-foreground sm:justify-end">
         {lib.rust ? (
           <span className="inline-flex items-center gap-1">
             <Package className="size-3" />
@@ -146,7 +162,7 @@ export function LibraryList({ libs }: { libs: LibrarySummary[] }) {
   const layout = useLayout()
   if (layout === 'list') {
     return (
-      <div className="grid divide-y divide-border overflow-hidden rounded-lg border border-border bg-card">
+      <div className="grid divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
         {libs.map((lib) => (
           <LibraryRow key={lib.slug} lib={lib} />
         ))}
@@ -178,7 +194,7 @@ export function LayoutToggle() {
     </button>
   )
   return (
-    <div role="group" aria-label="Layout" className="inline-flex h-9 items-center gap-0.5 rounded-md border border-border bg-card px-1">
+    <div role="group" aria-label="Layout" className="inline-flex h-9 items-center gap-0.5 rounded-lg border border-border bg-card px-1">
       {option('grid', 'Grid', LayoutGrid)}
       {option('list', 'List', List)}
     </div>
@@ -190,13 +206,13 @@ export function Toc({ entries }: { entries: { id: string; label: string; depth?:
   if (entries.length < 2) return null
   return (
     <nav className="sticky top-20 hidden max-h-[calc(100vh-6rem)] overflow-y-auto xl:block">
-      <div className="mb-2 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">On this page</div>
+      <div className="label mb-3 text-muted-foreground">On this page</div>
       <div className="grid gap-0.5 border-l border-border">
         {entries.map((e) => (
           <a
             key={e.id}
             href={`#${e.id}`}
-            className={`-ml-px truncate border-l border-transparent py-1 text-[12.5px] text-muted-foreground hover:border-foreground hover:text-foreground ${e.depth ? 'pl-6 font-mono text-[12px]' : 'pl-3'}`}
+            className={`-ml-px truncate border-l border-transparent py-1 text-[12.5px] text-muted-foreground transition-colors hover:border-highlight hover:text-foreground ${e.depth ? 'pl-6 font-mono text-[12px]' : 'pl-3'}`}
           >
             {e.label}
           </a>

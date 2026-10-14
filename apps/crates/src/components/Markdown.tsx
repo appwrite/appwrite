@@ -40,31 +40,31 @@ export function Markdown({ text, lib, slug }: { text: string; lib?: Pick<Library
           ul: ({ children }) => <ul className="m-0 grid list-disc gap-1 pl-5">{children}</ul>,
           ol: ({ children }) => <ol className="m-0 grid list-decimal gap-1 pl-5">{children}</ol>,
           table: ({ children }) => (
-            <div className="overflow-x-auto rounded-lg border border-border">
+            <div className="overflow-x-auto rounded-xl border border-border bg-card">
               <table className="w-full border-collapse text-[13px]">{children}</table>
             </div>
           ),
-          th: ({ children }) => <th className="border-b border-border bg-muted/50 px-3 py-2 text-left text-xs font-semibold">{children}</th>,
+          th: ({ children }) => <th className="label border-b border-border bg-muted/50 px-3 py-2 text-left text-muted-foreground">{children}</th>,
           td: ({ children }) => <td className="border-b border-border px-3 py-2 align-top">{children}</td>,
           pre: ({ children }) => <>{children}</>,
           code: ({ className, children }) => {
             const lang = /language-(\w+)/.exec(className ?? '')?.[1]
             const text = String(children).replace(/\n$/, '')
             if (lang || text.includes('\n')) return <CodeBlock code={text} lang={LANGS[lang ?? ''] ?? 'text'} />
-            return <code className="rounded-[5px] bg-muted px-1.5 py-0.5 font-mono text-[0.86em] text-foreground">{children}</code>
+            return <code className="rounded-[5px] border border-border bg-muted/60 px-1.5 py-px font-mono text-[0.85em] text-foreground">{children}</code>
           },
           a: ({ href, children }) => {
             if (href?.startsWith('rustdoc:')) {
               const target = lib && slug ? resolve(lib, decodeURIComponent(href.slice('rustdoc:'.length))) : null
               if (!target || !slug) return <>{children}</>
               return (
-                <Link to="/$lib/$" params={{ lib: slug, _splat: target.splat }} hash={target.hash} className="text-foreground underline decoration-border underline-offset-[3px] hover:decoration-foreground">
+                <Link to="/$lib/$" params={{ lib: slug, _splat: target.splat }} hash={target.hash} className="text-highlight underline decoration-highlight-line underline-offset-[3px] transition-colors hover:decoration-highlight">
                   {children}
                 </Link>
               )
             }
             return (
-              <a href={href} target="_blank" rel="noopener" className="text-foreground underline decoration-border underline-offset-[3px] hover:decoration-foreground">
+              <a href={href} target="_blank" rel="noopener" className="text-highlight underline decoration-highlight-line underline-offset-[3px] transition-colors hover:decoration-highlight">
                 {children}
               </a>
             )
