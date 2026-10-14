@@ -30,6 +30,7 @@
     "lint:native-dialogs": "bun run scripts/lint-native-dialogs.ts",
     "lint:removed-blog-links": "bun run scripts/lint-removed-blog-links.ts",
     "lint:sdk-pins": "bun run scripts/lint-sdk-pins.ts",
+    "lint:types": "bun run scripts/lint-types.ts",
     "prune:removed-blog-assets": "bun run scripts/prune-removed-blog-assets.ts",
     "release:self-hosted": "bun run scripts/release-self-hosted.ts",
     "serve": "vite preview",

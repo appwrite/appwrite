@@ -56,8 +56,8 @@ final class Func extends Base
         $platform = !empty($this->platform) ? $this->platform : Config::getParam('platform', []);
 
         return [
-            'project' => $this->project?->getArrayCopy(),
-            'user' => $this->user?->getArrayCopy(),
+            'project' => $this->project === null ? null : ProjectContext::fromDocument($this->project)->toArray(),
+            'user' => $this->user === null ? null : UserContext::fromDocument($this->user)->toArray(),
             'userId' => $this->userId,
             'function' => $this->function?->getArrayCopy(),
             'functionId' => $this->functionId,

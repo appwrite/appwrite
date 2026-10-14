@@ -227,7 +227,6 @@ class Create extends Action
 
         $publisherForDatabase->enqueue(new DatabaseMessage(
             project: $queueForEvents->getProject(),
-            user: $queueForEvents->getUser(),
             type: DATABASE_TYPE_CREATE_INDEX,
             database: $db,
             collection: $this->isCollectionsAPI() ? $collection : null,

@@ -503,7 +503,7 @@ abstract class Base extends Action
     {
         $publisherForAudits->enqueue(new AuditMessage(
             event: $event,
-            payload: $resource->getArrayCopy(),
+            payload: [],
             project: $project,
             user: $user,
             resource: $resourceType . '/' . $resource->getId(),
