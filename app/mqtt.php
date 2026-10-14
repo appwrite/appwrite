@@ -21,7 +21,6 @@ use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
-use Utopia\DI\Container;
 use Utopia\Mqtt\Adapter;
 use Utopia\Mqtt\Server;
 use Utopia\Pools\Group;
