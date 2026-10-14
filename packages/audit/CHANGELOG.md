@@ -21,8 +21,9 @@ All notable changes to `utopia-php/audit` are documented in this file.
 
 - `Utopia\Audit\Query`'s legacy `TYPE_*` constants take their values from
   `Utopia\Query\Method`; the strings are the same.
-- `minimum-stability` is `dev` with `prefer-stable: true` until
-  utopia-php/database 8.0.0 is tagged; it returns to `stable` with the tag.
+- Requires utopia-php/query `^0.7`, dropping `^0.6`. `minimum-stability`
+  stays `stable`: every dependency, utopia-php/database 8.1.2 included, is
+  tagged.
 
 ## Unreleased
 

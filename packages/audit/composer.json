@@ -10,8 +10,7 @@
         "audit"
     ],
     "license": "MIT",
-    "minimum-stability": "dev",
-    "prefer-stable": true,
+    "minimum-stability": "stable",
     "scripts": {
         "test": "phpunit --testsuite unit",
         "test:e2e": "phpunit --testsuite e2e"

@@ -14,8 +14,7 @@
         "test:e2e": "phpunit --testsuite e2e",
         "bench": "phpunit --testsuite bench"
     },
-    "minimum-stability": "dev",
-    "prefer-stable": true,
+    "minimum-stability": "stable",
     "require": {
         "php": ">=8.5",
         "psr/http-client": "^1.0",

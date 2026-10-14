@@ -32,15 +32,10 @@
 - The Database adapter compiles `contains()` through `containsString()`
   instead of the deprecated `contains()` factory. Matching is unchanged: a
   substring match on the column.
-- `utopia-php/database` is required as `^8.1.2`, replacing the temporary
-  `dev-feat-query-lib as 7.0.0` root alias. The branch resolves through its
-  own `8.0.x-dev` branch alias, so `minimum-stability` is `dev` with
-  `prefer-stable: true` until database 8.0.0 is tagged; `stable` is restored
-  with that tag.
-- Requires `utopia-php/client` 0.5 (`^0.5`). The ClickHouse adapter
-  imports `Utopia\Client\Client`, where client 0.5 moved the class.
-- `extra.branch-alias` maps `dev-feat-query-lib` and `dev-main` to
-  `0.17.x-dev`, so a consumer can require the branch before 0.17.0 is tagged.
+- `utopia-php/database` is required as `^8.1.2` (was `^7.0.0`) and
+  `utopia-php/query` as `^0.7` (was `^0.6 || ^0.7`). `minimum-stability`
+  stays `stable`: every dependency, utopia-php/database 8.1.2 included, is
+  tagged.
 
 ## Unreleased — query 0.6.x builder
 
