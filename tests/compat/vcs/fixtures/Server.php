@@ -181,22 +181,16 @@ final class Server
      */
     private function record(string $ns, string $provider, string $method, string $target, array $headers, string $body, World $world): void
     {
-        // Each runtime reaches the server under its own host name, which a
-        // body may carry (a webhook URL): the length counts it as `<host>`
-        $host = '';
-        foreach ($headers as [$name, $value]) {
-            if (strtolower($name) === 'host') {
-                $host = $value;
-            }
-        }
-        $mentions = $host === '' ? 0 : substr_count($body, $host);
+        // A body may carry the runtime's host name (a webhook URL) and the
+        // case namespace, both of which differ between runs: a length that
+        // matches the body is recorded as `<body>`, so only a wrong one shows.
         $recorded = [];
         foreach ($headers as [$name, $value]) {
             if (strtolower($name) === 'host') {
                 $value = '<host>';
             }
-            if (strtolower($name) === 'content-length' && $mentions > 0) {
-                $value = (string) ((int) $value + $mentions * (\strlen('<host>') - \strlen($host)));
+            if (strtolower($name) === 'content-length') {
+                $value = $value === (string) \strlen($body) ? '<body>' : $value;
             }
             if (strtolower($name) === 'authorization') {
                 $value = Jwt::describe($value, $world);

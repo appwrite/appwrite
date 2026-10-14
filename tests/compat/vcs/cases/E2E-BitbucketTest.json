@@ -220,7 +220,7 @@
                 ],
                 [
                   "Content-Length",
-                  "78"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"test-create-repository-06a0000000001\",\"is_private\":false}"
@@ -280,7 +280,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -508,7 +508,7 @@
                 ],
                 [
                   "Content-Length",
-                  "74"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"test-create-private-06a0000000002\",\"is_private\":true}"
@@ -568,7 +568,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -817,7 +817,7 @@
                 ],
                 [
                   "Content-Length",
-                  "74"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"test-public-access-06a0000000003\",\"is_private\":false}"
@@ -849,7 +849,7 @@
                 ],
                 [
                   "Content-Length",
-                  "74"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"test-private-access-06a0000000004\",\"is_private\":true}"
@@ -881,7 +881,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -913,7 +913,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -1141,7 +1141,7 @@
                 ],
                 [
                   "Content-Length",
-                  "75"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"test-get-repository-06a0000000005\",\"is_private\":false}"
@@ -1201,7 +1201,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -1637,7 +1637,7 @@
                 ],
                 [
                   "Content-Length",
-                  "78"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"test-delete-repository-06a0000000008\",\"is_private\":false}"
@@ -1669,7 +1669,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -1864,7 +1864,7 @@
                 ],
                 [
                   "Content-Length",
-                  "84"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"test-delete-repository-twice-06a0000000009\",\"is_private\":false}"
@@ -1896,7 +1896,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -1928,7 +1928,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -2061,7 +2061,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -2249,7 +2249,7 @@
                 ],
                 [
                   "Content-Length",
-                  "80"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"test-get-repository-name-06a000000000b\",\"is_private\":false}"
@@ -2309,7 +2309,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -2672,7 +2672,7 @@
                 ],
                 [
                   "Content-Length",
-                  "80"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"test-get-repository-tree-06a000000000c\",\"is_private\":false}"
@@ -2732,7 +2732,7 @@
                 ],
                 [
                   "Content-Length",
-                  "38"
+                  "<body>"
                 ]
               ],
               "body": "message=Add+file&%2FREADME.md=%23+Test"
@@ -2792,7 +2792,7 @@
                 ],
                 [
                   "Content-Length",
-                  "78"
+                  "<body>"
                 ]
               ],
               "body": "message=Add+file&%2Fsrc%2Fmain.php=%3C%3Fphp+echo+%22hello%22%3B&branch=master"
@@ -2852,7 +2852,7 @@
                 ],
                 [
                   "Content-Length",
-                  "68"
+                  "<body>"
                 ]
               ],
               "body": "message=Add+file&%2Fsrc%2Flib.php=%3C%3Fphp+%2F%2F+lib&branch=master"
@@ -2940,7 +2940,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -3148,7 +3148,7 @@
                 ],
                 [
                   "Content-Length",
-                  "88"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"test-get-repository-tree-invalid-06a000000000d\",\"is_private\":false}"
@@ -3208,7 +3208,7 @@
                 ],
                 [
                   "Content-Length",
-                  "38"
+                  "<body>"
                 ]
               ],
               "body": "message=Add+file&%2FREADME.md=%23+Test"
@@ -3268,7 +3268,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -3479,7 +3479,7 @@
                 ],
                 [
                   "Content-Length",
-                  "83"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"test-get-repository-content-06a000000000e\",\"is_private\":false}"
@@ -3539,7 +3539,7 @@
                 ],
                 [
                   "Content-Length",
-                  "45"
+                  "<body>"
                 ]
               ],
               "body": "message=Add+file&%2FREADME.md=%23+Hello+World"
@@ -3655,7 +3655,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -3867,7 +3867,7 @@
                 ],
                 [
                   "Content-Length",
-                  "87"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"test-get-repository-content-ref-06a000000000f\",\"is_private\":false}"
@@ -3927,7 +3927,7 @@
                 ],
                 [
                   "Content-Length",
-                  "48"
+                  "<body>"
                 ]
               ],
               "body": "message=Add+file&%2Ftest.txt=main+branch+content"
@@ -4015,7 +4015,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -4228,7 +4228,7 @@
                 ],
                 [
                   "Content-Length",
-                  "93"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"test-get-repository-content-not-found-06a0000000010\",\"is_private\":false}"
@@ -4288,7 +4288,7 @@
                 ],
                 [
                   "Content-Length",
-                  "38"
+                  "<body>"
                 ]
               ],
               "body": "message=Add+file&%2FREADME.md=%23+Test"
@@ -4376,7 +4376,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -4632,7 +4632,7 @@
                 ],
                 [
                   "Content-Length",
-                  "85"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"test-list-repository-contents-06a0000000011\",\"is_private\":false}"
@@ -4692,7 +4692,7 @@
                 ],
                 [
                   "Content-Length",
-                  "38"
+                  "<body>"
                 ]
               ],
               "body": "message=Add+file&%2FREADME.md=%23+Test"
@@ -4752,7 +4752,7 @@
                 ],
                 [
                   "Content-Length",
-                  "52"
+                  "<body>"
                 ]
               ],
               "body": "message=Add+file&%2Ffile1.txt=content1&branch=master"
@@ -4812,7 +4812,7 @@
                 ],
                 [
                   "Content-Length",
-                  "58"
+                  "<body>"
                 ]
               ],
               "body": "message=Add+file&%2Fsrc%2Fmain.php=%3C%3Fphp&branch=master"
@@ -4900,7 +4900,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -5107,7 +5107,7 @@
                 ],
                 [
                   "Content-Length",
-                  "93"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"test-list-repository-contents-invalid-06a0000000012\",\"is_private\":false}"
@@ -5167,7 +5167,7 @@
                 ],
                 [
                   "Content-Length",
-                  "38"
+                  "<body>"
                 ]
               ],
               "body": "message=Add+file&%2FREADME.md=%23+Test"
@@ -5255,7 +5255,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -5584,7 +5584,7 @@
                 ],
                 [
                   "Content-Length",
-                  "74"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"test-list-branches-06a0000000013\",\"is_private\":false}"
@@ -5644,7 +5644,7 @@
                 ],
                 [
                   "Content-Length",
-                  "38"
+                  "<body>"
                 ]
               ],
               "body": "message=Add+file&%2FREADME.md=%23+Test"
@@ -5704,7 +5704,7 @@
                 ],
                 [
                   "Content-Length",
-                  "47"
+                  "<body>"
                 ]
               ],
               "body": "{\"name\":\"feature-1\",\"target\":{\"hash\":\"master\"}}"
@@ -5736,7 +5736,7 @@
                 ],
                 [
                   "Content-Length",
-                  "47"
+                  "<body>"
                 ]
               ],
               "body": "{\"name\":\"feature-2\",\"target\":{\"hash\":\"master\"}}"
@@ -5796,7 +5796,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -5985,7 +5985,7 @@
                 ],
                 [
                   "Content-Length",
-                  "80"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"test-list-branches-empty-06a0000000014\",\"is_private\":false}"
@@ -6045,7 +6045,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -6468,7 +6468,7 @@
                 ],
                 [
                   "Content-Length",
-                  "70"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"test-list-tags-06a0000000015\",\"is_private\":false}"
@@ -6528,7 +6528,7 @@
                 ],
                 [
                   "Content-Length",
-                  "38"
+                  "<body>"
                 ]
               ],
               "body": "message=Add+file&%2FREADME.md=%23+Test"
@@ -6588,7 +6588,7 @@
                 ],
                 [
                   "Content-Length",
-                  "78"
+                  "<body>"
                 ]
               ],
               "body": "{\"name\":\"v1.0.0\",\"target\":{\"hash\":\"d44ecb7c26af2abef7c3c44e16c37e1953100d41\"}}"
@@ -6620,7 +6620,7 @@
                 ],
                 [
                   "Content-Length",
-                  "78"
+                  "<body>"
                 ]
               ],
               "body": "{\"name\":\"v1.1.0\",\"target\":{\"hash\":\"d44ecb7c26af2abef7c3c44e16c37e1953100d41\"}}"
@@ -6652,7 +6652,7 @@
                 ],
                 [
                   "Content-Length",
-                  "78"
+                  "<body>"
                 ]
               ],
               "body": "{\"name\":\"v2.0.0\",\"target\":{\"hash\":\"d44ecb7c26af2abef7c3c44e16c37e1953100d41\"}}"
@@ -6796,7 +6796,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -7014,7 +7014,7 @@
                 ],
                 [
                   "Content-Length",
-                  "76"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"test-list-tags-empty-06a0000000016\",\"is_private\":false}"
@@ -7074,7 +7074,7 @@
                 ],
                 [
                   "Content-Length",
-                  "38"
+                  "<body>"
                 ]
               ],
               "body": "message=Add+file&%2FREADME.md=%23+Test"
@@ -7162,7 +7162,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -7519,7 +7519,7 @@
                 ],
                 [
                   "Content-Length",
-                  "71"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"test-get-commit-06a0000000018\",\"is_private\":false}"
@@ -7579,7 +7579,7 @@
                 ],
                 [
                   "Content-Length",
-                  "49"
+                  "<body>"
                 ]
               ],
               "body": "message=Test+commit+message&%2FREADME.md=%23+Test"
@@ -7667,7 +7667,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -7919,7 +7919,7 @@
                 ],
                 [
                   "Content-Length",
-                  "78"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"test-get-latest-commit-06a0000000019\",\"is_private\":false}"
@@ -7979,7 +7979,7 @@
                 ],
                 [
                   "Content-Length",
-                  "42"
+                  "<body>"
                 ]
               ],
               "body": "message=First+commit&%2FREADME.md=%23+Test"
@@ -8067,7 +8067,7 @@
                 ],
                 [
                   "Content-Length",
-                  "52"
+                  "<body>"
                 ]
               ],
               "body": "message=Second+commit&%2Ftest.txt=test&branch=master"
@@ -8127,7 +8127,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -8340,7 +8340,7 @@
                 ],
                 [
                   "Content-Length",
-                  "86"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"test-get-latest-commit-invalid-06a000000001a\",\"is_private\":false}"
@@ -8400,7 +8400,7 @@
                 ],
                 [
                   "Content-Length",
-                  "38"
+                  "<body>"
                 ]
               ],
               "body": "message=Add+file&%2FREADME.md=%23+Test"
@@ -8460,7 +8460,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -8709,7 +8709,7 @@
                 ],
                 [
                   "Content-Length",
-                  "81"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"test-update-commit-status-06a000000001b\",\"is_private\":false}"
@@ -8769,7 +8769,7 @@
                 ],
                 [
                   "Content-Length",
-                  "38"
+                  "<body>"
                 ]
               ],
               "body": "message=Add+file&%2FREADME.md=%23+Test"
@@ -8829,7 +8829,7 @@
                 ],
                 [
                   "Content-Length",
-                  "118"
+                  "<body>"
                 ]
               ],
               "body": "{\"key\":\"ci\\/build\",\"name\":\"ci\\/build\",\"state\":\"SUCCESSFUL\",\"url\":\"https:\\/\\/example.com\",\"description\":\"Build passed\"}"
@@ -8889,7 +8889,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -9114,7 +9114,7 @@
                 ],
                 [
                   "Content-Length",
-                  "74"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"test-clone-command-06a000000001c\",\"is_private\":false}"
@@ -9174,7 +9174,7 @@
                 ],
                 [
                   "Content-Length",
-                  "38"
+                  "<body>"
                 ]
               ],
               "body": "message=Add+file&%2FREADME.md=%23+Test"
@@ -9206,7 +9206,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -9450,7 +9450,7 @@
                 ],
                 [
                   "Content-Length",
-                  "73"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"test-clone-commit-06a000000001e\",\"is_private\":false}"
@@ -9510,7 +9510,7 @@
                 ],
                 [
                   "Content-Length",
-                  "38"
+                  "<body>"
                 ]
               ],
               "body": "message=Add+file&%2FREADME.md=%23+Test"
@@ -9570,7 +9570,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -9871,7 +9871,7 @@
                 ],
                 [
                   "Content-Length",
-                  "75"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"test-get-owner-name-06a0000000022\",\"is_private\":false}"
@@ -9931,7 +9931,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -10065,7 +10065,7 @@
                 ],
                 [
                   "Content-Length",
-                  "66"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"invalid name with spaces\",\"is_private\":false}"
@@ -10378,7 +10378,7 @@
                 ],
                 [
                   "Content-Length",
-                  "70"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"test-clone-tag-06a0000000023\",\"is_private\":false}"
@@ -10438,7 +10438,7 @@
                 ],
                 [
                   "Content-Length",
-                  "42"
+                  "<body>"
                 ]
               ],
               "body": "message=Add+file&%2FREADME.md=%23+Test+Tag"
@@ -10498,7 +10498,7 @@
                 ],
                 [
                   "Content-Length",
-                  "105"
+                  "<body>"
                 ]
               ],
               "body": "{\"name\":\"v1.0.0\",\"target\":{\"hash\":\"e5917c538aad09ba167bb3e9bb4ca7bd50b8571b\"},\"message\":\"Release v1.0.0\"}"
@@ -10558,7 +10558,7 @@
                 ],
                 [
                   "Content-Length",
-                  "60"
+                  "<body>"
                 ]
               ],
               "body": "message=Add+file&%2FCHANGELOG.md=%23+After+Tag&branch=master"
@@ -10590,7 +10590,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -10854,7 +10854,7 @@
                 ],
                 [
                   "Content-Length",
-                  "73"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"test-search-match-06a0000000025\",\"is_private\":false}"
@@ -10886,7 +10886,7 @@
                 ],
                 [
                   "Content-Length",
-                  "73"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"test-search-other-06a0000000026\",\"is_private\":false}"
@@ -10946,7 +10946,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -10978,7 +10978,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -11248,7 +11248,7 @@
                 ],
                 [
                   "Content-Length",
-                  "73"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"test-search-repo1-06a0000000027\",\"is_private\":false}"
@@ -11280,7 +11280,7 @@
                 ],
                 [
                   "Content-Length",
-                  "73"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"test-search-repo2-06a0000000028\",\"is_private\":false}"
@@ -11340,7 +11340,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -11372,7 +11372,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -11733,7 +11733,7 @@
                 ],
                 [
                   "Content-Length",
-                  "77"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"test-get-pull-request-06a0000000029\",\"is_private\":false}"
@@ -11793,7 +11793,7 @@
                 ],
                 [
                   "Content-Length",
-                  "38"
+                  "<body>"
                 ]
               ],
               "body": "message=Add+file&%2FREADME.md=%23+Test"
@@ -11825,7 +11825,7 @@
                 ],
                 [
                   "Content-Length",
-                  "52"
+                  "<body>"
                 ]
               ],
               "body": "{\"name\":\"feature-branch\",\"target\":{\"hash\":\"master\"}}"
@@ -11857,7 +11857,7 @@
                 ],
                 [
                   "Content-Length",
-                  "72"
+                  "<body>"
                 ]
               ],
               "body": "message=Add+feature&%2Ffeature.txt=feature+content&branch=feature-branch"
@@ -11889,7 +11889,7 @@
                 ],
                 [
                   "Content-Length",
-                  "144"
+                  "<body>"
                 ]
               ],
               "body": "{\"title\":\"Test PR\",\"source\":{\"branch\":{\"name\":\"feature-branch\"}},\"destination\":{\"branch\":{\"name\":\"master\"}},\"description\":\"Test PR description\"}"
@@ -11949,7 +11949,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -12302,7 +12302,7 @@
                 ],
                 [
                   "Content-Length",
-                  "83"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"test-get-pull-request-files-06a000000002a\",\"is_private\":false}"
@@ -12362,7 +12362,7 @@
                 ],
                 [
                   "Content-Length",
-                  "38"
+                  "<body>"
                 ]
               ],
               "body": "message=Add+file&%2FREADME.md=%23+Test"
@@ -12394,7 +12394,7 @@
                 ],
                 [
                   "Content-Length",
-                  "52"
+                  "<body>"
                 ]
               ],
               "body": "{\"name\":\"feature-branch\",\"target\":{\"hash\":\"master\"}}"
@@ -12426,7 +12426,7 @@
                 ],
                 [
                   "Content-Length",
-                  "72"
+                  "<body>"
                 ]
               ],
               "body": "message=Add+feature&%2Ffeature.txt=feature+content&branch=feature-branch"
@@ -12458,7 +12458,7 @@
                 ],
                 [
                   "Content-Length",
-                  "114"
+                  "<body>"
                 ]
               ],
               "body": "{\"title\":\"Test PR Files\",\"source\":{\"branch\":{\"name\":\"feature-branch\"}},\"destination\":{\"branch\":{\"name\":\"master\"}}}"
@@ -12518,7 +12518,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -12714,7 +12714,7 @@
                 ],
                 [
                   "Content-Length",
-                  "85"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"test-get-pull-request-invalid-06a000000002b\",\"is_private\":false}"
@@ -12774,7 +12774,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -13134,7 +13134,7 @@
                 ],
                 [
                   "Content-Length",
-                  "79"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"test-get-pr-from-branch-06a000000002c\",\"is_private\":false}"
@@ -13194,7 +13194,7 @@
                 ],
                 [
                   "Content-Length",
-                  "38"
+                  "<body>"
                 ]
               ],
               "body": "message=Add+file&%2FREADME.md=%23+Test"
@@ -13226,7 +13226,7 @@
                 ],
                 [
                   "Content-Length",
-                  "48"
+                  "<body>"
                 ]
               ],
               "body": "{\"name\":\"my-feature\",\"target\":{\"hash\":\"master\"}}"
@@ -13258,7 +13258,7 @@
                 ],
                 [
                   "Content-Length",
-                  "60"
+                  "<body>"
                 ]
               ],
               "body": "message=Add+feature&%2Ffeature.txt=content&branch=my-feature"
@@ -13290,7 +13290,7 @@
                 ],
                 [
                   "Content-Length",
-                  "107"
+                  "<body>"
                 ]
               ],
               "body": "{\"title\":\"Feature PR\",\"source\":{\"branch\":{\"name\":\"my-feature\"}},\"destination\":{\"branch\":{\"name\":\"master\"}}}"
@@ -13350,7 +13350,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -13626,7 +13626,7 @@
                 ],
                 [
                   "Content-Length",
-                  "73"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"test-get-pr-no-pr-06a000000002d\",\"is_private\":false}"
@@ -13686,7 +13686,7 @@
                 ],
                 [
                   "Content-Length",
-                  "38"
+                  "<body>"
                 ]
               ],
               "body": "message=Add+file&%2FREADME.md=%23+Test"
@@ -13746,7 +13746,7 @@
                 ],
                 [
                   "Content-Length",
-                  "51"
+                  "<body>"
                 ]
               ],
               "body": "{\"name\":\"lonely-branch\",\"target\":{\"hash\":\"master\"}}"
@@ -13806,7 +13806,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -14156,7 +14156,7 @@
                 ],
                 [
                   "Content-Length",
-                  "75"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"test-create-comment-06a000000002e\",\"is_private\":false}"
@@ -14216,7 +14216,7 @@
                 ],
                 [
                   "Content-Length",
-                  "38"
+                  "<body>"
                 ]
               ],
               "body": "message=Add+file&%2FREADME.md=%23+Test"
@@ -14248,7 +14248,7 @@
                 ],
                 [
                   "Content-Length",
-                  "49"
+                  "<body>"
                 ]
               ],
               "body": "{\"name\":\"test-branch\",\"target\":{\"hash\":\"master\"}}"
@@ -14280,7 +14280,7 @@
                 ],
                 [
                   "Content-Length",
-                  "52"
+                  "<body>"
                 ]
               ],
               "body": "message=Add+test&%2Ftest.txt=test&branch=test-branch"
@@ -14312,7 +14312,7 @@
                 ],
                 [
                   "Content-Length",
-                  "105"
+                  "<body>"
                 ]
               ],
               "body": "{\"title\":\"Test PR\",\"source\":{\"branch\":{\"name\":\"test-branch\"}},\"destination\":{\"branch\":{\"name\":\"master\"}}}"
@@ -14344,7 +14344,7 @@
                 ],
                 [
                   "Content-Length",
-                  "34"
+                  "<body>"
                 ]
               ],
               "body": "{\"content\":{\"raw\":\"Test comment\"}}"
@@ -14376,7 +14376,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -14738,7 +14738,7 @@
                 ],
                 [
                   "Content-Length",
-                  "72"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"test-get-comment-06a000000002f\",\"is_private\":false}"
@@ -14798,7 +14798,7 @@
                 ],
                 [
                   "Content-Length",
-                  "38"
+                  "<body>"
                 ]
               ],
               "body": "message=Add+file&%2FREADME.md=%23+Test"
@@ -14830,7 +14830,7 @@
                 ],
                 [
                   "Content-Length",
-                  "49"
+                  "<body>"
                 ]
               ],
               "body": "{\"name\":\"test-branch\",\"target\":{\"hash\":\"master\"}}"
@@ -14862,7 +14862,7 @@
                 ],
                 [
                   "Content-Length",
-                  "52"
+                  "<body>"
                 ]
               ],
               "body": "message=Add+test&%2Ftest.txt=test&branch=test-branch"
@@ -14894,7 +14894,7 @@
                 ],
                 [
                   "Content-Length",
-                  "105"
+                  "<body>"
                 ]
               ],
               "body": "{\"title\":\"Test PR\",\"source\":{\"branch\":{\"name\":\"test-branch\"}},\"destination\":{\"branch\":{\"name\":\"master\"}}}"
@@ -14926,7 +14926,7 @@
                 ],
                 [
                   "Content-Length",
-                  "34"
+                  "<body>"
                 ]
               ],
               "body": "{\"content\":{\"raw\":\"Test comment\"}}"
@@ -14986,7 +14986,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -15367,7 +15367,7 @@
                 ],
                 [
                   "Content-Length",
-                  "75"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"test-update-comment-06a0000000030\",\"is_private\":false}"
@@ -15427,7 +15427,7 @@
                 ],
                 [
                   "Content-Length",
-                  "38"
+                  "<body>"
                 ]
               ],
               "body": "message=Add+file&%2FREADME.md=%23+Test"
@@ -15459,7 +15459,7 @@
                 ],
                 [
                   "Content-Length",
-                  "49"
+                  "<body>"
                 ]
               ],
               "body": "{\"name\":\"test-branch\",\"target\":{\"hash\":\"master\"}}"
@@ -15491,7 +15491,7 @@
                 ],
                 [
                   "Content-Length",
-                  "52"
+                  "<body>"
                 ]
               ],
               "body": "message=Add+test&%2Ftest.txt=test&branch=test-branch"
@@ -15523,7 +15523,7 @@
                 ],
                 [
                   "Content-Length",
-                  "105"
+                  "<body>"
                 ]
               ],
               "body": "{\"title\":\"Test PR\",\"source\":{\"branch\":{\"name\":\"test-branch\"}},\"destination\":{\"branch\":{\"name\":\"master\"}}}"
@@ -15555,7 +15555,7 @@
                 ],
                 [
                   "Content-Length",
-                  "38"
+                  "<body>"
                 ]
               ],
               "body": "{\"content\":{\"raw\":\"Original comment\"}}"
@@ -15587,7 +15587,7 @@
                 ],
                 [
                   "Content-Length",
-                  "37"
+                  "<body>"
                 ]
               ],
               "body": "{\"content\":{\"raw\":\"Updated comment\"}}"
@@ -15647,7 +15647,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -15861,7 +15861,7 @@
                 ],
                 [
                   "Content-Length",
-                  "76"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"test-comment-invalid-06a0000000031\",\"is_private\":false}"
@@ -15921,7 +15921,7 @@
                 ],
                 [
                   "Content-Length",
-                  "38"
+                  "<body>"
                 ]
               ],
               "body": "message=Add+file&%2FREADME.md=%23+Test"
@@ -15953,7 +15953,7 @@
                 ],
                 [
                   "Content-Length",
-                  "34"
+                  "<body>"
                 ]
               ],
               "body": "{\"content\":{\"raw\":\"Test comment\"}}"
@@ -15985,7 +15985,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -16192,7 +16192,7 @@
                 ],
                 [
                   "Content-Length",
-                  "80"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"test-get-comment-invalid-06a0000000032\",\"is_private\":false}"
@@ -16252,7 +16252,7 @@
                 ],
                 [
                   "Content-Length",
-                  "38"
+                  "<body>"
                 ]
               ],
               "body": "message=Add+file&%2FREADME.md=%23+Test"
@@ -16284,7 +16284,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -16497,7 +16497,7 @@
                 ],
                 [
                   "Content-Length",
-                  "79"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"test-get-commit-invalid-06a0000000033\",\"is_private\":false}"
@@ -16557,7 +16557,7 @@
                 ],
                 [
                   "Content-Length",
-                  "38"
+                  "<body>"
                 ]
               ],
               "body": "message=Add+file&%2FREADME.md=%23+Test"
@@ -16617,7 +16617,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -16848,7 +16848,7 @@
                 ],
                 [
                   "Content-Length",
-                  "74"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"test-presigned-url-06a0000000034\",\"is_private\":false}"
@@ -16908,7 +16908,7 @@
                 ],
                 [
                   "Content-Length",
-                  "38"
+                  "<body>"
                 ]
               ],
               "body": "message=Add+file&%2FREADME.md=%23+Test"
@@ -16940,7 +16940,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -17637,7 +17637,7 @@
                 ],
                 [
                   "Content-Length",
-                  "78"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"test-branch-with-slash-06a0000000035\",\"is_private\":false}"
@@ -17697,7 +17697,7 @@
                 ],
                 [
                   "Content-Length",
-                  "38"
+                  "<body>"
                 ]
               ],
               "body": "message=Add+file&%2FREADME.md=%23+Test"
@@ -17757,7 +17757,7 @@
                 ],
                 [
                   "Content-Length",
-                  "58"
+                  "<body>"
                 ]
               ],
               "body": "{\"name\":\"feature\\/test-branch\",\"target\":{\"hash\":\"master\"}}"
@@ -17845,7 +17845,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -18124,7 +18124,7 @@
                 ],
                 [
                   "Content-Length",
-                  "71"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"test-create-tag-06a0000000036\",\"is_private\":false}"
@@ -18184,7 +18184,7 @@
                 ],
                 [
                   "Content-Length",
-                  "38"
+                  "<body>"
                 ]
               ],
               "body": "message=Add+file&%2FREADME.md=%23+Test"
@@ -18244,7 +18244,7 @@
                 ],
                 [
                   "Content-Length",
-                  "104"
+                  "<body>"
                 ]
               ],
               "body": "{\"name\":\"v1.0.0\",\"target\":{\"hash\":\"d44ecb7c26af2abef7c3c44e16c37e1953100d41\"},\"message\":\"First release\"}"
@@ -18304,7 +18304,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -18608,7 +18608,7 @@
                 ],
                 [
                   "Content-Length",
-                  "73"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"test-pagination-06a0000000037-1\",\"is_private\":false}"
@@ -18640,7 +18640,7 @@
                 ],
                 [
                   "Content-Length",
-                  "73"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"test-pagination-06a0000000037-2\",\"is_private\":false}"
@@ -18756,7 +18756,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -18788,7 +18788,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -18977,7 +18977,7 @@
                 ],
                 [
                   "Content-Length",
-                  "81"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"test-list-tags-commitless-06a0000000038\",\"is_private\":false}"
@@ -19037,7 +19037,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -19286,7 +19286,7 @@
                 ],
                 [
                   "Content-Length",
-                  "80"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"test-get-commit-statuses-06a0000000039\",\"is_private\":false}"
@@ -19346,7 +19346,7 @@
                 ],
                 [
                   "Content-Length",
-                  "38"
+                  "<body>"
                 ]
               ],
               "body": "message=Add+file&%2FREADME.md=%23+Test"
@@ -19406,7 +19406,7 @@
                 ],
                 [
                   "Content-Length",
-                  "242"
+                  "<body>"
                 ]
               ],
               "body": "{\"key\":\"ci\\/test\",\"name\":\"ci\\/test\",\"state\":\"INPROGRESS\",\"url\":\"${vcs}\\/~${ns}\\/bitbucket\\/test-owner\\/test-get-commit-statuses-06a0000000039\\/commits\\/d44ecb7c26af2abef7c3c44e16c37e1953100d41\",\"description\":\"Build started\"}"
@@ -19466,7 +19466,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -19692,7 +19692,7 @@
                 ],
                 [
                   "Content-Length",
-                  "86"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"test-get-commit-statuses-empty-06a000000003a\",\"is_private\":false}"
@@ -19752,7 +19752,7 @@
                 ],
                 [
                   "Content-Length",
-                  "38"
+                  "<body>"
                 ]
               ],
               "body": "message=Add+file&%2FREADME.md=%23+Test"
@@ -19840,7 +19840,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -20125,7 +20125,7 @@
                 ],
                 [
                   "Content-Length",
-                  "77"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"test-create-check-run-06a000000003b\",\"is_private\":false}"
@@ -20185,7 +20185,7 @@
                 ],
                 [
                   "Content-Length",
-                  "38"
+                  "<body>"
                 ]
               ],
               "body": "message=Add+file&%2FREADME.md=%23+Test"
@@ -20245,7 +20245,7 @@
                 ],
                 [
                   "Content-Length",
-                  "228"
+                  "<body>"
                 ]
               ],
               "body": "{\"key\":\"check-run-<random>\",\"name\":\"ci\\/build\",\"state\":\"INPROGRESS\",\"url\":\"${vcs}\\/~${ns}\\/bitbucket\\/test-owner\\/test-create-check-run-06a000000003b\\/commits\\/d44ecb7c26af2abef7c3c44e16c37e1953100d41\"}"
@@ -20305,7 +20305,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -20447,7 +20447,7 @@
                 ],
                 [
                   "Content-Length",
-                  "230"
+                  "<body>"
                 ]
               ],
               "body": "{\"key\":\"check-run-<random>\",\"name\":\"ci\\/build\",\"state\":\"INPROGRESS\",\"url\":\"${vcs}\\/~${ns}\\/bitbucket\\/test-owner\\/non-existing-repository-06a000000003c\\/commits\\/a000000000000000000000000000000000000000\"}"
@@ -20650,7 +20650,7 @@
                 ],
                 [
                   "Content-Length",
-                  "82"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"test-get-check-run-invalid-06a000000003d\",\"is_private\":false}"
@@ -20682,7 +20682,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -20968,7 +20968,7 @@
                 ],
                 [
                   "Content-Length",
-                  "87"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"test-two-check-runs-same-commit-06a000000003e\",\"is_private\":false}"
@@ -21028,7 +21028,7 @@
                 ],
                 [
                   "Content-Length",
-                  "38"
+                  "<body>"
                 ]
               ],
               "body": "message=Add+file&%2FREADME.md=%23+Test"
@@ -21088,7 +21088,7 @@
                 ],
                 [
                   "Content-Length",
-                  "238"
+                  "<body>"
                 ]
               ],
               "body": "{\"key\":\"check-run-<random>\",\"name\":\"ci\\/build\",\"state\":\"INPROGRESS\",\"url\":\"${vcs}\\/~${ns}\\/bitbucket\\/test-owner\\/test-two-check-runs-same-commit-06a000000003e\\/commits\\/d44ecb7c26af2abef7c3c44e16c37e1953100d41\"}"
@@ -21120,7 +21120,7 @@
                 ],
                 [
                   "Content-Length",
-                  "238"
+                  "<body>"
                 ]
               ],
               "body": "{\"key\":\"check-run-<random>\",\"name\":\"ci\\/build\",\"state\":\"INPROGRESS\",\"url\":\"${vcs}\\/~${ns}\\/bitbucket\\/test-owner\\/test-two-check-runs-same-commit-06a000000003e\\/commits\\/d44ecb7c26af2abef7c3c44e16c37e1953100d41\"}"
@@ -21152,7 +21152,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -21474,7 +21474,7 @@
                 ],
                 [
                   "Content-Length",
-                  "89"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"test-check-runs-different-commits-06a000000003f\",\"is_private\":false}"
@@ -21534,7 +21534,7 @@
                 ],
                 [
                   "Content-Length",
-                  "38"
+                  "<body>"
                 ]
               ],
               "body": "message=Add+file&%2FREADME.md=%23+Test"
@@ -21622,7 +21622,7 @@
                 ],
                 [
                   "Content-Length",
-                  "54"
+                  "<body>"
                 ]
               ],
               "body": "message=Add+file&%2Fsecond.md=%23+Second&branch=master"
@@ -21682,7 +21682,7 @@
                 ],
                 [
                   "Content-Length",
-                  "240"
+                  "<body>"
                 ]
               ],
               "body": "{\"key\":\"check-run-<random>\",\"name\":\"ci\\/build\",\"state\":\"INPROGRESS\",\"url\":\"${vcs}\\/~${ns}\\/bitbucket\\/test-owner\\/test-check-runs-different-commits-06a000000003f\\/commits\\/d44ecb7c26af2abef7c3c44e16c37e1953100d41\"}"
@@ -21714,7 +21714,7 @@
                 ],
                 [
                   "Content-Length",
-                  "240"
+                  "<body>"
                 ]
               ],
               "body": "{\"key\":\"check-run-<random>\",\"name\":\"ci\\/build\",\"state\":\"INPROGRESS\",\"url\":\"${vcs}\\/~${ns}\\/bitbucket\\/test-owner\\/test-check-runs-different-commits-06a000000003f\\/commits\\/3bdc71037c9955cceea7b8f31a400ab7de652e2d\"}"
@@ -21746,7 +21746,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -21999,7 +21999,7 @@
                 ],
                 [
                   "Content-Length",
-                  "87"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"test-create-check-run-completed-06a0000000040\",\"is_private\":false}"
@@ -22059,7 +22059,7 @@
                 ],
                 [
                   "Content-Length",
-                  "38"
+                  "<body>"
                 ]
               ],
               "body": "message=Add+file&%2FREADME.md=%23+Test"
@@ -22119,7 +22119,7 @@
                 ],
                 [
                   "Content-Length",
-                  "286"
+                  "<body>"
                 ]
               ],
               "body": "{\"key\":\"check-run-<random>\",\"name\":\"ci\\/build\",\"state\":\"SUCCESSFUL\",\"url\":\"${vcs}\\/~${ns}\\/bitbucket\\/test-owner\\/test-create-check-run-completed-06a0000000040\\/commits\\/d44ecb7c26af2abef7c3c44e16c37e1953100d41\",\"description\":\"All checks passed successfully.\"}"
@@ -22151,7 +22151,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -22449,7 +22449,7 @@
                 ],
                 [
                   "Content-Length",
-                  "77"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"test-update-check-run-06a0000000041\",\"is_private\":false}"
@@ -22509,7 +22509,7 @@
                 ],
                 [
                   "Content-Length",
-                  "38"
+                  "<body>"
                 ]
               ],
               "body": "message=Add+file&%2FREADME.md=%23+Test"
@@ -22569,7 +22569,7 @@
                 ],
                 [
                   "Content-Length",
-                  "228"
+                  "<body>"
                 ]
               ],
               "body": "{\"key\":\"check-run-<random>\",\"name\":\"ci\\/build\",\"state\":\"INPROGRESS\",\"url\":\"${vcs}\\/~${ns}\\/bitbucket\\/test-owner\\/test-update-check-run-06a0000000041\\/commits\\/d44ecb7c26af2abef7c3c44e16c37e1953100d41\"}"
@@ -22629,7 +22629,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -22947,7 +22947,7 @@
                 ],
                 [
                   "Content-Length",
-                  "85"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"test-update-check-run-invalid-06a0000000043\",\"is_private\":false}"
@@ -22979,7 +22979,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -23256,7 +23256,7 @@
                 ],
                 [
                   "Content-Length",
-                  "91"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"test-update-check-run-no-conclusion-06a0000000044\",\"is_private\":false}"
@@ -23316,7 +23316,7 @@
                 ],
                 [
                   "Content-Length",
-                  "38"
+                  "<body>"
                 ]
               ],
               "body": "message=Add+file&%2FREADME.md=%23+Test"
@@ -23376,7 +23376,7 @@
                 ],
                 [
                   "Content-Length",
-                  "242"
+                  "<body>"
                 ]
               ],
               "body": "{\"key\":\"check-run-<random>\",\"name\":\"ci\\/build\",\"state\":\"INPROGRESS\",\"url\":\"${vcs}\\/~${ns}\\/bitbucket\\/test-owner\\/test-update-check-run-no-conclusion-06a0000000044\\/commits\\/d44ecb7c26af2abef7c3c44e16c37e1953100d41\"}"
@@ -23408,7 +23408,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -23944,7 +23944,7 @@
                 ],
                 [
                   "Content-Length",
-                  "90"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"test-list-repository-contents-root-06a0000000045\",\"is_private\":false}"
@@ -24004,7 +24004,7 @@
                 ],
                 [
                   "Content-Length",
-                  "38"
+                  "<body>"
                 ]
               ],
               "body": "message=Add+file&%2FREADME.md=%23+Test"
@@ -24260,7 +24260,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -24503,7 +24503,7 @@
                 ],
                 [
                   "Content-Length",
-                  "88"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"test-get-repository-content-root-06a0000000046\",\"is_private\":false}"
@@ -24563,7 +24563,7 @@
                 ],
                 [
                   "Content-Length",
-                  "38"
+                  "<body>"
                 ]
               ],
               "body": "message=Add+file&%2FREADME.md=%23+Test"
@@ -24847,7 +24847,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -25096,7 +25096,7 @@
                 ],
                 [
                   "Content-Length",
-                  "95"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"test-list-repository-contents-malformed-06a0000000047\",\"is_private\":false}"
@@ -25156,7 +25156,7 @@
                 ],
                 [
                   "Content-Length",
-                  "44"
+                  "<body>"
                 ]
               ],
               "body": "message=Add+file&%2Fsrc%2Fmain.php=%3C%3Fphp"
@@ -25356,7 +25356,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -25569,7 +25569,7 @@
                 ],
                 [
                   "Content-Length",
-                  "88"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"test-get-repository-content-case-06a0000000048\",\"is_private\":false}"
@@ -25629,7 +25629,7 @@
                 ],
                 [
                   "Content-Length",
-                  "38"
+                  "<body>"
                 ]
               ],
               "body": "message=Add+file&%2FREADME.md=%23+Test"
@@ -25717,7 +25717,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -25928,7 +25928,7 @@
                 ],
                 [
                   "Content-Length",
-                  "87"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"test-get-repository-content-sha-06a0000000049\",\"is_private\":false}"
@@ -25988,7 +25988,7 @@
                 ],
                 [
                   "Content-Length",
-                  "38"
+                  "<body>"
                 ]
               ],
               "body": "message=Add+file&%2FREADME.md=%23+Test"
@@ -26104,7 +26104,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -26337,7 +26337,7 @@
                 ],
                 [
                   "Content-Length",
-                  "78"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"test-get-commit-avatar-06a000000004a\",\"is_private\":false}"
@@ -26397,7 +26397,7 @@
                 ],
                 [
                   "Content-Length",
-                  "38"
+                  "<body>"
                 ]
               ],
               "body": "message=Add+file&%2FREADME.md=%23+Test"
@@ -26485,7 +26485,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -26680,7 +26680,7 @@
                 ],
                 [
                   "Content-Length",
-                  "83"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"test-get-deleted-repository-06a000000004b\",\"is_private\":false}"
@@ -26712,7 +26712,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -26936,7 +26936,7 @@
                 ],
                 [
                   "Content-Length",
-                  "72"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"test-create-file-06a000000004c\",\"is_private\":false}"
@@ -26996,7 +26996,7 @@
                 ],
                 [
                   "Content-Length",
-                  "41"
+                  "<body>"
                 ]
               ],
               "body": "message=Add+test+file&%2Ftest.md=%23+Test"
@@ -27028,7 +27028,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -27328,7 +27328,7 @@
                 ],
                 [
                   "Content-Length",
-                  "79"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"test-create-file-branch-06a000000004d\",\"is_private\":false}"
@@ -27388,7 +27388,7 @@
                 ],
                 [
                   "Content-Length",
-                  "38"
+                  "<body>"
                 ]
               ],
               "body": "message=Add+file&%2FREADME.md=%23+Main"
@@ -27448,7 +27448,7 @@
                 ],
                 [
                   "Content-Length",
-                  "45"
+                  "<body>"
                 ]
               ],
               "body": "{\"name\":\"feature\",\"target\":{\"hash\":\"master\"}}"
@@ -27480,7 +27480,7 @@
                 ],
                 [
                   "Content-Length",
-                  "65"
+                  "<body>"
                 ]
               ],
               "body": "message=Add+feature+file&%2Ffeature.md=%23+Feature&branch=feature"
@@ -27568,7 +27568,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -27803,7 +27803,7 @@
                 ],
                 [
                   "Content-Length",
-                  "92"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"test-list-repository-contents-subdir-06a000000004e\",\"is_private\":false}"
@@ -27863,7 +27863,7 @@
                 ],
                 [
                   "Content-Length",
-                  "45"
+                  "<body>"
                 ]
               ],
               "body": "message=Add+file&%2Fsrc%2Ffile1.php=%3C%3Fphp"
@@ -27923,7 +27923,7 @@
                 ],
                 [
                   "Content-Length",
-                  "59"
+                  "<body>"
                 ]
               ],
               "body": "message=Add+file&%2Fsrc%2Ffile2.php=%3C%3Fphp&branch=master"
@@ -28011,7 +28011,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -28331,7 +28331,7 @@
                 ],
                 [
                   "Content-Length",
-                  "82"
+                  "<body>"
                 ]
               ],
               "body": "{\"scm\":\"git\",\"name\":\"test-update-status-invalid-06a0000000050\",\"is_private\":false}"
@@ -28363,7 +28363,7 @@
                 ],
                 [
                   "Content-Length",
-                  "195"
+                  "<body>"
                 ]
               ],
               "body": "{\"key\":\"bitbucket\",\"name\":\"bitbucket\",\"state\":\"SUCCESSFUL\",\"url\":\"${vcs}\\/~${ns}\\/bitbucket\\/test-owner\\/test-update-status-invalid-06a0000000050\\/commits\\/invalid-commit-hash\"}"
@@ -28395,7 +28395,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -28530,7 +28530,7 @@
                 ],
                 [
                   "Content-Length",
-                  "208"
+                  "<body>"
                 ]
               ],
               "body": "{\"key\":\"bitbucket\",\"name\":\"bitbucket\",\"state\":\"SUCCESSFUL\",\"url\":\"${vcs}\\/~${ns}\\/bitbucket\\/test-owner\\/nonexistent-repo-06a0000000051\\/commits\\/abc123def456abc123def456abc123def456abc123\"}"

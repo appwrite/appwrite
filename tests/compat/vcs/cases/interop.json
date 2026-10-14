@@ -114,7 +114,7 @@
                 ],
                 [
                   "Content-Length",
-                  "2"
+                  "<body>"
                 ]
               ],
               "body": "{}"
@@ -292,7 +292,7 @@
                 ],
                 [
                   "Content-Length",
-                  "32"
+                  "<body>"
                 ]
               ],
               "body": "{\"scopes\":[],\"repositoryIds\":[]}"
