@@ -108,7 +108,48 @@
         "Utopia\\Queue\\Message::getAttempts",
         "Utopia\\Queue\\Message::getSequence",
         "Utopia\\Queue\\Message::getReceipt",
-        "Utopia\\Queue\\Message::isTerminal"
+        "Utopia\\Queue\\Message::isTerminal",
+        "Utopia\\Queue\\Message::setSize",
+        "Utopia\\Queue\\Message::getSize"
+      ]
+    },
+    "message.warn_if_large": {
+      "doc": "Message::warnIfLarge(queue, size): the line it logs, or null",
+      "covers": [
+        "Utopia\\Queue\\Message::warnIfLarge"
+      ],
+      "fuzz": [
+        {
+          "name": "sizes",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "queue": {
+                "gen": "string"
+              },
+              "size": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "int"
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      0,
+                      1048575,
+                      1048576,
+                      1048577,
+                      268435456,
+                      -1
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 1000
+        }
       ]
     },
     "codec.encode": {

@@ -953,7 +953,10 @@ pub async fn replay(cfg: &Config, lib: &str) -> Result<Report, String> {
                 continue;
             }
             counter += 1;
-            let ns = format!("cxreplay{}{counter}", std::process::id());
+            // The width of `Engine::ns()`'s: a recorded result that depends on
+            // the namespace's length (a message size, a cut-off server message)
+            // replays unchanged.
+            let ns = format!("cx{:05}{counter:06}r", std::process::id() % 100_000);
             for k in &kinds {
                 snapshot::cleanup(cfg, k, &ns)?;
             }

@@ -26,6 +26,7 @@ pub const OPS: &[&str] = &[
     "queue.new",
     "message.new",
     "message.set",
+    "message.warn_if_large",
     "codec.encode",
     "codec.decode",
     "codec.content_type",
@@ -409,6 +410,7 @@ fn delivered(messages: Vec<Message>, session: &mut Session) -> Json {
     for m in messages {
         let mut a = m.to_array();
         a.set("receipt".into(), m.receipt().map_or(Value::Null, Value::from));
+        a.set("size".into(), m.size().map_or(Value::Null, Value::Int));
         arrays.push(dump(&Value::Array(a)));
         handles.push(session.handle(m));
     }
@@ -494,6 +496,9 @@ pub async fn call(op: &str, args: &Json, session: &mut Session) -> OpResult {
             if let Some(v) = a.opt_bool("terminal")? {
                 m.terminal(v);
             }
+            if a.0.get("size").is_some() {
+                m.set_size(a.opt_i64("size")?);
+            }
             let mut out = Array::new();
             out.set("pid".into(), Value::Str(m.pid().clone()));
             out.set("queue".into(), Value::Str(m.queue().clone()));
@@ -503,8 +508,15 @@ pub async fn call(op: &str, args: &Json, session: &mut Session) -> OpResult {
             out.set("sequence".into(), m.sequence().map_or(Value::Null, Value::Int));
             out.set("receipt".into(), m.receipt().map_or(Value::Null, Value::from));
             out.set("terminal".into(), Value::Bool(m.is_terminal()));
+            out.set("size".into(), m.size().map_or(Value::Null, Value::Int));
             out.set("array".into(), Value::Array(m.to_array()));
             Outcome::Ok(dump(&Value::Array(out)))
+        }
+
+        "message.warn_if_large" => {
+            let (queue, size) = (a.str("queue")?, a.i64("size")?);
+            Message::warn_if_large(queue, size);
+            Outcome::ok(Message::large_warning(queue, size))
         }
 
         "codec.encode" => match codec(a.str("codec")?)?.encode(&decode(a.value("value")?)?) {
@@ -1267,7 +1279,8 @@ impl utopia_queue::telemetry::Telemetry for Recording {
 }
 
 impl Recording {
-    /// Each duration histogram's size and sign, each depth gauge observed twice.
+    /// Each duration histogram's size and sign, the message sizes (sorted),
+    /// each depth gauge observed twice.
     async fn report(&self) -> Json {
         let mut out = serde_json::Map::new();
         for name in ["messaging.process.wait.duration", "messaging.process.duration"] {
@@ -1275,6 +1288,13 @@ impl Recording {
             let values = values.map(|v| v.0.lock().map(|v| v.clone()).unwrap_or_default()).unwrap_or_default();
             out.insert(name.into(), json!({"count": values.len(), "non_negative": values.iter().all(|v| *v >= 0.0)}));
         }
+        let name = "messaging.process.message.size";
+        let sizes = self.histograms.lock().ok().and_then(|h| h.get(name).cloned());
+        let mut sizes: Vec<i64> = sizes
+            .map(|v| v.0.lock().map(|v| v.iter().map(|s| *s as i64).collect()).unwrap_or_default())
+            .unwrap_or_default();
+        sizes.sort_unstable();
+        out.insert(name.into(), json!(sizes));
         for name in ["messaging.queue.depth", "messaging.queue.failed.depth"] {
             let observers = self.gauges.lock().ok().and_then(|g| g.get(name).cloned()).unwrap_or_default();
             let mut observed = Vec::new();

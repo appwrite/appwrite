@@ -1278,6 +1278,12 @@
         "Utopia\\Mqtt\\Server::subscribers"
       ]
     },
+    "server.unsubscribe": {
+      "doc": "$server->unsubscribe(topic, fd): the server drops one connection's subscription",
+      "covers": [
+        "Utopia\\Mqtt\\Server::unsubscribe"
+      ]
+    },
     "server.log": {
       "doc": "the rig's log: handler calls, hooks and errors, oldest first"
     },

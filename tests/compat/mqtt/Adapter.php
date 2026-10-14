@@ -571,6 +571,7 @@ final class Adapter implements Base, Benchmarks
 
                 return $out;
             },
+            'server.unsubscribe' => fn (array $a, Session $s) => self::rig($a, $s)->server->unsubscribe($a['topic'], $a['fd']),
             'server.log' => fn (array $a, Session $s) => self::rig($a, $s)->log->getArrayCopy(),
             'server.metrics' => fn (array $a, Session $s) => self::metrics(self::rig($a, $s)->telemetry),
             'server.session' => function (array $a, Session $s) {

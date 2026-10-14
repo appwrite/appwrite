@@ -400,6 +400,10 @@
             true
           ],
           [
+            "size",
+            null
+          ],
+          [
             "array",
             {
               "$array": [
@@ -501,6 +505,10 @@
             false
           ],
           [
+            "size",
+            null
+          ],
+          [
             "array",
             {
               "$array": [
@@ -596,6 +604,10 @@
             false
           ],
           [
+            "size",
+            null
+          ],
+          [
             "array",
             {
               "$array": [
@@ -635,6 +647,341 @@
           ]
         ]
       }
+    },
+    {
+      "name": "size is null until set",
+      "op": "message.set",
+      "args": {
+        "envelope": {
+          "pid": "p1",
+          "queue": "mails",
+          "timestamp": 1700000000,
+          "payload": {
+            "to": "ada"
+          }
+        }
+      },
+      "expect": {
+        "$array": [
+          [
+            "pid",
+            "p1"
+          ],
+          [
+            "queue",
+            "mails"
+          ],
+          [
+            "timestamp",
+            1700000000
+          ],
+          [
+            "payload",
+            {
+              "$array": [
+                [
+                  "to",
+                  "ada"
+                ]
+              ]
+            }
+          ],
+          [
+            "attempts",
+            0
+          ],
+          [
+            "sequence",
+            null
+          ],
+          [
+            "receipt",
+            null
+          ],
+          [
+            "terminal",
+            false
+          ],
+          [
+            "size",
+            null
+          ],
+          [
+            "array",
+            {
+              "$array": [
+                [
+                  "pid",
+                  "p1"
+                ],
+                [
+                  "queue",
+                  "mails"
+                ],
+                [
+                  "timestamp",
+                  1700000000
+                ],
+                [
+                  "payload",
+                  {
+                    "$array": [
+                      [
+                        "to",
+                        "ada"
+                      ]
+                    ]
+                  }
+                ],
+                [
+                  "attempts",
+                  0
+                ],
+                [
+                  "sequence",
+                  null
+                ]
+              ]
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "name": "setSize stores the delivery size",
+      "op": "message.set",
+      "args": {
+        "envelope": {
+          "pid": "p1",
+          "queue": "mails",
+          "timestamp": 1700000000,
+          "payload": {
+            "to": "ada"
+          }
+        },
+        "size": 2048
+      },
+      "expect": {
+        "$array": [
+          [
+            "pid",
+            "p1"
+          ],
+          [
+            "queue",
+            "mails"
+          ],
+          [
+            "timestamp",
+            1700000000
+          ],
+          [
+            "payload",
+            {
+              "$array": [
+                [
+                  "to",
+                  "ada"
+                ]
+              ]
+            }
+          ],
+          [
+            "attempts",
+            0
+          ],
+          [
+            "sequence",
+            null
+          ],
+          [
+            "receipt",
+            null
+          ],
+          [
+            "terminal",
+            false
+          ],
+          [
+            "size",
+            2048
+          ],
+          [
+            "array",
+            {
+              "$array": [
+                [
+                  "pid",
+                  "p1"
+                ],
+                [
+                  "queue",
+                  "mails"
+                ],
+                [
+                  "timestamp",
+                  1700000000
+                ],
+                [
+                  "payload",
+                  {
+                    "$array": [
+                      [
+                        "to",
+                        "ada"
+                      ]
+                    ]
+                  }
+                ],
+                [
+                  "attempts",
+                  0
+                ],
+                [
+                  "sequence",
+                  null
+                ]
+              ]
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "name": "setSize clears it with null",
+      "op": "message.set",
+      "args": {
+        "envelope": {
+          "pid": "p1",
+          "queue": "mails",
+          "timestamp": 1700000000,
+          "payload": {
+            "to": "ada"
+          }
+        },
+        "size": null
+      },
+      "expect": {
+        "$array": [
+          [
+            "pid",
+            "p1"
+          ],
+          [
+            "queue",
+            "mails"
+          ],
+          [
+            "timestamp",
+            1700000000
+          ],
+          [
+            "payload",
+            {
+              "$array": [
+                [
+                  "to",
+                  "ada"
+                ]
+              ]
+            }
+          ],
+          [
+            "attempts",
+            0
+          ],
+          [
+            "sequence",
+            null
+          ],
+          [
+            "receipt",
+            null
+          ],
+          [
+            "terminal",
+            false
+          ],
+          [
+            "size",
+            null
+          ],
+          [
+            "array",
+            {
+              "$array": [
+                [
+                  "pid",
+                  "p1"
+                ],
+                [
+                  "queue",
+                  "mails"
+                ],
+                [
+                  "timestamp",
+                  1700000000
+                ],
+                [
+                  "payload",
+                  {
+                    "$array": [
+                      [
+                        "to",
+                        "ada"
+                      ]
+                    ]
+                  }
+                ],
+                [
+                  "attempts",
+                  0
+                ],
+                [
+                  "sequence",
+                  null
+                ]
+              ]
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "name": "warnIfLarge is silent at the threshold",
+      "op": "message.warn_if_large",
+      "args": {
+        "queue": "mails",
+        "size": 1048576
+      },
+      "expect": null
+    },
+    {
+      "name": "warnIfLarge logs past the threshold",
+      "op": "message.warn_if_large",
+      "args": {
+        "queue": "mails",
+        "size": 1048577
+      },
+      "expect": "Large queue message: 1048577 bytes on queue \"mails\""
+    },
+    {
+      "name": "warnIfLarge is silent for an empty message",
+      "op": "message.warn_if_large",
+      "args": {
+        "queue": "mails",
+        "size": 0
+      },
+      "expect": null
+    },
+    {
+      "name": "warnIfLarge quotes the queue name as given",
+      "op": "message.warn_if_large",
+      "args": {
+        "queue": "a \"dotted\".queue",
+        "size": 268435456
+      },
+      "expect": "Large queue message: 268435456 bytes on queue \"a \"dotted\".queue\""
     }
   ]
 }
