@@ -1051,17 +1051,6 @@ jobs:
           docker compose exec -T appwrite curl -s -o /dev/null -w '%{http_code}\n' -H 'Host: appwrite.test' http://appwrite.test/v1/users
           docker compose exec -T appwrite-rust /usr/local/bin/appwrite-rust health
 
-      - name: Run tests
-        timeout-minutes: 15
-        env:
-          RESPONSE_FORMAT: ${{ github.event.inputs.response_format }}
-        run: |
-          docker compose exec -T \
-            -e _APP_E2E_ENDPOINT=http://appwrite.test/v1 \
-            -e _APP_E2E_RESPONSE_FORMAT="${RESPONSE_FORMAT}" \
-            appwrite vendor/bin/paratest --processes "$(nproc)" --functional /usr/src/code/tests/e2e/Services/Users \
-            --exclude-group abuseEnabled --log-junit tests/e2e/Services/Users/junit-rust.xml
-
       - name: Install toolchain
         run: |
           if ! command -v rustup >/dev/null; then
@@ -1081,10 +1070,23 @@ jobs:
 
       # The same requests to PHP and to Rust on twin projects, compared on the
       # response, the table changes and the Redis side effects: the hook
-      # matrices of rfc/rust-lifecycle.md for the routes Rust serves.
+      # matrices of rfc/rust-lifecycle.md for the routes Rust serves. Before
+      # the E2E suite, on a fresh stack, so it creates the instance's one
+      # organization (the suite seeds its own when one exists).
       - name: Compare PHP and Rust request lifecycles
         timeout-minutes: 20
         run: bin/compat appwrite diff
+
+      - name: Run tests
+        timeout-minutes: 15
+        env:
+          RESPONSE_FORMAT: ${{ github.event.inputs.response_format }}
+        run: |
+          docker compose exec -T \
+            -e _APP_E2E_ENDPOINT=http://appwrite.test/v1 \
+            -e _APP_E2E_RESPONSE_FORMAT="${RESPONSE_FORMAT}" \
+            appwrite vendor/bin/paratest --processes "$(nproc)" --functional /usr/src/code/tests/e2e/Services/Users \
+            --exclude-group abuseEnabled --log-junit tests/e2e/Services/Users/junit-rust.xml
 
       - name: Failure Logs
         if: failure()
