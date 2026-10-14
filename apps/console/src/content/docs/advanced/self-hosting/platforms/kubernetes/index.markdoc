@@ -361,7 +361,7 @@ Functions and Sites are on by default:
 - **Builds** run as unprivileged Kubernetes Jobs in a namespace of their own.
 - **Executions** run on the [Open Runtimes executor](https://github.com/open-runtimes/executor), which starts runtime containers through its own Docker daemon. That daemon runs in a privileged container, which is root on its node, in a namespace of its own.
 
-Where privileged pods aren't allowed, set `compute.enabled: false`, or run the daemon without privileges through [Sysbox](https://github.com/nestybox/sysbox) with `compute.executor.runtimeClassName`. With compute off, the console still shows Functions and Sites, but creating one fails.
+Where privileged pods aren't allowed, set `compute.enabled: false`, or run the daemon without privileges through [Sysbox](https://github.com/nestybox/sysbox): set `compute.executor.privileged: false` and `compute.executor.runtimeClassName: sysbox-runc`. With compute off, the console still shows Functions and Sites, but creating one fails.
 
 For production, give the executor dedicated nodes, choose the runtimes you need, and set up wildcard DNS and certificates for previews at `*.functions.<domain>` and `*.sites.<domain>`. Label and taint the nodes for the executor:
 
