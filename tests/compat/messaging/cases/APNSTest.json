@@ -1,0 +1,506 @@
+{
+  "source": "packages/messaging/tests/Adapter/Push/APNSTest.php",
+  "cases": [
+    {
+      "name": "a silent wake has no alert: data at the payload root, a background push at priority 5",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "apns",
+            "args": {
+              "authKey": {
+                "fixture": "es256"
+              },
+              "authKeyId": "keyId",
+              "teamId": "teamId",
+              "bundleId": "com.example.app"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "push",
+              "to": [
+                "token"
+              ],
+              "data": {
+                "type": "wake",
+                "messageId": "msg1"
+              },
+              "content_available": true,
+              "priority": "HIGH"
+            },
+            "replies": [
+              {
+                "statusCode": 200
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "push",
+              "results": [
+                {
+                  "recipient": "token",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "urls": [
+                  "https://api.push.apple.com/3/device/token"
+                ],
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: Bearer <jwt>",
+                  "apns-topic: com.example.app",
+                  "apns-push-type: background",
+                  "apns-priority: 5"
+                ],
+                "bodies": [
+                  {
+                    "data": {
+                      "type": "wake",
+                      "messageId": "msg1"
+                    },
+                    "aps": {
+                      "content-available": 1
+                    }
+                  }
+                ],
+                "jwt": [
+                  {
+                    "header": {
+                      "typ": "JWT",
+                      "alg": "ES256",
+                      "kid": "keyId"
+                    },
+                    "payload": {
+                      "iss": "teamId",
+                      "iat": "<now>",
+                      "exp": "<iat+3600>"
+                    },
+                    "verified": true
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "content-available with a badge stays an alert push",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "apns",
+            "args": {
+              "authKey": {
+                "fixture": "es256"
+              },
+              "authKeyId": "keyId",
+              "teamId": "teamId",
+              "bundleId": "com.example.app"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "push",
+              "to": [
+                "token"
+              ],
+              "data": {
+                "k": "v"
+              },
+              "badge": 3,
+              "content_available": true
+            },
+            "replies": [
+              {
+                "statusCode": 200
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "push",
+              "results": [
+                {
+                  "recipient": "token",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "urls": [
+                  "https://api.push.apple.com/3/device/token"
+                ],
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: Bearer <jwt>",
+                  "apns-topic: com.example.app",
+                  "apns-push-type: alert"
+                ],
+                "bodies": [
+                  {
+                    "data": {
+                      "k": "v"
+                    },
+                    "aps": {
+                      "badge": 3,
+                      "content-available": 1
+                    }
+                  }
+                ],
+                "jwt": [
+                  {
+                    "header": {
+                      "typ": "JWT",
+                      "alg": "ES256",
+                      "kid": "keyId"
+                    },
+                    "payload": {
+                      "iss": "teamId",
+                      "iat": "<now>",
+                      "exp": "<iat+3600>"
+                    },
+                    "verified": true
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "data only is a background push with content-available",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "apns",
+            "args": {
+              "authKey": {
+                "fixture": "es256"
+              },
+              "authKeyId": "keyId",
+              "teamId": "teamId",
+              "bundleId": "com.example.app"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "push",
+              "to": [
+                "token"
+              ],
+              "data": {
+                "k": "v"
+              }
+            },
+            "replies": [
+              {
+                "statusCode": 200
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "push",
+              "results": [
+                {
+                  "recipient": "token",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "urls": [
+                  "https://api.push.apple.com/3/device/token"
+                ],
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: Bearer <jwt>",
+                  "apns-topic: com.example.app",
+                  "apns-push-type: background",
+                  "apns-priority: 5"
+                ],
+                "bodies": [
+                  {
+                    "data": {
+                      "k": "v"
+                    },
+                    "aps": {
+                      "content-available": 1
+                    }
+                  }
+                ],
+                "jwt": [
+                  {
+                    "header": {
+                      "typ": "JWT",
+                      "alg": "ES256",
+                      "kid": "keyId"
+                    },
+                    "payload": {
+                      "iss": "teamId",
+                      "iat": "<now>",
+                      "exp": "<iat+3600>"
+                    },
+                    "verified": true
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "a mutable-content placeholder is an alert push at priority 10",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "apns",
+            "args": {
+              "authKey": {
+                "fixture": "es256"
+              },
+              "authKeyId": "keyId",
+              "teamId": "teamId",
+              "bundleId": "com.example.app"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "push",
+              "to": [
+                "token"
+              ],
+              "title": "New message",
+              "priority": "HIGH",
+              "mutable_content": true
+            },
+            "replies": [
+              {
+                "statusCode": 200
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "push",
+              "results": [
+                {
+                  "recipient": "token",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "urls": [
+                  "https://api.push.apple.com/3/device/token"
+                ],
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: Bearer <jwt>",
+                  "apns-topic: com.example.app",
+                  "apns-push-type: alert",
+                  "apns-priority: 10"
+                ],
+                "bodies": [
+                  {
+                    "aps": {
+                      "alert": {
+                        "title": "New message"
+                      },
+                      "mutable-content": 1
+                    }
+                  }
+                ],
+                "jwt": [
+                  {
+                    "header": {
+                      "typ": "JWT",
+                      "alg": "ES256",
+                      "kid": "keyId"
+                    },
+                    "payload": {
+                      "iss": "teamId",
+                      "iat": "<now>",
+                      "exp": "<iat+3600>"
+                    },
+                    "verified": true
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "an alert keeps the alert push type and sends its priority as a header",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "apns",
+            "args": {
+              "authKey": {
+                "fixture": "es256"
+              },
+              "authKeyId": "keyId",
+              "teamId": "teamId",
+              "bundleId": "com.example.app"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "push",
+              "to": [
+                "token"
+              ],
+              "title": "Title",
+              "body": "Body",
+              "priority": "HIGH"
+            },
+            "replies": [
+              {
+                "statusCode": 200
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "push",
+              "results": [
+                {
+                  "recipient": "token",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "urls": [
+                  "https://api.push.apple.com/3/device/token"
+                ],
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: Bearer <jwt>",
+                  "apns-topic: com.example.app",
+                  "apns-push-type: alert",
+                  "apns-priority: 10"
+                ],
+                "bodies": [
+                  {
+                    "aps": {
+                      "alert": {
+                        "title": "Title",
+                        "body": "Body"
+                      }
+                    }
+                  }
+                ],
+                "jwt": [
+                  {
+                    "header": {
+                      "typ": "JWT",
+                      "alg": "ES256",
+                      "kid": "keyId"
+                    },
+                    "payload": {
+                      "iss": "teamId",
+                      "iat": "<now>",
+                      "exp": "<iat+3600>"
+                    },
+                    "verified": true
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

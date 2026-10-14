@@ -809,6 +809,7 @@ pub struct Push {
     critical: Option<bool>,
     priority: Option<Priority>,
     channel_id: Option<String>,
+    mutable_content: Option<bool>,
     origin: Option<String>,
 }
 
@@ -861,6 +862,9 @@ push_fields! {
     priority: Priority;
     /// Android: the notification channel.
     channel_id: impl Into<String>;
+    /// iOS: the mutable-content flag, so the app's notification service
+    /// extension can modify the notification before it is shown.
+    mutable_content: bool;
 }
 
 impl PushBuilder {
@@ -969,6 +973,24 @@ impl Push {
     /// PHP: `getChannelId()`.
     pub fn channel_id(&self) -> Option<&str> {
         self.channel_id.as_deref()
+    }
+
+    /// PHP: `getMutableContent()`.
+    pub fn mutable_content(&self) -> Option<bool> {
+        self.mutable_content
+    }
+
+    /// No user-facing content (title, body, sound, critical or badge): a
+    /// background push, which Apple requires to be of type `background`,
+    /// priority 5, with `content-available`.
+    ///
+    /// PHP: the `$background` the APNS and FCM adapters compute.
+    pub fn is_background(&self) -> bool {
+        self.title.is_none()
+            && self.body.is_none()
+            && self.sound.is_none()
+            && self.critical.is_none()
+            && self.badge.is_none()
     }
 
     /// PHP: `getOrigin()`.

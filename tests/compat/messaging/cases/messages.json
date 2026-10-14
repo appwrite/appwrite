@@ -167,6 +167,7 @@
             "critical": false,
             "priority": "HIGH",
             "channelId": "ch",
+            "mutableContent": null,
             "origin": "external"
           }
         },
@@ -212,6 +213,7 @@
             "critical": null,
             "priority": null,
             "channelId": null,
+            "mutableContent": null,
             "origin": null
           }
         },
@@ -239,6 +241,7 @@
             "critical": null,
             "priority": "NORMAL",
             "channelId": null,
+            "mutableContent": null,
             "origin": null
           }
         }

@@ -404,6 +404,9 @@ fn build_push(value: &Value) -> Result<Result<Push, Error>, Fault> {
     if let Some(v) = a.opt_bool("critical")? {
         b = b.critical(v);
     }
+    if let Some(v) = a.opt_bool("mutable_content")? {
+        b = b.mutable_content(v);
+    }
     if let Some(p) = a.opt_str("priority")? {
         b = b.priority(match p {
             "HIGH" => Priority::High,
@@ -546,7 +549,8 @@ fn push_out(p: &Push) -> Value {
         "to": p.to(), "from": p.from(), "title": p.title(), "body": p.body(), "data": p.data().map(out),
         "action": p.action(), "sound": p.sound(), "image": p.image(), "icon": p.icon(), "color": p.color(),
         "tag": p.tag(), "badge": p.badge(), "contentAvailable": p.content_available(), "critical": p.critical(),
-        "priority": p.priority().map(Priority::name), "channelId": p.channel_id(), "origin": p.origin(),
+        "priority": p.priority().map(Priority::name), "channelId": p.channel_id(),
+        "mutableContent": p.mutable_content(), "origin": p.origin(),
     })
 }
 

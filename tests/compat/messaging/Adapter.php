@@ -562,6 +562,7 @@ final class Adapter implements Base, Benchmarks
             critical: $a['critical'] ?? null,
             priority: isset($a['priority']) ? \constant(Priority::class . '::' . $a['priority']) : null,
             channelId: $a['channel_id'] ?? null,
+            mutableContent: $a['mutable_content'] ?? null,
         );
         if (\array_key_exists('origin', $a)) {
             $push->setOrigin($a['origin']);
@@ -689,6 +690,7 @@ final class Adapter implements Base, Benchmarks
             'critical' => $push->getCritical(),
             'priority' => $push->getPriority()?->name,
             'channelId' => $push->getChannelId(),
+            'mutableContent' => $push->getMutableContent(),
             'origin' => $push->getOrigin(),
         ];
     }

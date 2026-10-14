@@ -75,7 +75,7 @@
       ]
     },
     "push.new": {
-      "doc": "new Push(to, title?, body?, data?, action?, sound?, image?, icon?, color?, tag?, badge?, contentAvailable?, critical?, priority? (a Priority case name), channelId?), then setOrigin(origin) when given: every getter",
+      "doc": "new Push(to, title?, body?, data?, action?, sound?, image?, icon?, color?, tag?, badge?, contentAvailable?, critical?, priority? (a Priority case name), channelId?, mutableContent?), then setOrigin(origin) when given: every getter",
       "covers": [
         "Utopia\\Messaging\\Messages\\Push::*"
       ]

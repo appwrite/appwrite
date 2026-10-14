@@ -1662,6 +1662,267 @@
       "requires": [
         "services"
       ]
+    },
+    {
+      "name": "a silent wake is data-only: Android keeps high priority, the APNs side is a background push",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "fcm",
+            "args": {
+              "serviceAccount": {
+                "client_email": "sender@example.test",
+                "private_key": {
+                  "fixture": "rs256"
+                },
+                "project_id": "project"
+              }
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "push",
+              "to": [
+                "token"
+              ],
+              "data": {
+                "type": "wake",
+                "messageId": "msg1"
+              },
+              "content_available": true,
+              "priority": "HIGH"
+            },
+            "replies": [
+              {
+                "statusCode": 200,
+                "response": {
+                  "access_token": "token"
+                }
+              },
+              {
+                "statusCode": 200
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "push",
+              "results": [
+                {
+                  "recipient": "token",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://www.googleapis.com/oauth2/v4/token",
+                "headers": [
+                  "Content-Type: application/x-www-form-urlencoded"
+                ],
+                "body": {
+                  "grant_type": "urn:ietf:params:oauth:grant-type:jwt-bearer",
+                  "assertion": "<jwt>"
+                },
+                "jwt": [
+                  {
+                    "header": {
+                      "typ": "JWT",
+                      "alg": "RS256"
+                    },
+                    "payload": {
+                      "iss": "sender@example.test",
+                      "exp": "<iat+3660>",
+                      "iat": "<now>",
+                      "scope": "https://www.googleapis.com/auth/firebase.messaging",
+                      "aud": "https://www.googleapis.com/oauth2/v4/token"
+                    },
+                    "verified": true
+                  }
+                ]
+              },
+              {
+                "method": "POST",
+                "urls": [
+                  "https://fcm.googleapis.com/v1/projects/project/messages:send"
+                ],
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: Bearer token"
+                ],
+                "bodies": [
+                  {
+                    "message": {
+                      "data": {
+                        "type": "wake",
+                        "messageId": "msg1"
+                      },
+                      "apns": {
+                        "payload": {
+                          "aps": {
+                            "content-available": 1
+                          }
+                        },
+                        "headers": {
+                          "apns-priority": "5",
+                          "apns-push-type": "background"
+                        }
+                      },
+                      "android": {
+                        "priority": "high"
+                      },
+                      "token": "token"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "mutable-content is set under the APNs payload only",
+      "steps": [
+        {
+          "op": "adapter.new",
+          "args": {
+            "adapter": "fcm",
+            "args": {
+              "serviceAccount": {
+                "client_email": "sender@example.test",
+                "private_key": {
+                  "fixture": "rs256"
+                },
+                "project_id": "project"
+              }
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.send",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "message": {
+              "kind": "push",
+              "to": [
+                "token"
+              ],
+              "title": "New message",
+              "priority": "HIGH",
+              "mutable_content": true
+            },
+            "replies": [
+              {
+                "statusCode": 200,
+                "response": {
+                  "access_token": "token"
+                }
+              },
+              {
+                "statusCode": 200
+              }
+            ]
+          },
+          "expect": {
+            "result": {
+              "deliveredTo": 1,
+              "type": "push",
+              "results": [
+                {
+                  "recipient": "token",
+                  "status": "success",
+                  "error": "",
+                  "permanent": false
+                }
+              ]
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://www.googleapis.com/oauth2/v4/token",
+                "headers": [
+                  "Content-Type: application/x-www-form-urlencoded"
+                ],
+                "body": {
+                  "grant_type": "urn:ietf:params:oauth:grant-type:jwt-bearer",
+                  "assertion": "<jwt>"
+                },
+                "jwt": [
+                  {
+                    "header": {
+                      "typ": "JWT",
+                      "alg": "RS256"
+                    },
+                    "payload": {
+                      "iss": "sender@example.test",
+                      "exp": "<iat+3660>",
+                      "iat": "<now>",
+                      "scope": "https://www.googleapis.com/auth/firebase.messaging",
+                      "aud": "https://www.googleapis.com/oauth2/v4/token"
+                    },
+                    "verified": true
+                  }
+                ]
+              },
+              {
+                "method": "POST",
+                "urls": [
+                  "https://fcm.googleapis.com/v1/projects/project/messages:send"
+                ],
+                "headers": [
+                  "Content-Type: application/json",
+                  "Authorization: Bearer token"
+                ],
+                "bodies": [
+                  {
+                    "message": {
+                      "notification": {
+                        "title": "New message"
+                      },
+                      "apns": {
+                        "payload": {
+                          "aps": {
+                            "mutable-content": 1
+                          }
+                        },
+                        "headers": {
+                          "apns-priority": "10"
+                        }
+                      },
+                      "android": {
+                        "priority": "high"
+                      },
+                      "token": "token"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
     }
   ]
 }

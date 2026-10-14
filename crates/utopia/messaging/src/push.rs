@@ -86,7 +86,7 @@ impl Apns {
             set(&mut payload, &["aps", "alert", "body"], text(body));
         }
         if let Some(data) = message.data() {
-            set(&mut payload, &["aps", "data"], data.clone());
+            set(&mut payload, &["data"], data.clone());
         }
         if let Some(action) = message.action() {
             set(&mut payload, &["aps", "category"], text(action));
@@ -109,9 +109,14 @@ impl Apns {
         if let Some(available) = message.content_available() {
             set(&mut payload, &["aps", "content-available"], Value::Int(i64::from(available)));
         }
-        if let Some(priority) = message.priority() {
-            let value = if priority == Priority::High { "10" } else { "5" };
-            set(&mut payload, &["headers", "apns-priority"], text(value));
+        if let Some(mutable) = message.mutable_content() {
+            set(&mut payload, &["aps", "mutable-content"], Value::Int(i64::from(mutable)));
+        }
+        let mut priority = message.priority().map(|p| if p == Priority::High { "10" } else { "5" });
+        let background = message.is_background();
+        if background {
+            priority = Some("5");
+            set(&mut payload, &["aps", "content-available"], Value::Int(1));
         }
 
         let issued = now();
@@ -141,7 +146,7 @@ impl Apns {
                 let error = reason.unwrap_or_else(|| {
                     text(if result.error.is_empty() || result.error == "0" { "Unknown error" } else { &result.error })
                 });
-                result_text(&error, Site { argument: 2, file: "Adapter/Push/APNS.php", line: 135 })?
+                result_text(&error, Site { argument: 2, file: "Adapter/Push/APNS.php", line: 158 })?
             };
             locked(&response).add_failure(device, error);
             Ok(())
@@ -151,12 +156,18 @@ impl Apns {
                 Multi::new(
                     "POST",
                     urls,
-                    vec![
-                        "Content-Type: application/json".into(),
-                        format!("Authorization: Bearer {jwt}"),
-                        format!("apns-topic: {}", self.bundle_id),
-                        "apns-push-type: alert".into(),
-                    ],
+                    {
+                        let mut headers = vec![
+                            "Content-Type: application/json".into(),
+                            format!("Authorization: Bearer {jwt}"),
+                            format!("apns-topic: {}", self.bundle_id),
+                            format!("apns-push-type: {}", if background { "background" } else { "alert" }),
+                        ];
+                        if let Some(priority) = priority {
+                            headers.push(format!("apns-priority: {priority}"));
+                        }
+                        headers
+                    },
                     vec![payload],
                 ),
                 Some(&on_result),
@@ -317,10 +328,19 @@ impl Fcm {
                 Value::Int(i64::from(available)),
             );
         }
+        if let Some(mutable) = message.mutable_content() {
+            set(&mut shared, &["message", "apns", "payload", "aps", "mutable-content"], Value::Int(i64::from(mutable)));
+        }
         if let Some(priority) = message.priority() {
             let (android, apns) = if priority == Priority::High { ("high", "10") } else { ("normal", "5") };
             set(&mut shared, &["message", "android", "priority"], text(android));
             set(&mut shared, &["message", "apns", "headers", "apns-priority"], text(apns));
+        }
+        // A background push on the APNs side; Android keeps its priority.
+        if message.is_background() {
+            set(&mut shared, &["message", "apns", "headers", "apns-push-type"], text("background"));
+            set(&mut shared, &["message", "apns", "headers", "apns-priority"], text("5"));
+            set(&mut shared, &["message", "apns", "payload", "aps", "content-available"], Value::Int(1));
         }
 
         let bodies = message

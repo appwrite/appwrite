@@ -114,7 +114,8 @@
                   "Content-Type: application/json",
                   "Authorization: Bearer <jwt>",
                   "apns-topic: com.example.app",
-                  "apns-push-type: alert"
+                  "apns-push-type: alert",
+                  "apns-priority: 5"
                 ],
                 "bodies": [
                   {
@@ -123,16 +124,13 @@
                         "title": "Hi",
                         "body": "There"
                       },
-                      "data": {
-                        "x": 1
-                      },
                       "category": "CAT",
                       "sound": "ping",
                       "badge": 2,
                       "content-available": 0
                     },
-                    "headers": {
-                      "apns-priority": "5"
+                    "data": {
+                      "x": 1
                     }
                   }
                 ],
@@ -252,7 +250,8 @@
                   "Content-Type: application/json",
                   "Authorization: Bearer <jwt>",
                   "apns-topic: com.example.app",
-                  "apns-push-type: alert"
+                  "apns-push-type: alert",
+                  "apns-priority: 10"
                 ],
                 "bodies": [
                   {
@@ -265,9 +264,6 @@
                         "name": "alarm",
                         "volume": 1.0
                       }
-                    },
-                    "headers": {
-                      "apns-priority": "10"
                     }
                   }
                 ],
@@ -318,7 +314,7 @@
           "expect": {
             "error": {
               "class": "TypeError",
-              "message": "Utopia\\Messaging\\Response::addResult(): Argument #2 ($error) must be of type string, array given, called in /usr/src/code/packages/messaging/src/Adapter/Push/APNS.php on line 135"
+              "message": "Utopia\\Messaging\\Response::addResult(): Argument #2 ($error) must be of type string, array given, called in /usr/src/code/packages/messaging/src/Adapter/Push/APNS.php on line 158"
             },
             "requests": [
               {
@@ -560,6 +556,10 @@
                     "alert"
                   ],
                   [
+                    "apns-priority",
+                    "10"
+                  ],
+                  [
                     "User-Agent",
                     "Appwrite APNS Message Sender"
                   ],
@@ -569,10 +569,10 @@
                   ],
                   [
                     "Content-Length",
-                    "93"
+                    "60"
                   ]
                 ],
-                "body": "{\"aps\":{\"alert\":{\"title\":\"Hello\",\"body\":\"World\"},\"badge\":1},\"headers\":{\"apns-priority\":\"10\"}}",
+                "body": "{\"aps\":{\"alert\":{\"title\":\"Hello\",\"body\":\"World\"},\"badge\":1}}",
                 "jwt": [
                   {
                     "header": {
@@ -614,6 +614,10 @@
                     "alert"
                   ],
                   [
+                    "apns-priority",
+                    "10"
+                  ],
+                  [
                     "User-Agent",
                     "Appwrite APNS Message Sender"
                   ],
@@ -623,10 +627,10 @@
                   ],
                   [
                     "Content-Length",
-                    "93"
+                    "60"
                   ]
                 ],
-                "body": "{\"aps\":{\"alert\":{\"title\":\"Hello\",\"body\":\"World\"},\"badge\":1},\"headers\":{\"apns-priority\":\"10\"}}",
+                "body": "{\"aps\":{\"alert\":{\"title\":\"Hello\",\"body\":\"World\"},\"badge\":1}}",
                 "jwt": [
                   {
                     "header": {
@@ -668,6 +672,10 @@
                     "alert"
                   ],
                   [
+                    "apns-priority",
+                    "10"
+                  ],
+                  [
                     "User-Agent",
                     "Appwrite APNS Message Sender"
                   ],
@@ -677,10 +685,10 @@
                   ],
                   [
                     "Content-Length",
-                    "93"
+                    "60"
                   ]
                 ],
-                "body": "{\"aps\":{\"alert\":{\"title\":\"Hello\",\"body\":\"World\"},\"badge\":1},\"headers\":{\"apns-priority\":\"10\"}}",
+                "body": "{\"aps\":{\"alert\":{\"title\":\"Hello\",\"body\":\"World\"},\"badge\":1}}",
                 "jwt": [
                   {
                     "header": {
@@ -955,7 +963,7 @@
           "expect": {
             "error": {
               "class": "TypeError",
-              "message": "Utopia\\Messaging\\Response::addResult(): Argument #2 ($error) must be of type string, array given, called in /usr/src/code/packages/messaging/src/Adapter/Push/APNS.php on line 135"
+              "message": "Utopia\\Messaging\\Response::addResult(): Argument #2 ($error) must be of type string, array given, called in /usr/src/code/packages/messaging/src/Adapter/Push/APNS.php on line 158"
             },
             "requests": [
               {
