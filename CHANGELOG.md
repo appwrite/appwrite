@@ -6,6 +6,8 @@
 
 ### Breaking changes
 
+- Requires `utopia-php/database` `^8.1.2` (3.1.1 requires `^8.0`), which moved the update models into the namespace
+  of the model they update.
 - Provisioning ownership fencing is removed. The Appwrite destination tracks a database's lifecycle with `status`
   alone again, but recovers incomplete databases differently from 2.x.
   - `Destinations\Appwrite\ProvisioningOwner` is removed.
