@@ -486,7 +486,7 @@ export async function loadIndex(): Promise<Index | null> {
   return load ? load() : null
 }
 
-/** The ecosystem's dependency graph; older data has none. */
+/** The ecosystem's graph; older data has none. */
 export async function loadGraph(): Promise<Graph | null> {
   const load = Object.values(graphModule)[0]
   return load ? load() : null

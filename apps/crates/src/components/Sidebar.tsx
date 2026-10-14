@@ -323,7 +323,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         <FoldControls fold={fold} onFold={setFold} />
       </div>
       <Link to="/map" className={`${row} -mt-2`}>
-        Dependency map
+        Map
       </Link>
       <Fold.Provider value={fold}>
       <MigrationOnly>

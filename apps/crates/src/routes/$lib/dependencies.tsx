@@ -230,7 +230,7 @@ function DependentCard({ slug, kinds, lib, runtime }: { slug: string; kinds: str
 /** Appwrite as a dependent: the crates of its Rust API, or its PHP server. */
 function AppwriteCard({ title, detail }: { title: string; detail: ReactNode }) {
   return (
-    <Link to="/map" hash={APPWRITE} className={card} title="Appwrite on the dependency map">
+    <Link to="/map" hash={APPWRITE} className={card} title="Appwrite on the map">
       <span className="truncate text-[13.5px] font-medium">{title}</span>
       <span className="truncate font-mono text-[11px] text-muted-foreground">{detail}</span>
     </Link>
