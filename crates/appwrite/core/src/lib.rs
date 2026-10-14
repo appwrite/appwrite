@@ -41,7 +41,20 @@ pub mod validators;
 pub use error::{Error, ErrorType};
 
 /// Stable API version reported in error responses (`APP_VERSION_STABLE`).
-pub const VERSION: &str = "2.4.0";
+pub const VERSION: &str = "2.5.0";
 
 /// Result alias used across Appwrite crates.
 pub type Result<T, E = Error> = std::result::Result<T, E>;
+
+#[cfg(test)]
+mod tests {
+    /// `VERSION` follows PHP's `APP_VERSION_STABLE`, which a release bumps.
+    #[test]
+    fn version_is_php_stable_version() {
+        let constants =
+            std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../app/init/constants.php"))
+                .expect("app/init/constants.php");
+        let line = constants.lines().find(|l| l.starts_with("const APP_VERSION_STABLE")).expect("APP_VERSION_STABLE");
+        assert!(line.contains(&format!("'{}'", super::VERSION)), "{line}");
+    }
+}

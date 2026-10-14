@@ -70,6 +70,10 @@ pub struct Project {
     pub keys: Vec<Key>,
     pub platforms: Vec<Platform>,
     pub webhooks: Vec<Webhook>,
+    /// The whole document as PHP's queue messages carry it
+    /// (`$project->getArrayCopy()`); `Null` for the console project, which
+    /// has no stored document.
+    pub document: Value,
 }
 
 impl Project {
@@ -125,6 +129,7 @@ impl Project {
             keys: Vec::new(),
             platforms: vec![Platform { kind: "web".into(), hostname: "localhost".into(), key: String::new() }],
             webhooks: Vec::new(),
+            document: Value::Null,
         }
     }
 
@@ -188,8 +193,12 @@ impl Project {
         document.read()
     }
 
-    /// Payload used in queue messages (`$id`, `$sequence`, `database`, ...).
+    /// The project in function queue messages: the whole document, as PHP
+    /// sends it (the console project, which has none: its main fields).
     pub fn message_payload(&self) -> Value {
+        if !self.document.is_null() {
+            return self.document.clone();
+        }
         let mut m = Map::new();
         m.insert("$id".into(), Value::String(self.id.clone()));
         m.insert("$sequence".into(), Value::String(self.sequence.clone()));
@@ -260,6 +269,7 @@ impl From<&Document> for Project {
                 .into_iter()
                 .map(|w| Webhook { enabled: w.boolean("enabled") == Some(true), events: w.strings("events") })
                 .collect(),
+            document: utopia_database::Value::from(d.clone()).try_to_json().unwrap_or(Value::Null),
         }
     }
 }

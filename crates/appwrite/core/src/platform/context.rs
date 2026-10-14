@@ -72,6 +72,11 @@ pub struct Context {
     /// Usage metrics added by the action (e.g. `sessions` ±1).
     pub metrics: Vec<(&'static str, i64)>,
     pub response_headers: Vec<(&'static str, String)>,
+    /// Whether the security headers (`Server`, `X-Content-Type-Options`,
+    /// HSTS) apply. PHP's `general.php` adds them after it resolved the
+    /// project, the mode and the API key; an error before that is sent
+    /// without them.
+    pub secured: bool,
     db: Option<Database>,
     platform_db: OnceLock<Database>,
 }
@@ -100,6 +105,7 @@ impl Context {
             started: Instant::now(),
             project: console,
             project_found: true,
+            secured: false,
             mode: Mode::Default,
             locale,
             format: None,

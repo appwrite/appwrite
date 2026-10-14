@@ -143,6 +143,7 @@ pub(super) async fn authenticate(ctx: &mut Context) -> Result<()> {
         ctx.mode = Mode::Admin;
     }
     if ctx.mode == Mode::Admin && ctx.project_found && ctx.project.is_console() {
+        session_from_request(ctx);
         return Err(Error::with_message(ErrorType::GeneralBadRequest, "Admin mode is not allowed for console project"));
     }
 
@@ -174,11 +175,15 @@ pub(super) async fn authenticate(ctx: &mut Context) -> Result<()> {
     }
 
     // -- user (session cookie / header / fallback cookies, then JWT) --------
-    if ctx.project_found {
-        resolve_user(ctx).await?;
+    // A user resource that throws is not kept: PHP resolves it again for the
+    // error hook and once more after it, each time sending its headers.
+    if let Err(e) = resolve_user(ctx).await {
+        session_from_request(ctx);
+        session_from_request(ctx);
+        return Err(e);
     }
 
-    // -- API key -------------------------------------------------------------
+    // -- API key ---------------------------------------------------------------
     let key_header = ctx.request.header_or_empty("x-appwrite-key").to_owned();
     if !key_header.is_empty() {
         let key = ApiKey::decode(&ctx.project, &key_header, &state.config.openssl_key_v1);
@@ -187,6 +192,8 @@ pub(super) async fn authenticate(ctx: &mut Context) -> Result<()> {
         }
         ctx.key = Some(key);
     }
+    // `general.php` adds the security headers after the resources above.
+    ctx.secured = true;
 
     // -- CORS / origin (I4) ----------------------------------------------------
     let origin = ctx.request.header_or_empty("origin").to_owned();
@@ -406,8 +413,10 @@ fn session_store(data: &str) -> (String, String) {
     (field(b"id"), field(b"secret"))
 }
 
-async fn resolve_user(ctx: &mut Context) -> Result<()> {
-    let state = ctx.state.clone();
+/// The session the request carries (cookie, `X-Appwrite-Session`, then
+/// `X-Fallback-Cookies`) as `(id, secret)`, adding the `X-Debug-Fallback`
+/// headers PHP's user resource adds.
+fn session_from_request(ctx: &mut Context) -> (String, String) {
     let cookie_name =
         if ctx.mode == Mode::Admin { "a_session_console".to_owned() } else { format!("a_session_{}", ctx.project.id) };
     let mut store = ctx
@@ -432,7 +441,18 @@ async fn resolve_user(ctx: &mut Context) -> Result<()> {
             store = session_store(v);
         }
     }
+    store
+}
 
+async fn resolve_user(ctx: &mut Context) -> Result<()> {
+    let state = ctx.state.clone();
+    let store = session_from_request(ctx);
+
+    // An unknown project has no users (PHP: an empty `User`), but the
+    // fallback headers above are already sent.
+    if !ctx.project_found && ctx.mode != Mode::Admin {
+        return Ok(());
+    }
     let users_db = if ctx.mode == Mode::Admin || ctx.project.is_console() { ctx.platform_db()? } else { ctx.db()? };
 
     if !store.0.is_empty()
@@ -445,7 +465,7 @@ async fn resolve_user(ctx: &mut Context) -> Result<()> {
 
     // JWT
     let jwt = ctx.request.header_or_empty("x-appwrite-jwt").to_owned();
-    if !jwt.is_empty() {
+    if !jwt.is_empty() && ctx.project_found {
         if ctx.user.is_some() {
             return Err(Error::new(ErrorType::UserJwtAndCookieSet));
         }
@@ -630,10 +650,15 @@ pub(super) fn finalize(ctx: Context, result: Result<Response>) -> Response {
     for (k, v) in &cors {
         response.add(k, v);
     }
-    response.set("server", "Appwrite");
-    response.set("x-content-type-options", "nosniff");
-    if https {
-        response.set("strict-transport-security", "max-age=10886400");
+    if !ctx.secured {
+        // Swoole's own header: PHP failed before `general.php` set it.
+        response.set("server", "swoole-http-server");
+    } else {
+        response.set("server", "Appwrite");
+        response.set("x-content-type-options", "nosniff");
+        if https {
+            response.set("strict-transport-security", "max-age=10886400");
+        }
     }
     for (k, v) in &ctx.response_headers {
         response.add(k, v);

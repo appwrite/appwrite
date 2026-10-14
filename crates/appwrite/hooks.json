@@ -61,7 +61,7 @@
       "php": { "file": "app/controllers/shared/api.php", "kind": "shutdown", "anchor": "getWebhooksEvents" },
       "rust": {
         "status": "done",
-        "note": "Function events are cached in the same Redis hash as PHP's.",
+        "note": "Function events are cached in the same Redis hash as PHP's. Realtime adds the action-suffixed account channels; function messages carry the whole project document. `appwrite diff` compares every message and publication.",
         "where": [
           { "file": "crates/appwrite/core/src/platform/shutdown.rs", "anchor": "async fn trigger" },
           { "file": "crates/appwrite/core/src/platform/shutdown.rs", "anchor": "async fn function_events" }
@@ -121,9 +121,12 @@
       "description": "Records the request's metadata for usage: path, method, user agent, hostname, country from the IP, SDK and version, protocol, accept headers, query keys, region and service.",
       "php": { "file": "app/controllers/general.php", "kind": "init", "anchor": "->setQueryKeys($queryKeys)" },
       "rust": {
-        "status": "partial",
-        "note": "Country and query keys are left empty.",
-        "where": [{ "file": "crates/appwrite/core/src/platform/shutdown.rs", "anchor": "pub(super) fn schedule" }]
+        "status": "done",
+        "note": "Country from the IP's geo lookup, after the response. Query keys stay empty, as in PHP: Swoole's `request_uri` has no query string. `appwrite diff` compares every usage message.",
+        "where": [
+          { "file": "crates/appwrite/core/src/platform/shutdown.rs", "anchor": "pub(super) fn schedule" },
+          { "file": "crates/appwrite/core/src/platform/shutdown.rs", "anchor": "async fn usage" }
+        ]
       }
     },
     {
@@ -173,7 +176,7 @@
       "php": { "file": "app/controllers/general.php", "kind": "init", "anchor": "Application level CSRF protection" },
       "rust": {
         "status": "done",
-        "note": null,
+        "note": "The security headers apply once the project, mode, user and API key resolved, as in `general.php`: an error before that is sent with Swoole's `Server` header and no `X-Content-Type-Options`. `appwrite diff` covers no origin, a platform and a foreign origin.",
         "where": [
           { "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "// -- CORS / origin (I4)" },
           { "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "pub(super) fn finalize" },

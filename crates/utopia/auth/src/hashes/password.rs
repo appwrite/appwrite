@@ -22,6 +22,17 @@ fn salt() -> [u8; 16] {
     salt
 }
 
+/// `php_password_make_salt(16)`, the salt `password_hash()` gives Argon2:
+/// 13 random bytes in base64, `+` as `.`, cut to 16 characters.
+fn argon2_salt() -> [u8; 16] {
+    let mut raw = [0u8; 13];
+    random_bytes(&mut raw);
+    let encoded = php_std::encoding::base64_encode(&raw).replace('+', ".");
+    let mut salt = [0u8; 16];
+    salt.copy_from_slice(&encoded.as_bytes()[..16]);
+    salt
+}
+
 /// `password_hash($value, PASSWORD_BCRYPT, $options)`: reads `cost` (12 when absent).
 pub(crate) fn hash_bcrypt(value: &[u8], options: &Options) -> Result<Vec<u8>, Error> {
     php_std::string::password_hash_bcrypt(value, options.long_or("cost", 12), &salt()).map_err(engine)
@@ -35,7 +46,7 @@ pub(crate) fn hash_argon2id(value: &[u8], options: &Options) -> Result<Vec<u8>, 
         options.long_or("memory_cost", 65536),
         options.long_or("time_cost", 4),
         options.long_or("threads", 1),
-        &salt(),
+        &argon2_salt(),
     )
     .map_err(engine)
 }
@@ -53,6 +64,14 @@ pub(crate) fn crypt(password: &[u8], salt: &[u8]) -> Vec<u8> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn argon2_salts_are_php_salts() {
+        for _ in 0..100 {
+            let salt = argon2_salt();
+            assert!(salt.iter().all(|b| b.is_ascii_alphanumeric() || *b == b'.' || *b == b'/'), "{salt:?}");
+        }
+    }
 
     #[test]
     fn php_fixtures() {

@@ -63,6 +63,8 @@ pub struct Config {
     pub domain: String,
     pub console_domain: String,
     pub migration_host: Option<String>,
+    /// `app/config/platform.php`, as PHP's function messages carry it.
+    pub platform: serde_json::Value,
     pub console_url: String,
     pub console_schemas: Vec<String>,
     pub force_https: bool,
@@ -145,6 +147,7 @@ impl Config {
             region: env_or("_APP_REGION", "default").into_owned(),
             openssl_key_v1: env_raw("_APP_OPENSSL_KEY_V1").unwrap_or_default(),
             migration_host: env("_APP_MIGRATION_HOST"),
+            platform: platform(),
             console_url,
             console_schemas: list(env("_APP_CONSOLE_SCHEMA")),
             force_https,
@@ -189,7 +192,7 @@ impl Config {
         }
     }
 
-    /// `platform.hostnames`: API, console and migration hosts.
+    /// `platform.hostnames`: API, console and migration hosts (as a list).
     pub fn platform_hostnames(&self) -> Vec<String> {
         let console = utopia_system::env_or("_APP_CONSOLE_DOMAIN", "localhost").into_owned();
         let mut out: Vec<String> = Vec::new();
@@ -205,4 +208,67 @@ impl Config {
     pub fn asset(&self, relative: &str) -> PathBuf {
         self.assets.join(relative)
     }
+}
+
+/// `app/config/platform.php`.
+fn platform() -> serde_json::Value {
+    use serde_json::{Map, Value};
+    // `array_filter()` and `array_unique()` keep keys: with a gap, PHP
+    // encodes the array as an object.
+    fn php_array(items: Vec<Option<String>>) -> Value {
+        let mut kept: Vec<(usize, String)> = Vec::new();
+        for (i, item) in items.into_iter().enumerate() {
+            let item = item.unwrap_or_default();
+            if kept.iter().any(|(_, k)| *k == item) || item.is_empty() || item == "0" {
+                continue;
+            }
+            kept.push((i, item));
+        }
+        if kept.iter().enumerate().all(|(n, (i, _))| n == *i) {
+            Value::Array(kept.into_iter().map(|(_, v)| Value::String(v)).collect())
+        } else {
+            Value::Object(kept.into_iter().map(|(i, v)| (i.to_string(), Value::String(v))).collect::<Map<_, _>>())
+        }
+    }
+    let first = |name: &str| env_or(name, "").split(',').next().unwrap_or("").to_owned();
+    let domain = env_or("_APP_DOMAIN", "localhost").into_owned();
+    let console_domain = env_or("_APP_CONSOLE_DOMAIN", &domain).into_owned();
+    let scheme = if env("_APP_OPTIONS_FORCE_HTTPS").as_deref() == Some("disabled") { "http" } else { "https" };
+    let console_url =
+        env_or("_APP_CONSOLE_URL", &format!("{scheme}://{console_domain}")).trim_end_matches('/').to_owned();
+    let mut m = Map::new();
+    m.insert("apiHostname".into(), Value::String(domain.clone()));
+    m.insert("consoleHostname".into(), Value::String(console_domain));
+    m.insert("consoleUrl".into(), Value::String(console_url));
+    m.insert(
+        "hostnames".into(),
+        php_array(vec![
+            Some(domain),
+            Some(env_or("_APP_CONSOLE_DOMAIN", "localhost").into_owned()),
+            env("_APP_MIGRATION_HOST"),
+        ]),
+    );
+    m.insert(
+        "schemas".into(),
+        php_array(env_or("_APP_CONSOLE_SCHEMA", "").split(',').map(|s| Some(s.to_owned())).collect()),
+    );
+    let constants = [
+        ("platformName", "Appwrite"),
+        ("logoUrl", "https://cloud.appwrite.io/images/mails/logo.png"),
+        ("accentColor", "#fd366e"),
+        ("footerImageUrl", "https://appwrite.io/email/footer.png"),
+        ("twitterUrl", "https://twitter.com/appwrite"),
+        ("discordUrl", "https://appwrite.io/discord"),
+        ("githubUrl", "https://github.com/appwrite"),
+        ("termsUrl", "https://appwrite.io/terms"),
+        ("privacyUrl", "https://appwrite.io/privacy"),
+        ("websiteUrl", "https://appwrite.io"),
+        ("emailSenderName", "Appwrite"),
+    ];
+    for (k, v) in constants {
+        m.insert(k.into(), Value::String(v.into()));
+    }
+    m.insert("sitesDomain".into(), Value::String(first("_APP_DOMAIN_SITES")));
+    m.insert("functionsDomain".into(), Value::String(first("_APP_DOMAIN_FUNCTIONS")));
+    Value::Object(m)
 }

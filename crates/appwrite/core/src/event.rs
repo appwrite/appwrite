@@ -188,11 +188,24 @@ pub fn realtime_target(event: &str) -> Option<RealtimeTarget> {
                     break;
                 }
             }
-            Some(RealtimeTarget {
-                channels: vec!["account".to_owned(), format!("account.{id}")],
-                roles: vec![format!("user:{id}")],
-                permissions_changed,
-            })
+            let mut channels = vec!["account".to_owned(), format!("account.{id}")];
+            // The action-suffixed siblings, for top-level user events only (the
+            // action right after the user ID: `users.U.update.email`, not
+            // `users.U.sessions.S.create`).
+            const ACTIONS: [&str; 4] = ["create", "update", "upsert", "delete"];
+            let n = parts.len();
+            let action = if ACTIONS.contains(&parts[n - 1]) {
+                Some(parts[n - 1])
+            } else if n >= 2 && ACTIONS.contains(&parts[n - 2]) {
+                Some(parts[n - 2])
+            } else {
+                None
+            };
+            if let Some(action) = action.filter(|a| parts.get(2) == Some(a)) {
+                channels.push(format!("account.{action}"));
+                channels.push(format!("account.{id}.{action}"));
+            }
+            Some(RealtimeTarget { channels, roles: vec![format!("user:{id}")], permissions_changed })
         }
         _ => None,
     }
@@ -218,13 +231,19 @@ pub struct FunctionMessage<'a> {
     pub path: &'a str,
     pub headers: [(); 0],
     pub method: &'a str,
-    pub platform: [(); 0],
+    pub platform: &'a Value,
     #[serde(rename = "eventId")]
     pub event_id: String,
 }
 
 impl<'a> FunctionMessage<'a> {
-    pub fn new(project: &'a Value, user: &'a Value, payload: &'a RawValue, events: &'a [String]) -> Self {
+    pub fn new(
+        project: &'a Value,
+        user: &'a Value,
+        payload: &'a RawValue,
+        events: &'a [String],
+        platform: &'a Value,
+    ) -> Self {
         Self {
             project,
             user,
@@ -240,7 +259,7 @@ impl<'a> FunctionMessage<'a> {
             path: "",
             headers: [],
             method: "",
-            platform: [],
+            platform,
             event_id: crate::database::unique_id(),
         }
     }
@@ -431,7 +450,13 @@ mod tests {
     fn realtime() {
         let t = realtime_target("users.u1.update.name").unwrap();
         assert!(!t.permissions_changed);
-        assert_eq!(t.channels, vec!["account", "account.u1"]);
+        assert_eq!(t.channels, vec!["account", "account.u1", "account.update", "account.u1.update"]);
+        assert_eq!(
+            realtime_target("users.u1.create").unwrap().channels,
+            vec!["account", "account.u1", "account.create", "account.u1.create"]
+        );
+        // Nested events keep the plain channels.
+        assert_eq!(realtime_target("users.u1.sessions.s1.create").unwrap().channels, vec!["account", "account.u1"]);
         assert!(realtime_target("users.u1.update.email").unwrap().permissions_changed);
         assert!(!realtime_target("users.u1.targets.t1.create").unwrap().permissions_changed);
     }

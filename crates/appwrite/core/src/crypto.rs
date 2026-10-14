@@ -43,7 +43,8 @@ pub fn encrypt(key: &str, plain: &str) -> String {
         tag: hex::encode(tag),
         version: "1".to_owned(),
     };
-    crate::json::to_string(&envelope)
+    // `json_encode(..., JSON_UNESCAPED_SLASHES)`; every value is ASCII.
+    serde_json::to_string(&envelope).expect("the envelope serializes")
 }
 
 /// Decrypts a stored JSON document. `keys` resolves `version` to key material.
@@ -111,5 +112,16 @@ mod tests {
         assert!(stored.contains("\"method\":\"aes-128-gcm\""));
         assert_eq!(decrypt(&stored, |_| Some("your-secret-key".to_owned())).as_deref(), Some("hello/world"));
         assert!(decrypt(&stored, |_| Some("other-key".to_owned())).is_none());
+    }
+
+    #[test]
+    fn envelope_keeps_slashes_unescaped() {
+        // PHP writes it with `JSON_UNESCAPED_SLASHES`; base64 data has `/` in
+        // about one envelope in four for a short value, so try many.
+        for _ in 0..200 {
+            let stored = encrypt("your-secret-key", "a value long enough for several base64 groups");
+            assert!(!stored.contains("\\/"), "{stored}");
+            assert!(stored.starts_with("{\"data\":\""), "{stored}");
+        }
     }
 }

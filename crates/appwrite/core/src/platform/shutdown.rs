@@ -70,7 +70,10 @@ pub(super) fn schedule(ctx: Context, status: StatusCode, body: Bytes, response_s
             .unwrap_or_else(|| "http".to_owned()),
         accept: request.header_or_empty("accept").to_owned(),
         accept_language: request.header_or_empty("accept-language").to_owned(),
-        size: request.size() + request.body().len(),
+        // PHP's `Request::getSize()` adds `php://input`, which Swoole leaves
+        // empty: the body is never counted. Kept for parity (a PHP bug to fix
+        // in both runtimes together).
+        size: request.size(),
     };
     let actor = match (&ctx.key, ctx.roles_user()) {
         (Some(_), _) | (None, None) => event::empty_user(),
@@ -118,7 +121,8 @@ impl Job {
             let params = vec![("userId".to_owned(), user_id.clone())];
             let Ok(events) = event::generate_events("users.[userId].create", &params) else { continue };
             let payload = raw(payload);
-            let message = FunctionMessage::new(&project_payload, &self.actor, &payload, &events);
+            let message =
+                FunctionMessage::new(&project_payload, &self.actor, &payload, &events, &self.state.config.platform);
             self.publish(&self.state.config.queue_functions, &message).await;
             if !self.project.webhooks.is_empty() {
                 let message = WebhookMessage {
@@ -179,7 +183,8 @@ impl Job {
         }
         let function_events = self.function_events().await;
         if events.iter().any(|e| function_events.contains(e)) {
-            let message = FunctionMessage::new(project_payload, &self.actor, &payload, events);
+            let message =
+                FunctionMessage::new(project_payload, &self.actor, &payload, events, &self.state.config.platform);
             self.publish(&self.state.config.queue_functions, &message).await;
         }
         let webhook_events: Vec<&String> =
@@ -297,6 +302,12 @@ impl Job {
         if self.project.is_console() || !self.state.config.usage_stats {
             return;
         }
+        // `general.php` looks the IP up for every API request; here it runs
+        // after the response, from the in-process cache when it can.
+        let country = match self.state.geo.country_code(&self.request.ip).await.as_str() {
+            "--" => String::new(),
+            code => code.to_lowercase(),
+        };
         let base = |key: &str, value: i64| Metric {
             key: key.to_owned(),
             value,
@@ -310,7 +321,7 @@ impl Job {
             resource_path: String::new(),
             team_id: String::new(),
             team_internal_id: String::new(),
-            country: String::new(),
+            country: country.clone(),
             region: self.state.config.region.clone(),
             hostname: self.request.hostname.clone(),
             user_agent: self.request.user_agent.clone(),
