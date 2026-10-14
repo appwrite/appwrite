@@ -213,7 +213,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/appwrite/sdk-for-go/appwrite"
+	"github.com/appwrite/sdk-for-go/v7/appwrite"
 	"github.com/open-runtimes/types-for-go/v4/openruntimes"
 )
 
@@ -1718,8 +1718,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/appwrite/sdk-for-go/appwrite"
-	"github.com/appwrite/sdk-for-go/id"
+	"github.com/appwrite/sdk-for-go/v7/appwrite"
+	"github.com/appwrite/sdk-for-go/v7/id"
 	"github.com/open-runtimes/types-for-go/v4/openruntimes"
 )
 
@@ -1786,7 +1786,7 @@ func main(context: RuntimeContext) async throws -> RuntimeOutput {
        .setProject(ProcessInfo.processInfo.environment["APPWRITE_FUNCTION_PROJECT_ID"])
        .setKey(context.req.headers["x-appwrite-key"] ?? "")
 
-    let tablesDB = TablesDB(client: client)
+    let tablesDB = TablesDB(client)
 
     do {
         try await tablesDB.createRow(
@@ -2131,8 +2131,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/appwrite/sdk-for-go/appwrite"
-	"github.com/appwrite/sdk-for-go/id"
+	"github.com/appwrite/sdk-for-go/v7/appwrite"
+	"github.com/appwrite/sdk-for-go/v7/id"
 	"github.com/open-runtimes/types-for-go/v4/openruntimes"
 )
 
@@ -2212,7 +2212,7 @@ func main(context: RuntimeContext) async throws -> RuntimeOutput {
         return context.res.text("Access denied: This function requires authentication. Please sign in to continue.")
     }
 
-    let tablesDB = TablesDB(client: client)
+    let tablesDB = TablesDB(client)
 
     do {
         try await tablesDB.createRow(
