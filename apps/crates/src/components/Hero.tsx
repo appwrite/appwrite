@@ -51,11 +51,11 @@ export function Hero({ index, factory }: { index: Index; factory: Plan | null })
     <section className="grid grid-cols-[minmax(0,1fr)] gap-24 pt-10 pb-4 sm:pt-20">
       {/* The opening: one centred column (claim, pitch, actions, install), and the board on the same axis below. */}
       <div className="relative grid min-w-0 grid-cols-[minmax(0,1fr)] gap-16">
-        <div className="circuit pointer-events-none absolute inset-x-0 -top-10 h-[440px]" aria-hidden />
+        <div className="circuit pointer-events-none absolute inset-x-0 top-48 h-[340px]" aria-hidden />
         <div className="relative mx-auto grid w-full max-w-[1000px] min-w-0 grid-cols-[minmax(0,1fr)] justify-items-center gap-8 text-center">
           <h1 className="m-0 text-[42px] leading-[1] tracking-[-0.04em] sm:text-[60px] xl:text-[72px]">
             Run at speed of Rust, <br className="hidden sm:block" />
-            <span className="text-[1.12em] text-muted-foreground">
+            <span className="text-[1.22em] text-muted-foreground">
               one crate at a time<span className="text-highlight">.</span>
             </span>
           </h1>
