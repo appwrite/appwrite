@@ -16,8 +16,12 @@ function Changelog() {
         What changed in the crates, the docs, and the move from PHP to Rust.
       </PageHeader>
       <ol className="grid">
-        {ENTRIES.map((entry) => (
-          <li key={entry.slug} id={entry.slug} className="trace-rule grid scroll-mt-20 gap-x-10 gap-y-3 border-t border-border py-8 sm:grid-cols-[9rem_minmax(0,1fr)]">
+        {ENTRIES.map((entry, i) => (
+          <li
+            key={entry.slug}
+            id={entry.slug}
+            className={`grid scroll-mt-20 gap-x-10 gap-y-3 py-8 sm:grid-cols-[9rem_minmax(0,1fr)] ${i ? 'trace-rule border-t border-border' : ''}`}
+          >
             <time dateTime={entry.date} className="label pt-1.5 text-muted-foreground">
               {day(entry.date)}
             </time>
