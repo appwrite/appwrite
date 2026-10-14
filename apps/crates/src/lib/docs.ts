@@ -423,6 +423,15 @@ export interface GraphNode {
   php: string | null
   /** Appwrite's crates. */
   crates?: string[]
+  /** Appwrite's parts: its API modules, workers, schedulers, realtime and MQTT servers, each with the libraries its files import. */
+  components?: AppwriteComponent[]
+}
+
+/** A part of Appwrite and the libraries it is built from, each with the number of its files importing it. */
+export interface AppwriteComponent {
+  kind: 'http' | 'worker' | 'schedule' | 'realtime' | 'mqtt'
+  name: string
+  libraries: Record<string, number>
 }
 
 /** `source` depends on `target` through one runtime; `kinds` holds `normal`, `dev` and `build`. */

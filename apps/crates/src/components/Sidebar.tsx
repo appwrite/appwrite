@@ -1,17 +1,16 @@
-import { Link, getRouteApi, useMatch, useRouterState } from '@tanstack/react-router'
-import { ArrowLeftRight, ChevronRight, ChevronsDownUp, ChevronsUpDown, Search } from 'lucide-react'
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import { Link, getRouteApi } from '@tanstack/react-router'
+import { ArrowLeftRight, Search } from 'lucide-react'
+import { useState, type ReactNode } from 'react'
 import { dependents as dependentsOf, isTopLevel, moduleSplat, taskHash, type Navigation } from '@/lib/docs'
 import { StatusBadge, StatusDot } from './Status'
 import { MigrationOnly } from './Migration'
 import { useMigration } from '@/lib/prefs'
-import { SERVICE_STATUS, loadMigration, type Migration, type ServiceStatus } from '@/lib/appwrite'
 
 const root = getRouteApi('__root__')
 
-// The active row: the accent's tint and a bar on its left edge.
+// The active row: ink text and the red square before it.
 const row =
-  'relative flex min-w-0 items-center gap-2 rounded-md px-2 py-[5px] text-[13px] text-sidebar-ink transition-colors hover:bg-sidebar-accent hover:text-sidebar-strong data-[status=active]:bg-highlight-soft data-[status=active]:font-medium data-[status=active]:text-sidebar-strong data-[status=active]:before:absolute data-[status=active]:before:inset-y-1.5 data-[status=active]:before:left-0 data-[status=active]:before:w-[2px] data-[status=active]:before:rounded-full data-[status=active]:before:bg-highlight'
+  'relative flex min-w-0 items-center gap-2 px-2 py-[5px] text-[13px] text-sidebar-ink transition-colors hover:bg-sidebar-accent hover:text-sidebar-strong data-[status=active]:bg-sidebar-accent data-[status=active]:font-medium data-[status=active]:text-sidebar-strong data-[status=active]:before:absolute data-[status=active]:before:top-1/2 data-[status=active]:before:-left-[11.5px] data-[status=active]:before:size-[6px] data-[status=active]:before:-translate-y-1/2 data-[status=active]:before:bg-highlight'
 
 /**
  * A menu item shown only in migration mode carries the migration marking (a yellow tint), so the
@@ -20,81 +19,29 @@ const row =
 const MIGRATION_TITLE = 'Shown in migration mode'
 const item = (migration?: boolean) => (migration ? `${row} nav-migration` : row)
 
-/** Expand all / Collapse all: each press tells every group in the menu to open or close. */
-const Fold = createContext<{ open: boolean; n: number } | null>(null)
+// A group's title: mono capitals, so it never reads as one of the rows below.
+const heading = 'label mt-3 px-2 pt-2 pb-1 text-muted-foreground first:mt-0 first:pt-1'
 
-function FoldControls({ fold, onFold }: { fold: { open: boolean } | null; onFold: (open: boolean) => void }) {
-  // Most groups start closed, so the first press expands.
-  const open = !fold?.open
-  const label = open ? 'Expand all' : 'Collapse all'
+/**
+ * A group of the menu, always open: its title (a link to the group's own page
+ * when it has one) and its rows below, no folding.
+ */
+function Section({ title, count, migration, children }: { title: ReactNode; count?: number; migration?: boolean; children: ReactNode }) {
   return (
-    <button
-      type="button"
-      onClick={() => onFold(open)}
-      className="inline-flex size-7 flex-none items-center justify-center rounded-md text-sidebar-ink transition-colors hover:bg-sidebar-accent hover:text-sidebar-strong"
-      title={label}
-      aria-label={label}
-    >
-      {open ? <ChevronsUpDown className="size-3.5" /> : <ChevronsDownUp className="size-3.5" />}
-    </button>
-  )
-}
-
-function useFold() {
-  const [fold, setFold] = useState<{ open: boolean; n: number } | null>(null)
-  return [fold, (open: boolean) => setFold((f) => ({ open, n: (f?.n ?? 0) + 1 }))] as const
-}
-
-function Group({
-  label,
-  open: initial,
-  children,
-  depth = 0,
-  badge,
-  migration,
-}: {
-  label: ReactNode
-  open: boolean
-  children: ReactNode
-  depth?: number
-  badge?: ReactNode
-  /** Shown only in migration mode: the header gets the marking. */
-  migration?: boolean
-}) {
-  const [open, setOpen] = useState(initial)
-  const fold = useContext(Fold)
-  useEffect(() => {
-    if (initial) setOpen(true)
-  }, [initial])
-  useEffect(() => {
-    if (fold) setOpen(fold.open)
-  }, [fold])
-  return (
-    <div className="grid">
-      <button
-        type="button"
-        onClick={() => setOpen((o) => !o)}
-        aria-expanded={open}
-        title={migration ? MIGRATION_TITLE : undefined}
-        className={`flex min-w-0 items-center gap-1.5 rounded-md py-[5px] pr-2 text-left text-[13px] transition-colors hover:bg-sidebar-accent ${depth === 0 ? 'pl-2 font-medium text-sidebar-strong' : 'pl-2 text-sidebar-ink hover:text-sidebar-strong'} ${migration ? 'nav-migration' : ''}`}
-      >
-        <ChevronRight className={`size-3.5 flex-none text-muted-foreground transition-transform ${open ? 'rotate-90' : ''}`} />
-        <span className="min-w-0 flex-1 truncate">{label}</span>
-        {badge}
-      </button>
-      {open ? <div className="ml-[13px] grid gap-px border-l border-border py-0.5 pl-2">{children}</div> : null}
+    <div className="grid gap-px">
+      <div className={`flex min-w-0 items-center gap-2 ${heading} ${migration ? 'nav-migration' : ''}`} title={migration ? MIGRATION_TITLE : undefined}>
+        <span className="min-w-0 flex-1 truncate">{title}</span>
+        {count !== undefined ? <span className="tabular-nums tracking-normal">{count}</span> : null}
+      </div>
+      {children}
     </div>
   )
 }
 
-// A group's title: strong ink and a rule above it, so it never reads as one of the rows below.
-const heading = 'label mt-3 px-2 pt-2 pb-1 text-muted-foreground first:mt-0 first:pt-1'
 
 /** A library's own menu, a second column beside the catalog: its sections, modules (PHP: namespaces) and items. */
 export function LibraryMenu({ nav, onNavigate }: { nav: Navigation; onNavigate?: () => void }) {
-  const [fold, setFold] = useFold()
   const slug = nav.library.slug
-  const path = useRouterState({ select: (s) => decodeURIComponent(s.location.pathname) })
   const [q, setQ] = useState('')
   const term = q.trim().toLowerCase()
   const top = nav.items.filter(isTopLevel)
@@ -119,29 +66,15 @@ export function LibraryMenu({ nav, onNavigate }: { nav: Navigation; onNavigate?:
     const base = nav.phpClasses.map(nsOf).reduce((a, b) => (b.length < a.length ? b : a), nsOf(nav.phpClasses[0] ?? ''))
     const byNamespace = new Map<string, string[]>()
     for (const c of nav.phpClasses.filter(hit)) byNamespace.set(nsOf(c), [...(byNamespace.get(nsOf(c)) ?? []), c])
-    body = (
-      <>
-        <div className="mt-2 flex items-center justify-between border-t border-border pt-2 pr-1">
-          <div className={heading}>PHP API</div>
-          <FoldControls fold={fold} onFold={setFold} />
-        </div>
-        {[...byNamespace.entries()].map(([ns, classes]) => (
-          <Group
-            key={ns}
-            depth={1}
-            migration
-            label={<span className="font-mono text-[12px]">{ns === base ? (base.split('\\').pop() ?? 'global') : ns.slice(base.length + 1)}</span>}
-            open={!!term || byNamespace.size === 1 || classes.some((c) => path.endsWith(`/php-api/${c.split('\\').join('/')}`))}
-          >
-            {classes.map((c) => (
-              <Link key={c} to="/$lib/php-api/$" params={{ lib: slug, _splat: c.split('\\').join('/') }} className={row}>
-                <span className="truncate font-mono text-[12px]">{c.split('\\').pop()}</span>
-              </Link>
-            ))}
-          </Group>
+    body = [...byNamespace.entries()].map(([ns, classes]) => (
+      <Section key={ns} migration title={`PHP · ${ns === base ? (base.split('\\').pop() ?? 'global') : ns.slice(base.length + 1)}`} count={classes.length}>
+        {classes.map((c) => (
+          <Link key={c} to="/$lib/php-api/$" params={{ lib: slug, _splat: c.split('\\').join('/') }} className={row}>
+            <span className="truncate font-mono text-[12px]">{c.split('\\').pop()}</span>
+          </Link>
         ))}
-      </>
-    )
+      </Section>
+    ))
   } else {
     // The library's architecture: its top-level modules, each a page that
     // holds its whole subtree. Submodules are sections of that page.
@@ -175,18 +108,18 @@ export function LibraryMenu({ nav, onNavigate }: { nav: Navigation; onNavigate?:
 
   return (
     <nav className="grid content-start gap-3 p-3" onClick={(e) => (e.target as HTMLElement).closest('a') && onNavigate?.()}>
-      <div className="grid gap-1 rounded-lg border border-border bg-background p-3 shadow-card">
+      <div className="grid gap-1.5 border-b border-foreground pb-3">
         <div className="flex items-center justify-between gap-2">
-          <Link to="/$lib" params={{ lib: slug }} className="truncate font-display text-[15px] font-semibold tracking-tight">
+          <Link to="/$lib" params={{ lib: slug }} className="title truncate text-[19px] leading-none">
             {nav.library.title}
           </Link>
           <MigrationOnly>
             <StatusBadge status={nav.library.status} />
           </MigrationOnly>
         </div>
-        <span className="truncate font-mono text-[11px] text-highlight">{nav.library.rust?.crate ?? (migration ? nav.library.php?.package : nav.library.slug)}</span>
+        <span className="truncate font-mono text-[11px] text-muted-foreground">{nav.library.rust?.crate ?? (migration ? nav.library.php?.package : nav.library.slug)}</span>
       </div>
-      <label className="flex h-8 items-center gap-2 rounded-md border border-border bg-background px-2.5 text-muted-foreground shadow-[0_1px_2px_oklch(0_0_0/0.04)] transition-colors focus-within:border-highlight-line focus-within:ring-3 focus-within:ring-highlight-soft">
+      <label className="flex h-8 items-center gap-2 border border-border bg-card px-2.5 text-muted-foreground transition-colors focus-within:border-foreground">
         <Search className="size-3.5" />
         <input
           type="search"
@@ -226,7 +159,7 @@ export function LibraryMenu({ nav, onNavigate }: { nav: Navigation; onNavigate?:
             <span className="truncate">Benchmarks vs PHP</span>
           </Link>
         ) : null}
-        <Fold.Provider value={fold}>{body}</Fold.Provider>
+        {body}
         {commands.length || unported ? (
           <>
             <div className={heading}>Commands</div>
@@ -250,110 +183,44 @@ export function LibraryMenu({ nav, onNavigate }: { nav: Navigation; onNavigate?:
   )
 }
 
-const SERVICE_DOT: Record<ServiceStatus, string> = { rust: 'bg-ok', partial: 'bg-started', php: 'bg-muted-foreground/40' }
-
-/** The Appwrite migration: its overview and a page per service, with each service's status. */
-function AppwriteGroup() {
-  const [migration, setMigration] = useState<Migration | null>(null)
-  const path = useRouterState({ select: (s) => s.location.pathname })
-  useEffect(() => {
-    loadMigration().then(setMigration)
-  }, [])
-  const services = [...(migration?.services ?? [])].sort((a, b) => a.title.localeCompare(b.title))
-  return (
-    <Group
-      label={
-        <span className="flex items-center gap-1.5">
-          <ArrowLeftRight className="size-3.5 flex-none text-migration-ink" />
-          Appwrite migration
-        </span>
-      }
-      open={path.startsWith('/appwrite')}
-      migration
-      badge={services.length ? <span className="font-mono text-[10.5px] text-muted-foreground tabular-nums">{services.length}</span> : undefined}
-    >
-      <Link to="/appwrite" activeOptions={{ exact: true }} className={row}>
-        Overview
-      </Link>
-      <Link to="/appwrite/behaviour" className={row}>
-        Cross-cutting behaviour
-      </Link>
-      <Link to="/appwrite/benchmarks" className={row}>
-        Benchmarks
-      </Link>
-      {services.map((x) => (
-        <Link key={x.id} to="/appwrite/$service" params={{ service: x.id }} className={row} title={SERVICE_STATUS[x.status].label}>
-          <span className={`size-1.5 flex-none rounded-full ${SERVICE_DOT[x.status]}`} />
-          <span className="truncate">{x.title}</span>
-        </Link>
-      ))}
-    </Group>
-  )
-}
-
 export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const index = root.useLoaderData()
-  const libMatch = useMatch({ from: '/$lib', shouldThrow: false })
-  const nav = libMatch?.loaderData as Navigation | undefined
-  const [q, setQ] = useState('')
   const migration = useMigration()
-  const [fold, setFold] = useFold()
   if (!index) return null
-  const activeCategory = nav?.library.category
-  const term = q.trim().toLowerCase()
+  // A category is in the menu when it has a library to show: with a crate, or any in migration mode.
   const bySlug = new Map(index.libraries.map((l) => [l.slug, l]))
-
   return (
     <nav className="grid content-start gap-3 p-3" onClick={(e) => (e.target as HTMLElement).closest('a') && onNavigate?.()}>
-      <label className="flex h-8 items-center gap-2 rounded-md border border-border bg-background px-2.5 text-muted-foreground shadow-[0_1px_2px_oklch(0_0_0/0.04)] transition-colors focus-within:border-highlight-line focus-within:ring-3 focus-within:ring-highlight-soft">
-        <Search className="size-3.5" />
-        <input
-          type="search"
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Filter libraries"
-          aria-label="Filter libraries"
-          className="min-w-0 flex-1 bg-transparent text-[13px] text-foreground outline-none placeholder:text-muted-foreground"
-        />
-      </label>
-      <div className="flex items-center gap-1">
-        <Link to="/" activeOptions={{ exact: true }} className={`${row} flex-1`}>
-          All libraries
+      <div className="grid gap-px">
+        <Link to="/" activeOptions={{ exact: true, includeSearch: false }} className={row}>
+          Home
         </Link>
-        <FoldControls fold={fold} onFold={setFold} />
+        <Link to="/libraries" activeOptions={{ includeSearch: false }} className={row}>
+          Libraries
+        </Link>
+        <Link to="/map" className={row}>
+          Map
+        </Link>
+        <MigrationOnly>
+          <Link to="/appwrite" className={item(true)} title={MIGRATION_TITLE}>
+            <ArrowLeftRight className="size-3.5 flex-none text-migration-ink" />
+            Appwrite migration
+          </Link>
+        </MigrationOnly>
       </div>
-      <Link to="/map" className={`${row} -mt-2`}>
-        Map
-      </Link>
-      <Fold.Provider value={fold}>
-      <MigrationOnly>
-        <AppwriteGroup />
-      </MigrationOnly>
-      {index.categories.map((c) => {
-        const libs = c.libraries
-          .map((s) => bySlug.get(s))
-          // Libraries without a Rust crate belong to the migration view.
-          .filter((l) => l && (migration || l.rust) && (!term || `${l.title} ${l.slug} ${l.description}`.toLowerCase().includes(term)))
-        if (!libs.length) return null
-        return (
-          <Group key={c.id} label={c.title} open={!!term || c.id === activeCategory} migration={!libs.some((l) => l?.rust)} badge={<span className="font-mono text-[10.5px] text-muted-foreground tabular-nums">{libs.length}</span>}>
-            <Link to="/categories/$category" params={{ category: c.id }} className={row}>
-              Overview
+      <Section title="Categories">
+        {index.categories.map((c) => {
+          const libs = c.libraries.map((s) => bySlug.get(s)).filter((l) => l && (migration || l.rust))
+          if (!libs.length) return null
+          const rust = libs.some((l) => l?.rust)
+          return (
+            <Link key={c.id} to="/categories/$category" params={{ category: c.id }} className={item(!rust)} title={rust ? undefined : MIGRATION_TITLE}>
+              <span className="truncate">{c.title}</span>
+              <span className="ml-auto font-mono text-[10px] text-muted-foreground tabular-nums">{libs.length}</span>
             </Link>
-            {libs.map((l) =>
-              l ? (
-                <Link key={l.slug} to="/$lib" params={{ lib: l.slug }} className={item(!l.rust)} title={l.rust ? undefined : MIGRATION_TITLE}>
-                  <MigrationOnly>
-                    <StatusDot status={l.status} />
-                  </MigrationOnly>
-                  <span className="truncate">{l.title}</span>
-                </Link>
-              ) : null,
-            )}
-          </Group>
-        )
-      })}
-      </Fold.Provider>
+          )
+        })}
+      </Section>
     </nav>
   )
 }

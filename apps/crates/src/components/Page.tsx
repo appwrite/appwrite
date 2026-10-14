@@ -10,33 +10,39 @@ import { SpeedupBadge } from './Bench'
 import { Time } from './Time'
 import { LinesBadge } from './Size'
 
-/** Page title block: a mono eyebrow in the accent, the title, and its lead. */
+/** Page title block: a mono eyebrow after the red marker, the serif title, and its lead, closed by an ink rule. */
 export function PageHeader({ eyebrow, title, mono, children, aside }: { eyebrow?: ReactNode; title: ReactNode; mono?: boolean; children?: ReactNode; aside?: ReactNode }) {
   return (
-    <div className="grid gap-3 border-b border-border pb-7">
-      {eyebrow ? <div className="label text-highlight">{eyebrow}</div> : null}
+    <div className="trace-rule trace-bottom grid gap-4 border-b border-foreground pb-8">
+      {eyebrow ? (
+        <div className="label flex items-center gap-2.5 text-muted-foreground">
+          <span className="marker" aria-hidden />
+          {eyebrow}
+        </div>
+      ) : null}
       <div className="flex flex-wrap items-center gap-3">
-        <h1 className={mono ? 'font-mono text-[28px] font-semibold tracking-tight' : 'text-[34px] leading-[1.1]'}>{title}</h1>
+        <h1 className={mono ? 'font-mono text-[30px] font-medium tracking-tight' : 'text-[38px] sm:text-[46px]'}>{title}</h1>
         {aside}
       </div>
-      {children ? <div className="max-w-[72ch] text-[15.5px] leading-relaxed text-muted-foreground">{children}</div> : null}
+      {children ? <div className="max-w-[68ch] text-[16px] leading-relaxed text-ink-soft">{children}</div> : null}
     </div>
   )
 }
 
-export function Section({ id, title, children, description }: { id?: string; title: string; children: ReactNode; description?: ReactNode }) {
+export function Section({ id, title, children, description, number }: { id?: string; title: string; children: ReactNode; description?: ReactNode; number?: number }) {
   return (
-    <section id={id} className="grid scroll-mt-20 gap-4">
-      <div className="grid gap-1.5">
-        <h2 className="group flex items-center gap-2 text-[21px]">
+    <section id={id} className="trace-rule grid scroll-mt-20 gap-5 border-t border-border pt-6">
+      <div className="grid gap-2">
+        <h2 className="group flex items-baseline gap-3 text-[26px]">
+          {number !== undefined ? <span className="font-mono text-[12px] tracking-normal text-highlight tabular-nums">{String(number).padStart(2, '0')}</span> : null}
           {title}
           {id ? (
-            <a href={`#${id}`} className="font-mono text-[15px] font-normal text-muted-foreground/0 transition-colors group-hover:text-muted-foreground hover:text-highlight" aria-label={`Link to ${title}`}>
+            <a href={`#${id}`} className="font-mono text-[13px] text-transparent transition-colors group-hover:text-muted-foreground hover:text-highlight" aria-label={`Link to ${title}`}>
               #
             </a>
           ) : null}
         </h2>
-        {description ? <p className="m-0 max-w-[72ch] text-[13.5px] text-muted-foreground">{description}</p> : null}
+        {description ? <p className="m-0 max-w-[68ch] text-[14px] text-muted-foreground">{description}</p> : null}
       </div>
       {children}
     </section>
@@ -49,15 +55,13 @@ export function LibraryCard({ lib }: { lib: LibrarySummary }) {
     <Link
       to="/$lib"
       params={{ lib: lib.slug }}
-      className="group relative grid content-start gap-3 overflow-hidden rounded-xl border border-border bg-card p-4 transition-all duration-200 hover:-translate-y-px hover:border-highlight-line hover:shadow-card"
+      className="pad group relative grid content-start gap-3 border-r border-b border-border bg-card p-5 transition-colors hover:bg-background"
     >
-      {/* The accent's glow, from the card's top edge on hover. */}
-      <span className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-highlight to-transparent opacity-0 transition-opacity group-hover:opacity-100" aria-hidden />
       <div className="flex items-start justify-between gap-2">
-        <div className="grid gap-1">
-          <span className="flex items-center gap-1 font-display text-[15.5px] font-semibold tracking-tight">
+        <div className="grid gap-1.5">
+          <span className="flex items-center gap-1.5 font-display text-[16px] font-semibold tracking-tight">
             {lib.title}
-            <ArrowUpRight className="size-3.5 -translate-x-1 text-highlight opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100" />
+            <ArrowUpRight className="size-3.5 text-muted-foreground/0 transition-colors group-hover:text-highlight" />
           </span>
           <span className="font-mono text-[11px] text-muted-foreground">{lib.rust?.crate ?? lib.php?.package ?? lib.slug}</span>
         </div>
@@ -70,7 +74,7 @@ export function LibraryCard({ lib }: { lib: LibrarySummary }) {
         </MigrationOnly>
       </div>
       <p className="m-0 line-clamp-2 text-[13px] leading-relaxed text-muted-foreground">{lib.description}</p>
-      <div className="flex flex-wrap gap-x-3 gap-y-1 border-t border-dashed border-border pt-3 font-mono text-[10.5px] text-muted-foreground">
+      <div className="mt-auto flex flex-wrap gap-x-3 gap-y-1 border-t border-border pt-3 font-mono text-[10.5px] text-muted-foreground">
         {lib.rust ? (
           <span className="inline-flex items-center gap-1">
             <Package className="size-3" />
@@ -105,8 +109,9 @@ export function LibraryCard({ lib }: { lib: LibrarySummary }) {
   )
 }
 
+/** Cards share their hairlines, as cells of one printed table. */
 export function CardGrid({ children }: { children: ReactNode }) {
-  return <div className="grid grid-cols-[repeat(auto-fill,minmax(270px,1fr))] gap-3">{children}</div>
+  return <div className="grid grid-cols-[repeat(auto-fill,minmax(270px,1fr))] border-t border-l border-border">{children}</div>
 }
 
 /** A library as one row of a list: name and crate, what it does, its counts. */
@@ -115,7 +120,7 @@ export function LibraryRow({ lib }: { lib: LibrarySummary }) {
     <Link
       to="/$lib"
       params={{ lib: lib.slug }}
-      className="grid items-center gap-x-4 gap-y-1 px-4 py-3 transition-colors hover:bg-highlight-soft sm:grid-cols-[minmax(150px,220px)_minmax(0,1fr)_auto]"
+      className="group grid items-center gap-x-4 gap-y-1 px-4 py-3 transition-colors hover:bg-background sm:grid-cols-[minmax(150px,220px)_minmax(0,1fr)_auto]"
     >
       <span className="grid min-w-0 gap-0.5">
         <span className="truncate font-display text-[14.5px] font-semibold tracking-tight">{lib.title}</span>
@@ -162,7 +167,7 @@ export function LibraryList({ libs }: { libs: LibrarySummary[] }) {
   const layout = useLayout()
   if (layout === 'list') {
     return (
-      <div className="grid divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
+      <div className="grid divide-y divide-border border-y border-border bg-card">
         {libs.map((lib) => (
           <LibraryRow key={lib.slug} lib={lib} />
         ))}
@@ -188,13 +193,13 @@ export function LayoutToggle() {
       aria-label={`${label} view`}
       title={`${label} view`}
       onClick={() => setLayout(value)}
-      className="inline-flex size-7 items-center justify-center rounded text-muted-foreground transition-colors hover:text-foreground aria-pressed:bg-accent aria-pressed:text-foreground"
+      className="inline-flex size-7 items-center justify-center text-muted-foreground transition-colors hover:text-foreground aria-pressed:bg-accent aria-pressed:text-foreground"
     >
       <Icon className="size-4" />
     </button>
   )
   return (
-    <div role="group" aria-label="Layout" className="inline-flex h-9 items-center gap-0.5 rounded-lg border border-border bg-card px-1">
+    <div role="group" aria-label="Layout" className="inline-flex h-9 items-center gap-0.5 border border-border bg-card px-1">
       {option('grid', 'Grid', LayoutGrid)}
       {option('list', 'List', List)}
     </div>
@@ -212,7 +217,7 @@ export function Toc({ entries }: { entries: { id: string; label: string; depth?:
           <a
             key={e.id}
             href={`#${e.id}`}
-            className={`-ml-px truncate border-l border-transparent py-1 text-[12.5px] text-muted-foreground transition-colors hover:border-highlight hover:text-foreground ${e.depth ? 'pl-6 font-mono text-[12px]' : 'pl-3'}`}
+            className={`-ml-px truncate border-l border-transparent py-1 text-[12.5px] text-muted-foreground transition-colors hover:border-foreground hover:text-foreground ${e.depth ? 'pl-6 font-mono text-[12px]' : 'pl-3'}`}
           >
             {e.label}
           </a>

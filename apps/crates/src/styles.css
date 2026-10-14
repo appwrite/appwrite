@@ -1,79 +1,75 @@
 @import 'tailwindcss';
 
-/* The Utopia docs design system: cool zinc neutrals with a near-black dark
-   theme, Geist for text and headings, Geist Mono for code, labels and numbers,
-   and an electric indigo accent taken from the wordmark's periwinkle. Code
-   panels stay dark in both themes. Colour otherwise comes only from the
-   callout triplets (status, and the yellow migration cards). */
+/* The Utopia docs design system: a printed engineering catalogue. Warm paper
+   and ink, the wordmark's red dot as the one accent, Archivo set wide for
+   titles, Geist for text, Geist Mono for code, labels and figures. Square
+   corners, hairline rules, no shadows or gradients. Code panels are ink in
+   both themes. Colour otherwise comes only from the callout triplets
+   (status, and the yellow migration cards). */
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --zinc-0: oklch(1 0 0);
-  --zinc-25: oklch(0.992 0.001 286);
-  --zinc-50: oklch(0.985 0 0);
-  --zinc-100: oklch(0.967 0.001 286.375);
-  --zinc-200: oklch(0.92 0.004 286.32);
-  --zinc-300: oklch(0.871 0.006 286.286);
-  --zinc-400: oklch(0.705 0.015 286.067);
-  --zinc-500: oklch(0.552 0.016 285.938);
-  --zinc-600: oklch(0.442 0.017 285.786);
-  --zinc-700: oklch(0.274 0.006 286.033);
-  --zinc-800: oklch(0.21 0.006 285.885);
-  --zinc-900: oklch(0.141 0.005 285.823);
+  --paper: #f5f2eb;
+  --paper-deep: #ece8de;
+  --paper-sunk: #e3ded2;
+  --ink: #14130f;
+  --ink-soft: #3d3a33;
+  --ink-mute: #77736a;
+  --rule: #d9d3c5;
+  --rule-strong: #b9b2a3;
 
-  --background: var(--zinc-0);
-  --foreground: var(--zinc-900);
-  --card: var(--zinc-0);
-  --muted: var(--zinc-100);
-  --muted-foreground: var(--zinc-500);
-  --accent: var(--zinc-100);
-  --accent-foreground: var(--zinc-800);
-  --primary: var(--zinc-900);
-  --primary-foreground: var(--zinc-50);
-  --border: oklch(0.925 0.004 286.32);
-  --ring: var(--zinc-300);
-  --sidebar: var(--zinc-25);
-  --sidebar-accent: oklch(0.955 0.003 286.35);
+  --background: var(--paper);
+  --foreground: var(--ink);
+  --card: #faf8f3;
+  --muted: var(--paper-deep);
+  --muted-foreground: var(--ink-mute);
+  --accent: var(--paper-deep);
+  --accent-foreground: var(--ink);
+  --primary: var(--ink);
+  --primary-foreground: var(--paper);
+  --border: var(--rule);
+  --ring: var(--rule-strong);
+  --sidebar: var(--paper);
+  --sidebar-accent: var(--paper-deep);
   /* Menu text sits in a narrow band, so headings and links read as one list. */
-  --sidebar-ink: var(--zinc-600);
-  --sidebar-strong: var(--zinc-900);
+  --sidebar-ink: var(--ink-soft);
+  --sidebar-strong: var(--ink);
   --brand: #6474ce;
-  /* The accent: links, the active menu row, focus and the hero's glow. */
-  --highlight: oklch(0.54 0.2 272);
-  --highlight-soft: oklch(0.54 0.2 272 / 0.08);
-  --highlight-line: oklch(0.54 0.2 272 / 0.35);
-  --grid-line: oklch(0.141 0.005 285.823 / 0.06);
-  --shadow-card: 0 1px 2px oklch(0 0 0 / 0.04), 0 8px 24px -12px oklch(0 0 0 / 0.08);
+  /* The accent: the wordmark's red dot. Used sparingly: markers, the active row, links on hover. */
+  --highlight: #e8173f;
+  --highlight-soft: rgba(232, 23, 63, 0.07);
+  --highlight-line: rgba(232, 23, 63, 0.4);
 
-  /* Code panels stay dark in both themes: the code block is this brand's image. */
-  --code-bg: #0b0b0e;
-  --code-header: #111115;
-  --code-border: oklch(1 0 0 / 0.08);
-  --code-header-fg: #a1a1aa;
-  --code-plain: #e4e4e7;
-  --code-module-keyword: #67e8f9;
-  --code-function: #93c5fd;
-  --code-keyword: #c4b5fd;
-  --code-comment: #71717a;
-  --code-property: #f9a8d4;
-  --code-string: #86efac;
-  --code-number: #fdba74;
+  /* Code panels are ink in both themes. */
+  --code-bg: #161510;
+  --code-header: #1d1c17;
+  --code-border: #2c2a23;
+  --code-header-fg: #a8a397;
+  --code-plain: #ebe7dc;
+  --code-module-keyword: #9fc2c9;
+  --code-function: #e6c07b;
+  --code-keyword: #f2798f;
+  --code-comment: #7d796d;
+  --code-property: #d9b3a0;
+  --code-string: #b7cf96;
+  --code-number: #d7a7d0;
+  --code-punctuation: #8f8a7d;
 
   /* Callout triplets: success, warning, info; planned is neutral. */
-  --ok: #22c55e;
-  --ok-soft: #f0fdf4;
-  --ok-ink: #14532d;
-  --progress: #eab308;
-  --progress-soft: #fefce8;
-  --progress-ink: #713f12;
-  --started: #3b82f6;
-  --started-soft: #eff6ff;
-  --started-ink: #1e3a8a;
-  --planned: var(--zinc-400);
-  --planned-soft: var(--zinc-100);
-  --planned-ink: var(--zinc-600);
+  --ok: #2f9e55;
+  --ok-soft: #e6f0e1;
+  --ok-ink: #1d4d2c;
+  --progress: #c99a06;
+  --progress-soft: #f5edcf;
+  --progress-ink: #5f4708;
+  --started: #3a6fd8;
+  --started-soft: #e3e8f2;
+  --started-ink: #1f3a73;
+  --planned: #a29d91;
+  --planned-soft: var(--paper-deep);
+  --planned-ink: var(--ink-mute);
   /* Migration cards: the design system's warning callout. */
-  --migration: #fefce8;
+  --migration: #f6efcf;
   /* The two runtimes in comparisons: PHP's elephant blue-violet, Rust's orange. */
   --php: #7b85bd;
   --rust: #d4692a;
@@ -84,46 +80,43 @@
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
   --chart-brand: oklch(0.55 0.24 358);
-  --migration-border: #fef08a;
-  --migration-ink: #713f12;
+  --migration-border: #e6d68a;
+  --migration-ink: #5f4708;
 
-  --font-display: 'Geist', ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
-  --font-body: 'Geist', ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+  /* Titles: Archivo on its width axis, a little expanded, like lettering on a machine plate. */
+  --font-title: 'Archivo', ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+  --font-display: 'Geist', ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+  --font-body: 'Geist', ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
   --font-code: 'Geist Mono', ui-monospace, 'SF Mono', Menlo, Monaco, Consolas, monospace;
 }
 
 .dark {
-  --background: #09090b;
-  --foreground: #fafafa;
-  --card: #0e0e11;
-  --muted: #18181b;
-  --muted-foreground: #8b8b94;
-  --accent: #18181c;
-  --accent-foreground: #fafafa;
-  --primary: #fafafa;
-  --primary-foreground: #09090b;
-  --border: oklch(1 0 0 / 0.08);
-  --ring: oklch(1 0 0 / 0.2);
-  --sidebar: #09090b;
-  --sidebar-accent: oklch(1 0 0 / 0.05);
-  --sidebar-ink: #8b8b94;
-  --sidebar-strong: #f4f4f5;
-  --highlight: oklch(0.74 0.15 275);
-  --highlight-soft: oklch(0.74 0.15 275 / 0.1);
-  --highlight-line: oklch(0.74 0.15 275 / 0.4);
-  --grid-line: oklch(1 0 0 / 0.045);
-  --shadow-card: 0 1px 0 oklch(1 0 0 / 0.03) inset, 0 12px 32px -16px oklch(0 0 0 / 0.6);
-  --code-bg: #0b0b0e;
-  --code-header: #101014;
-  --ok-soft: rgba(5, 46, 22, 0.3);
-  --ok-ink: #dcfce7;
-  --progress-soft: rgba(66, 32, 6, 0.3);
-  --progress-ink: #fef9c3;
-  --started-soft: rgba(23, 37, 84, 0.3);
-  --started-ink: #dbeafe;
-  --planned-soft: #1c1c20;
-  --planned-ink: var(--zinc-400);
-  --migration: rgba(66, 32, 6, 0.3);
+  --paper: #11100d;
+  --paper-deep: #1a1915;
+  --paper-sunk: #23211c;
+  --ink: #ece8de;
+  --ink-soft: #bdb8ab;
+  --ink-mute: #8a857a;
+  --rule: #2a2822;
+  --rule-strong: #46433a;
+  --card: #15140f;
+  --highlight: #ff3d5f;
+  --highlight-soft: rgba(255, 61, 95, 0.09);
+  --highlight-line: rgba(255, 61, 95, 0.45);
+  --code-bg: #0b0a08;
+  --code-header: #12110e;
+  --code-border: #2a2822;
+  --ok: #4cbc72;
+  --ok-soft: rgba(47, 158, 85, 0.14);
+  --ok-ink: #bfe6c9;
+  --progress: #e2b21c;
+  --progress-soft: rgba(201, 154, 6, 0.14);
+  --progress-ink: #f1dfa0;
+  --started: #6b97f0;
+  --started-soft: rgba(58, 111, 216, 0.16);
+  --started-ink: #c9d8f7;
+  --planned: #6c685e;
+  --migration: rgba(201, 154, 6, 0.1);
   --php: #9aa3d6;
   --rust: #ec8a4d;
   --chart-1: oklch(0.488 0.243 264.376);
@@ -132,9 +125,19 @@
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
   --chart-brand: oklch(0.6 0.26 358);
-  --migration-border: #713f12;
-  --migration-ink: #fef9c3;
+  --migration-border: #5a4a12;
+  --migration-ink: #f1dfa0;
   color-scheme: dark;
+}
+
+/* Square corners: the whole radius scale collapses to a hairline bevel. */
+@theme {
+  --radius-xs: 1px;
+  --radius-sm: 1px;
+  --radius-md: 2px;
+  --radius-lg: 2px;
+  --radius-xl: 3px;
+  --radius-2xl: 3px;
 }
 
 @theme inline {
@@ -154,6 +157,7 @@
   --color-sidebar-ink: var(--sidebar-ink);
   --color-sidebar-strong: var(--sidebar-strong);
   --color-brand: var(--brand);
+  --color-ink-soft: var(--ink-soft);
   --color-highlight: var(--highlight);
   --color-highlight-soft: var(--highlight-soft);
   --color-highlight-line: var(--highlight-line);
@@ -178,6 +182,7 @@
   --color-rust: var(--rust);
   --color-migration-border: var(--migration-border);
   --color-migration-ink: var(--migration-ink);
+  --font-title: var(--font-title);
   --font-display: var(--font-display);
   --font-sans: var(--font-body);
   --font-mono: var(--font-code);
@@ -198,18 +203,27 @@
     @apply bg-background text-foreground font-sans antialiased;
     font-size: 14px;
     line-height: 1.625;
-    font-feature-settings: 'ss01', 'cv11';
+    font-feature-settings: 'ss01';
   }
+  /* Titles in Archivo; smaller headings in the sans. */
   h1,
-  h2,
+  h2 {
+    font-family: var(--font-title);
+    font-weight: 600;
+    font-stretch: 112%;
+    letter-spacing: -0.03em;
+    line-height: 1.02;
+    text-wrap: balance;
+  }
   h3,
   h4 {
     @apply font-display font-semibold;
-    letter-spacing: -0.03em;
+    letter-spacing: -0.015em;
     text-wrap: balance;
   }
   ::selection {
-    background: var(--highlight-line);
+    background: var(--ink);
+    color: var(--paper);
   }
   /* Native selects draw their arrow against the edge; draw our own with room. */
   select {
@@ -221,9 +235,8 @@
     background-size: 0.875rem;
   }
   :focus-visible {
-    outline: 2px solid var(--highlight-line);
+    outline: 1.5px solid var(--highlight);
     outline-offset: 2px;
-    border-radius: 6px;
   }
   @media (prefers-reduced-motion: reduce) {
     * {
@@ -244,30 +257,297 @@
     font-family: var(--font-code);
     font-size: 10.5px;
     font-weight: 500;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
   }
-  /* The blueprint grid behind the hero, fading out at its edges. */
-  .grid-backdrop {
-    background-image:
-      linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
-      linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
-    background-size: 44px 44px;
-    mask-image: radial-gradient(ellipse 70% 60% at 50% 30%, #000 30%, transparent 75%);
+  /* Archivo, wide: page and section titles, and the smaller titles that should read as them. */
+  .title {
+    font-family: var(--font-title);
+    font-weight: 600;
+    font-stretch: 112%;
+    letter-spacing: -0.025em;
   }
-  .glow {
-    background: radial-gradient(ellipse 50% 45% at 50% 0%, var(--highlight-soft), transparent 70%);
+  /* Soft electronic gestures: rules that end in vias like traces, a pad on cards, faint circuitry behind the hero. */
+  .trace-rule {
+    position: relative;
   }
-  /* Headline text in a soft foreground gradient. */
-  .text-gradient {
-    background: linear-gradient(180deg, var(--foreground) 30%, color-mix(in oklch, var(--foreground) 55%, transparent));
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+  .trace-rule::before,
+  .trace-rule::after {
+    content: '';
+    position: absolute;
+    top: -4px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    pointer-events: none;
   }
-  .shadow-card {
-    box-shadow: var(--shadow-card);
+  .trace-rule::before {
+    left: -3px;
+    border: 1px solid var(--rule-strong);
+    background: var(--background);
   }
+  .trace-rule::after {
+    right: -1px;
+    top: -2px;
+    width: 3px;
+    height: 3px;
+    background: var(--rule-strong);
+  }
+  .trace-rule.trace-bottom::before {
+    top: auto;
+    bottom: -4px;
+    border-color: var(--foreground);
+  }
+  .trace-rule.trace-bottom::after {
+    top: auto;
+    bottom: -2px;
+    background: var(--foreground);
+  }
+  .pad::after {
+    content: '';
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    border: 1px solid var(--rule-strong);
+    transition: border-color 0.2s, background-color 0.2s;
+    pointer-events: none;
+  }
+  .pad:hover::after {
+    border-color: var(--highlight);
+    background: var(--highlight);
+  }
+  /* Circuitry behind the hero: traces and vias in the rule colour, fading out towards the middle. */
+  .circuit {
+    background-color: var(--rule-strong);
+    opacity: 0.4;
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20width=%27280%27%20height=%27280%27%20fill=%27none%27%20stroke=%27black%27%20stroke-width=%271%27%3E%3Cpath%20d=%27M0%2040h70l20%2020h60%27/%3E%3Ccircle%20cx=%27154%27%20cy=%2760%27%20r=%273.5%27/%3E%3Cpath%20d=%27M280%20120h-70l-20-20h-36%27/%3E%3Ccircle%20cx=%27150%27%20cy=%27100%27%20r=%273.5%27/%3E%3Cpath%20d=%27M60%20280v-70l20-20v-36%27/%3E%3Ccircle%20cx=%2780%27%20cy=%27150%27%20r=%273.5%27/%3E%3Cpath%20d=%27M200%200v50l-20%2020v36%27/%3E%3Ccircle%20cx=%27180%27%20cy=%27110%27%20r=%273.5%27/%3E%3Cpath%20d=%27M0%20220h40l20-20h50l20%2020h36%27/%3E%3Ccircle%20cx=%27170%27%20cy=%27220%27%20r=%273.5%27/%3E%3Cpath%20d=%27M234%20280v-36l20-20h26%27/%3E%3Cpath%20d=%27M120%200v20l-16%2016H70%27/%3E%3Ccircle%20cx=%2766%27%20cy=%2736%27%20r=%273.5%27/%3E%3C/svg%3E"), radial-gradient(ellipse 55% 65% at 50% 45%, transparent 35%, #000 85%);
+    mask-image: url("data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20width=%27280%27%20height=%27280%27%20fill=%27none%27%20stroke=%27black%27%20stroke-width=%271%27%3E%3Cpath%20d=%27M0%2040h70l20%2020h60%27/%3E%3Ccircle%20cx=%27154%27%20cy=%2760%27%20r=%273.5%27/%3E%3Cpath%20d=%27M280%20120h-70l-20-20h-36%27/%3E%3Ccircle%20cx=%27150%27%20cy=%27100%27%20r=%273.5%27/%3E%3Cpath%20d=%27M60%20280v-70l20-20v-36%27/%3E%3Ccircle%20cx=%2780%27%20cy=%27150%27%20r=%273.5%27/%3E%3Cpath%20d=%27M200%200v50l-20%2020v36%27/%3E%3Ccircle%20cx=%27180%27%20cy=%27110%27%20r=%273.5%27/%3E%3Cpath%20d=%27M0%20220h40l20-20h50l20%2020h36%27/%3E%3Ccircle%20cx=%27170%27%20cy=%27220%27%20r=%273.5%27/%3E%3Cpath%20d=%27M234%20280v-36l20-20h26%27/%3E%3Cpath%20d=%27M120%200v20l-16%2016H70%27/%3E%3Ccircle%20cx=%2766%27%20cy=%2736%27%20r=%273.5%27/%3E%3C/svg%3E"), radial-gradient(ellipse 55% 65% at 50% 45%, transparent 35%, #000 85%);
+    -webkit-mask-size: 280px 280px, 100% 100%;
+    mask-size: 280px 280px, 100% 100%;
+    -webkit-mask-repeat: repeat, no-repeat;
+    mask-repeat: repeat, no-repeat;
+    -webkit-mask-composite: source-in;
+    mask-composite: intersect;
+  }
+  /* The red square: the wordmark's dot as a marker. */
+  .marker {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    flex: none;
+    background: var(--highlight);
+  }
+}
+
+/* The factory drawing (src/components/Factory.tsx): a circuit board in the
+   paper's tones, its blocks in three flat shades with ink hairlines, a thin
+   trace between sockets, the accent for blocks in focus. */
+.factory {
+  --f-top: #fcfbf7;
+  --f-left: #e6e1d4;
+  --f-right: #cfc8b7;
+  --f-dim: var(--paper);
+  --p-top: var(--paper-deep);
+  --p-left: #d9d2c2;
+  --p-right: #c6bead;
+}
+.dark .factory {
+  --f-top: #2b2924;
+  --f-left: #1f1d19;
+  --f-right: #171612;
+  --p-top: #181713;
+  --p-left: #14130f;
+  --p-right: #0f0e0b;
+}
+.factory .face,
+.factory .board {
+  stroke: var(--ink);
+  stroke-width: 0.75;
+  stroke-opacity: 0.8;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  transition: fill 0.25s;
+}
+.factory .top {
+  fill: var(--f-top);
+}
+.factory .left {
+  fill: var(--f-left);
+}
+.factory .right {
+  fill: var(--f-right);
+}
+.factory .board.top {
+  fill: var(--p-top);
+}
+.factory .board.left {
+  fill: var(--p-left);
+}
+.factory .board.right {
+  fill: var(--p-right);
+}
+.factory .plot {
+  fill: var(--paper);
+  stroke: var(--rule-strong);
+  stroke-width: 0.75;
+  stroke-dasharray: 3 2;
+  vector-effect: non-scaling-stroke;
+}
+.factory .trace {
+  fill: none;
+  stroke: var(--ink-mute);
+  stroke-opacity: 0.55;
+  stroke-width: 0.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.factory .bus {
+  fill: var(--paper);
+  stroke: var(--rule-strong);
+  stroke-width: 0.75;
+  vector-effect: non-scaling-stroke;
+}
+.factory .card.top {
+  fill: var(--p-left);
+}
+.factory .card.left,
+.factory .card.right {
+  fill: var(--p-right);
+}
+.factory .vent {
+  fill: none;
+  stroke: var(--ink);
+  stroke-opacity: 0.35;
+  stroke-width: 0.75;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+/* Packets: small squares riding the queue lanes from the bus to the workers. */
+.factory .packet {
+  fill: var(--ink-soft);
+  animation: factory-packet 3s linear infinite;
+}
+@keyframes factory-packet {
+  0% {
+    transform: translate(0, 0);
+    opacity: 0;
+  }
+  12%,
+  85% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translate(var(--dx), var(--dy));
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .factory .packet {
+    animation: none;
+    opacity: 0;
+  }
+}
+/* Floating: the board bobs a few pixels; its shadow on the ground tightens and fades as it rises. */
+.factory {
+  --f-shadow: 0.16;
+}
+.dark .factory {
+  --f-shadow: 0.55;
+}
+.factory .shadow {
+  fill: #000;
+  opacity: var(--f-shadow);
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: factory-shadow 7s ease-in-out infinite;
+}
+.factory .floating {
+  animation: factory-float 7s ease-in-out infinite;
+}
+@keyframes factory-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-9px);
+  }
+}
+@keyframes factory-shadow {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.95);
+    opacity: calc(var(--f-shadow) * 0.7);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .factory .floating,
+  .factory .shadow {
+    animation: none;
+  }
+}
+.factory .engraving-logo {
+  color: var(--ink-soft);
+}
+.factory .engraving {
+  fill: var(--ink-soft);
+  font-size: 8.5px;
+}
+.factory .engraving .title {
+  font-size: 9.5px;
+}
+.factory .engraving .mono {
+  font-family: var(--font-code);
+  font-size: 6.5px;
+  letter-spacing: 0.08em;
+  fill: var(--ink-mute);
+}
+.factory .blk {
+  cursor: pointer;
+}
+/* Out of focus: flat paper and faint lines, still solid, so the blocks in focus stand out and nothing shows through. */
+.factory svg[data-focus] .blk:not([data-hi]) .face {
+  fill: var(--f-dim);
+  stroke-opacity: 0.3;
+}
+.factory .blk[data-hi] .top {
+  fill: var(--highlight);
+}
+.factory .blk[data-hi] .left {
+  fill: color-mix(in oklch, var(--highlight) 78%, var(--ink));
+}
+.factory .blk[data-hi] .right {
+  fill: color-mix(in oklch, var(--highlight) 58%, var(--ink));
+}
+.factory .flash {
+  fill: var(--highlight);
+  pointer-events: none;
+}
+.factory .beam {
+  stroke: var(--highlight);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+.factory .tag line {
+  stroke: var(--ink);
+  stroke-width: 0.75;
+  vector-effect: non-scaling-stroke;
+}
+.factory .tag rect {
+  fill: var(--ink);
+}
+.factory .tag text {
+  fill: var(--paper);
+  font-family: var(--font-code);
+  font-size: 7px;
+  letter-spacing: 0.08em;
 }
 
 /* Prism tokens in the docs' palette. Tokens stay inline: their class
@@ -280,10 +560,11 @@
 .code .token.prolog,
 .code .token.doctype {
   color: var(--code-comment);
+  font-style: italic;
 }
 .code .token.punctuation,
 .code .token.operator {
-  color: #a1a1aa;
+  color: var(--code-punctuation);
 }
 .code .token.keyword,
 .code .token.boolean,

@@ -1,8 +1,8 @@
 import { Link, getRouteApi, useMatch, useRouterState } from '@tanstack/react-router'
-import { Github, Menu, Monitor, Moon, Sun } from 'lucide-react'
+import { Menu, Monitor, Moon, Sun } from 'lucide-react'
 import { Fragment } from 'react'
 import { setMigration, useMigration, useTheme, write } from '@/lib/prefs'
-import { Logo } from './Logo'
+import { GitHubMark, Logo } from './Logo'
 
 const root = getRouteApi('__root__')
 
@@ -17,6 +17,8 @@ function Crumbs() {
     if (parts[1]) crumbs.push({ label: service?.title ?? parts[1] })
   } else if (parts[0] === 'map') {
     crumbs.push({ label: 'Map' })
+  } else if (parts[0] === 'libraries') {
+    crumbs.push({ label: 'Libraries' })
   } else if (index && parts[0] === 'categories' && parts[1]) {
     crumbs.push({ label: index.categories.find((c) => c.id === parts[1])?.title ?? parts[1] })
   } else if (index && parts[0]) {
@@ -27,7 +29,7 @@ function Crumbs() {
     for (const p of parts.slice(1)) crumbs.push({ label: p === 'php-api' ? 'PHP API' : p === 'root' ? 'Crate root' : p === 'functions' && parts.length === 2 ? 'PHP functions' : p })
   }
   return (
-    <div className="flex min-w-0 items-center gap-2 font-mono text-[12px]">
+    <div className="flex min-w-0 items-center gap-2.5 font-mono text-[11px] tracking-[0.08em] uppercase">
       {crumbs.map((c, i) => (
         <Fragment key={i}>
           <span className="text-muted-foreground/35">/</span>
@@ -52,13 +54,13 @@ function MigrationSwitch() {
       role="switch"
       aria-checked={on}
       onClick={() => setMigration(!on)}
-      className={`inline-flex h-8 items-center gap-2 rounded-full border px-2.5 font-mono text-[11.5px] transition-colors ${on ? 'border-migration-border bg-migration text-migration-ink' : 'border-border text-muted-foreground hover:border-ring hover:text-foreground'}`}
+      className={`inline-flex h-8 items-center gap-2 border px-2.5 font-mono text-[10.5px] tracking-[0.08em] uppercase transition-colors ${on ? 'border-migration-border bg-migration text-migration-ink' : 'border-border text-muted-foreground hover:border-foreground hover:text-foreground'}`}
       title="Show the PHP to Rust migration: PHP examples and signatures, conversion status and sync with PHP"
     >
-      <span className={`relative inline-flex h-4 w-7 flex-none rounded-full transition-colors ${on ? 'bg-amber-500' : 'bg-muted ring-1 ring-border ring-inset'}`}>
-        <span className={`absolute top-[2px] size-3 rounded-full bg-background shadow transition-all ${on ? 'left-[14px]' : 'left-[2px]'}`} />
+      <span className={`relative inline-flex h-3.5 w-6 flex-none border transition-colors ${on ? 'border-amber-600 bg-amber-500' : 'border-ring bg-transparent'}`}>
+        <span className={`absolute top-[2px] size-2 transition-all ${on ? 'left-[12px] bg-background' : 'left-[2px] bg-muted-foreground'}`} />
       </span>
-      <span>Migration</span>
+      <span className="sr-only sm:not-sr-only">Migration</span>
     </button>
   )
 }
@@ -71,7 +73,7 @@ function ThemeToggle() {
     <button
       type="button"
       onClick={() => write('theme', next)}
-      className="inline-flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+      className="inline-flex size-8 items-center justify-center text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
       aria-label={`Theme: ${theme}. Switch to ${next}.`}
       title={`Theme: ${theme}`}
     >
@@ -82,13 +84,11 @@ function ThemeToggle() {
 
 export function Header({ onMenu }: { onMenu: () => void }) {
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center border-b border-border bg-background/75 backdrop-blur-xl backdrop-saturate-150">
-      {/* A thin accent line along the top edge. */}
-      <span className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-highlight-line to-transparent" aria-hidden />
+    <header className="sticky top-0 z-30 flex h-14 items-center border-b border-border bg-background">
       <button type="button" onClick={onMenu} className="ml-2 inline-flex size-9 items-center justify-center rounded-md text-muted-foreground hover:bg-accent lg:hidden" aria-label="Open navigation">
         <Menu className="size-5" />
       </button>
-      <Link to="/" className="flex h-14 flex-none items-center gap-2 px-4 lg:w-[240px] lg:border-r lg:border-border lg:bg-sidebar/60">
+      <Link to="/" className="flex h-14 flex-none items-center gap-2 px-4 lg:w-[240px] lg:border-r lg:border-border">
         <Logo />
       </Link>
       <div className="hidden min-w-0 flex-1 px-4 md:block">
@@ -96,16 +96,16 @@ export function Header({ onMenu }: { onMenu: () => void }) {
       </div>
       <div className="ml-auto flex items-center gap-1.5 pr-3">
         <MigrationSwitch />
-        <span className="mx-1 hidden h-5 w-px bg-border sm:block" aria-hidden />
+        <span className="mx-0.5 h-5 w-px bg-border sm:mx-1" aria-hidden />
         <a
           href="https://github.com/appwrite/appwrite/tree/main/crates/utopia"
           target="_blank"
           rel="noopener"
-          className="hidden size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground sm:inline-flex"
+          className="inline-flex size-8 items-center justify-center text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
           aria-label="Source on GitHub"
           title="Source on GitHub"
         >
-          <Github className="size-4" />
+          <GitHubMark className="size-[17px]" />
         </a>
         <ThemeToggle />
       </div>

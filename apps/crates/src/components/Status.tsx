@@ -17,12 +17,12 @@ const BADGE: Record<Status, string> = {
 }
 
 export function StatusDot({ status, className = '' }: { status: Status; className?: string }) {
-  return <span className={`inline-block size-1.5 flex-none rounded-full ${DOT[status]} ${className}`} title={STATUS[status].label} />
+  return <span className={`inline-block size-1.5 flex-none ${DOT[status]} ${className}`} title={STATUS[status].label} />
 }
 
 export function StatusBadge({ status }: { status: Status }) {
   return (
-    <span className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 font-mono text-[10.5px] font-medium whitespace-nowrap ${BADGE[status]}`} title={STATUS[status].note}>
+    <span className={`inline-flex items-center gap-1.5 px-1.5 py-0.5 font-mono text-[10px] font-medium tracking-[0.06em] whitespace-nowrap uppercase ${BADGE[status]}`} title={STATUS[status].note}>
       <StatusDot status={status} />
       {STATUS[status].label}
     </span>

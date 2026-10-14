@@ -33,7 +33,7 @@ export function CopyButton({ text, label = 'Copy' }: { text: string; label?: str
           })
           .catch(() => undefined)
       }}
-      className="inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-xs whitespace-nowrap text-zinc-400 transition-colors hover:bg-white/10 hover:text-white"
+      className="inline-flex h-7 items-center gap-1.5 px-2 font-mono text-[11px] whitespace-nowrap text-zinc-500 transition-colors hover:bg-white/5 hover:text-zinc-100"
       aria-label={label}
       title={label}
     >
@@ -64,17 +64,20 @@ export function CodeBlock({
   const runnable = program && program.trim() !== code.trim()
   const text = full && program ? program : code
   return (
-    <div className={`min-w-0 overflow-hidden rounded-xl border bg-code shadow-[0_1px_0_oklch(1_0_0/0.04)_inset,0_16px_40px_-24px_oklch(0_0_0/0.5)] ${migration ? 'border-migration-border' : 'border-code-border ring-1 ring-black/5 dark:ring-0'}`}>
+    <div className={`min-w-0 overflow-hidden border bg-code ${migration ? 'border-migration-border' : 'border-code-border'}`}>
       <div className={`flex items-center gap-2 border-b py-1 pr-1 pl-3 ${migration ? 'border-migration-border bg-migration' : 'border-code-border bg-code-header'}`}>
-        <span className={`rounded px-1.5 py-px font-mono text-[10.5px] font-medium tracking-wide uppercase ${migration ? 'text-migration-ink' : 'bg-white/[0.06] text-code-header-fg'}`}>{LABEL[lang]}</span>
+        <span className={`flex items-center gap-2 font-mono text-[10px] font-medium tracking-[0.12em] uppercase ${migration ? 'text-migration-ink' : 'text-code-header-fg'}`}>
+          {migration ? null : <span className="marker" aria-hidden />}
+          {LABEL[lang]}
+        </span>
         {migration ? <span className="text-[10px] font-semibold tracking-wider text-migration-ink uppercase">migration</span> : null}
-        {title ? <span className="truncate font-mono text-[11.5px] text-zinc-400">{title}</span> : null}
+        {title ? <span className="truncate border-l border-code-border pl-2 font-mono text-[11px] text-zinc-500">{title}</span> : null}
         <span className="flex-1" />
         {runnable ? (
           <button
             type="button"
             onClick={() => setFull((f) => !f)}
-            className="inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-xs whitespace-nowrap text-zinc-400 transition-colors hover:bg-white/10 hover:text-white"
+            className="inline-flex h-7 items-center gap-1.5 px-2 font-mono text-[11px] whitespace-nowrap text-zinc-500 transition-colors hover:bg-white/5 hover:text-zinc-100"
             title={full ? 'Show the example' : 'Show the complete program Copy copies'}
           >
             {full ? <Minimize2 className="size-3.5" /> : <Maximize2 className="size-3.5" />}
@@ -83,10 +86,10 @@ export function CodeBlock({
         ) : null}
         <CopyButton text={program ?? code} label={program ? 'Copy program' : 'Copy'} />
       </div>
-      <pre className="code m-0 overflow-x-auto px-4 py-3.5 font-mono text-[12.5px] leading-[1.7]">
+      <pre className="code m-0 overflow-x-auto px-5 py-4 font-mono text-[12.5px] leading-[1.75]">
         <code dangerouslySetInnerHTML={{ __html: highlight(text, lang) }} />
       </pre>
-      {note ? <div className="border-t border-code-border px-4 py-1.5 font-mono text-[11px] text-zinc-500">{note}</div> : null}
+      {note ? <div className="border-t border-code-border px-5 py-2 font-mono text-[11px] text-zinc-500">{note}</div> : null}
     </div>
   )
 }
