@@ -20,7 +20,6 @@ use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Exception\Timeout;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Http\Http;
@@ -89,65 +88,17 @@ class XList extends Action
 
     public function action(string $databaseId, string $collectionId, array $queries, ?string $transactionId, bool $includeTotal, int $ttl, UtopiaResponse $response, Database $dbForProject, User $user, callable $getDatabasesDB, Context $usage, TransactionState $transactionState, Authorization $authorization, ?Http $utopia = null): void
     {
-        $isAPIKey = $user->isKey($authorization->getRoles());
-        $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
-
-        $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
-        if ($database->isEmpty() || $this->isDatabaseTypeMismatch($database) || (!$database->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
-            throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
-        }
-
-        $collection = $authorization->skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId));
-        if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
-            throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
-        }
-
-        try {
-            $queries = Query::parseQueries($queries);
-        } catch (QueryException $e) {
-            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
-        }
-
-        $dbForDatabases = $getDatabasesDB($database);
-        $cursor = Query::getCursorQueries($queries, false);
-        $cursor = \reset($cursor);
-
-        if ($cursor !== false) {
-            $validator = new Cursor();
-            if (!$validator->isValid($cursor)) {
-                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
-            }
-
-            $documentId = $cursor->getValue();
-
-            try {
-                $cursorDocument = $authorization->skip(fn () => $dbForDatabases->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId));
-            } catch (NotFoundException) {
-                // The collection metadata document exists but the backing store (e.g. a
-                // dedicated DocumentsDB shard) has no table for it. Treat this as a
-                // not-found on the collection so the caller sees a 404 instead of a 500.
-                throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
-            }
-
-            if ($cursorDocument->isEmpty()) {
-                $type = ucfirst($this->getContext());
-                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "$type '{$documentId}' for the 'cursor' value not found.");
-            }
-
-            $cursor->setValue($cursorDocument);
-        }
+        $context = $this->prepareListContext($databaseId, $collectionId, $queries, $dbForProject, $user, $getDatabasesDB, $authorization);
+        $database = $context['database'];
+        $collection = $context['collection'];
+        $dbForDatabases = $context['dbForDatabases'];
+        $queries = $context['queries'];
+        $collectionTableId = $context['collectionTableId'];
+        $find = $context['find'];
 
         $dbStart = \microtime(true);
 
         try {
-            $hasSelects = ! empty(Query::groupByType($queries)['selections']);
-            $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
-            // When there are no select queries, relationship loading is skipped on the
-            // underlying find() to avoid pulling related documents the caller did not ask for.
-            $find = $hasSelects
-                ? fn () => $dbForDatabases->find($collectionTableId, $queries)
-                : fn () => $dbForDatabases->skipRelationships(fn () => $dbForDatabases->find($collectionTableId, $queries));
-
             // Use transaction-aware document retrieval if transactionId is provided
             if ($transactionId !== null) {
                 $documents = $transactionState->listDocuments($database, $collectionTableId, $transactionId, $queries);

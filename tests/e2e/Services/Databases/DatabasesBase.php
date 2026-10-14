@@ -756,6 +756,123 @@ trait DatabasesBase
         return [$this->getRecordResource() => $documents['body'][$this->getRecordResource()], 'databaseId' => $databaseId];
     }
 
+    public function testExplanation(): void
+    {
+        if (!\method_exists(Database::class, 'withExplain')) {
+            $this->markTestSkipped('Requires utopia-php/database withExplain');
+        }
+
+        $data = $this->setupDocuments();
+        $databaseId = $data['databaseId'];
+        $containerId = $data['moviesId'];
+
+        $response = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $containerId).'/explanation', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::orderAsc('releaseYear')->toString(),
+                Query::limit(10)->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertIsArray($response['body']['queries']);
+        $this->assertNotEmpty($response['body']['queries']);
+
+        $assertNoInternalIdentifiers = function (array $queries): void {
+            $rawPlan = json_encode($queries) ?: '';
+
+            $this->assertStringNotContainsString('_perms', $rawPlan);
+            $this->assertStringNotContainsString('__metadata', $rawPlan);
+            $this->assertStringNotContainsString('_collection_', $rawPlan);
+            $this->assertDoesNotMatchRegularExpression('/_\d+_[\w-]{16,}/', $rawPlan);
+            $this->assertDoesNotMatchRegularExpression('/_[\w-]{16,}_[\w-]{16,}/', $rawPlan);
+            $this->assertDoesNotMatchRegularExpression('/"_\d+_\d+"/', $rawPlan);
+            $this->assertStringNotContainsString('_index_', $rawPlan);
+            $this->assertStringNotContainsString('appwrite.<collection>', $rawPlan);
+            $this->assertStringNotContainsString('$db', $rawPlan);
+            $this->assertStringNotContainsString('serverInfo', $rawPlan);
+            $this->assertStringNotContainsString('serverParameters', $rawPlan);
+            $this->assertStringNotContainsString('$clusterTime', $rawPlan);
+            $this->assertStringNotContainsString('operationTime', $rawPlan);
+            $this->assertStringNotContainsString('slotBasedPlan', $rawPlan);
+        };
+
+        $first = $response['body']['queries'][0];
+        $this->assertEquals('find', $first['purpose']);
+        $this->assertEquals($containerId, $first['context']['collection']);
+
+        $this->assertArrayHasKey('rowsScanned', $first['plan']);
+        $this->assertArrayHasKey('indexUsed', $first['plan']);
+        $this->assertArrayHasKey('estimatedCost', $first['plan']);
+        $this->assertFalse(isset($first['plan']['tree']));
+        $this->assertArrayHasKey('metrics', $first['plan']);
+        $this->assertArrayHasKey('access', $first['plan']);
+        $this->assertArrayHasKey('estimatedRecordsScanned', $first['plan']['metrics']);
+        $this->assertArrayHasKey('recordsReturned', $first['plan']['metrics']);
+        $this->assertArrayHasKey('durationMs', $first['plan']['metrics']);
+        $this->assertArrayHasKey('estimatedCost', $first['plan']['metrics']);
+        $this->assertArrayHasKey('type', $first['plan']['access']);
+        $this->assertArrayHasKey('index', $first['plan']['access']);
+        $this->assertContains($first['plan']['access']['type'], ['index_scan', 'full_scan', 'unknown']);
+
+        foreach ($response['body']['queries'] as $entry) {
+            $this->assertArrayNotHasKey('engine', $entry['plan']);
+            $this->assertFalse(isset($entry['plan']['tree']));
+        }
+
+        $purposes = array_column($response['body']['queries'], 'purpose');
+        $this->assertContains('find', $purposes);
+        $this->assertContains('count', $purposes);
+        $assertNoInternalIdentifiers($response['body']['queries']);
+
+        $treeResponse = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $containerId).'/explanation', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::orderAsc('releaseYear')->toString(),
+                Query::limit(10)->toString(),
+            ],
+            'tree' => true,
+        ]);
+
+        $this->assertEquals(200, $treeResponse['headers']['status-code']);
+        $this->assertArrayHasKey('tree', $treeResponse['body']['queries'][0]['plan']);
+        $this->assertNotNull($treeResponse['body']['queries'][0]['plan']['tree']);
+
+        foreach ($treeResponse['body']['queries'] as $entry) {
+            $this->assertArrayNotHasKey('engine', $entry['plan']);
+        }
+
+        $assertNoInternalIdentifiers($treeResponse['body']['queries']);
+    }
+
+    public function testExplanationSkipsCountWhenTotalIsFalse(): void
+    {
+        if (!\method_exists(Database::class, 'withExplain')) {
+            $this->markTestSkipped('Requires utopia-php/database withExplain');
+        }
+
+        $data = $this->setupDocuments();
+        $databaseId = $data['databaseId'];
+        $containerId = $data['moviesId'];
+
+        $response = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $containerId).'/explanation', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [Query::limit(10)->toString()],
+            'total' => false,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $purposes = array_column($response['body']['queries'], 'purpose');
+        $this->assertContains('find', $purposes);
+        $this->assertNotContains('count', $purposes);
+    }
+
     public function testCreateDatabase(): void
     {
         /**
