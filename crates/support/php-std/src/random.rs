@@ -4,16 +4,15 @@
 //! [`Mt19937`] is the generator `ext/random` keeps as the default engine. Seeded
 //! with [`Mt19937::new`] it produces exactly the sequence PHP produces after
 //! `mt_srand($seed)`, so code that picks at random can be replayed against
-//! PHP: [`Mt19937::next_u32`] is one engine output, [`Mt19937::mt_rand`] is
-//! `mt_rand()`, [`Mt19937::range`] is `mt_rand($min, $max)` (and every other
-//! bounded draw of the default engine), and [`Mt19937::array_rand`] is
-//! `array_rand()` of one key from a list.
+//! PHP: [`Mt19937::next_u32`] is one engine output, [`Mt19937::range`] is
+//! `mt_rand($min, $max)` (and every other bounded draw of the default
+//! engine), and [`Mt19937::array_rand`] is `array_rand()` of one key from a
+//! list.
 //!
 //! | PHP | Rust |
 //! |---|---|
 //! | `mt_srand($seed)` (`MT_RAND_MT19937`) | [`Mt19937::new`] |
 //! | the engine seeded from the OS on first use | [`Mt19937::from_entropy`] |
-//! | `mt_rand()` | [`Mt19937::mt_rand`] |
 //! | `mt_rand($min, $max)`, `php_mt_rand_range()` | [`Mt19937::range`] |
 //! | `array_rand($list)` | [`Mt19937::array_rand`] |
 //!
@@ -21,14 +20,12 @@
 //! use php_std::random::Mt19937;
 //!
 //! let mut mt = Mt19937::new(42);
-//! assert_eq!(mt.mt_rand(), 804318771);
-//! assert_eq!(mt.range(1, 6), 6);
+//! assert_eq!(mt.range(1, 6), 1);
 //! ```
 //!
 //! ```php
 //! mt_srand(42);
-//! echo mt_rand(), "\n";      // 804318771
-//! echo mt_rand(1, 6), "\n";  // 6
+//! echo mt_rand(1, 6), "\n"; // 1
 //! ```
 
 use crate::EngineError;
@@ -108,11 +105,6 @@ impl Mt19937 {
         s1 ^= (s1 << 7) & 0x9D2C_5680;
         s1 ^= (s1 << 15) & 0xEFC6_0000;
         s1 ^ (s1 >> 18)
-    }
-
-    /// `mt_rand()`: an output shifted right by one, in `0..=2147483647`.
-    pub fn mt_rand(&mut self) -> i64 {
-        i64::from(self.next_u32() >> 1)
     }
 
     /// `mt_rand($min, $max)`: uniform in `min..=max` without modulo bias

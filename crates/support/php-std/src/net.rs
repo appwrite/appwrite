@@ -1,14 +1,9 @@
-//! Network helpers: `ip2long`/`long2ip`, `inet_pton`/`inet_ntop` and
-//! `idn_to_ascii`/`idn_to_utf8`.
+//! Network helpers: `inet_pton`/`inet_ntop`.
 //!
 //! | PHP | Rust |
 //! |---|---|
-//! | `ip2long($ip)` | [`ip2long`] |
-//! | `long2ip($ip)` | [`long2ip`] |
 //! | `inet_pton($ip)` | [`inet_pton`] |
 //! | `inet_ntop($ip)` | [`inet_ntop`] |
-//! | `idn_to_ascii($domain, $flags, INTL_IDNA_VARIANT_UTS46)` | [`idn::to_ascii`] |
-//! | `idn_to_utf8($domain, $flags, INTL_IDNA_VARIANT_UTS46)` | [`idn::to_utf8`] |
 //!
 //! PHP's address functions call the C library; the dev image is Alpine, so
 //! these are ports of musl's `inet_pton`/`inet_ntop` (`src/network/`), whose
@@ -18,8 +13,6 @@
 //! `bin/compat fuzz php-std` (operations `net.*`).
 
 use std::fmt;
-
-pub mod idn;
 
 /// PHP's `ValueError` for a string argument that must not contain NUL bytes
 /// (`Z_PARAM_PATH`): `"<function>(): Argument #1 ($ip) must not contain any
@@ -47,24 +40,6 @@ impl std::error::Error for NulByteError {}
 
 fn check_nul(function: &'static str, ip: &[u8]) -> Result<(), NulByteError> {
     if ip.contains(&0) { Err(NulByteError { function }) } else { Ok(()) }
-}
-
-/// PHP `ip2long($ip)`: the address as an unsigned 32-bit integer, `None`
-/// where PHP returns `false`. Only strict dotted quads parse (musl
-/// `inet_pton(AF_INET)`: four decimal octets of up to three digits, no
-/// leading zeros, no surrounding space).
-pub fn ip2long(ip: &[u8]) -> Result<Option<u32>, NulByteError> {
-    check_nul("ip2long", ip)?;
-    if ip.is_empty() {
-        return Ok(None);
-    }
-    Ok(pton4(ip).map(u32::from_be_bytes))
-}
-
-/// PHP `long2ip($ip)`: the low 32 bits of `ip` as a dotted quad.
-pub fn long2ip(ip: i64) -> String {
-    let b = (ip as u32).to_be_bytes();
-    format!("{}.{}.{}.{}", b[0], b[1], b[2], b[3])
 }
 
 /// A packed address from [`inet_pton`].
@@ -272,16 +247,6 @@ fn ntop6(a: &[u8]) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn ipv4() {
-        assert_eq!(ip2long(b"1.2.3.4"), Ok(Some(16909060)));
-        assert_eq!(ip2long(b"01.2.3.4"), Ok(None));
-        assert_eq!(ip2long(b"1.2.3"), Ok(None));
-        assert!(ip2long(b"1.2.3.4\0").is_err());
-        assert_eq!(long2ip(-1), "255.255.255.255");
-        assert_eq!(long2ip(4294967296), "0.0.0.0");
-    }
 
     #[test]
     fn ipv6() {

@@ -1,26 +1,14 @@
 //! PHP value semantics (type juggling) on top of `serde_json::Value`.
 //!
 //! Request parameters reach PHP code as PHP values. These functions answer
-//! the questions libraries ask about them (`is_array`, `is_numeric`,
-//! truthiness, string casts, `==`) the way the engine does.
+//! the questions libraries ask about them (`is_numeric`, truthiness, string
+//! casts, `==`) the way the engine does.
 
 use std::cmp::Ordering;
 
 use serde_json::{Map, Value};
 
 use crate::number;
-
-/// PHP `is_array`: JSON arrays and *non-empty* objects.
-///
-/// Appwrite decodes request bodies so that empty objects (`{}`) stay
-/// `stdClass` (not an array) while other objects become associative arrays.
-pub fn is_array(value: &Value) -> bool {
-    match value {
-        Value::Array(_) => true,
-        Value::Object(map) => !map.is_empty(),
-        _ => false,
-    }
-}
 
 /// An empty JSON object: a `stdClass` instance in PHP.
 pub fn is_object(value: &Value) -> bool {
@@ -332,14 +320,6 @@ mod tests {
         assert_eq!(numeric_str("0x1A"), None);
         assert_eq!(numeric_str(""), None);
         assert_eq!(numeric_str("."), None);
-    }
-
-    #[test]
-    fn php_arrays() {
-        assert!(is_array(&json!([])));
-        assert!(is_array(&json!({"a": 1})));
-        assert!(!is_array(&json!({})));
-        assert!(!is_array(&json!("x")));
     }
 
     #[test]

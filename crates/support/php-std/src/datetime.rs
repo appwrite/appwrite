@@ -53,10 +53,7 @@ use serde_json::{Map, Value};
 
 pub use parse::{Message, Messages};
 use timelib::{RelTime, Time, UNSET, ZONETYPE_ABBR, ZONETYPE_ID, ZONETYPE_OFFSET};
-pub use tz::{
-    Abbreviation, TzInfo, abbreviations as abbreviation_list, identifiers, is_valid_id, timezone_name_from_abbr,
-    version,
-};
+pub use tz::{Abbreviation, TzInfo, abbreviations as abbreviation_list, identifiers, is_valid_id, version};
 
 impl TzInfo {
     /// The `UTC` zone (Appwrite's default timezone).
@@ -734,18 +731,6 @@ pub struct ParsedDate {
 pub fn date_parse(datetime: &[u8]) -> ParsedDate {
     let (time, messages) = parse::strtotime(datetime);
     ParsedDate { time, messages }
-}
-
-/// `date_parse_from_format($format, $datetime)`.
-pub fn date_parse_from_format(format: &[u8], datetime: &[u8]) -> Result<ParsedDate, Error> {
-    if datetime.contains(&0) {
-        return Err(Error::new(
-            ErrorKind::Value,
-            "date_parse_from_format(): Argument #2 ($datetime) must not contain any null bytes",
-        ));
-    }
-    let (time, messages) = from_format::parse_from_format(format, datetime);
-    Ok(ParsedDate { time, messages })
 }
 
 impl Messages {

@@ -627,11 +627,6 @@ pub fn abbr_search(word: &[u8], gmtoffset: i64, isdst: i32) -> Option<Abbreviati
     FALLBACKMAP.iter().find(|r| i64::from(r.2) == gmtoffset && r.1 == isdst).map(row)
 }
 
-/// `timezone_name_from_abbr($abbr, $offset, $isdst)`.
-pub fn timezone_name_from_abbr(abbr: &str, gmtoffset: i64, isdst: i64) -> Option<&'static str> {
-    abbr_search(abbr.as_bytes(), gmtoffset, isdst as i32).and_then(|a| a.full_tz_name)
-}
-
 /// The rows of `timezonemap.h` (`DateTimeZone::listAbbreviations()` data).
 pub fn abbreviations() -> impl Iterator<Item = Abbreviation> {
     TIMEZONEMAP.iter().map(row)

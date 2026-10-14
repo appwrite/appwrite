@@ -1,6 +1,6 @@
 //! PHP's PCRE functions: `preg_match`, `preg_match_all`, `preg_replace`,
-//! `preg_replace_callback`, `preg_split`, `preg_quote` and `preg_grep`, on
-//! PCRE2 10.44 with its JIT, the library and version PHP 8.5 bundles.
+//! `preg_split` and `preg_quote`, on PCRE2 10.44 with its JIT, the library
+//! and version PHP 8.5 bundles.
 //!
 //! | PHP | Rust |
 //! |---|---|
@@ -8,10 +8,8 @@
 //! | `preg_match($p, $s)` | [`preg_match_bare`] |
 //! | `preg_match_all($p, $s, $m, $flags, $offset)` | [`preg_match_all`] |
 //! | `preg_replace($p, $r, $s, $limit, $count)` | [`preg_replace`] |
-//! | `preg_replace_callback($p, $fn, $s, $limit, $count, $flags)` | [`preg_replace_callback`] |
 //! | `preg_split($p, $s, $limit, $flags)` | [`preg_split`] |
 //! | `preg_quote($s, $delimiter)` | [`preg_quote`] |
-//! | `preg_grep($p, $array, $flags)` | [`preg_grep`] |
 //! | `preg_match($p, $s, $m) === 1` on a pattern compiled once | [`Regex::compiled`], [`Regex::captures`], [`Regex::is_match`] |
 //! | `preg_last_error()` / `preg_last_error_msg()` | [`PregError`] in every result |
 //!
@@ -64,8 +62,6 @@ pub const PREG_SPLIT_NO_EMPTY: i64 = 1;
 pub const PREG_SPLIT_DELIM_CAPTURE: i64 = 2;
 /// Returns each `preg_split()` piece with its byte offset, as PHP's `PREG_SPLIT_OFFSET_CAPTURE`.
 pub const PREG_SPLIT_OFFSET_CAPTURE: i64 = 4;
-/// Returns the entries that do not match from `preg_grep()`, as PHP's `PREG_GREP_INVERT`.
-pub const PREG_GREP_INVERT: i64 = 1;
 
 /// A PHP array key.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -1052,18 +1048,12 @@ fn expand_replacement(out: &mut Vec<u8>, replace: &[u8], subject: &[u8], ov: &[u
     }
 }
 
-/// The replacement of [`replace_impl`]: a template or a callback.
-enum Replacement<'a, 'f> {
-    Template(&'a [u8]),
-    Callback { func: &'f mut dyn FnMut(&Array) -> Vec<u8>, flags: i64 },
-}
-
-/// `php_pcre_replace_impl()` / `php_pcre_replace_func_impl()`: `None` on
-/// error (`preg_last_error()` set in `error`).
+/// `php_pcre_replace_impl()`: `None` on error (`preg_last_error()` set in
+/// `error`).
 fn replace_impl(
     re: &Regex,
     subject: &[u8],
-    replacement: &mut Replacement<'_, '_>,
+    replacement: &[u8],
     mut limit: usize,
     replace_count: &mut i64,
     error: &mut PregError,
@@ -1092,14 +1082,7 @@ fn replace_impl(
                     *replace_count += 1;
                     let mut out = result.take().unwrap_or_default();
                     out.extend_from_slice(&subject[piece..ov0]);
-                    match replacement {
-                        Replacement::Template(r) => expand_replacement(&mut out, r, subject, session.ovector(n)),
-                        Replacement::Callback { func, flags } => {
-                            let mut arg = Array::new();
-                            re.populate_subpat_array(&mut arg, subject, &session, n, *flags);
-                            out.extend_from_slice(&func(&arg));
-                        }
-                    }
+                    expand_replacement(&mut out, replacement, subject, session.ovector(n));
                     result = Some(out);
                     limit -= 1;
                     start_offset = ov1;
@@ -1159,8 +1142,8 @@ pub enum StrOrArray<'a> {
     Array(Vec<(Key, Vec<u8>)>),
 }
 
-/// What [`preg_replace`] and [`preg_replace_callback`] return: the result
-/// (`Str`, `Array` or `Null`) and `$count`.
+/// What [`preg_replace`] returns: the result (`Str`, `Array` or `Null`) and
+/// `$count`.
 #[derive(Debug, Clone, PartialEq)]
 pub struct ReplaceResult {
     /// The return value: a string, an array, or `null` on failure.
@@ -1180,7 +1163,7 @@ fn replace_one(
     func: &str,
     regex: &[u8],
     subject: &[u8],
-    replacement: &mut Replacement<'_, '_>,
+    replacement: &[u8],
     limit: i64,
     count: &mut i64,
     error: &mut PregError,
@@ -1222,7 +1205,7 @@ pub fn preg_replace(
             match pattern {
                 StrOrArray::Str(p) => {
                     let StrOrArray::Str(r) = replacement else { unreachable!() };
-                    replace_one("preg_replace", p, subject, &mut Replacement::Template(r), limit, count, error, warning)
+                    replace_one("preg_replace", p, subject, r, limit, count, error, warning)
                 }
                 StrOrArray::Array(patterns) => {
                     let mut current = subject.to_vec();
@@ -1236,16 +1219,7 @@ pub fn preg_replace(
                                 r
                             }
                         };
-                        current = replace_one(
-                            "preg_replace",
-                            p,
-                            &current,
-                            &mut Replacement::Template(r),
-                            limit,
-                            count,
-                            error,
-                            warning,
-                        )?;
+                        current = replace_one("preg_replace", p, &current, r, limit, count, error, warning)?;
                     }
                     Some(current)
                 }
@@ -1267,69 +1241,6 @@ pub fn preg_replace(
         }
     };
     Ok(Preg { value: ReplaceResult { result, count }, error, warning })
-}
-
-/// `preg_replace_callback($pattern, $callback, $subject, $limit, $count,
-/// $flags)`: `callback` receives the match array (shaped by `flags`) and
-/// returns the replacement.
-pub fn preg_replace_callback(
-    pattern: &StrOrArray<'_>,
-    callback: &mut dyn FnMut(&Array) -> Vec<u8>,
-    subject: &StrOrArray<'_>,
-    limit: i64,
-    flags: i64,
-) -> Preg<ReplaceResult> {
-    let mut error = preg_last_error();
-    let mut warning = None;
-    let mut count = 0i64;
-    let func = "preg_replace_callback";
-    let mut in_subject =
-        |subject: &[u8], count: &mut i64, error: &mut PregError, warning: &mut Option<Vec<u8>>| -> Option<Vec<u8>> {
-            match pattern {
-                StrOrArray::Str(p) => replace_one(
-                    func,
-                    p,
-                    subject,
-                    &mut Replacement::Callback { func: callback, flags },
-                    limit,
-                    count,
-                    error,
-                    warning,
-                ),
-                StrOrArray::Array(patterns) => {
-                    let mut current = subject.to_vec();
-                    for (_, p) in patterns {
-                        current = replace_one(
-                            func,
-                            p,
-                            &current,
-                            &mut Replacement::Callback { func: callback, flags },
-                            limit,
-                            count,
-                            error,
-                            warning,
-                        )?;
-                    }
-                    Some(current)
-                }
-            }
-        };
-    let result = match subject {
-        StrOrArray::Str(s) => match in_subject(s, &mut count, &mut error, &mut warning) {
-            Some(r) => Value::Str(r),
-            None => Value::Null,
-        },
-        StrOrArray::Array(entries) => {
-            let mut out = Array::new();
-            for (k, s) in entries {
-                if let Some(r) = in_subject(s, &mut count, &mut error, &mut warning) {
-                    out.update(k.clone(), Value::Str(r));
-                }
-            }
-            Value::Array(out)
-        }
-    };
-    Preg { value: ReplaceResult { result, count }, error, warning }
 }
 
 /// `preg_split($pattern, $subject, $limit, $flags)`: an array, or
@@ -1466,38 +1377,6 @@ pub fn preg_quote(s: &[u8], delimiter: Option<&[u8]>) -> Vec<u8> {
     out
 }
 
-/// `preg_grep($pattern, $array, $flags)`: the entries (keys kept) that match
-/// (or, with `PREG_GREP_INVERT`, that do not), or `Bool(false)`.
-pub fn preg_grep(pattern: &[u8], input: &[(Key, Vec<u8>)], flags: i64) -> Preg<Value> {
-    let (re, warning) = match cached("preg_grep", pattern) {
-        Ok(r) => r,
-        Err(w) => return Preg { value: Value::Bool(false), error: PregError::Internal, warning: Some(w) },
-    };
-    let invert = flags & PREG_GREP_INVERT != 0;
-    let mut out = Array::new();
-    let mut error = set_last_error(PregError::None);
-    let mut session = re.session();
-    for (k, s) in input {
-        match re.call(&mut session, s, 0, re.first_call(false)) {
-            Ok(Some(_)) => {
-                if !invert {
-                    out.update(k.clone(), Value::Str(s.clone()));
-                }
-            }
-            Ok(None) => {
-                if invert {
-                    out.update(k.clone(), Value::Str(s.clone()));
-                }
-            }
-            Err(e) => {
-                error = set_last_error(PregError::from_pcre(e));
-                break;
-            }
-        }
-    }
-    Preg { value: Value::Array(out), error, warning }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1564,25 +1443,6 @@ mod tests {
         assert_eq!(r.error, PregError::JitStackLimit);
         let r = preg_match(b"/./u", b"\xff", 0, 0).unwrap();
         assert_eq!(r.error, PregError::BadUtf8);
-    }
-
-    #[test]
-    fn nested_calls() {
-        let r = preg_replace_callback(
-            &StrOrArray::Str(b"/\\w+/"),
-            &mut |m| {
-                let Some(Value::Str(word)) = m.get(&Key::Int(0)) else { return Vec::new() };
-                let inner = preg_replace(&StrOrArray::Str(b"/o/"), &StrOrArray::Str(b"0"), &StrOrArray::Str(word), -1);
-                match inner.unwrap().value.result {
-                    Value::Str(s) => s,
-                    _ => Vec::new(),
-                }
-            },
-            &StrOrArray::Str(b"foo boo"),
-            -1,
-            0,
-        );
-        assert_eq!(r.value.result, Value::Str(b"f00 b00".to_vec()));
     }
 
     #[test]

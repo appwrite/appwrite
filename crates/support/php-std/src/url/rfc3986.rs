@@ -2,21 +2,20 @@
 //!
 //! PHP parses with uriparser 1.0 (`uriParseSingleUriExMmA`, the RFC 3986
 //! `URI-reference` grammar), keeps the parsed URI for the `getRaw*()`
-//! getters, and reads the normalized getters (`getScheme()`, `getHost()`,
-//! ...) from a copy passed through `uriNormalizeSyntaxExMmA` with every
+//! getters, and reads the normalized getters (`getScheme()`, `getHost()`)
+//! from a copy passed through `uriNormalizeSyntaxExMmA` with every
 //! normalization enabled. This module ports the parser state machine
-//! (`UriParse.c`), the normalization (`UriNormalize.c`, `UriCommon.c`) and
-//! the recomposition used by `toString()`/`toRawString()` (`UriRecompose.c`)
-//! byte for byte, including their quirks:
+//! (`UriParse.c`) and the scheme and host normalization (`UriNormalize.c`,
+//! `UriCommon.c`) byte for byte, including their quirks:
 //!
-//! - an IPv6 host is recomposed in full, uncompressed form
-//!   (`[::1]` becomes `[0000:0000:0000:0000:0000:0000:0000:0001]`);
 //! - host lowercasing stops at a `%` in the last three bytes of the host;
 //! - a port longer than 20 digits or above `PHP_INT_MAX` makes `parse()`
 //!   return `null` (PHP's own check).
 //!
-//! Base URIs (`parse($uri, $baseUrl)`), `resolve()` and the `with*()`
-//! modifiers are not ported: no Utopia library uses them.
+//! The normalized user info, path, port, query and fragment getters,
+//! `toString()`/`toRawString()`, base URIs (`parse($uri, $baseUrl)`),
+//! `resolve()` and the `with*()` modifiers are not ported: no Utopia library
+//! uses them.
 
 use std::borrow::Cow;
 use std::ops::Range;
@@ -93,29 +92,14 @@ impl<'a> Uri<'a> {
         self.opt(&self.user_info).map(Cow::Borrowed)
     }
 
-    /// `getUserInfo()`: percent-encoding normalized.
-    pub fn user_info(&self) -> Option<Cow<'a, [u8]>> {
-        self.opt(&self.user_info).map(fix_percent_encoding)
-    }
-
     /// `getRawUsername()`
     pub fn raw_username(&self) -> Option<Cow<'a, [u8]>> {
         self.raw_user_info().map(username)
     }
 
-    /// `getUsername()`
-    pub fn username(&self) -> Option<Cow<'a, [u8]>> {
-        self.user_info().map(username)
-    }
-
     /// `getRawPassword()`
     pub fn raw_password(&self) -> Option<Cow<'a, [u8]>> {
         self.raw_user_info().map(password)
-    }
-
-    /// `getPassword()`
-    pub fn password(&self) -> Option<Cow<'a, [u8]>> {
-        self.user_info().map(password)
     }
 
     /// `getRawHost()`: IP literals keep their brackets.
@@ -152,68 +136,15 @@ impl<'a> Uri<'a> {
         }
     }
 
-    /// `getPort()` (and `getRawPort()`): `None` without a port or with an
-    /// empty one (`http://h:`).
-    pub fn port(&self) -> Option<i64> {
-        self.port.as_ref().filter(|r| !r.is_empty()).and_then(|r| port_value(self.slice(r)))
-    }
-
     /// `getRawPath()`
     pub fn raw_path(&self) -> Cow<'a, [u8]> {
         let segments: Vec<Cow<'a, [u8]>> = self.segments.iter().map(|r| Cow::Borrowed(self.slice(r))).collect();
         Cow::Owned(self.join_path(&segments, self.absolute_path))
     }
 
-    /// `getPath()`: percent-encoding normalized, dot segments removed.
-    pub fn path(&self) -> Cow<'a, [u8]> {
-        Cow::Owned(self.join_path(&self.normalized_segments(), self.absolute_path))
-    }
-
     /// `getRawQuery()`
     pub fn raw_query(&self) -> Option<Cow<'a, [u8]>> {
         self.opt(&self.query).map(Cow::Borrowed)
-    }
-
-    /// `getQuery()`
-    pub fn query(&self) -> Option<Cow<'a, [u8]>> {
-        self.opt(&self.query).map(fix_percent_encoding)
-    }
-
-    /// `getRawFragment()`
-    pub fn raw_fragment(&self) -> Option<Cow<'a, [u8]>> {
-        self.opt(&self.fragment).map(Cow::Borrowed)
-    }
-
-    /// `getFragment()`
-    pub fn fragment(&self) -> Option<Cow<'a, [u8]>> {
-        self.opt(&self.fragment).map(fix_percent_encoding)
-    }
-
-    /// `toRawString()`
-    pub fn to_raw_string(&self) -> Vec<u8> {
-        let segments: Vec<Cow<'a, [u8]>> = self.segments.iter().map(|r| Cow::Borrowed(self.slice(r))).collect();
-        self.recompose(
-            self.raw_scheme(),
-            self.raw_user_info(),
-            self.host.as_ref().map(|h| Cow::Borrowed(self.slice(&h.text))),
-            self.port.as_ref().map(|r| Cow::Borrowed(self.slice(r))),
-            &segments,
-            self.raw_query(),
-            self.raw_fragment(),
-        )
-    }
-
-    /// `toString()`: the normalized URI.
-    pub fn to_string_normalized(&self) -> Vec<u8> {
-        self.recompose(
-            self.scheme(),
-            self.user_info(),
-            self.host.as_ref().map(|h| self.normalized_host_text(h)),
-            self.port.as_ref().map(|r| Cow::Borrowed(drop_leading_zeros(self.slice(r)))),
-            &self.normalized_segments(),
-            self.query(),
-            self.fragment(),
-        )
     }
 
     fn has_host(&self) -> bool {
@@ -233,84 +164,8 @@ impl<'a> Uri<'a> {
         }
         out
     }
-
-    /// The path segments after `URI_NORMALIZE_PATH`.
-    fn normalized_segments(&self) -> Vec<Cow<'a, [u8]>> {
-        let mut segments: Vec<Cow<'a, [u8]>> =
-            self.segments.iter().map(|r| fix_percent_encoding(self.slice(r))).collect();
-        let relative = self.scheme.is_none() && !self.absolute_path;
-        remove_dot_segments(&mut segments, relative, self.has_host(), self.absolute_path);
-        // FixEmptyTrailSegment
-        if !self.absolute_path && !self.has_host() && segments.len() == 1 && segments[0].is_empty() {
-            segments.clear();
-        }
-        segments
-    }
-
-    /// `uriToStringA` (`UriRecompose.c`).
-    #[allow(clippy::too_many_arguments)]
-    fn recompose(
-        &self,
-        scheme: Option<Cow<'_, [u8]>>,
-        user_info: Option<Cow<'_, [u8]>>,
-        host_text: Option<Cow<'_, [u8]>>,
-        port: Option<Cow<'_, [u8]>>,
-        segments: &[Cow<'_, [u8]>],
-        query: Option<Cow<'_, [u8]>>,
-        fragment: Option<Cow<'_, [u8]>>,
-    ) -> Vec<u8> {
-        let mut out = Vec::with_capacity(self.input.len() + 16);
-        if let Some(scheme) = scheme {
-            out.extend_from_slice(&scheme);
-            out.push(b':');
-        }
-        if let (Some(host), Some(text)) = (&self.host, host_text) {
-            out.extend_from_slice(b"//");
-            if let Some(user_info) = user_info {
-                out.extend_from_slice(&user_info);
-                out.push(b'@');
-            }
-            match &host.kind {
-                HostKind::Name => out.extend_from_slice(&text),
-                HostKind::Ip6(bytes) => {
-                    out.push(b'[');
-                    for (i, b) in bytes.iter().enumerate() {
-                        out.push(HEX_LOWER[usize::from(b >> 4)]);
-                        out.push(HEX_LOWER[usize::from(b & 15)]);
-                        if i & 1 == 1 && i < 15 {
-                            out.push(b':');
-                        }
-                    }
-                    out.push(b']');
-                }
-                HostKind::IpFuture => {
-                    out.push(b'[');
-                    out.extend_from_slice(&text);
-                    out.push(b']');
-                }
-            }
-            if let Some(port) = port {
-                out.push(b':');
-                out.extend_from_slice(&port);
-            }
-        }
-        if self.absolute_path || (!segments.is_empty() && self.has_host()) {
-            out.push(b'/');
-        }
-        join_segments(&mut out, segments);
-        if let Some(query) = query {
-            out.push(b'?');
-            out.extend_from_slice(&query);
-        }
-        if let Some(fragment) = fragment {
-            out.push(b'#');
-            out.extend_from_slice(&fragment);
-        }
-        out
-    }
 }
 
-const HEX_LOWER: &[u8; 16] = b"0123456789abcdef";
 const HEX_UPPER: &[u8; 16] = b"0123456789ABCDEF";
 
 fn join_segments(out: &mut Vec<u8>, segments: &[Cow<'_, [u8]>]) {
@@ -366,15 +221,6 @@ fn port_value(digits: &[u8]) -> Option<i64> {
         v = v.saturating_mul(10).saturating_add(u64::from(b - b'0'));
     }
     i64::try_from(v).ok()
-}
-
-/// `DropLeadingZerosInplace`: `"0080"` becomes `"80"`, `"000"` becomes `"0"`.
-fn drop_leading_zeros(port: &[u8]) -> &[u8] {
-    if port.is_empty() {
-        return port;
-    }
-    let zeros = port.iter().take_while(|&&b| b == b'0').count();
-    if zeros == port.len() { &port[port.len() - 1..] } else { &port[zeros..] }
 }
 
 fn lowercase(s: &[u8]) -> Cow<'_, [u8]> {
@@ -446,90 +292,6 @@ fn fix_percent_encoding(s: &[u8]) -> Cow<'_, [u8]> {
     }
     out.extend_from_slice(&s[i..]);
     Cow::Owned(out)
-}
-
-/// `RemoveDotSegmentsEx` over a segment list.
-fn remove_dot_segments(segments: &mut Vec<Cow<'_, [u8]>>, relative: bool, has_host: bool, absolute: bool) {
-    let mut i = 0;
-    while i < segments.len() {
-        let has_next = i + 1 < segments.len();
-        let prev = i.checked_sub(1);
-        let seg: &[u8] = &segments[i];
-        let mut removed = false;
-        if seg == b"." {
-            let mut remove = true;
-            // A leading "." stays before an empty segment (no host) or, in a
-            // relative reference, before a segment with a colon.
-            if i == 0
-                && has_next
-                && ((segments[1].is_empty() && !has_host) || (relative && segments[1].contains(&b':')))
-            {
-                remove = false;
-            }
-            if remove {
-                removed = true;
-                if has_next {
-                    segments.remove(i);
-                } else {
-                    if prev.is_none() && !has_host {
-                        segments.remove(i);
-                    } else {
-                        segments[i] = Cow::Borrowed(&[]);
-                    }
-                    i = segments.len();
-                }
-            }
-        } else if seg == b".." {
-            let mut remove = true;
-            if relative {
-                match prev {
-                    None => remove = false,
-                    Some(p) if &*segments[p] == b".." => remove = false,
-                    _ => {}
-                }
-            }
-            if remove {
-                removed = true;
-                match prev {
-                    Some(p) => {
-                        if p > 0 {
-                            // prevPrev exists: drop prev and walker.
-                            segments.drain(p..=i);
-                            if has_next {
-                                i = p;
-                            } else {
-                                segments.push(Cow::Borrowed(&[]));
-                                i = segments.len();
-                            }
-                        } else if has_next {
-                            segments.drain(0..=1);
-                            i = 0;
-                        } else {
-                            segments.clear();
-                            segments.push(Cow::Borrowed(&[]));
-                            i = segments.len();
-                        }
-                    }
-                    None => {
-                        if has_next {
-                            segments.remove(0);
-                            i = 0;
-                        } else {
-                            if absolute {
-                                segments.clear();
-                            } else {
-                                segments[0] = Cow::Borrowed(&[]);
-                            }
-                            i = segments.len();
-                        }
-                    }
-                }
-            }
-        }
-        if !removed {
-            i += 1;
-        }
-    }
 }
 
 /// The uriparser state machine (`UriParse.c`), positions instead of pointers.
@@ -1269,24 +1031,6 @@ mod tests {
         assert_eq!(s(u.scheme()).unwrap(), "http");
         assert_eq!(s(u.raw_scheme()).unwrap(), "HTTP");
         assert_eq!(s(u.host()).unwrap(), "example.com");
-        assert_eq!(u.port(), Some(80));
-        assert_eq!(String::from_utf8(u.path().into_owned()).unwrap(), "/A/~%2F");
-        assert_eq!(s(u.user_info()).unwrap(), "User:PAss");
-        assert_eq!(s(u.password()).unwrap(), "PAss");
-        assert_eq!(
-            String::from_utf8(u.to_string_normalized()).unwrap(),
-            "http://User:PAss@example.com:80/A/~%2F?QA#Fa"
-        );
-    }
-
-    #[test]
-    fn ipv6_recomposes_expanded() {
-        let u = Uri::parse(b"http://[::1]:80/a").unwrap();
-        assert_eq!(s(u.host()).unwrap(), "[::1]");
-        assert_eq!(
-            String::from_utf8(u.to_raw_string()).unwrap(),
-            "http://[0000:0000:0000:0000:0000:0000:0000:0001]:80/a"
-        );
     }
 
     #[test]
@@ -1295,14 +1039,5 @@ mod tests {
         assert!(Uri::parse(b"http://h:99999999999999999999").is_none());
         assert!(Uri::parse(b"a b").is_none());
         assert!(Uri::parse(b"").is_some());
-    }
-
-    #[test]
-    fn dot_segments() {
-        let path = |u: &str| String::from_utf8(Uri::parse(u.as_bytes()).unwrap().path().into_owned()).unwrap();
-        assert_eq!(path("a/../.."), "..");
-        assert_eq!(path("/./a"), "/a");
-        assert_eq!(path("./a:b"), "./a:b");
-        assert_eq!(path("a/./b"), "a/b");
     }
 }

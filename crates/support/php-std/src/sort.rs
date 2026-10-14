@@ -1,17 +1,16 @@
-//! PHP's array sorting and set functions: `sort`, `rsort`, `asort`, `arsort`,
-//! `ksort`, `krsort`, `array_unique`, `array_diff`, `array_diff_key`,
-//! `array_intersect`, `in_array` and `array_search`, with the `SORT_*` flags.
+//! PHP's array sorting and set functions: `sort`, `ksort`, `array_unique`,
+//! `array_diff`, `array_intersect`, `in_array` and `array_search`, with the
+//! `SORT_*` flags.
 //!
 //! Every function here is checked against the engine by
 //! `bin/compat fuzz php-std` (operations `sort.*`).
 //!
 //! | PHP | Rust |
 //! |---|---|
-//! | `sort($a, $flags)` / `rsort` | [`sort`] / [`rsort`] |
-//! | `asort($a, $flags)` / `arsort` | [`asort`] / [`arsort`] |
-//! | `ksort($a, $flags)` / `krsort` | [`ksort`] / [`krsort`] |
+//! | `sort($a, $flags)` | [`sort`] |
+//! | `ksort($a, $flags)` | [`ksort`] |
 //! | `array_unique($a, $flags)` | [`array_unique`] |
-//! | `array_diff($a, ...$b)`, `array_diff_key`, `array_intersect` | [`array_diff`], [`array_diff_key`], [`array_intersect`] |
+//! | `array_diff($a, ...$b)`, `array_intersect` | [`array_diff`], [`array_intersect`] |
 //! | `in_array($n, $h, $strict)`, `array_search` | [`in_array`], [`array_search`] |
 //! | `SORT_REGULAR`, `SORT_NUMERIC`, `SORT_STRING`, `SORT_FLAG_CASE`, `SORT_NATURAL`, `SORT_LOCALE_STRING` | [`SortFlags`] |
 //!
@@ -563,7 +562,7 @@ fn compare_keys(flags: SortFlags, a: KeyRef<'_>, b: KeyRef<'_>) -> i32 {
 }
 
 // ---------------------------------------------------------------------------
-// sort, rsort, asort, arsort, ksort, krsort
+// sort, ksort
 // ---------------------------------------------------------------------------
 
 /// The stable comparator: the unstable result (negated for a reverse
@@ -611,33 +610,13 @@ pub fn sort<X: Extension>(a: &mut Array<X>, flags: SortFlags) -> Result<(), Engi
     sort_values(a, flags, false, true)
 }
 
-/// `rsort($a, $flags)`.
-pub fn rsort<X: Extension>(a: &mut Array<X>, flags: SortFlags) -> Result<(), EngineError> {
-    sort_values(a, flags, true, true)
-}
-
-/// `asort($a, $flags)`: values in order, keys kept.
-pub fn asort<X: Extension>(a: &mut Array<X>, flags: SortFlags) -> Result<(), EngineError> {
-    sort_values(a, flags, false, false)
-}
-
-/// `arsort($a, $flags)`.
-pub fn arsort<X: Extension>(a: &mut Array<X>, flags: SortFlags) -> Result<(), EngineError> {
-    sort_values(a, flags, true, false)
-}
-
 /// `ksort($a, $flags)`.
 pub fn ksort<X: Extension>(a: &mut Array<X>, flags: SortFlags) {
     sort_keys(a, flags, false)
 }
 
-/// `krsort($a, $flags)`.
-pub fn krsort<X: Extension>(a: &mut Array<X>, flags: SortFlags) {
-    sort_keys(a, flags, true)
-}
-
 // ---------------------------------------------------------------------------
-// array_unique, array_diff, array_diff_key, array_intersect
+// array_unique, array_diff, array_intersect
 // ---------------------------------------------------------------------------
 
 /// `array_unique($a, $flags)` (PHP's default flag is `SORT_STRING`): the
@@ -725,17 +704,6 @@ pub fn array_diff<X: Extension>(a: &Array<X>, others: &[&Array<X>]) -> Result<Ar
         }
     }
     Ok(out)
-}
-
-/// `array_diff_key($a, ...$others)`: the entries of `a` whose key is in none of `others`.
-pub fn array_diff_key<X: Extension>(a: &Array<X>, others: &[&Array<X>]) -> Array<X> {
-    let mut out = Array::new();
-    for (k, v) in a.iter() {
-        if !others.iter().any(|o| o.get_ref(k).is_some()) {
-            out.set(k.to_owned(), v.clone());
-        }
-    }
-    out
 }
 
 /// `array_intersect($a, ...$others)`: the entries of `a` whose string value

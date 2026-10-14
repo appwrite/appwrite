@@ -3,11 +3,10 @@
     python3 unicode.py <unicode_data.h> ../src/mb/unicode.rs
 
 <unicode_data.h> is php-src `ext/mbstring/unicode_data.h` at the PHP version
-the compat tester runs (tag php-8.5.10). Extracted: the four case tables
-(`_uccase_{upper,lower,title,fold}_table`, sorted by code point),
-`_uccase_extra_table`, and the `UC_CASED` and `UC_CASE_IGNORABLE` ranges of
-`_ucprop_ranges`. After regenerating, re-run
-`bin/compat fuzz php-std --op mb.convert_case`.
+the compat tester runs (tag php-8.5.10). Extracted: the lower case table
+(`_uccase_lower_table`, sorted by code point), `_uccase_extra_table`, and the
+`UC_CASED` and `UC_CASE_IGNORABLE` ranges of `_ucprop_ranges`. After
+regenerating, re-run `bin/compat fuzz php-std --op mb.strtolower`.
 """
 import re
 import sys
@@ -64,12 +63,12 @@ out = ["""//! Unicode case data of PHP's mbstring, generated from php-src
 //! `ext/mbstring/unicode_data.h` (tag `php-8.5.10`) by `data/unicode.py`.
 //! Do not edit by hand.
 //!
-//! Case tables map a code point to its simple mapping, or, when the value
+//! The case table maps a code point to its simple mapping, or, when the value
 //! is above `0xFFFFFF`, to `(length << 24) | index` into [`EXTRA`], where
 //! `EXTRA[index]` is the simple mapping and the `length` code points after it
 //! are the full (special casing) mapping.
 """]
-for kind in ("upper", "lower", "title", "fold"):
+for kind in ("lower",):
     out.append(f"pub(super) static {kind.upper()}: &[(u32, u32)] = &[\n{fmt_pairs(case_table(kind))}\n];\n")
 out.append(f"pub(super) static EXTRA: &[u32] = &[\n{fmt_list(array('_uccase_extra_table'))}\n];\n")
 out.append("/// `UC_CASED` (DerivedCoreProperties `Cased`) as inclusive ranges.")

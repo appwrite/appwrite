@@ -1,6 +1,6 @@
-//! Number formatting and casts: `sprintf`/`vsprintf`, `number_format`,
-//! `round`/`floor`/`ceil`, `intval`/`floatval`/`boolval` and the `(int)` /
-//! `(float)` casts, `intdiv`, `fmod`, `abs`, `max`/`min` of numbers.
+//! Number formatting and casts: `sprintf`, `number_format`, `round`/`ceil`,
+//! `intval`/`floatval` and the `(int)` / `(float)` casts, `fmod`, `max`/`min`
+//! of numbers.
 //!
 //! Ported from PHP 8.5.10 (`ext/standard/formatted_print.c`, `math.c`,
 //! `type.c`, `array.c`, `Zend/zend_operators.c`, `main/snprintf.c`).
@@ -10,10 +10,10 @@
 //!
 //! | PHP | Rust |
 //! |---|---|
-//! | `sprintf`, `vsprintf` | [`sprintf`], [`vsprintf`] with [`Arg`] |
+//! | `sprintf` | [`sprintf`] with [`Arg`] |
 //! | `number_format` | [`number_format`] |
-//! | `round`, `floor`, `ceil`, `abs`, `fmod`, `fdiv`, `intdiv` | [`round`] with [`RoundingMode`], [`floor`], [`ceil`], [`abs`], [`fmod`], [`fdiv`], [`intdiv`] |
-//! | `intval`, `floatval`, `boolval`, `(int)`, `(float)` | [`intval`], [`floatval`], [`boolval`], [`Arg::to_int`], [`Arg::to_float`], [`str_to_int`], [`str_to_float`] |
+//! | `round`, `ceil`, `fmod` | [`round`] with [`RoundingMode`], [`ceil`], [`fmod`] |
+//! | `intval`, `floatval`, `(int)`, `(float)` | [`intval`], [`floatval`], [`Arg::to_int`], [`Arg::to_float`], [`str_to_int`], [`str_to_float`] |
 //! | `max`, `min` (numbers) | [`max`], [`min`], [`max_array`], [`min_array`] |
 //!
 //! Every function here is checked against the real PHP function by
@@ -418,11 +418,6 @@ pub fn floatval(value: Arg<'_>) -> f64 {
     value.to_float()
 }
 
-/// PHP `boolval($value)`, the `(bool)` cast: [`Arg::to_bool`].
-pub fn boolval(value: Arg<'_>) -> bool {
-    value.to_bool()
-}
-
 // ---------------------------------------------------------------------------
 // sprintf
 // ---------------------------------------------------------------------------
@@ -441,14 +436,7 @@ const ADJ_PRECISION: u8 = 2;
 /// padding, `'c` custom padding), width, precision, `*` and `n$` argument
 /// numbers, with PHP's errors (`ValueError`, `ArgumentCountError`).
 pub fn sprintf(format: &[u8], values: &[Arg<'_>]) -> Result<Vec<u8>, Error> {
-    formatted_print(format, values, 1)
-}
-
-/// PHP `vsprintf($format, $values)`: [`sprintf`] with the arguments in an
-/// array; missing arguments are a `ValueError` instead of an
-/// `ArgumentCountError`.
-pub fn vsprintf(format: &[u8], values: &[Arg<'_>]) -> Result<Vec<u8>, Error> {
-    formatted_print(format, values, -1)
+    formatted_print(format, values)
 }
 
 /// `php_sprintf_getnumber`: a run of digits as `strtol` reads it; -1 when
@@ -705,9 +693,9 @@ fn append_double(
     append_string(out, &text, width, 0, padding, align, negative, false, always_sign);
 }
 
-/// `php_formatted_print`. `additional` is the number of arguments before
-/// the values (1 for `sprintf`), or -1 for `vsprintf`'s array.
-fn formatted_print(fmt: &[u8], args: &[Arg<'_>], additional: i64) -> Result<Vec<u8>, Error> {
+/// `php_formatted_print` for `sprintf` (one argument, the format, before
+/// the values).
+fn formatted_print(fmt: &[u8], args: &[Arg<'_>]) -> Result<Vec<u8>, Error> {
     let at = |i: usize| fmt.get(i).copied().unwrap_or(0);
     let argc = args.len();
     let room: usize = args.iter().map(|a| if let Arg::Str(s) = a { s.len() } else { 16 }).sum();
@@ -876,15 +864,7 @@ fn formatted_print(fmt: &[u8], args: &[Arg<'_>], additional: i64) -> Result<Vec<
         pos += 1;
     }
     if let Some(m) = max_missing {
-        return Err(if additional == -1 {
-            Error::Value(format!("The arguments array must contain {} items, {} given", m + 1, argc))
-        } else {
-            Error::ArgumentCount(format!(
-                "{} arguments are required, {} given",
-                m as i64 + additional + 1,
-                argc as i64 + additional
-            ))
-        });
+        return Err(Error::ArgumentCount(format!("{} arguments are required, {} given", m + 2, argc + 1)));
     }
     match pending {
         Some(e) => Err(e),
@@ -1058,14 +1038,6 @@ pub fn round(num: Number, precision: i64, mode: RoundingMode) -> f64 {
     }
 }
 
-/// PHP `floor($num)`: always a float.
-pub fn floor(num: Number) -> f64 {
-    match num {
-        Number::Int(i) => i as f64,
-        Number::Float(f) => f.floor(),
-    }
-}
-
 /// PHP `ceil($num)`: always a float.
 pub fn ceil(num: Number) -> f64 {
     match num {
@@ -1074,34 +1046,9 @@ pub fn ceil(num: Number) -> f64 {
     }
 }
 
-/// PHP `abs($num)`: `abs(PHP_INT_MIN)` is a float.
-pub fn abs(num: Number) -> Number {
-    match num {
-        Number::Int(i64::MIN) => Number::Float(9223372036854775808.0),
-        Number::Int(i) => Number::Int(i.abs()),
-        Number::Float(f) => Number::Float(f.abs()),
-    }
-}
-
 /// PHP `fmod($num1, $num2)`: C `fmod` (the sign of the dividend).
 pub fn fmod(num1: f64, num2: f64) -> f64 {
     num1 % num2
-}
-
-/// PHP `fdiv($num1, $num2)`: IEEE division (by zero gives ±INF or NAN).
-pub fn fdiv(num1: f64, num2: f64) -> f64 {
-    num1 / num2
-}
-
-/// PHP `intdiv($num1, $num2)`: truncating integer division.
-pub fn intdiv(num1: i64, num2: i64) -> Result<i64, Error> {
-    if num2 == 0 {
-        return Err(Error::DivisionByZero("Division by zero".into()));
-    }
-    if num2 == -1 && num1 == i64::MIN {
-        return Err(Error::Arithmetic("Division of PHP_INT_MIN by -1 is not an integer".into()));
-    }
-    Ok(num1 / num2)
 }
 
 // ---------------------------------------------------------------------------

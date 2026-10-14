@@ -184,14 +184,14 @@ echo sprintf('%-8s|%05.1f|%x', 'cpu', 3.14159, 255), "\n"; // cpu     |003.1|ff
 The `mb` functions count and cut UTF-8 characters, not bytes. `strlen` is the byte length of the slice.
 
 ```
-use php_std::mb::{mb_strlen, mb_strtoupper, mb_substr};
+use php_std::mb::{mb_strlen, mb_strtolower, mb_substr};
 
 let name = "Zoë Ångström".as_bytes();
 
 assert_eq!(name.len(), 15);
 assert_eq!(mb_strlen(name), 12);
 assert_eq!(mb_substr(name, 0, Some(3))?, "Zoë".as_bytes());
-assert_eq!(mb_strtoupper(name), "ZOË ÅNGSTRÖM".as_bytes());
+assert_eq!(mb_strtolower(name), "zoë ångström".as_bytes());
 # Ok::<(), Box<dyn std::error::Error>>(())
 ```
 
@@ -201,7 +201,7 @@ $name = 'Zoë Ångström';
 echo strlen($name), "\n";          // 15
 echo mb_strlen($name), "\n";       // 12
 echo mb_substr($name, 0, 3), "\n"; // Zoë
-echo mb_strtoupper($name), "\n";   // ZOË ÅNGSTRÖM
+echo mb_strtolower($name), "\n";   // zoë ångström
 ```
 
 ## Parse a query string like parse_str
