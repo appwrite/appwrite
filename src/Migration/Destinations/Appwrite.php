@@ -378,7 +378,6 @@ class Appwrite extends Destination
     public static function getSupportedResources(): array
     {
         return [
-            // Auth
             Resource::TYPE_USER,
             Resource::TYPE_TEAM,
             Resource::TYPE_MEMBERSHIP,
@@ -386,7 +385,6 @@ class Appwrite extends Destination
             Resource::TYPE_POLICIES,
             Resource::TYPE_OAUTH2_PROVIDER,
 
-            // Database
             Resource::TYPE_DATABASE,
             Resource::TYPE_DATABASE_DOCUMENTSDB,
             Resource::TYPE_DATABASE_VECTORSDB,
@@ -395,48 +393,39 @@ class Appwrite extends Destination
             Resource::TYPE_INDEX,
             Resource::TYPE_ROW,
 
-            // legacy
             Resource::TYPE_DOCUMENT,
             Resource::TYPE_ATTRIBUTE,
             Resource::TYPE_COLLECTION,
 
-            // Storage
             Resource::TYPE_BUCKET,
             Resource::TYPE_FILE,
 
-            // Functions
             Resource::TYPE_FUNCTION,
             Resource::TYPE_DEPLOYMENT,
             Resource::TYPE_ENVIRONMENT_VARIABLE,
 
-            // Messaging
             Resource::TYPE_PROVIDER,
             Resource::TYPE_TOPIC,
             Resource::TYPE_SUBSCRIBER,
             Resource::TYPE_MESSAGE,
 
-            // Sites
             Resource::TYPE_SITE,
             Resource::TYPE_SITE_DEPLOYMENT,
             Resource::TYPE_SITE_VARIABLE,
 
-            // Integrations
             Resource::TYPE_PLATFORM,
             Resource::TYPE_API_KEY,
             Resource::TYPE_WEBHOOK,
             Resource::TYPE_SMTP,
 
-            // Project
             Resource::TYPE_PROJECT_VARIABLE,
             Resource::TYPE_PROJECT_PROTOCOLS,
             Resource::TYPE_PROJECT_LABELS,
             Resource::TYPE_PROJECT_SERVICES,
             Resource::TYPE_PROJECT_EMAIL_TEMPLATE,
 
-            // Backups
             Resource::TYPE_BACKUP_POLICY,
 
-            // Domains
             Resource::TYPE_RULE,
         ];
     }
@@ -458,7 +447,6 @@ class Appwrite extends Destination
         // Most of these API calls are purposely wrong. Appwrite will throw a 403 before a 400.
         // We want to make sure the API key has full read and write access to the project.
         try {
-            // Auth
             if (\in_array(Resource::TYPE_USER, $resources)) {
                 $scope = 'users.read';
                 $this->users->list();
@@ -483,7 +471,6 @@ class Appwrite extends Destination
                 $this->teams->createMembership('', [], '');
             }
 
-            // Storage
             if (\in_array(Resource::TYPE_BUCKET, $resources)) {
                 $scope = 'storage.read';
                 $this->storage->listBuckets();
@@ -500,7 +487,6 @@ class Appwrite extends Destination
                 $this->storage->createFile('', '', new InputFile());
             }
 
-            // Functions
             if (\in_array(Resource::TYPE_FUNCTION, $resources)) {
                 $scope = 'functions.read';
                 $this->functions->list();
@@ -509,7 +495,6 @@ class Appwrite extends Destination
                 $this->functions->create('', '', Runtime::NODE180());
             }
 
-            // Messaging
             if (\in_array(Resource::TYPE_PROVIDER, $resources)) {
                 $scope = 'providers.read';
                 $this->messaging->listProviders();
@@ -542,7 +527,6 @@ class Appwrite extends Destination
                 $this->messaging->createEmail('', '', '', draft: true);
             }
 
-            // Sites
             if (\in_array(Resource::TYPE_SITE, $resources)) {
                 $scope = 'sites.read';
                 $this->sites->list();
@@ -963,8 +947,6 @@ class Appwrite extends Destination
             $resource->setStatus(Resource::STATUS_SKIPPED, 'Columns not supported for DocumentsDB');
             return false;
         }
-        // column will be matching attribute as well
-        // column type will be matching attribute type as well
         $type = $this->schemaColumnType($resource);
 
         $database = $this->dbForProject->getDocument(
@@ -1503,7 +1485,6 @@ class Appwrite extends Destination
             return false;
         }
 
-        // Lengths hidden by default
         $lengths = [];
 
         if ($dbForDatabases->getAdapter()->supports(Capability::DefinedAttributes)) {
@@ -1598,7 +1579,6 @@ class Appwrite extends Destination
             return false;
         }
 
-        // Check if document has already been created
         $exists = \array_key_exists(
             $resource->getId(),
             $this->cache->get($resource->getName())
