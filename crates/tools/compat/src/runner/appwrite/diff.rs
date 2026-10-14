@@ -212,6 +212,8 @@ struct OwnedKeys {
     /// The console account that owns the account keys, and its sequence.
     user: String,
     user_sequence: String,
+    /// The organization's sequence (key locks are named after it).
+    team_sequence: String,
     ids: Vec<String>,
     account: String,
     expired_account: String,
@@ -236,7 +238,13 @@ fn owned_keys(input: &Value) -> Result<Value, String> {
     serde_json::from_str(last).map_err(|_| format!("keys.php: {text}{}", String::from_utf8_lossy(&out.stderr)))
 }
 
-fn seed_owned_keys(console: &Console, project: &str, user: String, user_sequence: String) -> Result<OwnedKeys, String> {
+fn seed_owned_keys(
+    console: &Console,
+    project: &str,
+    user: String,
+    user_sequence: String,
+    team_sequence: String,
+) -> Result<OwnedKeys, String> {
     let run = project;
     let account = format!("account_diff{run}");
     let expired_account = format!("account_diff{run}expired");
@@ -253,7 +261,7 @@ fn seed_owned_keys(console: &Console, project: &str, user: String, user_sequence
         .iter()
         .filter_map(|id| id.as_str().map(str::to_owned))
         .collect();
-    Ok(OwnedKeys { user, user_sequence, ids, account, expired_account, organization })
+    Ok(OwnedKeys { user, user_sequence, team_sequence, ids, account, expired_account, organization })
 }
 
 /// The scopes of the key scenarios use, and of the one that seeds.
@@ -342,7 +350,12 @@ async fn twin(
         .await
         .map_err(|e| format!("account sequence: {e}"))?
         .get::<_, String>(0);
-    let keys = seed_owned_keys(console, &project, user, user_sequence)?;
+    let team_sequence = db
+        .query_one("SELECT _id::text FROM appwrite._console_teams WHERE _uid = $1", &[&console.team])
+        .await
+        .map_err(|e| format!("organization sequence: {e}"))?
+        .get::<_, String>(0);
+    let keys = seed_owned_keys(console, &project, user, user_sequence, team_sequence)?;
     let (endpoint, container) =
         if runtime == "php" { (stack.php.clone(), "appwrite") } else { (stack.rust.clone(), "appwrite-rust") };
     Ok(Twin {
@@ -803,10 +816,17 @@ impl Normalizer {
             // Shared tables: the tenant in cache keys (`<cache>::<tenant>:collection:...`).
             (format!("::{}:", twin.prefix.trim_matches('_')), "::{seq}:".to_owned()),
         ];
-        // The account's and the organization's keys, by ID (in lock names).
-        for (id, name) in
-            twin.keys.ids.iter().zip(["{account-key-id}", "{expired-account-key-id}", "{organization-key-id}"])
-        {
+        // The account's and the organization's keys, by ID, and the locks
+        // named after them and their owner's sequence (which may equal the
+        // project's on one twin and not the other).
+        let names = ["{account-key-id}", "{expired-account-key-id}", "{organization-key-id}"];
+        for (i, (id, name)) in twin.keys.ids.iter().zip(names).enumerate() {
+            let (owner, placeholder) = if i < 2 {
+                (&twin.keys.user_sequence, "{account-seq}")
+            } else {
+                (&twin.keys.team_sequence, "{team-seq}")
+            };
+            fixed.push((format!("platform:{owner}:keys:{id}"), format!("platform:{placeholder}:keys:{name}")));
             fixed.push((id.clone(), name.to_owned()));
         }
         fixed.retain(|(from, _)| !from.is_empty());

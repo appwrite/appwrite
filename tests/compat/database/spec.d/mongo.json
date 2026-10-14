@@ -139,7 +139,7 @@
       "covers": []
     },
     "mongo.fuzz_find": {
-      "doc": "find() on collection `fz` of the session's MongoDB fuzz adapter (database ${ns} of the compat MongoDB, namespace `fz`, seeded as adapter.fuzz_find seeds its schema): the same programs as adapter.fuzz_find",
+      "doc": "find() on collection `fz` of the session's MongoDB fuzz adapter (database ${ns} of the compat MongoDB, namespace `fz`, seeded as adapter.fuzz_find seeds its schema): the same programs as adapter.fuzz_find, without filters on `$sequence` (a random UUIDv7 here, so which documents a filter on it matches differs between the runtimes)",
       "services": [
         "database-mongo"
       ],
@@ -160,15 +160,15 @@
                   "of": [
                     {
                       "gen": "ref",
-                      "name": "adapter.query"
+                      "name": "mongo.query"
                     },
                     {
                       "gen": "ref",
-                      "name": "adapter.query"
+                      "name": "mongo.query"
                     },
                     {
                       "gen": "ref",
-                      "name": "adapter.logical"
+                      "name": "mongo.logical"
                     }
                   ]
                 },
@@ -303,6 +303,101 @@
           "max": 12
         }
       ]
+    },
+    "mongo.query": {
+      "gen": "object",
+      "fields": {
+        "$query": {
+          "gen": "object",
+          "fields": {
+            "method": {
+              "gen": "pick",
+              "from": [
+                "equal",
+                "notEqual",
+                "lessThan",
+                "lessThanEqual",
+                "greaterThan",
+                "greaterThanEqual",
+                "contains",
+                "containsAny",
+                "containsAll",
+                "notContains",
+                "search",
+                "notSearch",
+                "isNull",
+                "isNotNull",
+                "between",
+                "notBetween",
+                "startsWith",
+                "notStartsWith",
+                "endsWith",
+                "notEndsWith",
+                "regex",
+                "select",
+                "exists"
+              ]
+            },
+            "attribute": {
+              "gen": "pick",
+              "from": [
+                "title",
+                "year",
+                "rating",
+                "active",
+                "tags",
+                "meta",
+                "released",
+                "$id",
+                "$createdAt",
+                "$updatedAt",
+                "missing",
+                "meta.k",
+                "meta.s"
+              ]
+            },
+            "values": {
+              "gen": "array",
+              "items": {
+                "gen": "ref",
+                "name": "adapter.qvalue"
+              },
+              "min": 0,
+              "max": 3
+            }
+          }
+        }
+      }
+    },
+    "mongo.logical": {
+      "gen": "object",
+      "fields": {
+        "$query": {
+          "gen": "object",
+          "fields": {
+            "method": {
+              "gen": "pick",
+              "from": [
+                "and",
+                "or"
+              ]
+            },
+            "attribute": {
+              "gen": "const",
+              "value": ""
+            },
+            "values": {
+              "gen": "array",
+              "items": {
+                "gen": "ref",
+                "name": "mongo.query"
+              },
+              "min": 0,
+              "max": 3
+            }
+          }
+        }
+      }
     }
   },
   "scrub": [
