@@ -773,11 +773,6 @@ class Handler implements MqttHandler
         return \array_reverse($fresh);
     }
 
-    /**
-     * The expiry a topic without its own inherits: the lowest expiry set on the project's enabled
-     * Appwrite providers, so a message is never kept longer than any of them allows. Null when
-     * none sets one.
-     */
     /** The internal sequence of the topic a cursor is bound to, resolved from its wire id; null when no such topic exists. */
     private function topicSequence(Database $projectDB, string $topic): ?string
     {
@@ -786,6 +781,11 @@ class Handler implements MqttHandler
         return $document->isEmpty() ? null : (string) $document->getSequence();
     }
 
+    /**
+     * The expiry a topic without its own inherits: the lowest expiry set on the project's enabled
+     * Appwrite providers, so a message is never kept longer than any of them allows. Null when
+     * none sets one.
+     */
     private function providerExpiry(Database $projectDB): ?int
     {
         $providers = $projectDB->getAuthorization()->skip(fn () => $projectDB->find('providers', [
