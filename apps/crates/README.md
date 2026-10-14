@@ -10,6 +10,8 @@ The home page opens on Appwrite drawn as a circuit board (`src/components/Factor
 
 The **Map** (`/map`) draws the whole ecosystem as a chord: every library and Appwrite, grouped by category, with a ribbon between each pair that depends on one another, through Rust (Cargo manifests), PHP (`composer.json`) or both. Hover a library to see what it depends on and what depends on it, click it for its panel, search to find one; `/map#<lib>` opens it on a library, as each Dependencies page's "See it on the map" does. Switch to Categories for the same picture rolled up. Outside migration mode the map draws only the Rust crates, Appwrite and the Rust edges between them, and each Dependencies page lists only the Rust dependents; migration mode adds the PHP packages, the PHP edges and each dependent's conversion status.
 
+The **Changelog** (`/changelog`) is a dated log of the crates, the docs, and the PHP to Rust migration. Entries live in `src/lib/changelog.ts`, newest first.
+
 Outside migration mode the site reads as a plain Rust library site: everything about PHP (comparisons, benchmarks, PHP APIs and sources, conversion status) is hidden. The exception is `php-std`, a Rust crate in its own right, whose PHP functions inventory always shows. Menu items that only appear in migration mode carry the migration marking (the `nav-migration` class: the migration cards' tint and a yellow rule), set through the `migration` prop of a menu section or the `item(true)` row class in `src/components/Sidebar.tsx`.
 
 ## Run

@@ -63,8 +63,24 @@ export function Markdown({ text, lib, slug }: { text: string; lib?: Pick<Library
                 </Link>
               )
             }
+            const className =
+              'text-foreground underline decoration-highlight-line decoration-1 underline-offset-[3px] transition-colors hover:text-highlight hover:decoration-highlight'
+            if (href?.startsWith('/')) {
+              return (
+                <Link to={href} className={className}>
+                  {children}
+                </Link>
+              )
+            }
+            if (href?.startsWith('#')) {
+              return (
+                <a href={href} className={className}>
+                  {children}
+                </a>
+              )
+            }
             return (
-              <a href={href} target="_blank" rel="noopener" className="text-foreground underline decoration-highlight-line decoration-1 underline-offset-[3px] transition-colors hover:text-highlight hover:decoration-highlight">
+              <a href={href} target="_blank" rel="noopener" className={className}>
                 {children}
               </a>
             )

@@ -2,7 +2,7 @@ import { Link, getRouteApi, useMatch, useRouterState } from '@tanstack/react-rou
 import { Menu, Monitor, Moon, Sun } from 'lucide-react'
 import { Fragment } from 'react'
 import { setMigration, useMigration, useTheme, write } from '@/lib/prefs'
-import { GitHubMark, Logo } from './Logo'
+import { DiscordMark, GitHubMark, Logo } from './Logo'
 
 const root = getRouteApi('__root__')
 
@@ -17,6 +17,8 @@ function Crumbs() {
     if (parts[1]) crumbs.push({ label: service?.title ?? parts[1] })
   } else if (parts[0] === 'map') {
     crumbs.push({ label: 'Map' })
+  } else if (parts[0] === 'changelog') {
+    crumbs.push({ label: 'Changelog' })
   } else if (parts[0] === 'libraries') {
     crumbs.push({ label: 'Libraries' })
   } else if (index && parts[0] === 'categories' && parts[1]) {
@@ -97,6 +99,16 @@ export function Header({ onMenu }: { onMenu: () => void }) {
       <div className="ml-auto flex items-center gap-1.5 pr-3">
         <MigrationSwitch />
         <span className="mx-0.5 h-5 w-px bg-border sm:mx-1" aria-hidden />
+        <a
+          href="https://discord.gg/GSeTUeA"
+          target="_blank"
+          rel="noopener"
+          className="inline-flex size-8 items-center justify-center text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          aria-label="Appwrite Discord"
+          title="Appwrite Discord"
+        >
+          <DiscordMark className="size-[17px]" />
+        </a>
         <a
           href="https://github.com/appwrite/appwrite/tree/main/crates/utopia"
           target="_blank"

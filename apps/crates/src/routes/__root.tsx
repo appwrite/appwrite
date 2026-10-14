@@ -90,19 +90,8 @@ function Layout() {
           </div>
         ) : null}
         <main className="min-w-0 px-5 pt-8 pb-16 md:px-10">
-          {index ? (
-            <>
-              <Outlet />
-              <Footer index={index} />
-            </>
-          ) : (
-            <div className="max-w-2xl border border-border bg-card p-5">
-              <h1 className="text-3xl">No documentation yet</h1>
-              <p className="mt-2 text-muted-foreground">
-                Generate it from the repository root with <code className="font-mono">bin/compat crates</code> (or <code className="font-mono">bun run generate</code> here), then reload.
-              </p>
-            </div>
-          )}
+          <Outlet />
+          {index ? <Footer index={index} /> : null}
         </main>
       </div>
     </div>

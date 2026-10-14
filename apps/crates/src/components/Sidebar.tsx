@@ -186,9 +186,8 @@ export function LibraryMenu({ nav, onNavigate }: { nav: Navigation; onNavigate?:
 export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const index = root.useLoaderData()
   const migration = useMigration()
-  if (!index) return null
   // A category is in the menu when it has a library to show: with a crate, or any in migration mode.
-  const bySlug = new Map(index.libraries.map((l) => [l.slug, l]))
+  const bySlug = new Map(index?.libraries.map((l) => [l.slug, l]) ?? [])
   return (
     <nav className="grid content-start gap-3 p-3" onClick={(e) => (e.target as HTMLElement).closest('a') && onNavigate?.()}>
       <div className="grid gap-px">
@@ -201,26 +200,33 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         <Link to="/map" className={row}>
           Map
         </Link>
-        <MigrationOnly>
-          <Link to="/appwrite" className={item(true)} title={MIGRATION_TITLE}>
-            <ArrowLeftRight className="size-3.5 flex-none text-migration-ink" />
-            Appwrite migration
-          </Link>
-        </MigrationOnly>
-      </div>
-      <Section title="Categories">
-        {index.categories.map((c) => {
-          const libs = c.libraries.map((s) => bySlug.get(s)).filter((l) => l && (migration || l.rust))
-          if (!libs.length) return null
-          const rust = libs.some((l) => l?.rust)
-          return (
-            <Link key={c.id} to="/categories/$category" params={{ category: c.id }} className={item(!rust)} title={rust ? undefined : MIGRATION_TITLE}>
-              <span className="truncate">{c.title}</span>
-              <span className="ml-auto font-mono text-[10px] text-muted-foreground tabular-nums">{libs.length}</span>
+        <Link to="/changelog" className={row}>
+          Changelog
+        </Link>
+        {index ? (
+          <MigrationOnly>
+            <Link to="/appwrite" className={item(true)} title={MIGRATION_TITLE}>
+              <ArrowLeftRight className="size-3.5 flex-none text-migration-ink" />
+              Appwrite migration
             </Link>
-          )
-        })}
-      </Section>
+          </MigrationOnly>
+        ) : null}
+      </div>
+      {index ? (
+        <Section title="Categories">
+          {index.categories.map((c) => {
+            const libs = c.libraries.map((s) => bySlug.get(s)).filter((l) => l && (migration || l.rust))
+            if (!libs.length) return null
+            const rust = libs.some((l) => l?.rust)
+            return (
+              <Link key={c.id} to="/categories/$category" params={{ category: c.id }} className={item(!rust)} title={rust ? undefined : MIGRATION_TITLE}>
+                <span className="truncate">{c.title}</span>
+                <span className="ml-auto font-mono text-[10px] text-muted-foreground tabular-nums">{libs.length}</span>
+              </Link>
+            )
+          })}
+        </Section>
+      ) : null}
     </nav>
   )
 }
