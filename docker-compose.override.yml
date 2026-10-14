@@ -576,6 +576,8 @@ services:
       - _APP_OPENSSL_KEY_V1
       - _APP_DOMAIN
       - _APP_CONSOLE_DOMAIN
+      - _APP_DOMAIN_SITES
+      - _APP_DOMAIN_FUNCTIONS
       - _APP_CONSOLE_URL
       - _APP_CONSOLE_SCHEMA
       - _APP_CONSOLE_TRUSTED_PROJECTS
@@ -659,6 +661,13 @@ services:
   postgresql:
     ports:
       - "9512:5432"
+    # PHP's HTTP server alone opens a pool per worker (96 by default), past
+    # Postgres' default of 100 connections once the workers, the Rust API and
+    # the tasks connect too.
+    command:
+      - postgres
+      - -c
+      - max_connections=500
   redis:
     ports:
       - "9513:6379"
