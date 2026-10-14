@@ -759,7 +759,21 @@ class Nats implements Synchronous, Consumer, Bounded
     public function receive(Queue $queue, int $timeout, int $n = 1): array
     {
         try {
-            return $this->synchronize(fn (): array => $this->pull($queue, $timeout, max(1, $n)));
+            return $this->synchronize(function () use ($queue, $timeout, $n): array {
+                try {
+                    return $this->pull($queue, $timeout, max(1, $n));
+                } catch (ConnectionException|ProtocolException $error) {
+                    // Once, on fresh connections. The server drops a receive socket
+                    // nobody serviced -- a Kubernetes Job's, while a long handler ran
+                    // -- and the next fetch finds out. A fetch that failed there took
+                    // nothing, so fetching again cannot duplicate a delivery.
+                    if (!$this->lostConnection($error) || !$this->reconnect()) {
+                        throw $error;
+                    }
+
+                    return $this->pull($queue, $timeout, max(1, $n));
+                }
+            });
         } finally {
             // Off the lock, and on the way out however pull() ended.
             $this->flushReports();
@@ -1020,10 +1034,12 @@ class Nats implements Synchronous, Consumer, Bounded
      *
      * Everything derived from the old sockets is dropped rather than reused:
      * consumer handles and subscriptions belong to the connection that created
-     * them. In-flight messages are deliberately not carried over — their ack
-     * subjects died with the connection, so the honest outcome is to let the
-     * server redeliver them on ackWait rather than pretend they can still be
-     * acknowledged.
+     * them. In-flight deliveries are kept. An ack is a publish to the delivery's
+     * reply subject, which no connection owns, and every ack path already sends
+     * it through onCommands() on whichever commands connection is current -- so a
+     * handler still running when the broker reconnects can commit, release or
+     * reject as before. Dropping them made that commit a silent no-op, and the
+     * server redelivered work that was already done.
      */
     public function reconnect(): bool
     {
@@ -1051,7 +1067,6 @@ class Nats implements Synchronous, Consumer, Bounded
         $this->advisories = [];
         $this->spareDelivery = [];
         $this->provisioned = [];
-        $this->inFlight = [];
 
         return true;
     }
