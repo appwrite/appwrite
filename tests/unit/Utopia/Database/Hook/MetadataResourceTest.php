@@ -6,6 +6,7 @@ namespace Tests\Unit\Utopia\Database\Hook;
 
 use Appwrite\Database\Factory as DatabaseFactory;
 use Appwrite\Usage\Context;
+use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use PHPUnit\Framework\TestCase;
 use Utopia\Cache\Adapter\None as NoCache;
@@ -21,6 +22,8 @@ use Utopia\Database\Relationship;
 use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
+use Utopia\Http\Adapter\FPM\Server;
+use Utopia\Http\Http;
 
 /**
  * The HTTP `getDatabasesDB` resource wires the Metadata hook of every tenant database it hands out: the hook must
@@ -182,6 +185,9 @@ final class MetadataResourceTest extends TestCase
         $container->set('request', static fn (): Request => $request);
         $container->set('dbForProject', static fn (): Database => $catalog);
         $container->set('usage', static fn (): Context => new Context());
+        $container->set('authorization', fn (): Authorization => $this->authorization);
+        $container->set('user', static fn (): User => new User());
+        $container->set('utopia', static fn (): Http => new Http(new Server($container), 'UTC'));
 
         return $container;
     }

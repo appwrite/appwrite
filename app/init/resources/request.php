@@ -31,6 +31,7 @@ use Appwrite\Usage\Operations;
 use Appwrite\Usage\Policy as UsagePolicy;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Database\Hook\FunctionCache;
+use Appwrite\Utopia\Database\Hook\Joins;
 use Appwrite\Utopia\Database\Hook\Metadata;
 use Appwrite\Utopia\Database\Hook\Usage;
 use Appwrite\Utopia\Database\Hook\UserEvents;
@@ -1054,9 +1055,9 @@ return function (Container $context): void {
 
     $context->set('operations', fn (): Operations => new Operations(), []);
 
-    $context->set('getDatabasesDB', function (DatabaseFactory $databaseFactory, Document $project, Request $request, Database $dbForProject, Operations $operations) {
+    $context->set('getDatabasesDB', function (DatabaseFactory $databaseFactory, Document $project, Request $request, Database $dbForProject, Operations $operations, User $user, Authorization $authorization, Http $utopia) {
 
-        return function (Document $database, ?Document $collection = null) use ($databaseFactory, $project, $request, $dbForProject, $operations): Database {
+        return function (Document $database, ?Document $collection = null) use ($databaseFactory, $project, $request, $dbForProject, $operations, $user, $authorization, $utopia): Database {
             $originalDatabase = $database;
             $context = str_contains($request->getURI(), '/tablesdb/') ? 'table' : 'collection';
             $publicIds = $collection === null || $collection->isEmpty()
@@ -1083,6 +1084,15 @@ return function (Container $context): void {
                     resolvePublicId: Metadata::resolver($database, $dbForProject, $publicIds),
                     tenant: $database,
                     operations: $operations,
+                ))
+                ->addHook(new Joins(
+                    dbForProject: $dbForProject,
+                    database: $originalDatabase,
+                    authorization: $authorization,
+                    user: $user,
+                    notFound: static fn (): string => \str_contains($utopia->context()->get('request')->getURI(), '/tablesdb/')
+                        ? Exception::TABLE_NOT_FOUND
+                        : Exception::COLLECTION_NOT_FOUND,
                 ));
 
             // Document counts and per-collection storage are produced by the
@@ -1092,7 +1102,7 @@ return function (Container $context): void {
             return $database;
         };
 
-    }, ['databaseFactory', 'project', 'request', 'dbForProject', 'operations']);
+    }, ['databaseFactory', 'project', 'request', 'dbForProject', 'operations', 'user', 'authorization', 'utopia']);
 
     $context->set(
         'transactionState',
