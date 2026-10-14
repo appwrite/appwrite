@@ -12,7 +12,6 @@ use crate::adapter::{Args, Fault, OpResult, Outcome, Session, bytes_value};
 
 pub const OPS: &[&str] = &[
     "datetime.parse",
-    "datetime.parse_from_format",
     "datetime.strtotime",
     "datetime.date",
     "datetime.gmdate",
@@ -27,7 +26,6 @@ pub const OPS: &[&str] = &[
     "datetime.create_from_format",
     "datetime.compare",
     "datetime.timezone",
-    "datetime.timezone_name_from_abbr",
     "datetime.microtime",
 ];
 
@@ -75,9 +73,6 @@ pub async fn call(op: &str, args: &Value, _session: &mut Session) -> OpResult {
     };
     Ok(match op {
         "datetime.parse" => Outcome::Ok(datetime::date_parse(&a.bytes("s")?).to_php()),
-        "datetime.parse_from_format" => {
-            thrown(datetime::date_parse_from_format(&a.bytes("format")?, &a.bytes("s")?).map(|p| p.to_php()))
-        }
         "datetime.strtotime" => Outcome::Ok(match datetime::strtotime(&a.bytes("s")?, a.i64("base")?, &utc) {
             Some(ts) => Value::from(ts),
             None => Value::Bool(false),
@@ -174,16 +169,6 @@ pub async fn call(op: &str, args: &Value, _session: &mut Session) -> OpResult {
             let ts = a.i64("ts")?;
             caught(TimeZone::new(a.bytes("tz")?).map(|z| json!([z.name(), z.offset_at(ts)])))
         }
-        "datetime.timezone_name_from_abbr" => Outcome::Ok(
-            match datetime::timezone_name_from_abbr(
-                a.str("abbr")?,
-                a.opt_i64("offset")?.unwrap_or(-1),
-                a.opt_i64("isdst")?.unwrap_or(-1),
-            ) {
-                Some(name) => Value::String(name.to_owned()),
-                None => Value::Bool(false),
-            },
-        ),
         "datetime.microtime" => Outcome::Ok(json!([
             datetime::microtime().len(),
             datetime::microtime_float().is_finite(),

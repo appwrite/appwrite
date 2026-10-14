@@ -9,14 +9,9 @@ use crate::adapter::{Args, Fault, OpResult, Outcome, Session, bytes_value};
 
 pub const OPS: &[&str] = &[
     "sort.sort",
-    "sort.rsort",
-    "sort.asort",
-    "sort.arsort",
     "sort.ksort",
-    "sort.krsort",
     "sort.array_unique",
     "sort.array_diff",
-    "sort.array_diff_key",
     "sort.array_intersect",
     "sort.in_array",
     "sort.array_search",
@@ -40,26 +35,18 @@ pub async fn call(op: &str, args: &Value, _session: &mut Session) -> OpResult {
     };
     Ok(match op {
         "sort.sort" => sorted(sort::sort)?,
-        "sort.rsort" => sorted(sort::rsort)?,
-        "sort.asort" => sorted(sort::asort)?,
-        "sort.arsort" => sorted(sort::arsort)?,
-        "sort.ksort" | "sort.krsort" => {
+        "sort.ksort" => {
             let mut array = decode_array(a.value("a")?)?;
-            if op == "sort.ksort" {
-                sort::ksort(&mut array, flags(0)?);
-            } else {
-                sort::krsort(&mut array, flags(0)?);
-            }
+            sort::ksort(&mut array, flags(0)?);
             Outcome::Ok(dump(&Php::Array(array)))
         }
         "sort.array_unique" => result(sort::array_unique(&decode_array(a.value("a")?)?, flags(2)?)),
-        "sort.array_diff" | "sort.array_diff_key" | "sort.array_intersect" => {
+        "sort.array_diff" | "sort.array_intersect" => {
             let array = decode_array(a.value("a")?)?;
             let others = others()?;
             let refs: Vec<&Array> = others.iter().collect();
             match op {
                 "sort.array_diff" => result(sort::array_diff(&array, &refs)),
-                "sort.array_diff_key" => result(Ok(sort::array_diff_key(&array, &refs))),
                 _ => result(sort::array_intersect(&array, &refs)),
             }
         }

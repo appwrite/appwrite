@@ -414,6 +414,20 @@ impl Fake {
     }
 }
 
+/// Non-overlapping occurrences of `needle` in `data` (`substr_count()` in
+/// Fake.php); none for an empty needle.
+fn occurrences(data: &[u8], needle: &[u8]) -> usize {
+    if needle.is_empty() {
+        return 0;
+    }
+    let (mut count, mut at) = (0, 0);
+    while let Some(p) = data[at..].windows(needle.len()).position(|w| w == needle) {
+        count += 1;
+        at += p + needle.len();
+    }
+    count
+}
+
 /// The (subject, reply) of each PUB/HPUB with a reply subject in `data`
 /// whose subject is `subject`, or under it when it ends with a dot.
 fn publishes(data: &[u8], subject: &str) -> Vec<(String, String)> {
@@ -507,7 +521,7 @@ impl Transport for Fake {
         }
         let mut state = self.lock();
         if state.answer_pings {
-            let pings = php_std::string::substr_count(data, b"PING\r\n", 0, None).unwrap_or(0);
+            let pings = occurrences(data, b"PING\r\n");
             for _ in 0..pings {
                 state.inbound.extend_from_slice(b"PONG\r\n");
             }
@@ -1939,7 +1953,7 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
             let state = fake.lock();
             let from = (a.opt_i64("from")?.unwrap_or(0) as usize).min(state.written.len());
             let needle = a.bytes("needle")?;
-            Ok(Outcome::ok(php_std::string::substr_count(&state.written[from..], &needle, 0, None).unwrap_or(0)))
+            Ok(Outcome::ok(occurrences(&state.written[from..], &needle)))
         }
         "fake.mark" => Ok(Outcome::ok(fake_of(session, &a).await?.lock().written.len())),
         "fake.written" => {

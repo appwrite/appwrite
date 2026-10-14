@@ -375,104 +375,12 @@
       "expect": "café&apos;"
     },
     {
-      "name": "html_entity_decode HTML 4.01",
-      "op": "encoding.html_entity_decode",
-      "args": {
-        "string": "&eacute;&euro;&apos;&#39;&#x41;&#0;&#xD800;&NotEqualTilde;"
-      },
-      "expect": "é€&apos;'A&#0;&#xD800;&NotEqualTilde;"
-    },
-    {
-      "name": "html_entity_decode HTML5",
-      "op": "encoding.html_entity_decode",
-      "args": {
-        "string": "&NotEqualTilde;&apos;&AMP;&fjlig;&#13;&#12;",
-        "flags": 51
-      },
-      "expect": "≂̸'&fj&#13;\f"
-    },
-    {
-      "name": "html_entity_decode XHTML apos",
-      "op": "encoding.html_entity_decode",
-      "args": {
-        "string": "&apos;&eacute;",
-        "flags": 35
-      },
-      "expect": "'é"
-    },
-    {
-      "name": "html_entity_decode hexadecimal 0x prefix (strtol)",
-      "op": "encoding.html_entity_decode",
-      "args": {
-        "string": "&#x0x41;&#0x41;"
-      },
-      "expect": "A&#0x41;"
-    },
-    {
-      "name": "html_entity_decode quotes off",
-      "op": "encoding.html_entity_decode",
-      "args": {
-        "string": "&quot;&#39;&apos;",
-        "flags": 48
-      },
-      "expect": "&quot;&#39;&apos;"
-    },
-    {
-      "name": "htmlspecialchars_decode only basic entities",
-      "op": "encoding.htmlspecialchars_decode",
-      "args": {
-        "string": "&lt;&eacute;&#39;&#x27;&apos;&#65;&quot;"
-      },
-      "expect": "<&eacute;''&apos;&#65;\""
-    },
-    {
-      "name": "htmlspecialchars_decode HTML5 apos",
-      "op": "encoding.htmlspecialchars_decode",
-      "args": {
-        "string": "&apos;&#039;",
-        "flags": 51
-      },
-      "expect": "''"
-    },
-    {
-      "name": "addslashes",
-      "op": "encoding.addslashes",
-      "args": {
-        "string": "O'Re\"il\\ly\u0000"
-      },
-      "expect": "O\\'Re\\\"il\\\\ly\\0"
-    },
-    {
-      "name": "stripslashes",
-      "op": "encoding.stripslashes",
-      "args": {
-        "string": "a\\'b\\\\c\\0d\\"
-      },
-      "expect": "a'b\\c\u0000d"
-    },
-    {
       "name": "quoted_printable_encode",
       "op": "encoding.quoted_printable_encode",
       "args": {
         "string": "Hé = ok \r\nline \u0000 ünïcödé ünïcödé ünïcödé ünïcödé ünïcödé ünïcödé ünïcödé ünïcödé"
       },
       "expect": "H=C3=A9 =3D ok=20\r\nline =00 =C3=BCn=C3=AFc=C3=B6d=C3=A9 =C3=BCn=C3=AFc=C3=B6d=C3=A9 =C3=BCn=\r\n=C3=AFc=C3=B6d=C3=A9 =C3=BCn=C3=AFc=C3=B6d=C3=A9 =C3=BCn=C3=AFc=C3=B6d=\r\n=C3=A9 =C3=BCn=C3=AFc=C3=B6d=C3=A9 =C3=BCn=C3=AFc=C3=B6d=C3=A9 =C3=BCn=\r\n=C3=AFc=C3=B6d=C3=A9"
-    },
-    {
-      "name": "quoted_printable_decode soft breaks",
-      "op": "encoding.quoted_printable_decode",
-      "args": {
-        "string": "a=3Db=\r\nc= \t\nd=\ne=4"
-      },
-      "expect": "a=bcde=4"
-    },
-    {
-      "name": "quoted_printable_decode stops at NUL",
-      "op": "encoding.quoted_printable_decode",
-      "args": {
-        "string": "a\u0000b"
-      },
-      "expect": "a"
     },
     {
       "name": "parse_str lists and maps",

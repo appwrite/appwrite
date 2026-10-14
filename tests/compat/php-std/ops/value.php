@@ -8,7 +8,6 @@ return [
     'value.to_string' => fn (array $a) => \is_array($a['v']) || \is_object($a['v']) ? null : (string) $a['v'],
     'value.truthy' => fn (array $a) => (bool) $a['v'],
     'value.empty' => fn (array $a) => empty($a['v']),
-    'value.is_array' => fn (array $a) => \is_array($a['v']),
     'value.loose_eq' => fn (array $a) => $a['a'] == $a['b'],
     'value.loose_str_eq' => fn (array $a) => (string) $a['a'] == (string) $a['b'],
     'value.le_numbers' => fn (array $a) => $a['a'] <= $a['b'],

@@ -85,23 +85,6 @@
         }
       ]
     },
-    "value.is_array": {
-      "doc": "is_array($v)",
-      "fuzz": [
-        {
-          "args": {
-            "gen": "object",
-            "fields": {
-              "v": {
-                "gen": "any",
-                "depth": 2
-              }
-            }
-          },
-          "iterations": 1000
-        }
-      ]
-    },
     "value.loose_eq": {
       "doc": "$a == $b",
       "fuzz": [

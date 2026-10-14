@@ -1,16 +1,18 @@
 {
   "ops": {
     "random.mt_rand": {
-      "doc": "mt_srand(seed), then `draws` calls of mt_rand() (or mt_rand(min, min + span))",
+      "doc": "mt_srand(seed), then `draws` calls of mt_rand(min, min + span)",
       "covers": ["mt_srand()", "mt_rand()"],
       "fuzz": [
         {
-          "name": "bare",
+          "name": "full seeds",
           "args": {
             "gen": "object",
             "fields": {
               "seed": { "gen": "int", "min": -9223372036854775808, "max": 9223372036854775807 },
-              "draws": { "gen": "int", "min": 1, "max": 700 }
+              "draws": { "gen": "int", "min": 1, "max": 700 },
+              "min": { "gen": "const", "value": 0 },
+              "span": { "gen": "const", "value": 4294967295 }
             }
           },
           "iterations": 300

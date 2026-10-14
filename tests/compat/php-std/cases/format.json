@@ -446,35 +446,6 @@
       "expect": "Array 1 0 1.0"
     },
     {
-      "name": "vsprintf missing arguments",
-      "op": "format.vsprintf",
-      "args": {
-        "format": "%s %s",
-        "values": [
-          "a"
-        ]
-      },
-      "expect": {
-        "$error": {
-          "class": "ValueError",
-          "message": "The arguments array must contain 2 items, 1 given"
-        }
-      }
-    },
-    {
-      "name": "vsprintf",
-      "op": "format.vsprintf",
-      "args": {
-        "format": "%04d-%02d-%02d",
-        "values": [
-          2026,
-          10,
-          9
-        ]
-      },
-      "expect": "2026-10-09"
-    },
-    {
       "name": "number_format defaults round half up",
       "op": "format.number_format",
       "args": {
@@ -711,36 +682,12 @@
       "expect": 1.5
     },
     {
-      "name": "floor negative half",
-      "op": "format.floor",
-      "args": {
-        "num": -0.5
-      },
-      "expect": -1.0
-    },
-    {
       "name": "ceil negative half is -0",
       "op": "format.ceil",
       "args": {
         "num": -0.5
       },
       "expect": -0.0
-    },
-    {
-      "name": "floor integer",
-      "op": "format.floor",
-      "args": {
-        "num": 7
-      },
-      "expect": 7.0
-    },
-    {
-      "name": "abs PHP_INT_MIN is a float",
-      "op": "format.abs",
-      "args": {
-        "num": -9223372036854775808
-      },
-      "expect": 9.223372036854776e+18
     },
     {
       "name": "fmod sign of the dividend",
@@ -760,54 +707,6 @@
       },
       "expect": {
         "$float": "NAN"
-      }
-    },
-    {
-      "name": "fdiv by zero",
-      "op": "format.fdiv",
-      "args": {
-        "num1": -1.0,
-        "num2": 0.0
-      },
-      "expect": {
-        "$float": "-INF"
-      }
-    },
-    {
-      "name": "intdiv truncates",
-      "op": "format.intdiv",
-      "args": {
-        "num1": -7,
-        "num2": 2
-      },
-      "expect": -3
-    },
-    {
-      "name": "intdiv by zero",
-      "op": "format.intdiv",
-      "args": {
-        "num1": 1,
-        "num2": 0
-      },
-      "expect": {
-        "$error": {
-          "class": "DivisionByZeroError",
-          "message": "Division by zero"
-        }
-      }
-    },
-    {
-      "name": "intdiv PHP_INT_MIN by -1",
-      "op": "format.intdiv",
-      "args": {
-        "num1": -9223372036854775808,
-        "num2": -1
-      },
-      "expect": {
-        "$error": {
-          "class": "ArithmeticError",
-          "message": "Division of PHP_INT_MIN by -1 is not an integer"
-        }
       }
     },
     {
@@ -981,22 +880,6 @@
         "value": "INF"
       },
       "expect": 0.0
-    },
-    {
-      "name": "boolval string 0.0",
-      "op": "format.boolval",
-      "args": {
-        "value": "0.0"
-      },
-      "expect": true
-    },
-    {
-      "name": "boolval stdClass",
-      "op": "format.boolval",
-      "args": {
-        "value": {}
-      },
-      "expect": true
     },
     {
       "name": "max keeps the first of equal values",

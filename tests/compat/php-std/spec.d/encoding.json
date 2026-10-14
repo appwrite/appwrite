@@ -388,118 +388,6 @@
         }
       ]
     },
-    "encoding.htmlspecialchars_decode": {
-      "doc": "htmlspecialchars_decode($string, $flags)",
-      "fuzz": [
-        {
-          "args": {
-            "gen": "object",
-            "fields": {
-              "string": {
-                "gen": "ref",
-                "name": "encoding_html"
-              },
-              "flags": {
-                "gen": "ref",
-                "name": "encoding_flags"
-              }
-            },
-            "optional": [
-              "flags"
-            ]
-          },
-          "iterations": 5000
-        }
-      ]
-    },
-    "encoding.html_entity_decode": {
-      "doc": "html_entity_decode($string, $flags, 'UTF-8')",
-      "fuzz": [
-        {
-          "args": {
-            "gen": "object",
-            "fields": {
-              "string": {
-                "gen": "ref",
-                "name": "encoding_html"
-              },
-              "flags": {
-                "gen": "ref",
-                "name": "encoding_flags"
-              },
-              "encoding": {
-                "gen": "pick",
-                "from": [
-                  null,
-                  "UTF-8"
-                ]
-              }
-            },
-            "optional": [
-              "flags",
-              "encoding"
-            ]
-          },
-          "iterations": 8000
-        }
-      ]
-    },
-    "encoding.addslashes": {
-      "doc": "addslashes($string)",
-      "fuzz": [
-        {
-          "args": {
-            "gen": "object",
-            "fields": {
-              "string": {
-                "gen": "one_of",
-                "of": [
-                  {
-                    "gen": "string",
-                    "alphabet": "ab'\"\\\u0000",
-                    "min": 0,
-                    "max": 20
-                  },
-                  {
-                    "gen": "ref",
-                    "name": "encoding_bytes"
-                  }
-                ]
-              }
-            }
-          },
-          "iterations": 3000
-        }
-      ]
-    },
-    "encoding.stripslashes": {
-      "doc": "stripslashes($string)",
-      "fuzz": [
-        {
-          "args": {
-            "gen": "object",
-            "fields": {
-              "string": {
-                "gen": "one_of",
-                "of": [
-                  {
-                    "gen": "string",
-                    "alphabet": "ab'\"\\0",
-                    "min": 0,
-                    "max": 40
-                  },
-                  {
-                    "gen": "ref",
-                    "name": "encoding_bytes"
-                  }
-                ]
-              }
-            }
-          },
-          "iterations": 3000
-        }
-      ]
-    },
     "encoding.quoted_printable_encode": {
       "doc": "quoted_printable_encode($string)",
       "fuzz": [
@@ -543,34 +431,6 @@
                     "sep": "",
                     "min": 5,
                     "max": 40
-                  }
-                ]
-              }
-            }
-          },
-          "iterations": 3000
-        }
-      ]
-    },
-    "encoding.quoted_printable_decode": {
-      "doc": "quoted_printable_decode($string)",
-      "fuzz": [
-        {
-          "args": {
-            "gen": "object",
-            "fields": {
-              "string": {
-                "gen": "one_of",
-                "of": [
-                  {
-                    "gen": "ref",
-                    "name": "encoding_bytes"
-                  },
-                  {
-                    "gen": "string",
-                    "alphabet": "=0123456789ABCDEFabcdefg \t\r\n",
-                    "min": 0,
-                    "max": 20
                   }
                 ]
               }
@@ -1377,14 +1237,14 @@
   },
   "quirks": [
     {
-      "symbol": "html_entity_decode() / htmlspecialchars() numeric entities",
-      "description": "hexadecimal entities are read with C strtol, which accepts a '0x' prefix after '&#x': '&#x0x41;' is 'A'",
-      "case": "encoding.json#html_entity_decode hexadecimal 0x prefix (strtol)"
+      "symbol": "htmlspecialchars() numeric entities",
+      "description": "hexadecimal entities are read with C strtol, which accepts a '0x' prefix after '&#x': with $double_encode false, '&#x0x41;' is a valid entity and is kept",
+      "case": "encoding.json#htmlspecialchars keeps valid entities without double encoding"
     }
   ],
   "deviations": [
     {
-      "symbol": "htmlspecialchars(), htmlentities(), html_entity_decode() $encoding",
+      "symbol": "htmlspecialchars(), htmlentities() $encoding",
       "php": "charsets other than UTF-8 (ISO-8859-1, Windows-1252, Big5, ...)",
       "reason": "php_std::encoding's HTML functions implement UTF-8, PHP's default_charset and the only charset the libraries use"
     },

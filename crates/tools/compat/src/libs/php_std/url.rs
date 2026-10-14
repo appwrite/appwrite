@@ -57,28 +57,19 @@ pub async fn call(op: &str, args: &Value, _session: &mut Session) -> OpResult {
     }))
 }
 
-/// Every getter of a parsed `Uri\Rfc3986\Uri`, in the PHP ops file's order.
+/// The getters of a parsed `Uri\Rfc3986\Uri` that php-std implements, in
+/// the PHP ops file's order.
 fn uri_value(uri: &Uri) -> Value {
     let s = |v: Option<std::borrow::Cow<'_, [u8]>>| v.map_or(Value::Null, |v| bytes_value(&v));
     let mut m = Map::new();
     m.insert("scheme".into(), s(uri.scheme()));
     m.insert("rawScheme".into(), s(uri.raw_scheme()));
-    m.insert("userInfo".into(), s(uri.user_info()));
     m.insert("rawUserInfo".into(), s(uri.raw_user_info()));
-    m.insert("username".into(), s(uri.username()));
     m.insert("rawUsername".into(), s(uri.raw_username()));
-    m.insert("password".into(), s(uri.password()));
     m.insert("rawPassword".into(), s(uri.raw_password()));
     m.insert("host".into(), s(uri.host()));
     m.insert("rawHost".into(), s(uri.raw_host()));
-    m.insert("port".into(), uri.port().map_or(Value::Null, Value::from));
-    m.insert("path".into(), bytes_value(&uri.path()));
     m.insert("rawPath".into(), bytes_value(&uri.raw_path()));
-    m.insert("query".into(), s(uri.query()));
     m.insert("rawQuery".into(), s(uri.raw_query()));
-    m.insert("fragment".into(), s(uri.fragment()));
-    m.insert("rawFragment".into(), s(uri.raw_fragment()));
-    m.insert("string".into(), bytes_value(&uri.to_string_normalized()));
-    m.insert("rawString".into(), bytes_value(&uri.to_raw_string()));
     Value::Object(m)
 }

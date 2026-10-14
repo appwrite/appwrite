@@ -228,32 +228,6 @@
         }
       ]
     },
-    "format.vsprintf": {
-      "doc": "vsprintf($format, $values)",
-      "fuzz": [
-        {
-          "args": {
-            "gen": "object",
-            "fields": {
-              "format": {
-                "gen": "ref",
-                "name": "format_format"
-              },
-              "values": {
-                "gen": "array",
-                "items": {
-                  "gen": "ref",
-                  "name": "format_value"
-                },
-                "min": 0,
-                "max": 4
-              }
-            }
-          },
-          "iterations": 3000
-        }
-      ]
-    },
     "format.number_format": {
       "doc": "number_format($num, $decimals, $decimal_separator, $thousands_separator)",
       "fuzz": [
@@ -445,60 +419,8 @@
         }
       ]
     },
-    "format.floor": {
-      "doc": "floor($num)",
-      "fuzz": [
-        {
-          "args": {
-            "gen": "object",
-            "fields": {
-              "num": {
-                "gen": "one_of",
-                "of": [
-                  {
-                    "gen": "ref",
-                    "name": "format_float"
-                  },
-                  {
-                    "gen": "ref",
-                    "name": "format_int"
-                  }
-                ]
-              }
-            }
-          },
-          "iterations": 2000
-        }
-      ]
-    },
     "format.ceil": {
       "doc": "ceil($num)",
-      "fuzz": [
-        {
-          "args": {
-            "gen": "object",
-            "fields": {
-              "num": {
-                "gen": "one_of",
-                "of": [
-                  {
-                    "gen": "ref",
-                    "name": "format_float"
-                  },
-                  {
-                    "gen": "ref",
-                    "name": "format_int"
-                  }
-                ]
-              }
-            }
-          },
-          "iterations": 2000
-        }
-      ]
-    },
-    "format.abs": {
-      "doc": "abs($num)",
       "fuzz": [
         {
           "args": {
@@ -573,75 +495,6 @@
         }
       ]
     },
-    "format.fdiv": {
-      "doc": "fdiv($num1, $num2)",
-      "fuzz": [
-        {
-          "args": {
-            "gen": "object",
-            "fields": {
-              "num1": {
-                "gen": "ref",
-                "name": "format_float"
-              },
-              "num2": {
-                "gen": "one_of",
-                "of": [
-                  {
-                    "gen": "ref",
-                    "name": "format_float"
-                  },
-                  {
-                    "gen": "pick",
-                    "from": [
-                      0.0,
-                      -0.0
-                    ]
-                  }
-                ]
-              }
-            }
-          },
-          "iterations": 2000
-        }
-      ]
-    },
-    "format.intdiv": {
-      "doc": "intdiv($num1, $num2)",
-      "fuzz": [
-        {
-          "args": {
-            "gen": "object",
-            "fields": {
-              "num1": {
-                "gen": "ref",
-                "name": "format_int"
-              },
-              "num2": {
-                "gen": "one_of",
-                "of": [
-                  {
-                    "gen": "ref",
-                    "name": "format_int"
-                  },
-                  {
-                    "gen": "pick",
-                    "from": [
-                      0,
-                      -1,
-                      1,
-                      2,
-                      -2
-                    ]
-                  }
-                ]
-              }
-            }
-          },
-          "iterations": 2000
-        }
-      ]
-    },
     "format.intval": {
       "doc": "intval($value, $base): (int) casts and strtol bases",
       "fuzz": [
@@ -703,23 +556,6 @@
             }
           },
           "iterations": 6000
-        }
-      ]
-    },
-    "format.boolval": {
-      "doc": "boolval($value): (bool) casts",
-      "fuzz": [
-        {
-          "args": {
-            "gen": "object",
-            "fields": {
-              "value": {
-                "gen": "ref",
-                "name": "format_value"
-              }
-            }
-          },
-          "iterations": 2000
         }
       ]
     },

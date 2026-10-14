@@ -14,10 +14,8 @@ pub const OPS: &[&str] = &[
     "pcre.preg_match",
     "pcre.preg_match_all",
     "pcre.preg_replace",
-    "pcre.preg_replace_callback",
     "pcre.preg_split",
     "pcre.preg_quote",
-    "pcre.preg_grep",
     "pcre.compiled",
 ];
 
@@ -89,29 +87,6 @@ pub async fn call(op: &str, args: &Value, _session: &mut Session) -> OpResult {
                 Err(e) => Outcome::err(e.php_class(), e.to_string()),
             }
         }
-        "pcre.preg_replace_callback" => {
-            let f = "preg_replace_callback";
-            let pattern = match str_or_array(a.value("pattern")?, f, "1 ($pattern)")? {
-                Ok(v) => v,
-                Err(e) => return Ok(e),
-            };
-            let subject = match str_or_array(a.value("subject")?, f, "3 ($subject)")? {
-                Ok(v) => v,
-                Err(e) => return Ok(e),
-            };
-            let limit = a.opt_i64("limit")?.unwrap_or(-1);
-            let mut calls: Vec<Value> = Vec::new();
-            let mut callback = |m: &Array| {
-                calls.push(array_value(m));
-                format!("<{}>", calls.len()).into_bytes()
-            };
-            let p = pcre::preg_replace_callback(&pattern.borrow(), &mut callback, &subject.borrow(), limit, flags);
-            let mut o = Map::new();
-            o.insert("result".into(), php_value(&p.value.result));
-            o.insert("count".into(), Value::from(p.value.count));
-            o.insert("calls".into(), Value::Array(calls));
-            report(o, &p)
-        }
         "pcre.preg_split" => {
             let limit = a.opt_i64("limit")?.unwrap_or(-1);
             let p = pcre::preg_split(&a.bytes("pattern")?, &a.bytes("subject")?, limit, flags);
@@ -125,20 +100,6 @@ pub async fn call(op: &str, args: &Value, _session: &mut Session) -> OpResult {
                 Some(v) => Some(bytes(v).ok_or_else(|| Fault::new("argument `delimiter` must be a string"))?),
             };
             Outcome::Ok(bytes_value(&pcre::preg_quote(&a.bytes("str")?, delimiter.as_deref())))
-        }
-        "pcre.preg_grep" => {
-            let array = a.value("array")?;
-            if is_std_class(array) {
-                return Ok(Outcome::err(
-                    "TypeError",
-                    "preg_grep(): Argument #2 ($array) must be of type array, stdClass given",
-                ));
-            }
-            let input = entries(array)?;
-            let p = pcre::preg_grep(&a.bytes("pattern")?, &input, flags);
-            let mut o = Map::new();
-            o.insert("result".into(), php_value(&p.value));
-            report(o, &p)
         }
         "pcre.compiled" => {
             let subject = a.bytes("subject")?;

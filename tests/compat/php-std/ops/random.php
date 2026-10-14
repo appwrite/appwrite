@@ -1,6 +1,6 @@
 <?php
 
-// random.*: the default engine (Mt19937) after mt_srand($seed): mt_rand(),
+// random.*: the default engine (Mt19937) after mt_srand($seed):
 // mt_rand($min, $min + $span) and array_rand() of one key from a list.
 
 return [
@@ -8,7 +8,7 @@ return [
         mt_srand($a['seed']);
         $out = [];
         for ($i = 0; $i < $a['draws']; $i++) {
-            $out[] = isset($a['min']) ? mt_rand($a['min'], $a['min'] + $a['span']) : mt_rand();
+            $out[] = mt_rand($a['min'], $a['min'] + $a['span']);
         }
 
         return $out;

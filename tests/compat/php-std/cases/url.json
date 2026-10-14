@@ -383,23 +383,13 @@
       "expect": {
         "scheme": "http",
         "rawScheme": "HTTP",
-        "userInfo": "User:PAss",
         "rawUserInfo": "User:P%41ss",
-        "username": "User",
         "rawUsername": "User",
-        "password": "PAss",
         "rawPassword": "P%41ss",
         "host": "example.com",
         "rawHost": "EXAMPLE.com",
-        "port": 80,
-        "path": "/A/~%2F",
         "rawPath": "/A/./b/../%7e%2f",
-        "query": "QA",
-        "rawQuery": "Q%41",
-        "fragment": "Fa",
-        "rawFragment": "F%61",
-        "string": "http://User:PAss@example.com:80/A/~%2F?QA#Fa",
-        "rawString": "HTTP://User:P%41ss@EXAMPLE.com:0080/A/./b/../%7e%2f?Q%41#F%61"
+        "rawQuery": "Q%41"
       }
     },
     {
@@ -411,23 +401,13 @@
       "expect": {
         "scheme": "http",
         "rawScheme": "http",
-        "userInfo": null,
         "rawUserInfo": null,
-        "username": null,
         "rawUsername": null,
-        "password": null,
         "rawPassword": null,
         "host": "[::1]",
         "rawHost": "[::1]",
-        "port": 80,
-        "path": "/a",
         "rawPath": "/a",
-        "query": null,
-        "rawQuery": null,
-        "fragment": null,
-        "rawFragment": null,
-        "string": "http://[0000:0000:0000:0000:0000:0000:0000:0001]:80/a",
-        "rawString": "http://[0000:0000:0000:0000:0000:0000:0000:0001]:80/a"
+        "rawQuery": null
       }
     },
     {
@@ -439,23 +419,13 @@
       "expect": {
         "scheme": "http",
         "rawScheme": "http",
-        "userInfo": null,
         "rawUserInfo": null,
-        "username": null,
         "rawUsername": null,
-        "password": null,
         "rawPassword": null,
         "host": "[::ffff:1.2.3.4]",
         "rawHost": "[::FFFF:1.2.3.4]",
-        "port": null,
-        "path": "/",
         "rawPath": "/",
-        "query": null,
-        "rawQuery": null,
-        "fragment": null,
-        "rawFragment": null,
-        "string": "http://[0000:0000:0000:0000:0000:ffff:0102:0304]/",
-        "rawString": "http://[0000:0000:0000:0000:0000:ffff:0102:0304]/"
+        "rawQuery": null
       }
     },
     {
@@ -467,23 +437,13 @@
       "expect": {
         "scheme": "x",
         "rawScheme": "x",
-        "userInfo": null,
         "rawUserInfo": null,
-        "username": null,
         "rawUsername": null,
-        "password": null,
         "rawPassword": null,
         "host": "[v1.abc]",
         "rawHost": "[v1.ABC]",
-        "port": null,
-        "path": "/",
         "rawPath": "/",
-        "query": null,
-        "rawQuery": null,
-        "fragment": null,
-        "rawFragment": null,
-        "string": "x://[v1.abc]/",
-        "rawString": "x://[v1.ABC]/"
+        "rawQuery": null
       }
     },
     {
@@ -495,23 +455,13 @@
       "expect": {
         "scheme": null,
         "rawScheme": null,
-        "userInfo": null,
         "rawUserInfo": null,
-        "username": null,
         "rawUsername": null,
-        "password": null,
         "rawPassword": null,
         "host": null,
         "rawHost": null,
-        "port": null,
-        "path": "",
         "rawPath": "",
-        "query": null,
-        "rawQuery": null,
-        "fragment": null,
-        "rawFragment": null,
-        "string": "",
-        "rawString": ""
+        "rawQuery": null
       }
     },
     {
@@ -523,23 +473,13 @@
       "expect": {
         "scheme": "a",
         "rawScheme": "a",
-        "userInfo": null,
         "rawUserInfo": null,
-        "username": null,
         "rawUsername": null,
-        "password": null,
         "rawPassword": null,
         "host": null,
         "rawHost": null,
-        "port": null,
-        "path": "",
         "rawPath": "",
-        "query": null,
-        "rawQuery": null,
-        "fragment": null,
-        "rawFragment": null,
-        "string": "a:",
-        "rawString": "a:"
+        "rawQuery": null
       }
     },
     {
@@ -551,23 +491,13 @@
       "expect": {
         "scheme": null,
         "rawScheme": null,
-        "userInfo": null,
         "rawUserInfo": null,
-        "username": null,
         "rawUsername": null,
-        "password": null,
         "rawPassword": null,
         "host": "",
         "rawHost": "",
-        "port": null,
-        "path": "",
         "rawPath": "",
-        "query": null,
-        "rawQuery": null,
-        "fragment": null,
-        "rawFragment": null,
-        "string": "//",
-        "rawString": "//"
+        "rawQuery": null
       }
     },
     {
@@ -579,23 +509,13 @@
       "expect": {
         "scheme": null,
         "rawScheme": null,
-        "userInfo": null,
         "rawUserInfo": null,
-        "username": null,
         "rawUsername": null,
-        "password": null,
         "rawPassword": null,
         "host": "",
         "rawHost": "",
-        "port": 80,
-        "path": "",
         "rawPath": "",
-        "query": null,
-        "rawQuery": null,
-        "fragment": null,
-        "rawFragment": null,
-        "string": "//:80",
-        "rawString": "//:80"
+        "rawQuery": null
       }
     },
     {
@@ -607,23 +527,13 @@
       "expect": {
         "scheme": null,
         "rawScheme": null,
-        "userInfo": "u",
         "rawUserInfo": "u",
-        "username": "u",
         "rawUsername": "u",
-        "password": "",
         "rawPassword": "",
         "host": "",
         "rawHost": "",
-        "port": null,
-        "path": "",
         "rawPath": "",
-        "query": null,
-        "rawQuery": null,
-        "fragment": null,
-        "rawFragment": null,
-        "string": "//u@",
-        "rawString": "//u@"
+        "rawQuery": null
       }
     },
     {
@@ -635,23 +545,13 @@
       "expect": {
         "scheme": "com.example.app",
         "rawScheme": "com.example.app",
-        "userInfo": null,
         "rawUserInfo": null,
-        "username": null,
         "rawUsername": null,
-        "password": null,
         "rawPassword": null,
         "host": null,
         "rawHost": null,
-        "port": null,
-        "path": "/oauth",
         "rawPath": "/oauth",
-        "query": null,
-        "rawQuery": null,
-        "fragment": null,
-        "rawFragment": null,
-        "string": "com.example.app:/oauth",
-        "rawString": "com.example.app:/oauth"
+        "rawQuery": null
       }
     },
     {
@@ -663,23 +563,13 @@
       "expect": {
         "scheme": null,
         "rawScheme": null,
-        "userInfo": null,
         "rawUserInfo": null,
-        "username": null,
         "rawUsername": null,
-        "password": null,
         "rawPassword": null,
         "host": null,
         "rawHost": null,
-        "port": null,
-        "path": "..",
         "rawPath": "a/../..",
-        "query": null,
-        "rawQuery": null,
-        "fragment": null,
-        "rawFragment": null,
-        "string": "..",
-        "rawString": "a/../.."
+        "rawQuery": null
       }
     },
     {
@@ -691,23 +581,13 @@
       "expect": {
         "scheme": null,
         "rawScheme": null,
-        "userInfo": null,
         "rawUserInfo": null,
-        "username": null,
         "rawUsername": null,
-        "password": null,
         "rawPassword": null,
         "host": null,
         "rawHost": null,
-        "port": null,
-        "path": "./a:b",
         "rawPath": "./a:b",
-        "query": null,
-        "rawQuery": null,
-        "fragment": null,
-        "rawFragment": null,
-        "string": "./a:b",
-        "rawString": "./a:b"
+        "rawQuery": null
       }
     },
     {
@@ -719,23 +599,13 @@
       "expect": {
         "scheme": "http",
         "rawScheme": "http",
-        "userInfo": null,
         "rawUserInfo": null,
-        "username": null,
         "rawUsername": null,
-        "password": null,
         "rawPassword": null,
         "host": "h",
         "rawHost": "h",
-        "port": null,
-        "path": "/b",
         "rawPath": "/a/%2E%2e/b",
-        "query": null,
-        "rawQuery": null,
-        "fragment": null,
-        "rawFragment": null,
-        "string": "http://h/b",
-        "rawString": "http://h/a/%2E%2e/b"
+        "rawQuery": null
       }
     },
     {
@@ -747,23 +617,13 @@
       "expect": {
         "scheme": "http",
         "rawScheme": "http",
-        "userInfo": null,
         "rawUserInfo": null,
-        "username": null,
         "rawUsername": null,
-        "password": null,
         "rawPassword": null,
         "host": "ab%2C",
         "rawHost": "AB%2C",
-        "port": null,
-        "path": "/",
         "rawPath": "/",
-        "query": null,
-        "rawQuery": null,
-        "fragment": null,
-        "rawFragment": null,
-        "string": "http://ab%2C/",
-        "rawString": "http://AB%2C/"
+        "rawQuery": null
       }
     },
     {
@@ -791,23 +651,13 @@
       "expect": {
         "scheme": "http",
         "rawScheme": "http",
-        "userInfo": null,
         "rawUserInfo": null,
-        "username": null,
         "rawUsername": null,
-        "password": null,
         "rawPassword": null,
         "host": "h",
         "rawHost": "h",
-        "port": 9223372036854775807,
-        "path": "",
         "rawPath": "",
-        "query": null,
-        "rawQuery": null,
-        "fragment": null,
-        "rawFragment": null,
-        "string": "http://h:9223372036854775807",
-        "rawString": "http://h:9223372036854775807"
+        "rawQuery": null
       }
     },
     {

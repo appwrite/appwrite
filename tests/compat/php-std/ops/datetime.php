@@ -33,7 +33,6 @@ $catching = static function (callable $call): mixed {
 
 return [
     'datetime.parse' => fn (array $a) => date_parse($a['s']),
-    'datetime.parse_from_format' => fn (array $a) => date_parse_from_format($a['format'], $a['s']),
     'datetime.strtotime' => fn (array $a) => strtotime($a['s'], $a['base']),
     'datetime.date' => fn (array $a) => date($a['format'], $a['ts']),
     'datetime.gmdate' => fn (array $a) => gmdate($a['format'], $a['ts']),
@@ -76,6 +75,5 @@ return [
 
         return [$z->getName(), $z->getOffset(new DateTimeImmutable('@' . $a['ts']))];
     }),
-    'datetime.timezone_name_from_abbr' => fn (array $a) => timezone_name_from_abbr($a['abbr'], $a['offset'] ?? -1, $a['isdst'] ?? -1),
     'datetime.microtime' => fn (array $a) => [\strlen(microtime()), \is_float(microtime(true)), microtime(true) > 1e9, \is_int(time())],
 ];

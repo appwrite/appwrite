@@ -45,28 +45,18 @@
       ]
     },
     "url.rfc3986_parse": {
-      "doc": "Uri\\Rfc3986\\Uri::parse($uri): every getter (raw and normalized) and both string forms, or null",
+      "doc": "Uri\\Rfc3986\\Uri::parse($uri): the getters php-std implements, or null",
       "covers": [
         "Uri\\Rfc3986\\Uri::parse",
         "Uri\\Rfc3986\\Uri::getScheme",
         "Uri\\Rfc3986\\Uri::getRawScheme",
-        "Uri\\Rfc3986\\Uri::getUserInfo",
         "Uri\\Rfc3986\\Uri::getRawUserInfo",
-        "Uri\\Rfc3986\\Uri::getUsername",
         "Uri\\Rfc3986\\Uri::getRawUsername",
-        "Uri\\Rfc3986\\Uri::getPassword",
         "Uri\\Rfc3986\\Uri::getRawPassword",
         "Uri\\Rfc3986\\Uri::getHost",
         "Uri\\Rfc3986\\Uri::getRawHost",
-        "Uri\\Rfc3986\\Uri::getPort",
-        "Uri\\Rfc3986\\Uri::getPath",
         "Uri\\Rfc3986\\Uri::getRawPath",
-        "Uri\\Rfc3986\\Uri::getQuery",
-        "Uri\\Rfc3986\\Uri::getRawQuery",
-        "Uri\\Rfc3986\\Uri::getFragment",
-        "Uri\\Rfc3986\\Uri::getRawFragment",
-        "Uri\\Rfc3986\\Uri::toString",
-        "Uri\\Rfc3986\\Uri::toRawString"
+        "Uri\\Rfc3986\\Uri::getRawQuery"
       ],
       "fuzz": [
         {

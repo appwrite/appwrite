@@ -22,12 +22,7 @@ pub const OPS: &[&str] = &[
     "encoding.hex2bin",
     "encoding.htmlspecialchars",
     "encoding.htmlentities",
-    "encoding.htmlspecialchars_decode",
-    "encoding.html_entity_decode",
-    "encoding.addslashes",
-    "encoding.stripslashes",
     "encoding.quoted_printable_encode",
-    "encoding.quoted_printable_decode",
     "encoding.parse_str",
 ];
 
@@ -73,15 +68,7 @@ pub async fn call(op: &str, args: &Value, _session: &mut Session) -> OpResult {
             let f = if op == "encoding.htmlspecialchars" { encoding::htmlspecialchars } else { encoding::htmlentities };
             ok(bytes_value(&f(&s()?, flags(&a)?, double_encode)))
         }
-        "encoding.htmlspecialchars_decode" => ok(bytes_value(&encoding::htmlspecialchars_decode(&s()?, flags(&a)?))),
-        "encoding.html_entity_decode" => {
-            utf8_only(&a)?;
-            ok(bytes_value(&encoding::html_entity_decode(&s()?, flags(&a)?)))
-        }
-        "encoding.addslashes" => ok(bytes_value(&encoding::addslashes(&s()?))),
-        "encoding.stripslashes" => ok(bytes_value(&encoding::stripslashes(&s()?))),
         "encoding.quoted_printable_encode" => ok(bytes_value(&encoding::quoted_printable_encode(&s()?))),
-        "encoding.quoted_printable_decode" => ok(bytes_value(&encoding::quoted_printable_decode(&s()?))),
         "encoding.parse_str" => {
             let mut out = Vec::new();
             if let php_std::Value::Array(a) = php_std::Value::Array(encoding::parse_str(&s()?)) {

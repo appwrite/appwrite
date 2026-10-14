@@ -1,7 +1,7 @@
 <?php
 
-// encoding.*: URL, query, base64, hex, HTML entity, slash and
-// quoted-printable encodings (ext/standard). The arguments are the
+// encoding.*: URL, query, base64, hex, HTML entity and quoted-printable
+// encodings (ext/standard). The arguments are the
 // function's named parameters, passed straight through.
 
 return [
@@ -16,12 +16,7 @@ return [
     'encoding.hex2bin' => fn (array $a) => hex2bin(...$a),
     'encoding.htmlspecialchars' => fn (array $a) => htmlspecialchars(...$a),
     'encoding.htmlentities' => fn (array $a) => htmlentities(...$a),
-    'encoding.htmlspecialchars_decode' => fn (array $a) => htmlspecialchars_decode(...$a),
-    'encoding.html_entity_decode' => fn (array $a) => html_entity_decode(...$a),
-    'encoding.addslashes' => fn (array $a) => addslashes(...$a),
-    'encoding.stripslashes' => fn (array $a) => stripslashes(...$a),
     'encoding.quoted_printable_encode' => fn (array $a) => quoted_printable_encode(...$a),
-    'encoding.quoted_printable_decode' => fn (array $a) => quoted_printable_decode(...$a),
     // Leaves in order as [[key, ...], value] (an empty array is a leaf with
     // value []): keys keep their int/string type and may be binary, and deep
     // nesting stays shallow on the wire.

@@ -66,14 +66,6 @@
       "expect": true
     },
     {
-      "name": "stdClass is not an array",
-      "op": "value.is_array",
-      "args": {
-        "v": {}
-      },
-      "expect": false
-    },
-    {
       "name": "numeric strings compare numerically",
       "op": "value.loose_eq",
       "args": {

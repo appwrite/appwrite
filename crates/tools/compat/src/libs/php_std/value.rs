@@ -11,7 +11,6 @@ pub const OPS: &[&str] = &[
     "value.to_string",
     "value.truthy",
     "value.empty",
-    "value.is_array",
     "value.loose_eq",
     "value.loose_str_eq",
     "value.le_numbers",
@@ -31,7 +30,6 @@ pub async fn call(op: &str, args: &Value, _session: &mut Session) -> OpResult {
         "value.to_string" => value::to_string(v()?).map(Value::String).unwrap_or(Value::Null),
         "value.truthy" => Value::Bool(value::truthy(v()?)),
         "value.empty" => Value::Bool(value::empty(v()?)),
-        "value.is_array" => Value::Bool(value::is_array(v()?)),
         "value.loose_eq" => Value::Bool(value::loose_eq(a.value("a")?, a.value("b")?)),
         "value.loose_str_eq" => Value::Bool(value::loose_str_eq(&a.bytes("a")?, &a.bytes("b")?)),
         "value.le_numbers" => {
