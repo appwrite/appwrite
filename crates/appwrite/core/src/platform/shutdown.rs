@@ -27,6 +27,9 @@ struct RequestInfo {
     hostname: String,
     ip: String,
     sdk: String,
+    /// `X-SDK-Name` and `X-SDK-Language` as sent (onboarding's install stages).
+    sdk_name: String,
+    sdk_language: String,
     sdk_version: String,
     protocol: String,
     accept: String,
@@ -46,6 +49,12 @@ struct Job {
     params: Vec<(String, String)>,
     payload: Bytes,
     created_users: Vec<(String, Bytes)>,
+    /// An API key's disabled metrics: suffixes of the metric keys left out.
+    disabled_metrics: Vec<String>,
+    /// The user whose session the request created (the session limit).
+    session_user: Option<String>,
+    /// The abuse keys' parameters (the limits' reset).
+    abuse_params: Vec<(String, String)>,
     /// A function changed: its events cache is purged.
     functions_changed: bool,
     deletes: Vec<Value>,
@@ -54,6 +63,63 @@ struct Job {
     status: StatusCode,
     response_size: usize,
 }
+
+/// The onboarding stages (`app/config/onboarding.php`).
+const ONBOARDING: &[&str] = &[
+    "project.createWebPlatform",
+    "project.createAndroidPlatform",
+    "project.createApplePlatform",
+    "project.createWindowsPlatform",
+    "project.createLinuxPlatform",
+    "project.createKey",
+    "organization.createProjectKey",
+    "cli.install",
+    "mcp.install",
+    "users.create",
+    "account.create",
+    "account.createAnonymousSession",
+    "teams.create",
+    "tablesDB.create",
+    "tablesDB.createTable",
+    "tablesDB.createRow",
+    "documentsDB.create",
+    "documentsDB.createCollection",
+    "documentsDB.createDocument",
+    "databases.create",
+    "databases.createCollection",
+    "databases.createDocument",
+    "mysql.create",
+    "postgresql.create",
+    "mongo.create",
+    "storage.createBucket",
+    "storage.createFile",
+    "functions.create",
+    "functions.createDeployment",
+    "functions.createTemplateDeployment",
+    "functions.createVcsDeployment",
+    "functions.updateFunctionDeployment",
+    "messaging.createTopic",
+    "messaging.createMailgunProvider",
+    "messaging.createSendgridProvider",
+    "messaging.createSesProvider",
+    "messaging.createResendProvider",
+    "messaging.createSmtpProvider",
+    "messaging.createSMTPProvider",
+    "messaging.createMsg91Provider",
+    "messaging.createTelesignProvider",
+    "messaging.createTextmagicProvider",
+    "messaging.createTwilioProvider",
+    "messaging.createVonageProvider",
+    "messaging.createFcmProvider",
+    "messaging.createFCMProvider",
+    "messaging.createApnsProvider",
+    "messaging.createAPNSProvider",
+    "sites.create",
+    "sites.createDeployment",
+    "sites.createTemplateDeployment",
+    "sites.createVcsDeployment",
+    "sites.updateSiteDeployment",
+];
 
 pub(super) fn schedule(ctx: Context, status: StatusCode, body: Bytes, response_size: usize) {
     let request = &ctx.request;
@@ -65,6 +131,8 @@ pub(super) fn schedule(ctx: Context, status: StatusCode, body: Bytes, response_s
         hostname: origin_host.unwrap_or_else(|| ctx.hostname.clone()),
         ip: ctx.ip.clone(),
         sdk: request.header_or_empty("x-sdk-name").to_lowercase(),
+        sdk_name: request.header_or_empty("x-sdk-name").to_owned(),
+        sdk_language: request.header_or_empty("x-sdk-language").to_owned(),
         sdk_version: request.header_or_empty("x-sdk-version").to_owned(),
         protocol: request
             .header("x-forwarded-proto")
@@ -85,6 +153,15 @@ pub(super) fn schedule(ctx: Context, status: StatusCode, body: Bytes, response_s
         (None, Some(u)) => u.message_payload(),
     };
     let payload = ctx.events.payload.clone().unwrap_or(body);
+    // The `session` group's session limit: the user of the session created.
+    let session_user = if ctx.route.has_group("session") && status.is_success() {
+        serde_json::from_slice::<Value>(&body)
+            .ok()
+            .and_then(|b| b.get("userId").and_then(Value::as_str).map(str::to_owned))
+            .filter(|id| !id.is_empty())
+    } else {
+        None
+    };
     let listened = std::mem::take(&mut *ctx.listened.lock().unwrap_or_else(|e| e.into_inner()));
     // `create-trigger-events`: each created user, as the listener renders it.
     let created_users = listened
@@ -102,6 +179,7 @@ pub(super) fn schedule(ctx: Context, status: StatusCode, body: Bytes, response_s
         route: ctx.route.clone(),
         mode: ctx.mode,
         key_kind: ctx.key.as_ref().filter(|k| k.role == roles::KEYS).map(|k| k.kind),
+        disabled_metrics: ctx.key.as_ref().map(|k| k.disabled_metrics.clone()).unwrap_or_default(),
         actor,
         has_user: ctx.user.is_some(),
         privileged: roles::is_privileged(&ctx.roles),
@@ -109,6 +187,8 @@ pub(super) fn schedule(ctx: Context, status: StatusCode, body: Bytes, response_s
         payload,
         created_users,
         functions_changed: listened.functions,
+        session_user,
+        abuse_params: ctx.abuse_params,
         deletes: ctx.events.deletes,
         metrics: listened.metrics,
         request: info,
@@ -129,6 +209,9 @@ impl Job {
         // Functions, webhooks and events all carry the project's context.
         let project_payload = self.project.message_payload();
         let trimmed = project_payload.clone();
+
+        super::guards::abuse_reset(&self.state, self.route.labels, self.status.as_u16(), &self.abuse_params).await;
+        self.session_limit().await;
 
         // `purge-function-events-cache`.
         if self.functions_changed
@@ -226,6 +309,28 @@ impl Job {
             };
             self.publish(&self.state.config.queue_webhooks, &message).await;
         }
+    }
+
+    /// The `session` group's limit: the user's oldest sessions beyond the
+    /// project's `maxSessions` are deleted.
+    async fn session_limit(&self) {
+        let Some(user_id) = &self.session_user else { return };
+        let limit = self.project.auths.get("maxSessions").and_then(Value::as_i64).unwrap_or(10);
+        if limit == 0 {
+            return;
+        }
+        let Ok(db) = self.state.databases.project(&self.project, Databases::unchecked()) else { return };
+        let Ok(Some(user)) = crate::database::documents::load_user(&db, user_id).await else { return };
+        let excess = user.sessions.len() as i64 - limit;
+        if excess <= 0 {
+            return;
+        }
+        for session in user.sessions.iter().take(excess as usize) {
+            if let Err(e) = db.delete_document("sessions", &session.id).await {
+                tracing::warn!(error = %e, "session limit delete failed");
+            }
+        }
+        let _ = db.purge_cached_document("users", Some(user_id)).await;
     }
 
     /// The project's functions events cache key (none for the console).
@@ -371,6 +476,10 @@ impl Job {
         if metrics.is_empty() {
             return;
         }
+        // The message is still sent when the key disabled every metric.
+        if !self.disabled_metrics.is_empty() {
+            metrics.retain(|m| !self.disabled_metrics.iter().any(|p| m.key.ends_with(p.as_str())));
+        }
         let message = event::usage_message(self.project.trimmed_payload(), &metrics);
         self.publish(&self.state.config.queue_usage, &message).await;
     }
@@ -379,15 +488,35 @@ impl Job {
         if !self.status.is_success() || self.project.is_console() {
             return;
         }
+        // The route's SDK method, and the CLI or MCP install named by the
+        // client's SDK headers.
+        let mut methods: Vec<String> = Vec::new();
+        let sdk = self.request.sdk_name.as_str();
+        let cli = matches!(sdk, "cli" | "Command Line") || self.request.sdk_language == "cli";
+        if self.route.namespace.is_empty() && sdk != "mcp" && !cli {
+            return;
+        }
         let method = format!("{}.{}", self.route.namespace, self.route.sdk_method);
-        if method != "users.create" {
+        if ONBOARDING.contains(&method.as_str()) {
+            methods.push(method);
+        }
+        let install = match sdk {
+            "mcp" => Some("mcp.install"),
+            _ if cli => Some("cli.install"),
+            _ => None,
+        };
+        if let Some(install) = install.filter(|i| ONBOARDING.contains(i)) {
+            methods.push(install.to_owned());
+        }
+        if methods.is_empty() {
             return;
         }
         let mut stages = match &self.project.onboarding {
             Value::Object(m) => m.clone(),
             _ => Map::new(),
         };
-        if stages.get(&method).and_then(|r| r.get("status")).and_then(Value::as_str) == Some("completed") {
+        methods.retain(|m| stages.get(m).and_then(|r| r.get("status")).and_then(Value::as_str) != Some("completed"));
+        if methods.is_empty() {
             return;
         }
         let actor_type = match self.key_kind {
@@ -403,11 +532,14 @@ impl Job {
             }
             None => "guest",
         };
-        let mut row = Map::new();
-        row.insert("status".into(), Value::String("completed".into()));
-        row.insert("at".into(), Value::String(datetime::format_db(&datetime::now())));
-        row.insert("actorType".into(), Value::String(actor_type.into()));
-        stages.insert(method, Value::Object(row));
+        let at = datetime::format_db(&datetime::now());
+        for method in methods {
+            let mut row = Map::new();
+            row.insert("status".into(), Value::String("completed".into()));
+            row.insert("at".into(), Value::String(at.clone()));
+            row.insert("actorType".into(), Value::String(actor_type.into()));
+            stages.insert(method, Value::Object(row));
+        }
         // The `json` filter passes text through: stored as PHP encodes it.
         let encoded = crate::json::to_string(&Value::Object(stages));
         let Ok(db) = self.state.databases.platform(Databases::unchecked()) else { return };
@@ -451,4 +583,21 @@ fn render_template(template: &str, params: &[(String, String)], payload: &Bytes)
         out.replace_range(start..start + end + 1, &value);
     }
     out
+}
+
+#[cfg(test)]
+mod onboarding_tests {
+    /// The stages match `app/config/onboarding.php`.
+    #[test]
+    fn stages_follow_the_php_config() {
+        let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../app/config/onboarding.php");
+        let php = std::fs::read_to_string(path).expect("onboarding.php");
+        let keys: Vec<&str> = php
+            .lines()
+            .map(str::trim)
+            .filter(|l| l.starts_with('\'') && l.ends_with("=> true,"))
+            .filter_map(|l| l[1..].split('\'').next())
+            .collect();
+        assert_eq!(keys, super::ONBOARDING);
+    }
 }

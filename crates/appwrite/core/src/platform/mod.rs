@@ -12,6 +12,7 @@
 //! None of this requires changes to CE crates.
 
 mod context;
+mod guards;
 mod lifecycle;
 mod shutdown;
 mod state;
@@ -62,7 +63,38 @@ pub struct Route {
     pub event: Option<&'static str>,
     pub audit: Option<Audit>,
     pub groups: &'static [&'static str],
+    pub labels: Labels,
     pub action: Action,
+}
+
+/// The labels the generic hooks read.
+#[derive(Debug, Clone, Copy)]
+pub struct Labels {
+    /// `abuse-key`: key templates (`url:{url},ip:{ip}` by default).
+    pub abuse_key: &'static [&'static str],
+    /// `abuse-limit`: requests per window, `0` for none.
+    pub abuse_limit: i64,
+    /// `abuse-time`: the window, in seconds.
+    pub abuse_time: i64,
+    /// `abuse-reset`: response statuses that reset the limits.
+    pub abuse_reset: &'static [u16],
+    /// `auth.type`: the authentication method the route uses.
+    pub auth_type: &'static str,
+    /// `session.allowActive`: the route may create a session for a caller
+    /// who has one.
+    pub session_allow_active: bool,
+}
+
+impl Labels {
+    /// PHP's defaults for a route that sets none of them.
+    pub const NONE: Labels = Labels {
+        abuse_key: &["url:{url},ip:{ip}"],
+        abuse_limit: 0,
+        abuse_time: 3600,
+        abuse_reset: &[],
+        auth_type: "",
+        session_allow_active: false,
+    };
 }
 
 impl Route {

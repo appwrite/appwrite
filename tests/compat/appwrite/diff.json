@@ -1,0 +1,49 @@
+{
+  "projects": {
+    "php": "diff1014183114p",
+    "rust": "diff1014183114r"
+  },
+  "scenarios": 590,
+  "identical": 590,
+  "masked_headers": [
+    {
+      "header": "date",
+      "why": "the time the response was sent"
+    },
+    {
+      "header": "x-ratelimit-reset",
+      "why": "a time"
+    },
+    {
+      "header": "connection",
+      "why": "transport: keep-alive handling is the server's"
+    },
+    {
+      "header": "keep-alive",
+      "why": "transport"
+    },
+    {
+      "header": "x-debug-speed",
+      "why": "timing"
+    },
+    {
+      "header": "content-length",
+      "why": "follows the body, which is compared"
+    }
+  ],
+  "masked_error_fields": [
+    {
+      "field": "file",
+      "why": "the runtime's source file (development only)"
+    },
+    {
+      "field": "line",
+      "why": "the runtime's source line (development only)"
+    },
+    {
+      "field": "trace",
+      "why": "the runtime's stack (development only)"
+    }
+  ],
+  "differences": []
+}

@@ -28,6 +28,8 @@ pub struct State {
     /// Redis pub/sub for realtime fan-out (`PUBLISH realtime`).
     pub pubsub: ConnectionManager,
     pub lock: crate::locking::Locking,
+    /// Redis for the abuse limits (PHP's `abuse` pool).
+    pub abuse: ConnectionManager,
     pub translations: Translations,
     pub dictionary: HashSet<String>,
     pub geo: Geo,
@@ -55,6 +57,7 @@ impl State {
         let pubsub = redis[redis.len() - 1].clone();
         let publisher = Arc::new(utopia_queue::broker::Redis::new(Arc::new(pubsub.clone()), Arc::new(pubsub.clone())));
         let lock = crate::locking::Locking::new(redis[0].clone());
+        let abuse = redis[0].clone();
 
         // PostgreSQL pools, de-duplicated by server so that `console` and
         // `database_db_main` share connections on single-server installs.
@@ -101,6 +104,7 @@ impl State {
             publisher,
             pubsub,
             lock,
+            abuse,
             translations,
             dictionary,
             geo,

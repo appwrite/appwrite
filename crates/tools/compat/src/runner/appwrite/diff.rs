@@ -79,6 +79,34 @@ fn postgres_credentials() -> Result<(String, String, String), String> {
     Ok((get("POSTGRES_USER"), get("POSTGRES_PASSWORD"), get("POSTGRES_DB")))
 }
 
+/// An ephemeral API key for `project`, signed as the API signs them (HS256
+/// with the stack's `_APP_OPENSSL_KEY_V1`), leaving two usage metrics out.
+fn ephemeral_key(project: &str) -> Result<String, String> {
+    use base64::Engine as _;
+    use base64::engine::general_purpose::URL_SAFE_NO_PAD;
+    use hmac::{Hmac, Mac};
+    let out = std::process::Command::new("docker")
+        .args(["inspect", "-f", "{{range .Config.Env}}{{println .}}{{end}}", "appwrite"])
+        .output()
+        .map_err(|e| format!("docker: {e}"))?;
+    let env = String::from_utf8_lossy(&out.stdout);
+    let secret = env.lines().find_map(|l| l.strip_prefix("_APP_OPENSSL_KEY_V1=")).unwrap_or_default();
+    let now = chrono::Utc::now().timestamp();
+    let header = URL_SAFE_NO_PAD.encode(br#"{"typ":"JWT","alg":"HS256"}"#);
+    let claims = json!({
+        "projectId": project,
+        "scopes": SCOPES,
+        "disabledMetrics": ["requests", "outbound"],
+        "iat": now,
+        "exp": now + 3600,
+    });
+    let payload = URL_SAFE_NO_PAD.encode(claims.to_string());
+    let mut mac = Hmac::<sha2::Sha256>::new_from_slice(secret.as_bytes()).map_err(|e| e.to_string())?;
+    mac.update(format!("{header}.{payload}").as_bytes());
+    let signature = URL_SAFE_NO_PAD.encode(mac.finalize().into_bytes());
+    Ok(format!("ephemeral_{header}.{payload}.{signature}"))
+}
+
 /// The addresses a container has on its networks.
 fn container_ips(name: &str) -> Vec<String> {
     std::process::Command::new("docker")
@@ -145,6 +173,8 @@ struct Twin {
     seed_key: String,
     session: String,
     jwt: String,
+    /// An ephemeral key (a JWT the API signs) whose usage leaves metrics out.
+    ephemeral: String,
     keys: OwnedKeys,
 }
 
@@ -362,7 +392,12 @@ async fn twin(
     Ok(Twin {
         runtime,
         endpoint,
-        ips: container_ips(container),
+        // A Rust server run on the host (`COMPAT_DIFF_RUST_IPS`: the
+        // addresses Redis sees it from) instead of its container.
+        ips: match std::env::var("COMPAT_DIFF_RUST_IPS") {
+            Ok(ips) if runtime == "rust" => ips.split(',').map(str::to_owned).collect(),
+            _ => container_ips(container),
+        },
         project,
         prefix: format!("_{sequence}_"),
         key: full,
@@ -370,6 +405,7 @@ async fn twin(
         seed_key: server[1].1.clone(),
         session,
         jwt,
+        ephemeral: ephemeral_key(&project)?,
         keys,
     })
 }
@@ -385,6 +421,8 @@ enum Identity {
     Jwt,
     InvalidJwt,
     NoProject,
+    /// An ephemeral key with `disabledMetrics`.
+    EphemeralKey,
     UnknownProject,
     /// The console account's key, with `x-appwrite-user`.
     AccountKey,
@@ -400,7 +438,7 @@ enum Identity {
     OrganizationKeyNoTeam,
 }
 
-const IDENTITIES: [Identity; 16] = [
+const IDENTITIES: [Identity; 17] = [
     Identity::Guest,
     Identity::Key,
     Identity::NarrowKey,
@@ -417,6 +455,7 @@ const IDENTITIES: [Identity; 16] = [
     Identity::AccountKeySession,
     Identity::OrganizationKey,
     Identity::OrganizationKeyNoTeam,
+    Identity::EphemeralKey,
 ];
 
 #[derive(Clone, Copy, Debug)]
@@ -483,9 +522,23 @@ enum Variant {
     NewFormat,
     /// `X-Appwrite-Locale` (translated error messages).
     Locale,
+    /// The CLI's `X-SDK-Name` (its onboarding install stage).
+    Cli,
+    /// The MCP server's `X-SDK-Name` (its onboarding install stage).
+    Mcp,
+    /// `X-Appwrite-Timeout` (the development database timeout).
+    Timeout,
 }
 
-const VARIANTS: [Variant; 4] = [Variant::Preflight, Variant::OldFormat, Variant::NewFormat, Variant::Locale];
+const VARIANTS: [Variant; 7] = [
+    Variant::Preflight,
+    Variant::OldFormat,
+    Variant::NewFormat,
+    Variant::Locale,
+    Variant::Cli,
+    Variant::Mcp,
+    Variant::Timeout,
+];
 
 struct Scenario {
     id: String,
@@ -583,6 +636,10 @@ fn request(
             headers.push(("x-appwrite-jwt".into(), "eyJhbGciOiJIUzI1NiJ9.e30.invalid".into()));
         }
         Identity::NoProject => headers.push(("x-appwrite-key".into(), twin.key.clone())),
+        Identity::EphemeralKey => {
+            project(&mut headers, &twin.project);
+            headers.push(("x-appwrite-key".into(), twin.ephemeral.clone()));
+        }
         Identity::UnknownProject => {
             project(&mut headers, "unknown-project");
             headers.push(("x-appwrite-key".into(), twin.key.clone()));
@@ -643,6 +700,9 @@ fn request(
         Variant::OldFormat => headers.push(("x-appwrite-response-format".into(), "1.4.0".into())),
         Variant::NewFormat => headers.push(("x-appwrite-response-format".into(), "99.0.0".into())),
         Variant::Locale => headers.push(("x-appwrite-locale".into(), "fr".into())),
+        Variant::Cli => headers.push(("x-sdk-name".into(), "Command Line".into())),
+        Variant::Mcp => headers.push(("x-sdk-name".into(), "mcp".into())),
+        Variant::Timeout => headers.push(("x-appwrite-timeout".into(), "5000".into())),
     }
     (method, format!("{}{path}", twin.endpoint), headers, body)
 }
@@ -836,6 +896,7 @@ impl Normalizer {
             (twin.narrow_key.clone(), "{narrow-key}".to_owned()),
             (twin.seed_key.clone(), "{seed-key}".to_owned()),
             (other.key.clone(), "{other-key}".to_owned()),
+            (twin.ephemeral.clone(), "{ephemeral-key}".to_owned()),
             (other.project.clone(), "{other-project}".to_owned()),
             (twin.session.clone(), "{session}".to_owned()),
             (twin.jwt.clone(), "{jwt}".to_owned()),

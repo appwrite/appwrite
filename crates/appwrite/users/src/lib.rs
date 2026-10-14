@@ -11,7 +11,7 @@ mod base;
 mod http;
 
 use appwrite_core::action;
-use appwrite_core::platform::{Audit, Module, Route};
+use appwrite_core::platform::{Audit, Labels, Module, Route};
 use utopia_http::Method;
 
 /// The Users module.
@@ -37,6 +37,7 @@ macro_rules! route {
             event: $event,
             audit: $audit,
             groups: GROUPS,
+            labels: Labels::NONE,
             action: action!($action),
         }
     };

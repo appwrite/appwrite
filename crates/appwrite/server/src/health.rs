@@ -31,6 +31,7 @@ impl Module for Health {
             event: None,
             audit: None,
             groups: &["api", "health"],
+            labels: appwrite_core::platform::Labels::NONE,
             action: action!(version),
         }]
     }

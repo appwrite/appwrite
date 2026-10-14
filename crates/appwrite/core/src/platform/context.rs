@@ -79,6 +79,9 @@ pub struct Context {
     /// The domain of the custom domain rule the request comes from, when it
     /// serves the project (the `rule` resource).
     pub rule_domain: Option<String>,
+    /// The abuse keys' parameters (`{projectId}`, `{ip}`, ...), for the
+    /// limits' reset after the action.
+    pub abuse_params: Vec<(String, String)>,
     /// The keys of the account API key's user (see the `user` resource).
     pub account_keys: Vec<crate::database::project::Key>,
     db: Option<Database>,
@@ -111,6 +114,7 @@ impl Context {
             project_found: true,
             secured: false,
             rule_domain: None,
+            abuse_params: Vec::new(),
             account_keys: Vec::new(),
             mode: Mode::Default,
             locale,
@@ -139,6 +143,17 @@ impl Context {
             return Ok(db.clone());
         }
         let db = self.state.databases.project(&self.project, self.authorization.clone())?;
+        // `x-appwrite-timeout` (the `api` group's database timeout hook):
+        // development only.
+        if self.state.config.development {
+            let timeout = php_std::format::intval(
+                php_std::format::Arg::Str(self.request.header_or_empty("x-appwrite-timeout").as_bytes()),
+                10,
+            );
+            if timeout != 0 {
+                db.set_timeout(timeout, Database::EVENT_ALL)?;
+            }
+        }
         // The console's database is the platform's, without listeners.
         if !self.project.is_console() && !self.project.id.is_empty() {
             listen(&db, &self.listened);

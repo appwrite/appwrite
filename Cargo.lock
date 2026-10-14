@@ -139,6 +139,7 @@ dependencies = [
  "sha2 0.10.9",
  "tokio",
  "tracing",
+ "utopia-abuse",
  "utopia-auth",
  "utopia-cache",
  "utopia-database",

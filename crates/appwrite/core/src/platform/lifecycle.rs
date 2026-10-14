@@ -13,7 +13,7 @@ use utopia_database::{Database, Document, Query};
 use utopia_http::{Compression, Request, Response};
 
 use super::context::{Context, Mode};
-use super::{Platform, Route, shutdown};
+use super::{Platform, Route, guards, shutdown};
 use crate::auth::{self, ApiKey, KeyType, Owners, roles};
 use crate::database::documents::{self, Attributes, User};
 use crate::database::project;
@@ -37,6 +37,7 @@ pub(super) fn wildcard_route() -> Route {
         event: None,
         audit: None,
         groups: &["api"],
+        labels: super::Labels::NONE,
         action: not_found,
     }
 }
@@ -447,6 +448,13 @@ pub(super) async fn authenticate(ctx: &mut Context) -> Result<()> {
             }
         }
     }
+
+    // The hooks routes opt into, in PHP's order.
+    guards::abuse(ctx).await?;
+    guards::session_active(ctx)?;
+    guards::mfa_fresh(ctx)?;
+    guards::recent_session(ctx)?;
+    guards::auth_methods(ctx).await?;
     Ok(())
 }
 
