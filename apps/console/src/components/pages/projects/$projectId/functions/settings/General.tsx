@@ -12,13 +12,19 @@ import {
 } from '@/lib/react-query/hooks'
 import { sdk } from '@/lib/appwrite/sdk'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import type { Models } from '@appwrite.io/console'
+import { Functions, type Models } from '@appwrite.io/console'
 import { toast } from 'sonner'
 import { Trash2 } from 'lucide-react'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
+import { DescriptionField } from '@/components/global/shared/DescriptionField'
 import { RuntimeIcon } from '@/components/global/shared/RuntimeIcon'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import {
+  normalizeDescription,
+  readDescription,
+  withDescription,
+} from '@/lib/appwrite/resource-descriptions'
 import {
   SettingsCardsList,
   type SettingsCardItem,
@@ -38,6 +44,9 @@ export function View() {
   )
 
   const [name, setName] = useSyncStateFromServer(func?.name || '')
+  const [description, setDescription] = useSyncStateFromServer(
+    readDescription(func),
+  )
   const [enabled, setEnabled] = useSyncStateFromServer(
     func ? func.enabled !== false : false,
   )
@@ -49,10 +58,12 @@ export function View() {
     mutationFn: async (updates: Partial<Models.Function>) => {
       if (!projectId || !functionId || !func)
         throw new Error('Project ID, Function ID, and Function are required')
-      const projectSdk = sdk.forProject(projectId)
-      return await projectSdk.functions.update(
-        buildFunctionUpdateParams(func, updates),
-      )
+      // Sent through `withDescription`: the pinned SDK drops `description`.
+      return await withDescription(
+        projectId,
+        normalizeDescription(description),
+        Functions,
+      ).update(buildFunctionUpdateParams(func, updates))
     },
     onSuccess: (updated) => {
       toast.success(t('Function updated successfully'))
@@ -102,7 +113,12 @@ export function View() {
     },
   })
 
-  const handleSaveName = () => {
+  const savedDescription = readDescription(func)
+  const detailsDirty =
+    name !== func?.name ||
+    normalizeDescription(description) !== savedDescription
+
+  const handleSaveDetails = () => {
     if (!name.trim()) {
       toast.error(t('Function name is required'))
       return
@@ -192,27 +208,40 @@ export function View() {
     {
       id: 'name',
       search: {
-        title: 'Name',
-        description: 'Function name used for identification',
-        keywords: ['rename', 'display'],
+        title: 'Name and description',
+        description: 'Name and description used to identify this function',
+        keywords: ['rename', 'display', 'description', 'about'],
       },
       node: (
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground">
-            {t('Name')}
+            {t('Name and description')}
           </h3>
           <p className="text-[13px] text-muted-foreground mt-2">
-            {t('Function name used for identification')}
+            {t('Name and description used to identify this function')}
           </p>
         </div>
         <div className="border-t border-border" />
-        <div className="px-6 py-4">
-          <Input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder={t('Enter function name')}
-            className="h-9 max-w-sm border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
+        <div className="px-6 py-4 space-y-4">
+          <div>
+            <Label htmlFor="function-name" className="text-[13px]">
+              {t('Name')}
+            </Label>
+            <Input
+              id="function-name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder={t('Enter function name')}
+              className="mt-2 h-9 max-w-sm border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
+            />
+          </div>
+          <DescriptionField
+            id="function-description"
+            value={description}
+            onChange={setDescription}
+            placeholder={t('What does this function do?')}
+            className="max-w-sm"
           />
         </div>
         <div className="px-6 py-4 border-t border-border bg-muted/30">
@@ -220,11 +249,9 @@ export function View() {
             size="sm"
             className="h-9 text-[13px]"
             disabled={
-              name === func.name ||
-              !name.trim() ||
-              updateFunctionMutation.isPending
+              !detailsDirty || !name.trim() || updateFunctionMutation.isPending
             }
-            onClick={handleSaveName}
+            onClick={handleSaveDetails}
           >
             {t('Update')}
           </Button>

@@ -1,18 +1,24 @@
 /**
  * Name Card Component
  *
- * Allows users to update the site's display name.
+ * Allows users to update the site's display name and description.
  */
 
 import { useSyncStateFromServer } from '@/hooks/use-sync-state-from-server'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { sdk } from '@/lib/appwrite/sdk'
-import type { Models } from '@appwrite.io/console'
+import { Sites, type Models } from '@appwrite.io/console'
+import { DescriptionField } from '@/components/global/shared/DescriptionField'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { buildSiteUpdateParams } from '@/lib/react-query/hooks'
+import {
+  normalizeDescription,
+  readDescription,
+  withDescription,
+} from '@/lib/appwrite/resource-descriptions'
 import { useT } from '@/lib/i18n/translate'
 
 interface NameCardProps {
@@ -25,17 +31,24 @@ export function NameCard({ projectId, siteId, site }: NameCardProps) {
   const t = useT()
   const queryClient = useQueryClient()
   const [name, setName] = useSyncStateFromServer(site?.name || '')
+  const [description, setDescription] = useSyncStateFromServer(
+    readDescription(site),
+  )
 
   // Update site mutation
   const updateSiteMutation = useMutation({
     mutationFn: async (updates: Partial<Models.Site>) => {
       if (!projectId || !siteId || !site)
         throw new Error('Project ID, Site ID, and Site are required')
-      const projectSdk = sdk.forProject(projectId)
-      return await projectSdk.sites.update(buildSiteUpdateParams(site, updates))
+      // Sent through `withDescription`: the pinned SDK drops `description`.
+      return await withDescription(
+        projectId,
+        normalizeDescription(description),
+        Sites,
+      ).update(buildSiteUpdateParams(site, updates))
     },
     onSuccess: (updated) => {
-      toast.success(t('Site name updated successfully'))
+      toast.success(t('Site updated successfully'))
       queryClient.setQueryData(
         ['site', 'project', projectId, siteId],
         updated,
@@ -45,7 +58,7 @@ export function NameCard({ projectId, siteId, site }: NameCardProps) {
       })
     },
     onError: (error: unknown) => {
-      toast.error(getErrorMessage(error, t('Failed to update site name')))
+      toast.error(getErrorMessage(error, t('Failed to update site')))
     },
   })
 
@@ -57,25 +70,40 @@ export function NameCard({ projectId, siteId, site }: NameCardProps) {
     updateSiteMutation.mutate({ name })
   }
 
-  const hasChanges = name !== site?.name
+  const hasChanges =
+    name !== site?.name ||
+    normalizeDescription(description) !== readDescription(site)
 
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       <div className="px-6 py-4">
         <h3 className="text-[15px] font-semibold text-foreground">
-          {t('Name')}
+          {t('Name and description')}
         </h3>
         <p className="text-[13px] text-muted-foreground mt-2">
-          {t('Site name used for identification')}
+          {t('Name and description used to identify this site')}
         </p>
       </div>
       <div className="border-t border-border" />
-      <div className="px-6 py-4">
-        <Input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder={t('Enter site name')}
-          className="h-9 max-w-sm border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
+      <div className="px-6 py-4 space-y-4">
+        <div>
+          <Label htmlFor="site-name" className="text-[13px]">
+            {t('Name')}
+          </Label>
+          <Input
+            id="site-name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder={t('Enter site name')}
+            className="mt-2 h-9 max-w-sm border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
+          />
+        </div>
+        <DescriptionField
+          id="site-description"
+          value={description}
+          onChange={setDescription}
+          placeholder={t('What is this site for?')}
+          className="max-w-sm"
         />
       </div>
       <div className="px-6 py-4 border-t border-border bg-muted/30">

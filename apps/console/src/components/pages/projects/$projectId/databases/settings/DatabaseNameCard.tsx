@@ -3,11 +3,16 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { DescriptionField } from '@/components/global/shared/DescriptionField'
 import {
   invalidateDatabaseModel,
   refetchProjectDatabaseLists,
   updateProjectDatabase,
 } from '@/lib/react-query/hooks'
+import {
+  normalizeDescription,
+  readDescription,
+} from '@/lib/appwrite/resource-descriptions'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useT } from '@/lib/i18n/translate'
 import type { DatabaseRouteKind } from '@/lib/database-routes'
@@ -31,10 +36,16 @@ export function DatabaseNameCard({
   const t = useT()
   const queryClient = useQueryClient()
   const [name, setName] = useState(database.name)
+  const savedDescription = readDescription(database)
+  const [description, setDescription] = useState(savedDescription)
 
   useEffect(() => {
     setName(database.name)
   }, [database.name])
+
+  useEffect(() => {
+    setDescription(savedDescription)
+  }, [savedDescription])
 
   const updateMutation = useMutation({
     mutationFn: async (nextName: string) => {
@@ -48,7 +59,7 @@ export function DatabaseNameCard({
       await updateProjectDatabase(
         projectId,
         databaseId,
-        { name: trimmed },
+        { name: trimmed, description: normalizeDescription(description) },
         dbKind,
       )
     },
@@ -59,20 +70,23 @@ export function DatabaseNameCard({
       })
       // List queries use refetchOnMount: false, so refetch (not invalidate).
       await refetchProjectDatabaseLists(queryClient, projectId)
-      toast.success(t('Database name updated successfully'))
+      toast.success(t('Database updated successfully'))
     },
     onError: (error: unknown) => {
-      toast.error(getErrorMessage(error, t('Failed to update database name')))
+      toast.error(getErrorMessage(error, t('Failed to update database')))
     },
   })
 
-  const hasChanges = name.trim() !== database.name && name.trim().length > 0
+  const hasChanges =
+    (name.trim() !== database.name ||
+      normalizeDescription(description) !== savedDescription) &&
+    name.trim().length > 0
 
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       <div className="px-6 py-4">
         <h3 className="text-[15px] font-semibold text-foreground">
-          {t('Name')}
+          {t('Name and description')}
         </h3>
       </div>
       <div className="border-t border-border" />
@@ -88,6 +102,14 @@ export function DatabaseNameCard({
           placeholder={t('Database name')}
           disabled={!canWrite}
           className="mt-3 h-9 max-w-sm border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
+        />
+        <DescriptionField
+          id="database-description"
+          value={description}
+          onChange={setDescription}
+          placeholder={t('What does this database hold?')}
+          disabled={!canWrite}
+          className="mt-4 max-w-sm"
         />
       </div>
       <div className="px-6 py-4 border-t border-border bg-muted/30">

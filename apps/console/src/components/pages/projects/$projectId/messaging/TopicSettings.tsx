@@ -13,6 +13,7 @@ import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DetailResourceHeaderTitle } from '@/components/global/shared/ResourceTitleSwitcher'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
+import { DescriptionField } from '@/components/global/shared/DescriptionField'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -25,8 +26,13 @@ import { Input } from '@/components/ui/input'
 import { toast } from 'sonner'
 import { useT } from '@/lib/i18n/translate'
 import { sdk } from '@/lib/appwrite/sdk'
+import {
+  normalizeDescription,
+  readDescription,
+  withDescription,
+} from '@/lib/appwrite/resource-descriptions'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
-import type { Models } from '@appwrite.io/console'
+import { Messaging, type Models } from '@appwrite.io/console'
 
 export function View({
   initialTopic,
@@ -53,12 +59,14 @@ export function View({
   const showSettingsTab = canShowTopicSettingsTab(access, features)
 
   const [name, setName] = useState('')
+  const [description, setDescription] = useState('')
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 
   // Initialize form when topic loads
   useMemo(() => {
     if (topic) {
       setName(topic.name || '')
+      setDescription(readDescription(topic))
     }
   }, [topic])
 
@@ -68,8 +76,12 @@ export function View({
       if (!projectId || !topicId) {
         throw new Error('Project ID and Topic ID are required')
       }
-      const projectSdk = sdk.forProject(projectId)
-      await projectSdk.messaging.updateTopic({
+      // Sent through `withDescription`: the pinned SDK drops `description`.
+      await withDescription(
+        projectId,
+        normalizeDescription(description),
+        Messaging,
+      ).updateTopic({
         topicId,
         name,
       })
@@ -78,10 +90,10 @@ export function View({
       queryClient.invalidateQueries({
         queryKey: ['topic', 'project', projectId, topicId],
       })
-      toast.success(t('Topic name updated successfully'))
+      toast.success(t('Topic updated successfully'))
     },
     onError: (error: Error) => {
-      toast.error(getErrorMessage(error) || t('Failed to update topic name'))
+      toast.error(getErrorMessage(error) || t('Failed to update topic'))
     },
   })
 
@@ -208,7 +220,7 @@ export function View({
           <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
             <div className="px-6 py-4">
               <h3 className="text-[15px] font-semibold text-foreground">
-                {t('Name')}
+                {t('Name and description')}
               </h3>
             </div>
             <div className="border-t border-border" />
@@ -225,13 +237,22 @@ export function View({
                 placeholder={t('Topic name')}
                 className="mt-3 h-9 max-w-sm border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
               />
+              <DescriptionField
+                id="topic-description"
+                value={description}
+                onChange={setDescription}
+                placeholder={t('Who subscribes to this topic?')}
+                className="mt-4 max-w-sm"
+              />
             </div>
             <div className="px-6 py-4 border-t border-border bg-muted/30">
               <Button
                 size="sm"
                 className="h-9 text-[13px]"
                 disabled={
-                  name.trim() === topic.name ||
+                  (name.trim() === topic.name &&
+                    normalizeDescription(description) ===
+                      readDescription(topic)) ||
                   !name.trim() ||
                   updateNameMutation.isPending
                 }

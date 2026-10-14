@@ -10,8 +10,12 @@ import {
   useQueryClient,
   queryOptions,
 } from '@tanstack/react-query'
-import { ID, type Models } from '@appwrite.io/console'
+import { ID, Webhooks, type Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
+import {
+  normalizeDescription,
+  withDescription,
+} from '@/lib/appwrite/resource-descriptions'
 import { Dependencies } from './dependencies'
 import { DEFAULT_STALE_TIME } from './constants'
 
@@ -135,6 +139,7 @@ export function useCreateWebhook(projectId: string | null | undefined) {
   return useMutation({
     mutationFn: async (data: {
       name: string
+      description: string
       events: string[]
       url: string
       tls: boolean
@@ -145,7 +150,12 @@ export function useCreateWebhook(projectId: string | null | undefined) {
       if (!projectId) {
         throw new Error('Project ID is required')
       }
-      return await sdk.forProject(projectId).webhooks.create({
+      // Sent through `withDescription`: the pinned SDK drops `description`.
+      return await withDescription(
+        projectId,
+        normalizeDescription(data.description),
+        Webhooks,
+      ).create({
         webhookId: ID.unique(),
         name: data.name,
         events: data.events,
@@ -179,6 +189,7 @@ export function useUpdateWebhook(projectId: string | null | undefined) {
     mutationFn: async (data: {
       webhookId: string
       name: string
+      description: string
       events: string[]
       url: string
       tls: boolean
@@ -189,7 +200,12 @@ export function useUpdateWebhook(projectId: string | null | undefined) {
       if (!projectId) {
         throw new Error('Project ID is required')
       }
-      return await sdk.forProject(projectId).webhooks.update({
+      // Sent through `withDescription`: the pinned SDK drops `description`.
+      return await withDescription(
+        projectId,
+        normalizeDescription(data.description),
+        Webhooks,
+      ).update({
         webhookId: data.webhookId,
         name: data.name,
         events: data.events,

@@ -13,6 +13,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { useCreateWebhook } from '@/lib/react-query/hooks'
 import { toast } from 'sonner'
 import { ChevronRight, ChevronLeft, Copy, Check } from 'lucide-react'
+import { DescriptionField } from '@/components/global/shared/DescriptionField'
 import { EventSelector } from './EventSelector'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useT } from '@/lib/i18n/translate'
@@ -74,6 +75,7 @@ export function CreateWebhookDialog({
   const createWebhookMutation = useCreateWebhook(projectId)
   const [currentStep, setCurrentStep] = useState<WizardStep>('name-url')
   const [name, setName] = useState('')
+  const [description, setDescription] = useState('')
   const [url, setUrl] = useState('')
   const [events, setEvents] = useState<string[]>([])
   const [authUsername, setAuthUsername] = useState('')
@@ -88,6 +90,7 @@ export function CreateWebhookDialog({
     if (!open) {
       setCurrentStep('name-url')
       setName('')
+      setDescription('')
       setUrl('')
       setEvents([])
       setAuthUsername('')
@@ -131,6 +134,7 @@ export function CreateWebhookDialog({
     try {
       const webhook = await createWebhookMutation.mutateAsync({
         name: name.trim(),
+        description,
         url: url.trim(),
         events,
         tls,
@@ -191,6 +195,13 @@ export function CreateWebhookDialog({
                     autoFocus
                   />
                 </div>
+                <DescriptionField
+                  id="create-webhook-description"
+                  value={description}
+                  onChange={setDescription}
+                  placeholder={t('What does this webhook notify?')}
+                  disabled={createWebhookMutation.isPending}
+                />
                 <div className="space-y-2">
                   <Label htmlFor="url" className="text-[12px] font-medium">
                     {t('POST URL')} <span className="text-destructive">*</span>

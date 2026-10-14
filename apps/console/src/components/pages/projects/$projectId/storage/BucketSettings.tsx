@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useParams } from '@tanstack/react-router'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { Compression } from '@appwrite.io/console'
+import { Compression, Storage } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
   useBucket,
@@ -28,6 +28,12 @@ import {
 } from '@/components/ui/select'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
+import { DescriptionField } from '@/components/global/shared/DescriptionField'
+import {
+  normalizeDescription,
+  readDescription,
+  withDescription,
+} from '@/lib/appwrite/resource-descriptions'
 import { Loader2, FolderOpen, X, Plus } from 'lucide-react'
 import { formatBytes } from '@/lib/utils/mock-data'
 import {
@@ -93,6 +99,7 @@ export function BucketSettings() {
 
   // State for form fields
   const [bucketName, setBucketName] = useState('')
+  const [bucketDescription, setBucketDescription] = useState('')
   const [enabled, setEnabled] = useState(false)
   const [encryption, setEncryption] = useState(false)
   const [compression, setCompression] = useState<'none' | 'gzip' | 'zstd'>(
@@ -114,6 +121,7 @@ export function BucketSettings() {
   useEffect(() => {
     if (bucket) {
       setBucketName(bucket.name)
+      setBucketDescription(readDescription(bucket))
       setEnabled(bucket.enabled)
       setEncryption(bucket.encryption)
       const bucketCompression =
@@ -141,8 +149,12 @@ export function BucketSettings() {
     mutationFn: async (name: string) => {
       if (!projectId || !bucketId || !bucket)
         throw new Error('Project ID, Bucket ID, and Bucket are required')
-      const projectSdk = sdk.forProject(projectId)
-      return await projectSdk.storage.updateBucket({
+      // Sent through `withDescription`: the pinned SDK drops `description`.
+      return await withDescription(
+        projectId,
+        normalizeDescription(bucketDescription),
+        Storage,
+      ).updateBucket({
         bucketId,
         name: name.trim(),
         enabled: bucket.enabled ?? undefined,
@@ -155,7 +167,7 @@ export function BucketSettings() {
       })
     },
     onSuccess: () => {
-      toast.success(t('Bucket name has been updated'))
+      toast.success(t('Bucket has been updated'))
       queryClient.invalidateQueries({
         queryKey: ['bucket', 'project', projectId, bucketId],
       })
@@ -386,8 +398,12 @@ export function BucketSettings() {
     },
   })
 
+  const bucketDetailsDirty =
+    bucketName.trim() !== bucket?.name ||
+    normalizeDescription(bucketDescription) !== readDescription(bucket)
+
   const handleNameUpdate = () => {
-    if (bucketName.trim() && bucketName !== bucket?.name) {
+    if (bucketName.trim() && bucketDetailsDirty) {
       updateNameMutation.mutate(bucketName)
     }
   }
@@ -575,7 +591,7 @@ export function BucketSettings() {
         <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
           <div className="px-6 py-4">
             <h3 className="text-[15px] font-semibold text-foreground">
-              {t('Name')}
+              {t('Name and description')}
             </h3>
           </div>
           <div className="border-t border-border" />
@@ -591,13 +607,20 @@ export function BucketSettings() {
               placeholder={t('Bucket name')}
               className="mt-3 h-9 max-w-sm border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
             />
+            <DescriptionField
+              id="bucket-description"
+              value={bucketDescription}
+              onChange={setBucketDescription}
+              placeholder={t('What is stored in this bucket?')}
+              className="mt-4 max-w-sm"
+            />
           </div>
           <div className="px-6 py-4 border-t border-border bg-muted/30">
             <Button
               size="sm"
               className="h-9 text-[13px]"
               disabled={
-                bucketName.trim() === bucket.name ||
+                !bucketDetailsDirty ||
                 !bucketName.trim() ||
                 updateNameMutation.isPending
               }

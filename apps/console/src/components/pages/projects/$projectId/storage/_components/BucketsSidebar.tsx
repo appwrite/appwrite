@@ -16,8 +16,7 @@ import {
   useQueryClient,
 } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { sdk } from '@/lib/appwrite/sdk'
-import { ID } from '@appwrite.io/console'
+import { ID, Storage } from '@appwrite.io/console'
 import { cn } from '@/lib/utils'
 import { SecondarySidebarHeader } from '@/lib/layout/secondary-sidebar-header'
 import {
@@ -25,6 +24,10 @@ import {
   SECONDARY_SIDEBAR_NAV_LINK_LABEL_CLASS,
   secondarySidebarNavLinkClassName,
 } from '@/lib/layout/secondary-sidebar-nav'
+import {
+  normalizeDescription,
+  withDescription,
+} from '@/lib/appwrite/resource-descriptions'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
   bucketsQueryOptions,
@@ -145,11 +148,19 @@ export function BucketsSidebar({
   )
 
   const createBucketMutation = useMutation({
-    mutationFn: async (data: { bucketId?: string; name: string }) => {
+    mutationFn: async (data: {
+      bucketId?: string
+      name: string
+      description: string
+    }) => {
       if (!projectId) throw new Error('Project ID is required')
-      const projectSdk = sdk.forProject(projectId)
       const newId = data.bucketId || ID.unique()
-      return await projectSdk.storage.createBucket({
+      // Sent through `withDescription`: the pinned SDK drops `description`.
+      return await withDescription(
+        projectId,
+        normalizeDescription(data.description),
+        Storage,
+      ).createBucket({
         bucketId: newId,
         name: data.name,
       })

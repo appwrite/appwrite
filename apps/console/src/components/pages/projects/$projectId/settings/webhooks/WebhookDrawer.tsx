@@ -9,6 +9,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
+import { DescriptionField } from '@/components/global/shared/DescriptionField'
 import {
   Dialog,
   DialogContent,
@@ -33,6 +34,7 @@ import {
 } from 'lucide-react'
 import { EventSelector } from './EventSelector'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { readDescription } from '@/lib/appwrite/resource-descriptions'
 import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
 import type { Models } from '@appwrite.io/console'
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
@@ -110,6 +112,7 @@ export function WebhookDrawer({
     regenerateSignatureMutation.isPending
 
   const [name, setName] = useState('')
+  const [description, setDescription] = useState('')
   const [url, setUrl] = useState('')
   const [events, setEvents] = useState<string[]>([])
   const [enabled, setEnabled] = useState(true)
@@ -127,6 +130,7 @@ export function WebhookDrawer({
   useEffect(() => {
     if (!open) {
       setName('')
+      setDescription('')
       setUrl('')
       setEvents([])
       setEnabled(true)
@@ -140,6 +144,7 @@ export function WebhookDrawer({
     const source = fullWebhook ?? webhook
     if (source) {
       setName(source.name || '')
+      setDescription(readDescription(source))
       setUrl(source.url || '')
       setEvents(source.events || [])
       setEnabled(source.enabled ?? true)
@@ -228,6 +233,7 @@ export function WebhookDrawer({
         {
           webhookId: webhook.$id,
           name: name.trim(),
+          description,
           url: url.trim(),
           events,
           tls,
@@ -250,6 +256,7 @@ export function WebhookDrawer({
       createMutation.mutate(
         {
           name: name.trim(),
+          description,
           url: url.trim(),
           events,
           tls,
@@ -328,6 +335,14 @@ export function WebhookDrawer({
                     </p>
                   )}
                 </div>
+
+                <DescriptionField
+                  id="webhook-description"
+                  value={description}
+                  onChange={setDescription}
+                  placeholder={t('What does this webhook notify?')}
+                  disabled={isPending}
+                />
 
                 <div className="space-y-2">
                   <Label

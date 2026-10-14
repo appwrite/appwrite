@@ -3,8 +3,7 @@ import { useNavigate, useParams } from '@tanstack/react-router'
 import { ChevronDown, Folder, Loader2, Plus } from 'lucide-react'
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { sdk } from '@/lib/appwrite/sdk'
-import { ID } from '@appwrite.io/console'
+import { ID, Storage } from '@appwrite.io/console'
 import {
   bucketsQueryOptions,
   Dependencies,
@@ -15,6 +14,10 @@ import {
 } from '@/lib/react-query/hooks'
 import { canCreateBucket } from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
+import {
+  normalizeDescription,
+  withDescription,
+} from '@/lib/appwrite/resource-descriptions'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { analyticsAttrs } from '@/lib/analytics-actions'
 import { Button } from '@/components/ui/button'
@@ -105,11 +108,19 @@ export function MobileBucketSelector() {
     (value ? t('Bucket') : t('Select bucket'))
 
   const createMutation = useMutation({
-    mutationFn: async (form: { bucketId?: string; name: string }) => {
+    mutationFn: async (form: {
+      bucketId?: string
+      name: string
+      description: string
+    }) => {
       if (!projectId) throw new Error('Project ID is required')
-      const projectSdk = sdk.forProject(projectId)
       const newId = form.bucketId || ID.unique()
-      return await projectSdk.storage.createBucket({
+      // Sent through `withDescription`: the pinned SDK drops `description`.
+      return await withDescription(
+        projectId,
+        normalizeDescription(form.description),
+        Storage,
+      ).createBucket({
         bucketId: newId,
         name: form.name,
       })

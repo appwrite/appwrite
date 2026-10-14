@@ -7,8 +7,7 @@ import {
 import { HardDrive } from 'lucide-react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { sdk } from '@/lib/appwrite/sdk'
-import { ID } from '@appwrite.io/console'
+import { ID, Storage } from '@appwrite.io/console'
 import {
   bucketsQueryOptions,
   Dependencies,
@@ -19,6 +18,10 @@ import {
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { canCreateBucket } from '@/lib/console-access-checks'
 import { BucketsEmptyState } from './_components/BucketsEmptyState'
+import {
+  normalizeDescription,
+  withDescription,
+} from '@/lib/appwrite/resource-descriptions'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { CreateBucket } from './_components/CreateBucket'
@@ -79,11 +82,19 @@ export function View() {
   }
 
   const createMutation = useMutation({
-    mutationFn: async (data: { bucketId?: string; name: string }) => {
+    mutationFn: async (data: {
+      bucketId?: string
+      name: string
+      description: string
+    }) => {
       if (!projectId) throw new Error('Project ID is required')
-      const projectSdk = sdk.forProject(projectId)
       const bucketId = data.bucketId || ID.unique()
-      return await projectSdk.storage.createBucket({
+      // Sent through `withDescription`: the pinned SDK drops `description`.
+      return await withDescription(
+        projectId,
+        normalizeDescription(data.description),
+        Storage,
+      ).createBucket({
         bucketId,
         name: data.name,
       })

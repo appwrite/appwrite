@@ -10,12 +10,17 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { IdInput } from '@/components/ui/id-input'
+import { DescriptionField } from '@/components/global/shared/DescriptionField'
 import { useT } from '@/lib/i18n/translate'
 
 interface CreateBucketProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onCreate: (data: { bucketId?: string; name: string }) => void
+  onCreate: (data: {
+    bucketId?: string
+    name: string
+    description: string
+  }) => void
   isLoading?: boolean
 }
 
@@ -28,6 +33,7 @@ export function CreateBucket({
   const t = useT()
   const [bucketId, setBucketId] = useState<string | undefined>(undefined)
   const [name, setName] = useState('')
+  const [description, setDescription] = useState('')
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   const handleOpenChange = (newOpen: boolean) => {
@@ -42,6 +48,7 @@ export function CreateBucket({
   const resetForm = () => {
     setBucketId(undefined)
     setName('')
+    setDescription('')
     setErrors({})
   }
 
@@ -72,6 +79,7 @@ export function CreateBucket({
     onCreate({
       bucketId,
       name: name.trim(),
+      description,
     })
   }
 
@@ -110,6 +118,14 @@ export function CreateBucket({
                 <p className="text-[12px] text-destructive">{errors.name}</p>
               )}
             </div>
+
+            <DescriptionField
+              id="create-bucket-description"
+              value={description}
+              onChange={setDescription}
+              placeholder={t('What is stored in this bucket?')}
+              disabled={isLoading}
+            />
 
             <div className="space-y-2">
               <Label htmlFor="bucket-id">{t('Bucket ID')}</Label>

@@ -8,8 +8,8 @@ export const FUNCTION_SETTINGS_CARD_INDEX: SettingsCardIndexEntry[] = [
   },
   {
     sectionId: 'general',
-    title: 'Name',
-    keywords: ['rename', 'display', 'function name'],
+    title: 'Name and description',
+    keywords: ['rename', 'display', 'function name', 'description', 'about'],
   },
   {
     sectionId: 'general',

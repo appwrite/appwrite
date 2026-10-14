@@ -16,8 +16,11 @@ import { useEffect, useMemo } from 'react'
 import {
   Query,
   ID,
+  DocumentsDB,
   DocumentsDBIndexType,
+  TablesDB,
   TablesDBIndexType,
+  VectorsDB,
   VectorsDBIndexType,
   OrderBy,
   RelationshipType,
@@ -34,6 +37,10 @@ import type { Models } from '@appwrite.io/console'
 import type { Database, Collection } from '@/lib/utils/mock-data'
 import { buildAttributePrefixSearchQueries } from '@/lib/appwrite-id'
 import { sdk } from '@/lib/appwrite/sdk'
+import {
+  normalizeDescription,
+  withDescription,
+} from '@/lib/appwrite/resource-descriptions'
 import {
   getActiveProfileFeatures,
   getActiveProfileId,
@@ -1570,7 +1577,7 @@ export async function waitForCreatedDatabasePitrReady(
 export async function updateProjectDatabase(
   projectId: string,
   databaseId: string,
-  data: { name: string; enabled?: boolean },
+  data: { name: string; enabled?: boolean; description?: string },
   dbKind: DatabaseRouteKind,
 ) {
   if (!projectId || !databaseId) {
@@ -1582,6 +1589,25 @@ export async function updateProjectDatabase(
     databaseId,
     name: data.name.trim(),
     ...(data.enabled !== undefined ? { enabled: data.enabled } : {}),
+  }
+
+  // A caller that sets a description goes through `withDescription`, since the
+  // pinned SDK drops the param. Callers that omit it keep whatever is saved.
+  if (data.description !== undefined) {
+    const description = normalizeDescription(data.description)
+    if (kind === DatabaseType.Documentsdb) {
+      return await withDescription(projectId, description, DocumentsDB).update(
+        payload,
+      )
+    }
+    if (kind === DatabaseType.Vectorsdb) {
+      return await withDescription(projectId, description, VectorsDB).update(
+        payload,
+      )
+    }
+    return await withDescription(projectId, description, TablesDB).update(
+      payload,
+    )
   }
 
   if (kind === DatabaseType.Documentsdb) {
