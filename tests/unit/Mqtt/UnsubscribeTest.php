@@ -107,11 +107,11 @@ final class UnsubscribeTest extends TestCase
         \putenv($this->previousAbuseOption === false ? self::ABUSE_OPTION : self::ABUSE_OPTION . '=' . $this->previousAbuseOption);
     }
 
-    /** Create a topic and return its internal id (the subscribers' topicInternalId). */
+    /** Create a topic whose id is its wire name and return its internal id (the subscribers' topicInternalId). */
     private function seedTopic(string $name): string
     {
         return (string) $this->database->createDocument('topics', new Document([
-            '$id' => ID::unique(),
+            '$id' => $name,
             'name' => $name,
         ]))->getSequence();
     }

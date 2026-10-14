@@ -110,7 +110,7 @@ class Delete extends Action
 
         if ($stillSubscribed->isEmpty()) {
             try {
-                $mqtt->revokeTopic($project->getId(), $userId, $topic->getAttribute('name'));
+                $mqtt->revokeTopic($project->getId(), $userId, $topic->getId());
             } catch (\Throwable $error) {
                 Console::error('Failed to unsubscribe MQTT connection: ' . $error->getMessage());
             }

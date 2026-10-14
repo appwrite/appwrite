@@ -219,28 +219,29 @@ class Handler implements MqttHandler
         $projectDB = $this->getProjectDB($connection->prefix);
         $userId = $connection->identity['userId'] ?? '';
 
-        // Resolve exact topic names to their documents: needed to cap QoS, enable replay, and key the
-        // subscriber-list check on an ordinary topic's id.
-        $names = [];
+        // Resolve each exact filter to its topic document by id, the primary key rather than the
+        // unindexed name: an ordinary filter is already the topic id, a reserved users/<id> filter
+        // maps to its md5 id, the same id the producer provisions it under.
+        $ids = [];
         foreach ($subscribe->filters() as $filter) {
             if ($this->isWildcard($filter->topic) || $this->deniesUserTopic($filter->topic, $userId)) {
                 continue;
             }
-            $names[$filter->topic] = true;
+            $ids[$this->topicId($filter->topic)] = true;
         }
 
         $authorization = new Authorization();
         $projectDB->setAuthorization($authorization);
 
-        $topicsByName = [];
+        $topicsById = [];
         $ordinaryInternalIds = [];
-        if ($names !== []) {
+        if ($ids !== []) {
             $documents = $authorization->skip(fn () => $projectDB->find('topics', [
-                Query::equal('name', array_keys($names)),
-                Query::limit(\count($names)),
+                Query::equal('$id', array_keys($ids)),
+                Query::limit(\count($ids)),
             ]));
             foreach ($documents as $document) {
-                $topicsByName[$document->getAttribute('name')] ??= $document;
+                $topicsById[$document->getId()] = $document;
                 if (!$this->isReservedUserTopic($document->getAttribute('name', ''))) {
                     $ordinaryInternalIds[] = (string) $document->getSequence();
                 }
@@ -271,11 +272,11 @@ class Handler implements MqttHandler
             $ordinaryId = null;
             if ($this->isReservedUserTopic($filter->topic)) {
                 // Authorised by ownership; its document may not exist yet (auto-provisioned on publish).
-                $document = $topicsByName[$filter->topic] ?? null;
+                $document = $topicsById[$this->topicId($filter->topic)] ?? null;
             } else {
                 // Ordinary topic: a wildcard cannot be matched against one topic's list, and an exact
                 // topic must be one the user is a subscriber of.
-                $document = $this->isWildcard($filter->topic) ? null : ($topicsByName[$filter->topic] ?? null);
+                $document = $this->isWildcard($filter->topic) ? null : ($topicsById[$filter->topic] ?? null);
 
                 if ($document === null || !isset($subscribedInternalIds[(string) $document->getSequence()])) {
                     $decisions[] = ['qos' => null, 'ordinaryId' => null];
@@ -465,9 +466,7 @@ class Handler implements MqttHandler
             $authorization = new Authorization();
             $projectDB->setAuthorization($authorization);
 
-            $document = $authorization->skip(fn () => $projectDB->findOne('topics', [
-                Query::equal('name', [$topic]),
-            ]));
+            $document = $authorization->skip(fn () => $projectDB->getDocument('topics', $this->topicId($topic)));
 
             if (!$document->isEmpty() && $this->isSubscribed($projectDB, $authorization, $userId, (string) $document->getSequence())) {
                 return 0;
@@ -576,6 +575,15 @@ class Handler implements MqttHandler
         $segments = \explode('/', $topic);
 
         return \count($segments) === 2 && $segments[0] === self::USER_TOPIC_PREFIX;
+    }
+
+    /**
+     * The topics-collection id a wire filter resolves to. An ordinary filter is already the topic id;
+     * a reserved users/<id> hashes to its md5 id, the row the producer auto-provisions on first push.
+     */
+    private function topicId(string $topic): string
+    {
+        return $this->isReservedUserTopic($topic) ? \md5($topic) : $topic;
     }
 
     /** Whether the user is entered as a subscriber of the topic (via any of their targets). */
@@ -770,14 +778,12 @@ class Handler implements MqttHandler
      * Appwrite providers, so a message is never kept longer than any of them allows. Null when
      * none sets one.
      */
-    /** The internal sequence of the topic named $name, which a cursor is bound to; null when no such topic exists. */
-    private function topicSequence(Database $projectDB, string $name): ?string
+    /** The internal sequence of the topic a cursor is bound to, resolved from its wire id; null when no such topic exists. */
+    private function topicSequence(Database $projectDB, string $topic): ?string
     {
-        $topic = $projectDB->getAuthorization()->skip(fn () => $projectDB->findOne('topics', [
-            Query::equal('name', [$name]),
-        ]));
+        $document = $projectDB->getAuthorization()->skip(fn () => $projectDB->getDocument('topics', $this->topicId($topic)));
 
-        return $topic->isEmpty() ? null : (string) $topic->getSequence();
+        return $document->isEmpty() ? null : (string) $document->getSequence();
     }
 
     private function providerExpiry(Database $projectDB): ?int
