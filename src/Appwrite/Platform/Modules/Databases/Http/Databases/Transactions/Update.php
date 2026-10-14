@@ -310,7 +310,7 @@ class Update extends Action
                                 $databaseOperations[$databaseInternalId] = ($databaseOperations[$databaseInternalId] ?? 0) + $count;
                                 break;
                             case 'bulkUpdate':
-                                $count = $this->handleBulkUpdateOperation($dbForDatabases, $transactionState, $collectionId, $data, $createdAt, $state);
+                                $count = $this->handleBulkUpdateOperation($dbForDatabases, $collectionId, $data, $createdAt, $state);
                                 $totalOperations += $count;
                                 $databaseOperations[$databaseInternalId] = ($databaseOperations[$databaseInternalId] ?? 0) + $count;
                                 break;
@@ -320,7 +320,7 @@ class Update extends Action
                                 $databaseOperations[$databaseInternalId] = ($databaseOperations[$databaseInternalId] ?? 0) + $count;
                                 break;
                             case 'bulkDelete':
-                                $count = $this->handleBulkDeleteOperation($dbForDatabases, $transactionState, $collectionId, $data, $createdAt, $state);
+                                $count = $this->handleBulkDeleteOperation($dbForDatabases, $collectionId, $data, $createdAt, $state);
                                 $totalOperations += $count;
                                 $databaseOperations[$databaseInternalId] = ($databaseOperations[$databaseInternalId] ?? 0) + $count;
                                 break;
@@ -971,7 +971,6 @@ class Update extends Action
      * Handle bulk update operation with manual timestamp checking
      *
      * @param Database $dbForDatabases
-     * @param TransactionState $transactionState
      * @param string $collectionId
      * @param array $data
      * @param \DateTime $createdAt
@@ -983,61 +982,31 @@ class Update extends Action
      */
     private function handleBulkUpdateOperation(
         Database $dbForDatabases,
-        TransactionState $transactionState,
         string $collectionId,
         array $data,
         \DateTime $createdAt,
         array &$state
     ): int {
         $queries = Query::parseQueries($data['queries'] ?? []);
-        $updateData = new Document($data['data']);
 
-        $dependentDocs = [];
-
-        $transactionState->applyBulkUpdateToState($collectionId, $updateData, $queries, $state);
-
-        // Clone the document before passing to updateDocuments to prevent mutation
-        // The database layer mutates the input document, which would corrupt transaction state
-        $count = $dbForDatabases->updateDocuments(
+        // The database matches rows and applies operators, so its result is the new state
+        return $dbForDatabases->updateDocuments(
             $collectionId,
-            clone $updateData,
+            new Document($data['data']),
             $queries,
-            onNext: function (Document $updated, Document $old) use (&$state, $collectionId, $createdAt, &$dependentDocs) {
+            onNext: function (Document $updated, Document $old) use (&$state, $collectionId, $createdAt) {
                 $dependent = isset($state[$collectionId][$updated->getId()]);
 
-                if ($dependent) {
-                    $dependentDocs[] = $updated->getId();
-                } else {
+                if (!$dependent) {
                     $oldUpdatedAt = new \DateTime($old->getUpdatedAt());
                     if ($oldUpdatedAt > $createdAt) {
                         throw new ConflictException('Document was updated after the request timestamp');
                     }
-                    $state[$collectionId][$updated->getId()] = $updated;
                 }
+
+                $state[$collectionId][$updated->getId()] = $updated;
             }
         );
-
-        // Re-write dependent documents from state to database to fix partial updates
-        if (!empty($dependentDocs)) {
-            $documentsToRewrite = [];
-            foreach ($dependentDocs as $docId) {
-                if (isset($state[$collectionId][$docId])) {
-                    $documentsToRewrite[] = $state[$collectionId][$docId];
-                }
-            }
-
-            if (!empty($documentsToRewrite)) {
-                $dbForDatabases->upsertDocuments(
-                    $collectionId,
-                    $documentsToRewrite,
-                    onNext: function (Document $upserted) use (&$state, $collectionId) {
-                        $state[$collectionId][$upserted->getId()] = $upserted;
-                    }
-                );
-            }
-        }
-
-        return $count;
     }
 
     /**
@@ -1093,7 +1062,6 @@ class Update extends Action
      * Handle bulk delete operation with manual timestamp checking
      *
      * @param Database $dbForDatabases
-     * @param TransactionState $transactionState
      * @param string $collectionId
      * @param array $data
      * @param \DateTime $createdAt
@@ -1105,7 +1073,6 @@ class Update extends Action
      */
     private function handleBulkDeleteOperation(
         Database $dbForDatabases,
-        TransactionState $transactionState,
         string $collectionId,
         array $data,
         \DateTime $createdAt,
@@ -1113,7 +1080,7 @@ class Update extends Action
     ): int {
         $queries = Query::parseQueries($data['queries'] ?? []);
 
-        $count = $dbForDatabases->deleteDocuments(
+        return $dbForDatabases->deleteDocuments(
             $collectionId,
             $queries,
             onNext: function (Document $deleted, Document $old) use (&$state, $collectionId, $createdAt) {
@@ -1131,9 +1098,5 @@ class Update extends Action
                 }
             }
         );
-
-        $transactionState->applyBulkDeleteToState($collectionId, $queries, $state);
-
-        return $count;
     }
 }

@@ -95,6 +95,10 @@ class Action extends AppwriteAction
 
         foreach ($data as $key => $value) {
             if (!\is_string($key)) {
+                // Bulk rows read back from transaction logs are Documents
+                if ($value instanceof Document) {
+                    $value = $value->getArrayCopy();
+                }
                 if (\is_array($value)) {
                     $data[$key] = $this->parseOperators($value, $collection);
                 }
