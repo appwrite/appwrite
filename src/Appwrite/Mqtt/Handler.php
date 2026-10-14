@@ -272,7 +272,12 @@ class Handler implements MqttHandler
             $ordinaryId = null;
             if ($this->isReservedUserTopic($filter->topic)) {
                 // Authorised by ownership; its document may not exist yet (auto-provisioned on publish).
+                // Ignore a row squatting the md5 id under another name so it can't leak as the user's
+                // topic (the producer guards the same collision when it provisions the row).
                 $document = $topicsById[$this->topicId($filter->topic)] ?? null;
+                if ($document !== null && $document->getAttribute('name') !== $filter->topic) {
+                    $document = null;
+                }
             } else {
                 // Ordinary topic: a wildcard cannot be matched against one topic's list, and an exact
                 // topic must be one the user is a subscriber of.

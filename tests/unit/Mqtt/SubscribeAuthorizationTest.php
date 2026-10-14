@@ -50,6 +50,19 @@ final class SubscribeAuthorizationTest extends ReplayTestCase
         $this->assertSame([Packet::QOS_1], $this->subscribeCodes($this->connect(1), $name));
     }
 
+    public function testSquattedUserTopicRowIsNotServedAsTheUserTopic(): void
+    {
+        // An ordinary topic squatting the md5 id of users/<user> under its own name: the owner may
+        // still subscribe to their reserved topic, but must not receive the squatter's backlog.
+        $filter = 'users/' . self::USER;
+        $squatterId = $this->seedTopic('squatter', 5, id: \md5($filter), subscribed: false);
+        $this->appendLedger($squatterId, 1, 5);
+        $this->seedCursor($filter, 0);
+
+        $this->assertSame([Packet::QOS_1], $this->subscribeCodes($this->connect(1), $filter));
+        $this->assertSame([], $this->payloads($this->drainPublishes(1)), 'a squatted topic row leaked its backlog to the user-topic owner');
+    }
+
     public function testGrantIsDemotedWhenMembershipVanishesDuringReplay(): void
     {
         $this->seedTopic('news', 12, subscribed: false);
