@@ -10,6 +10,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\ProjectId;
 use Appwrite\Utopia\Response;
+use Appwrite\Video\Profiles;
 use Utopia\Audit\Adapter\Database as AdapterDatabase;
 use Utopia\Audit\Audit;
 use Utopia\Cache\Cache;
@@ -236,7 +237,19 @@ class Create extends Action
                         // Collection already exists
                     }
                 }
+
+                Profiles::seed($dbForProject);
             }
+        } else {
+            $adapter = new DatabasePool($pools->get($dsn->getHost()));
+            $dbForProject = new Database($adapter, $cache);
+            $dbForProject
+                ->setDatabase(APP_DATABASE)
+                ->setSharedTables(true)
+                ->setTenant($project->getSequence())
+                ->setNamespace($dsn->getParam('namespace'));
+
+            Profiles::seed($dbForProject);
         }
 
         // Hook allowing instant project mirroring during migration

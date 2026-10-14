@@ -31,6 +31,8 @@ final class JobsTest extends TestCase
         );
 
         $this->assertSame(1, $jobs['databases']['coroutines']);
+        $this->assertSame(1, $this->config['videos']['coroutines']);
+        $this->assertSame(1, $jobs['videos']['coroutines']);
         $this->assertSame(8, $jobs['functions']['coroutines']);
         $this->assertSame('database_db_main', $jobs['databases']['queue']);
     }

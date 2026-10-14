@@ -513,6 +513,8 @@ class Migrations extends Action
             'mocks.write',
             'project.policies.read',
             'project.policies.write',
+            'project.profiles.read',
+            'project.profiles.write',
             'project.oauth2.read',
             'project.oauth2.write',
             'templates.read',

@@ -1,0 +1,1 @@
+Delete a rendition by its unique ID, along with its packaged segments and transcoded output. Fails with `video_rendition_in_progress` while the rendition is started, ended, or uploading, unless it has not been updated within the rendition retention window.

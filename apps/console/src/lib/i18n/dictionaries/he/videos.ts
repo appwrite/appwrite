@@ -312,10 +312,8 @@ export const heVideosDictionary: Record<string, string> = {
   'Target duration': 'משך יעד',
   Elapsed: 'זמן שחלף',
   'No renditions requested yet.': 'עדיין לא התבקשו גרסאות קידוד.',
-  'No timeline yet. Generate sprite thumbnails for scrubbing previews and the video poster.':
-    'אין עדיין ציר זמן. צרו תמונות ממוזערות לתצוגה מקדימה בגלילה ולתמונת השער של הסרטון.',
-  'Generating sprite timeline. This view refreshes automatically.':
-    'יוצר ציר זמן של תמונות ממוזערות. התצוגה תתרענן אוטומטית.',
+  'No timeline yet. Generate scrubbing thumbnails and a video poster.': 'אין עדיין ציר זמן. צרו תמונות ממוזערות לגלילה ופוסטר לסרטון.',
+  'Generating thumbnail timeline. This view refreshes automatically.': 'יוצר ציר זמן של תמונות ממוזערות. התצוגה מתרעננת אוטומטית.',
   'Select a thumbnail to seek the player.':
     'בחרו תמונה ממוזערת כדי לדלג למיקום בנגן.',
   thumbnails: 'תמונות ממוזערות',
@@ -345,8 +343,7 @@ export const heVideosDictionary: Record<string, string> = {
   'Video created': 'הסרטון נוצר',
   'Choose a video file from Storage. Appwrite probes the file and lets you encode renditions for adaptive streaming.':
     'בחרו קובץ וידאו מ-Storage. Appwrite סורקת את הקובץ ומאפשרת לקודד renditions לסטרימינג אדפטיבי.',
-  'Sprite thumbnail cues from the timeline WebVTT. Select a thumbnail to seek the player.':
-    'רמזי תמונות ממוזערות מ-WebVTT של ציר הזמן. בחרו תמונה ממוזערת כדי לדלג בנגן.',
+  'Thumbnail cues from the timeline WebVTT. Select a thumbnail to seek the player.': 'רמזי תמונות ממוזערות מ-WebVTT של ציר הזמן. בחרו תמונה ממוזערת כדי לנוע בנגן.',
 
   // Workspace: sidebar, submenu, and welcome state
   'All videos': 'כל הסרטונים',
@@ -386,9 +383,8 @@ export const heVideosDictionary: Record<string, string> = {
   'Source failed': 'הכנת המקור נכשלה',
   'Timeline generated': 'ציר הזמן נוצר',
   'Time range': 'טווח זמן',
-  'Sprite region': 'אזור ב-Sprite sheet',
-  'Scroll through the thumbnails and hover one to see its time range and sprite region. Select one to use it as the preview image.':
-    'גללו בין התמונות הממוזערות ורחפו מעל אחת כדי לראות את טווח הזמן ואזור הספרייט שלה. בחרו אחת כדי להשתמש בה כתמונת התצוגה המקדימה.',
+  'Thumbnail region': 'אזור בתמונה הממוזערת',
+  'Scroll through the thumbnails and hover one to see its time range and thumbnail region. Select one to use it as the preview image.': 'גללו בין התמונות הממוזערות ורחפו כדי לראות טווח זמן ואזור. בחרו אחת לשימוש כתמונת תצוגה מקדימה.',
   'The frame shown before playback starts. Select a thumbnail above or scrub through the video to choose it.':
     'הפריים שמוצג לפני תחילת הניגון. בחרו תמונה ממוזערת למעלה או גללו לאורך הווידאו כדי לבחור אותו.',
   'Generate a timeline to choose a preview image.':
@@ -400,7 +396,7 @@ export const heVideosDictionary: Record<string, string> = {
   'Set as preview': 'הגדרה כתצוגה מקדימה',
   "Saving a preview frame isn't available yet. The Videos API can't set a video's poster frame.":
     'שמירת פריים לתצוגה מקדימה עדיין לא זמינה. ה-API של הווידאו עדיין לא תומך בהגדרת פריים פוסטר.',
-  'Sprite sheet': 'Sprite sheet',
+  'Thumbnail sheet': 'גיליון תמונות ממוזערות',
   'Ready to stream': 'מוכן לסטרימינג',
   'HLS manifest URL': 'כתובת מניפסט HLS',
   'Copy HLS manifest URL': 'העתקת כתובת מניפסט HLS',
@@ -480,17 +476,15 @@ export const heVideosDictionary: Record<string, string> = {
   'Regenerate timeline': 'יצירה מחדש של ציר הזמן',
   'Loading timeline...': 'טוען את ציר הזמן...',
   'Generating timeline': 'יוצר ציר זמן',
-  'Sampling frames into sprite sheets. Thumbnails appear here when ready.':
-    'דוגם פריימים ל-sprite sheets. התמונות הממוזערות יופיעו כאן כשיהיו מוכנות.',
+  'Sampling frames into thumbnail sheets. Thumbnails appear here when ready.': 'דוגם פריימים לגיליונות תמונות ממוזערות. התמונות הממוזערות יופיעו כאן כשיהיו מוכנות.',
   'No timeline yet': 'אין עדיין ציר זמן',
   'Generate a timeline to get scrubbing thumbnails and a preview image for this video.':
     'צרו ציר זמן כדי לקבל תמונות ממוזערות לגלילה ותמונת תצוגה מקדימה לסרטון.',
   Thumbnails: 'תמונות ממוזערות',
-  'Sprite sheets': 'Sprite sheets',
+  'Thumbnail sheets': 'גיליונות תמונות ממוזערות',
   'Thumbnail size': 'גודל תמונה ממוזערת',
   'Timeline file': 'קובץ ציר הזמן',
-  'A WebVTT file that maps time ranges to sprite sheet regions. Point your player thumbnail option at this URL.':
-    'קובץ WebVTT שממפה טווחי זמן לאזורים ב-sprite sheet. הגדירו את כתובת התמונות הממוזערות בנגן לכתובת הזו.',
+  'A WebVTT file that maps time ranges to thumbnail sheet regions. Point your player thumbnail option at this URL.': 'קובץ WebVTT שממפה טווחי זמן לאזורים בגיליון תמונות ממוזערות. הגדירו את כתובת התמונות הממוזערות בנגן לכתובת הזו.',
   'Timeline URL': 'כתובת ציר הזמן',
   'First lines': 'שורות ראשונות',
   'Preview image': 'תמונת תצוגה מקדימה',
@@ -580,8 +574,7 @@ export const heVideosDictionary: Record<string, string> = {
     'Bitrate אדפטיבי: הנגן בוחר איכות אוטומטית לפי מהירות הרשת.',
   'Data per second of video. Higher bitrate means better quality and bigger files.':
     'כמות נתונים לכל שנייה של וידאו. Bitrate גבוה יותר פירושו איכות טובה יותר וקבצים גדולים יותר.',
-  'Thumbnail sprite sheets plus a WebVTT index. Players use it to show previews while scrubbing.':
-    'Sprite sheets של תמונות ממוזערות ואינדקס WebVTT. נגנים משתמשים בהם כדי להציג תצוגה מקדימה בזמן גלילה.',
+  'Thumbnail sheets plus a WebVTT index. Players use it to show previews while scrubbing.': 'גיליונות תמונות ממוזערות ואינדקס WebVTT. נגנים משתמשים בהם כדי להציג תצוגה מקדימה בזמן גלילה.',
   'A single image that packs many thumbnails into a grid.':
     'תמונה אחת שמרכזת תמונות ממוזערות רבות ברשת.',
   'An image cut from the timeline. The first one is used as the video poster.':

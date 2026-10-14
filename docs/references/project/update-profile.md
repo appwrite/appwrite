@@ -1,0 +1,1 @@
+Update a video profile by its unique ID. Existing renditions are not re-encoded. Changing the profile onto the same width, height, bitrates, and codec as another profile fails with `video_profile_already_exists`.

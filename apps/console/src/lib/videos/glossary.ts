@@ -25,8 +25,8 @@ export const VIDEO_GLOSSARY = {
   bitrate:
     'Data per second of video. Higher bitrate means better quality and bigger files.',
   timeline:
-    'Thumbnail sprite sheets plus a WebVTT index. Players use it to show previews while scrubbing.',
-  sprite: 'A single image that packs many thumbnails into a grid.',
+    'Thumbnail sheets plus a WebVTT index. Players use it to show previews while scrubbing.',
+  thumbnail: 'A single image that packs many scrubbing frames into a grid.',
   preview:
     'An image cut from the timeline. The first one is used as the video poster.',
   embedded:
