@@ -1021,7 +1021,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 # Update a presence {% #update-a-presence %}
 
-`update` patches a subset of fields on an existing record without re-sending the whole payload. Every field except `presenceId` is optional, so a "go away" handler only needs to send `status`. **One naming difference to watch for:** the method is named `update` on client SDKs and `updatePresence` (with each language's case convention) on server SDKs, where it also requires `userId`. This is the only point at which the client and server surfaces diverge.
+`update` patches a subset of fields on an existing record without re-sending the whole payload. Every field except `presenceId` is optional, so a "go away" handler only needs to send `status`. **One difference to watch for:** server SDKs also require `userId`. This is the only point at which the client and server surfaces diverge.
 
 {% multicode %}
 ```client-web
@@ -1095,7 +1095,7 @@ const client = new sdk.Client()
 
 const presences = new sdk.Presences(client);
 
-const presence = await presences.updatePresence({
+const presence = await presences.update({
     presenceId: '<PRESENCE_ID>',
     userId: '<USER_ID>',
     status: 'away'
@@ -1113,7 +1113,7 @@ client.set_key('<YOUR_API_KEY>')
 
 presences = Presences(client)
 
-presence = presences.update_presence(
+presence = presences.update(
     presence_id = '<PRESENCE_ID>',
     user_id = '<USER_ID>',
     status = 'away'
@@ -1133,7 +1133,7 @@ $client = (new Client())
 
 $presences = new Presences($client);
 
-$presence = $presences->updatePresence(
+$presence = $presences->update(
     presenceId: '<PRESENCE_ID>',
     userId: '<USER_ID>',
     status: 'away'
@@ -1152,7 +1152,7 @@ client = Client.new
 
 presences = Presences.new(client)
 
-presence = presences.update_presence(
+presence = presences.update(
     presence_id: '<PRESENCE_ID>',
     user_id: '<USER_ID>',
     status: 'away'
@@ -1169,7 +1169,7 @@ Client client = Client()
 
 Presences presences = Presences(client);
 
-Presence presence = await presences.updatePresence(
+Presence presence = await presences.update(
     presenceId: '<PRESENCE_ID>',
     userId: '<USER_ID>',
     status: 'away',
@@ -1187,7 +1187,7 @@ val client = Client()
 
 val presences = Presences(client)
 
-val presence = presences.updatePresence(
+val presence = presences.update(
     presenceId = "<PRESENCE_ID>",
     userId = "<USER_ID>",
     status = "away"
@@ -1206,7 +1206,7 @@ Client client = new Client()
 
 Presences presences = new Presences(client);
 
-presences.updatePresence(
+presences.update(
     "<PRESENCE_ID>", // presenceId
     "<USER_ID>",     // userId
     "away",          // status
@@ -1230,7 +1230,7 @@ let client = Client()
 
 let presences = Presences(client)
 
-let presence = try await presences.updatePresence(
+let presence = try await presences.update(
     presenceId: "<PRESENCE_ID>",
     userId: "<USER_ID>",
     status: "away"
@@ -1249,7 +1249,7 @@ Client client = new Client()
 
 Presences presences = new Presences(client);
 
-Presence presence = await presences.UpdatePresence(
+Presence presence = await presences.Update(
     presenceId: "<PRESENCE_ID>",
     userId: "<USER_ID>",
     status: "away"
@@ -1274,10 +1274,10 @@ func main() {
 
     service := presences.New(cli)
 
-    presence, err := service.UpdatePresence(
+    presence, err := service.Update(
         "<PRESENCE_ID>",
         "<USER_ID>",
-        service.WithUpdatePresenceStatus("away"),
+        service.WithUpdateStatus("away"),
     )
     if err != nil {
         panic(err)
@@ -1299,7 +1299,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let presences = Presences::new(&client);
 
-    let presence = presences.update_presence(
+    let presence = presences.update(
         "<PRESENCE_ID>",
         "<USER_ID>",
         Some("away"),

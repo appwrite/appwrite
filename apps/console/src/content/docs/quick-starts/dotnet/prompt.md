@@ -83,7 +83,7 @@ await tablesDB.CreateTextColumn(
     tableId: todoTable.Id,
     key: "description",
     required: false,
-    xdefault: "This is a test description"
+    @default: "This is a test description"
 );
 
 await tablesDB.CreateBooleanColumn(
