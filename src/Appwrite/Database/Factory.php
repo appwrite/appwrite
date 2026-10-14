@@ -2,13 +2,13 @@
 
 namespace Appwrite\Database;
 
-use Appwrite\Utopia\Database\Adapter\Pool as DatabasePool;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Database\Hook\UniqueId;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
 use Utopia\Database\Adapter;
 use Utopia\Database\Adapter\Feature\Schemaless;
+use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Hook\Permissions;

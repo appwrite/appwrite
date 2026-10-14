@@ -3,9 +3,9 @@
 namespace Appwrite\Utopia\Database\Hook;
 
 use Appwrite\Usage\Operations;
-use Appwrite\Utopia\Database\Adapter\Pool;
 use Closure;
 use Override;
+use Utopia\Database\Adapter\Pool;
 use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
