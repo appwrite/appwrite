@@ -2,6 +2,7 @@
 
 namespace Appwrite\Utopia\Database\Documents;
 
+use Utopia\Auth\Hashes\Sha;
 use Utopia\Auth\Proof;
 use Utopia\Auth\Proofs\Token;
 use Utopia\Database\Database;
@@ -132,20 +133,31 @@ class User extends Document
     /**
      * Verify session and check that its not expired.
      *
+     * Session secrets are SHA-256, so the cookie secret is hashed once per call.
+     * Salted proofs still verify each session.
+     *
      * @param string $secret
      *
-     * @return bool|string
+     * @return string|false
      */
-    public function sessionVerify(string $secret, Token $proofForToken)
+    public function sessionVerify(string $secret, Token $proofForToken): string|false
     {
         $sessions = $this->getAttribute('sessions', []);
+        $prepared = $proofForToken->getHash() instanceof Sha;
+        $hashed = $prepared ? $proofForToken->hash($secret) : '';
 
         foreach ($sessions as $session) {
+            $sessionSecret = $session->getAttribute('secret');
+            if (!\is_string($sessionSecret) || !$session->isSet('provider') || !$session->isSet('expire')) {
+                continue;
+            }
+
+            $matches = $prepared
+                ? \hash_equals($sessionSecret, $hashed)
+                : $proofForToken->verify($secret, $sessionSecret);
+
             if (
-                $session->isSet('secret') &&
-                $session->isSet('provider') &&
-                $session->isSet('expire') &&
-                $proofForToken->verify($secret, $session->getAttribute('secret')) &&
+                $matches &&
                 DateTime::formatTz(DateTime::format(new \DateTime($session->getAttribute('expire')))) >= DateTime::formatTz(DateTime::now())
             ) {
                 return $session->getId();
