@@ -67,6 +67,8 @@ export type ConsoleProfileFeatures = {
   nativeDbsMongo: boolean
   /** Videos product (transcoding, renditions, subtitles, HLS/DASH playback) via the `videos` SDK service. */
   videos: boolean
+  /** Project environments (`/project/environments`), a cloud-only API. */
+  projectEnvironments: boolean
   /** Multi-region support (region picker/labels in project UX). */
   multiRegion: boolean
   /**
@@ -131,6 +133,7 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   databaseSpecifications: 'Database specifications',
   nativeDbsMongo: 'Native DBs: MongoDB',
   videos: 'Videos',
+  projectEnvironments: 'Project environments',
   multiRegion: 'Multi-region',
   edgeNetwork: 'Edge network',
   userVerification: 'User verification',
@@ -183,6 +186,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       databaseSpecifications: true,
       nativeDbsMongo: false,
       videos: false,
+      projectEnvironments: true,
       multiRegion: true,
       edgeNetwork: true,
       userVerification: true,
@@ -224,6 +228,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       databaseSpecifications: false,
       nativeDbsMongo: false,
       videos: false,
+      projectEnvironments: false,
       multiRegion: false,
       edgeNetwork: false,
       userVerification: false,

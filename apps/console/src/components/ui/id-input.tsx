@@ -37,10 +37,12 @@ export interface IdInputProps {
    */
   id?: string
   /**
-   * ID validation rules. Dedicated native databases only allow letters and numbers.
+   * ID validation rules. Dedicated native databases only allow letters and
+   * numbers; project-shaped IDs (projects, project environments) only allow
+   * lowercase letters, numbers and a non-leading hyphen.
    * @default 'default'
    */
-  idFormat?: 'default' | 'dedicated'
+  idFormat?: 'default' | 'dedicated' | 'project'
 }
 
 /**
@@ -61,6 +63,13 @@ function validateDedicatedId(id: string): boolean {
   return /^[A-Za-z0-9]+$/.test(id)
 }
 
+/** Mirrors the server-side `ProjectId` validator (projects and environments). */
+function validateProjectId(id: string): boolean {
+  if (!id || id.length === 0) return true
+  if (id.length > 36) return false
+  return /^[a-z0-9][a-z0-9-]*$/.test(id)
+}
+
 export function IdInput({
   value,
   onChange,
@@ -72,11 +81,17 @@ export function IdInput({
   idFormat = 'default',
 }: IdInputProps) {
   const validateId =
-    idFormat === 'dedicated' ? validateDedicatedId : validateDefaultId
+    idFormat === 'dedicated'
+      ? validateDedicatedId
+      : idFormat === 'project'
+        ? validateProjectId
+        : validateDefaultId
   const idHelpText =
     idFormat === 'dedicated'
       ? 'Allowed characters: letters and numbers only'
-      : 'Allowed characters: alphanumeric, non-leading hyphen, underscore, period'
+      : idFormat === 'project'
+        ? 'Allowed characters: lowercase letters, numbers, non-leading hyphen'
+        : 'Allowed characters: alphanumeric, non-leading hyphen, underscore, period'
   const [isOpen, setIsOpen] = React.useState(false)
   const [inputValue, setInputValue] = React.useState(value || '')
   const [error, setError] = React.useState<string | null>(null)

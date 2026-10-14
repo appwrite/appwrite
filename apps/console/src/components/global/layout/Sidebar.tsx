@@ -631,7 +631,7 @@ export function ConsoleSidebar({
               <OnboardingCard projectId={projectId} collapsed={collapsed} />
             )}
 
-            {showProjectEnvironments && (
+            {showProjectEnvironments && features.projectEnvironments && (
               <EnvironmentSwitcher projectId={projectId} collapsed={collapsed} />
             )}
 
@@ -722,7 +722,7 @@ export function ConsoleSidebar({
             <OnboardingCard projectId={projectId} collapsed={false} />
           )}
 
-          {showProjectEnvironments && (
+          {showProjectEnvironments && features.projectEnvironments && (
             <EnvironmentSwitcher projectId={projectId} isMobile />
           )}
 

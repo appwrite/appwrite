@@ -1,0 +1,237 @@
+/**
+ * React Query hooks for project environments.
+ *
+ * An environment is itself a project document, linked to the current project by
+ * `parentId`, so the list returns `Models.Project` rows and never contains the
+ * project it belongs to. Cloud only — the endpoints live in the cloud API, so
+ * callers gate on the `projectEnvironments` profile feature and the queries
+ * stay quiet (no retry) where the routes are absent.
+ */
+
+import {
+  queryOptions,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query'
+import { useMemo } from 'react'
+import { ID, Query, type Models } from '@appwrite.io/console'
+import { sdk } from '@/lib/appwrite/sdk'
+import { DEFAULT_STALE_TIME } from './constants'
+import { PROJECT_NAME_MAX_LENGTH } from './projects'
+
+/** One page covers the per-plan environment cap many times over. */
+export const PROJECT_ENVIRONMENTS_LIMIT = 100
+
+// ============================================================================
+// QUERY FUNCTIONS
+// ============================================================================
+
+/**
+ * Query function to fetch the environments of a project
+ *
+ * This is extracted so it can be reused in both hooks and route loaders.
+ *
+ * @param projectId - The project ID
+ * @param region - The project region
+ * @returns Environments with total count
+ */
+export async function fetchProjectEnvironments(
+  projectId: string,
+  region?: string,
+) {
+  if (!projectId) {
+    return { environments: [] as Models.Project[], total: 0 }
+  }
+
+  const response = await sdk
+    .forProject(projectId, region)
+    .project.listEnvironments({
+      queries: [
+        Query.orderDesc('$createdAt'),
+        Query.limit(PROJECT_ENVIRONMENTS_LIMIT),
+      ],
+      total: true,
+    })
+
+  return {
+    environments: response.projects ?? [],
+    total: response.total ?? 0,
+  }
+}
+
+/** Query options for a project's environments (for route loader prefetch). */
+export function projectEnvironmentsQueryOptions(
+  projectId: string | null | undefined,
+  region?: string,
+) {
+  return queryOptions({
+    queryKey: ['project-environments', 'project', projectId, region],
+    queryFn: () => fetchProjectEnvironments(projectId!, region),
+    enabled: !!projectId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+  })
+}
+
+// ============================================================================
+// HOOKS
+// ============================================================================
+
+/**
+ * Hook to fetch the environments of a project
+ *
+ * @param projectId - The project ID
+ * @param region - The project region
+ * @param enabled - False where the feature is off (self-hosted), so no request is made
+ * @returns Environments list with loading and error state
+ */
+export function useProjectEnvironments(
+  projectId: string | null | undefined,
+  region?: string,
+  enabled = true,
+) {
+  const { data, isLoading, isFetched, error, refetch } = useQuery({
+    ...projectEnvironmentsQueryOptions(projectId, region),
+    enabled: !!projectId && enabled,
+  })
+
+  const environments = useMemo(() => data?.environments ?? [], [data])
+
+  return {
+    environments,
+    total: data?.total ?? 0,
+    isLoading,
+    /** False while disabled or in flight: callers wait before trusting the list. */
+    isFetched,
+    error,
+    refetch,
+  }
+}
+
+/**
+ * Hook to create an environment for a project
+ *
+ * @param projectId - The project ID
+ * @param region - The project region
+ */
+export function useCreateProjectEnvironment(
+  projectId: string | null | undefined,
+  region?: string,
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({
+      environmentId,
+      name,
+    }: {
+      environmentId?: string
+      name: string
+    }) => {
+      if (!projectId) {
+        throw new Error('Project ID is required')
+      }
+      const trimmedName = name.trim()
+      if (!trimmedName) {
+        throw new Error('Environment name is required')
+      }
+      if (trimmedName.length > PROJECT_NAME_MAX_LENGTH) {
+        throw new Error(
+          `Environment name must be no longer than ${PROJECT_NAME_MAX_LENGTH} characters`,
+        )
+      }
+
+      return await sdk.forProject(projectId, region).project.createEnvironment({
+        environmentId: environmentId?.trim() || ID.unique(),
+        name: trimmedName,
+      })
+    },
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
+        queryKey: ['project-environments', 'project', projectId],
+      })
+    },
+  })
+}
+
+/**
+ * Hook to rename an environment of a project
+ *
+ * @param projectId - The project ID
+ * @param region - The project region
+ */
+export function useUpdateProjectEnvironment(
+  projectId: string | null | undefined,
+  region?: string,
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({
+      environmentId,
+      name,
+    }: {
+      environmentId: string
+      name: string
+    }) => {
+      if (!projectId) {
+        throw new Error('Project ID is required')
+      }
+      if (!environmentId) {
+        throw new Error('Environment ID is required')
+      }
+      const trimmedName = name.trim()
+      if (!trimmedName) {
+        throw new Error('Environment name is required')
+      }
+      if (trimmedName.length > PROJECT_NAME_MAX_LENGTH) {
+        throw new Error(
+          `Environment name must be no longer than ${PROJECT_NAME_MAX_LENGTH} characters`,
+        )
+      }
+
+      return await sdk
+        .forProject(projectId, region)
+        .project.updateEnvironment({ environmentId, name: trimmedName })
+    },
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
+        queryKey: ['project-environments', 'project', projectId],
+      })
+    },
+  })
+}
+
+/**
+ * Hook to delete an environment of a project, with its resources and users
+ *
+ * @param projectId - The project ID
+ * @param region - The project region
+ */
+export function useDeleteProjectEnvironment(
+  projectId: string | null | undefined,
+  region?: string,
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (environmentId: string) => {
+      if (!projectId) {
+        throw new Error('Project ID is required')
+      }
+      if (!environmentId) {
+        throw new Error('Environment ID is required')
+      }
+
+      return await sdk
+        .forProject(projectId, region)
+        .project.deleteEnvironment({ environmentId })
+    },
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
+        queryKey: ['project-environments', 'project', projectId],
+      })
+    },
+  })
+}

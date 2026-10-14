@@ -3270,12 +3270,27 @@ export const jaProjectMiscDictionary: Record<string, string> = {
 
   // Project environment switcher
   Environments: '環境',
-  Staging: 'ステージング',
-  Development: '開発',
   'Switch environment': '環境を切り替え',
   'Environment switched': '環境を切り替えました',
   'Create environment': '環境を作成',
-  'Custom environments are coming soon': 'カスタム環境は近日公開予定です',
+  'Rename environment': '環境の名前を変更',
+  'Delete environment': '環境を削除',
+  'Environment ID': '環境 ID',
+  'Enter environment name': '環境名を入力',
+  'An environment gets its own resources and users, in the same region as this project. Its usage is billed under this project.':
+    '環境はこのプロジェクトと同じリージョンに、独自のリソースとユーザーを持ちます。使用量はこのプロジェクトに請求されます。',
+  'Only the name changes. The environment ID stays the same.':
+    '変更されるのは名前だけです。環境 ID はそのままです。',
+  'Are you sure you want to delete this environment? Its resources and users are removed with it. This action cannot be undone.':
+    'この環境を削除してもよろしいですか? リソースとユーザーもあわせて削除されます。この操作は元に戻せません。',
+  'Environment created': '環境を作成しました',
+  'Environment renamed': '環境の名前を変更しました',
+  'Environment deleted': '環境を削除しました',
+  'Failed to create environment': '環境の作成に失敗しました',
+  'Failed to rename environment': '環境の名前の変更に失敗しました',
+  'Failed to delete environment': '環境の削除に失敗しました',
+  'Too many environments created for this project in the last hour. Try again later.':
+    'このプロジェクトで過去 1 時間に作成された環境が多すぎます。しばらくしてからもう一度お試しください。',
   'Send your first message': '最初のメッセージを送信',
   'Reach your users by email, SMS, and push notifications from one place.':
     'メール、SMS、プッシュ通知でユーザーに届けられます。すべて 1 か所で管理できます。',
