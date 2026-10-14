@@ -473,6 +473,76 @@ final class UsageCustomServerTest extends Scope
         }, 60_000, 500);
     }
 
+    #[DataProvider('databaseApis')]
+    public function testStagedUpdateAndUpsertOperationsAreMetered(string $api, string $containers, string $records, string $attributes, string $containerIdKey, string $recordIdKey): void
+    {
+        self::$project = $this->getProject(true);
+        $this->waitForUsageStats();
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $databaseId = Id::unique();
+        $containerId = Id::unique();
+        $path = "/$api/$databaseId/$containers/$containerId";
+
+        $response = $this->client->call(Client::METHOD_POST, "/$api", $headers, [
+            'databaseId' => $databaseId,
+            'name' => 'Staged usage',
+        ]);
+        $this->assertSame(201, $response['headers']['status-code']);
+        $response = $this->client->call(Client::METHOD_POST, "/$api/$databaseId/$containers", $headers, [
+            $containerIdKey => $containerId,
+            'name' => 'Staged usage',
+        ]);
+        $this->assertSame(201, $response['headers']['status-code']);
+        $response = $this->client->call(Client::METHOD_POST, "$path/$attributes/integer", $headers, [
+            'key' => 'count',
+            'required' => true,
+        ]);
+        $this->assertSame(202, $response['headers']['status-code']);
+        $this->assertEventually(function () use ($path, $attributes, $headers) {
+            $response = $this->client->call(Client::METHOD_GET, "$path/$attributes/count", $headers);
+            $this->assertSame(200, $response['headers']['status-code']);
+            $this->assertSame('available', $response['body']['status']);
+        });
+        $response = $this->client->call(Client::METHOD_POST, "$path/$records", $headers, [
+            $recordIdKey => 'single',
+            'data' => ['count' => 1],
+        ]);
+        $this->assertSame(201, $response['headers']['status-code']);
+
+        // Test for SUCCESS: an update and an upsert staged in a transaction are metered when staged, before any commit.
+        $response = $this->client->call(Client::METHOD_POST, "/$api/transactions", $headers);
+        $this->assertSame(201, $response['headers']['status-code']);
+        $transactionId = $response['body']['$id'];
+        $response = $this->client->call(Client::METHOD_PATCH, "$path/$records/single", $headers, [
+            'data' => ['count' => 2],
+            'transactionId' => $transactionId,
+        ]);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $response = $this->client->call(Client::METHOD_PUT, "$path/$records/single", $headers, [
+            'data' => ['count' => 3],
+            'transactionId' => $transactionId,
+        ]);
+        $this->assertSame(201, $response['headers']['status-code']);
+        $response = $this->client->call(Client::METHOD_GET, "/$api/transactions/$transactionId", $headers);
+        $this->assertSame(200, $response['headers']['status-code']);
+        $this->assertSame('pending', $response['body']['status']);
+        $this->assertSame(2, $response['body']['operations']);
+
+        $usageHeaders = array_merge($headers, ['x-appwrite-key' => $this->getNewKey(['usage.read'])]);
+        $this->assertEventually(function () use ($databaseId, $usageHeaders) {
+            $response = $this->client->call(Client::METHOD_GET, '/usage/events', $usageHeaders, [
+                'metrics' => ['databases.operations.writes'],
+                'queries' => [Query::equal('resourceId', [$databaseId])->toString()],
+            ]);
+            $this->assertSame(200, $response['headers']['status-code']);
+            $this->assertSame(3, (int) array_sum(array_column($response['body']['metrics'][0]['points'], 'value')), 'writes: 1 for the create, 1 for the staged update, 1 for the staged upsert');
+        }, 60_000, 500);
+    }
+
     /**
      * @param array<string, string> $headers
      */
