@@ -16,7 +16,6 @@ use Appwrite\Usage\Context;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Conflict as ConflictException;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\Limit as LimitException;
@@ -209,8 +208,6 @@ class Upsert extends Action
             throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, $e->getMessage());
         } catch (StructureException $e) {
             throw new Exception($this->getStructureException(), $e->getMessage());
-        } catch (AuthorizationException $e) {
-            throw $this->unauthorized($e);
         } catch (LimitException $e) {
             throw new Exception($this->getLimitException(), $e->getMessage());
         }

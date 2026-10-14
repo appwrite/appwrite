@@ -160,9 +160,14 @@ class XList extends Action
 
         try {
             $parsed = Query::groupByType($queries);
-            $find = $parsed->isAggregation() || $parsed->selections !== []
-                ? fn (): array => $dbForDatabases->read($collectionTableId, $queries)
-                : fn (): array => $dbForDatabases->skipRelationships(fn (): array => $dbForDatabases->read($collectionTableId, $queries));
+            $find = match (true) {
+                $parsed->isAggregation() => fn (): array => \array_map(
+                    static fn (array $row): Document => new Document($row),
+                    $dbForDatabases->aggregate($collectionTableId, $queries),
+                ),
+                $parsed->selections !== [] => fn (): array => $dbForDatabases->find($collectionTableId, $queries),
+                default => fn (): array => $dbForDatabases->skipRelationships(fn (): array => $dbForDatabases->find($collectionTableId, $queries)),
+            };
 
             if ($transactionId !== null) {
                 $documents = \array_map(
