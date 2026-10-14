@@ -6,7 +6,7 @@ The tool that measures it is the compatibility framework in [`tests/compat`](../
 
 ## 1. Scope
 
-A Utopia library is a PHP package in `packages/<name>` (or a `utopia-php/<name>` package still in `vendor/`). Its Rust equivalent is the crate `crates/utopia/<name>`, published in the workspace as `utopia-<name>`.
+A Utopia library is a PHP package in `packages/<name>` (or a `utopia-php/<name>` package still in `vendor/`). Its Rust equivalent is the crate `crates/utopia/<name>`, published in the workspace as `utopia-<name>` and mirrored read-only to [`github.com/utopia-rs/<name>`](https://github.com/utopia-rs). Appwrite consumes it through the workspace `path`; external consumers take the git dependency from the mirror. `php-std` lives at `crates/support/php-std` and mirrors to [`github.com/utopia-rs/php-std`](https://github.com/utopia-rs/php-std).
 
 A library is converted **when a migrated service first needs it, and then in full**. A crate never ships with only the parts one service uses: the first service to need a library pays for its complete conversion. Libraries no migrated service needs yet stay PHP-only.
 

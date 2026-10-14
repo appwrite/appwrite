@@ -4,12 +4,14 @@
 # kept out of `packages/` (that directory is reserved for Composer packages and
 # is wired into the PHP CI, autoloader and Docker image).
 #
-#   crates/utopia/<name>    Generic Utopia libraries (Rust equivalents of packages/<name>)
-#   crates/appwrite/<name>  Appwrite domain crates: core, service modules, server binary
-#   crates/support/<name>   Support crates shared by Utopia crates: php-std (PHP engine semantics)
+#   crates/utopia/<name>    Generic Utopia libraries (Rust equivalents of packages/<name>).
+#                           Loaded here by path; mirrored read-only to github.com/utopia-rs/<name>.
+#   crates/appwrite/<name>  Appwrite domain crates: core, service modules, server binary (not mirrored)
+#   crates/support/<name>   Support crates shared by Utopia crates: php-std (PHP engine semantics),
+#                           mirrored to github.com/utopia-rs/php-std
 #   crates/tools/<name>     Development tools (not shipped): compat, the PHP/Rust differential tester
 #
-# See rfc/rust.md for the migration plan and crates/CONVERSION.md for the
+# See rfc/rust.md for the migration plan, mirrors and crates/CONVERSION.md for the
 # standard each Utopia crate is converted to.
 [workspace]
 resolver = "3"
