@@ -84,7 +84,7 @@ class XList extends Action
             $membershipId = $cursor->getValue();
             $cursorDocument = $dbForProject->getDocument('memberships', $membershipId);
 
-            if ($cursorDocument->isEmpty()) {
+            if ($cursorDocument->isEmpty() || $cursorDocument->getAttribute('userInternalId') !== $user->getSequence()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Membership '{$membershipId}' for the 'cursor' value not found.");
             }
 

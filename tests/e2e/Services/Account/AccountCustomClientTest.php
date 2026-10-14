@@ -8358,5 +8358,26 @@ final class AccountCustomClientTest extends Scope
         ]);
         $this->assertEquals(400, $response['headers']['status-code']);
         $this->assertEquals('general_cursor_not_found', $response['body']['type']);
+
+        $otherData = $this->createFreshAccountWithSession();
+        $otherHeaders = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $otherData['session'],
+        ];
+        $otherTeam = $this->client->call(Client::METHOD_POST, '/teams', $otherHeaders, [
+            'teamId' => ID::unique(),
+            'name' => 'Other Team',
+        ]);
+        $this->assertEquals(201, $otherTeam['headers']['status-code']);
+        $otherMemberships = $this->client->call(Client::METHOD_GET, '/account/memberships', $otherHeaders);
+        $otherMembershipId = $otherMemberships['body']['memberships'][0]['$id'];
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/memberships', $headers, [
+            'queries' => [Query::cursorAfter(new Document(['$id' => $otherMembershipId]))->toString()],
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('general_cursor_not_found', $response['body']['type']);
     }
 }
