@@ -26,6 +26,12 @@ pub(crate) mod joins;
 #[cfg(all(test, feature = "memory"))]
 mod memory_tests;
 mod numeric;
+#[cfg(test)]
+mod queries_hook_tests;
 mod read;
+#[cfg(test)]
+mod read_memory_tests;
+#[cfg(test)]
+mod resolved_read_tests;
 mod update;
 mod upsert;

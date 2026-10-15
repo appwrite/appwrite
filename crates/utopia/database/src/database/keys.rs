@@ -271,6 +271,7 @@ mod tests {
     /// `Adapter\Memory`, which has no connection, as the stub).
     #[test]
     fn cache_keys_match_php() {
+        let _filters = super::super::fixtures::global_filters();
         block_on(async {
             let db = uncached(StubAdapter::new());
             db.authorization().clean_roles();

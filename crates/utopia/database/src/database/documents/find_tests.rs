@@ -937,3 +937,87 @@ fn qualified_orders_and_tie_breaks_of_joins() {
     );
     assert_eq!(orders, ["name", "$sequence"]);
 }
+
+// ---- CustomDocumentTypeTest ------------------------------------------------
+// PHP checks the class exists and extends `Document`; Rust has no class to
+// check, so those two cases have no port.
+
+const USER: &str = "Tests\\Unit\\TestUserDocument";
+const POST: &str = "Tests\\Unit\\TestPostDocument";
+
+#[test]
+fn document_types_are_set_read_and_cleared() {
+    let db = uncached(StubAdapter::new());
+    assert_eq!(db.document_type("nonexistent"), None);
+    db.set_document_type("users", USER).set_document_type("posts", POST);
+    assert_eq!(db.document_type("users").as_deref(), Some(USER));
+    assert_eq!(db.document_type("posts").as_deref(), Some(POST));
+    db.clear_document_type("users");
+    assert_eq!(db.document_type("users"), None);
+    assert_eq!(db.document_type("posts").as_deref(), Some(POST));
+    db.set_document_type("users", USER);
+    db.clear_document_types();
+    assert_eq!(db.document_type("users"), None);
+    assert_eq!(db.document_type("posts"), None);
+    assert_eq!(db.document_type(METADATA).as_deref(), Some(crate::collection::CLASS));
+}
+
+#[test]
+fn a_created_document_takes_its_collection_type() {
+    block_on(async {
+        let any = Role::any();
+        let users = collection(
+            "users",
+            Vec::new(),
+            Vec::new(),
+            Some(vec![Permission::create(&any), Permission::read(&any)]),
+            false,
+        );
+        let generic = collection(
+            "generic",
+            Vec::new(),
+            Vec::new(),
+            Some(vec![Permission::create(&any), Permission::read(&any)]),
+            false,
+        );
+        let adapter = stub(vec![users, generic], &[Capability::DefinedAttributes], none());
+        let db = uncached(adapter);
+        db.set_validation(false);
+        db.set_filtering(false);
+        db.set_document_type("users", USER);
+        db.authorization().clean_roles();
+        db.authorization().add_role("any");
+
+        let created = db
+            .create_document(
+                "users",
+                doc(vec![
+                    ("$id", string("user1")),
+                    ("$permissions", Value::Array(Array::new())),
+                    ("email", string("test@example.com")),
+                    ("name", string("Test User")),
+                    ("status", string("active")),
+                ]),
+            )
+            .await
+            .unwrap();
+        assert_eq!(created.class(), USER);
+        assert_eq!(created.get("email"), Some(&string("test@example.com")));
+        assert_eq!(created.get("name"), Some(&string("Test User")));
+        assert_eq!(created.get("status"), Some(&string("active")));
+
+        let created = db
+            .create_document(
+                "generic",
+                doc(vec![
+                    ("$id", string("doc1")),
+                    ("$permissions", Value::Array(Array::new())),
+                    ("data", string("test")),
+                ]),
+            )
+            .await
+            .unwrap();
+        assert_ne!(created.class(), USER);
+        assert_ne!(created.class(), POST);
+    });
+}

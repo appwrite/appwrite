@@ -151,6 +151,17 @@ impl Memory {
         self.store().data.clone()
     }
 
+    /// Overwrites one stored column of a document's row, past every check
+    /// (what PHP's tests do through a subclass writing `$this->data`).
+    #[doc(hidden)]
+    pub fn store_attribute(&self, collection: &str, id: &str, column: &str, value: Value) {
+        let ctx = self.ctx();
+        let key = Store::key(&ctx, collection);
+        let doc_key = Store::document_key(&ctx, id, None);
+        let mut store = self.store();
+        store::set(&mut store.data, &[key, store::k("documents"), store::key_of(&doc_key), store::k(column)], value);
+    }
+
     /// The unique-index hash tables, by storage key, index and serialized
     /// signature (`$uniqueIndexHashes`).
     #[doc(hidden)]
