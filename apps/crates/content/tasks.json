@@ -1,0 +1,197 @@
+{
+  "updated": "2026-10-15T16:30:00Z",
+  "tasks": [
+    {
+      "id": "db8-compat-rust",
+      "title": "Database 8: Rust side of the compat harness",
+      "area": "Database 8",
+      "status": "progress",
+      "note": "The new op vocabulary (object.new/call/get, adapter.call, the 8.x database.* ops) dispatched onto the Rust database, the old ops removed, per-case registry isolation, then the five shards (postgres, mysql, sqlite, mongo, redis) run locally.",
+      "updated": "2026-10-15T16:30:00Z"
+    },
+    {
+      "id": "audit-cursor",
+      "title": "Audit: the last compat difference",
+      "area": "Database 8",
+      "status": "progress",
+      "note": "value::from_query turns any Row into a Document; PHP treats a non-Document cursor (Utopia\\Audit\\Log) as invalid and throws Exception\\Query. Fixed with the compat harness.",
+      "updated": "2026-10-15T16:30:00Z"
+    },
+    {
+      "id": "db8-push",
+      "title": "Push the database 8 merge and get CI green",
+      "area": "Database 8",
+      "status": "blocked",
+      "note": "db8-final holds the whole port merged into feat/rust-utopia-conversion. Waits on the Rust compat harness; then the database lanes, migration, audit, usage and the Users parity diff run locally before one push. CI's database lanes and Users (Rust) stay red until then.",
+      "updated": "2026-10-15T16:30:00Z"
+    },
+    {
+      "id": "php-image",
+      "title": "Rebuild the local PHP image",
+      "area": "Environment",
+      "status": "todo",
+      "note": "main moved packages/query and packages/migration after the appwrite image was built, so new PHP processes fail in init.php. Rebuilt once the agents using the containers finish.",
+      "updated": "2026-10-15T16:30:00Z"
+    },
+    {
+      "id": "migration-newer",
+      "title": "Migration: port what packages/migration added after 3.1.2",
+      "area": "Libraries",
+      "status": "todo",
+      "note": "Project environments, the passkey relying-party ID, passwordPwned and passwordRotation, membership IDs, topic QoS and expiry, and the reply-to and channelId options on messaging providers. The dev image still runs migration 3.1.2, so compat cannot check them yet.",
+      "updated": "2026-10-15T16:30:00Z"
+    },
+    {
+      "id": "filters-mutate",
+      "title": "Database filters that change the document (enum, range)",
+      "area": "Database 8",
+      "status": "todo",
+      "note": "PHP 8.x's enum and range filters edit the attribute document; the Rust Filter trait gets it read-only, so both pass values through. Only user databases' attributes use them, and no Rust service reads those yet.",
+      "updated": "2026-10-15T16:30:00Z"
+    },
+    {
+      "id": "hooks-rest",
+      "title": "The remaining cross-cutting hooks",
+      "area": "Hooks",
+      "status": "todo",
+      "note": "15 missing and 7 partial in crates/appwrite/hooks.json; they arrive with the services that need them.",
+      "updated": "2026-10-15T16:30:00Z"
+    },
+    {
+      "id": "next-services",
+      "title": "Migrate the next services",
+      "area": "Services",
+      "status": "todo",
+      "note": "After Users, Teams and Account: the next services to port, each with its parity diff matrix and benchmarks.",
+      "updated": "2026-10-15T16:30:00Z"
+    },
+    {
+      "id": "account-dedupe",
+      "title": "Account: dedupe the shared helpers",
+      "area": "Services",
+      "status": "todo",
+      "note": "13 helpers are duplicated between the sign-in and profile halves of the account crate (base/mod.rs, base/profile.rs).",
+      "updated": "2026-10-15T16:30:00Z"
+    },
+    {
+      "id": "bench-rerun",
+      "title": "Re-run the vcs, agents and messaging benchmarks",
+      "area": "Benchmarks",
+      "status": "todo",
+      "note": "On a quiet machine; the last container runs were taken under load.",
+      "updated": "2026-10-15T16:30:00Z"
+    },
+    {
+      "id": "pr-ready",
+      "title": "Ready the PR for merge",
+      "area": "Release",
+      "status": "todo",
+      "note": "Delete .github/ci/focus.json and mark the PR ready for review.",
+      "updated": "2026-10-15T16:30:00Z"
+    },
+    {
+      "id": "db8-core",
+      "title": "Database 8: the core in Rust",
+      "area": "Database 8",
+      "status": "done",
+      "note": "Database.php, every trait, the caches, the Permissions and Relationships hooks and the event dispatch. Cache keys are byte-identical to PHP. 2,819 tests pass.",
+      "updated": "2026-10-15T12:40:00Z"
+    },
+    {
+      "id": "db8-sql",
+      "title": "Database 8: SQL adapters",
+      "area": "Database 8",
+      "status": "done",
+      "note": "Postgres, MariaDB, MySQL and SQLite, with the utopia-query builders.",
+      "updated": "2026-10-15T08:00:00Z"
+    },
+    {
+      "id": "db8-adapters",
+      "title": "Database 8: Mongo, Memory, Redis and Pool adapters",
+      "area": "Database 8",
+      "status": "done",
+      "note": "Mongo on the official Rust driver.",
+      "updated": "2026-10-15T06:00:00Z"
+    },
+    {
+      "id": "db8-php-harness",
+      "title": "Database 8: PHP side of the compat harness",
+      "area": "Database 8",
+      "status": "done",
+      "note": "25,175 cases and 736,324 steps recorded from 8.1.3, 338 unit-test classes ported, API coverage 100%, PHPStan clean.",
+      "updated": "2026-10-15T15:00:00Z"
+    },
+    {
+      "id": "db8-appwrite",
+      "title": "Database 8: the Appwrite crates",
+      "area": "Database 8",
+      "status": "done",
+      "note": "core, users, teams, account and server. The Users parity diff: 2,135 of 2,135 scenarios identical.",
+      "updated": "2026-10-15T14:00:00Z"
+    },
+    {
+      "id": "db8-migration",
+      "title": "Database 8: migration",
+      "area": "Database 8",
+      "status": "done",
+      "note": "250 of 250 compat cases, the 45 that were blocked on database 8 included.",
+      "updated": "2026-10-15T13:00:00Z"
+    },
+    {
+      "id": "db8-audit-usage",
+      "title": "Database 8: audit and usage",
+      "area": "Database 8",
+      "status": "done",
+      "note": "usage converted; audit has one difference left (see above).",
+      "updated": "2026-10-15T13:30:00Z"
+    },
+    {
+      "id": "osv-fflate",
+      "title": "Dependency scan: fflate",
+      "area": "CI",
+      "status": "done",
+      "note": "fflate pinned to 0.7.5 under satori (GHSA-px8p-9vwx-vf98).",
+      "updated": "2026-10-15T15:10:00Z"
+    },
+    {
+      "id": "account",
+      "title": "Account service in Rust",
+      "area": "Services",
+      "status": "done",
+      "note": "About 88 routes: sessions, tokens, JWTs, MFA, passkeys, profile, recovery, verifications, identities and targets.",
+      "updated": "2026-10-14T00:00:00Z"
+    },
+    {
+      "id": "teams",
+      "title": "Teams service in Rust",
+      "area": "Services",
+      "status": "done",
+      "note": "13 routes.",
+      "updated": "2026-10-14T00:00:00Z"
+    },
+    {
+      "id": "hooks-guards",
+      "title": "Global hooks for Teams and Account",
+      "area": "Hooks",
+      "status": "done",
+      "note": "Abuse limits, active session, MFA freshness, recent session, auth methods, custom-domain CORS, database listeners, disabled metrics, onboarding and the dev timeout.",
+      "updated": "2026-10-14T00:00:00Z"
+    },
+    {
+      "id": "users-perf",
+      "title": "Users: close the performance gaps",
+      "area": "Services",
+      "status": "done",
+      "note": "The Users API benchmark on a fresh stack and a quiet machine.",
+      "updated": "2026-10-14T00:00:00Z"
+    },
+    {
+      "id": "libraries",
+      "title": "Utopia libraries converted",
+      "area": "Libraries",
+      "status": "done",
+      "note": "Every library proven with bin/compat check; utopia-php/async is not converted, by design.",
+      "updated": "2026-10-13T00:00:00Z"
+    }
+  ]
+}

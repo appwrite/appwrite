@@ -23,6 +23,7 @@ import { Route as AppwriteIndexRouteImport } from './routes/appwrite/index'
 import { Route as AppwriteServiceRouteImport } from './routes/appwrite/$service'
 import { Route as AppwriteBehaviourRouteImport } from './routes/appwrite/behaviour'
 import { Route as AppwriteBenchmarksRouteImport } from './routes/appwrite/benchmarks'
+import { Route as AppwriteTasksRouteImport } from './routes/appwrite/tasks'
 import { Route as CategoriesCategoryRouteImport } from './routes/categories/$category'
 import { Route as LibPhpApiSplatRouteImport } from './routes/$lib/php-api/$'
 
@@ -96,6 +97,11 @@ const AppwriteBenchmarksRoute = AppwriteBenchmarksRouteImport.update({
   path: '/appwrite/benchmarks',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppwriteTasksRoute = AppwriteTasksRouteImport.update({
+  id: '/appwrite/tasks',
+  path: '/appwrite/tasks',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CategoriesCategoryRoute = CategoriesCategoryRouteImport.update({
   id: '/categories/$category',
   path: '/categories/$category',
@@ -120,6 +126,7 @@ export interface FileRoutesByFullPath {
   '/appwrite/$service': typeof AppwriteServiceRoute
   '/appwrite/behaviour': typeof AppwriteBehaviourRoute
   '/appwrite/benchmarks': typeof AppwriteBenchmarksRoute
+  '/appwrite/tasks': typeof AppwriteTasksRoute
   '/categories/$category': typeof CategoriesCategoryRoute
   '/$lib/': typeof LibIndexRoute
   '/appwrite/': typeof AppwriteIndexRoute
@@ -137,6 +144,7 @@ export interface FileRoutesByTo {
   '/appwrite/$service': typeof AppwriteServiceRoute
   '/appwrite/behaviour': typeof AppwriteBehaviourRoute
   '/appwrite/benchmarks': typeof AppwriteBenchmarksRoute
+  '/appwrite/tasks': typeof AppwriteTasksRoute
   '/categories/$category': typeof CategoriesCategoryRoute
   '/$lib': typeof LibIndexRoute
   '/appwrite': typeof AppwriteIndexRoute
@@ -156,6 +164,7 @@ export interface FileRoutesById {
   '/appwrite/$service': typeof AppwriteServiceRoute
   '/appwrite/behaviour': typeof AppwriteBehaviourRoute
   '/appwrite/benchmarks': typeof AppwriteBenchmarksRoute
+  '/appwrite/tasks': typeof AppwriteTasksRoute
   '/categories/$category': typeof CategoriesCategoryRoute
   '/$lib/': typeof LibIndexRoute
   '/appwrite/': typeof AppwriteIndexRoute
@@ -176,6 +185,7 @@ export interface FileRouteTypes {
     | '/appwrite/$service'
     | '/appwrite/behaviour'
     | '/appwrite/benchmarks'
+    | '/appwrite/tasks'
     | '/categories/$category'
     | '/$lib/'
     | '/appwrite/'
@@ -193,6 +203,7 @@ export interface FileRouteTypes {
     | '/appwrite/$service'
     | '/appwrite/behaviour'
     | '/appwrite/benchmarks'
+    | '/appwrite/tasks'
     | '/categories/$category'
     | '/$lib'
     | '/appwrite'
@@ -211,6 +222,7 @@ export interface FileRouteTypes {
     | '/appwrite/$service'
     | '/appwrite/behaviour'
     | '/appwrite/benchmarks'
+    | '/appwrite/tasks'
     | '/categories/$category'
     | '/$lib/'
     | '/appwrite/'
@@ -226,6 +238,7 @@ export interface RootRouteChildren {
   AppwriteServiceRoute: typeof AppwriteServiceRoute
   AppwriteBehaviourRoute: typeof AppwriteBehaviourRoute
   AppwriteBenchmarksRoute: typeof AppwriteBenchmarksRoute
+  AppwriteTasksRoute: typeof AppwriteTasksRoute
   CategoriesCategoryRoute: typeof CategoriesCategoryRoute
   AppwriteIndexRoute: typeof AppwriteIndexRoute
 }
@@ -330,6 +343,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppwriteBenchmarksRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/appwrite/tasks': {
+      id: '/appwrite/tasks'
+      path: '/appwrite/tasks'
+      fullPath: '/appwrite/tasks'
+      preLoaderRoute: typeof AppwriteTasksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/categories/$category': {
       id: '/categories/$category'
       path: '/categories/$category'
@@ -376,6 +396,7 @@ const rootRouteChildren: RootRouteChildren = {
   AppwriteServiceRoute: AppwriteServiceRoute,
   AppwriteBehaviourRoute: AppwriteBehaviourRoute,
   AppwriteBenchmarksRoute: AppwriteBenchmarksRoute,
+  AppwriteTasksRoute: AppwriteTasksRoute,
   CategoriesCategoryRoute: CategoriesCategoryRoute,
   AppwriteIndexRoute: AppwriteIndexRoute,
 }

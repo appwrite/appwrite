@@ -1,6 +1,7 @@
 import { Link, createFileRoute, notFound } from '@tanstack/react-router'
 import { ChevronRight, Search } from 'lucide-react'
 import { useState } from 'react'
+import { BOARD, COLUMNS } from '@/lib/tasks'
 import { Bar, MigrationGate, ServiceBadge, SourceLink, Stat } from '@/components/Appwrite'
 import { Measured } from '@/components/Bench'
 import { BenchSummary } from '@/components/BenchAppwrite'
@@ -188,7 +189,17 @@ function Overview() {
           ) : null}
         </Section>
 
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <Link to="/appwrite/tasks" className="group grid gap-1 rounded-lg border border-border bg-card p-4 transition-colors hover:border-ring">
+            <span className="flex items-center justify-between text-[14px] font-medium">
+              Task board
+              <ChevronRight className="size-4 text-muted-foreground group-hover:text-foreground" />
+            </span>
+            <span className="text-[12.5px] text-muted-foreground">
+              The migration's work by status: {COLUMNS.map((c) => `${BOARD.tasks.filter((t) => t.status === c.status).length} ${c.label.toLowerCase()}`).join(', ')}. Last changed{' '}
+              <Time date={BOARD.updated} />.
+            </span>
+          </Link>
           <Link to="/appwrite/behaviour" className="group grid gap-1 rounded-lg border border-border bg-card p-4 transition-colors hover:border-ring">
             <span className="flex items-center justify-between text-[14px] font-medium">
               Cross-cutting behaviour
