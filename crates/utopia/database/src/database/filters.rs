@@ -505,10 +505,17 @@ impl Database {
     /// A document of `collection` from data read back from storage or the
     /// cache (`newDocument()`): of the collection's custom type, when one is
     /// set; non-string permissions dropped, as `Document::fromStorage()`
-    /// does.
+    /// does. A collection definition is built as `Collection::fromArray()`
+    /// builds it (`$className::fromArray($data)`), even from no data: a
+    /// missing definition reads as an empty-named collection, not an empty
+    /// document (PHP `Database.php` `newDocument()`, `Collection.php`
+    /// `fromArray()`).
     pub(crate) fn new_document(&self, collection: &str, data: Array) -> Result<Document> {
         let document = Document::from_storage(data)?;
         Ok(match self.document_type(collection) {
+            Some(class) if class == crate::collection::CLASS => {
+                Collection::from_array(document.into_array())?.to_document().with_class(class)
+            }
             Some(class) => document.with_class(class),
             None => document,
         })
