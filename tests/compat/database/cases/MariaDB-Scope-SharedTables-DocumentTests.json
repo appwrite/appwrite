@@ -3868,9 +3868,21 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to persist metadata after retries for attribute creation 'string': Failed to execute transaction: the transaction was lost before it could commit"
+            "$value": "Attribute",
+            "fields": {
+              "key": "string",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 128,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
             }
           }
         },
@@ -4091,12 +4103,7 @@
             ],
             "batchSize": 6
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
-            }
-          }
+          "expect": 11
         },
         {
           "op": "database.find",
@@ -4112,7 +4119,195 @@
               }
             ]
           },
-          "expect": []
+          "expect": [
+            {
+              "$document": {
+                "string": "text",
+                "$id": "<uniqid>",
+                "$sequence": "1000000",
+                "$tenant": "999",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "$collection": "testCreateDocumentsWithAutoIncrement"
+              }
+            },
+            {
+              "$document": {
+                "string": "text",
+                "$id": "<uniqid>",
+                "$sequence": "1000001",
+                "$tenant": "999",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "$collection": "testCreateDocumentsWithAutoIncrement"
+              }
+            },
+            {
+              "$document": {
+                "string": "text",
+                "$id": "<uniqid>",
+                "$sequence": "1000002",
+                "$tenant": "999",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "$collection": "testCreateDocumentsWithAutoIncrement"
+              }
+            },
+            {
+              "$document": {
+                "string": "text",
+                "$id": "<uniqid>",
+                "$sequence": "1000003",
+                "$tenant": "999",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "$collection": "testCreateDocumentsWithAutoIncrement"
+              }
+            },
+            {
+              "$document": {
+                "string": "text",
+                "$id": "<uniqid>",
+                "$sequence": "1000004",
+                "$tenant": "999",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "$collection": "testCreateDocumentsWithAutoIncrement"
+              }
+            },
+            {
+              "$document": {
+                "string": "text",
+                "$id": "<uniqid>",
+                "$sequence": "1000005",
+                "$tenant": "999",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "$collection": "testCreateDocumentsWithAutoIncrement"
+              }
+            },
+            {
+              "$document": {
+                "string": "text",
+                "$id": "<uniqid>",
+                "$sequence": "1000006",
+                "$tenant": "999",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "$collection": "testCreateDocumentsWithAutoIncrement"
+              }
+            },
+            {
+              "$document": {
+                "string": "text",
+                "$id": "<uniqid>",
+                "$sequence": "1000007",
+                "$tenant": "999",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "$collection": "testCreateDocumentsWithAutoIncrement"
+              }
+            },
+            {
+              "$document": {
+                "string": "text",
+                "$id": "<uniqid>",
+                "$sequence": "1000008",
+                "$tenant": "999",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "$collection": "testCreateDocumentsWithAutoIncrement"
+              }
+            },
+            {
+              "$document": {
+                "string": "text",
+                "$id": "<uniqid>",
+                "$sequence": "1000009",
+                "$tenant": "999",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "$collection": "testCreateDocumentsWithAutoIncrement"
+              }
+            },
+            {
+              "$document": {
+                "string": "text",
+                "$id": "<uniqid>",
+                "$sequence": "1000010",
+                "$tenant": "999",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "$collection": "testCreateDocumentsWithAutoIncrement"
+              }
+            }
+          ]
         }
       ]
     },
@@ -63137,1600 +63332,6 @@
             "$error": {
               "class": "Utopia\\Database\\Exception\\Duplicate",
               "message": "Document already exists"
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "DocumentTests::testEmptyTenant",
-      "state": [
-        "mysql@database-mariadb"
-      ],
-      "steps": [
-        {
-          "op": "db.open",
-          "args": {
-            "driver": "mariadb",
-            "namespace": "",
-            "shared_tables": true,
-            "tenant": 999
-          },
-          "bind": "db",
-          "expect": {
-            "$handle": "*"
-          }
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": {
-            "$authorization": true
-          }
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "any"
-          },
-          "expect": {
-            "$authorization": true
-          }
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:x"
-          },
-          "expect": {
-            "$authorization": true
-          }
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "users"
-          },
-          "expect": {
-            "$authorization": true
-          }
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "priceRange"
-          },
-          "expect": true
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "priceRangeNew"
-          },
-          "expect": true
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "encrypt"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "subQueryProbe"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.create_collection",
-          "args": {
-            "collection": {
-              "$document": {
-                "$id": "documents_u000000000052",
-                "name": "documents_u000000000052",
-                "attributes": [],
-                "indexes": [],
-                "documentSecurity": true
-              },
-              "$class": "Collection"
-            }
-          },
-          "expect": {
-            "$document": {
-              "$id": "documents_u000000000052",
-              "name": "documents_u000000000052",
-              "attributes": [],
-              "indexes": [],
-              "documentSecurity": true,
-              "$permissions": [
-                "create(\"any\")"
-              ],
-              "$collection": "_metadata",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$tenant": "999",
-              "$sequence": "1"
-            },
-            "$class": "Collection"
-          }
-        },
-        {
-          "op": "database.create_attribute",
-          "args": {
-            "collection": "documents_u000000000052",
-            "attribute": {
-              "$value": "Attribute",
-              "fields": {
-                "key": "string",
-                "type": {
-                  "$enum": "Query\\Schema\\ColumnType::String"
-                },
-                "size": 128,
-                "required": true,
-                "default": null,
-                "signed": true,
-                "array": false,
-                "format": null,
-                "filters": [],
-                "relationship": null,
-                "side": null
-              }
-            }
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to persist metadata after retries for attribute creation 'string': Failed to execute transaction: the transaction was lost before it could commit"
-            }
-          }
-        },
-        {
-          "op": "database.create_attribute",
-          "args": {
-            "collection": "documents_u000000000052",
-            "attribute": {
-              "$value": "Attribute",
-              "fields": {
-                "key": "integer_signed",
-                "type": {
-                  "$enum": "Query\\Schema\\ColumnType::Integer"
-                },
-                "size": null,
-                "required": true,
-                "default": null,
-                "signed": true,
-                "array": false,
-                "format": null,
-                "filters": [],
-                "relationship": null,
-                "side": null
-              }
-            }
-          },
-          "expect": {
-            "$value": "Attribute",
-            "fields": {
-              "key": "integer_signed",
-              "type": {
-                "$enum": "Query\\Schema\\ColumnType::Integer"
-              },
-              "size": null,
-              "required": true,
-              "default": null,
-              "signed": true,
-              "array": false,
-              "format": null,
-              "filters": [],
-              "relationship": null,
-              "side": null
-            }
-          }
-        },
-        {
-          "op": "database.create_attribute",
-          "args": {
-            "collection": "documents_u000000000052",
-            "attribute": {
-              "$value": "Attribute",
-              "fields": {
-                "key": "integer_unsigned",
-                "type": {
-                  "$enum": "Query\\Schema\\ColumnType::Integer"
-                },
-                "size": null,
-                "required": true,
-                "default": null,
-                "signed": false,
-                "array": false,
-                "format": null,
-                "filters": [],
-                "relationship": null,
-                "side": null
-              }
-            }
-          },
-          "expect": {
-            "$value": "Attribute",
-            "fields": {
-              "key": "integer_unsigned",
-              "type": {
-                "$enum": "Query\\Schema\\ColumnType::Integer"
-              },
-              "size": null,
-              "required": true,
-              "default": null,
-              "signed": false,
-              "array": false,
-              "format": null,
-              "filters": [],
-              "relationship": null,
-              "side": null
-            }
-          }
-        },
-        {
-          "op": "database.create_attribute",
-          "args": {
-            "collection": "documents_u000000000052",
-            "attribute": {
-              "$value": "Attribute",
-              "fields": {
-                "key": "bigint_signed",
-                "type": {
-                  "$enum": "Query\\Schema\\ColumnType::Integer"
-                },
-                "size": 8,
-                "required": true,
-                "default": null,
-                "signed": true,
-                "array": false,
-                "format": null,
-                "filters": [],
-                "relationship": null,
-                "side": null
-              }
-            }
-          },
-          "expect": {
-            "$value": "Attribute",
-            "fields": {
-              "key": "bigint_signed",
-              "type": {
-                "$enum": "Query\\Schema\\ColumnType::Integer"
-              },
-              "size": 8,
-              "required": true,
-              "default": null,
-              "signed": true,
-              "array": false,
-              "format": null,
-              "filters": [],
-              "relationship": null,
-              "side": null
-            }
-          }
-        },
-        {
-          "op": "database.create_attribute",
-          "args": {
-            "collection": "documents_u000000000052",
-            "attribute": {
-              "$value": "Attribute",
-              "fields": {
-                "key": "bigint_unsigned",
-                "type": {
-                  "$enum": "Query\\Schema\\ColumnType::Integer"
-                },
-                "size": 8,
-                "required": true,
-                "default": null,
-                "signed": false,
-                "array": false,
-                "format": null,
-                "filters": [],
-                "relationship": null,
-                "side": null
-              }
-            }
-          },
-          "expect": {
-            "$value": "Attribute",
-            "fields": {
-              "key": "bigint_unsigned",
-              "type": {
-                "$enum": "Query\\Schema\\ColumnType::Integer"
-              },
-              "size": 8,
-              "required": true,
-              "default": null,
-              "signed": false,
-              "array": false,
-              "format": null,
-              "filters": [],
-              "relationship": null,
-              "side": null
-            }
-          }
-        },
-        {
-          "op": "database.create_attribute",
-          "args": {
-            "collection": "documents_u000000000052",
-            "attribute": {
-              "$value": "Attribute",
-              "fields": {
-                "key": "float_signed",
-                "type": {
-                  "$enum": "Query\\Schema\\ColumnType::Double"
-                },
-                "size": null,
-                "required": true,
-                "default": null,
-                "signed": true,
-                "array": false,
-                "format": null,
-                "filters": [],
-                "relationship": null,
-                "side": null
-              }
-            }
-          },
-          "expect": {
-            "$value": "Attribute",
-            "fields": {
-              "key": "float_signed",
-              "type": {
-                "$enum": "Query\\Schema\\ColumnType::Double"
-              },
-              "size": null,
-              "required": true,
-              "default": null,
-              "signed": true,
-              "array": false,
-              "format": null,
-              "filters": [],
-              "relationship": null,
-              "side": null
-            }
-          }
-        },
-        {
-          "op": "database.create_attribute",
-          "args": {
-            "collection": "documents_u000000000052",
-            "attribute": {
-              "$value": "Attribute",
-              "fields": {
-                "key": "float_unsigned",
-                "type": {
-                  "$enum": "Query\\Schema\\ColumnType::Double"
-                },
-                "size": null,
-                "required": true,
-                "default": null,
-                "signed": false,
-                "array": false,
-                "format": null,
-                "filters": [],
-                "relationship": null,
-                "side": null
-              }
-            }
-          },
-          "expect": {
-            "$value": "Attribute",
-            "fields": {
-              "key": "float_unsigned",
-              "type": {
-                "$enum": "Query\\Schema\\ColumnType::Double"
-              },
-              "size": null,
-              "required": true,
-              "default": null,
-              "signed": false,
-              "array": false,
-              "format": null,
-              "filters": [],
-              "relationship": null,
-              "side": null
-            }
-          }
-        },
-        {
-          "op": "database.create_attribute",
-          "args": {
-            "collection": "documents_u000000000052",
-            "attribute": {
-              "$value": "Attribute",
-              "fields": {
-                "key": "boolean",
-                "type": {
-                  "$enum": "Query\\Schema\\ColumnType::Boolean"
-                },
-                "size": null,
-                "required": true,
-                "default": null,
-                "signed": true,
-                "array": false,
-                "format": null,
-                "filters": [],
-                "relationship": null,
-                "side": null
-              }
-            }
-          },
-          "expect": {
-            "$value": "Attribute",
-            "fields": {
-              "key": "boolean",
-              "type": {
-                "$enum": "Query\\Schema\\ColumnType::Boolean"
-              },
-              "size": null,
-              "required": true,
-              "default": null,
-              "signed": true,
-              "array": false,
-              "format": null,
-              "filters": [],
-              "relationship": null,
-              "side": null
-            }
-          }
-        },
-        {
-          "op": "database.create_attribute",
-          "args": {
-            "collection": "documents_u000000000052",
-            "attribute": {
-              "$value": "Attribute",
-              "fields": {
-                "key": "colors",
-                "type": {
-                  "$enum": "Query\\Schema\\ColumnType::String"
-                },
-                "size": 32,
-                "required": true,
-                "default": null,
-                "signed": true,
-                "array": true,
-                "format": null,
-                "filters": [],
-                "relationship": null,
-                "side": null
-              }
-            }
-          },
-          "expect": {
-            "$value": "Attribute",
-            "fields": {
-              "key": "colors",
-              "type": {
-                "$enum": "Query\\Schema\\ColumnType::String"
-              },
-              "size": 32,
-              "required": true,
-              "default": null,
-              "signed": true,
-              "array": true,
-              "format": null,
-              "filters": [],
-              "relationship": null,
-              "side": null
-            }
-          }
-        },
-        {
-          "op": "database.create_attribute",
-          "args": {
-            "collection": "documents_u000000000052",
-            "attribute": {
-              "$value": "Attribute",
-              "fields": {
-                "key": "empty",
-                "type": {
-                  "$enum": "Query\\Schema\\ColumnType::String"
-                },
-                "size": 32,
-                "required": false,
-                "default": null,
-                "signed": true,
-                "array": true,
-                "format": null,
-                "filters": [],
-                "relationship": null,
-                "side": null
-              }
-            }
-          },
-          "expect": {
-            "$value": "Attribute",
-            "fields": {
-              "key": "empty",
-              "type": {
-                "$enum": "Query\\Schema\\ColumnType::String"
-              },
-              "size": 32,
-              "required": false,
-              "default": null,
-              "signed": true,
-              "array": true,
-              "format": null,
-              "filters": [],
-              "relationship": null,
-              "side": null
-            }
-          }
-        },
-        {
-          "op": "database.create_attribute",
-          "args": {
-            "collection": "documents_u000000000052",
-            "attribute": {
-              "$value": "Attribute",
-              "fields": {
-                "key": "with-dash",
-                "type": {
-                  "$enum": "Query\\Schema\\ColumnType::String"
-                },
-                "size": 128,
-                "required": false,
-                "default": null,
-                "signed": true,
-                "array": false,
-                "format": null,
-                "filters": [],
-                "relationship": null,
-                "side": null
-              }
-            }
-          },
-          "expect": {
-            "$value": "Attribute",
-            "fields": {
-              "key": "with-dash",
-              "type": {
-                "$enum": "Query\\Schema\\ColumnType::String"
-              },
-              "size": 128,
-              "required": false,
-              "default": null,
-              "signed": true,
-              "array": false,
-              "format": null,
-              "filters": [],
-              "relationship": null,
-              "side": null
-            }
-          }
-        },
-        {
-          "op": "database.create_attribute",
-          "args": {
-            "collection": "documents_u000000000052",
-            "attribute": {
-              "$value": "Attribute",
-              "fields": {
-                "key": "id",
-                "type": {
-                  "$enum": "Query\\Schema\\ColumnType::Id"
-                },
-                "size": null,
-                "required": false,
-                "default": null,
-                "signed": true,
-                "array": false,
-                "format": null,
-                "filters": [],
-                "relationship": null,
-                "side": null
-              }
-            }
-          },
-          "expect": {
-            "$value": "Attribute",
-            "fields": {
-              "key": "id",
-              "type": {
-                "$enum": "Query\\Schema\\ColumnType::Id"
-              },
-              "size": null,
-              "required": false,
-              "default": null,
-              "signed": true,
-              "array": false,
-              "format": null,
-              "filters": [],
-              "relationship": null,
-              "side": null
-            }
-          }
-        },
-        {
-          "op": "database.create_document",
-          "args": {
-            "collection": "documents_u000000000052",
-            "document": {
-              "$document": {
-                "$permissions": [
-                  "read(\"any\")",
-                  "read(\"user:1\")",
-                  "read(\"user:2\")",
-                  "create(\"any\")",
-                  "create(\"user:1x\")",
-                  "create(\"user:2x\")",
-                  "update(\"any\")",
-                  "update(\"user:1x\")",
-                  "update(\"user:2x\")",
-                  "delete(\"any\")",
-                  "delete(\"user:1x\")",
-                  "delete(\"user:2x\")"
-                ],
-                "string": "text📝",
-                "integer_signed": -2147483647,
-                "integer_unsigned": 2147483647,
-                "bigint_signed": -9223372036854775807,
-                "bigint_unsigned": 9223372036854775807,
-                "float_signed": -5.55,
-                "float_unsigned": 5.55,
-                "boolean": true,
-                "colors": [
-                  "pink",
-                  "green",
-                  "blue"
-                ],
-                "empty": [],
-                "with-dash": "Works",
-                "id": "1000000"
-              }
-            }
-          },
-          "bind": "s9463",
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
-            }
-          }
-        },
-        {
-          "op": "database.create_document",
-          "args": {
-            "collection": "documents_u000000000052",
-            "document": {
-              "$document": {
-                "$id": "56000",
-                "$sequence": "56000",
-                "$permissions": [
-                  "read(\"any\")",
-                  "read(\"user:1\")",
-                  "read(\"user:2\")",
-                  "create(\"any\")",
-                  "create(\"user:1x\")",
-                  "create(\"user:2x\")",
-                  "update(\"any\")",
-                  "update(\"user:1x\")",
-                  "update(\"user:2x\")",
-                  "delete(\"any\")",
-                  "delete(\"user:1x\")",
-                  "delete(\"user:2x\")"
-                ],
-                "string": "text📝",
-                "integer_signed": -2147483647,
-                "integer_unsigned": 2147483647,
-                "bigint_signed": -9223372036854775807,
-                "bigint_unsigned": 9223372036854775807,
-                "float_signed": -5.55,
-                "float_unsigned": 5.55,
-                "boolean": true,
-                "colors": [
-                  "pink",
-                  "green",
-                  "blue"
-                ],
-                "empty": [],
-                "with-dash": "Works"
-              }
-            }
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
-            }
-          }
-        },
-        {
-          "op": "database.create_document",
-          "args": {
-            "collection": "documents_u000000000052",
-            "document": {
-              "$document": {
-                "string": "",
-                "integer_signed": 0,
-                "integer_unsigned": 0,
-                "bigint_signed": 0,
-                "bigint_unsigned": 0,
-                "float_signed": 0,
-                "float_unsigned": -5.55,
-                "boolean": true,
-                "colors": [],
-                "empty": []
-              }
-            }
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Attribute \"float_unsigned\" has invalid type. Value must be a valid range between 0 and 179,769,313,486,231,570,814,527,423,731,704,356,798,070,567,525,844,996,598,917,476,803,157,260,780,028,538,760,589,558,632,766,878,171,540,458,953,514,382,464,234,321,326,889,464,182,768,467,546,703,537,516,986,049,910,576,551,282,076,245,490,090,389,328,944,075,868,508,455,133,942,304,583,236,903,222,948,165,808,559,332,123,348,274,797,826,204,144,723,168,738,177,180,919,299,881,250,404,026,184,124,858,368"
-            }
-          }
-        },
-        {
-          "op": "database.create_document",
-          "args": {
-            "collection": "documents_u000000000052",
-            "document": {
-              "$document": {
-                "string": "",
-                "integer_signed": 0,
-                "integer_unsigned": 0,
-                "bigint_signed": 0,
-                "bigint_unsigned": -10,
-                "float_signed": 0,
-                "float_unsigned": 0,
-                "boolean": true,
-                "colors": [],
-                "empty": []
-              }
-            }
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Attribute \"bigint_unsigned\" has invalid type. Value must be a valid range between 0 and 9,223,372,036,854,775,807"
-            }
-          }
-        },
-        {
-          "op": "database.create_document",
-          "args": {
-            "collection": "documents_u000000000052",
-            "document": {
-              "$document": {
-                "$sequence": "0",
-                "$permissions": [],
-                "string": "",
-                "integer_signed": 1,
-                "integer_unsigned": 1,
-                "bigint_signed": 1,
-                "bigint_unsigned": 1,
-                "float_signed": 1,
-                "float_unsigned": 1,
-                "boolean": true,
-                "colors": [],
-                "empty": [],
-                "with-dash": ""
-              }
-            }
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Attribute \"$sequence\" has invalid type. Invalid sequence value"
-            }
-          }
-        },
-        {
-          "op": "database.create_document",
-          "args": {
-            "collection": "documents_u000000000052",
-            "document": {
-              "$document": {
-                "id": null,
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "string": "",
-                "integer_signed": 1,
-                "integer_unsigned": 1,
-                "bigint_signed": 1,
-                "bigint_unsigned": 1,
-                "float_signed": 1,
-                "float_unsigned": 1,
-                "boolean": true,
-                "colors": [],
-                "empty": [],
-                "with-dash": ""
-              }
-            }
-          },
-          "bind": "s9474",
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
-            }
-          }
-        },
-        {
-          "op": "database.create_document",
-          "args": {
-            "collection": "documents_u000000000052",
-            "document": {
-              "$document": {
-                "id": "0",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "string": "",
-                "integer_signed": 1,
-                "integer_unsigned": 1,
-                "bigint_signed": 1,
-                "bigint_unsigned": 1,
-                "float_signed": 1,
-                "float_unsigned": 1,
-                "boolean": true,
-                "colors": [],
-                "empty": [],
-                "with-dash": ""
-              }
-            }
-          },
-          "bind": "s9478",
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
-            }
-          }
-        },
-        {
-          "op": "database.update_document",
-          "args": {
-            "collection": "documents_u000000000052",
-            "id": {
-              "$ref": "s9463",
-              "path": "/$document/$id"
-            },
-            "document": {
-              "$document": {
-                "string": "text📝 updated",
-                "integer_signed": -6,
-                "integer_unsigned": 6,
-                "bigint_signed": -9223372036854775807,
-                "bigint_unsigned": 9223372036854775807,
-                "float_signed": -5.56,
-                "float_unsigned": 5.56,
-                "boolean": false,
-                "colors": [
-                  "pink",
-                  "green",
-                  "blue",
-                  "red"
-                ],
-                "empty": [],
-                "with-dash": "Works",
-                "id": "1000000",
-                "$sequence": "1",
-                "$id": {
-                  "$ref": "s9463",
-                  "path": "/$document/$id"
-                },
-                "$tenant": "999",
-                "$createdAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
-                },
-                "$updatedAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
-                },
-                "$permissions": [
-                  "read(\"any\")",
-                  "read(\"user:1\")",
-                  "read(\"user:2\")",
-                  "create(\"any\")",
-                  "create(\"user:1x\")",
-                  "create(\"user:2x\")",
-                  "update(\"any\")",
-                  "update(\"user:1x\")",
-                  "update(\"user:2x\")",
-                  "delete(\"any\")",
-                  "delete(\"user:1x\")",
-                  "delete(\"user:2x\")"
-                ],
-                "$collection": "documents_u000000000052"
-              }
-            }
-          }
-        },
-        {
-          "op": "database.update_document",
-          "args": {
-            "collection": "documents_u000000000052",
-            "id": {
-              "$ref": "s9463",
-              "path": "/$document/$id"
-            },
-            "document": {
-              "$document": {
-                "string": "text📝 updated",
-                "integer_signed": -6,
-                "integer_unsigned": 6,
-                "bigint_signed": -9223372036854775807,
-                "bigint_unsigned": 9223372036854775807,
-                "float_signed": -5.56,
-                "float_unsigned": 5.56,
-                "boolean": false,
-                "colors": [
-                  "pink",
-                  "green",
-                  "blue",
-                  "red"
-                ],
-                "empty": [],
-                "with-dash": "Works",
-                "id": "1000000",
-                "$sequence": "1",
-                "$id": {
-                  "$ref": "s9463",
-                  "path": "/$document/$id"
-                },
-                "$tenant": 999,
-                "$createdAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
-                },
-                "$updatedAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
-                },
-                "$permissions": [
-                  "read(\"any\")",
-                  "read(\"user:1\")",
-                  "read(\"user:2\")",
-                  "create(\"any\")",
-                  "create(\"user:1x\")",
-                  "create(\"user:2x\")",
-                  "update(\"any\")",
-                  "update(\"user:1x\")",
-                  "update(\"user:2x\")",
-                  "delete(\"any\")",
-                  "delete(\"user:1x\")",
-                  "delete(\"user:2x\")",
-                  "read(\"guests\")",
-                  "create(\"guests\")",
-                  "update(\"guests\")",
-                  "delete(\"guests\")"
-                ],
-                "$collection": "documents_u000000000052"
-              }
-            }
-          }
-        },
-        {
-          "op": "database.update_document",
-          "args": {
-            "collection": "documents_u000000000052",
-            "id": {
-              "$ref": "s9463",
-              "path": "/$document/$id"
-            },
-            "document": {
-              "$document": {
-                "string": "text📝 updated",
-                "integer_signed": -6,
-                "integer_unsigned": 6,
-                "bigint_signed": -9223372036854775807,
-                "bigint_unsigned": 9223372036854775807,
-                "float_signed": -5.56,
-                "float_unsigned": 5.56,
-                "boolean": false,
-                "colors": [
-                  "pink",
-                  "green",
-                  "blue",
-                  "red"
-                ],
-                "empty": [],
-                "with-dash": "Works",
-                "id": "1000000",
-                "$sequence": "1",
-                "$id": {
-                  "$ref": "s9463",
-                  "path": "/$document/$id"
-                },
-                "$tenant": "999",
-                "$createdAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
-                },
-                "$updatedAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
-                },
-                "$permissions": [
-                  "read(\"any\")",
-                  "read(\"user:1\")",
-                  "read(\"user:2\")",
-                  "create(\"any\")",
-                  "create(\"user:1x\")",
-                  "create(\"user:2x\")",
-                  "update(\"any\")",
-                  "update(\"user:1x\")",
-                  "update(\"user:2x\")",
-                  "delete(\"any\")",
-                  "delete(\"user:1x\")",
-                  "delete(\"user:2x\")"
-                ],
-                "$collection": "documents_u000000000052"
-              }
-            }
-          }
-        },
-        {
-          "op": "database.update_document",
-          "args": {
-            "collection": "documents_u000000000052",
-            "id": {
-              "$ref": "s9463",
-              "path": "/$document/$id"
-            },
-            "document": {
-              "$document": {
-                "string": "text📝 updated",
-                "integer_signed": -6,
-                "integer_unsigned": 6,
-                "bigint_signed": -9223372036854775807,
-                "bigint_unsigned": 9223372036854775807,
-                "float_signed": -5.56,
-                "float_unsigned": 5.56,
-                "boolean": false,
-                "colors": [
-                  "pink",
-                  "green",
-                  "blue",
-                  "red"
-                ],
-                "empty": [],
-                "with-dash": "Works",
-                "id": "1000000",
-                "$sequence": "1",
-                "$id": "new-id",
-                "$tenant": "999",
-                "$createdAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
-                },
-                "$updatedAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
-                },
-                "$permissions": [
-                  "read(\"any\")",
-                  "read(\"user:1\")",
-                  "read(\"user:2\")",
-                  "create(\"any\")",
-                  "create(\"user:1x\")",
-                  "create(\"user:2x\")",
-                  "update(\"any\")",
-                  "update(\"user:1x\")",
-                  "update(\"user:2x\")",
-                  "delete(\"any\")",
-                  "delete(\"user:1x\")",
-                  "delete(\"user:2x\")"
-                ],
-                "$collection": "documents_u000000000052"
-              }
-            }
-          }
-        },
-        {
-          "op": "database.update_document",
-          "args": {
-            "collection": "documents_u000000000052",
-            "id": "new-id",
-            "document": {
-              "$document": {
-                "string": "text📝 updated",
-                "integer_signed": -6,
-                "integer_unsigned": 6,
-                "bigint_signed": -9223372036854775807,
-                "bigint_unsigned": 9223372036854775807,
-                "float_signed": -5.56,
-                "float_unsigned": 5.56,
-                "boolean": false,
-                "colors": [
-                  "pink",
-                  "green",
-                  "blue",
-                  "red"
-                ],
-                "empty": [],
-                "with-dash": "Works",
-                "id": "1000000",
-                "$sequence": "1",
-                "$id": {
-                  "$ref": "s9463",
-                  "path": "/$document/$id"
-                },
-                "$tenant": 999,
-                "$createdAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
-                },
-                "$updatedAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
-                },
-                "$permissions": [
-                  "read(\"any\")",
-                  "read(\"user:1\")",
-                  "read(\"user:2\")",
-                  "create(\"any\")",
-                  "create(\"user:1x\")",
-                  "create(\"user:2x\")",
-                  "update(\"any\")",
-                  "update(\"user:1x\")",
-                  "update(\"user:2x\")",
-                  "delete(\"any\")",
-                  "delete(\"user:1x\")",
-                  "delete(\"user:2x\")"
-                ],
-                "$collection": "documents_u000000000052"
-              }
-            }
-          }
-        },
-        {
-          "op": "database.delete_document",
-          "args": {
-            "collection": "documents_u000000000052",
-            "id": {
-              "$ref": "s9463",
-              "path": "/$document/$id"
-            }
-          }
-        },
-        {
-          "op": "database.create_document",
-          "args": {
-            "collection": "documents_u000000000052",
-            "document": {
-              "$document": {
-                "$permissions": [
-                  "read(\"any\")",
-                  "read(\"user:1\")",
-                  "read(\"user:2\")",
-                  "create(\"any\")",
-                  "create(\"user:1x\")",
-                  "create(\"user:2x\")",
-                  "update(\"any\")",
-                  "update(\"user:1x\")",
-                  "update(\"user:2x\")",
-                  "delete(\"any\")",
-                  "delete(\"user:1x\")",
-                  "delete(\"user:2x\")"
-                ],
-                "string": "text📝",
-                "integer_signed": -2147483647,
-                "integer_unsigned": 2147483647,
-                "bigint_signed": -9223372036854775807,
-                "bigint_unsigned": 9223372036854775807,
-                "float_signed": -5.55,
-                "float_unsigned": 5.55,
-                "boolean": true,
-                "colors": [
-                  "pink",
-                  "green",
-                  "blue"
-                ],
-                "empty": [],
-                "with-dash": "Works",
-                "id": "1000000",
-                "$id": {
-                  "$ref": "s9463",
-                  "path": "/$document/$id"
-                },
-                "$collection": "documents_u000000000052",
-                "$createdAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
-                },
-                "$updatedAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
-                },
-                "$tenant": "999",
-                "$sequence": "1"
-              }
-            }
-          }
-        },
-        {
-          "op": "database.create_document",
-          "args": {
-            "collection": "documents_u000000000052",
-            "document": {
-              "$document": {
-                "$permissions": [
-                  "read(\"any\")",
-                  "create(\"any\")",
-                  "update(\"any\")",
-                  "delete(\"any\")"
-                ],
-                "string": "text📝",
-                "integer_signed": -2147483647,
-                "integer_unsigned": 2147483647,
-                "bigint_signed": -9223372036854775807,
-                "bigint_unsigned": 9223372036854775807,
-                "float_signed": -5.55,
-                "float_unsigned": 5.55,
-                "boolean": true,
-                "colors": [
-                  "pink",
-                  "green",
-                  "blue"
-                ]
-              }
-            }
-          },
-          "bind": "s10323"
-        },
-        {
-          "op": "database.create_document",
-          "args": {
-            "collection": "documents_u000000000052",
-            "document": {
-              "$document": {
-                "$permissions": [
-                  "read(\"any\")",
-                  "create(\"any\")",
-                  "update(\"any\")",
-                  "delete(\"any\")"
-                ],
-                "string": "text📝",
-                "integer_signed": -2147483647,
-                "integer_unsigned": 2147483647,
-                "bigint_signed": -9223372036854775807,
-                "bigint_unsigned": 9223372036854775807,
-                "float_signed": -5.55,
-                "float_unsigned": 5.55,
-                "boolean": true,
-                "colors": [
-                  "pink",
-                  "green",
-                  "blue"
-                ]
-              }
-            }
-          }
-        },
-        {
-          "op": "database.create_document",
-          "args": {
-            "collection": "documents_u000000000052",
-            "document": {
-              "$document": {
-                "$permissions": [
-                  "read(\"any\")",
-                  "create(\"any\")",
-                  "update(\"any\")",
-                  "delete(\"any\")"
-                ],
-                "string": "text📝",
-                "integer_signed": -2147483647,
-                "integer_unsigned": 2147483647,
-                "bigint_signed": -9223372036854775807,
-                "bigint_unsigned": 9223372036854775807,
-                "float_signed": -5.55,
-                "float_unsigned": 5.55,
-                "boolean": true,
-                "colors": [
-                  "pink",
-                  "green",
-                  "blue"
-                ]
-              }
-            }
-          },
-          "bind": "s10343"
-        },
-        {
-          "op": "database.update_document",
-          "args": {
-            "collection": "documents_u000000000052",
-            "id": {
-              "$ref": "s10343",
-              "path": "/$document/$id"
-            },
-            "document": {
-              "$document": {
-                "$id": {
-                  "$ref": "s10343",
-                  "path": "/$document/$id"
-                },
-                "$permissions": [
-                  "read(\"any\")",
-                  "create(\"any\")",
-                  "update(\"any\")",
-                  "delete(\"any\")"
-                ],
-                "string": "text📝",
-                "integer_signed": 6,
-                "bigint_signed": -9223372036854775807,
-                "float_signed": -1.7976931348623157e+308,
-                "float_unsigned": 1.7976931348623157e+308,
-                "boolean": true,
-                "colors": [
-                  "pink",
-                  "green",
-                  "blue"
-                ]
-              }
-            }
-          }
-        },
-        {
-          "op": "database.create_index",
-          "args": {
-            "collection": "documents_u000000000052",
-            "index": {
-              "$value": "Index",
-              "fields": {
-                "key": "fulltext_integer",
-                "type": {
-                  "$enum": "Query\\Schema\\IndexType::Fulltext"
-                },
-                "attributes": [
-                  "string",
-                  "integer_signed"
-                ],
-                "lengths": [],
-                "orders": [],
-                "ttl": null
-              }
-            }
-          }
-        },
-        {
-          "op": "database.create_document",
-          "args": {
-            "collection": "documents_u000000000052",
-            "document": {
-              "$document": {
-                "$permissions": [
-                  "read(\"any\")",
-                  "read(\"user:1\")",
-                  "read(\"user:2\")",
-                  "create(\"any\")",
-                  "create(\"user:1x\")",
-                  "create(\"user:2x\")",
-                  "update(\"any\")",
-                  "update(\"user:1x\")",
-                  "update(\"user:2x\")",
-                  "delete(\"any\")",
-                  "delete(\"user:1x\")",
-                  "delete(\"user:2x\")"
-                ],
-                "string": "text📝",
-                "integer_signed": -2147483647,
-                "integer_unsigned": 2147483647,
-                "bigint_signed": -9223372036854775807,
-                "bigint_unsigned": 9223372036854775807,
-                "float_signed": -5.55,
-                "float_unsigned": 5.55,
-                "boolean": true,
-                "colors": [
-                  "pink",
-                  "green",
-                  "blue"
-                ],
-                "empty": [],
-                "with-dash": "Works",
-                "id": "1000000",
-                "$id": "duplicated",
-                "$collection": "documents_u000000000052",
-                "$createdAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
-                },
-                "$updatedAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
-                },
-                "$tenant": "999"
-              }
-            }
-          }
-        },
-        {
-          "op": "database.create_document",
-          "args": {
-            "collection": "documents_u000000000052",
-            "document": {
-              "$document": {
-                "$permissions": [
-                  "read(\"any\")",
-                  "read(\"user:1\")",
-                  "read(\"user:2\")",
-                  "create(\"any\")",
-                  "create(\"user:1x\")",
-                  "create(\"user:2x\")",
-                  "update(\"any\")",
-                  "update(\"user:1x\")",
-                  "update(\"user:2x\")",
-                  "delete(\"any\")",
-                  "delete(\"user:1x\")",
-                  "delete(\"user:2x\")"
-                ],
-                "string": "text📝",
-                "integer_signed": -2147483647,
-                "integer_unsigned": 2147483647,
-                "bigint_signed": -9223372036854775807,
-                "bigint_unsigned": 9223372036854775807,
-                "float_signed": -5.55,
-                "float_unsigned": 5.55,
-                "boolean": true,
-                "colors": [
-                  "pink",
-                  "green",
-                  "blue"
-                ],
-                "empty": [],
-                "with-dash": "Works",
-                "id": "1000000",
-                "$id": "duplicated",
-                "$collection": "documents_u000000000052",
-                "$createdAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
-                },
-                "$updatedAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
-                },
-                "$tenant": "999"
-              }
-            }
-          }
-        },
-        {
-          "op": "database.create_document",
-          "args": {
-            "collection": "documents_u000000000052",
-            "document": {
-              "$document": {
-                "$permissions": [
-                  "read(\"any\")",
-                  "read(\"user:1\")",
-                  "read(\"user:2\")",
-                  "create(\"any\")",
-                  "create(\"user:1x\")",
-                  "create(\"user:2x\")",
-                  "update(\"any\")",
-                  "update(\"user:1x\")",
-                  "update(\"user:2x\")",
-                  "delete(\"any\")",
-                  "delete(\"user:1x\")",
-                  "delete(\"user:2x\")"
-                ],
-                "string": "text📝",
-                "integer_signed": -2147483647,
-                "integer_unsigned": 2147483647,
-                "bigint_signed": -9223372036854775807,
-                "bigint_unsigned": 9223372036854775807,
-                "float_signed": -5.55,
-                "float_unsigned": 5.55,
-                "boolean": true,
-                "colors": [
-                  "pink",
-                  "green",
-                  "blue"
-                ],
-                "empty": [],
-                "with-dash": "Works",
-                "id": "1000000",
-                "$id": "caseSensitive",
-                "$collection": "documents_u000000000052",
-                "$createdAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
-                },
-                "$updatedAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
-                },
-                "$tenant": "999"
-              }
-            }
-          }
-        },
-        {
-          "op": "database.create_document",
-          "args": {
-            "collection": "documents_u000000000052",
-            "document": {
-              "$document": {
-                "$permissions": [
-                  "read(\"any\")",
-                  "read(\"user:1\")",
-                  "read(\"user:2\")",
-                  "create(\"any\")",
-                  "create(\"user:1x\")",
-                  "create(\"user:2x\")",
-                  "update(\"any\")",
-                  "update(\"user:1x\")",
-                  "update(\"user:2x\")",
-                  "delete(\"any\")",
-                  "delete(\"user:1x\")",
-                  "delete(\"user:2x\")"
-                ],
-                "string": "text📝",
-                "integer_signed": -2147483647,
-                "integer_unsigned": 2147483647,
-                "bigint_signed": -9223372036854775807,
-                "bigint_unsigned": 9223372036854775807,
-                "float_signed": -5.55,
-                "float_unsigned": 5.55,
-                "boolean": true,
-                "colors": [
-                  "pink",
-                  "green",
-                  "blue"
-                ],
-                "empty": [],
-                "with-dash": "Works",
-                "id": "1000000",
-                "$id": "CaseSensitive",
-                "$collection": "documents_u000000000052",
-                "$createdAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
-                },
-                "$updatedAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
-                },
-                "$tenant": "999"
-              }
-            }
-          }
-        },
-        {
-          "op": "db.adapter",
-          "args": {
-            "method": "hasSharedTables",
-            "args": {}
-          }
-        },
-        {
-          "op": "database.find",
-          "args": {
-            "collection": "documents_u000000000052",
-            "queries": [
-              {
-                "$query": {
-                  "method": "select",
-                  "attribute": "",
-                  "values": [
-                    "*"
-                  ]
-                }
-              }
-            ]
-          }
-        },
-        {
-          "op": "database.get_document",
-          "args": {
-            "collection": "documents_u000000000052",
-            "id": {
-              "$ref": "s9463",
-              "path": "/$document/$id"
             }
           }
         }
@@ -130980,10 +129581,23 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to create collection metadata for 'movies_u000000000053': Failed to execute transaction: the transaction was lost before it could commit"
-            }
+            "$document": {
+              "$id": "movies_u000000000053",
+              "name": "movies_u000000000053",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "update(\"users\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
           }
         },
         {

@@ -60897,10 +60897,55 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to create collection metadata for 'VERSIONING': Failed to execute transaction: the transaction was lost before it could commit"
-            }
+            "$document": {
+              "$id": "VERSIONING",
+              "name": "VERSIONING",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "attribute1",
+                    "key": "attribute1",
+                    "type": "string",
+                    "size": 256,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "$document": {
+                    "$id": "index1",
+                    "key": "index1",
+                    "type": "key",
+                    "attributes": [
+                      "attribute1"
+                    ],
+                    "lengths": [
+                      null
+                    ],
+                    "orders": [
+                      "ASC"
+                    ]
+                  }
+                }
+              ],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "273"
+            },
+            "$class": "Collection"
           }
         },
         {
@@ -60921,9 +60966,20 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$document": {
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$id": "helloWorld",
+              "attribute1": "Hello World",
+              "$collection": "VERSIONING",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1"
             }
           }
         },
@@ -60934,9 +60990,20 @@
             "id": "helloWorld"
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$document": {
+              "attribute1": "Hello World",
+              "$sequence": "1",
+              "$id": "helloWorld",
+              "$tenant": "999",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "VERSIONING"
             }
           }
         },
@@ -60945,24 +61012,32 @@
           "args": {
             "collection": "VERSIONING"
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+          "expect": [
+            {
+              "$document": {
+                "attribute1": "Hello World",
+                "$id": "helloWorld",
+                "$sequence": "1",
+                "$tenant": "999",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "$collection": "VERSIONING"
+              }
             }
-          }
+          ]
         },
         {
           "op": "database.delete_collection",
           "args": {
             "collection": "VERSIONING"
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
-            }
-          }
+          "expect": null
         },
         {
           "op": "database.find_collection",
@@ -109821,9 +109896,21 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to persist metadata after retries for attribute creation 'SPECIFIC': Failed to execute transaction: the transaction was lost before it could commit"
+            "$value": "Attribute",
+            "fields": {
+              "key": "SPECIFIC",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 128,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
             }
           }
         },
@@ -109845,9 +109932,20 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$id": "reservedKeyDocument",
+              "SPECIFIC": "Reserved:SPECIFIC",
+              "$collection": "rkSPECIFIC",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1"
             }
           }
         },
@@ -109858,7 +109956,21 @@
             "id": "reservedKeyDocument"
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "SPECIFIC": "Reserved:SPECIFIC",
+              "$sequence": "1",
+              "$id": "reservedKeyDocument",
+              "$tenant": "999",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "rkSPECIFIC"
+            }
           }
         },
         {
@@ -109866,7 +109978,25 @@
           "args": {
             "collection": "rkSPECIFIC"
           },
-          "expect": []
+          "expect": [
+            {
+              "$document": {
+                "SPECIFIC": "Reserved:SPECIFIC",
+                "$id": "reservedKeyDocument",
+                "$sequence": "1",
+                "$tenant": "999",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "$collection": "rkSPECIFIC"
+              }
+            }
+          ]
         },
         {
           "op": "database.find",
@@ -109884,12 +110014,25 @@
               }
             ]
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+          "expect": [
+            {
+              "$document": {
+                "SPECIFIC": "Reserved:SPECIFIC",
+                "$id": "reservedKeyDocument",
+                "$sequence": "1",
+                "$tenant": "999",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "$collection": "rkSPECIFIC"
+              }
             }
-          }
+          ]
         },
         {
           "op": "database.find",
@@ -109905,12 +110048,25 @@
               }
             ]
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+          "expect": [
+            {
+              "$document": {
+                "SPECIFIC": "Reserved:SPECIFIC",
+                "$id": "reservedKeyDocument",
+                "$sequence": "1",
+                "$tenant": "999",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "$collection": "rkSPECIFIC"
+              }
             }
-          }
+          ]
         },
         {
           "op": "database.delete_collection",

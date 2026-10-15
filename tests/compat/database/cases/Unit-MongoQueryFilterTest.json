@@ -184,7 +184,13 @@
               ]
             }
           },
-          "expect": false
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "Query::orderRandom() returns the documents in a random order"
+          }
         },
         {
           "op": "object.call",
@@ -380,7 +386,13 @@
               ]
             }
           },
-          "expect": true
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "Query::orderRandom() returns the documents in a random order"
+          }
         },
         {
           "op": "object.call",

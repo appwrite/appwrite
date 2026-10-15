@@ -14727,9 +14727,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to create relationship: Failed to execute transaction: the transaction was lost before it could commit"
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "two_u000000000284",
+              "type": {
+                "$enum": "RelationshipType::OneToMany"
+              },
+              "twoWay": false,
+              "key": "two_u000000000284",
+              "twoWayKey": "one_u000000000283",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
             }
           }
         },
@@ -14739,12 +14748,7 @@
             "collection": "two_u000000000284",
             "key": "one_u000000000283"
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Relationship not found"
-            }
-          }
+          "expect": null
         },
         {
           "op": "database.create_relationship",

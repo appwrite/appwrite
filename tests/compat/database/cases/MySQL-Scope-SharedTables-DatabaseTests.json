@@ -1,259 +1,308 @@
 {
-    "source": [
-        "vendor/utopia-php/database/tests/e2e/Adapter/Scopes/DatabaseTests.php",
-        "vendor/utopia-php/database/tests/e2e/Adapter/SharedTables/MySQLTest.php"
-    ],
-    "cases": [
+  "source": [
+    "vendor/utopia-php/database/tests/e2e/Adapter/Scopes/DatabaseTests.php",
+    "vendor/utopia-php/database/tests/e2e/Adapter/SharedTables/MySQLTest.php"
+  ],
+  "cases": [
+    {
+      "name": "DatabaseTests::testUpdateMovesEveryCollectionUnderTheNewName",
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "steps": [
         {
-            "name": "DatabaseTests::testUpdateMovesEveryCollectionUnderTheNewName",
-            "state": [
-                "mysql@database-mysql"
-            ],
-            "steps": [
-                {
-                    "op": "db.open",
-                    "args": {
-                        "driver": "mysql",
-                        "namespace": "",
-                        "shared_tables": true,
-                        "tenant": 999
-                    },
-                    "bind": "db"
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRange"
-                    }
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRangeNew"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "subQueryProbe"
-                    }
-                },
-                {
-                    "op": "database.has_shared_tables",
-                    "args": {}
-                }
-            ]
+          "op": "db.open",
+          "args": {
+            "driver": "mysql",
+            "namespace": "",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
-            "name": "DatabaseTests::testUpdateToAnExistingDatabaseThrowsDuplicate",
-            "state": [
-                "mysql@database-mysql"
-            ],
-            "steps": [
-                {
-                    "op": "db.open",
-                    "args": {
-                        "driver": "mysql",
-                        "namespace": "",
-                        "shared_tables": true,
-                        "tenant": 999
-                    },
-                    "bind": "db"
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRange"
-                    }
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRangeNew"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "subQueryProbe"
-                    }
-                },
-                {
-                    "op": "database.has_shared_tables",
-                    "args": {}
-                }
-            ]
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
         },
         {
-            "name": "DatabaseTests::testUpdateOfAMissingDatabaseThrowsNotFound",
-            "state": [
-                "mysql@database-mysql"
-            ],
-            "steps": [
-                {
-                    "op": "db.open",
-                    "args": {
-                        "driver": "mysql",
-                        "namespace": "",
-                        "shared_tables": true,
-                        "tenant": 999
-                    },
-                    "bind": "db"
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRange"
-                    }
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRangeNew"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "subQueryProbe"
-                    }
-                },
-                {
-                    "op": "database.has_shared_tables",
-                    "args": {}
-                }
-            ]
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
         },
         {
-            "name": "DatabaseTests::testUpdateLeavesNoStaleMetadata",
-            "state": [
-                "mysql@database-mysql"
-            ],
-            "steps": [
-                {
-                    "op": "db.open",
-                    "args": {
-                        "driver": "mysql",
-                        "namespace": "",
-                        "shared_tables": true,
-                        "tenant": 999
-                    },
-                    "bind": "db"
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRange"
-                    }
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRangeNew"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "subQueryProbe"
-                    }
-                },
-                {
-                    "op": "database.has_shared_tables",
-                    "args": {}
-                }
-            ]
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
         },
         {
-            "name": "DatabaseTests::testUpdateIsRefusedUnderSharedTables",
-            "state": [
-                "mysql@database-mysql"
-            ],
-            "steps": [
-                {
-                    "op": "db.open",
-                    "args": {
-                        "driver": "mysql",
-                        "namespace": "",
-                        "shared_tables": true,
-                        "tenant": 999
-                    },
-                    "bind": "db"
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRange"
-                    }
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRangeNew"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "subQueryProbe"
-                    }
-                },
-                {
-                    "op": "database.has_shared_tables",
-                    "args": {}
-                },
-                {
-                    "op": "database.get_database",
-                    "args": {}
-                },
-                {
-                    "op": "database.update",
-                    "args": {
-                        "database": "${ns}",
-                        "new": "${ns}_${ns}Renamed"
-                    }
-                },
-                {
-                    "op": "database.get_database",
-                    "args": {}
-                },
-                {
-                    "op": "database.exists",
-                    "args": {
-                        "database": "${ns}_${ns}Renamed"
-                    }
-                }
-            ]
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.has_shared_tables",
+          "args": {},
+          "expect": true
         }
-    ]
+      ]
+    },
+    {
+      "name": "DatabaseTests::testUpdateToAnExistingDatabaseThrowsDuplicate",
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "driver": "mysql",
+            "namespace": "",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.has_shared_tables",
+          "args": {},
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "DatabaseTests::testUpdateOfAMissingDatabaseThrowsNotFound",
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "driver": "mysql",
+            "namespace": "",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.has_shared_tables",
+          "args": {},
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "DatabaseTests::testUpdateLeavesNoStaleMetadata",
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "driver": "mysql",
+            "namespace": "",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.has_shared_tables",
+          "args": {},
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "DatabaseTests::testUpdateIsRefusedUnderSharedTables",
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "driver": "mysql",
+            "namespace": "",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.has_shared_tables",
+          "args": {},
+          "expect": true
+        },
+        {
+          "op": "database.get_database",
+          "args": {},
+          "expect": "${ns}"
+        },
+        {
+          "op": "database.update",
+          "args": {
+            "database": "${ns}",
+            "new": "${ns}_${ns}Renamed"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Cannot rename a database while shared tables are enabled"
+            }
+          }
+        },
+        {
+          "op": "database.get_database",
+          "args": {},
+          "expect": "${ns}"
+        },
+        {
+          "op": "database.exists",
+          "args": {
+            "database": "${ns}_${ns}Renamed"
+          },
+          "expect": false
+        }
+      ]
+    }
+  ]
 }

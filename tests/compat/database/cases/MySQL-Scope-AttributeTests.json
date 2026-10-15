@@ -26098,10 +26098,21 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to create collection metadata for 'bad_default_u000000000017': Failed to execute transaction: the transaction was lost before it could commit"
-            }
+            "$document": {
+              "$id": "bad_default_u000000000017",
+              "name": "bad_default_u000000000017",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
           }
         },
         {

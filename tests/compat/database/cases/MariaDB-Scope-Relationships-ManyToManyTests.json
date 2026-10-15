@@ -5147,9 +5147,36 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Transaction",
-              "message": "Failed to execute transaction: the transaction was lost before it could commit"
+            "$document": {
+              "name": "Student 1 Updated",
+              "$sequence": "1",
+              "$id": "student1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "students",
+              "newClasses": [
+                {
+                  "$document": {
+                    "name": "Class 1 Updated",
+                    "number": 1,
+                    "$id": "class1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "update(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "classes"
+                  }
+                }
+              ]
             }
           }
         },

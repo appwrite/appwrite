@@ -22688,10 +22688,51 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to create collection metadata for 'renameDroppedIndex': Failed to execute transaction: the transaction was lost before it could commit"
-            }
+            "$document": {
+              "$id": "renameDroppedIndex",
+              "name": "renameDroppedIndex",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "age",
+                    "key": "age",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "$document": {
+                    "$id": "byAge",
+                    "key": "byAge",
+                    "type": "key",
+                    "attributes": [
+                      "age"
+                    ],
+                    "lengths": [],
+                    "orders": []
+                  }
+                }
+              ],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
           }
         },
         {
@@ -22703,12 +22744,7 @@
               "key": "byAge"
             }
           },
-          "expect": {
-            "$error": {
-              "class": "PDOException",
-              "message": "SQLSTATE[42S02]: Base table or view not found: 1146 Table '${ns}.compat_renameDroppedIndex' doesn't exist"
-            }
-          }
+          "expect": true
         },
         {
           "op": "database.rename_index",
@@ -22720,7 +22756,7 @@
           "expect": {
             "$error": {
               "class": "Utopia\\Database\\Exception",
-              "message": "Failed to rename index 'byAge' to 'ageIndex': SQLSTATE[42S02]: Base table or view not found: 1146 Table '${ns}.compat_renameDroppedIndex' doesn't exist"
+              "message": "Failed to rename index 'byAge' to 'ageIndex': SQLSTATE[42000]: Syntax error or access violation: 1176 Key 'byAge' doesn't exist in table 'compat_renameDroppedIndex'"
             }
           }
         },

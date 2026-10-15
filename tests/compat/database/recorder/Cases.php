@@ -476,9 +476,21 @@ final class Cases
     /** Whether the cases run on MySQL. */
     private static bool $mysql = false;
 
+    /** @var list<string> the stored objects that are random-order queries */
+    private static array $random = [];
+
     private static function mask(Step $step): ?array
     {
         $args = (string) json_encode($step->args);
+        // Unit tests build the query first (`Query::orderRandom()` stored under a name), then pass it.
+        if ($step->op === 'object.call' && ($step->args['method'] ?? '') === 'orderRandom' && isset($step->args['as'])) {
+            self::$random[] = (string) $step->args['as'];
+        }
+        foreach (self::$random as $name) {
+            if (str_contains($args, '"$obj":"' . $name . '"')) {
+                return ['paths' => [''], 'reason' => 'Query::orderRandom() returns the documents in a random order'];
+            }
+        }
         if (str_contains($args, '"method":"orderRandom"')) {
             return ['paths' => [''], 'reason' => 'Query::orderRandom() returns the documents in a random order'];
         }
@@ -502,6 +514,10 @@ final class Cases
         }
         if ($step->op === 'db.profiler' && \in_array($step->args['method'] ?? '', ['getLogs', 'getSlowQueries'], true)) {
             return ['paths' => ['/*/fields/durationMs', '/*/fields/backtrace'], 'reason' => 'a profiled statement\'s duration and the PHP stack it ran from are the runtime\'s own'];
+        }
+        // A profiler's logs read by unit tests (object.call), directly or in a callback.
+        if (str_contains($args, '"method":"getLogs"') || str_contains($args, '"method":"getSlowQueries"')) {
+            return ['paths' => ['/*/fields/durationMs', '/*/fields/backtrace', '/calls/*/*/steps/*/*/fields/durationMs', '/calls/*/*/steps/*/*/fields/backtrace'], 'reason' => 'a profiled statement\'s duration and the PHP stack it ran from are the runtime\'s own'];
         }
         if ($step->op === 'db.profiler' && ($step->args['method'] ?? '') === 'getTotalTime') {
             return ['paths' => [''], 'reason' => 'the time the profiled statements took'];

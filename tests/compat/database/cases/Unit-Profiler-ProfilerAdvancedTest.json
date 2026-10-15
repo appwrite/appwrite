@@ -77,19 +77,22 @@
               "fields": {
                 "query": "SELECT 1",
                 "bindings": [],
-                "durationMs": 1.0,
+                "durationMs": "<masked>",
                 "collection": "",
                 "operation": "",
-                "backtrace": [
-                  "/usr/src/code/tests/compat/database/ops/core.php:609 log",
-                  "/usr/src/code/tests/compat/database/ops/objects.php:40 invoke",
-                  "/usr/src/code/tests/compat/database/ops/core.php:1075 {closure:/usr/src/code/tests/compat/database/ops/objects.php:35}",
-                  "/usr/src/code/tests/compat/database/ops/core.php:1092 {closure:{closure:Tests\\Compat\\Database\\Core::operations():1073}:1073}",
-                  "/usr/src/code/tests/compat/php/driver.php:99 {closure:{closure:Tests\\Compat\\Database\\Core::operations():1089}:1089}"
-                ]
+                "backtrace": "<masked>"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/fields/durationMs",
+              "/*/fields/backtrace",
+              "/calls/*/*/steps/*/*/fields/durationMs",
+              "/calls/*/*/steps/*/*/fields/backtrace"
+            ],
+            "reason": "a profiled statement's duration and the PHP stack it ran from are the runtime's own"
+          }
         }
       ]
     },
@@ -152,13 +155,22 @@
               "fields": {
                 "query": "SELECT 1",
                 "bindings": [],
-                "durationMs": 1.0,
+                "durationMs": "<masked>",
                 "collection": "",
                 "operation": "",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/fields/durationMs",
+              "/*/fields/backtrace",
+              "/calls/*/*/steps/*/*/fields/durationMs",
+              "/calls/*/*/steps/*/*/fields/backtrace"
+            ],
+            "reason": "a profiled statement's duration and the PHP stack it ran from are the runtime's own"
+          }
         }
       ]
     },
@@ -236,19 +248,22 @@
               "fields": {
                 "query": "Q1",
                 "bindings": [],
-                "durationMs": 1.0,
+                "durationMs": "<masked>",
                 "collection": "",
                 "operation": "",
-                "backtrace": [
-                  "/usr/src/code/tests/compat/database/ops/core.php:609 log",
-                  "/usr/src/code/tests/compat/database/ops/objects.php:40 invoke",
-                  "/usr/src/code/tests/compat/database/ops/core.php:1075 {closure:/usr/src/code/tests/compat/database/ops/objects.php:35}",
-                  "/usr/src/code/tests/compat/database/ops/core.php:1092 {closure:{closure:Tests\\Compat\\Database\\Core::operations():1073}:1073}",
-                  "/usr/src/code/tests/compat/php/driver.php:99 {closure:{closure:Tests\\Compat\\Database\\Core::operations():1089}:1089}"
-                ]
+                "backtrace": "<masked>"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/fields/durationMs",
+              "/*/fields/backtrace",
+              "/calls/*/*/steps/*/*/fields/durationMs",
+              "/calls/*/*/steps/*/*/fields/backtrace"
+            ],
+            "reason": "a profiled statement's duration and the PHP stack it ran from are the runtime's own"
+          }
         },
         {
           "op": "object.call",
@@ -295,16 +310,10 @@
               "fields": {
                 "query": "Q1",
                 "bindings": [],
-                "durationMs": 1.0,
+                "durationMs": "<masked>",
                 "collection": "",
                 "operation": "",
-                "backtrace": [
-                  "/usr/src/code/tests/compat/database/ops/core.php:609 log",
-                  "/usr/src/code/tests/compat/database/ops/objects.php:40 invoke",
-                  "/usr/src/code/tests/compat/database/ops/core.php:1075 {closure:/usr/src/code/tests/compat/database/ops/objects.php:35}",
-                  "/usr/src/code/tests/compat/database/ops/core.php:1092 {closure:{closure:Tests\\Compat\\Database\\Core::operations():1073}:1073}",
-                  "/usr/src/code/tests/compat/php/driver.php:99 {closure:{closure:Tests\\Compat\\Database\\Core::operations():1089}:1089}"
-                ]
+                "backtrace": "<masked>"
               }
             },
             {
@@ -312,13 +321,22 @@
               "fields": {
                 "query": "Q2",
                 "bindings": [],
-                "durationMs": 1.0,
+                "durationMs": "<masked>",
                 "collection": "",
                 "operation": "",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/fields/durationMs",
+              "/*/fields/backtrace",
+              "/calls/*/*/steps/*/*/fields/durationMs",
+              "/calls/*/*/steps/*/*/fields/backtrace"
+            ],
+            "reason": "a profiled statement's duration and the PHP stack it ran from are the runtime's own"
+          }
         }
       ]
     },
@@ -410,7 +428,16 @@
             "method": "getSlowQueries",
             "args": {}
           },
-          "expect": []
+          "expect": [],
+          "mask": {
+            "paths": [
+              "/*/fields/durationMs",
+              "/*/fields/backtrace",
+              "/calls/*/*/steps/*/*/fields/durationMs",
+              "/calls/*/*/steps/*/*/fields/backtrace"
+            ],
+            "reason": "a profiled statement's duration and the PHP stack it ran from are the runtime's own"
+          }
         },
         {
           "op": "object.call",
@@ -856,7 +883,16 @@
             "method": "getSlowQueries",
             "args": {}
           },
-          "expect": []
+          "expect": [],
+          "mask": {
+            "paths": [
+              "/*/fields/durationMs",
+              "/*/fields/backtrace",
+              "/calls/*/*/steps/*/*/fields/durationMs",
+              "/calls/*/*/steps/*/*/fields/backtrace"
+            ],
+            "reason": "a profiled statement's duration and the PHP stack it ran from are the runtime's own"
+          }
         }
       ]
     },
@@ -925,13 +961,22 @@
                 "bindings": [
                   "active"
                 ],
-                "durationMs": 15.5,
+                "durationMs": "<masked>",
                 "collection": "orders",
                 "operation": "find",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/fields/durationMs",
+              "/*/fields/backtrace",
+              "/calls/*/*/steps/*/*/fields/durationMs",
+              "/calls/*/*/steps/*/*/fields/backtrace"
+            ],
+            "reason": "a profiled statement's duration and the PHP stack it ran from are the runtime's own"
+          }
         }
       ]
     },
@@ -1014,7 +1059,16 @@
             "method": "getLogs",
             "args": {}
           },
-          "expect": []
+          "expect": [],
+          "mask": {
+            "paths": [
+              "/*/fields/durationMs",
+              "/*/fields/backtrace",
+              "/calls/*/*/steps/*/*/fields/durationMs",
+              "/calls/*/*/steps/*/*/fields/backtrace"
+            ],
+            "reason": "a profiled statement's duration and the PHP stack it ran from are the runtime's own"
+          }
         },
         {
           "op": "object.call",
@@ -1047,7 +1101,16 @@
             "method": "getSlowQueries",
             "args": {}
           },
-          "expect": []
+          "expect": [],
+          "mask": {
+            "paths": [
+              "/*/fields/durationMs",
+              "/*/fields/backtrace",
+              "/calls/*/*/steps/*/*/fields/durationMs",
+              "/calls/*/*/steps/*/*/fields/backtrace"
+            ],
+            "reason": "a profiled statement's duration and the PHP stack it ran from are the runtime's own"
+          }
         }
       ]
     },
@@ -1346,13 +1409,22 @@
               "fields": {
                 "query": "exact",
                 "bindings": [],
-                "durationMs": 50.0,
+                "durationMs": "<masked>",
                 "collection": "",
                 "operation": "",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/fields/durationMs",
+              "/*/fields/backtrace",
+              "/calls/*/*/steps/*/*/fields/durationMs",
+              "/calls/*/*/steps/*/*/fields/backtrace"
+            ],
+            "reason": "a profiled statement's duration and the PHP stack it ran from are the runtime's own"
+          }
         }
       ]
     },

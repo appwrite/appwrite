@@ -287065,24 +287065,7 @@
               }
             },
             {
-              "$document": {
-                "name": "a1",
-                "score": 1,
-                "n.author": "a1",
-                "n.score": 2,
-                "n.label": "y",
-                "n.$id": "n3",
-                "n.$createdAt": "<now>",
-                "$id": "a1",
-                "$sequence": "1",
-                "$tenant": "999",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
+              "$document": "<masked>"
             },
             {
               "$document": {
@@ -287124,7 +287107,13 @@
                 "$collection": "jcur_authors"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/4/$document"
+            ],
+            "reason": "rows a full outer join leaves tied on every ordered attribute come back in the order PostgreSQL's plan picks"
+          }
         },
         {
           "op": "database.find",
@@ -288070,24 +288059,7 @@
               }
             },
             {
-              "$document": {
-                "name": "a1",
-                "score": 1,
-                "n.author": "a1",
-                "n.score": 2,
-                "n.label": "y",
-                "n.$id": "n3",
-                "n.$createdAt": "<now>",
-                "$id": "a1",
-                "$sequence": "1",
-                "$tenant": "999",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
+              "$document": "<masked>"
             },
             {
               "$document": {
@@ -288129,7 +288101,13 @@
                 "$collection": "jcur_authors"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/4/$document"
+            ],
+            "reason": "rows a full outer join leaves tied on every ordered attribute come back in the order PostgreSQL's plan picks"
+          }
         },
         {
           "op": "database.find",
@@ -288263,24 +288241,7 @@
               }
             },
             {
-              "$document": {
-                "name": "a1",
-                "score": 1,
-                "n.author": "a1",
-                "n.score": 2,
-                "n.label": "y",
-                "n.$id": "n3",
-                "n.$createdAt": "<now>",
-                "$id": "a1",
-                "$sequence": "1",
-                "$tenant": "999",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
+              "$document": "<masked>"
             },
             {
               "$document": {
@@ -288322,7 +288283,13 @@
                 "$collection": "jcur_authors"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/4/$document"
+            ],
+            "reason": "rows a full outer join leaves tied on every ordered attribute come back in the order PostgreSQL's plan picks"
+          }
         },
         {
           "op": "database.find",
@@ -289349,24 +289316,7 @@
               }
             },
             {
-              "$document": {
-                "name": "a1",
-                "score": 1,
-                "n.author": "a1",
-                "n.score": 2,
-                "n.label": "y",
-                "n.$id": "n3",
-                "n.$createdAt": "<now>",
-                "$id": "a1",
-                "$sequence": "1",
-                "$tenant": "999",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
+              "$document": "<masked>"
             },
             {
               "$document": {
@@ -289408,7 +289358,13 @@
                 "$collection": "jcur_authors"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/4/$document"
+            ],
+            "reason": "rows a full outer join leaves tied on every ordered attribute come back in the order PostgreSQL's plan picks"
+          }
         },
         {
           "op": "database.find",
@@ -289548,26 +289504,7 @@
               }
             },
             {
-              "$document": {
-                "n.author": "a1",
-                "n.score": 2,
-                "n.label": "y",
-                "n.$id": "n3",
-                "n.$sequence": "3",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
+              "$document": "<masked>"
             },
             {
               "$document": {
@@ -289613,7 +289550,13 @@
                 "$collection": "jcur_authors"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/4/$document"
+            ],
+            "reason": "rows a full outer join leaves tied on every ordered attribute come back in the order PostgreSQL's plan picks"
+          }
         },
         {
           "op": "database.find",
@@ -290690,26 +290633,7 @@
               }
             },
             {
-              "$document": {
-                "n.author": "a1",
-                "n.score": 2,
-                "n.label": "y",
-                "n.$id": "n3",
-                "n.$sequence": "3",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
+              "$document": "<masked>"
             },
             {
               "$document": {
@@ -290755,7 +290679,13 @@
                 "$collection": "jcur_authors"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/4/$document"
+            ],
+            "reason": "rows a full outer join leaves tied on every ordered attribute come back in the order PostgreSQL's plan picks"
+          }
         },
         {
           "op": "database.find",
@@ -290900,27 +290830,7 @@
               }
             },
             {
-              "$document": {
-                "name": "a1",
-                "n.author": "a1",
-                "n.score": 2,
-                "n.label": "y",
-                "n.$id": "n3",
-                "n.$sequence": "3",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
+              "$document": "<masked>"
             },
             {
               "$document": {
@@ -290968,7 +290878,13 @@
                 "$collection": "jcur_authors"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/4/$document"
+            ],
+            "reason": "rows a full outer join leaves tied on every ordered attribute come back in the order PostgreSQL's plan picks"
+          }
         },
         {
           "op": "database.find",
@@ -292076,27 +291992,7 @@
               }
             },
             {
-              "$document": {
-                "name": "a1",
-                "n.author": "a1",
-                "n.score": 2,
-                "n.label": "y",
-                "n.$id": "n3",
-                "n.$sequence": "3",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
+              "$document": "<masked>"
             },
             {
               "$document": {
@@ -292144,7 +292040,13 @@
                 "$collection": "jcur_authors"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/4/$document"
+            ],
+            "reason": "rows a full outer join leaves tied on every ordered attribute come back in the order PostgreSQL's plan picks"
+          }
         },
         {
           "op": "database.find",

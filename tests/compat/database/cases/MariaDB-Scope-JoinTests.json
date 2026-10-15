@@ -30019,9 +30019,21 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to persist metadata after retries for attribute creation 'title': Failed to execute transaction: the transaction was lost before it could commit"
+            "$value": "Attribute",
+            "fields": {
+              "key": "title",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 100,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
             }
           }
         },
@@ -30259,9 +30271,16 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$id": "p1",
+              "title": "Widget",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "ttj_p",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
             }
           }
         },
@@ -30280,9 +30299,16 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$id": "p2",
+              "title": "Gadget",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "ttj_p",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
             }
           }
         },
@@ -30513,7 +30539,18 @@
               }
             ]
           },
-          "expect": []
+          "expect": [
+            {
+              "order_cnt": "3",
+              "total": "600",
+              "cust_uid": "c1"
+            },
+            {
+              "order_cnt": "2",
+              "total": "400",
+              "cust_uid": "c2"
+            }
+          ]
         },
         {
           "op": "database.collection_exists",
@@ -63653,9 +63690,21 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to persist metadata after retries for attribute creation 'name': Failed to execute transaction: the transaction was lost before it could commit"
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 100,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
             }
           }
         },
@@ -63793,9 +63842,16 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$id": "m1",
+              "name": "Main",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "jp_gds_m",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
             }
           }
         },
@@ -63883,7 +63939,20 @@
             ]
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "name": "Main",
+              "j0.mainId": null,
+              "j0.score": null,
+              "j0.$id": null,
+              "$sequence": "1",
+              "$id": "m1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "jp_gds_m"
+            }
           }
         },
         {
@@ -220560,15 +220629,15 @@
             },
             {
               "$document": {
-                "name": "a1",
-                "score": 1,
-                "n.author": "a1",
-                "n.score": 2,
+                "name": "a2",
+                "score": 2,
+                "n.author": "a2",
+                "n.score": 1,
                 "n.label": "y",
-                "n.$id": "n3",
+                "n.$id": "n4",
                 "n.$createdAt": "<now>",
-                "$id": "a1",
-                "$sequence": "1",
+                "$id": "a2",
+                "$sequence": "2",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -220579,15 +220648,15 @@
             },
             {
               "$document": {
-                "name": "a2",
-                "score": 2,
-                "n.author": "a2",
-                "n.score": 1,
+                "name": "a1",
+                "score": 1,
+                "n.author": "a1",
+                "n.score": 2,
                 "n.label": "y",
-                "n.$id": "n4",
+                "n.$id": "n3",
                 "n.$createdAt": "<now>",
-                "$id": "a2",
-                "$sequence": "2",
+                "$id": "a1",
+                "$sequence": "1",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -220720,15 +220789,15 @@
             },
             {
               "$document": {
-                "name": "a1",
-                "score": 1,
-                "n.author": "a1",
-                "n.score": 2,
+                "name": "a2",
+                "score": 2,
+                "n.author": "a2",
+                "n.score": 1,
                 "n.label": "y",
-                "n.$id": "n3",
+                "n.$id": "n4",
                 "n.$createdAt": "<now>",
-                "$id": "a1",
-                "$sequence": "1",
+                "$id": "a2",
+                "$sequence": "2",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -220840,15 +220909,15 @@
             },
             {
               "$document": {
-                "name": "a1",
-                "score": 1,
-                "n.author": "a1",
-                "n.score": 2,
+                "name": "a2",
+                "score": 2,
+                "n.author": "a2",
+                "n.score": 1,
                 "n.label": "y",
-                "n.$id": "n3",
+                "n.$id": "n4",
                 "n.$createdAt": "<now>",
-                "$id": "a1",
-                "$sequence": "1",
+                "$id": "a2",
+                "$sequence": "2",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -220960,15 +221029,15 @@
             },
             {
               "$document": {
-                "name": "a1",
-                "score": 1,
-                "n.author": "a1",
-                "n.score": 2,
+                "name": "a2",
+                "score": 2,
+                "n.author": "a2",
+                "n.score": 1,
                 "n.label": "y",
-                "n.$id": "n3",
+                "n.$id": "n4",
                 "n.$createdAt": "<now>",
-                "$id": "a1",
-                "$sequence": "1",
+                "$id": "a2",
+                "$sequence": "2",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -221393,15 +221462,15 @@
             },
             {
               "$document": {
-                "name": "a1",
-                "score": 1,
-                "n.author": "a1",
-                "n.score": 2,
+                "name": "a2",
+                "score": 2,
+                "n.author": "a2",
+                "n.score": 1,
                 "n.label": "y",
-                "n.$id": "n3",
+                "n.$id": "n4",
                 "n.$createdAt": "<now>",
-                "$id": "a1",
-                "$sequence": "1",
+                "$id": "a2",
+                "$sequence": "2",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -221412,15 +221481,15 @@
             },
             {
               "$document": {
-                "name": "a2",
-                "score": 2,
-                "n.author": "a2",
-                "n.score": 1,
+                "name": "a1",
+                "score": 1,
+                "n.author": "a1",
+                "n.score": 2,
                 "n.label": "y",
-                "n.$id": "n4",
+                "n.$id": "n3",
                 "n.$createdAt": "<now>",
-                "$id": "a2",
-                "$sequence": "2",
+                "$id": "a1",
+                "$sequence": "1",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -221562,15 +221631,15 @@
             },
             {
               "$document": {
-                "name": "a1",
-                "score": 1,
-                "n.author": "a1",
-                "n.score": 2,
+                "name": "a2",
+                "score": 2,
+                "n.author": "a2",
+                "n.score": 1,
                 "n.label": "y",
-                "n.$id": "n3",
+                "n.$id": "n4",
                 "n.$createdAt": "<now>",
-                "$id": "a1",
-                "$sequence": "1",
+                "$id": "a2",
+                "$sequence": "2",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -221581,15 +221650,15 @@
             },
             {
               "$document": {
-                "name": "a2",
-                "score": 2,
-                "n.author": "a2",
-                "n.score": 1,
+                "name": "a1",
+                "score": 1,
+                "n.author": "a1",
+                "n.score": 2,
                 "n.label": "y",
-                "n.$id": "n4",
+                "n.$id": "n3",
                 "n.$createdAt": "<now>",
-                "$id": "a2",
-                "$sequence": "2",
+                "$id": "a1",
+                "$sequence": "1",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -221731,15 +221800,15 @@
             },
             {
               "$document": {
-                "name": "a1",
-                "score": 1,
-                "n.author": "a1",
-                "n.score": 2,
+                "name": "a2",
+                "score": 2,
+                "n.author": "a2",
+                "n.score": 1,
                 "n.label": "y",
-                "n.$id": "n3",
+                "n.$id": "n4",
                 "n.$createdAt": "<now>",
-                "$id": "a1",
-                "$sequence": "1",
+                "$id": "a2",
+                "$sequence": "2",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -221860,15 +221929,15 @@
             },
             {
               "$document": {
-                "name": "a1",
-                "score": 1,
-                "n.author": "a1",
-                "n.score": 2,
+                "name": "a2",
+                "score": 2,
+                "n.author": "a2",
+                "n.score": 1,
                 "n.label": "y",
-                "n.$id": "n3",
+                "n.$id": "n4",
                 "n.$createdAt": "<now>",
-                "$id": "a1",
-                "$sequence": "1",
+                "$id": "a2",
+                "$sequence": "2",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -221989,15 +222058,15 @@
             },
             {
               "$document": {
-                "name": "a1",
-                "score": 1,
-                "n.author": "a1",
-                "n.score": 2,
+                "name": "a2",
+                "score": 2,
+                "n.author": "a2",
+                "n.score": 1,
                 "n.label": "y",
-                "n.$id": "n3",
+                "n.$id": "n4",
                 "n.$createdAt": "<now>",
-                "$id": "a1",
-                "$sequence": "1",
+                "$id": "a2",
+                "$sequence": "2",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -222467,15 +222536,15 @@
             },
             {
               "$document": {
-                "name": "a1",
-                "score": 1,
-                "n.author": "a1",
-                "n.score": 2,
+                "name": "a2",
+                "score": 2,
+                "n.author": "a2",
+                "n.score": 1,
                 "n.label": "y",
-                "n.$id": "n3",
+                "n.$id": "n4",
                 "n.$createdAt": "<now>",
-                "$id": "a1",
-                "$sequence": "1",
+                "$id": "a2",
+                "$sequence": "2",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -222486,15 +222555,15 @@
             },
             {
               "$document": {
-                "name": "a2",
-                "score": 2,
-                "n.author": "a2",
-                "n.score": 1,
+                "name": "a1",
+                "score": 1,
+                "n.author": "a1",
+                "n.score": 2,
                 "n.label": "y",
-                "n.$id": "n4",
+                "n.$id": "n3",
                 "n.$createdAt": "<now>",
-                "$id": "a2",
-                "$sequence": "2",
+                "$id": "a1",
+                "$sequence": "1",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -222639,28 +222708,6 @@
             },
             {
               "$document": {
-                "n.author": "a1",
-                "n.score": 2,
-                "n.label": "y",
-                "n.$id": "n3",
-                "n.$sequence": "3",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
                 "n.author": "a2",
                 "n.score": 1,
                 "n.label": "y",
@@ -222673,6 +222720,28 @@
                 ],
                 "$id": "a2",
                 "$sequence": "2",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "jcur_authors"
+              }
+            },
+            {
+              "$document": {
+                "n.author": "a1",
+                "n.score": 2,
+                "n.label": "y",
+                "n.$id": "n3",
+                "n.$sequence": "3",
+                "n.$createdAt": "<now>",
+                "n.$updatedAt": "<now>",
+                "n.$permissions": [
+                  "read(\"any\")"
+                ],
+                "$id": "a1",
+                "$sequence": "1",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -222824,18 +222893,18 @@
             },
             {
               "$document": {
-                "n.author": "a1",
-                "n.score": 2,
+                "n.author": "a2",
+                "n.score": 1,
                 "n.label": "y",
-                "n.$id": "n3",
-                "n.$sequence": "3",
+                "n.$id": "n4",
+                "n.$sequence": "4",
                 "n.$createdAt": "<now>",
                 "n.$updatedAt": "<now>",
                 "n.$permissions": [
                   "read(\"any\")"
                 ],
-                "$id": "a1",
-                "$sequence": "1",
+                "$id": "a2",
+                "$sequence": "2",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -222965,18 +223034,18 @@
             },
             {
               "$document": {
-                "n.author": "a1",
-                "n.score": 2,
+                "n.author": "a2",
+                "n.score": 1,
                 "n.label": "y",
-                "n.$id": "n3",
-                "n.$sequence": "3",
+                "n.$id": "n4",
+                "n.$sequence": "4",
                 "n.$createdAt": "<now>",
                 "n.$updatedAt": "<now>",
                 "n.$permissions": [
                   "read(\"any\")"
                 ],
-                "$id": "a1",
-                "$sequence": "1",
+                "$id": "a2",
+                "$sequence": "2",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -223106,18 +223175,18 @@
             },
             {
               "$document": {
-                "n.author": "a1",
-                "n.score": 2,
+                "n.author": "a2",
+                "n.score": 1,
                 "n.label": "y",
-                "n.$id": "n3",
-                "n.$sequence": "3",
+                "n.$id": "n4",
+                "n.$sequence": "4",
                 "n.$createdAt": "<now>",
                 "n.$updatedAt": "<now>",
                 "n.$permissions": [
                   "read(\"any\")"
                 ],
-                "$id": "a1",
-                "$sequence": "1",
+                "$id": "a2",
+                "$sequence": "2",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -223610,28 +223679,6 @@
             },
             {
               "$document": {
-                "n.author": "a1",
-                "n.score": 2,
-                "n.label": "y",
-                "n.$id": "n3",
-                "n.$sequence": "3",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
                 "n.author": "a2",
                 "n.score": 1,
                 "n.label": "y",
@@ -223644,6 +223691,28 @@
                 ],
                 "$id": "a2",
                 "$sequence": "2",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "jcur_authors"
+              }
+            },
+            {
+              "$document": {
+                "n.author": "a1",
+                "n.score": 2,
+                "n.label": "y",
+                "n.$id": "n3",
+                "n.$sequence": "3",
+                "n.$createdAt": "<now>",
+                "n.$updatedAt": "<now>",
+                "n.$permissions": [
+                  "read(\"any\")"
+                ],
+                "$id": "a1",
+                "$sequence": "1",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -223797,29 +223866,6 @@
             },
             {
               "$document": {
-                "name": "a1",
-                "n.author": "a1",
-                "n.score": 2,
-                "n.label": "y",
-                "n.$id": "n3",
-                "n.$sequence": "3",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
                 "name": "a2",
                 "n.author": "a2",
                 "n.score": 1,
@@ -223833,6 +223879,29 @@
                 ],
                 "$id": "a2",
                 "$sequence": "2",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "jcur_authors"
+              }
+            },
+            {
+              "$document": {
+                "name": "a1",
+                "n.author": "a1",
+                "n.score": 2,
+                "n.label": "y",
+                "n.$id": "n3",
+                "n.$sequence": "3",
+                "n.$createdAt": "<now>",
+                "n.$updatedAt": "<now>",
+                "n.$permissions": [
+                  "read(\"any\")"
+                ],
+                "$id": "a1",
+                "$sequence": "1",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -223989,19 +224058,19 @@
             },
             {
               "$document": {
-                "name": "a1",
-                "n.author": "a1",
-                "n.score": 2,
+                "name": "a2",
+                "n.author": "a2",
+                "n.score": 1,
                 "n.label": "y",
-                "n.$id": "n3",
-                "n.$sequence": "3",
+                "n.$id": "n4",
+                "n.$sequence": "4",
                 "n.$createdAt": "<now>",
                 "n.$updatedAt": "<now>",
                 "n.$permissions": [
                   "read(\"any\")"
                 ],
-                "$id": "a1",
-                "$sequence": "1",
+                "$id": "a2",
+                "$sequence": "2",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -224134,19 +224203,19 @@
             },
             {
               "$document": {
-                "name": "a1",
-                "n.author": "a1",
-                "n.score": 2,
+                "name": "a2",
+                "n.author": "a2",
+                "n.score": 1,
                 "n.label": "y",
-                "n.$id": "n3",
-                "n.$sequence": "3",
+                "n.$id": "n4",
+                "n.$sequence": "4",
                 "n.$createdAt": "<now>",
                 "n.$updatedAt": "<now>",
                 "n.$permissions": [
                   "read(\"any\")"
                 ],
-                "$id": "a1",
-                "$sequence": "1",
+                "$id": "a2",
+                "$sequence": "2",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -224279,19 +224348,19 @@
             },
             {
               "$document": {
-                "name": "a1",
-                "n.author": "a1",
-                "n.score": 2,
+                "name": "a2",
+                "n.author": "a2",
+                "n.score": 1,
                 "n.label": "y",
-                "n.$id": "n3",
-                "n.$sequence": "3",
+                "n.$id": "n4",
+                "n.$sequence": "4",
                 "n.$createdAt": "<now>",
                 "n.$updatedAt": "<now>",
                 "n.$permissions": [
                   "read(\"any\")"
                 ],
-                "$id": "a1",
-                "$sequence": "1",
+                "$id": "a2",
+                "$sequence": "2",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
@@ -224796,29 +224865,6 @@
             },
             {
               "$document": {
-                "name": "a1",
-                "n.author": "a1",
-                "n.score": 2,
-                "n.label": "y",
-                "n.$id": "n3",
-                "n.$sequence": "3",
-                "n.$createdAt": "<now>",
-                "n.$updatedAt": "<now>",
-                "n.$permissions": [
-                  "read(\"any\")"
-                ],
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jcur_authors"
-              }
-            },
-            {
-              "$document": {
                 "name": "a2",
                 "n.author": "a2",
                 "n.score": 1,
@@ -224832,6 +224878,29 @@
                 ],
                 "$id": "a2",
                 "$sequence": "2",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "jcur_authors"
+              }
+            },
+            {
+              "$document": {
+                "name": "a1",
+                "n.author": "a1",
+                "n.score": 2,
+                "n.label": "y",
+                "n.$id": "n3",
+                "n.$sequence": "3",
+                "n.$createdAt": "<now>",
+                "n.$updatedAt": "<now>",
+                "n.$permissions": [
+                  "read(\"any\")"
+                ],
+                "$id": "a1",
+                "$sequence": "1",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [

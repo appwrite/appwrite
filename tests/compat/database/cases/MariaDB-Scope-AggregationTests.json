@@ -75846,9 +75846,21 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to persist metadata after retries for attribute creation 'label': Failed to execute transaction: the transaction was lost before it could commit"
+            "$value": "Attribute",
+            "fields": {
+              "key": "label",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 20,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
             }
           }
         },
@@ -75866,9 +75878,16 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "label": "only",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "join_cap",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
             }
           }
         },
@@ -75943,12 +75962,37 @@
               }
             ]
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+          "expect": [
+            {
+              "$document": {
+                "label": "only",
+                "joined1.label": "only",
+                "joined2.label": "only",
+                "joined3.label": "only",
+                "joined4.label": "only",
+                "joined5.label": "only",
+                "joined6.label": "only",
+                "joined7.label": "only",
+                "joined8.label": "only",
+                "joined1.$id": "<uniqid>",
+                "joined2.$id": "<uniqid>",
+                "joined3.$id": "<uniqid>",
+                "joined4.$id": "<uniqid>",
+                "joined5.$id": "<uniqid>",
+                "joined6.$id": "<uniqid>",
+                "joined7.$id": "<uniqid>",
+                "joined8.$id": "<uniqid>",
+                "$id": "<uniqid>",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "join_cap"
+              }
             }
-          }
+          ]
         },
         {
           "op": "database.count",
@@ -76021,7 +76065,7 @@
               }
             ]
           },
-          "expect": 0
+          "expect": 1
         },
         {
           "op": "database.find",

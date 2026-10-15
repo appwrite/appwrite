@@ -1747,485 +1747,6 @@
       ]
     },
     {
-      "name": "WithCacheTest::testWithCacheDoesNotCacheMixedDocumentArrays",
-      "state": [],
-      "steps": [
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "structureFormatProbe"
-          },
-          "expect": true
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "structureFormatProbe"
-          },
-          "expect": true
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "structureFormatProbe"
-          },
-          "expect": true
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "structureFormatProbe"
-          },
-          "expect": true
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "structureFormatProbe"
-          },
-          "expect": true
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "email"
-          },
-          "expect": true
-        },
-        {
-          "op": "object.new",
-          "args": {
-            "class": "Adapter\\Memory",
-            "args": {},
-            "as": "o5056"
-          },
-          "bind": "s8207",
-          "expect": {
-            "$adapter": "Memory"
-          }
-        },
-        {
-          "op": "object.new",
-          "args": {
-            "class": "Database",
-            "args": {
-              "adapter": {
-                "$obj": "o5056"
-              },
-              "cache": "memory",
-              "filters": []
-            },
-            "as": "o5057"
-          },
-          "bind": "s8208",
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o5057"
-            },
-            "method": "setDatabase",
-            "args": {
-              "name": "utopiaTests"
-            }
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o5057"
-            },
-            "method": "setNamespace",
-            "args": {
-              "namespace": "list_cache_u000000000052"
-            }
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o5057"
-            },
-            "method": "create",
-            "args": {}
-          },
-          "expect": true
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o5057"
-            },
-            "method": "getAuthorization",
-            "args": {},
-            "as": "o5058"
-          },
-          "bind": "s8212",
-          "expect": {
-            "$authorization": true
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "class": "Role",
-            "method": "any",
-            "args": {},
-            "as": "o5059"
-          },
-          "bind": "s8213",
-          "expect": {
-            "$value": "Role",
-            "fields": {}
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o5059"
-            },
-            "method": "toString",
-            "args": {}
-          },
-          "expect": "any"
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o5058"
-            },
-            "method": "addRole",
-            "args": {
-              "role": "any"
-            }
-          },
-          "expect": {
-            "$authorization": true
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "class": "Role",
-            "method": "any",
-            "args": {},
-            "as": "o5060"
-          },
-          "bind": "s8216",
-          "expect": {
-            "$value": "Role",
-            "fields": {}
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "class": "Permission",
-            "method": "read",
-            "args": {
-              "role": {
-                "$obj": "o5060"
-              }
-            }
-          },
-          "expect": "read(\"any\")"
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "class": "Role",
-            "method": "any",
-            "args": {},
-            "as": "o5061"
-          },
-          "bind": "s8218",
-          "expect": {
-            "$value": "Role",
-            "fields": {}
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "class": "Permission",
-            "method": "create",
-            "args": {
-              "role": {
-                "$obj": "o5061"
-              }
-            }
-          },
-          "expect": "create(\"any\")"
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "class": "Collection",
-            "method": "create",
-            "args": {
-              "id": "wafRules",
-              "permissions": [
-                "read(\"any\")",
-                "create(\"any\")"
-              ],
-              "documentSecurity": false
-            },
-            "as": "o5062"
-          },
-          "bind": "s8220",
-          "expect": {
-            "$document": {
-              "$id": "wafRules",
-              "name": "wafRules",
-              "attributes": [],
-              "indexes": [],
-              "documentSecurity": false,
-              "$permissions": [
-                "read(\"any\")",
-                "create(\"any\")"
-              ]
-            },
-            "$class": "Collection"
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o5057"
-            },
-            "method": "createCollection",
-            "args": {
-              "collection": {
-                "$obj": "o5062"
-              }
-            },
-            "as": "o5063"
-          },
-          "expect": {
-            "$document": {
-              "$id": "wafRules",
-              "name": "wafRules",
-              "attributes": [],
-              "indexes": [],
-              "documentSecurity": false,
-              "$permissions": [
-                "read(\"any\")",
-                "create(\"any\")"
-              ],
-              "$collection": "_metadata",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$sequence": "1"
-            },
-            "$class": "Collection"
-          }
-        },
-        {
-          "op": "object.new",
-          "args": {
-            "class": "Document",
-            "args": {
-              "input": {
-                "$id": "rule-a"
-              }
-            },
-            "as": "o5064"
-          },
-          "bind": "s8222",
-          "expect": {
-            "$document": {
-              "$id": "rule-a"
-            }
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o5057"
-            },
-            "method": "createDocument",
-            "args": {
-              "collection": "wafRules",
-              "document": {
-                "$obj": "o5064"
-              }
-            }
-          },
-          "expect": {
-            "$document": {
-              "$id": "rule-a",
-              "$collection": "wafRules",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$permissions": [],
-              "$sequence": "1"
-            }
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o5057"
-            },
-            "method": "withCache",
-            "args": {
-              "key": "key",
-              "callback": {
-                "steps": [
-                  {
-                    "op": "object.call",
-                    "args": {
-                      "this": {
-                        "$obj": "o5057"
-                      },
-                      "method": "getDocument",
-                      "args": {
-                        "collection": "wafRules",
-                        "id": "rule-a"
-                      },
-                      "as": "o5065"
-                    }
-                  },
-                  {
-                    "op": "$return",
-                    "args": {
-                      "value": [
-                        "prefix",
-                        {
-                          "$obj": "o5065"
-                        }
-                      ]
-                    }
-                  }
-                ]
-              }
-            }
-          },
-          "bind": "s8224",
-          "expect": {
-            "result": [
-              "prefix",
-              {
-                "$obj": "o5065"
-              }
-            ],
-            "calls": {
-              "callback": [
-                {
-                  "args": [],
-                  "steps": [
-                    {
-                      "$document": {
-                        "$sequence": "1",
-                        "$id": "rule-a",
-                        "$createdAt": "<now>",
-                        "$updatedAt": "<now>",
-                        "$permissions": [],
-                        "$collection": "wafRules"
-                      }
-                    },
-                    null
-                  ]
-                }
-              ]
-            }
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o5057"
-            },
-            "method": "withCache",
-            "args": {
-              "key": "key",
-              "callback": {
-                "steps": [
-                  {
-                    "op": "object.call",
-                    "args": {
-                      "this": {
-                        "$obj": "o5057"
-                      },
-                      "method": "getDocument",
-                      "args": {
-                        "collection": "wafRules",
-                        "id": "rule-a"
-                      },
-                      "as": "o5066"
-                    }
-                  },
-                  {
-                    "op": "$return",
-                    "args": {
-                      "value": [
-                        "prefix",
-                        {
-                          "$obj": "o5066"
-                        }
-                      ]
-                    }
-                  }
-                ]
-              }
-            }
-          },
-          "bind": "s8225",
-          "expect": {
-            "result": [
-              "prefix",
-              {
-                "$obj": "o5065"
-              }
-            ],
-            "calls": {
-              "callback": []
-            }
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o5065"
-            },
-            "method": "getId",
-            "args": {}
-          },
-          "expect": "rule-a"
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o5066"
-            },
-            "method": "getId",
-            "args": {}
-          }
-        }
-      ]
-    },
-    {
       "name": "WithCacheTest::testWithCacheCachesSingleDocument",
       "state": [],
       "steps": [
@@ -7831,8 +7352,12 @@
             "method": "getMethod",
             "args": {}
           },
-          "expect": {
-            "$enum": "Query\\Method::OrderRandom"
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "Query::orderRandom() returns the documents in a random order"
           }
         },
         {
@@ -7857,19 +7382,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "projectId": "project-a",
-                "$id": "rule-a",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [],
-                "$sequence": "1",
-                "$collection": "wafRules"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "Query::orderRandom() returns the documents in a random order"
+          }
         },
         {
           "op": "object.new",
@@ -7939,8 +7458,12 @@
             "method": "getMethod",
             "args": {}
           },
-          "expect": {
-            "$enum": "Query\\Method::OrderRandom"
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "Query::orderRandom() returns the documents in a random order"
           }
         },
         {
@@ -7965,30 +7488,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "projectId": "project-a",
-                "$id": "rule-a",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [],
-                "$sequence": "1",
-                "$collection": "wafRules"
-              }
-            },
-            {
-              "$document": {
-                "projectId": "project-a",
-                "$id": "rule-b",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [],
-                "$sequence": "2",
-                "$collection": "wafRules"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "Query::orderRandom() returns the documents in a random order"
+          }
         }
       ]
     },

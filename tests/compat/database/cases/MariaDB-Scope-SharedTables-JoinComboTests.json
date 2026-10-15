@@ -36782,9 +36782,21 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to persist metadata after retries for attribute creation 'label': Failed to execute transaction: the transaction was lost before it could commit"
+            "$value": "Attribute",
+            "fields": {
+              "key": "label",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 100,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
             }
           }
         },
@@ -37544,9 +37556,19 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"label\""
+            "$document": {
+              "$id": "hb1",
+              "aId": "ha1",
+              "mainId": "hm1",
+              "label": "b-public",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "jh_b",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1"
             }
           }
         },
@@ -37567,9 +37589,19 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"label\""
+            "$document": {
+              "$id": "hb2",
+              "aId": "ha1",
+              "mainId": "hm2",
+              "label": "b-second",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "jh_b",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "2"
             }
           }
         },

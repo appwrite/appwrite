@@ -9059,9 +9059,21 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to persist metadata after retries for attribute creation 'name': Failed to execute transaction: the transaction was lost before it could commit"
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 100,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
             }
           }
         },
@@ -9202,9 +9214,17 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"name\""
+            "$document": {
+              "$id": "p1",
+              "name": "WithOrders",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "ljsn_p",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1"
             }
           }
         },
@@ -9223,9 +9243,17 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"name\""
+            "$document": {
+              "$id": "p2",
+              "name": "NoOrders",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "ljsn_p",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "2"
             }
           }
         },
@@ -9333,12 +9361,16 @@
               }
             ]
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Query",
-              "message": "Invalid query: Attribute not found in schema: name"
+          "expect": [
+            {
+              "total": null,
+              "name": "NoOrders"
+            },
+            {
+              "total": "300",
+              "name": "WithOrders"
             }
-          }
+          ]
         },
         {
           "op": "database.collection_exists",

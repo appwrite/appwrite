@@ -3707,8 +3707,14 @@
           "expect": {
             "$error": {
               "class": "PDOException",
-              "message": "SQLSTATE[22P02]: Invalid text representation: 7 ERROR:  invalid input syntax for type integer: \"not a number\"\nLINE 1: ...d000013p\".\"ns_f\" AS \"table_main\" WHERE \"year\" IN ('not a num...\n                                                             ^"
+              "message": "<masked>"
             }
+          },
+          "mask": {
+            "paths": [
+              "/$error/message"
+            ],
+            "reason": "PostgreSQL quotes the statement around the error, which cuts the case namespace (${ns}) at a point that depends on its length"
           }
         },
         {

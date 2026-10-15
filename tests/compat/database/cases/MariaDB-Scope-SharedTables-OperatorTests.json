@@ -92968,9 +92968,21 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to persist metadata after retries for attribute creation 'value': Failed to execute transaction: the transaction was lost before it could commit"
+            "$value": "Attribute",
+            "fields": {
+              "key": "value",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Double"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
             }
           }
         },
@@ -92990,9 +93002,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$id": "negative_multiply",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "value": 10.0,
+              "$collection": "test_multiply_negative",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1"
             }
           }
         },
@@ -93016,7 +93037,19 @@
             }
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "value": -20.0,
+              "$id": "negative_multiply",
+              "$sequence": "1",
+              "$tenant": "999",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "test_multiply_negative"
+            }
           }
         },
         {
@@ -93035,9 +93068,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$id": "negative_with_max",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "value": 10.0,
+              "$collection": "test_multiply_negative",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "2"
             }
           }
         },
@@ -93062,7 +93104,19 @@
             }
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "value": -20.0,
+              "$id": "negative_with_max",
+              "$sequence": "2",
+              "$tenant": "999",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "test_multiply_negative"
+            }
           }
         },
         {
@@ -93081,9 +93135,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$id": "pos_times_neg",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "value": 50.0,
+              "$collection": "test_multiply_negative",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "3"
             }
           }
         },
@@ -93108,7 +93171,19 @@
             }
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "value": -150.0,
+              "$id": "pos_times_neg",
+              "$sequence": "3",
+              "$tenant": "999",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "test_multiply_negative"
+            }
           }
         },
         {
@@ -93127,9 +93202,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$id": "negative_overflow",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "value": -60.0,
+              "$collection": "test_multiply_negative",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "4"
             }
           }
         },
@@ -93154,7 +93238,19 @@
             }
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "value": -60.0,
+              "$id": "negative_overflow",
+              "$sequence": "4",
+              "$tenant": "999",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "test_multiply_negative"
+            }
           }
         },
         {
@@ -93173,9 +93269,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$id": "zero_multiply",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "value": 50.0,
+              "$collection": "test_multiply_negative",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "5"
             }
           }
         },
@@ -93200,7 +93305,19 @@
             }
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "value": 0.0,
+              "$id": "zero_multiply",
+              "$sequence": "5",
+              "$tenant": "999",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "test_multiply_negative"
+            }
           }
         },
         {

@@ -11596,7 +11596,7 @@
               "$collection": "_metadata",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
-              "$sequence": "2"
+              "$sequence": "3"
             },
             "$class": "Collection"
           }

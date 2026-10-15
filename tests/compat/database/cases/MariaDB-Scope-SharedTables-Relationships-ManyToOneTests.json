@@ -6342,9 +6342,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to create relationship: Failed to execute transaction: the transaction was lost before it could commit"
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "teams",
+              "type": {
+                "$enum": "RelationshipType::ManyToOne"
+              },
+              "twoWay": true,
+              "key": "team",
+              "twoWayKey": "players",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
             }
           }
         },
@@ -6422,9 +6431,61 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$id": "player1",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "name": "Player 1",
+              "$collection": "players",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1",
+              "team": {
+                "$document": {
+                  "name": "Team 1",
+                  "$id": "team1",
+                  "$sequence": "1",
+                  "$tenant": "999",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"any\")"
+                  ],
+                  "$collection": "teams",
+                  "supporters": [
+                    {
+                      "$document": {
+                        "name": "Supporter 1",
+                        "$id": "supporter1",
+                        "$sequence": "1",
+                        "$tenant": "999",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "$collection": "supporters"
+                      }
+                    },
+                    {
+                      "$document": {
+                        "name": "Supporter 2",
+                        "$id": "supporter2",
+                        "$sequence": "2",
+                        "$tenant": "999",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "$collection": "supporters"
+                      }
+                    }
+                  ]
+                }
+              }
             }
           }
         },
@@ -6435,7 +6496,62 @@
             "id": "player1"
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "name": "Player 1",
+              "$sequence": "1",
+              "$id": "player1",
+              "$tenant": "999",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "players",
+              "team": {
+                "$document": {
+                  "name": "Team 1",
+                  "$id": "team1",
+                  "$sequence": "1",
+                  "$tenant": "999",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"any\")"
+                  ],
+                  "$collection": "teams",
+                  "supporters": [
+                    {
+                      "$document": {
+                        "name": "Supporter 1",
+                        "$id": "supporter1",
+                        "$sequence": "1",
+                        "$tenant": "999",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "$collection": "supporters"
+                      }
+                    },
+                    {
+                      "$document": {
+                        "name": "Supporter 2",
+                        "$id": "supporter2",
+                        "$sequence": "2",
+                        "$tenant": "999",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "$collection": "supporters"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
           }
         },
         {
@@ -6476,9 +6592,61 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"players\""
+            "$document": {
+              "$id": "supporter3",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "name": "Supporter 3",
+              "$collection": "supporters",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "3",
+              "team": {
+                "$document": {
+                  "name": "Team 2",
+                  "$id": "team2",
+                  "$sequence": "2",
+                  "$tenant": "999",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"any\")"
+                  ],
+                  "$collection": "teams",
+                  "players": [
+                    {
+                      "$document": {
+                        "name": "Player 2",
+                        "$id": "player2",
+                        "$sequence": "2",
+                        "$tenant": "999",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "$collection": "players"
+                      }
+                    },
+                    {
+                      "$document": {
+                        "name": "Player 3",
+                        "$id": "player3",
+                        "$sequence": "3",
+                        "$tenant": "999",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "$collection": "players"
+                      }
+                    }
+                  ]
+                }
+              }
             }
           }
         },
@@ -6489,7 +6657,62 @@
             "id": "supporter3"
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "name": "Supporter 3",
+              "$sequence": "3",
+              "$id": "supporter3",
+              "$tenant": "999",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "supporters",
+              "team": {
+                "$document": {
+                  "name": "Team 2",
+                  "$id": "team2",
+                  "$sequence": "2",
+                  "$tenant": "999",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"any\")"
+                  ],
+                  "$collection": "teams",
+                  "players": [
+                    {
+                      "$document": {
+                        "name": "Player 2",
+                        "$id": "player2",
+                        "$sequence": "2",
+                        "$tenant": "999",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "$collection": "players"
+                      }
+                    },
+                    {
+                      "$document": {
+                        "name": "Player 3",
+                        "$id": "player3",
+                        "$sequence": "3",
+                        "$tenant": "999",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "$collection": "players"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
           }
         }
       ]

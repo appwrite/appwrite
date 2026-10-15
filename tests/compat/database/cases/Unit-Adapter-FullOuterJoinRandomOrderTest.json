@@ -1382,68 +1382,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "c3",
-                "note.body": null,
-                "$id": "c3",
-                "$sequence": "3",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [],
-                "$collection": "customers"
-              }
-            },
-            {
-              "$document": {
-                "name": "c2",
-                "note.body": "n3",
-                "$id": "c2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [],
-                "$collection": "customers"
-              }
-            },
-            {
-              "$document": {
-                "name": "c1",
-                "note.body": "n1",
-                "$id": "c1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [],
-                "$collection": "customers"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "note.body": "n4",
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "customers"
-              }
-            },
-            {
-              "$document": {
-                "name": "c1",
-                "note.body": "n2",
-                "$id": "c1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [],
-                "$collection": "customers"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "Query::orderRandom() returns the documents in a random order"
+          }
         },
         {
           "op": "object.call",
