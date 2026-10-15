@@ -228,6 +228,8 @@ kubectl -n appwrite create secret generic appwrite-external \
   --from-literal=redis-password='<Redis password>'
 ```
 
+Then point the chart at the Secret in your values file:
+
 ```yaml
 database:
   mode: external

@@ -25,7 +25,7 @@ faqs:
 
 Self-hosted Appwrite has always shipped as a Docker Compose stack. On one server, that's the right shape: one installer, one `docker-compose.yml`, and an upgrade command that rewrites it. Teams that run everything else on [Kubernetes](/blog/post/what-is-kubernetes-an-expert-guide-for-developers) had a harder time. They translated the Compose file into manifests or Helm charts of their own, then kept that translation working through every Appwrite release.
 
-That translation is more work than it looks. Compose starts services in order with `depends_on`, and Kubernetes has no equivalent. Appwrite's scheduler has no leader election, so a second replica runs every scheduled function twice. Database pools size themselves from the CPU count, which inside a container is the node's count, not the pod's. And every upgrade needs a data migration that must run after the new version is up, never before.
+That translation is more work than it looks. Compose starts services in order with `depends_on`, and Kubernetes has no equivalent. Appwrite's scheduler has no leader election, so a second replica runs every scheduled function twice. Database pools size themselves from the CPU count, which inside a container is the node's count, not the pod's.
 
 Today, we are announcing the **official Appwrite Helm chart**.
 
@@ -39,7 +39,7 @@ The chart deploys the same images as the Docker installation, wired together the
 - **Managed services, one at a time.** Each datastore has its own `mode` switch. Move PostgreSQL to RDS, Cloud SQL, or CloudNativePG while keeping the built-in Redis, and move Redis later.
 - **Ingress or Gateway API routes** for the API, console, realtime, function and site previews, and custom domains.
 - **Functions and Sites in the cluster, on by default.** Builds run as Kubernetes Jobs, and executions run on the Open Runtimes executor in a namespace of its own.
-- **Three worker topologies.** `combined` and `separate` match the Docker installation, and `grouped` is new.
+- **Three worker topologies.** `combined` runs every queue in one worker and `separate` runs one worker per queue, as in the Docker installation. The new `grouped` topology runs one worker per group of queues you choose.
 - **Credentials that survive upgrades.** The chart generates the encryption key and datastore passwords once, keeps them across upgrades and uninstalls, and refuses changes that would make your data unreadable.
 - **Data migrations on upgrade.** When the Appwrite version changes, `helm upgrade` runs the migration and waits for it to finish.
 - **Hardened defaults.** Every pod in the Appwrite namespace passes the `restricted` [Pod Security Standard](https://kubernetes.io/docs/concepts/security/pod-security-standards/), and releases are signed with [cosign](https://github.com/sigstore/cosign).
@@ -74,7 +74,7 @@ Open `http://appwrite.localhost` and sign up. The first account becomes the cons
 
 ## Install on a real cluster
 
-On a real cluster, you bring a domain, a DNS record that points at your ingress controller, and [cert-manager](https://cert-manager.io) for certificates. The values file stays short:
+On a real cluster, you bring a domain, a DNS record that points at your ingress controller, and [cert-manager](https://cert-manager.io) for certificates. Create a `values.yaml` with your domain and ingress settings, replacing `appwrite.example.com` with your domain:
 
 ```yaml
 appwrite:
@@ -90,6 +90,8 @@ ingress:
     enabled: true
 ```
 
+Then install the chart with that file:
+
 ```bash
 helm install appwrite oci://ghcr.io/appwrite/charts/appwrite \
   --namespace appwrite --create-namespace \
@@ -98,7 +100,7 @@ helm install appwrite oci://ghcr.io/appwrite/charts/appwrite \
 
 The chart checks your values before it creates anything, and when something is missing, the error names the setting. After the install, run `helm test appwrite -n appwrite`, then back up the encryption key the chart generated. Without it, a database backup can't be read.
 
-A few choices are hard to undo once Appwrite holds data: the release name, the domain, the database engine, and the storage device. The [Kubernetes docs](/docs/advanced/self-hosting/platforms/kubernetes#decide-first) list them, with the reason each one is hard to change.
+Pick the release name, domain, database engine, and storage device before you store real data. Changing any of them later means migrating that data. The [Kubernetes docs](/docs/advanced/self-hosting/platforms/kubernetes#decide-first) explain why for each one.
 
 # Bring your own PostgreSQL, Redis, and S3
 
