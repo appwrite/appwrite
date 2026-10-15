@@ -59,14 +59,17 @@ mod scopes;
 mod transactions;
 
 #[cfg(all(test, feature = "memory"))]
+#[allow(dead_code)]
 mod cache_engine_tests;
 #[cfg(test)]
 mod core_memory_tests;
 #[cfg(test)]
 mod core_tests;
 #[cfg(all(test, feature = "memory"))]
+#[allow(dead_code)]
 pub(crate) mod cache_fixtures;
 #[cfg(all(test, feature = "memory"))]
+#[allow(dead_code)]
 pub(crate) mod observed;
 #[cfg(test)]
 pub(crate) mod fixtures;

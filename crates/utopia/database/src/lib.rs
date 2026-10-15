@@ -74,7 +74,6 @@ pub mod capability;
 pub mod change;
 pub mod collection;
 pub mod connection;
-#[allow(dead_code)] // until every area of the database layer lands
 pub mod database;
 pub mod datetime;
 pub mod document;

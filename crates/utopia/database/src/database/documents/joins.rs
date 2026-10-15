@@ -13,7 +13,7 @@ use std::sync::Arc;
 use utopia_query::schema::IndexType;
 use utopia_query::{Method, Object, Value as QValue};
 
-use super::super::{Database, METADATA};
+use super::super::Database;
 use crate::attribute::Attribute;
 use crate::capability::Capability;
 use crate::collection::Collection;
@@ -474,11 +474,6 @@ impl Database {
     /// Whether the caller holds `permission` on the collection itself.
     pub(crate) fn collection_granted(&self, collection: &Collection, permission: PermissionType) -> Result<bool> {
         Ok(self.authorization().is_valid(&Input::new(permission, collection.permissions_by_type(permission)?)))
-    }
-
-    /// Whether `collection` is the metadata collection's definition.
-    pub(crate) fn is_metadata_collection(collection: &Collection) -> bool {
-        collection.id() == METADATA
     }
 }
 

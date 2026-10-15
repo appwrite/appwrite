@@ -7,7 +7,7 @@ use std::sync::{Arc, LazyLock, RwLock};
 use async_trait::async_trait;
 use utopia_query::schema::ColumnType;
 
-use super::{Database, METADATA};
+use super::Database;
 use crate::attribute::Attribute;
 use crate::collection::Collection;
 use crate::document::{self, Document};
@@ -542,11 +542,6 @@ impl Database {
     /// The relationship attributes of a collection (`relationshipAttributes()`).
     pub(crate) fn relationship_attributes(collection: &Collection) -> Result<Vec<Attribute>> {
         Ok(collection.attributes()?.iter().filter(|a| a.relationship.is_some()).cloned().collect())
-    }
-
-    /// Whether `collection` is the metadata collection.
-    pub(crate) fn is_metadata(collection: &str) -> bool {
-        collection == METADATA
     }
 }
 
