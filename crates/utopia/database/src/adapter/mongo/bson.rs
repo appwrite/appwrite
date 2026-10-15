@@ -46,6 +46,8 @@ pub(crate) fn document(a: &Array) -> Result<BsonDocument> {
 /// otherwise; a `stdClass` and an object's array form are documents.
 pub(crate) fn value(v: &Value) -> Result<Bson> {
     Ok(match v {
+        // The extension stores a backed enum case as its backing value.
+        Value::Ext(Ext::Enum(e)) => value(&e.backing)?,
         Value::Null => Bson::Null,
         Value::Bool(b) => Bson::Boolean(*b),
         Value::Int(i) => utopia_mongo::client::int(*i),
@@ -58,6 +60,7 @@ pub(crate) fn value(v: &Value) -> Result<Bson> {
         Value::Ext(Ext::Bson(b)) => match &**b {
             BsonValue::UtcDateTime(ms) => Bson::DateTime(BsonDateTime::from_millis(*ms)),
             BsonValue::ObjectId(bytes) => Bson::ObjectId(ObjectId::from_bytes(*bytes)),
+            BsonValue::Int64(n) => Bson::Int64(*n),
             BsonValue::Regex { pattern, flags } => {
                 let cstring = |s: &str| {
                     CString::try_from(s)

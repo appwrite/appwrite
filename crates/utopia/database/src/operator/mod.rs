@@ -562,6 +562,27 @@ impl Operator {
     /// PHP: `Operator::extractOperators()`. PHP sets the attribute on the
     /// operator object the data holds too; here the data is consumed.
     pub fn extract_operators(data: Array) -> Extracted {
+        Self::extract(data)
+    }
+
+    /// The attribute `extractOperators()` sets on each operator `data`
+    /// holds without one: its key. PHP's operators are objects the data
+    /// shares, so the caller's document carries them named after the call.
+    pub fn name_operators(data: &mut Array) {
+        let keys: Vec<ArrayKey> = data.keys().map(KeyRef::to_owned).collect();
+        for key in keys {
+            if let Some(Value::Ext(Ext::Operator(operator))) = data.get_mut(&key)
+                && (operator.attribute.is_empty() || operator.attribute == "0")
+            {
+                operator.attribute = match key.as_ref() {
+                    KeyRef::Int(i) => i.to_string(),
+                    KeyRef::Str(s) => String::from_utf8_lossy(s).into_owned(),
+                };
+            }
+        }
+    }
+
+    fn extract(data: Array) -> Extracted {
         let mut extracted = Extracted::default();
         for (key, value) in data {
             match value {

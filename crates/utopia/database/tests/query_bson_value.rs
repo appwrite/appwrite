@@ -11,6 +11,8 @@ fn a_bson_value_round_trips_through_a_query_value() {
         BsonValue::UtcDateTime(1_735_117_221_891),
         BsonValue::UtcDateTime(-5),
         BsonValue::ObjectId([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]),
+        // `MongoDB\BSON\Int64`, the object the extension decodes an int64 to.
+        BsonValue::Int64(9),
         BsonValue::Regex { pattern: "^a".into(), flags: "i".into() },
     ] {
         let value = Value::from(bson);

@@ -114,7 +114,8 @@ impl Declared {
         let array = declaration.get("array").is_some_and(Value::truthy);
         let filters = match declaration.get("filters") {
             None => Vec::new(),
-            Some(Value::Array(a)) => a.values().map(crate::value::to_text).collect(),
+            // `Filter::names()`: a `Filter` case is its value.
+            Some(Value::Array(a)) => a.values().map(|v| crate::value::to_text(crate::value::backing(v))).collect(),
             Some(_) => Vec::new(),
         };
         Declared { size: Some(size), array: Some(array), filters: Some(filters) }

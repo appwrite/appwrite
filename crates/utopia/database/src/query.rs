@@ -60,6 +60,20 @@ pub const SHAPE_MAX_NODES: usize = 10_000;
 #[derive(Debug, Clone, PartialEq)]
 pub struct Query(utopia_query::Query);
 
+/// [`query_error`] for a statement PHP's adapter builds without catching the
+/// query library's exceptions: a `ValidationException` keeps its class
+/// ([`Kind::QueryValidation`]) instead of becoming a [`Kind::Query`] error,
+/// which PHP raises only around a select (`Adapter/SQL.php`
+/// `executeSelect()` and `compileFilters()`).
+pub(crate) fn statement_error(e: utopia_query::Error) -> Error {
+    match &e {
+        utopia_query::Error::Validation(message) if e.previous().is_none() => {
+            Error::new(Kind::QueryValidation, message.clone()).with_code(e.code())
+        }
+        _ => query_error(e),
+    }
+}
+
 /// A `utopia-query` error as the database reports it: the library's
 /// exceptions (`Utopia\Query\Exception` and its subclasses) as
 /// [`Kind::Query`] with the same message and code, the engine's errors as
@@ -930,5 +944,20 @@ fn intval(value: &QValue) -> i64 {
         QValue::Null => 0,
         QValue::Array(a) => i64::from(!a.is_empty()),
         QValue::Object(_) | QValue::Ext(_) => 1,
+    }
+}
+
+#[cfg(test)]
+mod statement_error_tests {
+    use super::{Kind, query_error, statement_error};
+
+    #[test]
+    fn a_statement_keeps_the_query_libraries_validation_exception() {
+        let error = statement_error(utopia_query::Error::Validation(
+            "Conflict update column 'n' is not present in the row data.".into(),
+        ));
+        assert_eq!(error.kind(), Kind::QueryValidation);
+        assert_eq!(error.php_class(), "Utopia\\Query\\Exception\\ValidationException");
+        assert_eq!(query_error(utopia_query::Error::Validation("x".into())).kind(), Kind::Query);
     }
 }

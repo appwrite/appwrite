@@ -174,6 +174,10 @@ pub enum Kind {
     /// `BadMethodCallException`: a call the object cannot serve (a query
     /// builder without an executor).
     BadMethodCall,
+    /// `Utopia\Query\Exception\ValidationException`: a statement the query
+    /// library's builder refused, passed through where PHP's adapter does
+    /// not wrap it in a [`Kind::Query`] error (an upsert's statement).
+    QueryValidation,
 }
 
 impl Kind {
@@ -221,13 +225,14 @@ impl Kind {
             Kind::DateMalformedString => "DateMalformedStringException",
             Kind::InvalidArgument => "InvalidArgumentException",
             Kind::BadMethodCall => "BadMethodCallException",
+            Kind::QueryValidation => "Utopia\\Query\\Exception\\ValidationException",
         }
     }
 
     /// The kind of errors of the PHP class `class` (the inverse of
     /// [`Kind::php_class`]); `None` for a class no kind stands for.
     pub fn from_php_class(class: &str) -> Option<Kind> {
-        const ALL: [Kind; 41] = [
+        const ALL: [Kind; 42] = [
             Kind::Database,
             Kind::Authorization,
             Kind::Schema,
@@ -269,6 +274,7 @@ impl Kind {
             Kind::DateMalformedString,
             Kind::InvalidArgument,
             Kind::BadMethodCall,
+            Kind::QueryValidation,
         ];
         let class = class.strip_prefix('\\').unwrap_or(class);
         ALL.into_iter().find(|k| k.php_class().eq_ignore_ascii_case(class))
@@ -308,7 +314,8 @@ impl Kind {
             | Kind::MongoUnexpectedValue
             | Kind::DateMalformedString
             | Kind::InvalidArgument
-            | Kind::BadMethodCall => None,
+            | Kind::BadMethodCall
+            | Kind::QueryValidation => None,
             Kind::MongoUnsent => Some(Kind::Mongo),
             _ => Some(Kind::Database),
         }

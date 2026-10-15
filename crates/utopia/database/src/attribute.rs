@@ -742,6 +742,19 @@ impl Attribute {
     ) -> Result<Self> {
         let kind = match kind {
             Some(Value::Str(s)) => Attribute::type_from_stored(&String::from_utf8_lossy(s.as_bytes()))?,
+            // A `ColumnType` case, as `resolveType()` takes it (`Attribute.php`
+            // line 587).
+            Some(Value::Ext(crate::value::Ext::Enum(e))) if e.class == COLUMN_TYPE_CLASS => {
+                let column = match &e.backing {
+                    Value::Str(s) => ColumnType::try_from_value(&String::from_utf8_lossy(s.as_bytes())),
+                    _ => None,
+                };
+                let Some(column) = column else {
+                    return Err(Error::structure(format!("Unknown attribute type: {}", e.case)));
+                };
+                assert_type(column)?;
+                column
+            }
             other => {
                 return Err(Error::structure(format!(
                     "Attribute type must be a string, {} given",
@@ -775,6 +788,9 @@ impl Attribute {
 pub fn is_spatial_type(kind: ColumnType) -> bool {
     matches!(kind, ColumnType::Point | ColumnType::Linestring | ColumnType::Polygon)
 }
+
+/// The PHP class of [`ColumnType`] cases held in documents.
+const COLUMN_TYPE_CLASS: &str = "Utopia\\Query\\Schema\\ColumnType";
 
 fn assert_type(kind: ColumnType) -> Result<()> {
     if TYPES.contains(&kind) {
@@ -874,7 +890,8 @@ fn hydrate_format(format: Option<&Value>, options: Option<&Value>) -> Option<For
 
 fn hydrate_filters(filters: Option<&Value>) -> Vec<String> {
     match filters {
-        Some(Value::Array(a)) => a.values().map(crate::value::to_text).collect(),
+        // A `Filter` case reads as its value (`Filter|string`).
+        Some(Value::Array(a)) => a.values().map(|v| crate::value::to_text(crate::value::backing(v))).collect(),
         _ => Vec::new(),
     }
 }
@@ -885,11 +902,13 @@ fn hydrate_relationship(key: &str, options: Option<&Value>) -> Result<(Relations
         Some(Value::Array(a)) => a.clone(),
         _ => return Err(Error::structure(format!("Relationship attribute \"{key}\" has no relationship options"))),
     };
-    let side = match options.get_str(relationship::SIDE).filter(|v| !matches!(v, Value::Null)) {
-        None => Some(RelationshipSide::Parent),
-        Some(Value::Str(s)) => s.as_str().and_then(RelationshipSide::try_from_value),
-        Some(_) => RelationshipSide::try_from_value(""),
-    };
+    // A `RelationshipSide` case reads as its value (`RelationshipSide|string`).
+    let side =
+        match options.get_str(relationship::SIDE).map(crate::value::backing).filter(|v| !matches!(v, Value::Null)) {
+            None => Some(RelationshipSide::Parent),
+            Some(Value::Str(s)) => s.as_str().and_then(RelationshipSide::try_from_value),
+            Some(_) => RelationshipSide::try_from_value(""),
+        };
     let Some(side) = side else {
         return Err(Error::structure(format!("Relationship attribute \"{key}\" has an unknown side")));
     };

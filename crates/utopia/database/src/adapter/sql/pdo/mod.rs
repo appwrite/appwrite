@@ -259,11 +259,21 @@ pub struct Options {
     /// adapters set it (`true` by default). SQLite without it fetches
     /// integers and floats as numbers, as `pdo_sqlite` does on PHP 8.1+.
     pub stringify_fetches: bool,
+    /// Whether the handle has `createFunction()` (a `Pdo\Sqlite`, as the
+    /// adapters open it; `true` by default). A plain `PDO` has not, and
+    /// the SQLite adapter then registers no `REGEXP` (`Adapter/SQLite.php`
+    /// `registerUserFunctions()`, line 297).
+    pub user_functions: bool,
 }
 
 impl Default for Options {
     fn default() -> Self {
-        Options { timeout: Duration::from_secs(3), fetch_mode: FetchMode::Assoc, stringify_fetches: true }
+        Options {
+            timeout: Duration::from_secs(3),
+            fetch_mode: FetchMode::Assoc,
+            stringify_fetches: true,
+            user_functions: true,
+        }
     }
 }
 
@@ -870,6 +880,9 @@ impl Pdo {
     ///
     /// PHP: `Utopia\Database\Adapter\SQLite::registerUserFunctions()`.
     pub fn register_regexp(&mut self) -> bool {
+        if !self.options.user_functions {
+            return false;
+        }
         match &self.conn {
             #[cfg(feature = "sqlite")]
             Conn::Sqlite(c) => {

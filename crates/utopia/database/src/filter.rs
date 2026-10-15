@@ -159,6 +159,15 @@ impl Callback {
             signature: format!("{at}:{at}"),
         }
     }
+
+    /// The codec with the signature `signature` instead of where it was
+    /// built: a codec standing for one whose closures are declared
+    /// elsewhere (`<file>:<line>:<file>:<line>`, as
+    /// `Filter\Callback::signature()` names them).
+    pub fn with_signature(mut self, signature: impl Into<String>) -> Self {
+        self.signature = signature.into();
+        self
+    }
 }
 
 impl fmt::Debug for Callback {

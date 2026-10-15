@@ -56,6 +56,31 @@ pub enum Ext {
     /// A BSON value the MongoDB adapter carries in documents and queries
     /// (`MongoDB\BSON\UTCDateTime`, `ObjectId`, `Regex`).
     Bson(Box<BsonValue>),
+    /// A backed enum case held as a value: what PHP stores where the library
+    /// takes `ColumnType|string` and the like (an attribute document's
+    /// `type`, a relationship's `side`). The library reads it as its backing
+    /// value ([`backing`]).
+    Enum(Box<EnumValue>),
+}
+
+/// A backed enum case (`Query\Schema\ColumnType::String`).
+#[derive(Clone, PartialEq, Debug)]
+pub struct EnumValue {
+    /// The enum's class (`Utopia\Query\Schema\ColumnType`).
+    pub class: String,
+    /// The case's name (`String`).
+    pub case: String,
+    /// The case's backing value (`->value`): a string or an integer.
+    pub backing: Value,
+}
+
+/// The value as the library reads a `X|string` parameter: an enum case's
+/// backing value, anything else as it is.
+pub fn backing(value: &Value) -> &Value {
+    match value {
+        Value::Ext(Ext::Enum(e)) => &e.backing,
+        other => other,
+    }
 }
 
 /// The BSON types (besides documents, arrays and scalars) a MongoDB
@@ -66,6 +91,9 @@ pub enum BsonValue {
     UtcDateTime(i64),
     /// `MongoDB\BSON\ObjectId`: its 12 bytes.
     ObjectId([u8; 12]),
+    /// `MongoDB\BSON\Int64`: the 64-bit integer object the extension
+    /// decodes a BSON `int64` (`{"$numberLong": ...}`) to.
+    Int64(i64),
     /// `MongoDB\BSON\Regex`.
     Regex {
         /// `getPattern()`.
@@ -81,6 +109,7 @@ impl BsonValue {
         match self {
             BsonValue::UtcDateTime(_) => "MongoDB\\BSON\\UTCDateTime",
             BsonValue::ObjectId(_) => "MongoDB\\BSON\\ObjectId",
+            BsonValue::Int64(_) => "MongoDB\\BSON\\Int64",
             BsonValue::Regex { .. } => "MongoDB\\BSON\\Regex",
         }
     }
@@ -90,6 +119,7 @@ impl BsonValue {
         let pairs: Vec<(&str, String)> = match self {
             BsonValue::UtcDateTime(ms) => vec![("milliseconds", ms.to_string())],
             BsonValue::ObjectId(bytes) => vec![("oid", hex::encode(bytes))],
+            BsonValue::Int64(n) => vec![("integer", n.to_string())],
             BsonValue::Regex { pattern, flags } => vec![("pattern", pattern.clone()), ("flags", flags.clone())],
         };
         pairs.into_iter().map(|(k, v)| (php_std::ArrayKey::Str(k.into()), Value::Str(v.into()))).collect()
@@ -105,6 +135,7 @@ impl BsonValue {
         match class {
             "MongoDB\\BSON\\UTCDateTime" => text("milliseconds")?.parse().ok().map(BsonValue::UtcDateTime),
             "MongoDB\\BSON\\ObjectId" => hex::decode(text("oid")?).ok()?.try_into().ok().map(BsonValue::ObjectId),
+            "MongoDB\\BSON\\Int64" => text("integer")?.parse().ok().map(BsonValue::Int64),
             "MongoDB\\BSON\\Regex" => Some(BsonValue::Regex { pattern: text("pattern")?, flags: text("flags")? }),
             _ => None,
         }
@@ -124,6 +155,7 @@ impl php_std::Extension for Ext {
             Ext::Operator(_) => "Utopia\\Database\\Operator",
             Ext::Query(_) => "Utopia\\Database\\Query",
             Ext::Bson(b) => b.class(),
+            Ext::Enum(e) => &e.class,
         }
     }
 
@@ -133,6 +165,13 @@ impl php_std::Extension for Ext {
             Ext::Operator(o) => o.to_array(),
             Ext::Bson(b) => b.to_array(),
             Ext::Query(q) => from_query_array(&q.to_array()),
+            // `(array)` of an enum case: its `name` and `value` properties.
+            Ext::Enum(e) => [
+                (ArrayKey::Str(Str::from_static("name")), Value::Str(Str::from(e.case.as_str()))),
+                (ArrayKey::Str(Str::from_static("value")), e.backing.clone()),
+            ]
+            .into_iter()
+            .collect(),
         }
     }
 }
@@ -224,6 +263,8 @@ pub fn from_query(value: &utopia_query::Value) -> Value {
             let fields = from_query_array(fields);
             if let Some(bson) = BsonValue::from_array(class, &fields) {
                 Value::from(bson)
+            } else if let Some(e) = enum_of_row(class, &fields) {
+                Value::Ext(Ext::Enum(Box::new(e)))
             } else if crate::document::is_document_class(class) {
                 Value::from(Document::from_array_unchecked(fields).with_class(class.as_str()))
             } else {
@@ -231,6 +272,24 @@ pub fn from_query(value: &utopia_query::Value) -> Value {
             }
         }
     }
+}
+
+/// The enum case a row of `class` with exactly a `name` and a scalar
+/// `value` (what [`to_query`] makes of an [`Ext::Enum`]) stands for.
+fn enum_of_row(class: &str, fields: &Array) -> Option<EnumValue> {
+    if fields.len() != 2 || class.is_empty() {
+        return None;
+    }
+    let Some(Value::Str(case)) = fields.get_str("name") else { return None };
+    let backing = fields.get_str("value")?;
+    if !matches!(backing, Value::Str(_) | Value::Int(_)) {
+        return None;
+    }
+    Some(EnumValue {
+        class: class.to_owned(),
+        case: String::from_utf8_lossy(case.as_bytes()).into_owned(),
+        backing: backing.clone(),
+    })
 }
 
 /// [`from_query`] over an array, keys kept.
@@ -250,6 +309,8 @@ pub(crate) fn json_value(value: &Value) -> php_std::Value {
         a.iter().map(|(k, v)| (k.to_owned(), json_value(v))).collect()
     }
     match value {
+        // `json_encode()` writes a backed enum case as its backing value.
+        Value::Ext(Ext::Enum(e)) => json_value(&e.backing),
         Value::Null => php_std::Value::Null,
         Value::Bool(b) => php_std::Value::Bool(*b),
         Value::Int(i) => php_std::Value::Int(*i),
@@ -269,6 +330,7 @@ pub(crate) fn json_value(value: &Value) -> php_std::Value {
                     object(vec![("$date", object(vec![("$numberLong", text(ms.to_string()))]))])
                 }
                 BsonValue::ObjectId(bytes) => object(vec![("$oid", text(hex::encode(bytes)))]),
+                BsonValue::Int64(n) => object(vec![("$numberLong", text(n.to_string()))]),
                 BsonValue::Regex { pattern, flags } => {
                     object(vec![("$regex", text(pattern.clone())), ("$options", text(flags.clone()))])
                 }

@@ -507,10 +507,8 @@ impl Sql {
         for_update: bool,
     ) -> Result<Document> {
         let name = self.filter(collection.id());
-        let selections: Vec<String> = crate::adapter::attribute_selections(&queries)
-            .iter()
-            .map(|v| crate::value::to_text(&crate::value::from_query(v)))
-            .collect();
+        let (selections, star) =
+            super::find::projection::php_selections(&crate::adapter::attribute_selections(&queries), None)?;
         let alias = DEFAULT_ALIAS;
         let joins = queries_have_joins(&queries);
 
@@ -567,7 +565,7 @@ impl Sql {
             self.read_joined_document(collection, id, queries).await?
         } else {
             let mut builder = self.simple_builder(&name, alias)?;
-            if !selections.iter().any(|s| s == "*") {
+            if !star {
                 builder.select(self.map_selections_to_columns(&selections, true, &[]));
             }
             builder.filter(vec![utopia_query::Query::equal(storage::UID, [id])]);

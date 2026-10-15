@@ -71,6 +71,7 @@ pub(crate) fn stringify(value: &Value) -> Str {
         Value::Ext(Ext::Bson(b)) => Str::from(match &**b {
             BsonValue::ObjectId(bytes) => hex::encode(bytes),
             BsonValue::UtcDateTime(ms) => ms.to_string(),
+            BsonValue::Int64(n) => n.to_string(),
             BsonValue::Regex { pattern, flags } => format!("/{pattern}/{flags}"),
         }),
         _ => Str::EMPTY,

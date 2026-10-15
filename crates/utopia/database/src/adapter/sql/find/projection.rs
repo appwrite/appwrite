@@ -299,6 +299,55 @@ impl Sql {
     }
 }
 
+/// The `select` values of a read as PHP's SQL adapter reads them: their
+/// texts as the adapter's `filter()` takes them (PHP coerces scalars:
+/// `false` is `''`, `1.5` is `'1.5'`), and whether they select everything
+/// (`in_array('*', $selections)`, compared loosely, so `true` selects
+/// everything too).
+///
+/// Fails, unless everything is selected, as PHP does on a selection that is
+/// no scalar: a list or object in the first string function that reads it
+/// (`str_ends_with()` in `applySelectionProjection()` for `find()`, given
+/// as `first`, else `strpos()` in `mapSelectionsToColumns()`), and `null`
+/// in `filter()` (`Adapter/SQL.php` line 4017).
+pub(crate) fn php_selections(
+    values: &[utopia_query::Value],
+    first: Option<&str>,
+) -> crate::error::Result<(Vec<String>, bool)> {
+    use crate::error::{Error, Kind};
+    use utopia_query::Value as Q;
+    let star = values.iter().any(|v| matches!(v, Q::Str(s) if s.as_bytes() == b"*") || matches!(v, Q::Bool(true)));
+    let texts = values.iter().map(|v| crate::value::to_text(&crate::value::from_query(v))).collect();
+    if star || values.is_empty() {
+        return Ok((texts, star));
+    }
+    let given = |v: &Q| crate::value::from_query(v).debug_type().to_owned();
+    let not_scalar = |v: &Q| matches!(v, Q::Array(_) | Q::Object(_) | Q::Ext(_));
+    if let Some(function) = first
+        && let Some(v) = values.iter().find(|v| not_scalar(v))
+    {
+        return Err(Error::new(
+            Kind::TypeError,
+            format!("{function}(): Argument #1 ($haystack) must be of type string, {} given", given(v)),
+        ));
+    }
+    for v in values {
+        if not_scalar(v) {
+            return Err(Error::new(
+                Kind::TypeError,
+                format!("strpos(): Argument #1 ($haystack) must be of type string, {} given", given(v)),
+            ));
+        }
+        if matches!(v, Q::Null) {
+            return Err(Error::new(
+                Kind::TypeError,
+                "Utopia\\Database\\Adapter::filter(): Argument #1 ($value) must be of type string, null given, called in /usr/src/code/vendor/utopia-php/database/src/Database/Adapter/SQL.php on line 4017",
+            ));
+        }
+    }
+    Ok((texts, star))
+}
+
 /// Runs `f` on every value of a query's values, in order.
 pub(crate) fn for_each_mut(values: &mut utopia_query::Array, mut f: impl FnMut(&mut utopia_query::Value)) {
     let keys: Vec<php_std::types::ArrayKey> = values.keys().map(php_std::types::KeyRef::to_owned).collect();
@@ -306,5 +355,44 @@ pub(crate) fn for_each_mut(values: &mut utopia_query::Array, mut f: impl FnMut(&
         if let Some(value) = values.get_mut(&k) {
             f(value);
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use utopia_query::Value as Q;
+
+    use super::php_selections;
+    use crate::error::Kind;
+
+    fn strings(values: &[&str]) -> Vec<Q> {
+        values.iter().map(|s| Q::Str((*s).into())).collect()
+    }
+
+    #[test]
+    fn true_selects_everything_as_star_does() {
+        let (_, star) = php_selections(&[Q::Str("title".into()), Q::Bool(true)], Some("str_ends_with")).unwrap();
+        assert!(star);
+        let (_, star) = php_selections(&strings(&["title", "*"]), None).unwrap();
+        assert!(star);
+        let (texts, star) = php_selections(&[Q::Str("year".into()), Q::Float(1.5), Q::Bool(false)], None).unwrap();
+        assert!(!star);
+        assert_eq!(texts, ["year", "1.5", ""]);
+    }
+
+    #[test]
+    fn a_selection_that_is_no_scalar_fails_as_php_does() {
+        let list = Q::Array(std::iter::once(Q::Str("title".into())).collect());
+        let error = php_selections(&[Q::Str("a".into()), list.clone()], Some("str_ends_with")).unwrap_err();
+        assert_eq!(
+            (error.kind(), error.message()),
+            (Kind::TypeError, "str_ends_with(): Argument #1 ($haystack) must be of type string, array given")
+        );
+        let error = php_selections(&[list], None).unwrap_err();
+        assert_eq!(error.message(), "strpos(): Argument #1 ($haystack) must be of type string, array given");
+        let error = php_selections(&[Q::Null], Some("str_ends_with")).unwrap_err();
+        assert!(error.message().starts_with(
+            "Utopia\\Database\\Adapter::filter(): Argument #1 ($value) must be of type string, null given"
+        ));
     }
 }

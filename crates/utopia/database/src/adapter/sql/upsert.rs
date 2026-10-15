@@ -168,10 +168,21 @@ impl Sql {
             for hook in self.write_hooks() {
                 hook.after_document_upsert(&name, &changes, &context).await?;
             }
-            Ok::<_, Error>(())
+            Ok::<_, Error>(has_operators)
         };
-        run.await.map_err(|e| self.process_exception(e))?;
-        Ok(changes.into_iter().map(|change| change.new).collect())
+        let has_operators = run.await.map_err(|e| self.process_exception(e))?;
+        // `extractOperators()` named the operators of every document it read
+        // (`Adapter/SQL.php` upsertDocuments(), `Operator.php` line 606).
+        Ok(changes
+            .into_iter()
+            .map(|change| {
+                let mut document = change.new;
+                if has_operators {
+                    Operator::name_operators(document.as_array_mut());
+                }
+                document
+            })
+            .collect())
     }
 
     /// The rows of an upsert batch: each document's columns, decorated by
@@ -356,7 +367,7 @@ impl Sql {
             }
         }
 
-        let result = crate::each_builder!(&mut builder, b => b.upsert()).map_err(crate::query::query_error)?;
+        let result = crate::each_builder!(&mut builder, b => b.upsert()).map_err(crate::query::statement_error)?;
         let mut statement = self.execute_result(&result, Some(Event::DocumentsUpsert), "").await?;
         self.execute(&mut statement).await?;
         statement.statement.close_cursor();

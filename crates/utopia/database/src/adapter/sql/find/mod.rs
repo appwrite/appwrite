@@ -38,7 +38,7 @@ use crate::value::{Array, ArrayKey, Value};
 
 mod cursor;
 mod join;
-mod projection;
+pub(crate) mod projection;
 mod search;
 
 /// The rows of an emulated full outer join, read as one derived table
@@ -743,11 +743,13 @@ impl Sql {
         let join_aliases = aliases_of(joins);
 
         if !has_aggregation {
-            let mut selections = Vec::new();
-            for query in queries.iter().filter(|q| q.method() == Method::Select) {
-                selections.extend(query.values().values().map(text));
-            }
-            if !selections.is_empty() && !selections.iter().any(|s| s == "*") {
+            let values: Vec<utopia_query::Value> = queries
+                .iter()
+                .filter(|q| q.method() == Method::Select)
+                .flat_map(|q| q.values().values().cloned().collect::<Vec<_>>())
+                .collect();
+            let (selections, star) = projection::php_selections(&values, Some("str_ends_with"))?;
+            if !selections.is_empty() && !star {
                 self.apply_selection_projection(
                     builder,
                     &selections,
