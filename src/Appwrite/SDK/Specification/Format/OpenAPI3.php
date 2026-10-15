@@ -20,6 +20,7 @@ use Utopia\Database\Validator\Spatial;
 use Utopia\OpenAPI\Model\Composition;
 use Utopia\OpenAPI\Model\ParameterLocation;
 use Utopia\Platform\Enum;
+use Utopia\Query\Method as QueryMethod;
 use Utopia\Query\Schema\ColumnType;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Nullable;
@@ -817,20 +818,14 @@ class OpenAPI3 extends Format
                         // utopia-php/waf is not a dependency here, so the class is named rather than referenced.
                     case 'Utopia\WAF\Validator\Conditions':
                         $node['schema']['type'] = 'array';
-                                                $node['schema']['items'] = [
+                        $node['schema']['items'] = [
                             'type' => 'string',
                         ];
-
-                        // Publish what a restricted validator accepts so generators need not
-                        // parse it out of the description. Unrestricted validators emit nothing.
                         if ($validator instanceof Restricted) {
-                            $queries = [];
-                            $allowedAttributes = $validator->getAllowedAttributes();
-                            if ($allowedAttributes !== null) {
-                                $queries['attributes'] = $allowedAttributes;
-                            }
-                            $queries['methods'] = $validator->getAllowedMethods();
-                            $node['x-appwrite']['queries'] = $queries;
+                            $node['schema']['x-appwrite']['queries'] = [
+                                'attributes' => $validator->getAllowedAttributes(),
+                                'methods' => \array_map(fn (QueryMethod $method) => $method->value, $validator->getAllowedMethods()),
+                            ];
                         }
                         break;
                     case \Utopia\Validator\Multiple::class:
@@ -1151,10 +1146,6 @@ class OpenAPI3 extends Format
                                     $body['content'][$consumes[0]]['schema']['properties'][$name][$key] = $node['schema'][$key];
                                 }
                             }
-                        }
-
-                        if (isset($node['x-appwrite'])) {
-                            $body['content'][$consumes[0]]['schema']['properties'][$name]['x-appwrite'] = $node['x-appwrite'];
                         }
 
                         if (isset($node['schema']['x-appwrite'])) {

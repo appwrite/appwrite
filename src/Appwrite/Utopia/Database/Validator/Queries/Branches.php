@@ -9,7 +9,7 @@ use Utopia\Database\Validator\Query\Offset;
 
 class Branches extends Base implements Restricted
 {
-    use RestrictsQueries;
+    use Restrictions;
 
     public function __construct()
     {

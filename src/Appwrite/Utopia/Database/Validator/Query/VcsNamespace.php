@@ -10,14 +10,14 @@ use Utopia\Validator\Text;
 
 class VcsNamespace extends Base implements Restricted
 {
-    public function getAllowedAttributes(): ?array
+    public function getAllowedAttributes(): array
     {
         return ['namespace'];
     }
 
     public function getAllowedMethods(): array
     {
-        return [Query::TYPE_EQUAL];
+        return [Method::Equal];
     }
 
     public function getMethodType(): string

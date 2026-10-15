@@ -2,23 +2,23 @@
 
 namespace Appwrite\Utopia\Database\Validator\Queries;
 
+use Utopia\Query\Method;
+
 /**
- * A queries validator that can publish which attributes and methods it accepts,
+ * A queries validator that publishes the attributes and methods it accepts,
  * so the API specification can carry them in structured form.
  */
 interface Restricted
 {
     /**
-     * Attributes the validator accepts, or null when it does not restrict them.
+     * Attributes its filter and order queries accept.
      *
-     * @return string[]|null
+     * @return array<string>
      */
-    public function getAllowedAttributes(): ?array;
+    public function getAllowedAttributes(): array;
 
     /**
-     * Query methods (e.g. equal, orderAsc, limit) the validator accepts.
-     *
-     * @return string[]
+     * @return array<Method>
      */
     public function getAllowedMethods(): array;
 }

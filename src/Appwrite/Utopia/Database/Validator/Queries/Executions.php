@@ -13,7 +13,7 @@ use Utopia\Query\Schema\ColumnType;
 
 class Executions extends Base implements Restricted
 {
-    use RestrictsQueries;
+    use Restrictions;
 
     protected const ATTRIBUTE_TYPES = [
         'trigger' => ColumnType::String->value,

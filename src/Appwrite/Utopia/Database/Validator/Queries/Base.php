@@ -15,7 +15,7 @@ use Utopia\Query\Schema\ColumnType;
 
 class Base extends Queries implements Restricted
 {
-    use RestrictsQueries;
+    use Restrictions;
 
     /**
      * Expression constructor
