@@ -72,9 +72,9 @@ export function FunctionEmailCard({
   })
 
   const pending = disabled || updateMutation.isPending
-  const address = emailEnabled
-    ? buildFunctionEmailAddress(projectId, func.$id, emailDomain)
-    : null
+  // Shown whether or not the trigger is on, so the address is known before
+  // enabling it.
+  const address = buildFunctionEmailAddress(projectId, func.$id, emailDomain)
 
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
@@ -114,7 +114,7 @@ export function FunctionEmailCard({
             <Mail className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
             <div className="min-w-0 flex-1 space-y-1">
               <p className="text-[12px] font-medium text-foreground">
-                {t('Testing address')}
+                {t('Default address')}
               </p>
               <CopyableId
                 id={address}
@@ -124,7 +124,13 @@ export function FunctionEmailCard({
                 copyToastLabel="Email"
                 className="max-w-full"
               />
-              {!func.deploymentId ? (
+              {!emailEnabled ? (
+                <p className="text-[12px] text-muted-foreground">
+                  {t(
+                    'Enable the email trigger to receive mail at this address.',
+                  )}
+                </p>
+              ) : !func.deploymentId ? (
                 <p className="text-[12px] text-amber-600 dark:text-amber-400">
                   {t(
                     'Mail is delivered when this function has an active deployment.',

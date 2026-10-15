@@ -733,7 +733,9 @@ export const jaFunctionsDictionary: Record<string, string> = {
     'この関数宛ての受信メールを受け付けます。',
   'Inbound mail for this function is rejected.':
     'この関数宛ての受信メールは拒否されます。',
-  'Testing address': 'テスト用アドレス',
+  'Default address': 'デフォルトアドレス',
+  'Enable the email trigger to receive mail at this address.':
+    'このアドレスでメールを受信するには、メールトリガーを有効にしてください。',
   'Mail is delivered when this function has an active deployment.':
     'この関数にアクティブなデプロイがある場合にメールが配信されます。',
 }

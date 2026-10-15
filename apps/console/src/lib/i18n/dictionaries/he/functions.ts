@@ -734,7 +734,9 @@ export const heFunctionsDictionary: Record<string, string> = {
   'Inbound mail for this function is accepted.':
     'דואר נכנס לפונקציה הזו מתקבל.',
   'Inbound mail for this function is rejected.': 'דואר נכנס לפונקציה הזו נדחה.',
-  'Testing address': 'כתובת בדיקה',
+  'Default address': 'כתובת ברירת מחדל',
+  'Enable the email trigger to receive mail at this address.':
+    'דואר נכנס לכתובת הזו יתקבל אחרי שתפעילו את טריגר האימייל.',
   'Mail is delivered when this function has an active deployment.':
     'הדואר נמסר כאשר לפונקציה יש פריסה פעילה.',
 }
