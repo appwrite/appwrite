@@ -268,6 +268,15 @@ const ops = {
 
     // Documents (rows)
     listItems: (k) => (api, data) => api.call('GET', `${items(k, data[k.ns])}${qs(query('limit', undefined, [25]), query('offset', undefined, [Math.floor(random() * 100)]))}`),
+    // The same filter, sent in the body of `POST .../query`.
+    queryItems: (k) => (api, data) => api.call('POST', `${items(k, data[k.ns])}/query`, {
+        queries: [
+            query('equal', 'active', [true]),
+            query('greaterThan', 'count', [Math.floor(random() * SEED * 4)]),
+            query('orderAsc', 'count'),
+            query('limit', undefined, [25]),
+        ],
+    }),
     filterItems: (k) => (api, data) => api.call('GET', `${items(k, data[k.ns])}${qs(
         query('equal', 'active', [true]),
         query('greaterThan', 'count', [Math.floor(random() * SEED * 4)]),
@@ -479,6 +488,10 @@ const bench = define({
             run: L('filterItems'),
         },
         {
+            name: 'databases.documents.query', route: 'POST /v1/databases/:databaseId/collections/:collectionId/documents/query', weight: 4, note: 'the filter, in the body',
+            run: L('queryItems'),
+        },
+        {
             name: 'databases.documents.select', route: 'GET /v1/databases/:databaseId/collections/:collectionId/documents', weight: 4, note: 'select two attributes, equal on an unindexed one',
             run: L('selectItems'),
         },
@@ -586,6 +599,7 @@ const bench = define({
 
         { name: 'tablesdb.rows.list', route: 'GET /v1/tablesdb/:databaseId/tables/:tableId/rows', weight: 12, run: T('listItems') },
         { name: 'tablesdb.rows.filter', route: 'GET /v1/tablesdb/:databaseId/tables/:tableId/rows', weight: 8, note: 'equal, greaterThan on an index, orderAsc', run: T('filterItems') },
+        { name: 'tablesdb.rows.query', route: 'POST /v1/tablesdb/:databaseId/tables/:tableId/rows/query', weight: 4, note: 'the filter, in the body', run: T('queryItems') },
         { name: 'tablesdb.rows.select', route: 'GET /v1/tablesdb/:databaseId/tables/:tableId/rows', weight: 4, note: 'select two columns, equal on an unindexed one', run: T('selectItems') },
         { name: 'tablesdb.rows.get', route: 'GET /v1/tablesdb/:databaseId/tables/:tableId/rows/:rowId', weight: 25, run: T('getItem') },
         { name: 'tablesdb.rows.create', route: 'POST /v1/tablesdb/:databaseId/tables/:tableId/rows', weight: 4, run: T('createItem') },
@@ -625,6 +639,7 @@ const bench = define({
             { name: 'documentsdb.collections.update', route: 'PUT /v1/documentsdb/:databaseId/collections/:collectionId' },
             { name: 'documentsdb.collections.delete', route: 'DELETE /v1/documentsdb/:databaseId/collections/:collectionId' },
             { name: 'documentsdb.documents.list', route: 'GET /v1/documentsdb/:databaseId/collections/:collectionId/documents' },
+            { name: 'documentsdb.documents.query', route: 'POST /v1/documentsdb/:databaseId/collections/:collectionId/documents/query' },
             { name: 'documentsdb.documents.create', route: 'POST /v1/documentsdb/:databaseId/collections/:collectionId/documents' },
             { name: 'documentsdb.documents.upsertBulk', route: 'PUT /v1/documentsdb/:databaseId/collections/:collectionId/documents' },
             { name: 'documentsdb.documents.updateBulk', route: 'PATCH /v1/documentsdb/:databaseId/collections/:collectionId/documents' },
