@@ -231,7 +231,7 @@ val userId = token.userId
 ```
 {% /multicode %}
 
-If no active user has that email address, Appwrite sends no email but still returns a token with a random `userId`. The response to this call looks the same in both cases. Show the user the same message either way, for example "If an account exists for this email, a code is on its way."
+If no active user has that email address, Appwrite sends no email but still returns a token with a random `userId`. Show the user the same message whether or not the account exists, for example "If an account exists for this email, a code is on its way."
 
 Next, ask the user for the code from the email and a new password. Confirm the reset by passing the user ID, the code as the `secret`, and the new password.
 
