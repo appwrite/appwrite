@@ -10,6 +10,7 @@ mod epoch;
 mod invalidation;
 mod lease;
 mod query_purge;
+mod round_trip;
 mod scope;
 mod with_cache;
 
