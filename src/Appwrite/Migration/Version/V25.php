@@ -239,16 +239,12 @@ class V25 extends Migration
                         }
                         $this->dbForProject->purgeCachedCollection($id);
 
-                        // Transactions created before type was stored keep working on
-                        // the legacy Databases API and TablesDB. DocumentsDB and
-                        // VectorsDB only list and resolve transactions they created.
-                        // Skip when the collection is missing (partial fixtures / older installs).
                         try {
                             $transactions = \iterator_to_array($this->documentsIterator($id, [Query::isNull('type')]));
                             foreach ($transactions as $transaction) {
                                 try {
                                     $this->dbForProject->updateDocument($id, $transaction->getId(), new Document([
-                                        'type' => 'legacy',
+                                        'type' => DATABASE_TYPE_LEGACY,
                                     ]));
                                 } catch (Throwable $th) {
                                     Console::warning("Failed to backfill \"type\" for transaction {$transaction->getId()}: {$th->getMessage()}");
