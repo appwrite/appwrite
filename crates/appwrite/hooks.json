@@ -25,7 +25,7 @@
         "status": "done",
         "note": "Teams' `createMembership` (`abuse-limit` 10 on the default key) and `updateMembershipStatus` (`ip:{ip},url:{url}`) and the Account recovery, verification and password routes (keys with `{param-email}`, `{userId}` and `{param-userId}`, several keys per route) prove the counters and the `X-RateLimit-*` headers in `bin/compat appwrite diff` (the dev stack runs with `_APP_OPTIONS_ABUSE=disabled`, so requests are counted, not refused).",
         "where": [
-          { "file": "crates/appwrite/core/src/platform/guards.rs", "anchor": "pub(super) async fn abuse" }
+          { "file": "crates/appwrite/core/src/platform/guards.rs", "anchor": "async fn abuse" }
         ]
       }
     },
@@ -47,14 +47,26 @@
       "title": "One session at a time",
       "description": "Refuses to create a session for a caller who already has one, unless the route is labelled `session.allowActive`.",
       "php": { "file": "app/controllers/shared/api.php", "kind": "init", "anchor": "session.allowActive" },
-      "rust": { "status": "partial", "note": "Implemented in `platform/guards.rs` (route labels in `platform::Labels`); no route Rust serves carries its labels yet (Teams has none), so Account proves it.", "note": null, "where": [] }
+      "rust": {
+        "status": "done",
+        "note": "Proved by Account: the session routes (email, anonymous, token, magic URL, phone, ID token) refuse a session or JWT caller with `user_session_already_exists`; the OAuth2 redirect (`session.allowActive`) replaces the session instead. `appwrite diff` account.sessions.* scenarios.",
+        "where": [
+          { "file": "crates/appwrite/core/src/platform/guards.rs", "anchor": "fn session_active" }
+        ]
+      }
     },
     {
       "id": "session-limit",
       "title": "Session limit",
       "description": "After a session is created, deletes the user's oldest sessions beyond the project's `maxSessions` and purges the cached user.",
       "php": { "file": "app/controllers/shared/api.php", "kind": "shutdown", "anchor": "maxSessions" },
-      "rust": { "status": "partial", "note": "Implemented in `platform/guards.rs` (route labels in `platform::Labels`); no route Rust serves carries its labels yet (Teams has none), so Account proves it.", "note": null, "where": [] }
+      "rust": {
+        "status": "partial",
+        "note": "Runs after every Account route in the `session` group (the session's user from the response); no scenario exceeds `maxSessions` (10), so the deletion itself is unproved.",
+        "where": [
+          { "file": "crates/appwrite/core/src/platform/shutdown.rs", "anchor": "async fn session_limit" }
+        ]
+      }
     },
     {
       "id": "events",
@@ -75,7 +87,13 @@
       "title": "Abuse counter reset",
       "description": "Resets the route's abuse counters when the response status is one of its `abuse-reset` codes.",
       "php": { "file": "app/controllers/shared/api.php", "kind": "shutdown", "anchor": "abuse-reset" },
-      "rust": { "status": "partial", "note": "Implemented in `platform/guards.rs` (route labels in `platform::Labels`); no route Rust serves carries an `abuse-reset` label yet (Teams has none), so Account proves it.", "where": [] }
+      "rust": {
+        "status": "partial",
+        "note": "Account's session routes carry `abuse-reset` (201) like PHP; unproved while `_APP_OPTIONS_ABUSE=disabled` on the shared stack (the hook returns early).",
+        "where": [
+          { "file": "crates/appwrite/core/src/platform/guards.rs", "anchor": "async fn abuse_reset" }
+        ]
+      }
     },
     {
       "id": "audits",
@@ -238,14 +256,26 @@
       "title": "Recent MFA challenge",
       "description": "For `mfaProtected` routes, requires an MFA challenge completed within the recent window.",
       "php": { "file": "app/controllers/shared/api/auth.php", "kind": "init", "anchor": "USER_CHALLENGE_REQUIRED" },
-      "rust": { "status": "partial", "note": "Implemented in `platform/guards.rs` (route labels in `platform::Labels`); no route Rust serves carries its labels yet (Teams has none), so Account proves it.", "note": null, "where": [] }
+      "rust": {
+        "status": "done",
+        "note": "Proved by Account's `mfaProtected` routes (recovery codes get/update, authenticator delete): sessions without a recent challenge get `user_challenge_required`. No scenario completes a challenge, so the fresh pass is not reached.",
+        "where": [
+          { "file": "crates/appwrite/core/src/platform/guards.rs", "anchor": "fn mfa_fresh" }
+        ]
+      }
     },
     {
       "id": "recent-session",
       "title": "Recent sign-in",
       "description": "For `recentSession` routes, requires a session created or MFA-verified within the recent window.",
       "php": { "file": "app/controllers/shared/api/auth.php", "kind": "init", "anchor": "USER_REAUTHENTICATION_REQUIRED" },
-      "rust": { "status": "partial", "note": "Implemented in `platform/guards.rs` (route labels in `platform::Labels`); no route Rust serves carries its labels yet (Teams has none), so Account proves it.", "note": null, "where": [] }
+      "rust": {
+        "status": "done",
+        "note": "Proved by Account's `recentSession` routes (passkeys create, verify, delete): a fresh session passes, guests fall through to the scope check. `appwrite diff` account.passkeys.* scenarios.",
+        "where": [
+          { "file": "crates/appwrite/core/src/platform/guards.rs", "anchor": "fn recent_session" }
+        ]
+      }
     },
     {
       "id": "auth-methods",
@@ -256,7 +286,7 @@
         "status": "done",
         "note": "`createMembership` (`auth.type` `invites`, groups `api`, `teams`, `auth`) and `createPhoneVerification` (`auth.type` `phone`) run it in `bin/compat appwrite diff` under every identity (both methods enabled, as on the twins); the refusal of a disabled method is the shared code path the other `auth.type` values take.",
         "where": [
-          { "file": "crates/appwrite/core/src/platform/guards.rs", "anchor": "pub(super) async fn auth_methods" }
+          { "file": "crates/appwrite/core/src/platform/guards.rs", "anchor": "async fn auth_methods" }
         ]
       }
     },

@@ -101,6 +101,14 @@ pub struct Config {
     pub system_email_address: String,
     /// `_APP_SYSTEM_EMAIL_NAME` (`APP_NAME . ' Server'` by default).
     pub system_email_name: String,
+    /// `_APP_CONSOLE_URL` is set explicitly (it then carries its own port).
+    pub console_url_explicit: bool,
+    /// The scheme the OAuth2 and magic URL links use: `http` when
+    /// `_APP_OPTIONS_FORCE_HTTPS` is `disabled`, else `https`.
+    pub link_scheme: &'static str,
+    /// `_APP_CONSOLE_ROOT_SESSION=enabled`: console cookies go on the
+    /// registrable domain.
+    pub console_root_session: bool,
     pub console_trusted_projects: Vec<String>,
     /// `_APP_OPTIONS_ABUSE_INCREASED_LIMIT_PROJECTS`: projects whose limits
     /// are a hundred times higher.
@@ -210,6 +218,9 @@ impl Config {
             sms_provider: env_or("_APP_SMS_PROVIDER", "").into_owned(),
             system_email_address: env_or("_APP_SYSTEM_EMAIL_ADDRESS", "team@localhost.test").into_owned(),
             system_email_name: env_or("_APP_SYSTEM_EMAIL_NAME", "Appwrite Server").into_owned(),
+            console_url_explicit: env("_APP_CONSOLE_URL").is_some(),
+            link_scheme: if env("_APP_OPTIONS_FORCE_HTTPS").as_deref() == Some("disabled") { "http" } else { "https" },
+            console_root_session: env_or("_APP_CONSOLE_ROOT_SESSION", "disabled") == "enabled",
             console_trusted_projects: list(env("_APP_CONSOLE_TRUSTED_PROJECTS")),
             rules_md5: env_or("_APP_RULES_FORMAT", "") == "md5",
             abuse_increased_projects: list(env("_APP_OPTIONS_ABUSE_INCREASED_LIMIT_PROJECTS")),

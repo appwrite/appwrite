@@ -13,12 +13,13 @@ use appwrite_core::response::{UserModel, prefs_value};
 use appwrite_core::validators::{Password, PasswordDictionary, PasswordStrength, Phone};
 use appwrite_core::{Error, ErrorType, Result};
 
-use crate::{ACCOUNT, abuse, audit, base};
+use crate::base::profile as base;
+use crate::{ACCOUNT, abuse, audit};
 
 pub fn routes() -> Vec<Route> {
     vec![
-        route!(GET, "/v1/account", "get", "get", ACCOUNT, None, None, get),
-        route!(
+        profile_route!(GET, "/v1/account", "get", "get", ACCOUNT, None, None, get),
+        profile_route!(
             DELETE,
             "/v1/account",
             "delete",
@@ -28,7 +29,7 @@ pub fn routes() -> Vec<Route> {
             audit("user.delete", "user/{user.$id}"),
             delete
         ),
-        route!(
+        profile_route!(
             PATCH,
             "/v1/account/status",
             "updateStatus",
@@ -38,7 +39,7 @@ pub fn routes() -> Vec<Route> {
             audit("user.update", "user/{response.$id}"),
             status
         ),
-        route!(
+        profile_route!(
             PATCH,
             "/v1/account/name",
             "updateName",
@@ -48,7 +49,7 @@ pub fn routes() -> Vec<Route> {
             audit("user.update", "user/{response.$id}"),
             name
         ),
-        route!(
+        profile_route!(
             PATCH,
             "/v1/account/password",
             "updatePassword",
@@ -60,7 +61,7 @@ pub fn routes() -> Vec<Route> {
             crate::GROUPS,
             abuse(&["url:{url},ip:{ip}"])
         ),
-        route!(
+        profile_route!(
             PATCH,
             "/v1/account/email",
             "updateEmail",
@@ -70,7 +71,7 @@ pub fn routes() -> Vec<Route> {
             audit("user.update", "user/{response.$id}"),
             email
         ),
-        route!(
+        profile_route!(
             PATCH,
             "/v1/account/phone",
             "updatePhone",
@@ -80,8 +81,8 @@ pub fn routes() -> Vec<Route> {
             audit("user.update", "user/{response.$id}"),
             phone
         ),
-        route!(GET, "/v1/account/prefs", "getPrefs", "getPrefs", ACCOUNT, None, None, get_prefs),
-        route!(
+        profile_route!(GET, "/v1/account/prefs", "getPrefs", "getPrefs", ACCOUNT, None, None, get_prefs),
+        profile_route!(
             PATCH,
             "/v1/account/prefs",
             "updatePrefs",

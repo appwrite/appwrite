@@ -570,6 +570,7 @@ services:
       - traefik.http.routers.appwrite_rust_https.tls=true
     environment:
       - _APP_ENV
+      - _APP_ALLOWED_INTERNAL_ADDRESSES
       - _APP_EDITION
       - _APP_LOCALE
       - _APP_REGION

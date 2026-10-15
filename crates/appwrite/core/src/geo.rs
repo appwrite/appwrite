@@ -2,7 +2,7 @@
 
 use std::collections::HashMap;
 use std::net::IpAddr;
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use bytes::Bytes;
@@ -14,12 +14,69 @@ use serde_json::Value;
 
 const CACHE_SIZE: usize = 10_000;
 
-/// Country lookups with an in-process cache.
+/// What `Geo::get()` knows about an IP (`Appwrite\Locale\GeoRecord`), as
+/// `Geo::build()` shapes the service's record.
+#[derive(Debug, Clone, Default)]
+pub struct GeoRecord {
+    /// Upper case, or `--` when unknown.
+    pub country_code: String,
+    /// Upper case, or `--` when unknown.
+    pub continent_code: String,
+    pub latitude: Option<f64>,
+    pub longitude: Option<f64>,
+    pub time_zone: Option<String>,
+    pub weather_code: Option<String>,
+    pub postal_code: Option<String>,
+    pub autonomous_system_number: Option<String>,
+    pub autonomous_system_organization: Option<String>,
+    pub connection_type: Option<String>,
+    pub connection_usage_type: Option<String>,
+    pub connection_organization: Option<String>,
+    pub isp: Option<String>,
+}
+
+impl GeoRecord {
+    fn unknown() -> Self {
+        Self { country_code: "--".into(), continent_code: "--".into(), ..Self::default() }
+    }
+
+    /// `Geo::build($ip, $record)`.
+    fn build(record: &Value) -> Self {
+        let text = |key: &str| match record.get(key) {
+            Some(Value::String(s)) => Some(s.clone()),
+            Some(Value::Number(n)) => Some(n.to_string()),
+            _ => None,
+        };
+        let float = |key: &str| match record.get(key) {
+            Some(Value::Number(n)) => n.as_f64(),
+            Some(Value::String(s)) => s.parse().ok(),
+            _ => None,
+        };
+        let upper = |key: &str| text(key).unwrap_or_else(|| "--".into()).to_uppercase();
+        Self {
+            country_code: upper("countryCode"),
+            continent_code: upper("continentCode"),
+            latitude: float("latitude"),
+            longitude: float("longitude"),
+            time_zone: text("timeZone"),
+            weather_code: text("weatherCode"),
+            postal_code: text("postalCode"),
+            autonomous_system_number: text("autonomousSystemNumber"),
+            autonomous_system_organization: text("autonomousSystemOrganization"),
+            connection_type: text("connection"),
+            connection_usage_type: text("user").or_else(|| text("type")),
+            connection_organization: text("organization"),
+            isp: text("isp"),
+        }
+    }
+}
+
+/// Lookups with an in-process cache.
 pub struct Geo {
     endpoint: Option<String>,
     secret: String,
     client: Client<HttpConnector, Empty<Bytes>>,
-    cache: Mutex<HashMap<String, String>>,
+    cache: Mutex<HashMap<String, Arc<GeoRecord>>>,
 }
 
 impl Geo {
@@ -39,12 +96,17 @@ impl Geo {
 
     /// Upper-case ISO country code, or `--` when unknown.
     pub async fn country_code(&self, ip: &str) -> String {
+        self.get(ip).await.country_code.clone()
+    }
+
+    /// `Geo::get($ip)`.
+    pub async fn get(&self, ip: &str) -> Arc<GeoRecord> {
         let ip = if ip.parse::<IpAddr>().is_ok() { ip } else { "0.0.0.0" };
-        if let Some(code) = self.cache.lock().ok().and_then(|c| c.get(ip).cloned()) {
-            return code;
+        if let Some(record) = self.cache.lock().ok().and_then(|c| c.get(ip).cloned()) {
+            return record;
         }
         let Some(endpoint) = &self.endpoint else {
-            return "--".to_owned();
+            return Arc::new(GeoRecord::unknown());
         };
         let lookup = async {
             let request = http::Request::get(format!("{endpoint}/ips/{ip}"))
@@ -57,19 +119,23 @@ impl Geo {
             }
             let body = response.into_body().collect().await.ok()?.to_bytes();
             let json: Value = serde_json::from_slice(&body).ok()?;
-            Some(json.get("countryCode").and_then(Value::as_str).unwrap_or("--").to_uppercase())
+            match &json {
+                Value::Object(m) if !m.is_empty() => Some(GeoRecord::build(&json)),
+                _ => None,
+            }
         };
         match tokio::time::timeout(Duration::from_secs(3), lookup).await {
-            Ok(Some(code)) => {
+            Ok(Some(record)) => {
+                let record = Arc::new(record);
                 if let Ok(mut cache) = self.cache.lock() {
                     if cache.len() >= CACHE_SIZE {
                         cache.clear();
                     }
-                    cache.insert(ip.to_owned(), code.clone());
+                    cache.insert(ip.to_owned(), record.clone());
                 }
-                code
+                record
             }
-            _ => "--".to_owned(),
+            _ => Arc::new(GeoRecord::unknown()),
         }
     }
 }

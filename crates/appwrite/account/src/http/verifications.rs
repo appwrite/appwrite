@@ -14,15 +14,16 @@ use appwrite_core::response::TokenModel;
 use appwrite_core::validators::uid;
 use appwrite_core::{Error, ErrorType, Result};
 
+use crate::base::profile as base;
 use crate::http::recovery::require_smtp;
-use crate::{ACCOUNT, abuse, audit, base};
+use crate::{ACCOUNT, abuse, audit};
 
 const PUBLIC: &[&str] = &["public"];
 const AUTH_GROUPS: &[&str] = &["api", "account", "auth"];
 
 pub fn routes() -> Vec<Route> {
     vec![
-        route!(
+        profile_route!(
             POST,
             "/v1/account/verifications/email",
             "createEmailVerification",
@@ -34,7 +35,7 @@ pub fn routes() -> Vec<Route> {
             crate::GROUPS,
             abuse(&["url:{url},userId:{userId}"])
         ),
-        route!(
+        profile_route!(
             PUT,
             "/v1/account/verifications/email",
             "updateEmailVerification",
@@ -46,7 +47,7 @@ pub fn routes() -> Vec<Route> {
             crate::GROUPS,
             abuse(&["url:{url},userId:{param-userId}"])
         ),
-        route!(
+        profile_route!(
             POST,
             "/v1/account/verifications/email/otp",
             "createEmailVerificationOTP",
@@ -58,7 +59,7 @@ pub fn routes() -> Vec<Route> {
             crate::GROUPS,
             abuse(&["url:{url},userId:{userId}"])
         ),
-        route!(
+        profile_route!(
             PUT,
             "/v1/account/verifications/email/otp",
             "updateEmailVerificationOTP",
@@ -70,7 +71,7 @@ pub fn routes() -> Vec<Route> {
             crate::GROUPS,
             abuse(&["url:{url},userId:{param-userId}"])
         ),
-        route!(
+        profile_route!(
             POST,
             "/v1/account/verifications/phone",
             "createPhoneVerification",
@@ -82,7 +83,7 @@ pub fn routes() -> Vec<Route> {
             AUTH_GROUPS,
             Labels { auth_type: "phone", ..abuse(&["url:{url},userId:{userId}", "url:{url},ip:{ip}"]) }
         ),
-        route!(
+        profile_route!(
             PUT,
             "/v1/account/verifications/phone",
             "updatePhoneVerification",
@@ -127,7 +128,7 @@ fn created(ctx: &mut Context, user: &User, token: &Document, secret: &str, phras
     ctx.event_param("tokenId", token.id.clone());
     ctx.events.payload = Some(base::token_payload(&token));
     ctx.events.sensitive = vec!["secret"];
-    ctx.created(&TokenModel { token: &token, secret: Some(secret), render: ctx.render() })
+    ctx.created(&TokenModel { token: &token, secret: Some(secret), phrase: "", reveal: false, render: ctx.render() })
 }
 
 /// `POST /v1/account/verifications/email`.
@@ -287,10 +288,12 @@ pub async fn create_phone(ctx: &mut Context) -> Result<Response> {
     ctx.events.payload = Some(bytes::Bytes::from(appwrite_core::response::current(&TokenModel {
         token: &model,
         secret: Some(&secret),
+        phrase: "",
+        reveal: false,
         render,
     })));
     ctx.events.sensitive = vec!["secret"];
-    Ok(ctx.created(&TokenModel { token: &model, secret: Some(&secret), render }))
+    Ok(ctx.created(&TokenModel { token: &model, secret: Some(&secret), phrase: "", reveal: false, render }))
 }
 
 /// `PUT /v1/account/verifications/email`.
@@ -343,5 +346,5 @@ async fn confirm(ctx: &mut Context, kind: i64, attribute: &str, payload: bool) -
         ctx.events.payload = Some(base::token_payload(&token));
         ctx.events.sensitive = vec!["secret"];
     }
-    Ok(ctx.ok(&TokenModel { token: &token, secret: None, render: ctx.render() }))
+    Ok(ctx.ok(&TokenModel { token: &token, secret: None, phrase: "", reveal: false, render: ctx.render() }))
 }

@@ -12,6 +12,7 @@
 //! None of this requires changes to CE crates.
 
 mod context;
+mod error_page;
 mod guards;
 mod lifecycle;
 mod shutdown;
@@ -26,7 +27,7 @@ use std::sync::Arc;
 use serde_json::{Map, Value};
 use utopia_http::{Method, Request, Response, Router};
 
-pub use context::{Context, EventState, Mode};
+pub use context::{Context, EventState, Mode, Store};
 pub use state::State;
 
 use crate::Result;
@@ -83,6 +84,15 @@ pub struct Labels {
     /// `session.allowActive`: the route may create a session for a caller
     /// who has one.
     pub session_allow_active: bool,
+    /// `impersonation`: `allow` lets an impersonator write through an
+    /// account route, `deny` refuses the route on any method, empty refuses
+    /// account writes only.
+    pub impersonation: &'static str,
+    /// `error`: errors render the HTML error page for non-SDK requests
+    /// (`app/views/general/error.phtml`).
+    pub error_page: bool,
+    /// `origin` = `*`: any origin may call the route.
+    pub any_origin: bool,
 }
 
 impl Labels {
@@ -94,6 +104,9 @@ impl Labels {
         abuse_reset: &[],
         auth_type: "",
         session_allow_active: false,
+        impersonation: "",
+        error_page: false,
+        any_origin: false,
     };
 }
 

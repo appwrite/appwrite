@@ -14,13 +14,14 @@ use appwrite_core::response::TokenModel;
 use appwrite_core::validators::{PasswordDictionary, PasswordStrength, uid};
 use appwrite_core::{Error, ErrorType, Result};
 
-use crate::{abuse, audit, base};
+use crate::base::profile as base;
+use crate::{abuse, audit};
 
 const SESSIONS_WRITE: &[&str] = &["sessions.write"];
 
 pub fn routes() -> Vec<Route> {
     vec![
-        route!(
+        profile_route!(
             POST,
             "/v1/account/recovery",
             "createRecovery",
@@ -32,7 +33,7 @@ pub fn routes() -> Vec<Route> {
             crate::GROUPS,
             abuse(&["url:{url},email:{param-email}", "url:{url},ip:{ip}"])
         ),
-        route!(
+        profile_route!(
             PUT,
             "/v1/account/recovery",
             "updateRecovery",
@@ -44,7 +45,7 @@ pub fn routes() -> Vec<Route> {
             crate::GROUPS,
             abuse(&["url:{url},userId:{param-userId}"])
         ),
-        route!(
+        profile_route!(
             POST,
             "/v1/account/recovery/otp",
             "createRecoveryOTP",
@@ -56,7 +57,7 @@ pub fn routes() -> Vec<Route> {
             crate::GROUPS,
             abuse(&["url:{url},email:{param-email}", "url:{url},ip:{ip}"])
         ),
-        route!(
+        profile_route!(
             PUT,
             "/v1/account/recovery/otp",
             "updateRecoveryOTP",
@@ -145,7 +146,7 @@ fn created(ctx: &mut Context, recovery: Recovery, phrase: Option<String>) -> Res
     // mint tokens through `users.write` read it back.
     let hidden = ctx.key.as_ref().is_some_and(|k| !k.scopes.iter().any(|s| s == "users.write"));
     let secret = if hidden { "" } else { recovery.secret.as_str() };
-    ctx.created(&TokenModel { token: &token, secret: Some(secret), render: ctx.render() })
+    ctx.created(&TokenModel { token: &token, secret: Some(secret), phrase: "", reveal: false, render: ctx.render() })
 }
 
 /// `POST /v1/account/recovery`.
@@ -337,5 +338,5 @@ async fn confirm(ctx: &mut Context, kind: i64) -> Result<Response> {
     ctx.events.actor = Some(updated.message_payload());
     ctx.events.payload = Some(base::token_payload(&token));
     ctx.events.sensitive = vec!["secret"];
-    Ok(ctx.ok(&TokenModel { token: &token, secret: None, render: ctx.render() }))
+    Ok(ctx.ok(&TokenModel { token: &token, secret: None, phrase: "", reveal: false, render: ctx.render() }))
 }

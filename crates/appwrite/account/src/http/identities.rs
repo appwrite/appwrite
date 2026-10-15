@@ -17,8 +17,8 @@ use crate::{ACCOUNT, audit};
 
 pub fn routes() -> Vec<Route> {
     vec![
-        route!(GET, "/v1/account/identities", "listIdentities", "listIdentities", ACCOUNT, None, None, list),
-        route!(
+        profile_route!(GET, "/v1/account/identities", "listIdentities", "listIdentities", ACCOUNT, None, None, list),
+        profile_route!(
             DELETE,
             "/v1/account/identities/:identityId",
             "deleteIdentity",

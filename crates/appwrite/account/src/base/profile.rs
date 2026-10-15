@@ -369,6 +369,8 @@ pub fn token_payload(token: &Token) -> Bytes {
     Bytes::from(appwrite_core::response::current(&TokenModel {
         token,
         secret: None,
+        phrase: "",
+        reveal: false,
         render: Render { sensitive: true, format: None },
     }))
 }

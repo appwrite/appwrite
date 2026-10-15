@@ -10,7 +10,8 @@ use appwrite_core::response::TargetModel;
 use appwrite_core::validators::{CustomId, uid};
 use appwrite_core::{Error, ErrorType, Result};
 
-use crate::{audit, base};
+use crate::audit;
+use crate::base::profile as base;
 
 const TARGETS_WRITE: &[&str] = &["targets.write"];
 
@@ -19,7 +20,7 @@ const LENGTH_KEY: usize = 255;
 
 pub fn routes() -> Vec<Route> {
     vec![
-        route!(
+        profile_route!(
             POST,
             "/v1/account/targets/push",
             "createPushTarget",
@@ -29,7 +30,7 @@ pub fn routes() -> Vec<Route> {
             audit("target.create", "target/response.$id"),
             create
         ),
-        route!(
+        profile_route!(
             PUT,
             "/v1/account/targets/:targetId/push",
             "updatePushTarget",
@@ -39,7 +40,7 @@ pub fn routes() -> Vec<Route> {
             audit("target.update", "target/response.$id"),
             update
         ),
-        route!(
+        profile_route!(
             DELETE,
             "/v1/account/targets/:targetId/push",
             "deletePushTarget",

@@ -237,10 +237,14 @@ impl Serialize for SessionListModel<'_> {
     }
 }
 
-/// `token` model.
+/// `token` model (`tokenSecret` with `reveal`).
 pub struct TokenModel<'a> {
     pub token: &'a Token,
     pub secret: Option<&'a str>,
+    /// The security phrase (`''` when none).
+    pub phrase: &'a str,
+    /// `tokenSecret`: the secret is not sensitive.
+    pub reveal: bool,
     pub render: Render,
 }
 
@@ -251,12 +255,60 @@ impl Serialize for TokenModel<'_> {
         m.serialize_entry("$id", &t.id)?;
         m.serialize_entry("$createdAt", &dt(&t.created_at))?;
         m.serialize_entry("userId", &t.user_id)?;
-        let secret = if self.render.sensitive { self.secret.or(t.secret.as_deref()).unwrap_or("") } else { "" };
+        let secret =
+            if self.reveal || self.render.sensitive { self.secret.or(t.secret.as_deref()).unwrap_or("") } else { "" };
         m.serialize_entry("secret", secret)?;
         m.serialize_entry("expire", &dt(&t.expire))?;
-        if !self.render.before(1, 5, 0) {
-            m.serialize_entry("phrase", t.phrase.as_deref().unwrap_or(""))?;
+        // `V17` removes the phrase of a `token`, not of a `tokenSecret`.
+        if self.reveal || !self.render.before(1, 5, 0) {
+            let phrase = if self.phrase.is_empty() { t.phrase.as_deref().unwrap_or("") } else { self.phrase };
+            m.serialize_entry("phrase", phrase)?;
         }
+        m.end()
+    }
+}
+
+/// `mfaType`: a new authenticator's secret and provisioning URI.
+#[derive(Serialize)]
+pub struct MfaTypeModel<'a> {
+    pub secret: &'a str,
+    pub uri: &'a str,
+}
+
+/// `mfaChallenge`.
+pub struct MfaChallengeModel<'a> {
+    pub challenge: &'a Challenge,
+}
+
+impl Serialize for MfaChallengeModel<'_> {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        let c = self.challenge;
+        let mut m = serializer.serialize_map(Some(4))?;
+        m.serialize_entry("$id", &c.id)?;
+        m.serialize_entry("$createdAt", &dt(&c.created_at))?;
+        m.serialize_entry("userId", &c.user_id)?;
+        m.serialize_entry("expire", &dt(&c.expire))?;
+        m.end()
+    }
+}
+
+/// `passkeyChallenge`: a registration or sign-in ceremony's options.
+pub struct PasskeyChallengeModel<'a> {
+    pub id: &'a str,
+    pub created_at: &'a Option<chrono::NaiveDateTime>,
+    pub passkey_id: &'a str,
+    pub expire: &'a Option<chrono::NaiveDateTime>,
+    pub public_key: &'a Value,
+}
+
+impl Serialize for PasskeyChallengeModel<'_> {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        let mut m = serializer.serialize_map(Some(5))?;
+        m.serialize_entry("$id", self.id)?;
+        m.serialize_entry("$createdAt", &dt(self.created_at))?;
+        m.serialize_entry("passkeyId", self.passkey_id)?;
+        m.serialize_entry("expire", &dt(self.expire))?;
+        m.serialize_entry("publicKey", self.public_key)?;
         m.end()
     }
 }

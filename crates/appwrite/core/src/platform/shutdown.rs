@@ -47,6 +47,8 @@ struct Job {
     has_user: bool,
     privileged: bool,
     params: Vec<(String, String)>,
+    /// The event an action set (`setEvent()`), over the route's.
+    event: Option<String>,
     payload: Bytes,
     /// Payload keys left out of realtime messages.
     sensitive: Vec<&'static str>,
@@ -189,6 +191,7 @@ pub(super) fn schedule(ctx: Context, status: StatusCode, body: Bytes, response_s
         has_user: ctx.user.is_some(),
         privileged: roles::is_privileged(&ctx.roles),
         params: ctx.events.params,
+        event: ctx.events.event,
         payload,
         sensitive: ctx.events.sensitive,
         created_users,
@@ -260,7 +263,7 @@ impl Job {
             self.publish(queue, message).await;
         }
 
-        if let Some(pattern) = self.route.event {
+        if let Some(pattern) = self.event.as_deref().or(self.route.event) {
             match event::generate_events(pattern, &self.params) {
                 Ok(events) => self.trigger(&events, &project_payload, &trimmed).await,
                 Err(e) => tracing::warn!(error = %e, pattern, "event generation failed"),
@@ -465,13 +468,16 @@ impl Job {
             "--" => String::new(),
             code => code.to_lowercase(),
         };
+        // `$parts[1] ?? $parts[0]` of the URI's segments.
+        let parts: Vec<&str> = self.request.path.trim_matches('/').split('/').collect();
+        let service = parts.get(1).or(parts.first()).copied().unwrap_or("").to_owned();
         let base = |key: &str, value: i64| Metric {
             key: key.to_owned(),
             value,
             path: self.request.path.clone(),
             method: self.request.method.clone(),
             status: self.status.as_u16(),
-            service: self.route.namespace.to_owned(),
+            service: service.clone(),
             resource_type: "project".to_owned(),
             resource_id: self.project.id.clone(),
             resource_internal_id: self.project.sequence.clone(),

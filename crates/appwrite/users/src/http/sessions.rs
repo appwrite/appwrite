@@ -160,7 +160,7 @@ pub async fn token(ctx: &mut Context) -> Result<Response> {
     let db = ctx.db()?;
     let token = Token::from(&db.create_document("tokens", token).await?);
     db.purge_cached_document("users", Some(&user.id)).await?;
-    let model = TokenModel { token: &token, secret: Some(&secret), render: ctx.render() };
+    let model = TokenModel { token: &token, secret: Some(&secret), phrase: "", reveal: false, render: ctx.render() };
     ctx.event_param("userId", user.id.clone());
     ctx.event_param("tokenId", token.id.clone());
     ctx.event_payload(&model);

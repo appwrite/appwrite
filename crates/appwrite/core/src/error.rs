@@ -115,6 +115,27 @@ error_types! {
     MembershipAlreadyConfirmed => ("membership_already_confirmed", 409, "Membership is already confirmed."),
     MembershipDeletionProhibited => ("membership_deletion_prohibited", 400, "Membership deletion is prohibited."),
     MembershipDowngradeProhibited => ("membership_downgrade_prohibited", 400, "Membership role downgrade is prohibited."),
+    // Account sign-in (sessions, tokens, MFA, passkeys, OAuth2).
+    UserConsoleCountExceeded => ("user_console_count_exceeded", 501, "Sign up to the console is restricted. You can contact an administrator to update console sign up restrictions by setting _APP_CONSOLE_WHITELIST_ROOT to \"disabled\"."),
+    UserEmailNotWhitelisted => ("user_email_not_whitelisted", 401, "Console registration is restricted to specific emails. Contact your administrator for more information."),
+    UserIpNotWhitelisted => ("user_ip_not_whitelisted", 401, "Console registration is restricted to specific IPs. Contact your administrator for more information."),
+    UserAnonymousConsoleProhibited => ("user_anonymous_console_prohibited", 401, "Anonymous users cannot be created for the console project."),
+    UserPhoneNotVerified => ("user_phone_not_verified", 400, "User phone is not verified"),
+    UserEmailNotVerified => ("user_email_not_verified", 400, "User email is not verified"),
+    UserMissingId => ("user_missing_id", 400, "Missing ID from OAuth2 provider."),
+    UserAuthenticatorAlreadyVerified => ("user_authenticator_already_verified", 409, "This authenticator is already verified on the current user."),
+    UserPasskeyAlreadyExists => ("user_passkey_already_exists", 409, "This passkey is already registered in the project."),
+    UserPasskeyLimitExceeded => ("user_passkey_limit_exceeded", 400, "The maximum number of passkeys for this user has been reached. Delete an existing passkey to add a new one."),
+    UserPasskeyInvalid => ("user_passkey_invalid", 401, "The passkey credential could not be verified. Please restart the ceremony and try again."),
+    UserOauth2TokenInvalid => ("user_oauth2_token_invalid", 401, "The provided ID token is invalid, expired, or failed verification."),
+    UserOauth2StateInvalid => ("user_oauth2_state_invalid", 401, "The OAuth2 sign-in was not started from this browser, or it took too long to complete. Please start the sign-in again."),
+    UserOauth2ProviderError => ("user_oauth2_provider_error", 424, "OAuth2 provider returned some error."),
+    UserOauth2ProviderFailure => ("user_oauth2_provider_failure", 424, "%s couldn't complete sign-in (%s). Please try again."),
+    UserJwtCreationDenied => ("user_jwt_creation_denied", 403, "A JWT cannot be created from a request authorized with a JWT. Authenticate with a session cookie or session header instead."),
+    ProjectProviderDisabled => ("project_provider_disabled", 412, "The chosen OAuth provider is disabled. You can enable the OAuth provider using the Appwrite console."),
+    ProjectProviderUnsupported => ("project_provider_unsupported", 400, "The chosen OAuth provider is unsupported. Please check the <a href=\"/docs/client/account?sdk=web-default#accountCreateOAuth2Session\">Create OAuth2 Session docs</a> for the complete list of supported OAuth providers."),
+    ProjectInvalidSuccessUrl => ("project_invalid_success_url", 400, "Invalid redirect URL for OAuth success."),
+    ProjectInvalidFailureUrl => ("project_invalid_failure_url", 400, "Invalid redirect URL for OAuth failure."),
 }
 
 /// Status codes that pass through to clients; everything else becomes 500.

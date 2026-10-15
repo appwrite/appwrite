@@ -33,6 +33,7 @@ php-std.workspace = true
 utopia-auth.workspace = true
 utopia-cache.workspace = true
 utopia-database = { workspace = true, features = ["pool"] }
+utopia-domains.workspace = true
 utopia-dsn.workspace = true
 utopia-emails.workspace = true
 utopia-http.workspace = true
