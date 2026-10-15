@@ -410,9 +410,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Block hosting provider traffic': 'חסימת תנועה מספקי hosting',
   'Deny API requests from hosting provider networks.':
     'דחיית בקשות API מרשתות ספקי hosting.',
-  'Block datacenter connection traffic': 'חסימת תנועה מחיבור datacenter',
-  'Deny API requests from datacenter connection types.':
-    'דחיית בקשות API מסוגי חיבור datacenter.',
   'Add-on required': 'נדרש תוסף',
   'Premium Geo DB': 'Premium Geo DB',
   'Set a per-IP request quota for matching API traffic. Review the impact preview before tightening limits.':
@@ -2961,6 +2958,19 @@ export const heProjectMiscDictionary: Record<string, string> = {
     'שליחת התראות Push דרך APNS (iOS).',
   'Send push notifications via FCM (Android, iOS, web).':
     'שליחת התראות Push דרך FCM (Android, iOS, ווב).',
+  'Send push notifications through the Appwrite push service.':
+    'שליחת התראות Push דרך שירות ה-Push של Appwrite.',
+  'Quality of service': 'איכות השירות',
+  'Let the subscriber choose': 'מתן בחירה למנוי',
+  'At most once (QoS 0)': 'לכל היותר פעם אחת (QoS 0)',
+  'At least once (QoS 1)': 'לפחות פעם אחת (QoS 1)',
+  'Default delivery guarantee for topics on this provider.':
+    'ברירת המחדל לאחריות המסירה עבור נושאים בספק הזה.',
+  'Message expiry (seconds)': 'תפוגת הודעה (שניות)',
+  'Message expiry must be a whole number of seconds, up to 604800.':
+    'תפוגת ההודעה חייבת להיות מספר שלם של שניות, עד 604800.',
+  'How long undelivered messages are kept for offline devices. Max 7 days (604800).':
+    'כמה זמן הודעות שלא נמסרו נשמרות עבור מכשירים לא מקוונים. עד 7 ימים (604800).',
   'Send transactional email through Amazon SES.':
     'שליחת אימייל טרנזקציוני דרך Amazon SES.',
   'Send transactional email through Mailgun.':

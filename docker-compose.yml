@@ -45,10 +45,12 @@ services:
         max-file: "5"
         max-size: 10m
     image: ${_APP_IMAGE:-appwrite/appwrite}:${_APP_VERSION:-latest}
+    # The marker is APP_READINESS_MARKER, written by app/http.php once the core schema exists.
     healthcheck:
       test:
         - CMD-SHELL
-        - 'curl -fsS -o /dev/null -H "Host: $${_APP_DOMAIN:-localhost}" http://localhost/v1/health/version'
+        - 'test -f /tmp/.appwrite-ready && curl -fsS -o /dev/null -H "Host: $${_APP_DOMAIN:-localhost}"
+          http://localhost/v1/health/version'
       interval: 5s
       timeout: 5s
       retries: 12
@@ -132,7 +134,6 @@ services:
       - _APP_DOMAIN
       - _APP_CONSOLE_DOMAIN
       - _APP_CONSOLE_URL
-      - _APP_CONSOLE_PASSKEY_ORIGINS
       - _APP_CONSOLE_TRUSTED_PROJECTS
       - _APP_DOMAIN_TARGET_CNAME
       - _APP_DOMAIN_TARGET_AAAA
@@ -274,12 +275,13 @@ services:
         max-file: "5"
         max-size: 10m
     container_name: appwrite-console
-    image: appwrite/new:1.2.55-self-hosted
+    image: appwrite/new:1.2.74-self-hosted
     restart: unless-stopped
     networks:
       - appwrite
     environment:
       - VITE_CONSOLE_PROFILE=self-hosted
+      - VITE_APPWRITE_VERSION=${_APP_VERSION:-}
       - APPWRITE_ENDPOINT_SAME_ORIGIN=true
     labels:
       - traefik.enable=true
@@ -1886,6 +1888,7 @@ services:
   postgresql:
     image: appwrite/postgres:0.1.0
     container_name: appwrite-postgresql
+    shm_size: 1g
     logging:
       driver: json-file
       options:

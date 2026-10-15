@@ -5,9 +5,10 @@ namespace Tests\E2E\Services\Databases\Transactions;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\SchemaPolling;
 use Tests\E2E\Traits\DatabasesUrlHelpers;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\Query;
+use Utopia\Database\Role;
 
 trait TransactionPermissionsBase
 {
@@ -38,7 +39,7 @@ trait TransactionPermissionsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'PermissionsTestDB'
         ]);
 
@@ -222,7 +223,7 @@ trait TransactionPermissionsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Commit Authorization Failure',
             'permissions' => [
                 Permission::read(Role::users()),
@@ -252,7 +253,7 @@ trait TransactionPermissionsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => ['title' => 'Original Title'],
             'permissions' => [
                 Permission::read(Role::user($userId)),
@@ -654,7 +655,7 @@ trait TransactionPermissionsBase
         ];
 
         $parent = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($this->getPermissionsDatabase()), $keyHeaders, [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Related Permissions Parent',
             'permissions' => $containerPermissions,
             $this->getSecurityParam() => true,
@@ -663,7 +664,7 @@ trait TransactionPermissionsBase
         $parentId = $parent['body']['$id'];
 
         $child = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($this->getPermissionsDatabase()), $keyHeaders, [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Related Permissions Child',
             'permissions' => $containerPermissions,
             $this->getSecurityParam() => true,
@@ -701,10 +702,10 @@ trait TransactionPermissionsBase
                 'action' => 'create',
                 'databaseId' => $this->getPermissionsDatabase(),
                 $this->getContainerIdParam() => $parentId,
-                $this->getRecordIdParam() => ID::unique(),
+                $this->getRecordIdParam() => Id::unique(),
                 'data' => [
                     'child' => [
-                        '$id' => ID::unique(),
+                        '$id' => Id::unique(),
                         '$permissions' => $permissions,
                         'title' => 'Child',
                     ],
@@ -747,7 +748,7 @@ trait TransactionPermissionsBase
         ], $this->getHeaders());
 
         $parent = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($this->getPermissionsDatabase()), $keyHeaders, [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Recreated Related Parent',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -759,7 +760,7 @@ trait TransactionPermissionsBase
         $parentId = $parent['body']['$id'];
 
         $child = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($this->getPermissionsDatabase()), $keyHeaders, [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Recreated Related Child',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -788,7 +789,7 @@ trait TransactionPermissionsBase
         $this->waitForAttribute($this->getPermissionsDatabase(), $parentId, 'child');
 
         $foreign = [Permission::update(Role::team('adminTeam'))];
-        $recordId = ID::unique();
+        $recordId = Id::unique();
         $record = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($this->getPermissionsDatabase(), $childId), $keyHeaders, [
             $this->getRecordIdParam() => $recordId,
             'data' => ['title' => 'Original'],
@@ -806,7 +807,7 @@ trait TransactionPermissionsBase
             'action' => 'create',
             'databaseId' => $this->getPermissionsDatabase(),
             $this->getContainerIdParam() => $parentId,
-            $this->getRecordIdParam() => ID::unique(),
+            $this->getRecordIdParam() => Id::unique(),
             'data' => [
                 'child' => [
                     '$id' => $recordId,
@@ -834,7 +835,7 @@ trait TransactionPermissionsBase
         $this->assertEquals(401, $staged['headers']['status-code']);
         $this->assertStringContainsString('Permissions must be one of', $staged['body']['message']);
 
-        // Delete staged in the same request is caught when the commit applies it.
+        // Delete staged earlier in the same request is visible while staging.
         $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), $userHeaders);
         $this->assertEquals(201, $transaction['headers']['status-code']);
         $transactionId = $transaction['body']['$id'];
@@ -842,14 +843,12 @@ trait TransactionPermissionsBase
         $staged = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl($transactionId) . '/operations', $userHeaders, [
             'operations' => [$delete, $recreate],
         ]);
-        $this->assertEquals(201, $staged['headers']['status-code']);
-
-        $commit = $this->client->call(Client::METHOD_PATCH, $this->getTransactionUrl($transactionId), $userHeaders, ['commit' => true]);
-        $this->assertEquals(401, $commit['headers']['status-code']);
+        $this->assertEquals(401, $staged['headers']['status-code']);
+        $this->assertStringContainsString('Permissions must be one of', $staged['body']['message']);
 
         $status = $this->client->call(Client::METHOD_GET, $this->getTransactionUrl($transactionId), $userHeaders);
         $this->assertEquals(200, $status['headers']['status-code']);
-        $this->assertEquals('failed', $status['body']['status']);
+        $this->assertEquals(0, $status['body']['operations'], 'a refused request stages none of its operations');
 
         $read = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($this->getPermissionsDatabase(), $childId, $recordId), $keyHeaders);
         $this->assertEquals(200, $read['headers']['status-code']);
@@ -903,7 +902,7 @@ trait TransactionPermissionsBase
         ];
 
         $parent = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($this->getPermissionsDatabase()), $keyHeaders, [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Related Update Parent',
             'permissions' => $containerPermissions,
             $this->getSecurityParam() => true,
@@ -912,7 +911,7 @@ trait TransactionPermissionsBase
         $parentId = $parent['body']['$id'];
 
         $child = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($this->getPermissionsDatabase()), $keyHeaders, [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Related Update Child',
             'permissions' => $containerPermissions,
             $this->getSecurityParam() => true,
@@ -936,12 +935,12 @@ trait TransactionPermissionsBase
         $this->assertEquals(202, $relationship['headers']['status-code']);
         $this->waitForAttribute($this->getPermissionsDatabase(), $parentId, 'child');
 
-        $recordId = ID::unique();
+        $recordId = Id::unique();
         $record = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($this->getPermissionsDatabase(), $parentId), $keyHeaders, [
             $this->getRecordIdParam() => $recordId,
             'data' => [
                 'child' => [
-                    '$id' => ID::unique(),
+                    '$id' => Id::unique(),
                     'title' => 'Original',
                 ],
             ],
@@ -956,7 +955,7 @@ trait TransactionPermissionsBase
         $foreign = [Permission::update(Role::team('adminTeam'))];
         $data = fn (array $permissions) => [
             'child' => [
-                '$id' => ID::unique(),
+                '$id' => Id::unique(),
                 '$permissions' => $permissions,
                 'title' => 'Child',
             ],
@@ -993,7 +992,7 @@ trait TransactionPermissionsBase
 
         $routes = [
             'create' => [Client::METHOD_POST, $this->getRecordUrl($this->getPermissionsDatabase(), $parentId), [
-                $this->getRecordIdParam() => ID::unique(),
+                $this->getRecordIdParam() => Id::unique(),
                 'data' => $data($foreign),
             ]],
             'update' => [Client::METHOD_PATCH, $this->getRecordUrl($this->getPermissionsDatabase(), $parentId, $recordId), [
@@ -1086,6 +1085,216 @@ trait TransactionPermissionsBase
         // This should succeed
         $this->assertEquals(201, $staged['headers']['status-code']);
         $this->assertEquals(1, $staged['body']['operations']);
+    }
+
+    public function testRecordRouteStagesOnlyPermittedCreate(): void
+    {
+        $denied = $this->createStagingContainer([Permission::read(Role::any())]);
+        $allowed = $this->createStagingContainer([Permission::read(Role::any()), Permission::create(Role::users())]);
+        $transactionId = $this->createStagingTransaction();
+
+        $stage = fn (string $containerId) => $this->client->call(Client::METHOD_POST, $this->getRecordUrl($this->getPermissionsDatabase(), $containerId), $this->getStagingUserHeaders(), [
+            $this->getRecordIdParam() => Id::unique(),
+            'data' => ['title' => 'Staged'],
+            'transactionId' => $transactionId,
+        ]);
+
+        /**
+         * Test for FAILURE
+         */
+        $staged = $stage($denied);
+        $this->assertSame(401, $staged['headers']['status-code']);
+        $this->assertSame('user_unauthorized', $staged['body']['type']);
+        $this->assertSame(0, $this->getStagedOperations($transactionId));
+
+        /**
+         * Test for SUCCESS
+         */
+        $staged = $stage($allowed);
+        $this->assertSame(201, $staged['headers']['status-code']);
+        $this->assertSame(1, $this->getStagedOperations($transactionId));
+    }
+
+    public function testRecordRouteStagesOnlyPermittedUpdate(): void
+    {
+        $denied = $this->createStagingContainer([Permission::read(Role::any())]);
+        $allowed = $this->createStagingContainer([Permission::read(Role::any()), Permission::update(Role::users())]);
+        $transactionId = $this->createStagingTransaction();
+
+        $stage = function (string $containerId) use ($transactionId): array {
+            $record = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($this->getPermissionsDatabase(), $containerId), $this->getStagingKeyHeaders(), [
+                $this->getRecordIdParam() => Id::unique(),
+                'data' => ['title' => 'Original'],
+            ]);
+            $this->assertSame(201, $record['headers']['status-code']);
+
+            return $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($this->getPermissionsDatabase(), $containerId, $record['body']['$id']), $this->getStagingUserHeaders(), [
+                'data' => ['title' => 'Staged'],
+                'transactionId' => $transactionId,
+            ]);
+        };
+
+        /**
+         * Test for FAILURE
+         */
+        $staged = $stage($denied);
+        $this->assertSame(401, $staged['headers']['status-code']);
+        $this->assertSame('user_unauthorized', $staged['body']['type']);
+        $this->assertSame(0, $this->getStagedOperations($transactionId));
+
+        /**
+         * Test for SUCCESS
+         */
+        $staged = $stage($allowed);
+        $this->assertSame(200, $staged['headers']['status-code']);
+        $this->assertSame(1, $this->getStagedOperations($transactionId));
+    }
+
+    public function testStagingALinkByIdNeedsUpdateOnTheLinkedRecord(): void
+    {
+        if (!$this->getSupportForRelationships()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $parentId = $this->createStagingContainer([Permission::read(Role::any()), Permission::create(Role::users()), Permission::update(Role::users())]);
+        $readOnlyId = $this->createStagingContainer([Permission::read(Role::any())]);
+        $updatableId = $this->createStagingContainer([Permission::read(Role::any()), Permission::update(Role::users())]);
+
+        foreach (['readOnly' => $readOnlyId, 'updatable' => $updatableId] as $key => $relatedId) {
+            $relationship = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($this->getPermissionsDatabase(), $parentId, 'relationship'), $this->getStagingKeyHeaders(), [
+                $this->getRelatedIdParam() => $relatedId,
+                'type' => 'manyToOne',
+                'key' => $key,
+            ]);
+            $this->assertSame(202, $relationship['headers']['status-code']);
+            $this->waitForAttribute($this->getPermissionsDatabase(), $parentId, $key);
+        }
+
+        $createLinked = function (string $containerId): string {
+            $record = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($this->getPermissionsDatabase(), $containerId), $this->getStagingKeyHeaders(), [
+                $this->getRecordIdParam() => Id::unique(),
+                'data' => ['title' => 'Linked'],
+            ]);
+            $this->assertSame(201, $record['headers']['status-code']);
+
+            return $record['body']['$id'];
+        };
+        $readOnlyRecordId = $createLinked($readOnlyId);
+        $updatableRecordId = $createLinked($updatableId);
+
+        $transactionId = $this->createStagingTransaction();
+        $stageOperation = fn (string $parentRecordId, string $key, string $recordId) => $this->client->call(Client::METHOD_POST, $this->getTransactionUrl($transactionId) . '/operations', $this->getStagingUserHeaders(), [
+            'operations' => [[
+                'action' => 'create',
+                'databaseId' => $this->getPermissionsDatabase(),
+                $this->getContainerIdParam() => $parentId,
+                $this->getRecordIdParam() => $parentRecordId,
+                'data' => ['title' => 'Parent', $key => $recordId],
+            ]],
+        ]);
+        $stageRecord = fn (string $parentRecordId, string $key, string $recordId) => $this->client->call(Client::METHOD_POST, $this->getRecordUrl($this->getPermissionsDatabase(), $parentId), $this->getStagingUserHeaders(), [
+            $this->getRecordIdParam() => $parentRecordId,
+            'data' => ['title' => 'Parent', $key => $recordId],
+            'transactionId' => $transactionId,
+        ]);
+
+        /**
+         * Test for FAILURE
+         */
+        foreach (['operations' => $stageOperation, 'record' => $stageRecord] as $route => $stage) {
+            $staged = $stage(Id::unique(), 'readOnly', $readOnlyRecordId);
+            $this->assertSame(401, $staged['headers']['status-code'], "The {$route} route staged a link to a record the caller can only read");
+            $this->assertSame('user_unauthorized', $staged['body']['type']);
+        }
+        $this->assertSame(0, $this->getStagedOperations($transactionId));
+
+        /**
+         * Test for SUCCESS
+         */
+        $parentRecordIds = [Id::unique(), Id::unique()];
+        $staged = $stageOperation($parentRecordIds[0], 'updatable', $updatableRecordId);
+        $this->assertSame(201, $staged['headers']['status-code']);
+        $staged = $stageRecord($parentRecordIds[1], 'updatable', $updatableRecordId);
+        $this->assertSame(201, $staged['headers']['status-code']);
+        $this->assertSame(2, $this->getStagedOperations($transactionId));
+
+        $commit = $this->client->call(Client::METHOD_PATCH, $this->getTransactionUrl($transactionId), $this->getStagingUserHeaders(), ['commit' => true]);
+        $this->assertSame(200, $commit['headers']['status-code']);
+
+        foreach ($parentRecordIds as $parentRecordId) {
+            $parent = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($this->getPermissionsDatabase(), $parentId, $parentRecordId), $this->getStagingKeyHeaders(), [
+                'queries' => [Query::select(['*', 'updatable.*'])->toString()],
+            ]);
+            $this->assertSame(200, $parent['headers']['status-code']);
+            $this->assertSame($updatableRecordId, $parent['body']['updatable']['$id']);
+        }
+    }
+
+    /**
+     * @param array<string> $permissions
+     */
+    private function createStagingContainer(array $permissions): string
+    {
+        $container = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($this->getPermissionsDatabase()), $this->getStagingKeyHeaders(), [
+            $this->getContainerIdParam() => Id::unique(),
+            'name' => 'Staging Pre-check',
+            'permissions' => $permissions,
+            $this->getSecurityParam() => false,
+        ]);
+        $this->assertSame(201, $container['headers']['status-code']);
+        $containerId = $container['body']['$id'];
+
+        if ($this->getSupportForAttributes()) {
+            $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($this->getPermissionsDatabase(), $containerId, 'string'), $this->getStagingKeyHeaders(), [
+                'key' => 'title',
+                'size' => 255,
+                'required' => false,
+            ]);
+            $this->assertSame(202, $attribute['headers']['status-code']);
+            $this->waitForAttribute($this->getPermissionsDatabase(), $containerId, 'title');
+        }
+
+        return $containerId;
+    }
+
+    private function createStagingTransaction(): string
+    {
+        $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), $this->getStagingUserHeaders());
+        $this->assertSame(201, $transaction['headers']['status-code']);
+
+        return $transaction['body']['$id'];
+    }
+
+    private function getStagedOperations(string $transactionId): int
+    {
+        $transaction = $this->client->call(Client::METHOD_GET, $this->getTransactionUrl($transactionId), $this->getStagingUserHeaders());
+        $this->assertSame(200, $transaction['headers']['status-code']);
+
+        return $transaction['body']['operations'];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function getStagingKeyHeaders(): array
+    {
+        return [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function getStagingUserHeaders(): array
+    {
+        return array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
     }
 
     /**
@@ -1663,7 +1872,7 @@ trait TransactionPermissionsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Staged Read Test',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -1706,7 +1915,7 @@ trait TransactionPermissionsBase
         $this->assertEquals(201, $transaction['headers']['status-code']);
         $transactionId = $transaction['body']['$id'];
 
-        $documentId = ID::unique();
+        $documentId = Id::unique();
         $staged = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl($transactionId) . '/operations', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1734,6 +1943,8 @@ trait TransactionPermissionsBase
 
         $this->assertEquals(200, $ownRead['headers']['status-code']);
         $this->assertEquals('Staged secret', $ownRead['body']['title']);
+        $this->assertSame($this->getPermissionsDatabase(), $ownRead['body']['$databaseId'], 'Main stamped a staged record with its database');
+        $this->assertSame($collectionId, $ownRead['body']['$' . $this->getContainerIdParam()], 'Main stamped a staged record with its container');
 
         /**
          * Test for FAILURE
@@ -1777,7 +1988,7 @@ trait TransactionPermissionsBase
         ];
 
         $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($this->getPermissionsDatabase()), $keyHeaders, [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Foreign Staging Test',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -1802,7 +2013,7 @@ trait TransactionPermissionsBase
             $this->waitForAllAttributes($this->getPermissionsDatabase(), $collectionId);
         }
 
-        $documentId = ID::unique();
+        $documentId = Id::unique();
         $document = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($this->getPermissionsDatabase(), $collectionId), $keyHeaders, [
             $this->getRecordIdParam() => $documentId,
             'data' => ['title' => 'Original'],
@@ -1835,13 +2046,13 @@ trait TransactionPermissionsBase
          */
         $requests = [
             'create' => [Client::METHOD_POST, $this->getRecordUrl($this->getPermissionsDatabase(), $collectionId), [
-                $this->getRecordIdParam() => ID::unique(),
+                $this->getRecordIdParam() => Id::unique(),
                 'data' => ['title' => 'Injected'],
             ]],
             'update' => [Client::METHOD_PATCH, $this->getRecordUrl($this->getPermissionsDatabase(), $collectionId, $documentId), [
                 'data' => ['title' => 'Injected'],
             ]],
-            'upsert' => [Client::METHOD_PUT, $this->getRecordUrl($this->getPermissionsDatabase(), $collectionId, ID::unique()), [
+            'upsert' => [Client::METHOD_PUT, $this->getRecordUrl($this->getPermissionsDatabase(), $collectionId, Id::unique()), [
                 'data' => ['title' => 'Injected'],
             ]],
             'delete' => [Client::METHOD_DELETE, $this->getRecordUrl($this->getPermissionsDatabase(), $collectionId, $documentId), []],
@@ -1890,7 +2101,7 @@ trait TransactionPermissionsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            $this->getContainerIdParam() => ID::unique(),
+            $this->getContainerIdParam() => Id::unique(),
             'name' => 'Bulk Staging Test',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -1918,14 +2129,14 @@ trait TransactionPermissionsBase
          */
         $operations = [
             'bulkCreate' => [
-                ['$id' => ID::unique(), 'title' => 'Bulk'],
+                ['$id' => Id::unique(), 'title' => 'Bulk'],
             ],
             'bulkUpdate' => [
                 'queries' => [],
                 'data' => ['title' => 'Bulk'],
             ],
             'bulkUpsert' => [
-                ['$id' => ID::unique(), 'title' => 'Bulk'],
+                ['$id' => Id::unique(), 'title' => 'Bulk'],
             ],
             'bulkDelete' => [
                 'queries' => [],

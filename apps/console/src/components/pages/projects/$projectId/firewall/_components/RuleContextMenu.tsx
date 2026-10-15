@@ -1,4 +1,4 @@
-import type { Models } from '@appwrite.io/console'
+import type { FirewallRule } from '@/lib/firewall/types'
 import {
   Copy,
   ExternalLink,
@@ -34,12 +34,12 @@ import { openDialogAfterOverlayCloses } from '@/lib/utils/overlay-lock'
 
 interface RuleContextMenuProps {
   projectId: string
-  rule: Models.WafRule
+  rule: FirewallRule
   canWrite: boolean
   togglePending?: boolean
-  onUpdate: (rule: Models.WafRule) => void
-  onToggleEnabled: (rule: Models.WafRule) => void
-  onDelete: (rule: Models.WafRule) => void
+  onUpdate: (rule: FirewallRule) => void
+  onToggleEnabled: (rule: FirewallRule) => void
+  onDelete: (rule: FirewallRule) => void
   children: React.ReactNode
 }
 
@@ -81,9 +81,7 @@ export function RuleContextMenu({
             {t('Copy')}
           </ContextMenuSubTrigger>
           <ContextMenuSubContent>
-            <ContextMenuItem
-              onSelect={() => copyToClipboard('ID', rule.$id)}
-            >
+            <ContextMenuItem onSelect={() => copyToClipboard('ID', rule.$id)}>
               <ContextMenuIcon icon={Copy} />
               {t('Copy ID')}
             </ContextMenuItem>
@@ -93,9 +91,7 @@ export function RuleContextMenu({
               <ContextMenuIcon icon={Copy} />
               {t('Copy name')}
             </ContextMenuItem>
-            <ContextMenuItem
-              onSelect={() => copyToClipboard('Link', ruleHref)}
-            >
+            <ContextMenuItem onSelect={() => copyToClipboard('Link', ruleHref)}>
               <ContextMenuIcon icon={Link2} />
               {t('Copy link')}
             </ContextMenuItem>

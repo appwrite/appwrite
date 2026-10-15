@@ -46,6 +46,8 @@ Deploy Appwrite on AWS using the pre-configured Marketplace app.
 
 For manual installations on AWS EC2, ECS, or other configurations, follow the [general installation guide](/docs/advanced/self-hosting/installation) which covers Docker setup and configuration for any Linux server.
 
+To run Appwrite on Amazon EKS, use the [Helm chart](/docs/advanced/self-hosting/platforms/kubernetes). Its [`aws.yaml`](https://github.com/appwrite/helm-chart/blob/main/examples/aws.yaml) example connects Appwrite to RDS, ElastiCache, S3, SES, and EFS.
+
 # Production considerations {% #production %}
 
 For production deployments, optimization, and advanced AWS configuration, see the [production deployment guide](/docs/advanced/self-hosting/production).

@@ -35,6 +35,10 @@ export type ConsoleProfileFeatures = {
   accountMfa: boolean
   /** Console account identities (OAuth providers linked to the account) */
   accountIdentities: boolean
+  /** Console sign-in and sign-up with OAuth providers (GitHub, Google, GitLab, Bitbucket). */
+  accountOAuth: boolean
+  /** Console account passkeys (Account › Security card and the passkey sign-in button and autofill). */
+  accountPasskeys: boolean
   /** Console account Applications page (OAuth2 consents granted on the account). */
   accountApplications: boolean
   /**
@@ -95,6 +99,8 @@ export type ConsoleProfileFeatures = {
    * Off until that's confirmed.
    */
   analyticsTrafficFilter: boolean
+  /** Appwrite push messaging provider (create wizard and its QoS/expiry settings). */
+  appwritePush: boolean
 }
 
 /** Short labels for debug UI (profile comparison, etc.). */
@@ -113,6 +119,8 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   systemStatus: 'System status',
   accountMfa: 'Account MFA',
   accountIdentities: 'Account identities',
+  accountOAuth: 'Account OAuth sign-in',
+  accountPasskeys: 'Account passkeys',
   accountApplications: 'Account applications',
   extraVcsOAuth: 'Extra VCS OAuth',
   compliance: 'Compliance',
@@ -133,6 +141,7 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   blogDrafts: 'Blog drafts',
   analytics: 'Analytics',
   analyticsTrafficFilter: 'Analytics humans/bots filter',
+  appwritePush: 'Appwrite push',
 }
 
 export type ConsoleProfile = {
@@ -163,6 +172,8 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       systemStatus: true,
       accountMfa: true,
       accountIdentities: true,
+      accountOAuth: true,
+      accountPasskeys: true,
       accountApplications: true,
       extraVcsOAuth: false,
       compliance: true,
@@ -184,6 +195,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       // Off until launch; enable from Debug → Feature flags.
       analytics: false,
       analyticsTrafficFilter: false,
+      appwritePush: false,
     },
   },
   'self-hosted': {
@@ -202,6 +214,8 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       systemStatus: false,
       accountMfa: false,
       accountIdentities: false,
+      accountOAuth: false,
+      accountPasskeys: false,
       accountApplications: false,
       extraVcsOAuth: false,
       compliance: false,
@@ -222,6 +236,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       blogDrafts: false,
       analytics: false,
       analyticsTrafficFilter: false,
+      appwritePush: false,
     },
   },
 }

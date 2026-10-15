@@ -45,6 +45,11 @@ export const DEBUG_ENV_CATALOG: readonly DebugEnvEntry[] = [
     description: 'Appwrite API endpoint',
   },
   {
+    key: 'VITE_APPWRITE_VERSION',
+    group: 'Runtime',
+    description: 'Appwrite server version shown on the page loader',
+  },
+  {
     key: 'VITE_CONSOLE_PROFILE',
     group: 'Runtime',
     description: 'Console profile (cloud / self-hosted / native)',
@@ -238,6 +243,7 @@ function readRuntimePresence(): Record<string, boolean> {
   const config = getRuntimeConfig()
   return {
     VITE_APPWRITE_ENDPOINT: isNonEmpty(config.appwriteEndpoint),
+    VITE_APPWRITE_VERSION: isNonEmpty(config.appwriteVersion),
     VITE_CONSOLE_PROFILE: isNonEmpty(config.consoleProfile),
     VITE_CONSOLE_FINGERPRINT_KEY: isNonEmpty(config.fingerprintKey),
     VITE_STRIPE_PUBLISHABLE_KEY: isNonEmpty(config.stripePublishableKey),

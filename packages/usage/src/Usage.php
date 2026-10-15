@@ -58,6 +58,17 @@ class Usage
     }
 
     /**
+     * Add the tables, columns and indexes the storage lacks, leaving
+     * retention as it is.
+     *
+     * @throws \Exception
+     */
+    public function migrate(): void
+    {
+        $this->adapter->migrate();
+    }
+
+    /**
      * Add metrics in batch (raw append).
      *
      * Callers must explicitly pass the metric type so event and gauge

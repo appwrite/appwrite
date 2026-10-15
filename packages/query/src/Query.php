@@ -19,6 +19,7 @@ class Query
         Method::And,
         Method::Or,
         Method::ElemMatch,
+        Method::Relationship,
     ];
 
     protected Method $method;
@@ -342,7 +343,7 @@ class Query
      * different parameter values produce the same fingerprint, which is
      * useful for pattern-based counting and slow-query grouping.
      *
-     * Logical queries (`and`, `or`, `elemMatch`) contribute their inner
+     * Logical queries (`and`, `or`, `elemMatch`, `relationship`) contribute their inner
      * structure to the hash via `Query::shape()` — two `and(...)` queries
      * with different child shapes produce different fingerprints.
      *
@@ -378,7 +379,7 @@ class Query
      * Canonical shape string for this Query — values excluded.
      *
      * Non-logical queries produce `method:attribute`. Logical queries
-     * (`and`, `or`, `elemMatch`) produce `method:attribute(child1|child2|…)`
+     * (`and`, `or`, `elemMatch`, `relationship`) produce `method:attribute(child1|child2|…)`
      * with children sorted so child order does not affect the shape.
      *
      * Implemented iteratively: walks the tree into a preorder list via a
@@ -424,7 +425,7 @@ class Query
             }
             \sort($childShapes);
 
-            // Attribute is empty for and/or; meaningful for elemMatch (the field being matched).
+            // Attribute is empty for and/or; meaningful for elemMatch and relationship (the field being matched).
             $shapes[$id] = $node->method->value.':'.$node->attribute.'('.\implode('|', $childShapes).')';
         }
 
@@ -897,15 +898,11 @@ class Query
                     break;
 
                 case $method === Method::Limit:
-                    if ($limit === null && isset($values[0]) && \is_numeric($values[0])) {
-                        $limit = \intval($values[0]);
-                    }
+                    $limit ??= self::toInteger($values[0] ?? null);
                     break;
 
                 case $method === Method::Offset:
-                    if ($offset === null && isset($values[0]) && \is_numeric($values[0])) {
-                        $offset = \intval($values[0]);
-                    }
+                    $offset ??= self::toInteger($values[0] ?? null);
                     break;
 
                 case $method === Method::CursorAfter:
@@ -999,6 +996,29 @@ class Query
             cursorDirection: $cursorDirection,
             timeBuckets: $timeBuckets,
         );
+    }
+
+    private static function toInteger(mixed $value): ?int
+    {
+        if (\is_int($value)) {
+            return $value;
+        }
+
+        if (! \is_numeric($value)) {
+            return null;
+        }
+
+        $integer = \filter_var($value, FILTER_VALIDATE_INT);
+        if ($integer !== false) {
+            return $integer;
+        }
+
+        $number = (float) $value;
+        if (! \is_finite($number) || $number < PHP_INT_MIN || $number >= PHP_INT_MAX) {
+            return null;
+        }
+
+        return (int) $number;
     }
 
     /**
@@ -1215,6 +1235,17 @@ class Query
     public static function elemMatch(string $attribute, array $queries): static
     {
         return new static(Method::ElemMatch, $attribute, $queries);
+    }
+
+    /**
+     * Queries that shape the documents populated for a relationship attribute,
+     * written against the related collection.
+     *
+     * @param  array<Query>  $queries
+     */
+    public static function relationship(string $attribute, array $queries): static
+    {
+        return new static(Method::Relationship, $attribute, $queries);
     }
 
     // Aggregation factory methods
@@ -1640,10 +1671,15 @@ class Query
             Method::Select,
             Method::Exists,
             Method::NotExists,
+            Method::Relationship,
         ];
 
         foreach ($queries as $query) {
             $method = $query->getMethod();
+
+            if (\in_array($method, $skipTypes, true)) {
+                continue;
+            }
 
             // Recursively validate nested queries
             if ($method->isNested()) {
@@ -1651,10 +1687,6 @@ class Query
                 $nested = $query->getValues();
                 \array_push($errors, ...static::validate($nested, $allowedAttributes));
 
-                continue;
-            }
-
-            if (\in_array($method, $skipTypes, true)) {
                 continue;
             }
 
