@@ -67,11 +67,11 @@ class Get extends Action
         callable $getDatabasesDB,
         Endpoint $migrationEndpoint
     ): void {
-        $destinations = $migrationEndpoint->destinations($endpoint);
+        $migrationEndpoint->validate($endpoint);
 
         try {
             $appwrite = new AppwriteSource($projectID, $endpoint, $key, $getDatabasesDB);
-            $appwrite->setDestinations($destinations);
+            $appwrite->setResolver($migrationEndpoint->resolve(...));
             $report = $appwrite->report($resources);
         } catch (\Throwable $e) {
             throw new Exception(

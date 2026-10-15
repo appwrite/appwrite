@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9ef66bad61f50ec30767659d5786a9cc",
+    "content-hash": "9cf517c6107339a4bccb793cb59f5585",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4499,16 +4499,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "dev-feat/source-destinations",
+            "version": "dev-main",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "953b73af0d331b4761fad0c194d530a5da2c0726"
+                "reference": "c8b9ba500de7377c60d49a45c6516459ffda720c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/953b73af0d331b4761fad0c194d530a5da2c0726",
-                "reference": "953b73af0d331b4761fad0c194d530a5da2c0726",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/c8b9ba500de7377c60d49a45c6516459ffda720c",
+                "reference": "c8b9ba500de7377c60d49a45c6516459ffda720c",
                 "shasum": ""
             },
             "require": {
@@ -4531,6 +4531,7 @@
                 "phpunit/phpunit": "11.*",
                 "vlucas/phpdotenv": "5.*"
             },
+            "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-4": {
@@ -4551,9 +4552,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/feat/source-destinations"
+                "source": "https://github.com/utopia-php/migration/tree/main"
             },
-            "time": "2026-10-15T03:43:47+00:00"
+            "time": "2026-10-15T03:57:45+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -7740,7 +7741,7 @@
     "aliases": [
         {
             "package": "utopia-php/migration",
-            "version": "dev-feat/source-destinations",
+            "version": "dev-main",
             "alias": "3.2.0",
             "alias_normalized": "3.2.0.0"
         }
