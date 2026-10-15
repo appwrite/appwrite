@@ -656,13 +656,6 @@ final class RealtimeCustomClientQueryTestWithMessage extends Scope
             \str_contains($response['data']['message'], 'contains') ||
             \str_contains($response['data']['message'], 'endsWith')
         );
-
-        $response = $this->receiveSubscribeMessageResponse(['documents'], $headers, [
-            Query::equal('status', \array_fill(0, APP_LIMIT_ARRAY_ELEMENT_SIZE, 'a'))->toString(),
-        ]);
-        $this->assertEquals('error', $response['type']);
-        $this->assertEquals(1003, $response['data']['code']);
-        $this->assertStringContainsString('Queries are too long', (string) $response['data']['message']);
     }
 
     public function testConnectionJWT(): void

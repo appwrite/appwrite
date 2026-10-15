@@ -6,10 +6,8 @@ namespace Tests\Unit\Messaging;
 
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Utopia\Database\RuntimeQuery;
-use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\Database\Document;
-use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Id;
 use Utopia\Database\Permission;
 use Utopia\Database\Query;
@@ -1437,29 +1435,6 @@ final class MessagingTest extends TestCase
         $this->assertSame(['documents'], $realtime->connections[2]['channels']);
         $this->assertSame([], $realtime->connections[1]['channels']);
         $this->assertArrayNotHasKey('files', $realtime->subscriptions['1'][Role::users()->toString()]);
-    }
-
-    public function testConvertQueriesWithinLimit(): void
-    {
-        $queries = Realtime::convertQueries([Query::equal('status', ['active'])->toString()]);
-
-        $this->assertCount(1, $queries);
-        $this->assertSame('status', $queries[0]->getAttribute());
-    }
-
-    #[DataProvider('queriesOverLimit')]
-    public function testConvertQueriesOverLimit(array $queries): void
-    {
-        $this->expectException(QueryException::class);
-        $this->expectExceptionMessage('Queries are too long');
-
-        Realtime::convertQueries($queries);
-    }
-
-    public static function queriesOverLimit(): \Iterator
-    {
-        yield 'one long query' => [[Query::equal('status', \array_fill(0, APP_LIMIT_ARRAY_ELEMENT_SIZE, 'a'))->toString()]];
-        yield 'many short queries' => [\array_fill(0, APP_LIMIT_ARRAY_PARAMS_SIZE, Query::equal('status', ['active'])->toString())];
     }
 
     public function testFromPayloadTeamCreateSetsPermissionsChangedAndTeamRole(): void

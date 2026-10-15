@@ -891,15 +891,6 @@ class Realtime extends MessagingAdapter
      */
     public static function convertQueries(mixed $queries): array
     {
-        $length = 0;
-        foreach ($queries as $query) {
-            $length += \is_string($query) ? \strlen($query) : 0;
-        }
-
-        if ($length > APP_LIMIT_ARRAY_ELEMENT_SIZE) {
-            throw new QueryException('Queries are too long. A subscription can have at most ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters of queries.');
-        }
-
         $queries = Query::parseQueries($queries);
         $stack = $queries;
         $allowed = implode(', ', array_map(fn (Method $m) => $m->value, RuntimeQuery::ALLOWED_QUERIES));
