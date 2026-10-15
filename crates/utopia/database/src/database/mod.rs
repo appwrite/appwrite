@@ -263,6 +263,8 @@ pub(crate) struct Settings {
     pub(crate) cache_writer_timeout: i64,
     /// `$documentsValidatorCache`, by `documentsValidatorCacheKey()`.
     pub(crate) documents_validators: HashMap<String, Arc<DocumentsValidator>>,
+    /// `$sumValidatorCache`, by `getSumValidator()`'s key.
+    pub(crate) sum_validators: HashMap<String, Arc<crate::validator::query::aggregate::Aggregate>>,
     /// `$definitionFillsFail` (`Trait\Transactions`).
     pub(crate) definition_fills_fail: bool,
 }
@@ -303,6 +305,7 @@ impl Database {
                     authorization,
                     cache_writer_timeout: crate::cache::Scope::WRITER_TIMEOUT,
                     documents_validators: HashMap::new(),
+                    sum_validators: HashMap::new(),
                     definition_fills_fail: false,
                 }),
                 toggles: Toggles::default(),
