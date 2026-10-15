@@ -199,6 +199,19 @@ fn test_from_array_stores_models_and_arrays_as_documents() {
     assert_eq!(index_keys(&c), ["by_title", "by_pages"]);
 }
 
+/// PHP 8.1.3's `Collection::fromArray()` writes `(bool) ($data['documentSecurity']
+/// ?? true)`: a definition without the flag, or with `null`, has document
+/// security (checked on the 8.1.3 oracle). Reads that take a raw document
+/// default to `false` (`getAttribute('documentSecurity', false)`), but every
+/// read of the database layer reads a `Collection`, so the flag is set.
+#[test]
+fn test_from_array_defaults_document_security_as_php_does() {
+    let missing = Collection::from_array(arr! {"$id" => "x"}).unwrap();
+    assert_eq!(missing.get("documentSecurity"), Some(&v(true)));
+    let null = Collection::from_array(arr! {"$id" => "x", "documentSecurity" => Value::Null}).unwrap();
+    assert_eq!(null.get("documentSecurity"), Some(&v(true)));
+}
+
 #[test]
 fn test_from_array_reads_the_stored_document_security() {
     assert!(!Collection::from_array(arr! {"$id" => "books", "documentSecurity" => false}).unwrap().document_security());
