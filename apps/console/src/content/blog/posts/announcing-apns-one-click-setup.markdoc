@@ -1,0 +1,141 @@
+---
+layout: post
+title: "Announcing one-click APNs setup with the Appwrite CLI"
+description: Run appwrite init apns and the CLI creates your APNs providers, configures Xcode, checks your App ID with Apple, and can even create the APNs key for you.
+date: 2026-10-15
+cover: /images/blog/announcing-apns-one-click-setup/cover.avif
+timeToRead: 6
+author: arnab-chatterjee
+category: announcements
+featured: false
+faqs:
+  - question: "What does `appwrite init apns` do?"
+    answer: "It sets up push notifications for an iOS app in one command. It creates or updates the APNs production and sandbox providers in your Appwrite project, adds the `aps-environment` entitlement and the `remote-notification` background mode to your Xcode target, adds an Apple platform for your bundle ID if the project has none, and checks with Apple that the bundle ID is an App ID with Push Notifications on. See the [APNs docs](/docs/products/messaging/apns#one-click-setup)."
+  - question: "Do I need to create an APNs key in the Apple Developer portal first?"
+    answer: "No. Pass `--create-key` and the CLI signs in with your Apple ID, password, and two-factor code, then creates the key for you. This option is experimental. If you already have a key, drop the `AuthKey_<KEYID>.p8` file in your project folder or pass `--key-path`, and the CLI reads the key ID from the file name."
+  - question: "Where does the CLI find my bundle ID and team ID?"
+    answer: "From your project. For native Xcode projects it reads `PRODUCT_BUNDLE_IDENTIFIER` and `DEVELOPMENT_TEAM` from the app target. For Expo projects it reads `ios.bundleIdentifier` and `ios.appleTeamId` from `app.json`. You can override either with `--bundle-id` and `--team-id`."
+  - question: "Why does the CLI check my App ID with Apple?"
+    answer: "APNs rejects pushes for any bundle ID that isn't registered as an App ID with Push Notifications turned on, and returns `TopicDisallowed`. The CLI checks this on every run and asks before it signs in to Apple or changes anything. Pass `--register-app-id` to register the App ID and turn on Push Notifications without being asked."
+  - question: "Can I run `appwrite init apns` in CI?"
+    answer: "Yes, with an existing key. `APPWRITE_APPLE_ID` and `APPWRITE_APPLE_PASSWORD` answer the Apple sign-in prompts, but Apple's two-factor code always needs a terminal, so pass `--key-path` in CI. The App ID check then reports that it was skipped and only fails the command when `--register-app-id` is passed."
+  - question: "Is it safe to run the command more than once?"
+    answer: "Yes. A rerun updates the existing providers instead of creating duplicates, and only checks the App ID when APNs is already set up. Pass `--force` to replace the key on providers that are already configured."
+---
+
+Getting push notifications working on iOS has always meant a long checklist across three tools. Create an APNs key in the Apple Developer portal, download the `.p8` file before Apple hides it forever, note the key ID and team ID, look up the bundle ID, create a provider in the Appwrite Console, create a second one for sandbox, then open Xcode to add the Push Notifications capability and the background mode. Miss one step, or register the wrong bundle ID, and APNs quietly answers with `TopicDisallowed`.
+
+None of it is hard. It is just easy to get one value slightly wrong, and the error only shows up when the first push fails.
+
+Today we are announcing **one-click APNs setup** in the Appwrite CLI. Run `appwrite init apns` in your iOS project, and the CLI configures [Appwrite Messaging](/docs/products/messaging), your Xcode project, and your Apple App ID in one pass.
+
+```bash
+appwrite init apns
+```
+
+# What one-click APNs setup gives you
+
+- **Production and sandbox providers in one run.** The CLI creates or updates both [APNs providers](/docs/products/messaging/apns) and enables them, so development builds and App Store builds both receive pushes. Use `--environment sandbox` or `--environment production` to set up only one.
+- **Xcode configured for you.** It adds the `aps-environment` entitlement and the `remote-notification` background mode to your app target.
+- **Values read from your project.** The bundle ID and team ID come from your Xcode project or Expo `app.json`, and the key ID comes from the `AuthKey_<KEYID>.p8` file name. With a key in the project folder, the command asks nothing.
+- **An Apple platform when you need one.** If your project has no Apple platform for the bundle ID, the CLI adds it. Without one, Appwrite rejects the app's requests as an unknown origin, device registration included.
+- **An App ID check on every run.** The CLI confirms with Apple that your bundle ID is an App ID with Push Notifications on, and offers to fix it if not. It always asks before signing in or changing anything.
+- **An APNs key without the portal.** With `--create-key`, the CLI signs in with your Apple ID and creates the key itself.
+- **Safe reruns.** Running the command again updates providers instead of duplicating them.
+
+# Set up APNs with a key you already have
+
+If you already have an APNs auth key, put the `.p8` file in your project folder and run the command from there:
+
+```bash
+appwrite init apns
+```
+
+The output walks through each step:
+
+```
+ℹ Info: Setting up APNs ...
+✓ Success: Created provider APNs (io.appwrite.apnstest.native) ( … )
+✓ Success: Created provider APNs sandbox (io.appwrite.apnstest.native) ( … )
+✓ Success: Added aps-environment to APNsNative/APNsNative.entitlements
+✓ Success: Added the remote-notification background mode to APNsNative/Info.plist
+✓ Success: APNs is set up for io.appwrite.apnstest.native.
+✓ Success: Added the Apple platform io.appwrite.apnstest.native to the project.
+ℹ Info: Checking the App ID for io.appwrite.apnstest.native ...
+✓ Success: io.appwrite.apnstest.native is registered as an App ID with Push Notifications.
+```
+
+Keep your keys somewhere else? Point the CLI at the file and pass the team ID:
+
+```bash
+appwrite init apns --key-path ~/keys/AuthKey_Q4GAU66T2N.p8 --team-id ABCDE12345
+```
+
+# Create the APNs key with your Apple ID
+
+The slowest part of APNs setup is usually the Apple Developer portal. With `--create-key`, you skip it:
+
+```bash
+appwrite init apns --create-key
+```
+
+The CLI signs in with your Apple ID, asks for your password and two-factor code, lets you pick a team, and creates the key. The sign-in is saved in `~/.appwrite/apns/<setup>/` with `0600` permissions, so later runs skip the password and two-factor code until Apple expires the session. Pass `--reset` to sign in again.
+
+If you run `appwrite init apns` without a key and without `--create-key`, the CLI offers three choices: create the key with your Apple ID, create it in the browser, or pick a file.
+
+Key creation is **experimental**. It talks to Apple's private developer APIs, which can change without notice. To keep you unblocked when that happens, the CLI ships three interchangeable ways to talk to Apple:
+
+| Setup | Built on |
+| --- | --- |
+| `appwrite` (default) | Native Go client built into the CLI |
+| `expo` | `@expo/apple-utils` |
+| `fastlane` | fastlane's spaceship |
+
+Switch with `--provider` or the `APPWRITE_APNS_SETUP` environment variable:
+
+```bash
+appwrite init apns --create-key --provider fastlane
+```
+
+If Apple breaks one setup, switch to another instead of waiting for a CLI release.
+
+# Why the CLI checks your App ID
+
+APNs only accepts pushes for a bundle ID that is registered as an App ID on your team with the Push Notifications capability on. Anything else fails with `TopicDisallowed`, which is easy to hit when a bundle ID was renamed, typed by hand, or created before push was added.
+
+So every run of `appwrite init apns` checks the App ID. It reuses a fresh sign-in from key creation or a saved one, and asks before it signs in or registers anything. To make the changes without prompts, pass `--register-app-id`. In that mode the command fails if it can't register the App ID, which is what you want in a scripted setup.
+
+# Run it in CI
+
+`APPWRITE_APPLE_ID` and `APPWRITE_APPLE_PASSWORD` answer the Apple sign-in prompts. The CLI prints the variable names, never their values. Apple's two-factor code always needs a terminal, though, so in CI use an existing key:
+
+```bash
+appwrite init apns --key-path ./AuthKey_Q4GAU66T2N.p8 --team-id ABCDE12345
+```
+
+Without a terminal, the App ID check reports that it was skipped and why. It only fails the command when `--register-app-id` is passed.
+
+# What you still set up yourself
+
+`appwrite init apns` stops at what it can configure safely and tells you the rest:
+
+- **Background and terminated delivery.** To show messages while the app is in the background or swiped away, add a Notification Service Extension whose class extends `AppwriteNotificationService`, and put the app and the extension in one App Group, named by `AppwritePushAppGroup` in both `Info.plist` files. The CLI prints this as a hint at the end of the run.
+- **Device registration and sending.** Request permission, register the device token as a push target, and send your first message by following [Send push notifications](/docs/products/messaging/send-push-notifications).
+
+# When to reach for `appwrite init apns`
+
+- **You are adding push to a new iOS app.** One command replaces the portal, the Console provider form, and the Xcode capability editor.
+- **You run separate development and production builds.** Both APNs environments are configured together, so sandbox pushes work from the first debug build.
+- **You build with Expo or fastlane.** The CLI reads Expo's `app.json` and can sign in through the same tools you already use.
+- **You keep seeing `TopicDisallowed`.** Rerun the command and let the App ID check find the mismatch.
+
+Stick with the Console when you are configuring an app you don't have the source for, or when you want to paste in credentials by hand. The [manual APNs steps](/docs/products/messaging/apns#add-provider) still work exactly as before.
+
+# Get started with APNs in Appwrite
+
+Update the [Appwrite CLI](/docs/tooling/command-line/installation) to the latest version, log in to your [Appwrite Cloud](https://cloud.appwrite.io) project, and run `appwrite init apns` from your iOS project folder.
+
+- [One-click APNs setup](/docs/products/messaging/apns#one-click-setup)
+- [Send push notifications](/docs/products/messaging/send-push-notifications)
+- [Appwrite CLI commands](/docs/tooling/command-line/commands)
+- [Push notifications best practices](/blog/post/push-notifications-best-practices)
