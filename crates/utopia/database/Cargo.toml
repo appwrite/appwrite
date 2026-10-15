@@ -48,6 +48,7 @@ utopia-pools = { workspace = true, optional = true }
 utopia-mongo = { workspace = true, optional = true }
 utopia-validators.workspace = true
 utopia-query.workspace = true
+xxhash-rust.workspace = true
 
 [dev-dependencies]
 tokio = { workspace = true, features = ["sync", "time", "rt", "macros", "rt-multi-thread"] }

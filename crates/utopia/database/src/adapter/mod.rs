@@ -1178,7 +1178,31 @@ pub trait QueryBuilder: Send + Sync {
     fn builder(&self) -> Result<crate::hook::SqlBuilder>;
 
     /// A schema builder in the adapter's dialect (`schema()`).
-    fn schema(&self) -> Result<Box<dyn Any + Send>>;
+    fn schema(&self) -> Result<SqlSchema>;
+}
+
+/// A schema builder of `utopia-query` in an adapter's dialect.
+///
+/// PHP: `MySQLSchema|PostgresSchema` (SQLite's extends MySQL's).
+#[derive(Clone)]
+#[allow(missing_debug_implementations)]
+pub enum SqlSchema {
+    /// MySQL and MariaDB.
+    MySql(utopia_query::schema::MySql),
+    /// PostgreSQL.
+    PostgreSql(utopia_query::schema::PostgreSql),
+    /// SQLite.
+    Sqlite(utopia_query::schema::Sqlite),
+}
+
+/// The values of the `select` queries among `queries`, in order
+/// (`getAttributeSelections()`).
+pub fn attribute_selections(queries: &[Query]) -> Vec<utopia_query::Value> {
+    queries
+        .iter()
+        .filter(|q| q.method() == utopia_query::Method::Select)
+        .flat_map(|q| q.values().values().cloned().collect::<Vec<_>>())
+        .collect()
 }
 
 /// An adapter that runs raw statements.

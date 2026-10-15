@@ -291,6 +291,23 @@ impl Collection {
             .map_err(Clone::clone)
     }
 
+    /// A hash of everything a query against the collection is validated and
+    /// cached by: its attributes, indexes, permissions and document
+    /// security (`fingerprint()`, internal): PHP's `hash('xxh128',
+    /// serialize([...]))`, so caches shared with PHP key alike.
+    ///
+    /// Fails as [`Collection::attributes`], [`Collection::indexes`] and
+    /// [`Document::permissions`] do.
+    pub fn fingerprint(&self) -> Result<String> {
+        let payload = crate::serialize::definition(
+            self.attributes()?,
+            self.indexes()?,
+            &self.document.permissions()?,
+            self.document_security(),
+        );
+        Ok(format!("{:032x}", xxhash_rust::xxh3::xxh3_128(&payload)))
+    }
+
     /// The name, else the id (`name()`).
     pub fn name(&self) -> &str {
         match self.document.get(NAME) {

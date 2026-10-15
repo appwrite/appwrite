@@ -78,6 +78,7 @@ pub mod query;
 pub mod relationship;
 pub mod role;
 pub mod schema;
+mod serialize;
 pub mod state;
 pub mod storage;
 pub mod validator;
