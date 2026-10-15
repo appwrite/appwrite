@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents;
 
-use Appwrite\Databases\Rejection;
 use Appwrite\Databases\TransactionState;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
@@ -153,8 +152,11 @@ class XList extends Action
                     $cursor->getMethod() === QueryMethod::CursorAfter ? CursorDirection::After : CursorDirection::Before,
                     $queries,
                 );
-            } catch (NotFoundException $e) {
-                throw $this->notFound($e, $dbForDatabases, $collectionTableId, $collectionId);
+            } catch (NotFoundException) {
+                // The collection metadata document exists but the backing store (e.g. a
+                // dedicated DocumentsDB shard) has no table for it. Treat this as a
+                // not-found on the collection so the caller sees a 404 instead of a 500.
+                throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
             } catch (QueryException $e) {
                 throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
             }
@@ -249,8 +251,11 @@ class XList extends Action
                 $documents = $find();
                 $total = $includeTotal ? $this->countRows($dbForDatabases, $collectionTableId, $queries, $parsed, $documents) : 0;
             }
-        } catch (NotFoundException $e) {
-            throw $this->notFound($e, $dbForDatabases, $collectionTableId, $collectionId);
+        } catch (NotFoundException) {
+            // The collection metadata document exists but the backing store (e.g. a
+            // dedicated DocumentsDB shard) has no table for it. Treat this as a
+            // not-found on the collection so the caller sees a 404 instead of a 500.
+            throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
         } catch (OrderException $e) {
             $documents = $this->isCollectionsAPI() ? 'documents' : 'rows';
             $attribute = $this->isCollectionsAPI() ? 'attribute' : 'column';
@@ -291,30 +296,6 @@ class XList extends Action
      */
     protected function afterQuery(float $dbDurationMs, Document $database, Document $collection, array $queries, ?Http $utopia): void
     {
-    }
-
-    /**
-     * A missing table means the backing store (e.g. a dedicated DocumentsDB shard) never got the collection, a 404.
-     * Anything else the query names and the store lacks, such as an unknown column, is an invalid query.
-     */
-    private function notFound(NotFoundException $error, Database $dbForDatabases, string $collectionTableId, string $collectionId): Exception
-    {
-        $rejection = Rejection::fromThrowable($error);
-        if ($rejection !== null) {
-            return new Exception($rejection->getType(), $rejection->getMessage(), previous: $error);
-        }
-
-        try {
-            $tableExists = $dbForDatabases->getAuthorization()->skip(fn () => $dbForDatabases->findCollection($collectionTableId)) !== null;
-        } catch (\Throwable) {
-            $tableExists = false;
-        }
-
-        if ($tableExists) {
-            return new Exception(Exception::GENERAL_QUERY_INVALID, 'Invalid query: ' . $error->getMessage(), previous: $error);
-        }
-
-        return new Exception($this->getParentNotFoundException(), params: [$collectionId], previous: $error);
     }
 
     /**
