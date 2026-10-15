@@ -255,11 +255,15 @@ pub struct Options {
     /// `PDO::ATTR_DEFAULT_FETCH_MODE`: [`FetchMode::Assoc`] by default, as
     /// the adapters set it.
     pub fetch_mode: FetchMode,
+    /// `PDO::ATTR_STRINGIFY_FETCHES`: every fetched value a string, as the
+    /// adapters set it (`true` by default). SQLite without it fetches
+    /// integers and floats as numbers, as `pdo_sqlite` does on PHP 8.1+.
+    pub stringify_fetches: bool,
 }
 
 impl Default for Options {
     fn default() -> Self {
-        Options { timeout: Duration::from_secs(3), fetch_mode: FetchMode::Assoc }
+        Options { timeout: Duration::from_secs(3), fetch_mode: FetchMode::Assoc, stringify_fetches: true }
     }
 }
 
@@ -449,7 +453,9 @@ impl Conn {
                 Ok(Conn::Mysql(mysql::Conn::connect(params, username, password, options.timeout).await?))
             }
             #[cfg(feature = "sqlite")]
-            dsn::Target::Sqlite(path) => Ok(Conn::Sqlite(sqlite::Conn::open(path, options.timeout)?)),
+            dsn::Target::Sqlite(path) => {
+                Ok(Conn::Sqlite(sqlite::Conn::open(path, options.timeout, options.stringify_fetches)?))
+            }
         }
     }
 
