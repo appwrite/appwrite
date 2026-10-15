@@ -161,6 +161,9 @@ pub struct Core {
     pub(crate) json_sets: Ordered<Condition>,
     pub(crate) returning: Vec<String>,
     pub(crate) group_by_modifier: Option<String>,
+    pub(crate) flavor: crate::builder::flavor::Flavor,
+    pub(crate) scope: Option<crate::builder::flavor::ScopeState>,
+    pub(crate) deferred: Option<Error>,
 }
 
 /// A query builder for one dialect: from a table, with queries (filters,
@@ -1555,7 +1558,8 @@ impl<D: Dialect> Builder<D> {
             return Ok(format!("{keyword} {table}"));
         }
         let on = self.compile_join_on(query)?;
-        Ok(format!("{keyword} {table} ON {}", on.join(" AND ")))
+        let sql = format!("{keyword} {table} ON {}", on.join(" AND "));
+        self.collate_join(query, sql)
     }
 
     fn compile_join_on(&mut self, query: &Query) -> Result<Vec<String>> {
@@ -1689,6 +1693,8 @@ impl<D: Dialect> Builder<D> {
 
     /// `attribute IN (?, ...)`, with `IS NULL` for null values; `1 = 0` for none.
     pub(crate) fn compile_in(&mut self, attribute: &str, values: &Array, column: Option<&str>) -> Result<String> {
+        let collated = self.collate(attribute, column)?;
+        let attribute = collated.as_str();
         if values.is_empty() {
             return Ok("1 = 0".into());
         }
@@ -1707,6 +1713,8 @@ impl<D: Dialect> Builder<D> {
 
     /// `attribute != ?` / `NOT IN (...)`, with `IS NOT NULL` for null values; `1 = 1` for none.
     pub(crate) fn compile_not_in(&mut self, attribute: &str, values: &Array, column: Option<&str>) -> Result<String> {
+        let collated = self.collate(attribute, column)?;
+        let attribute = collated.as_str();
         if values.is_empty() {
             return Ok("1 = 1".into());
         }

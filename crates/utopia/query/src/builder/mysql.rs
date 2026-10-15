@@ -358,6 +358,18 @@ impl Dialect for MySqlDialect {
         Ok(format!("{attribute} REGEXP ?"))
     }
 
+    fn compile_contains_all(
+        b: &mut Builder<Self>,
+        attribute: &str,
+        values: &Array,
+        column: Option<&str>,
+    ) -> Result<String> {
+        if let Some(sql) = b.flavored_contains_all(attribute, values, column) {
+            return Ok(sql);
+        }
+        b.base_compile_contains_all(attribute, values, column)
+    }
+
     fn compile_filter(b: &mut Builder<Self>, query: &Query) -> Result<String> {
         sql::sql_compile_filter(b, query)
     }
@@ -393,7 +405,10 @@ impl Dialect for MySqlDialect {
 
 impl SqlDialect for MySqlDialect {
     fn compile_search_expression(b: &mut Builder<Self>, attribute: &str, values: &Array, not: bool) -> Result<String> {
-        search_expression(b, attribute, values, not)
+        match b.flavored_search_values(values) {
+            Some(values) => search_expression(b, attribute, &values, not),
+            None => search_expression(b, attribute, values, not),
+        }
     }
 
     fn compile_spatial_distance(
@@ -655,7 +670,9 @@ impl<D: MySqlFamily> Builder<D> {
         right: impl Into<String>,
         alias: impl Into<String>,
     ) -> &mut Self {
-        D::mysql_mut(self).update_join = Some((table.into(), left.into(), right.into(), alias.into()));
+        let table = table.into();
+        self.defer_unbound(&format!("update joining table '{table}'"));
+        D::mysql_mut(self).update_join = Some((table, left.into(), right.into(), alias.into()));
         self
     }
 
@@ -669,7 +686,9 @@ impl<D: MySqlFamily> Builder<D> {
         left: impl Into<String>,
         right: impl Into<String>,
     ) -> &mut Self {
-        D::mysql_mut(self).delete_join = Some((alias.into(), table.into(), left.into(), right.into()));
+        let table = table.into();
+        self.defer_unbound(&format!("delete joining table '{table}'"));
+        D::mysql_mut(self).delete_join = Some((alias.into(), table, left.into(), right.into()));
         self
     }
 

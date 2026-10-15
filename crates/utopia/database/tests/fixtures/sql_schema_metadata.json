@@ -1,0 +1,886 @@
+[
+    {
+        "engine": "sqlite",
+        "shared": false,
+        "seed": [
+            "INSERT INTO `ns__metadata` (`_id`, `_uid`, `name`, `attributes`, `indexes`) VALUES (1, 'movies', 'movies', '[{\"$id\":\"title\",\"key\":\"title\",\"type\":\"string\",\"size\":128,\"required\":false,\"default\":null,\"signed\":true,\"array\":false,\"format\":null,\"formatOptions\":[],\"filters\":[]},{\"$id\":\"a\",\"key\":\"a\",\"type\":\"string\",\"size\":32,\"required\":false,\"default\":null,\"signed\":true,\"array\":false,\"format\":null,\"formatOptions\":[],\"filters\":[]},{\"$id\":\"b\",\"key\":\"b\",\"type\":\"string\",\"size\":32,\"required\":false,\"default\":null,\"signed\":true,\"array\":false,\"format\":null,\"formatOptions\":[],\"filters\":[]},{\"$id\":\"notes\",\"key\":\"notes\",\"type\":\"text\",\"size\":0,\"required\":false,\"default\":null,\"signed\":true,\"array\":false,\"format\":null,\"formatOptions\":[],\"filters\":[]},{\"$id\":\"tags\",\"key\":\"tags\",\"type\":\"string\",\"size\":64,\"required\":false,\"default\":null,\"signed\":true,\"array\":true,\"format\":null,\"formatOptions\":[],\"filters\":[]}]', '[{\"$id\":\"idx_ab\",\"key\":\"idx_ab\",\"type\":\"key\",\"attributes\":[\"a\",\"b\"],\"lengths\":[],\"orders\":[\"ASC\",\"DESC\"]},{\"$id\":\"ft_notes\",\"key\":\"ft_notes\",\"type\":\"fulltext\",\"attributes\":[\"notes\"]}]')",
+            "INSERT INTO `ns__metadata` (`_id`, `_uid`, `name`, `attributes`, `indexes`) VALUES (2, 'people', 'people', '[{\"$id\":\"name\",\"key\":\"name\",\"type\":\"string\",\"size\":64,\"required\":false,\"default\":null,\"signed\":true,\"array\":false,\"format\":null,\"formatOptions\":[],\"filters\":[]}]', '[]')"
+        ],
+        "steps": [
+            {
+                "step": "renameIndex",
+                "statements": [
+                    [
+                        "document_read",
+                        "SELECT * FROM `ns__metadata` AS `table_main` WHERE `_uid` COLLATE NOCASE = :_uid"
+                    ],
+                    [
+                        "index_rename",
+                        "\n            SELECT name FROM sqlite_master WHERE type='index' AND name=:_index\n        "
+                    ],
+                    [
+                        "index_rename",
+                        "DROP INDEX `ns__movies_idx_ab`"
+                    ],
+                    [
+                        "index_rename",
+                        "\n\t\t\tSELECT name\n\t\t\tFROM sqlite_master\n\t\t\tWHERE type='index' AND name=:_index;\n\t\t\t"
+                    ],
+                    [
+                        "index_rename",
+                        "CREATE INDEX `ns__movies_idx_ab2` ON `ns_movies` (`a` , `b` )"
+                    ]
+                ],
+                "result": true,
+                "error": null
+            },
+            {
+                "step": "renameIndex missing",
+                "statements": [
+                    [
+                        "document_read",
+                        "SELECT * FROM `ns__metadata` AS `table_main` WHERE `_uid` COLLATE NOCASE = :_uid"
+                    ]
+                ],
+                "result": false,
+                "error": null
+            },
+            {
+                "step": "deleteAttribute",
+                "statements": [
+                    [
+                        "document_read",
+                        "SELECT * FROM `ns__metadata` AS `table_main` WHERE `_uid` COLLATE NOCASE = :_uid"
+                    ],
+                    [
+                        "attribute_delete",
+                        "\n            SELECT name FROM sqlite_master WHERE type='index' AND name=:_index\n        "
+                    ],
+                    [
+                        "document_read",
+                        "SELECT * FROM `ns__metadata` AS `table_main` WHERE `_uid` COLLATE NOCASE = :_uid"
+                    ],
+                    [
+                        "attribute_delete",
+                        "DROP TRIGGER IF EXISTS `ns_movies_3add7b9612102f2a_fts_ai`"
+                    ],
+                    [
+                        "attribute_delete",
+                        "DROP TRIGGER IF EXISTS `ns_movies_3add7b9612102f2a_fts_ad`"
+                    ],
+                    [
+                        "attribute_delete",
+                        "DROP TRIGGER IF EXISTS `ns_movies_3add7b9612102f2a_fts_au`"
+                    ],
+                    [
+                        "attribute_delete",
+                        "DROP TABLE IF EXISTS `ns_movies_3add7b9612102f2a_fts`"
+                    ],
+                    [
+                        "attribute_delete",
+                        "\n\t\t\tSELECT name\n\t\t\tFROM sqlite_master\n\t\t\tWHERE type='index' AND name=:_index;\n\t\t\t"
+                    ],
+                    [
+                        "attribute_delete",
+                        "CREATE INDEX `ns__movies_idx_ab` ON `ns_movies` (`a` )"
+                    ],
+                    [
+                        "attribute_delete",
+                        "ALTER TABLE `ns_movies` DROP COLUMN `b`"
+                    ]
+                ],
+                "result": true,
+                "error": null
+            },
+            {
+                "step": "deleteIndex fulltext",
+                "statements": [
+                    [
+                        "index_delete",
+                        "\n            SELECT name FROM sqlite_master WHERE type='index' AND name=:_index\n        "
+                    ],
+                    [
+                        "index_delete",
+                        "DROP INDEX `ns__movies_ft_notes`"
+                    ]
+                ],
+                "result": true,
+                "error": null
+            },
+            {
+                "step": "deleteAttribute missing collection",
+                "statements": [
+                    [
+                        "document_read",
+                        "SELECT * FROM `ns__metadata` AS `table_main` WHERE `_uid` COLLATE NOCASE = :_uid"
+                    ]
+                ],
+                "result": null,
+                "error": "Utopia\\Database\\Exception\\NotFound: Collection not found"
+            },
+            {
+                "step": "updateRelationship manyToMany",
+                "statements": [
+                    [
+                        "document_read",
+                        "SELECT * FROM `ns__metadata` AS `table_main` WHERE `_uid` COLLATE NOCASE = :_uid"
+                    ],
+                    [
+                        "document_read",
+                        "SELECT * FROM `ns__metadata` AS `table_main` WHERE `_uid` COLLATE NOCASE = :_uid"
+                    ],
+                    [
+                        "attribute_update",
+                        "ALTER TABLE `ns__1_2` RENAME COLUMN `fans` TO `fans2`"
+                    ],
+                    [
+                        "attribute_update",
+                        "ALTER TABLE `ns__1_2` RENAME COLUMN `liked` TO `liked2`"
+                    ]
+                ],
+                "result": true,
+                "error": null
+            },
+            {
+                "step": "deleteRelationship manyToMany",
+                "statements": [
+                    [
+                        "document_read",
+                        "SELECT * FROM `ns__metadata` AS `table_main` WHERE `_uid` COLLATE NOCASE = :_uid"
+                    ],
+                    [
+                        "document_read",
+                        "SELECT * FROM `ns__metadata` AS `table_main` WHERE `_uid` COLLATE NOCASE = :_uid"
+                    ],
+                    [
+                        "attribute_delete",
+                        "DROP TABLE `ns__1_2`"
+                    ],
+                    [
+                        "attribute_delete",
+                        "DROP TABLE `ns__1_2_perms`"
+                    ]
+                ],
+                "result": true,
+                "error": null
+            }
+        ]
+    },
+    {
+        "engine": "sqlite",
+        "shared": true,
+        "seed": [
+            "INSERT INTO `ns__metadata` (`_id`, `_uid`, `name`, `attributes`, `indexes`, `_tenant`) VALUES (1, 'movies', 'movies', '[{\"$id\":\"title\",\"key\":\"title\",\"type\":\"string\",\"size\":128,\"required\":false,\"default\":null,\"signed\":true,\"array\":false,\"format\":null,\"formatOptions\":[],\"filters\":[]},{\"$id\":\"a\",\"key\":\"a\",\"type\":\"string\",\"size\":32,\"required\":false,\"default\":null,\"signed\":true,\"array\":false,\"format\":null,\"formatOptions\":[],\"filters\":[]},{\"$id\":\"b\",\"key\":\"b\",\"type\":\"string\",\"size\":32,\"required\":false,\"default\":null,\"signed\":true,\"array\":false,\"format\":null,\"formatOptions\":[],\"filters\":[]},{\"$id\":\"notes\",\"key\":\"notes\",\"type\":\"text\",\"size\":0,\"required\":false,\"default\":null,\"signed\":true,\"array\":false,\"format\":null,\"formatOptions\":[],\"filters\":[]},{\"$id\":\"tags\",\"key\":\"tags\",\"type\":\"string\",\"size\":64,\"required\":false,\"default\":null,\"signed\":true,\"array\":true,\"format\":null,\"formatOptions\":[],\"filters\":[]}]', '[{\"$id\":\"idx_ab\",\"key\":\"idx_ab\",\"type\":\"key\",\"attributes\":[\"a\",\"b\"],\"lengths\":[],\"orders\":[\"ASC\",\"DESC\"]},{\"$id\":\"ft_notes\",\"key\":\"ft_notes\",\"type\":\"fulltext\",\"attributes\":[\"notes\"]}]', 7)",
+            "INSERT INTO `ns__metadata` (`_id`, `_uid`, `name`, `attributes`, `indexes`, `_tenant`) VALUES (2, 'people', 'people', '[{\"$id\":\"name\",\"key\":\"name\",\"type\":\"string\",\"size\":64,\"required\":false,\"default\":null,\"signed\":true,\"array\":false,\"format\":null,\"formatOptions\":[],\"filters\":[]}]', '[]', 7)"
+        ],
+        "steps": [
+            {
+                "step": "renameIndex",
+                "statements": [
+                    [
+                        "document_read",
+                        "SELECT * FROM `ns__metadata` AS `table_main` WHERE `_uid` COLLATE NOCASE = :_uid AND (`table_main`._tenant IN (:_tenant) OR `table_main`._tenant IS NULL)"
+                    ],
+                    [
+                        "index_rename",
+                        "\n            SELECT name FROM sqlite_master WHERE type='index' AND name=:_index\n        "
+                    ],
+                    [
+                        "index_rename",
+                        "DROP INDEX `ns_7_movies_idx_ab`"
+                    ],
+                    [
+                        "index_rename",
+                        "\n\t\t\tSELECT name\n\t\t\tFROM sqlite_master\n\t\t\tWHERE type='index' AND name=:_index;\n\t\t\t"
+                    ],
+                    [
+                        "index_rename",
+                        "CREATE INDEX `ns_7_movies_idx_ab2` ON `ns_movies` (`_tenant`, `a` , `b` )"
+                    ]
+                ],
+                "result": true,
+                "error": null
+            },
+            {
+                "step": "renameIndex missing",
+                "statements": [
+                    [
+                        "document_read",
+                        "SELECT * FROM `ns__metadata` AS `table_main` WHERE `_uid` COLLATE NOCASE = :_uid AND (`table_main`._tenant IN (:_tenant) OR `table_main`._tenant IS NULL)"
+                    ]
+                ],
+                "result": false,
+                "error": null
+            },
+            {
+                "step": "deleteAttribute",
+                "statements": [
+                    [
+                        "document_read",
+                        "SELECT * FROM `ns__metadata` AS `table_main` WHERE `_uid` COLLATE NOCASE = :_uid AND (`table_main`._tenant IN (:_tenant) OR `table_main`._tenant IS NULL)"
+                    ],
+                    [
+                        "attribute_delete",
+                        "\n            SELECT name FROM sqlite_master WHERE type='index' AND name=:_index\n        "
+                    ],
+                    [
+                        "document_read",
+                        "SELECT * FROM `ns__metadata` AS `table_main` WHERE `_uid` COLLATE NOCASE = :_uid AND (`table_main`._tenant IN (:_tenant) OR `table_main`._tenant IS NULL)"
+                    ],
+                    [
+                        "attribute_delete",
+                        "DROP TRIGGER IF EXISTS `ns_7_movies_3add7b9612102f2a_fts_ai`"
+                    ],
+                    [
+                        "attribute_delete",
+                        "DROP TRIGGER IF EXISTS `ns_7_movies_3add7b9612102f2a_fts_ad`"
+                    ],
+                    [
+                        "attribute_delete",
+                        "DROP TRIGGER IF EXISTS `ns_7_movies_3add7b9612102f2a_fts_au`"
+                    ],
+                    [
+                        "attribute_delete",
+                        "DROP TABLE IF EXISTS `ns_7_movies_3add7b9612102f2a_fts`"
+                    ],
+                    [
+                        "attribute_delete",
+                        "\n\t\t\tSELECT name\n\t\t\tFROM sqlite_master\n\t\t\tWHERE type='index' AND name=:_index;\n\t\t\t"
+                    ],
+                    [
+                        "attribute_delete",
+                        "CREATE INDEX `ns_7_movies_idx_ab` ON `ns_movies` (`_tenant`, `a` )"
+                    ],
+                    [
+                        "attribute_delete",
+                        "ALTER TABLE `ns_movies` DROP COLUMN `b`"
+                    ]
+                ],
+                "result": true,
+                "error": null
+            },
+            {
+                "step": "deleteIndex fulltext",
+                "statements": [
+                    [
+                        "index_delete",
+                        "\n            SELECT name FROM sqlite_master WHERE type='index' AND name=:_index\n        "
+                    ],
+                    [
+                        "index_delete",
+                        "DROP INDEX `ns_7_movies_ft_notes`"
+                    ]
+                ],
+                "result": true,
+                "error": null
+            },
+            {
+                "step": "deleteAttribute missing collection",
+                "statements": [
+                    [
+                        "document_read",
+                        "SELECT * FROM `ns__metadata` AS `table_main` WHERE `_uid` COLLATE NOCASE = :_uid AND (`table_main`._tenant IN (:_tenant) OR `table_main`._tenant IS NULL)"
+                    ]
+                ],
+                "result": null,
+                "error": "Utopia\\Database\\Exception\\NotFound: Collection not found"
+            },
+            {
+                "step": "updateRelationship manyToMany",
+                "statements": [
+                    [
+                        "document_read",
+                        "SELECT * FROM `ns__metadata` AS `table_main` WHERE `_uid` COLLATE NOCASE = :_uid AND (`table_main`._tenant IN (:_tenant) OR `table_main`._tenant IS NULL)"
+                    ],
+                    [
+                        "document_read",
+                        "SELECT * FROM `ns__metadata` AS `table_main` WHERE `_uid` COLLATE NOCASE = :_uid AND (`table_main`._tenant IN (:_tenant) OR `table_main`._tenant IS NULL)"
+                    ],
+                    [
+                        "attribute_update",
+                        "ALTER TABLE `ns__1_2` RENAME COLUMN `fans` TO `fans2`"
+                    ],
+                    [
+                        "attribute_update",
+                        "ALTER TABLE `ns__1_2` RENAME COLUMN `liked` TO `liked2`"
+                    ]
+                ],
+                "result": true,
+                "error": null
+            },
+            {
+                "step": "deleteRelationship manyToMany",
+                "statements": [
+                    [
+                        "document_read",
+                        "SELECT * FROM `ns__metadata` AS `table_main` WHERE `_uid` COLLATE NOCASE = :_uid AND (`table_main`._tenant IN (:_tenant) OR `table_main`._tenant IS NULL)"
+                    ],
+                    [
+                        "document_read",
+                        "SELECT * FROM `ns__metadata` AS `table_main` WHERE `_uid` COLLATE NOCASE = :_uid AND (`table_main`._tenant IN (:_tenant) OR `table_main`._tenant IS NULL)"
+                    ],
+                    [
+                        "attribute_delete",
+                        "DROP TABLE `ns__1_2`"
+                    ],
+                    [
+                        "attribute_delete",
+                        "DROP TABLE `ns__1_2_perms`"
+                    ]
+                ],
+                "result": true,
+                "error": null
+            }
+        ]
+    },
+    {
+        "engine": "postgres",
+        "shared": false,
+        "seed": [
+            "INSERT INTO \"schema_meta\".\"ns__metadata\" (\"_id\", \"_uid\", \"name\", \"attributes\", \"indexes\") VALUES (1, 'movies', 'movies', '[{\"$id\":\"title\",\"key\":\"title\",\"type\":\"string\",\"size\":128,\"required\":false,\"default\":null,\"signed\":true,\"array\":false,\"format\":null,\"formatOptions\":[],\"filters\":[]},{\"$id\":\"a\",\"key\":\"a\",\"type\":\"string\",\"size\":32,\"required\":false,\"default\":null,\"signed\":true,\"array\":false,\"format\":null,\"formatOptions\":[],\"filters\":[]},{\"$id\":\"b\",\"key\":\"b\",\"type\":\"string\",\"size\":32,\"required\":false,\"default\":null,\"signed\":true,\"array\":false,\"format\":null,\"formatOptions\":[],\"filters\":[]},{\"$id\":\"notes\",\"key\":\"notes\",\"type\":\"text\",\"size\":0,\"required\":false,\"default\":null,\"signed\":true,\"array\":false,\"format\":null,\"formatOptions\":[],\"filters\":[]},{\"$id\":\"tags\",\"key\":\"tags\",\"type\":\"string\",\"size\":64,\"required\":false,\"default\":null,\"signed\":true,\"array\":true,\"format\":null,\"formatOptions\":[],\"filters\":[]}]', '[{\"$id\":\"idx_ab\",\"key\":\"idx_ab\",\"type\":\"key\",\"attributes\":[\"a\",\"b\"],\"lengths\":[],\"orders\":[\"ASC\",\"DESC\"]},{\"$id\":\"ft_notes\",\"key\":\"ft_notes\",\"type\":\"fulltext\",\"attributes\":[\"notes\"]}]')",
+            "INSERT INTO \"schema_meta\".\"ns__metadata\" (\"_id\", \"_uid\", \"name\", \"attributes\", \"indexes\") VALUES (2, 'people', 'people', '[{\"$id\":\"name\",\"key\":\"name\",\"type\":\"string\",\"size\":64,\"required\":false,\"default\":null,\"signed\":true,\"array\":false,\"format\":null,\"formatOptions\":[],\"filters\":[]}]', '[]')"
+        ],
+        "steps": [
+            {
+                "step": "renameIndex",
+                "statements": [
+                    [
+                        "index_rename",
+                        "ALTER INDEX IF EXISTS \"schema_meta\".\"ns__movies_idx_ab\" RENAME TO \"ns__movies_idx_ab2\""
+                    ],
+                    [
+                        "index_rename",
+                        "SELECT c.relname FROM pg_catalog.pg_class c JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname = ? AND c.relkind = 'i' AND c.relname IN (?)"
+                    ]
+                ],
+                "result": true,
+                "error": null
+            },
+            {
+                "step": "renameIndex missing",
+                "statements": [
+                    [
+                        "index_rename",
+                        "ALTER INDEX IF EXISTS \"schema_meta\".\"ns__movies_nope\" RENAME TO \"ns__movies_nope2\""
+                    ],
+                    [
+                        "index_rename",
+                        "SELECT c.relname FROM pg_catalog.pg_class c JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname = ? AND c.relkind = 'i' AND c.relname IN (?)"
+                    ]
+                ],
+                "result": false,
+                "error": null
+            },
+            {
+                "step": "updateRelationship manyToMany",
+                "statements": [
+                    [
+                        "document_read",
+                        "SELECT * FROM \"schema_meta\".\"ns__metadata\" AS \"table_main\" WHERE \"_uid\" = :_uid"
+                    ],
+                    [
+                        "document_read",
+                        "SELECT * FROM \"schema_meta\".\"ns__metadata\" AS \"table_main\" WHERE \"_uid\" = :_uid"
+                    ],
+                    [
+                        "attribute_update",
+                        "ALTER TABLE \"schema_meta\".\"ns__1_2\" RENAME COLUMN \"fans\" TO \"fans2\";ALTER TABLE \"schema_meta\".\"ns__1_2\" RENAME COLUMN \"liked\" TO \"liked2\";"
+                    ]
+                ],
+                "result": true,
+                "error": null
+            },
+            {
+                "step": "deleteRelationship manyToMany",
+                "statements": [
+                    [
+                        "document_read",
+                        "SELECT * FROM \"schema_meta\".\"ns__metadata\" AS \"table_main\" WHERE \"_uid\" = :_uid"
+                    ],
+                    [
+                        "document_read",
+                        "SELECT * FROM \"schema_meta\".\"ns__metadata\" AS \"table_main\" WHERE \"_uid\" = :_uid"
+                    ],
+                    [
+                        "attribute_delete",
+                        "DROP TABLE \"schema_meta\".\"ns__1_2\"; DROP TABLE \"schema_meta\".\"ns__1_2_perms\""
+                    ]
+                ],
+                "result": true,
+                "error": null
+            }
+        ]
+    },
+    {
+        "engine": "postgres",
+        "shared": true,
+        "seed": [
+            "INSERT INTO \"schema_meta_shared\".\"ns__metadata\" (\"_id\", \"_uid\", \"name\", \"attributes\", \"indexes\", \"_tenant\") VALUES (1, 'movies', 'movies', '[{\"$id\":\"title\",\"key\":\"title\",\"type\":\"string\",\"size\":128,\"required\":false,\"default\":null,\"signed\":true,\"array\":false,\"format\":null,\"formatOptions\":[],\"filters\":[]},{\"$id\":\"a\",\"key\":\"a\",\"type\":\"string\",\"size\":32,\"required\":false,\"default\":null,\"signed\":true,\"array\":false,\"format\":null,\"formatOptions\":[],\"filters\":[]},{\"$id\":\"b\",\"key\":\"b\",\"type\":\"string\",\"size\":32,\"required\":false,\"default\":null,\"signed\":true,\"array\":false,\"format\":null,\"formatOptions\":[],\"filters\":[]},{\"$id\":\"notes\",\"key\":\"notes\",\"type\":\"text\",\"size\":0,\"required\":false,\"default\":null,\"signed\":true,\"array\":false,\"format\":null,\"formatOptions\":[],\"filters\":[]},{\"$id\":\"tags\",\"key\":\"tags\",\"type\":\"string\",\"size\":64,\"required\":false,\"default\":null,\"signed\":true,\"array\":true,\"format\":null,\"formatOptions\":[],\"filters\":[]}]', '[{\"$id\":\"idx_ab\",\"key\":\"idx_ab\",\"type\":\"key\",\"attributes\":[\"a\",\"b\"],\"lengths\":[],\"orders\":[\"ASC\",\"DESC\"]},{\"$id\":\"ft_notes\",\"key\":\"ft_notes\",\"type\":\"fulltext\",\"attributes\":[\"notes\"]}]', 7)",
+            "INSERT INTO \"schema_meta_shared\".\"ns__metadata\" (\"_id\", \"_uid\", \"name\", \"attributes\", \"indexes\", \"_tenant\") VALUES (2, 'people', 'people', '[{\"$id\":\"name\",\"key\":\"name\",\"type\":\"string\",\"size\":64,\"required\":false,\"default\":null,\"signed\":true,\"array\":false,\"format\":null,\"formatOptions\":[],\"filters\":[]}]', '[]', 7)"
+        ],
+        "steps": [
+            {
+                "step": "renameIndex",
+                "statements": [
+                    [
+                        "index_rename",
+                        "ALTER INDEX IF EXISTS \"schema_meta_shared\".\"ns_7_movies_idx_ab\" RENAME TO \"ns_7_movies_idx_ab2\""
+                    ],
+                    [
+                        "index_rename",
+                        "SELECT \"_tenant\" FROM \"schema_meta_shared\".\"ns__metadata\" WHERE \"_uid\" = ? ORDER BY \"_id\" ASC LIMIT 1"
+                    ],
+                    [
+                        "index_rename",
+                        "SELECT c.relname FROM pg_catalog.pg_class c JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname = ? AND c.relkind = 'i' AND c.relname IN (?, ?)"
+                    ]
+                ],
+                "result": true,
+                "error": null
+            },
+            {
+                "step": "renameIndex missing",
+                "statements": [
+                    [
+                        "index_rename",
+                        "ALTER INDEX IF EXISTS \"schema_meta_shared\".\"ns_7_movies_nope\" RENAME TO \"ns_7_movies_nope2\""
+                    ],
+                    [
+                        "index_rename",
+                        "SELECT \"_tenant\" FROM \"schema_meta_shared\".\"ns__metadata\" WHERE \"_uid\" = ? ORDER BY \"_id\" ASC LIMIT 1"
+                    ],
+                    [
+                        "index_rename",
+                        "SELECT c.relname FROM pg_catalog.pg_class c JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname = ? AND c.relkind = 'i' AND c.relname IN (?, ?)"
+                    ]
+                ],
+                "result": false,
+                "error": null
+            },
+            {
+                "step": "updateRelationship manyToMany",
+                "statements": [
+                    [
+                        "document_read",
+                        "SELECT * FROM \"schema_meta_shared\".\"ns__metadata\" AS \"table_main\" WHERE \"_uid\" = :_uid AND (\"table_main\"._tenant IN (:_tenant) OR \"table_main\"._tenant IS NULL)"
+                    ],
+                    [
+                        "document_read",
+                        "SELECT * FROM \"schema_meta_shared\".\"ns__metadata\" AS \"table_main\" WHERE \"_uid\" = :_uid AND (\"table_main\"._tenant IN (:_tenant) OR \"table_main\"._tenant IS NULL)"
+                    ],
+                    [
+                        "attribute_update",
+                        "ALTER TABLE \"schema_meta_shared\".\"ns__1_2\" RENAME COLUMN \"fans\" TO \"fans2\";ALTER TABLE \"schema_meta_shared\".\"ns__1_2\" RENAME COLUMN \"liked\" TO \"liked2\";"
+                    ]
+                ],
+                "result": true,
+                "error": null
+            },
+            {
+                "step": "deleteRelationship manyToMany",
+                "statements": [
+                    [
+                        "document_read",
+                        "SELECT * FROM \"schema_meta_shared\".\"ns__metadata\" AS \"table_main\" WHERE \"_uid\" = :_uid AND (\"table_main\"._tenant IN (:_tenant) OR \"table_main\"._tenant IS NULL)"
+                    ],
+                    [
+                        "document_read",
+                        "SELECT * FROM \"schema_meta_shared\".\"ns__metadata\" AS \"table_main\" WHERE \"_uid\" = :_uid AND (\"table_main\"._tenant IN (:_tenant) OR \"table_main\"._tenant IS NULL)"
+                    ],
+                    [
+                        "attribute_delete",
+                        "DROP TABLE \"schema_meta_shared\".\"ns__1_2\"; DROP TABLE \"schema_meta_shared\".\"ns__1_2_perms\""
+                    ]
+                ],
+                "result": true,
+                "error": null
+            }
+        ]
+    },
+    {
+        "engine": "mariadb",
+        "shared": false,
+        "seed": [
+            "INSERT INTO `schema_meta`.`ns__metadata` (`_id`, `_uid`, `name`, `attributes`, `indexes`) VALUES (1, 'movies', 'movies', '[{\\\"$id\\\":\\\"title\\\",\\\"key\\\":\\\"title\\\",\\\"type\\\":\\\"string\\\",\\\"size\\\":128,\\\"required\\\":false,\\\"default\\\":null,\\\"signed\\\":true,\\\"array\\\":false,\\\"format\\\":null,\\\"formatOptions\\\":[],\\\"filters\\\":[]},{\\\"$id\\\":\\\"a\\\",\\\"key\\\":\\\"a\\\",\\\"type\\\":\\\"string\\\",\\\"size\\\":32,\\\"required\\\":false,\\\"default\\\":null,\\\"signed\\\":true,\\\"array\\\":false,\\\"format\\\":null,\\\"formatOptions\\\":[],\\\"filters\\\":[]},{\\\"$id\\\":\\\"b\\\",\\\"key\\\":\\\"b\\\",\\\"type\\\":\\\"string\\\",\\\"size\\\":32,\\\"required\\\":false,\\\"default\\\":null,\\\"signed\\\":true,\\\"array\\\":false,\\\"format\\\":null,\\\"formatOptions\\\":[],\\\"filters\\\":[]},{\\\"$id\\\":\\\"notes\\\",\\\"key\\\":\\\"notes\\\",\\\"type\\\":\\\"text\\\",\\\"size\\\":0,\\\"required\\\":false,\\\"default\\\":null,\\\"signed\\\":true,\\\"array\\\":false,\\\"format\\\":null,\\\"formatOptions\\\":[],\\\"filters\\\":[]},{\\\"$id\\\":\\\"tags\\\",\\\"key\\\":\\\"tags\\\",\\\"type\\\":\\\"string\\\",\\\"size\\\":64,\\\"required\\\":false,\\\"default\\\":null,\\\"signed\\\":true,\\\"array\\\":true,\\\"format\\\":null,\\\"formatOptions\\\":[],\\\"filters\\\":[]}]', '[{\\\"$id\\\":\\\"idx_ab\\\",\\\"key\\\":\\\"idx_ab\\\",\\\"type\\\":\\\"key\\\",\\\"attributes\\\":[\\\"a\\\",\\\"b\\\"],\\\"lengths\\\":[],\\\"orders\\\":[\\\"ASC\\\",\\\"DESC\\\"]},{\\\"$id\\\":\\\"ft_notes\\\",\\\"key\\\":\\\"ft_notes\\\",\\\"type\\\":\\\"fulltext\\\",\\\"attributes\\\":[\\\"notes\\\"]}]')",
+            "INSERT INTO `schema_meta`.`ns__metadata` (`_id`, `_uid`, `name`, `attributes`, `indexes`) VALUES (2, 'people', 'people', '[{\\\"$id\\\":\\\"name\\\",\\\"key\\\":\\\"name\\\",\\\"type\\\":\\\"string\\\",\\\"size\\\":64,\\\"required\\\":false,\\\"default\\\":null,\\\"signed\\\":true,\\\"array\\\":false,\\\"format\\\":null,\\\"formatOptions\\\":[],\\\"filters\\\":[]}]', '[]')"
+        ],
+        "steps": [
+            {
+                "step": "createIndex",
+                "statements": [
+                    [
+                        "document_read",
+                        "SELECT * FROM `schema_meta`.`ns__metadata` AS `table_main` WHERE `_uid` = :_uid"
+                    ],
+                    [
+                        "index_create",
+                        "CREATE INDEX `idx_title` ON `schema_meta`.`ns_movies` (`title`(16) DESC)"
+                    ]
+                ],
+                "result": true,
+                "error": null
+            },
+            {
+                "step": "createIndex fulltext",
+                "statements": [
+                    [
+                        "document_read",
+                        "SELECT * FROM `schema_meta`.`ns__metadata` AS `table_main` WHERE `_uid` = :_uid"
+                    ],
+                    [
+                        "index_create",
+                        "CREATE FULLTEXT INDEX `ft_title` ON `schema_meta`.`ns_movies` (`title`)"
+                    ]
+                ],
+                "result": true,
+                "error": null
+            },
+            {
+                "step": "createIndex missing collection",
+                "statements": [
+                    [
+                        "document_read",
+                        "SELECT * FROM `schema_meta`.`ns__metadata` AS `table_main` WHERE `_uid` = :_uid"
+                    ]
+                ],
+                "result": null,
+                "error": "Utopia\\Database\\Exception\\NotFound: Collection not found"
+            },
+            {
+                "step": "updateRelationship manyToMany",
+                "statements": [
+                    [
+                        "document_read",
+                        "SELECT * FROM `schema_meta`.`ns__metadata` AS `table_main` WHERE `_uid` = :_uid"
+                    ],
+                    [
+                        "document_read",
+                        "SELECT * FROM `schema_meta`.`ns__metadata` AS `table_main` WHERE `_uid` = :_uid"
+                    ],
+                    [
+                        "attribute_update",
+                        "ALTER TABLE `schema_meta`.`ns__1_2` RENAME COLUMN `fans` TO `fans2`;ALTER TABLE `schema_meta`.`ns__1_2` RENAME COLUMN `liked` TO `liked2`;"
+                    ]
+                ],
+                "result": true,
+                "error": null
+            },
+            {
+                "step": "deleteRelationship manyToMany",
+                "statements": [
+                    [
+                        "document_read",
+                        "SELECT * FROM `schema_meta`.`ns__metadata` AS `table_main` WHERE `_uid` = :_uid"
+                    ],
+                    [
+                        "document_read",
+                        "SELECT * FROM `schema_meta`.`ns__metadata` AS `table_main` WHERE `_uid` = :_uid"
+                    ],
+                    [
+                        "attribute_delete",
+                        "DROP TABLE `schema_meta`.`ns__1_2`; DROP TABLE `schema_meta`.`ns__1_2_perms`"
+                    ]
+                ],
+                "result": true,
+                "error": null
+            }
+        ]
+    },
+    {
+        "engine": "mariadb",
+        "shared": true,
+        "seed": [
+            "INSERT INTO `schema_meta_shared`.`ns__metadata` (`_id`, `_uid`, `name`, `attributes`, `indexes`, `_tenant`) VALUES (1, 'movies', 'movies', '[{\\\"$id\\\":\\\"title\\\",\\\"key\\\":\\\"title\\\",\\\"type\\\":\\\"string\\\",\\\"size\\\":128,\\\"required\\\":false,\\\"default\\\":null,\\\"signed\\\":true,\\\"array\\\":false,\\\"format\\\":null,\\\"formatOptions\\\":[],\\\"filters\\\":[]},{\\\"$id\\\":\\\"a\\\",\\\"key\\\":\\\"a\\\",\\\"type\\\":\\\"string\\\",\\\"size\\\":32,\\\"required\\\":false,\\\"default\\\":null,\\\"signed\\\":true,\\\"array\\\":false,\\\"format\\\":null,\\\"formatOptions\\\":[],\\\"filters\\\":[]},{\\\"$id\\\":\\\"b\\\",\\\"key\\\":\\\"b\\\",\\\"type\\\":\\\"string\\\",\\\"size\\\":32,\\\"required\\\":false,\\\"default\\\":null,\\\"signed\\\":true,\\\"array\\\":false,\\\"format\\\":null,\\\"formatOptions\\\":[],\\\"filters\\\":[]},{\\\"$id\\\":\\\"notes\\\",\\\"key\\\":\\\"notes\\\",\\\"type\\\":\\\"text\\\",\\\"size\\\":0,\\\"required\\\":false,\\\"default\\\":null,\\\"signed\\\":true,\\\"array\\\":false,\\\"format\\\":null,\\\"formatOptions\\\":[],\\\"filters\\\":[]},{\\\"$id\\\":\\\"tags\\\",\\\"key\\\":\\\"tags\\\",\\\"type\\\":\\\"string\\\",\\\"size\\\":64,\\\"required\\\":false,\\\"default\\\":null,\\\"signed\\\":true,\\\"array\\\":true,\\\"format\\\":null,\\\"formatOptions\\\":[],\\\"filters\\\":[]}]', '[{\\\"$id\\\":\\\"idx_ab\\\",\\\"key\\\":\\\"idx_ab\\\",\\\"type\\\":\\\"key\\\",\\\"attributes\\\":[\\\"a\\\",\\\"b\\\"],\\\"lengths\\\":[],\\\"orders\\\":[\\\"ASC\\\",\\\"DESC\\\"]},{\\\"$id\\\":\\\"ft_notes\\\",\\\"key\\\":\\\"ft_notes\\\",\\\"type\\\":\\\"fulltext\\\",\\\"attributes\\\":[\\\"notes\\\"]}]', 7)",
+            "INSERT INTO `schema_meta_shared`.`ns__metadata` (`_id`, `_uid`, `name`, `attributes`, `indexes`, `_tenant`) VALUES (2, 'people', 'people', '[{\\\"$id\\\":\\\"name\\\",\\\"key\\\":\\\"name\\\",\\\"type\\\":\\\"string\\\",\\\"size\\\":64,\\\"required\\\":false,\\\"default\\\":null,\\\"signed\\\":true,\\\"array\\\":false,\\\"format\\\":null,\\\"formatOptions\\\":[],\\\"filters\\\":[]}]', '[]', 7)"
+        ],
+        "steps": [
+            {
+                "step": "createIndex",
+                "statements": [
+                    [
+                        "document_read",
+                        "SELECT * FROM `schema_meta_shared`.`ns__metadata` AS `table_main` WHERE `_uid` = :_uid AND (`table_main`._tenant IN (:_tenant) OR `table_main`._tenant IS NULL)"
+                    ],
+                    [
+                        "index_create",
+                        "CREATE INDEX `idx_title` ON `schema_meta_shared`.`ns_movies` (`_tenant`, `title`(16) DESC)"
+                    ]
+                ],
+                "result": true,
+                "error": null
+            },
+            {
+                "step": "createIndex fulltext",
+                "statements": [
+                    [
+                        "document_read",
+                        "SELECT * FROM `schema_meta_shared`.`ns__metadata` AS `table_main` WHERE `_uid` = :_uid AND (`table_main`._tenant IN (:_tenant) OR `table_main`._tenant IS NULL)"
+                    ],
+                    [
+                        "index_create",
+                        "CREATE FULLTEXT INDEX `ft_title` ON `schema_meta_shared`.`ns_movies` (`title`)"
+                    ]
+                ],
+                "result": true,
+                "error": null
+            },
+            {
+                "step": "createIndex missing collection",
+                "statements": [
+                    [
+                        "document_read",
+                        "SELECT * FROM `schema_meta_shared`.`ns__metadata` AS `table_main` WHERE `_uid` = :_uid AND (`table_main`._tenant IN (:_tenant) OR `table_main`._tenant IS NULL)"
+                    ]
+                ],
+                "result": null,
+                "error": "Utopia\\Database\\Exception\\NotFound: Collection not found"
+            },
+            {
+                "step": "updateRelationship manyToMany",
+                "statements": [
+                    [
+                        "document_read",
+                        "SELECT * FROM `schema_meta_shared`.`ns__metadata` AS `table_main` WHERE `_uid` = :_uid AND (`table_main`._tenant IN (:_tenant) OR `table_main`._tenant IS NULL)"
+                    ],
+                    [
+                        "document_read",
+                        "SELECT * FROM `schema_meta_shared`.`ns__metadata` AS `table_main` WHERE `_uid` = :_uid AND (`table_main`._tenant IN (:_tenant) OR `table_main`._tenant IS NULL)"
+                    ],
+                    [
+                        "attribute_update",
+                        "ALTER TABLE `schema_meta_shared`.`ns__1_2` RENAME COLUMN `fans` TO `fans2`;ALTER TABLE `schema_meta_shared`.`ns__1_2` RENAME COLUMN `liked` TO `liked2`;"
+                    ]
+                ],
+                "result": true,
+                "error": null
+            },
+            {
+                "step": "deleteRelationship manyToMany",
+                "statements": [
+                    [
+                        "document_read",
+                        "SELECT * FROM `schema_meta_shared`.`ns__metadata` AS `table_main` WHERE `_uid` = :_uid AND (`table_main`._tenant IN (:_tenant) OR `table_main`._tenant IS NULL)"
+                    ],
+                    [
+                        "document_read",
+                        "SELECT * FROM `schema_meta_shared`.`ns__metadata` AS `table_main` WHERE `_uid` = :_uid AND (`table_main`._tenant IN (:_tenant) OR `table_main`._tenant IS NULL)"
+                    ],
+                    [
+                        "attribute_delete",
+                        "DROP TABLE `schema_meta_shared`.`ns__1_2`; DROP TABLE `schema_meta_shared`.`ns__1_2_perms`"
+                    ]
+                ],
+                "result": true,
+                "error": null
+            }
+        ]
+    },
+    {
+        "engine": "mysql",
+        "shared": false,
+        "seed": [
+            "INSERT INTO `schema_meta`.`ns__metadata` (`_id`, `_uid`, `name`, `attributes`, `indexes`) VALUES (1, 'movies', 'movies', '[{\\\"$id\\\":\\\"title\\\",\\\"key\\\":\\\"title\\\",\\\"type\\\":\\\"string\\\",\\\"size\\\":128,\\\"required\\\":false,\\\"default\\\":null,\\\"signed\\\":true,\\\"array\\\":false,\\\"format\\\":null,\\\"formatOptions\\\":[],\\\"filters\\\":[]},{\\\"$id\\\":\\\"a\\\",\\\"key\\\":\\\"a\\\",\\\"type\\\":\\\"string\\\",\\\"size\\\":32,\\\"required\\\":false,\\\"default\\\":null,\\\"signed\\\":true,\\\"array\\\":false,\\\"format\\\":null,\\\"formatOptions\\\":[],\\\"filters\\\":[]},{\\\"$id\\\":\\\"b\\\",\\\"key\\\":\\\"b\\\",\\\"type\\\":\\\"string\\\",\\\"size\\\":32,\\\"required\\\":false,\\\"default\\\":null,\\\"signed\\\":true,\\\"array\\\":false,\\\"format\\\":null,\\\"formatOptions\\\":[],\\\"filters\\\":[]},{\\\"$id\\\":\\\"notes\\\",\\\"key\\\":\\\"notes\\\",\\\"type\\\":\\\"text\\\",\\\"size\\\":0,\\\"required\\\":false,\\\"default\\\":null,\\\"signed\\\":true,\\\"array\\\":false,\\\"format\\\":null,\\\"formatOptions\\\":[],\\\"filters\\\":[]},{\\\"$id\\\":\\\"tags\\\",\\\"key\\\":\\\"tags\\\",\\\"type\\\":\\\"string\\\",\\\"size\\\":64,\\\"required\\\":false,\\\"default\\\":null,\\\"signed\\\":true,\\\"array\\\":true,\\\"format\\\":null,\\\"formatOptions\\\":[],\\\"filters\\\":[]}]', '[{\\\"$id\\\":\\\"idx_ab\\\",\\\"key\\\":\\\"idx_ab\\\",\\\"type\\\":\\\"key\\\",\\\"attributes\\\":[\\\"a\\\",\\\"b\\\"],\\\"lengths\\\":[],\\\"orders\\\":[\\\"ASC\\\",\\\"DESC\\\"]},{\\\"$id\\\":\\\"ft_notes\\\",\\\"key\\\":\\\"ft_notes\\\",\\\"type\\\":\\\"fulltext\\\",\\\"attributes\\\":[\\\"notes\\\"]}]')",
+            "INSERT INTO `schema_meta`.`ns__metadata` (`_id`, `_uid`, `name`, `attributes`, `indexes`) VALUES (2, 'people', 'people', '[{\\\"$id\\\":\\\"name\\\",\\\"key\\\":\\\"name\\\",\\\"type\\\":\\\"string\\\",\\\"size\\\":64,\\\"required\\\":false,\\\"default\\\":null,\\\"signed\\\":true,\\\"array\\\":false,\\\"format\\\":null,\\\"formatOptions\\\":[],\\\"filters\\\":[]}]', '[]')"
+        ],
+        "steps": [
+            {
+                "step": "createIndex",
+                "statements": [
+                    [
+                        "document_read",
+                        "SELECT * FROM `schema_meta`.`ns__metadata` AS `table_main` WHERE `_uid` = :_uid"
+                    ],
+                    [
+                        "index_create",
+                        "CREATE INDEX `idx_title` ON `schema_meta`.`ns_movies` (`title`(16) DESC)"
+                    ]
+                ],
+                "result": true,
+                "error": null
+            },
+            {
+                "step": "createIndex array",
+                "statements": [
+                    [
+                        "document_read",
+                        "SELECT * FROM `schema_meta`.`ns__metadata` AS `table_main` WHERE `_uid` = :_uid"
+                    ],
+                    [
+                        "index_create",
+                        "CREATE INDEX `idx_tags` ON `schema_meta`.`ns_movies` ((CAST(`tags` AS char(255) ARRAY)))"
+                    ]
+                ],
+                "result": true,
+                "error": null
+            },
+            {
+                "step": "createIndex fulltext",
+                "statements": [
+                    [
+                        "document_read",
+                        "SELECT * FROM `schema_meta`.`ns__metadata` AS `table_main` WHERE `_uid` = :_uid"
+                    ],
+                    [
+                        "index_create",
+                        "CREATE FULLTEXT INDEX `ft_title` ON `schema_meta`.`ns_movies` (`title`)"
+                    ]
+                ],
+                "result": true,
+                "error": null
+            },
+            {
+                "step": "createIndex missing collection",
+                "statements": [
+                    [
+                        "document_read",
+                        "SELECT * FROM `schema_meta`.`ns__metadata` AS `table_main` WHERE `_uid` = :_uid"
+                    ]
+                ],
+                "result": null,
+                "error": "Utopia\\Database\\Exception\\NotFound: Collection not found"
+            },
+            {
+                "step": "updateRelationship manyToMany",
+                "statements": [
+                    [
+                        "document_read",
+                        "SELECT * FROM `schema_meta`.`ns__metadata` AS `table_main` WHERE `_uid` = :_uid"
+                    ],
+                    [
+                        "document_read",
+                        "SELECT * FROM `schema_meta`.`ns__metadata` AS `table_main` WHERE `_uid` = :_uid"
+                    ],
+                    [
+                        "attribute_update",
+                        "ALTER TABLE `schema_meta`.`ns__1_2` RENAME COLUMN `fans` TO `fans2`;ALTER TABLE `schema_meta`.`ns__1_2` RENAME COLUMN `liked` TO `liked2`;"
+                    ]
+                ],
+                "result": true,
+                "error": null
+            },
+            {
+                "step": "deleteRelationship manyToMany",
+                "statements": [
+                    [
+                        "document_read",
+                        "SELECT * FROM `schema_meta`.`ns__metadata` AS `table_main` WHERE `_uid` = :_uid"
+                    ],
+                    [
+                        "document_read",
+                        "SELECT * FROM `schema_meta`.`ns__metadata` AS `table_main` WHERE `_uid` = :_uid"
+                    ],
+                    [
+                        "attribute_delete",
+                        "DROP TABLE `schema_meta`.`ns__1_2`; DROP TABLE `schema_meta`.`ns__1_2_perms`"
+                    ]
+                ],
+                "result": true,
+                "error": null
+            }
+        ]
+    },
+    {
+        "engine": "mysql",
+        "shared": true,
+        "seed": [
+            "INSERT INTO `schema_meta_shared`.`ns__metadata` (`_id`, `_uid`, `name`, `attributes`, `indexes`, `_tenant`) VALUES (1, 'movies', 'movies', '[{\\\"$id\\\":\\\"title\\\",\\\"key\\\":\\\"title\\\",\\\"type\\\":\\\"string\\\",\\\"size\\\":128,\\\"required\\\":false,\\\"default\\\":null,\\\"signed\\\":true,\\\"array\\\":false,\\\"format\\\":null,\\\"formatOptions\\\":[],\\\"filters\\\":[]},{\\\"$id\\\":\\\"a\\\",\\\"key\\\":\\\"a\\\",\\\"type\\\":\\\"string\\\",\\\"size\\\":32,\\\"required\\\":false,\\\"default\\\":null,\\\"signed\\\":true,\\\"array\\\":false,\\\"format\\\":null,\\\"formatOptions\\\":[],\\\"filters\\\":[]},{\\\"$id\\\":\\\"b\\\",\\\"key\\\":\\\"b\\\",\\\"type\\\":\\\"string\\\",\\\"size\\\":32,\\\"required\\\":false,\\\"default\\\":null,\\\"signed\\\":true,\\\"array\\\":false,\\\"format\\\":null,\\\"formatOptions\\\":[],\\\"filters\\\":[]},{\\\"$id\\\":\\\"notes\\\",\\\"key\\\":\\\"notes\\\",\\\"type\\\":\\\"text\\\",\\\"size\\\":0,\\\"required\\\":false,\\\"default\\\":null,\\\"signed\\\":true,\\\"array\\\":false,\\\"format\\\":null,\\\"formatOptions\\\":[],\\\"filters\\\":[]},{\\\"$id\\\":\\\"tags\\\",\\\"key\\\":\\\"tags\\\",\\\"type\\\":\\\"string\\\",\\\"size\\\":64,\\\"required\\\":false,\\\"default\\\":null,\\\"signed\\\":true,\\\"array\\\":true,\\\"format\\\":null,\\\"formatOptions\\\":[],\\\"filters\\\":[]}]', '[{\\\"$id\\\":\\\"idx_ab\\\",\\\"key\\\":\\\"idx_ab\\\",\\\"type\\\":\\\"key\\\",\\\"attributes\\\":[\\\"a\\\",\\\"b\\\"],\\\"lengths\\\":[],\\\"orders\\\":[\\\"ASC\\\",\\\"DESC\\\"]},{\\\"$id\\\":\\\"ft_notes\\\",\\\"key\\\":\\\"ft_notes\\\",\\\"type\\\":\\\"fulltext\\\",\\\"attributes\\\":[\\\"notes\\\"]}]', 7)",
+            "INSERT INTO `schema_meta_shared`.`ns__metadata` (`_id`, `_uid`, `name`, `attributes`, `indexes`, `_tenant`) VALUES (2, 'people', 'people', '[{\\\"$id\\\":\\\"name\\\",\\\"key\\\":\\\"name\\\",\\\"type\\\":\\\"string\\\",\\\"size\\\":64,\\\"required\\\":false,\\\"default\\\":null,\\\"signed\\\":true,\\\"array\\\":false,\\\"format\\\":null,\\\"formatOptions\\\":[],\\\"filters\\\":[]}]', '[]', 7)"
+        ],
+        "steps": [
+            {
+                "step": "createIndex",
+                "statements": [
+                    [
+                        "document_read",
+                        "SELECT * FROM `schema_meta_shared`.`ns__metadata` AS `table_main` WHERE `_uid` = :_uid AND (`table_main`._tenant IN (:_tenant) OR `table_main`._tenant IS NULL)"
+                    ],
+                    [
+                        "index_create",
+                        "CREATE INDEX `idx_title` ON `schema_meta_shared`.`ns_movies` (`_tenant`, `title`(16) DESC)"
+                    ]
+                ],
+                "result": true,
+                "error": null
+            },
+            {
+                "step": "createIndex array",
+                "statements": [
+                    [
+                        "document_read",
+                        "SELECT * FROM `schema_meta_shared`.`ns__metadata` AS `table_main` WHERE `_uid` = :_uid AND (`table_main`._tenant IN (:_tenant) OR `table_main`._tenant IS NULL)"
+                    ],
+                    [
+                        "index_create",
+                        "CREATE INDEX `idx_tags` ON `schema_meta_shared`.`ns_movies` (`_tenant`, (CAST(`tags` AS char(255) ARRAY)))"
+                    ]
+                ],
+                "result": true,
+                "error": null
+            },
+            {
+                "step": "createIndex fulltext",
+                "statements": [
+                    [
+                        "document_read",
+                        "SELECT * FROM `schema_meta_shared`.`ns__metadata` AS `table_main` WHERE `_uid` = :_uid AND (`table_main`._tenant IN (:_tenant) OR `table_main`._tenant IS NULL)"
+                    ],
+                    [
+                        "index_create",
+                        "CREATE FULLTEXT INDEX `ft_title` ON `schema_meta_shared`.`ns_movies` (`title`)"
+                    ]
+                ],
+                "result": true,
+                "error": null
+            },
+            {
+                "step": "createIndex missing collection",
+                "statements": [
+                    [
+                        "document_read",
+                        "SELECT * FROM `schema_meta_shared`.`ns__metadata` AS `table_main` WHERE `_uid` = :_uid AND (`table_main`._tenant IN (:_tenant) OR `table_main`._tenant IS NULL)"
+                    ]
+                ],
+                "result": null,
+                "error": "Utopia\\Database\\Exception\\NotFound: Collection not found"
+            },
+            {
+                "step": "updateRelationship manyToMany",
+                "statements": [
+                    [
+                        "document_read",
+                        "SELECT * FROM `schema_meta_shared`.`ns__metadata` AS `table_main` WHERE `_uid` = :_uid AND (`table_main`._tenant IN (:_tenant) OR `table_main`._tenant IS NULL)"
+                    ],
+                    [
+                        "document_read",
+                        "SELECT * FROM `schema_meta_shared`.`ns__metadata` AS `table_main` WHERE `_uid` = :_uid AND (`table_main`._tenant IN (:_tenant) OR `table_main`._tenant IS NULL)"
+                    ],
+                    [
+                        "attribute_update",
+                        "ALTER TABLE `schema_meta_shared`.`ns__1_2` RENAME COLUMN `fans` TO `fans2`;ALTER TABLE `schema_meta_shared`.`ns__1_2` RENAME COLUMN `liked` TO `liked2`;"
+                    ]
+                ],
+                "result": true,
+                "error": null
+            },
+            {
+                "step": "deleteRelationship manyToMany",
+                "statements": [
+                    [
+                        "document_read",
+                        "SELECT * FROM `schema_meta_shared`.`ns__metadata` AS `table_main` WHERE `_uid` = :_uid AND (`table_main`._tenant IN (:_tenant) OR `table_main`._tenant IS NULL)"
+                    ],
+                    [
+                        "document_read",
+                        "SELECT * FROM `schema_meta_shared`.`ns__metadata` AS `table_main` WHERE `_uid` = :_uid AND (`table_main`._tenant IN (:_tenant) OR `table_main`._tenant IS NULL)"
+                    ],
+                    [
+                        "attribute_delete",
+                        "DROP TABLE `schema_meta_shared`.`ns__1_2`; DROP TABLE `schema_meta_shared`.`ns__1_2_perms`"
+                    ]
+                ],
+                "result": true,
+                "error": null
+            }
+        ]
+    }
+]

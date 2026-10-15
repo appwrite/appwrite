@@ -54,6 +54,8 @@
 //! | `Adapter\Pool`, `Adapter\ReadWritePool` | [`adapter::pool::Pool`], [`adapter::pool::ReadWritePool`] (feature `pool`) |
 //! | `Utopia\Database\Adapter\Mongo` (feature `mongo`) | [`adapter::mongo::Mongo`], over an [`adapter::mongo::Driver`] |
 //! | `Utopia\Database\Hook\Mongo\{Read, Permission, Tenant}` | [`hook::mongo`] |
+//! | `Utopia\Database\Builder\*` | [`builder`] (`utopia-query` builders with the database's flavor and scope) |
+//! | `Adapter\SQL`, `Adapter\{Postgres, MariaDB, MySQL, SQLite}`, `Adapter\SQL\*`, `PDO`, `PDOStatement` | [`adapter::sql`] ([`adapter::sql::Sql`], [`adapter::sql::Engine`], [`adapter::sql::pdo`]) |
 //! | `Adapter\Feature\*` | [`adapter::Feature`], [`adapter::Casting`], [`adapter::Connection`], [`adapter::QueryBuilder`], [`adapter::RawQuery`], [`adapter::Relationships`], [`adapter::Schemaless`], [`adapter::Spatial`], [`adapter::Timeouts`], [`adapter::Upserts`] |
 //! | `Utopia\Database\Validator\*` | [`validator`] |
 //! | `Utopia\Database\Database` (constants, `internalAttributesFor()`) | [`database`] |
@@ -66,6 +68,7 @@ mod macros;
 
 pub mod adapter;
 pub mod attribute;
+pub mod builder;
 pub mod capability;
 pub mod change;
 pub mod collection;

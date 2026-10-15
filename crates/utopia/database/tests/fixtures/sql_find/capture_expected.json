@@ -1,0 +1,966 @@
+{
+    "sql_find/join_without_select_leaves_joined_internals_out mysql/plain": [
+        "sql",
+        "SELECT `table_main`.*, `j0`.`_uid` AS `j0._uid` FROM `database`.`namespace_collection` AS `table_main` LEFT JOIN `database`.`namespace_orders` AS `j0` ON `table_main`.`_uid` = `j0`.`customerId` LIMIT ?"
+    ],
+    "sql_find/nested_join_on_compiles_predicates_onto_join mysql/plain": [
+        "sql",
+        "SELECT `table_main`.*, `ord`.`_uid` AS `ord._uid` FROM `database`.`namespace_collection` AS `table_main` LEFT JOIN `database`.`namespace_orders` AS `ord` ON `table_main`.`_uid` = `ord`.`customerId` AND `ord`.`status` IN (?) LIMIT ?"
+    ],
+    "sql_find/emulates_full_outer_join_with_outer_limit mysql/plain": [
+        "sql",
+        "(SELECT `table_main`.*, `j0`.`_uid` AS `j0._uid` FROM `database`.`namespace_collection` AS `table_main` LEFT JOIN `database`.`namespace_orders` AS `j0` ON `table_main`.`_uid` = `j0`.`customerId`) UNION ALL (SELECT `table_main`.*, `j0`.`_uid` AS `j0._uid` FROM `database`.`namespace_collection` AS `table_main` RIGHT JOIN `database`.`namespace_orders` AS `j0` ON `table_main`.`_uid` = `j0`.`customerId` WHERE `table_main`.`_uid` IS NULL AND `j0`.`_uid` IS NOT NULL) LIMIT ?"
+    ],
+    "sql_find/emulates_full_outer_join_order_by_is_unambiguous_after_union mysql/plain": [
+        "sql",
+        "(SELECT `table_main`.*, `j0`.`_uid` AS `j0._uid`, `table_main`.`_id` AS `$foj_ord_0` FROM `database`.`namespace_collection` AS `table_main` LEFT JOIN `database`.`namespace_orders` AS `j0` ON `table_main`.`_uid` = `j0`.`customerId`) UNION ALL (SELECT `table_main`.*, `j0`.`_uid` AS `j0._uid`, `table_main`.`_id` AS `$foj_ord_0` FROM `database`.`namespace_collection` AS `table_main` RIGHT JOIN `database`.`namespace_orders` AS `j0` ON `table_main`.`_uid` = `j0`.`customerId` WHERE `table_main`.`_uid` IS NULL AND `j0`.`_uid` IS NOT NULL) ORDER BY `$foj_ord_0` ASC LIMIT ?"
+    ],
+    "sql_find/emulates_full_outer_join_order_by_matches_projected_union_output mysql/plain": [
+        "sql",
+        "(SELECT `table_main`.`name`, `table_main`.`_uid`, `table_main`.`_id`, `table_main`.`_permissions`, `table_main`.`_createdAt`, `table_main`.`_updatedAt`, `table_main`.`_id` AS `$foj_ord_0` FROM `database`.`namespace_collection` AS `table_main` LEFT JOIN `database`.`namespace_orders` AS `j0` ON `table_main`.`_uid` = `j0`.`customerId`) UNION ALL (SELECT `table_main`.`name`, `table_main`.`_uid`, `table_main`.`_id`, `table_main`.`_permissions`, `table_main`.`_createdAt`, `table_main`.`_updatedAt`, `table_main`.`_id` AS `$foj_ord_0` FROM `database`.`namespace_collection` AS `table_main` RIGHT JOIN `database`.`namespace_orders` AS `j0` ON `table_main`.`_uid` = `j0`.`customerId` WHERE `table_main`.`_uid` IS NULL AND `j0`.`_uid` IS NOT NULL) ORDER BY `$foj_ord_0` ASC LIMIT ?"
+    ],
+    "sql_find/emulates_full_outer_join_order_by_handles_multiple_attributes mysql/plain": [
+        "sql",
+        "(SELECT `table_main`.*, `j0`.`_uid` AS `j0._uid`, `table_main`.`name` AS `$foj_ord_0`, `table_main`.`_id` AS `$foj_ord_1` FROM `database`.`namespace_collection` AS `table_main` LEFT JOIN `database`.`namespace_orders` AS `j0` ON `table_main`.`_uid` = `j0`.`customerId`) UNION ALL (SELECT `table_main`.*, `j0`.`_uid` AS `j0._uid`, `table_main`.`name` AS `$foj_ord_0`, `table_main`.`_id` AS `$foj_ord_1` FROM `database`.`namespace_collection` AS `table_main` RIGHT JOIN `database`.`namespace_orders` AS `j0` ON `table_main`.`_uid` = `j0`.`customerId` WHERE `table_main`.`_uid` IS NULL AND `j0`.`_uid` IS NOT NULL) ORDER BY `$foj_ord_0` ASC, `$foj_ord_1` ASC LIMIT ?"
+    ],
+    "sql_find/distinct_select_id_projects_main_uid mysql/plain": [
+        "sql",
+        "SELECT DISTINCT `table_main`.`name`, `table_main`.`_uid`, `b`.`label` AS `b.label` FROM `database`.`namespace_collection` AS `table_main` JOIN `database`.`namespace_orders` AS `b` ON `table_main`.`_uid` = `b`.`customerId` LIMIT ?"
+    ],
+    "sql_find/selected_join_identity_is_projected_as_qualified_internal mysql/plain": [
+        "sql",
+        "SELECT `table_main`.`name`, `table_main`.`_uid`, `table_main`.`_id`, `table_main`.`_permissions`, `table_main`.`_createdAt`, `table_main`.`_updatedAt`, `alpha`.`_uid` AS `alpha._uid`, `alpha`.`label` AS `alpha.label` FROM `database`.`namespace_collection` AS `table_main` JOIN `database`.`namespace_peers` AS `alpha` ON `table_main`.`_uid` = `alpha`.`mainId` LIMIT ?"
+    ],
+    "sql_find/remap_row_preserves_selected_join_identity mysql/plain": [
+        "sql",
+        "SELECT `table_main`.`name`, `table_main`.`_uid`, `table_main`.`_id`, `table_main`.`_permissions`, `table_main`.`_createdAt`, `table_main`.`_updatedAt`, `alpha`.`_uid` AS `alpha._uid`, `beta`.`_uid` AS `beta._uid`, `alpha`.`label` AS `alpha.label`, `beta`.`label` AS `beta.label`, `alpha`.`score` AS `alpha.score` FROM `database`.`namespace_collection` AS `table_main` JOIN `database`.`namespace_peers` AS `alpha` ON `table_main`.`_uid` = `alpha`.`mainId` JOIN `database`.`namespace_peers` AS `beta` ON `table_main`.`peerKey` = `beta`.`_uid` LIMIT ?"
+    ],
+    "sql_find/join_side_search_uses_join_alias postgres/plain": [
+        "sql",
+        "SELECT \"table_main\".*, \"meta\".\"_uid\" AS \"meta._uid\" FROM \"database\".\"namespace_collection\" AS \"table_main\" LEFT JOIN \"database\".\"namespace_meta\" AS \"meta\" ON \"table_main\".\"_uid\" = \"meta\".\"mainId\" WHERE to_tsvector(regexp_replace(\"meta\".\"body\", '[^\\w]+', ' ', 'g')) @@ websearch_to_tsquery(?) LIMIT ?"
+    ],
+    "sql_find/join_side_search_uses_join_alias mariadb/plain": [
+        "sql",
+        "SELECT `table_main`.*, `meta`.`_uid` AS `meta._uid` FROM `database`.`namespace_collection` AS `table_main` LEFT JOIN `database`.`namespace_meta` AS `meta` ON `table_main`.`_uid` = `meta`.`mainId` WHERE MATCH(`meta`.`body`) AGAINST(? IN BOOLEAN MODE) LIMIT ?"
+    ],
+    "sql_find/join_side_search_uses_join_alias mysql/plain": [
+        "sql",
+        "SELECT `table_main`.*, `meta`.`_uid` AS `meta._uid` FROM `database`.`namespace_collection` AS `table_main` LEFT JOIN `database`.`namespace_meta` AS `meta` ON `table_main`.`_uid` = `meta`.`mainId` WHERE MATCH(`meta`.`body`) AGAINST(? IN BOOLEAN MODE) LIMIT ?"
+    ],
+    "sql_find/join_side_search_uses_join_alias sqlite/plain": [
+        "sql",
+        "SELECT `table_main`.*, `meta`.`_uid` AS `meta._uid` FROM `namespace_collection` AS `table_main` LEFT JOIN `namespace_meta` AS `meta` ON `table_main`.`_uid` COLLATE NOCASE = `meta`.`mainId` WHERE `meta`.`body` LIKE ? ESCAPE '\\' LIMIT ?"
+    ],
+    "sql_find/sqlite_main_search_quotes_main_alias sqlite/plain": [
+        "sql",
+        "SELECT `table_main`.*, `meta`.`_uid` AS `meta._uid` FROM `namespace_collection` AS `table_main` LEFT JOIN `namespace_meta` AS `meta` ON `table_main`.`_uid` COLLATE NOCASE = `meta`.`mainId` WHERE `table_main`.`body` LIKE ? ESCAPE '\\' LIMIT ?"
+    ],
+    "sql_find/emulates_full_outer_join_cursor_after_uses_join_qualified_order postgres/plain": [
+        "sql",
+        "SELECT \"table_main\".*, \"meta\".\"_uid\" AS \"meta._uid\", \"meta\".\"score\" AS \"meta.score\" FROM \"database\".\"namespace_collection\" AS \"table_main\" FULL OUTER JOIN \"database\".\"namespace_meta\" AS \"meta\" ON \"table_main\".\"_uid\" = \"meta\".\"mainId\" WHERE ((\"meta\".\"score\" > ? OR \"meta\".\"score\" IS NULL) OR (\"meta\".\"score\" IN (?) AND (\"table_main\".\"_id\" > ? OR \"table_main\".\"_id\" IS NULL))) ORDER BY \"meta\".\"score\" ASC, \"table_main\".\"_id\" ASC LIMIT ?"
+    ],
+    "sql_find/emulates_full_outer_join_cursor_after_uses_join_qualified_order mariadb/plain": [
+        "sql",
+        "(SELECT `table_main`.*, `meta`.`_uid` AS `meta._uid`, `meta`.`score` AS `meta.score`, `meta`.`score` AS `$foj_ord_0`, `table_main`.`_id` AS `$foj_ord_1` FROM `database`.`namespace_collection` AS `table_main` LEFT JOIN `database`.`namespace_meta` AS `meta` ON `table_main`.`_uid` = `meta`.`mainId` WHERE (`meta`.`score` > ? OR (`meta`.`score` IN (?) AND `table_main`.`_id` > ?))) UNION ALL (SELECT `table_main`.*, `meta`.`_uid` AS `meta._uid`, `meta`.`score` AS `meta.score`, `meta`.`score` AS `$foj_ord_0`, `table_main`.`_id` AS `$foj_ord_1` FROM `database`.`namespace_collection` AS `table_main` RIGHT JOIN `database`.`namespace_meta` AS `meta` ON `table_main`.`_uid` = `meta`.`mainId` WHERE `table_main`.`_uid` IS NULL AND `meta`.`_uid` IS NOT NULL AND (`meta`.`score` > ? OR (`meta`.`score` IN (?) AND `table_main`.`_id` > ?))) ORDER BY `$foj_ord_0` ASC, `$foj_ord_1` ASC LIMIT ?"
+    ],
+    "sql_find/emulates_full_outer_join_cursor_after_uses_join_qualified_order mysql/plain": [
+        "sql",
+        "(SELECT `table_main`.*, `meta`.`_uid` AS `meta._uid`, `meta`.`score` AS `meta.score`, `meta`.`score` AS `$foj_ord_0`, `table_main`.`_id` AS `$foj_ord_1` FROM `database`.`namespace_collection` AS `table_main` LEFT JOIN `database`.`namespace_meta` AS `meta` ON `table_main`.`_uid` = `meta`.`mainId` WHERE (`meta`.`score` > ? OR (`meta`.`score` IN (?) AND `table_main`.`_id` > ?))) UNION ALL (SELECT `table_main`.*, `meta`.`_uid` AS `meta._uid`, `meta`.`score` AS `meta.score`, `meta`.`score` AS `$foj_ord_0`, `table_main`.`_id` AS `$foj_ord_1` FROM `database`.`namespace_collection` AS `table_main` RIGHT JOIN `database`.`namespace_meta` AS `meta` ON `table_main`.`_uid` = `meta`.`mainId` WHERE `table_main`.`_uid` IS NULL AND `meta`.`_uid` IS NOT NULL AND (`meta`.`score` > ? OR (`meta`.`score` IN (?) AND `table_main`.`_id` > ?))) ORDER BY `$foj_ord_0` ASC, `$foj_ord_1` ASC LIMIT ?"
+    ],
+    "sql_find/emulates_full_outer_join_cursor_after_uses_join_qualified_order sqlite/plain": [
+        "sql",
+        "SELECT `table_main`.*, `meta`.`_uid` AS `meta._uid`, `meta`.`score` AS `meta.score`, `meta`.`score` AS `$foj_ord_0`, `table_main`.`_id` AS `$foj_ord_1` FROM `namespace_collection` AS `table_main` LEFT JOIN `namespace_meta` AS `meta` ON `table_main`.`_uid` COLLATE NOCASE = `meta`.`mainId` WHERE (`meta`.`score` > ? OR (`meta`.`score` IN (?) AND `table_main`.`_id` > ?)) UNION ALL SELECT `table_main`.*, `meta`.`_uid` AS `meta._uid`, `meta`.`score` AS `meta.score`, `meta`.`score` AS `$foj_ord_0`, `table_main`.`_id` AS `$foj_ord_1` FROM `namespace_collection` AS `table_main` RIGHT JOIN `namespace_meta` AS `meta` ON `table_main`.`_uid` COLLATE NOCASE = `meta`.`mainId` WHERE `table_main`.`_uid` IS NULL AND `meta`.`_uid` IS NOT NULL AND (`meta`.`score` > ? OR (`meta`.`score` IN (?) AND `table_main`.`_id` > ?)) ORDER BY `$foj_ord_0` ASC, `$foj_ord_1` ASC LIMIT ?"
+    ],
+    "sql_find/qualify_dotted_attribute_keeps_nested_object_paths mysql/plain": [
+        "sql",
+        "SELECT `table_main`.*, `orders`.`_uid` AS `orders._uid` FROM `database`.`namespace_collection` AS `table_main` JOIN `database`.`namespace_orders` AS `orders` ON `table_main`.`_uid` = `orders`.`customerId` WHERE `table_main`.`metascore` IN (?) AND `orders`.`email` IN (?) AND `orders`.`_uid` IN (?) AND `profile`.`user`.`email` IN (?) LIMIT ?"
+    ],
+    "sql_find/join_document_security/disabled_under_the_collection_id mysql/plain": [
+        "sql",
+        "SELECT `table_main`.*, `j0`.`_uid` AS `j0._uid` FROM `appwrite`.`_5_database_1_collection_1` AS `table_main` JOIN `appwrite`.`_5_database_1_collection_2` AS `j0` ON `table_main`.`_uid` = `j0`.`mainId` LIMIT ?"
+    ],
+    "sql_find/join_document_security/disabled_under_the_qualified_physical_name mysql/plain": [
+        "sql",
+        "SELECT `table_main`.*, `j0`.`_uid` AS `j0._uid` FROM `appwrite`.`_5_database_1_collection_1` AS `table_main` JOIN `appwrite`.`_5_database_1_collection_2` AS `j0` ON `table_main`.`_uid` = `j0`.`mainId` LIMIT ?"
+    ],
+    "sql_find/join_document_security/disabled_under_the_physical_table_name mysql/plain": [
+        "sql",
+        "SELECT `table_main`.*, `j0`.`_uid` AS `j0._uid` FROM `appwrite`.`_5_database_1_collection_1` AS `table_main` JOIN `appwrite`.`_5_database_1_collection_2` AS `j0` ON `table_main`.`_uid` = `j0`.`mainId` LIMIT ?"
+    ],
+    "sql_find/join_document_security/enabled_under_the_qualified_physical_name mysql/plain": [
+        "sql",
+        "SELECT `table_main`.*, `j0`.`_uid` AS `j0._uid` FROM `appwrite`.`_5_database_1_collection_1` AS `table_main` JOIN `appwrite`.`_5_database_1_collection_2` AS `j0` ON `table_main`.`_uid` = `j0`.`mainId` AND `j0`.`_uid` IN (SELECT _document FROM `appwrite`.`_5_database_1_collection_2_perms` WHERE _permission IN (?) AND _type = ?) LIMIT ?"
+    ],
+    "sql_find/join_document_security/disabled_for_another_collection_only mysql/plain": [
+        "sql",
+        "SELECT `table_main`.*, `j0`.`_uid` AS `j0._uid` FROM `appwrite`.`_5_database_1_collection_1` AS `table_main` JOIN `appwrite`.`_5_database_1_collection_2` AS `j0` ON `table_main`.`_uid` = `j0`.`mainId` AND `j0`.`_uid` IN (SELECT _document FROM `appwrite`.`_5_database_1_collection_2_perms` WHERE _permission IN (?) AND _type = ?) LIMIT ?"
+    ],
+    "sql_find/join_document_security/no_entries mysql/plain": [
+        "sql",
+        "SELECT `table_main`.*, `j0`.`_uid` AS `j0._uid` FROM `appwrite`.`_5_database_1_collection_1` AS `table_main` JOIN `appwrite`.`_5_database_1_collection_2` AS `j0` ON `table_main`.`_uid` = `j0`.`mainId` AND `j0`.`_uid` IN (SELECT _document FROM `appwrite`.`_5_database_1_collection_2_perms` WHERE _permission IN (?) AND _type = ?) LIMIT ?"
+    ],
+    "sql_find/fast_path mysql/plain": [
+        "sql",
+        "SELECT * FROM `database`.`namespace_collection` AS `table_main` ORDER BY `_id` ASC LIMIT 25 OFFSET 0"
+    ],
+    "sql_find/builder_path mysql/plain": [
+        "sql",
+        "SELECT * FROM `database`.`namespace_collection` AS `table_main` WHERE `title` IN (?) ORDER BY `_id` ASC LIMIT ?"
+    ],
+    "postgres_vector_cursor/without_its_distance_is_refused postgres/plain": [
+        "error",
+        "Utopia\\Database\\Exception\\Query",
+        "Vector cursor is missing its distance"
+    ],
+    "postgres_vector_cursor/without_an_order_attribute_is_refused postgres/plain": [
+        "error",
+        "Utopia\\Database\\Exception\\Query",
+        "Vector cursor requires a unique order attribute"
+    ],
+    "postgres_vector_cursor/missing_an_order_value_is_refused postgres/plain": [
+        "error",
+        "Utopia\\Database\\Exception\\Query",
+        "Vector cursor is missing order attribute 'rank'"
+    ],
+    "postgres_vector_cursor/missing_a_later_order_value_is_refused postgres/plain": [
+        "error",
+        "Utopia\\Database\\Exception\\Query",
+        "Vector cursor is missing order attribute '$sequence'"
+    ],
+    "postgres_vector_cursor/descending_after postgres/plain": [
+        "sql",
+        "SELECT *, (\"table_main\".\"embedding\" <=> ?::vector)::text AS \"_distance\" FROM \"database\".\"namespace_items\" AS \"table_main\" WHERE \"table_main\".\"embedding\" IS NOT NULL AND (((\"table_main\".\"embedding\" <=> ?::vector)) > ? OR (((\"table_main\".\"embedding\" <=> ?::vector)) = ? AND \"table_main\".\"rank\" < ?)) ORDER BY (\"table_main\".\"embedding\" <=> ?::vector), \"rank\" DESC LIMIT ?"
+    ],
+    "postgres_vector_cursor/descending_before postgres/plain": [
+        "sql",
+        "SELECT *, (\"table_main\".\"embedding\" <=> ?::vector)::text AS \"_distance\" FROM \"database\".\"namespace_items\" AS \"table_main\" WHERE \"table_main\".\"embedding\" IS NOT NULL AND (((\"table_main\".\"embedding\" <=> ?::vector)) < ? OR (((\"table_main\".\"embedding\" <=> ?::vector)) = ? AND \"table_main\".\"rank\" > ?)) ORDER BY (\"table_main\".\"embedding\" <=> ?::vector) DESC, \"rank\" ASC LIMIT ?"
+    ],
+    "postgres_vector_cursor/ascending_after postgres/plain": [
+        "sql",
+        "SELECT *, (\"table_main\".\"embedding\" <=> ?::vector)::text AS \"_distance\" FROM \"database\".\"namespace_items\" AS \"table_main\" WHERE \"table_main\".\"embedding\" IS NOT NULL AND (((\"table_main\".\"embedding\" <=> ?::vector)) > ? OR (((\"table_main\".\"embedding\" <=> ?::vector)) = ? AND \"table_main\".\"rank\" > ?)) ORDER BY (\"table_main\".\"embedding\" <=> ?::vector), \"rank\" ASC LIMIT ?"
+    ],
+    "postgres_vector_cursor/ascending_before postgres/plain": [
+        "sql",
+        "SELECT *, (\"table_main\".\"embedding\" <=> ?::vector)::text AS \"_distance\" FROM \"database\".\"namespace_items\" AS \"table_main\" WHERE \"table_main\".\"embedding\" IS NOT NULL AND (((\"table_main\".\"embedding\" <=> ?::vector)) < ? OR (((\"table_main\".\"embedding\" <=> ?::vector)) = ? AND \"table_main\".\"rank\" < ?)) ORDER BY (\"table_main\".\"embedding\" <=> ?::vector) DESC, \"rank\" DESC LIMIT ?"
+    ],
+    "postgres_vector_cursor/joined_nullable postgres/plain": [
+        "sql",
+        "SELECT \"table_main\".*, \"j\".\"_uid\" AS \"j._uid\", \"j\".\"rank\" AS \"j.rank\", (\"table_main\".\"embedding\" <#> ?::vector)::text AS \"_distance\" FROM \"database\".\"namespace_items\" AS \"table_main\" LEFT JOIN \"database\".\"namespace_ranks\" AS \"j\" ON \"table_main\".\"_uid\" = \"j\".\"itemId\" WHERE \"table_main\".\"embedding\" IS NOT NULL AND (((\"table_main\".\"embedding\" <#> ?::vector)) > ? OR (((\"table_main\".\"embedding\" <#> ?::vector)) = ? AND \"j\".\"rank\" IS NOT NULL) OR (((\"table_main\".\"embedding\" <#> ?::vector)) = ? AND \"j\".\"rank\" IS NULL AND COALESCE(\"table_main\".\"_id\" > ?, TRUE))) ORDER BY (\"table_main\".\"embedding\" <#> ?::vector), \"j\".\"rank\" DESC, \"table_main\".\"_id\" ASC LIMIT ?"
+    ],
+    "sqlite_vector_query/vector_queries_are_left_out mariadb/plain": [
+        "sql",
+        "SELECT * FROM `database`.`namespace_items` AS `table_main` WHERE `label` IN (?) LIMIT ?"
+    ],
+    "sqlite_vector_query/vector_queries_are_left_out sqlite/plain": [
+        "sql",
+        "SELECT * FROM `namespace_items` AS `table_main` WHERE `label` IN (?) LIMIT ?"
+    ],
+    "aggregate/unfiltered_count postgres/plain": [
+        "sql",
+        "SELECT COUNT(1) AS \"sum\" FROM \"database\".\"namespace_items\" AS \"table_main\" WHERE (\"_permissions\" @> ?::jsonb)"
+    ],
+    "aggregate/unfiltered_count postgres/shared": [
+        "sql",
+        "SELECT COUNT(1) AS \"sum\" FROM \"database\".\"namespace_items\" AS \"table_main\" WHERE \"table_main\"._tenant IN (?) AND (\"_permissions\" @> ?::jsonb)"
+    ],
+    "aggregate/unfiltered_count mariadb/plain": [
+        "sql",
+        "SELECT COUNT(1) AS `sum` FROM `database`.`namespace_items` AS `table_main` WHERE `_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ?)"
+    ],
+    "aggregate/unfiltered_count mariadb/shared": [
+        "sql",
+        "SELECT COUNT(1) AS `sum` FROM `database`.`namespace_items` AS `table_main` WHERE `table_main`._tenant IN (?) AND `_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ? AND _tenant IN (?))"
+    ],
+    "aggregate/unfiltered_count mysql/plain": [
+        "sql",
+        "SELECT COUNT(1) AS `sum` FROM `database`.`namespace_items` AS `table_main` WHERE `_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ?)"
+    ],
+    "aggregate/unfiltered_count mysql/shared": [
+        "sql",
+        "SELECT COUNT(1) AS `sum` FROM `database`.`namespace_items` AS `table_main` WHERE `table_main`._tenant IN (?) AND `_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ? AND _tenant IN (?))"
+    ],
+    "aggregate/unfiltered_count sqlite/plain": [
+        "sql",
+        "SELECT COUNT(1) AS `sum` FROM `namespace_items` AS `table_main` WHERE `_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_items_perms` WHERE _permission IN (?) AND _type = ?)"
+    ],
+    "aggregate/unfiltered_count sqlite/shared": [
+        "sql",
+        "SELECT COUNT(1) AS `sum` FROM `namespace_items` AS `table_main` WHERE `table_main`._tenant IN (?) AND `_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_items_perms` WHERE _permission IN (?) AND _type = ? AND `namespace_items_perms`._tenant IN (?))"
+    ],
+    "aggregate/unfiltered_count_max postgres/plain": [
+        "sql",
+        "SELECT COUNT(1) AS \"sum\" FROM (SELECT 1 FROM \"database\".\"namespace_items\" AS \"table_main\" WHERE (\"_permissions\" @> ?::jsonb) LIMIT ?) AS \"table_count\""
+    ],
+    "aggregate/unfiltered_count_max postgres/shared": [
+        "sql",
+        "SELECT COUNT(1) AS \"sum\" FROM (SELECT 1 FROM \"database\".\"namespace_items\" AS \"table_main\" WHERE \"table_main\"._tenant IN (?) AND (\"_permissions\" @> ?::jsonb) LIMIT ?) AS \"table_count\""
+    ],
+    "aggregate/unfiltered_count_max mariadb/plain": [
+        "sql",
+        "SELECT COUNT(1) AS `sum` FROM (SELECT 1 FROM `database`.`namespace_items` AS `table_main` WHERE `_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ?) LIMIT ?) AS `table_count`"
+    ],
+    "aggregate/unfiltered_count_max mariadb/shared": [
+        "sql",
+        "SELECT COUNT(1) AS `sum` FROM (SELECT 1 FROM `database`.`namespace_items` AS `table_main` WHERE `table_main`._tenant IN (?) AND `_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ? AND _tenant IN (?)) LIMIT ?) AS `table_count`"
+    ],
+    "aggregate/unfiltered_count_max mysql/plain": [
+        "sql",
+        "SELECT COUNT(1) AS `sum` FROM (SELECT 1 FROM `database`.`namespace_items` AS `table_main` WHERE `_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ?) LIMIT ?) AS `table_count`"
+    ],
+    "aggregate/unfiltered_count_max mysql/shared": [
+        "sql",
+        "SELECT COUNT(1) AS `sum` FROM (SELECT 1 FROM `database`.`namespace_items` AS `table_main` WHERE `table_main`._tenant IN (?) AND `_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ? AND _tenant IN (?)) LIMIT ?) AS `table_count`"
+    ],
+    "aggregate/unfiltered_count_max sqlite/plain": [
+        "sql",
+        "SELECT COUNT(1) AS `sum` FROM (SELECT 1 FROM `namespace_items` AS `table_main` WHERE `_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_items_perms` WHERE _permission IN (?) AND _type = ?) LIMIT ?) AS `table_count`"
+    ],
+    "aggregate/unfiltered_count_max sqlite/shared": [
+        "sql",
+        "SELECT COUNT(1) AS `sum` FROM (SELECT 1 FROM `namespace_items` AS `table_main` WHERE `table_main`._tenant IN (?) AND `_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_items_perms` WHERE _permission IN (?) AND _type = ? AND `namespace_items_perms`._tenant IN (?)) LIMIT ?) AS `table_count`"
+    ],
+    "aggregate/unfiltered_sum postgres/plain": [
+        "sql",
+        "SELECT SUM(\"price\") AS \"sum\" FROM \"database\".\"namespace_items\" AS \"table_main\" WHERE (\"_permissions\" @> ?::jsonb)"
+    ],
+    "aggregate/unfiltered_sum postgres/shared": [
+        "sql",
+        "SELECT SUM(\"price\") AS \"sum\" FROM \"database\".\"namespace_items\" AS \"table_main\" WHERE \"table_main\"._tenant IN (?) AND (\"_permissions\" @> ?::jsonb)"
+    ],
+    "aggregate/unfiltered_sum mariadb/plain": [
+        "sql",
+        "SELECT SUM(`price`) AS `sum` FROM `database`.`namespace_items` AS `table_main` WHERE `_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ?)"
+    ],
+    "aggregate/unfiltered_sum mariadb/shared": [
+        "sql",
+        "SELECT SUM(`price`) AS `sum` FROM `database`.`namespace_items` AS `table_main` WHERE `table_main`._tenant IN (?) AND `_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ? AND _tenant IN (?))"
+    ],
+    "aggregate/unfiltered_sum mysql/plain": [
+        "sql",
+        "SELECT SUM(`price`) AS `sum` FROM `database`.`namespace_items` AS `table_main` WHERE `_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ?)"
+    ],
+    "aggregate/unfiltered_sum mysql/shared": [
+        "sql",
+        "SELECT SUM(`price`) AS `sum` FROM `database`.`namespace_items` AS `table_main` WHERE `table_main`._tenant IN (?) AND `_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ? AND _tenant IN (?))"
+    ],
+    "aggregate/unfiltered_sum sqlite/plain": [
+        "sql",
+        "SELECT SUM(`price`) AS `sum` FROM `namespace_items` AS `table_main` WHERE `_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_items_perms` WHERE _permission IN (?) AND _type = ?)"
+    ],
+    "aggregate/unfiltered_sum sqlite/shared": [
+        "sql",
+        "SELECT SUM(`price`) AS `sum` FROM `namespace_items` AS `table_main` WHERE `table_main`._tenant IN (?) AND `_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_items_perms` WHERE _permission IN (?) AND _type = ? AND `namespace_items_perms`._tenant IN (?))"
+    ],
+    "aggregate/filtered_count postgres/plain": [
+        "sql",
+        "SELECT COUNT(1) AS \"sum\" FROM \"database\".\"namespace_items\" AS \"table_main\" WHERE \"price\" > ? AND (\"_uid\" IN (?) OR \"label\" IS NULL) AND (\"_permissions\" @> ?::jsonb OR \"_permissions\" @> ?::jsonb)"
+    ],
+    "aggregate/filtered_count postgres/shared": [
+        "sql",
+        "SELECT COUNT(1) AS \"sum\" FROM \"database\".\"namespace_items\" AS \"table_main\" WHERE \"price\" > ? AND (\"_uid\" IN (?) OR \"label\" IS NULL) AND \"table_main\"._tenant IN (?) AND (\"_permissions\" @> ?::jsonb OR \"_permissions\" @> ?::jsonb)"
+    ],
+    "aggregate/filtered_count mariadb/plain": [
+        "sql",
+        "SELECT COUNT(1) AS `sum` FROM `database`.`namespace_items` AS `table_main` WHERE `price` > ? AND (`_uid` IN (?) OR `label` IS NULL) AND `_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?, ?) AND _type = ?)"
+    ],
+    "aggregate/filtered_count mariadb/shared": [
+        "sql",
+        "SELECT COUNT(1) AS `sum` FROM `database`.`namespace_items` AS `table_main` WHERE `price` > ? AND (`_uid` IN (?) OR `label` IS NULL) AND `table_main`._tenant IN (?) AND `_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?, ?) AND _type = ? AND _tenant IN (?))"
+    ],
+    "aggregate/filtered_count mysql/plain": [
+        "sql",
+        "SELECT COUNT(1) AS `sum` FROM `database`.`namespace_items` AS `table_main` WHERE `price` > ? AND (`_uid` IN (?) OR `label` IS NULL) AND `_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?, ?) AND _type = ?)"
+    ],
+    "aggregate/filtered_count mysql/shared": [
+        "sql",
+        "SELECT COUNT(1) AS `sum` FROM `database`.`namespace_items` AS `table_main` WHERE `price` > ? AND (`_uid` IN (?) OR `label` IS NULL) AND `table_main`._tenant IN (?) AND `_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?, ?) AND _type = ? AND _tenant IN (?))"
+    ],
+    "aggregate/filtered_count sqlite/plain": [
+        "sql",
+        "SELECT COUNT(1) AS `sum` FROM `namespace_items` AS `table_main` WHERE `price` > ? AND (`_uid` COLLATE NOCASE IN (?) OR `label` IS NULL) AND `_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_items_perms` WHERE _permission IN (?, ?) AND _type = ?)"
+    ],
+    "aggregate/filtered_count sqlite/shared": [
+        "sql",
+        "SELECT COUNT(1) AS `sum` FROM `namespace_items` AS `table_main` WHERE `price` > ? AND (`_uid` COLLATE NOCASE IN (?) OR `label` IS NULL) AND `table_main`._tenant IN (?) AND `_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_items_perms` WHERE _permission IN (?, ?) AND _type = ? AND `namespace_items_perms`._tenant IN (?))"
+    ],
+    "aggregate/filtered_sum_max postgres/plain": [
+        "sql",
+        "SELECT SUM(\"price\") AS \"sum\" FROM (SELECT \"price\" FROM \"database\".\"namespace_items\" AS \"table_main\" WHERE \"price\" BETWEEN ? AND ? AND (\"_permissions\" @> ?::jsonb) LIMIT ?) AS \"table_count\""
+    ],
+    "aggregate/filtered_sum_max postgres/shared": [
+        "sql",
+        "SELECT SUM(\"price\") AS \"sum\" FROM (SELECT \"price\" FROM \"database\".\"namespace_items\" AS \"table_main\" WHERE \"price\" BETWEEN ? AND ? AND \"table_main\"._tenant IN (?) AND (\"_permissions\" @> ?::jsonb) LIMIT ?) AS \"table_count\""
+    ],
+    "aggregate/filtered_sum_max mariadb/plain": [
+        "sql",
+        "SELECT SUM(`price`) AS `sum` FROM (SELECT `price` FROM `database`.`namespace_items` AS `table_main` WHERE `price` BETWEEN ? AND ? AND `_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ?) LIMIT ?) AS `table_count`"
+    ],
+    "aggregate/filtered_sum_max mariadb/shared": [
+        "sql",
+        "SELECT SUM(`price`) AS `sum` FROM (SELECT `price` FROM `database`.`namespace_items` AS `table_main` WHERE `price` BETWEEN ? AND ? AND `table_main`._tenant IN (?) AND `_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ? AND _tenant IN (?)) LIMIT ?) AS `table_count`"
+    ],
+    "aggregate/filtered_sum_max mysql/plain": [
+        "sql",
+        "SELECT SUM(`price`) AS `sum` FROM (SELECT `price` FROM `database`.`namespace_items` AS `table_main` WHERE `price` BETWEEN ? AND ? AND `_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ?) LIMIT ?) AS `table_count`"
+    ],
+    "aggregate/filtered_sum_max mysql/shared": [
+        "sql",
+        "SELECT SUM(`price`) AS `sum` FROM (SELECT `price` FROM `database`.`namespace_items` AS `table_main` WHERE `price` BETWEEN ? AND ? AND `table_main`._tenant IN (?) AND `_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ? AND _tenant IN (?)) LIMIT ?) AS `table_count`"
+    ],
+    "aggregate/filtered_sum_max sqlite/plain": [
+        "sql",
+        "SELECT SUM(`price`) AS `sum` FROM (SELECT `price` FROM `namespace_items` AS `table_main` WHERE `price` BETWEEN ? AND ? AND `_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_items_perms` WHERE _permission IN (?) AND _type = ?) LIMIT ?) AS `table_count`"
+    ],
+    "aggregate/filtered_sum_max sqlite/shared": [
+        "sql",
+        "SELECT SUM(`price`) AS `sum` FROM (SELECT `price` FROM `namespace_items` AS `table_main` WHERE `price` BETWEEN ? AND ? AND `table_main`._tenant IN (?) AND `_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_items_perms` WHERE _permission IN (?) AND _type = ? AND `namespace_items_perms`._tenant IN (?)) LIMIT ?) AS `table_count`"
+    ],
+    "aggregate/metadata_count postgres/plain": [
+        "sql",
+        "SELECT COUNT(1) AS \"sum\" FROM \"database\".\"namespace__metadata\" AS \"table_main\" WHERE \"name\" IN (?) AND (\"_permissions\" @> ?::jsonb)"
+    ],
+    "aggregate/metadata_count postgres/shared": [
+        "sql",
+        "SELECT COUNT(1) AS \"sum\" FROM \"database\".\"namespace__metadata\" AS \"table_main\" WHERE \"name\" IN (?) AND (\"table_main\"._tenant IN (?) OR \"table_main\"._tenant IS NULL) AND (\"_permissions\" @> ?::jsonb)"
+    ],
+    "aggregate/metadata_count mariadb/plain": [
+        "sql",
+        "SELECT COUNT(1) AS `sum` FROM `database`.`namespace__metadata` AS `table_main` WHERE `name` IN (?) AND `_uid` IN (SELECT _document FROM `database`.`namespace__metadata_perms` WHERE _permission IN (?) AND _type = ?)"
+    ],
+    "aggregate/metadata_count mariadb/shared": [
+        "sql",
+        "SELECT COUNT(1) AS `sum` FROM `database`.`namespace__metadata` AS `table_main` WHERE `name` IN (?) AND (`table_main`._tenant IN (?) OR `table_main`._tenant IS NULL) AND `_uid` IN (SELECT _document FROM `database`.`namespace__metadata_perms` WHERE _permission IN (?) AND _type = ? AND (_tenant IN (?) OR _tenant IS NULL))"
+    ],
+    "aggregate/metadata_count mysql/plain": [
+        "sql",
+        "SELECT COUNT(1) AS `sum` FROM `database`.`namespace__metadata` AS `table_main` WHERE `name` IN (?) AND `_uid` IN (SELECT _document FROM `database`.`namespace__metadata_perms` WHERE _permission IN (?) AND _type = ?)"
+    ],
+    "aggregate/metadata_count mysql/shared": [
+        "sql",
+        "SELECT COUNT(1) AS `sum` FROM `database`.`namespace__metadata` AS `table_main` WHERE `name` IN (?) AND (`table_main`._tenant IN (?) OR `table_main`._tenant IS NULL) AND `_uid` IN (SELECT _document FROM `database`.`namespace__metadata_perms` WHERE _permission IN (?) AND _type = ? AND (_tenant IN (?) OR _tenant IS NULL))"
+    ],
+    "aggregate/metadata_count sqlite/plain": [
+        "sql",
+        "SELECT COUNT(1) AS `sum` FROM `namespace__metadata` AS `table_main` WHERE `name` IN (?) AND `_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace__metadata_perms` WHERE _permission IN (?) AND _type = ?)"
+    ],
+    "aggregate/metadata_count sqlite/shared": [
+        "sql",
+        "SELECT COUNT(1) AS `sum` FROM `namespace__metadata` AS `table_main` WHERE `name` IN (?) AND (`table_main`._tenant IN (?) OR `table_main`._tenant IS NULL) AND `_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace__metadata_perms` WHERE _permission IN (?) AND _type = ? AND (`namespace__metadata_perms`._tenant IN (?) OR `namespace__metadata_perms`._tenant IS NULL))"
+    ],
+    "aggregate/filtered_count_ordered postgres/plain": [
+        "sql",
+        "SELECT COUNT(1) AS \"sum\" FROM (SELECT 1 FROM \"database\".\"namespace_items\" AS \"table_main\" WHERE \"price\" > ? ORDER BY \"price\" ASC) AS \"table_count\""
+    ],
+    "aggregate/filtered_count_ordered postgres/shared": [
+        "sql",
+        "SELECT COUNT(1) AS \"sum\" FROM (SELECT 1 FROM \"database\".\"namespace_items\" AS \"table_main\" WHERE \"price\" > ? AND \"table_main\"._tenant IN (?) ORDER BY \"price\" ASC) AS \"table_count\""
+    ],
+    "aggregate/filtered_count_ordered mariadb/plain": [
+        "sql",
+        "SELECT COUNT(1) AS `sum` FROM (SELECT 1 FROM `database`.`namespace_items` AS `table_main` WHERE `price` > ? ORDER BY `price` ASC) AS `table_count`"
+    ],
+    "aggregate/filtered_count_ordered mariadb/shared": [
+        "sql",
+        "SELECT COUNT(1) AS `sum` FROM (SELECT 1 FROM `database`.`namespace_items` AS `table_main` WHERE `price` > ? AND `table_main`._tenant IN (?) ORDER BY `price` ASC) AS `table_count`"
+    ],
+    "aggregate/filtered_count_ordered mysql/plain": [
+        "sql",
+        "SELECT COUNT(1) AS `sum` FROM (SELECT 1 FROM `database`.`namespace_items` AS `table_main` WHERE `price` > ? ORDER BY `price` ASC) AS `table_count`"
+    ],
+    "aggregate/filtered_count_ordered mysql/shared": [
+        "sql",
+        "SELECT COUNT(1) AS `sum` FROM (SELECT 1 FROM `database`.`namespace_items` AS `table_main` WHERE `price` > ? AND `table_main`._tenant IN (?) ORDER BY `price` ASC) AS `table_count`"
+    ],
+    "aggregate/filtered_count_ordered sqlite/plain": [
+        "sql",
+        "SELECT COUNT(1) AS `sum` FROM (SELECT 1 FROM `namespace_items` AS `table_main` WHERE `price` > ? ORDER BY `price` ASC) AS `table_count`"
+    ],
+    "aggregate/filtered_count_ordered sqlite/shared": [
+        "sql",
+        "SELECT COUNT(1) AS `sum` FROM (SELECT 1 FROM `namespace_items` AS `table_main` WHERE `price` > ? AND `table_main`._tenant IN (?) ORDER BY `price` ASC) AS `table_count`"
+    ],
+    "aggregate/sum_dotted postgres/plain": [
+        "sql",
+        "SELECT SUM(\"metaprice\") AS \"sum\" FROM \"database\".\"namespace_items\" AS \"table_main\" WHERE \"metaprice\" > ?"
+    ],
+    "aggregate/sum_dotted mariadb/plain": [
+        "sql",
+        "SELECT SUM(`metaprice`) AS `sum` FROM `database`.`namespace_items` AS `table_main` WHERE `metaprice` > ?"
+    ],
+    "aggregate/sum_dotted mysql/plain": [
+        "sql",
+        "SELECT SUM(`metaprice`) AS `sum` FROM `database`.`namespace_items` AS `table_main` WHERE `metaprice` > ?"
+    ],
+    "aggregate/sum_dotted sqlite/plain": [
+        "sql",
+        "SELECT SUM(`metaprice`) AS `sum` FROM `namespace_items` AS `table_main` WHERE `metaprice` > ?"
+    ],
+    "aggregate/count_join_search postgres/plain": [
+        "sql",
+        "SELECT COUNT(1) AS \"sum\" FROM (SELECT 1 FROM \"database\".\"namespace_items\" AS \"table_main\" JOIN \"database\".\"namespace_meta\" AS \"meta\" ON \"table_main\".\"_uid\" = \"meta\".\"itemId\" AND (\"meta\".\"_permissions\" @> ?::jsonb) WHERE to_tsvector(regexp_replace(\"meta\".\"body\", '[^\\w]+', ' ', 'g')) @@ websearch_to_tsquery(?) AND (\"table_main\".\"_permissions\" @> ?::jsonb)) AS \"table_count\""
+    ],
+    "aggregate/count_join_search postgres/shared": [
+        "sql",
+        "SELECT COUNT(1) AS \"sum\" FROM (SELECT 1 FROM \"database\".\"namespace_items\" AS \"table_main\" JOIN \"database\".\"namespace_meta\" AS \"meta\" ON \"table_main\".\"_uid\" = \"meta\".\"itemId\" AND \"meta\"._tenant IN (?) AND (\"meta\".\"_permissions\" @> ?::jsonb) WHERE to_tsvector(regexp_replace(\"meta\".\"body\", '[^\\w]+', ' ', 'g')) @@ websearch_to_tsquery(?) AND \"table_main\"._tenant IN (?) AND (\"table_main\".\"_permissions\" @> ?::jsonb)) AS \"table_count\""
+    ],
+    "aggregate/count_join_search mariadb/plain": [
+        "sql",
+        "SELECT COUNT(1) AS `sum` FROM (SELECT 1 FROM `database`.`namespace_items` AS `table_main` JOIN `database`.`namespace_meta` AS `meta` ON `table_main`.`_uid` = `meta`.`itemId` AND `meta`.`_uid` IN (SELECT _document FROM `database`.`namespace_meta_perms` WHERE _permission IN (?) AND _type = ?) WHERE MATCH(`meta`.`body`) AGAINST(? IN BOOLEAN MODE) AND `table_main`.`_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ?)) AS `table_count`"
+    ],
+    "aggregate/count_join_search mariadb/shared": [
+        "sql",
+        "SELECT COUNT(1) AS `sum` FROM (SELECT 1 FROM `database`.`namespace_items` AS `table_main` JOIN `database`.`namespace_meta` AS `meta` ON `table_main`.`_uid` = `meta`.`itemId` AND `meta`._tenant IN (?) AND `meta`.`_uid` IN (SELECT _document FROM `database`.`namespace_meta_perms` WHERE _permission IN (?) AND _type = ? AND _tenant IN (?)) WHERE MATCH(`meta`.`body`) AGAINST(? IN BOOLEAN MODE) AND `table_main`._tenant IN (?) AND `table_main`.`_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ? AND _tenant IN (?))) AS `table_count`"
+    ],
+    "aggregate/count_join_search mysql/plain": [
+        "sql",
+        "SELECT COUNT(1) AS `sum` FROM (SELECT 1 FROM `database`.`namespace_items` AS `table_main` JOIN `database`.`namespace_meta` AS `meta` ON `table_main`.`_uid` = `meta`.`itemId` AND `meta`.`_uid` IN (SELECT _document FROM `database`.`namespace_meta_perms` WHERE _permission IN (?) AND _type = ?) WHERE MATCH(`meta`.`body`) AGAINST(? IN BOOLEAN MODE) AND `table_main`.`_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ?)) AS `table_count`"
+    ],
+    "aggregate/count_join_search mysql/shared": [
+        "sql",
+        "SELECT COUNT(1) AS `sum` FROM (SELECT 1 FROM `database`.`namespace_items` AS `table_main` JOIN `database`.`namespace_meta` AS `meta` ON `table_main`.`_uid` = `meta`.`itemId` AND `meta`._tenant IN (?) AND `meta`.`_uid` IN (SELECT _document FROM `database`.`namespace_meta_perms` WHERE _permission IN (?) AND _type = ? AND _tenant IN (?)) WHERE MATCH(`meta`.`body`) AGAINST(? IN BOOLEAN MODE) AND `table_main`._tenant IN (?) AND `table_main`.`_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ? AND _tenant IN (?))) AS `table_count`"
+    ],
+    "aggregate/count_join_search sqlite/plain": [
+        "sql",
+        "SELECT COUNT(1) AS `sum` FROM (SELECT 1 FROM `namespace_items` AS `table_main` JOIN `namespace_meta` AS `meta` ON `table_main`.`_uid` COLLATE NOCASE = `meta`.`itemId` AND `meta`.`_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_meta_perms` WHERE _permission IN (?) AND _type = ?) WHERE `table_main`.`_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_items_perms` WHERE _permission IN (?) AND _type = ?) AND `meta`.`body` LIKE ? ESCAPE '\\') AS `table_count`"
+    ],
+    "aggregate/count_join_search sqlite/shared": [
+        "sql",
+        "SELECT COUNT(1) AS `sum` FROM (SELECT 1 FROM `namespace_items` AS `table_main` JOIN `namespace_meta` AS `meta` ON `table_main`.`_uid` COLLATE NOCASE = `meta`.`itemId` AND `meta`._tenant IN (?) AND `meta`.`_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_meta_perms` WHERE _permission IN (?) AND _type = ? AND `namespace_meta_perms`._tenant IN (?)) WHERE `table_main`._tenant IN (?) AND `table_main`.`_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_items_perms` WHERE _permission IN (?) AND _type = ? AND `namespace_items_perms`._tenant IN (?)) AND `meta`.`body` LIKE ? ESCAPE '\\') AS `table_count`"
+    ],
+    "joins/bounded_sort postgres/plain": [
+        "sql",
+        "SELECT \"table_main\".*, \"meta\".\"_uid\" AS \"meta._uid\", \"meta\".\"rank\" AS \"meta.rank\" FROM \"database\".\"namespace_items\" AS \"table_main\" LEFT JOIN \"database\".\"namespace_meta\" AS \"meta\" ON \"table_main\".\"_uid\" = \"meta\".\"itemId\" AND (\"meta\".\"_permissions\" @> ?::jsonb) WHERE \"table_main\".\"label\" IN (?) AND to_tsvector(regexp_replace(\"table_main\".\"body\", '[^\\w]+', ' ', 'g')) @@ websearch_to_tsquery(?) AND (\"table_main\".\"label\" IS NOT NULL) AND (\"table_main\".\"_createdAt\" < ? OR (\"table_main\".\"_createdAt\" IN (?) AND (\"table_main\".\"_uid\" > ? OR \"table_main\".\"_uid\" IS NULL)) OR (\"table_main\".\"_createdAt\" IN (?) AND \"table_main\".\"_uid\" IN (?) AND (\"meta\".\"rank\" > ? OR \"meta\".\"rank\" IS NULL))) AND (\"table_main\".\"_permissions\" @> ?::jsonb) ORDER BY \"table_main\".\"_createdAt\" DESC, \"table_main\".\"_uid\" ASC, \"meta\".\"rank\" ASC LIMIT ? OFFSET ?"
+    ],
+    "joins/bounded_sort postgres/shared": [
+        "sql",
+        "SELECT \"table_main\".*, \"meta\".\"_uid\" AS \"meta._uid\", \"meta\".\"rank\" AS \"meta.rank\" FROM \"database\".\"namespace_items\" AS \"table_main\" LEFT JOIN \"database\".\"namespace_meta\" AS \"meta\" ON \"table_main\".\"_uid\" = \"meta\".\"itemId\" AND \"meta\"._tenant IN (?) AND (\"meta\".\"_permissions\" @> ?::jsonb) WHERE \"table_main\".\"label\" IN (?) AND to_tsvector(regexp_replace(\"table_main\".\"body\", '[^\\w]+', ' ', 'g')) @@ websearch_to_tsquery(?) AND (\"table_main\".\"label\" IS NOT NULL) AND (\"table_main\".\"_createdAt\" < ? OR (\"table_main\".\"_createdAt\" IN (?) AND (\"table_main\".\"_uid\" > ? OR \"table_main\".\"_uid\" IS NULL)) OR (\"table_main\".\"_createdAt\" IN (?) AND \"table_main\".\"_uid\" IN (?) AND (\"meta\".\"rank\" > ? OR \"meta\".\"rank\" IS NULL))) AND \"table_main\"._tenant IN (?) AND (\"table_main\".\"_permissions\" @> ?::jsonb) ORDER BY \"table_main\".\"_createdAt\" DESC, \"table_main\".\"_uid\" ASC, \"meta\".\"rank\" ASC LIMIT ? OFFSET ?"
+    ],
+    "joins/bounded_sort mariadb/plain": [
+        "sql",
+        "SELECT `table_main`.*, `meta`.`_uid` AS `meta._uid`, `meta`.`rank` AS `meta.rank` FROM (SELECT `table_main`.* FROM `database`.`namespace_items` AS `table_main` WHERE `label` IN (?) AND MATCH(`body`) AGAINST(? IN BOOLEAN MODE) AND (`label` IS NOT NULL) AND ((`_createdAt` < ? OR `_createdAt` IS NULL) OR (`_createdAt` IN (?) AND `_uid` > ?) OR (`_createdAt` IN (?) AND `_uid` IN (?))) AND `table_main`.`_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ?) ORDER BY `_createdAt` DESC, `_uid` ASC LIMIT ?) AS `table_main` LEFT JOIN `database`.`namespace_meta` AS `meta` ON `table_main`.`_uid` = `meta`.`itemId` AND `meta`.`_uid` IN (SELECT _document FROM `database`.`namespace_meta_perms` WHERE _permission IN (?) AND _type = ?) WHERE `table_main`.`label` IN (?) AND (`table_main`.`label` IS NOT NULL) AND ((`table_main`.`_createdAt` < ? OR `table_main`.`_createdAt` IS NULL) OR (`table_main`.`_createdAt` IN (?) AND `table_main`.`_uid` > ?) OR (`table_main`.`_createdAt` IN (?) AND `table_main`.`_uid` IN (?) AND `meta`.`rank` > ?)) AND `table_main`.`_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ?) ORDER BY `table_main`.`_createdAt` DESC, `table_main`.`_uid` ASC, `meta`.`rank` ASC LIMIT ? OFFSET ?"
+    ],
+    "joins/bounded_sort mariadb/shared": [
+        "sql",
+        "SELECT `table_main`.*, `meta`.`_uid` AS `meta._uid`, `meta`.`rank` AS `meta.rank` FROM (SELECT `table_main`.* FROM `database`.`namespace_items` AS `table_main` WHERE `label` IN (?) AND MATCH(`body`) AGAINST(? IN BOOLEAN MODE) AND (`label` IS NOT NULL) AND ((`_createdAt` < ? OR `_createdAt` IS NULL) OR (`_createdAt` IN (?) AND `_uid` > ?) OR (`_createdAt` IN (?) AND `_uid` IN (?))) AND `table_main`._tenant IN (?) AND `table_main`.`_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ? AND _tenant IN (?)) ORDER BY `_createdAt` DESC, `_uid` ASC LIMIT ?) AS `table_main` LEFT JOIN `database`.`namespace_meta` AS `meta` ON `table_main`.`_uid` = `meta`.`itemId` AND `meta`._tenant IN (?) AND `meta`.`_uid` IN (SELECT _document FROM `database`.`namespace_meta_perms` WHERE _permission IN (?) AND _type = ? AND _tenant IN (?)) WHERE `table_main`.`label` IN (?) AND (`table_main`.`label` IS NOT NULL) AND ((`table_main`.`_createdAt` < ? OR `table_main`.`_createdAt` IS NULL) OR (`table_main`.`_createdAt` IN (?) AND `table_main`.`_uid` > ?) OR (`table_main`.`_createdAt` IN (?) AND `table_main`.`_uid` IN (?) AND `meta`.`rank` > ?)) AND `table_main`._tenant IN (?) AND `table_main`.`_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ? AND _tenant IN (?)) ORDER BY `table_main`.`_createdAt` DESC, `table_main`.`_uid` ASC, `meta`.`rank` ASC LIMIT ? OFFSET ?"
+    ],
+    "joins/bounded_sort mysql/plain": [
+        "sql",
+        "SELECT `table_main`.*, `meta`.`_uid` AS `meta._uid`, `meta`.`rank` AS `meta.rank` FROM (SELECT `table_main`.* FROM `database`.`namespace_items` AS `table_main` WHERE `label` IN (?) AND MATCH(`body`) AGAINST(? IN BOOLEAN MODE) AND (`label` IS NOT NULL) AND ((`_createdAt` < ? OR `_createdAt` IS NULL) OR (`_createdAt` IN (?) AND `_uid` > ?) OR (`_createdAt` IN (?) AND `_uid` IN (?))) AND `table_main`.`_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ?) ORDER BY `_createdAt` DESC, `_uid` ASC LIMIT ?) AS `table_main` LEFT JOIN `database`.`namespace_meta` AS `meta` ON `table_main`.`_uid` = `meta`.`itemId` AND `meta`.`_uid` IN (SELECT /*+ NO_SEMIJOIN() */ _document FROM `database`.`namespace_meta_perms` WHERE _permission IN (?) AND _type = ?) WHERE `table_main`.`label` IN (?) AND (`table_main`.`label` IS NOT NULL) AND ((`table_main`.`_createdAt` < ? OR `table_main`.`_createdAt` IS NULL) OR (`table_main`.`_createdAt` IN (?) AND `table_main`.`_uid` > ?) OR (`table_main`.`_createdAt` IN (?) AND `table_main`.`_uid` IN (?) AND `meta`.`rank` > ?)) AND `table_main`.`_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ?) ORDER BY `table_main`.`_createdAt` DESC, `table_main`.`_uid` ASC, `meta`.`rank` ASC LIMIT ? OFFSET ?"
+    ],
+    "joins/bounded_sort mysql/shared": [
+        "sql",
+        "SELECT `table_main`.*, `meta`.`_uid` AS `meta._uid`, `meta`.`rank` AS `meta.rank` FROM (SELECT `table_main`.* FROM `database`.`namespace_items` AS `table_main` WHERE `label` IN (?) AND MATCH(`body`) AGAINST(? IN BOOLEAN MODE) AND (`label` IS NOT NULL) AND ((`_createdAt` < ? OR `_createdAt` IS NULL) OR (`_createdAt` IN (?) AND `_uid` > ?) OR (`_createdAt` IN (?) AND `_uid` IN (?))) AND `table_main`._tenant IN (?) AND `table_main`.`_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ? AND _tenant IN (?)) ORDER BY `_createdAt` DESC, `_uid` ASC LIMIT ?) AS `table_main` LEFT JOIN `database`.`namespace_meta` AS `meta` ON `table_main`.`_uid` = `meta`.`itemId` AND `meta`._tenant IN (?) AND `meta`.`_uid` IN (SELECT /*+ NO_SEMIJOIN() */ _document FROM `database`.`namespace_meta_perms` WHERE _permission IN (?) AND _type = ? AND _tenant IN (?)) WHERE `table_main`.`label` IN (?) AND (`table_main`.`label` IS NOT NULL) AND ((`table_main`.`_createdAt` < ? OR `table_main`.`_createdAt` IS NULL) OR (`table_main`.`_createdAt` IN (?) AND `table_main`.`_uid` > ?) OR (`table_main`.`_createdAt` IN (?) AND `table_main`.`_uid` IN (?) AND `meta`.`rank` > ?)) AND `table_main`._tenant IN (?) AND `table_main`.`_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ? AND _tenant IN (?)) ORDER BY `table_main`.`_createdAt` DESC, `table_main`.`_uid` ASC, `meta`.`rank` ASC LIMIT ? OFFSET ?"
+    ],
+    "joins/bounded_sort sqlite/plain": [
+        "sql",
+        "SELECT `table_main`.*, `meta`.`_uid` AS `meta._uid`, `meta`.`rank` AS `meta.rank` FROM `namespace_items` AS `table_main` LEFT JOIN `namespace_meta` AS `meta` ON `table_main`.`_uid` COLLATE NOCASE = `meta`.`itemId` AND `meta`.`_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_meta_perms` WHERE _permission IN (?) AND _type = ?) WHERE `table_main`.`label` IN (?) AND (`table_main`.`label` IS NOT NULL) AND ((`table_main`.`_createdAt` < ? OR `table_main`.`_createdAt` IS NULL) OR (`table_main`.`_createdAt` IN (?) AND `table_main`.`_uid` > ?) OR (`table_main`.`_createdAt` IN (?) AND `table_main`.`_uid` COLLATE NOCASE IN (?) AND `meta`.`rank` > ?)) AND `table_main`.`_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_items_perms` WHERE _permission IN (?) AND _type = ?) AND `table_main`.`body` LIKE ? ESCAPE '\\' ORDER BY `table_main`.`_createdAt` DESC, `table_main`.`_uid` ASC, `meta`.`rank` ASC LIMIT ? OFFSET ?"
+    ],
+    "joins/bounded_sort sqlite/shared": [
+        "sql",
+        "SELECT `table_main`.*, `meta`.`_uid` AS `meta._uid`, `meta`.`rank` AS `meta.rank` FROM `namespace_items` AS `table_main` LEFT JOIN `namespace_meta` AS `meta` ON `table_main`.`_uid` COLLATE NOCASE = `meta`.`itemId` AND `meta`._tenant IN (?) AND `meta`.`_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_meta_perms` WHERE _permission IN (?) AND _type = ? AND `namespace_meta_perms`._tenant IN (?)) WHERE `table_main`.`label` IN (?) AND (`table_main`.`label` IS NOT NULL) AND ((`table_main`.`_createdAt` < ? OR `table_main`.`_createdAt` IS NULL) OR (`table_main`.`_createdAt` IN (?) AND `table_main`.`_uid` > ?) OR (`table_main`.`_createdAt` IN (?) AND `table_main`.`_uid` COLLATE NOCASE IN (?) AND `meta`.`rank` > ?)) AND `table_main`._tenant IN (?) AND `table_main`.`_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_items_perms` WHERE _permission IN (?) AND _type = ? AND `namespace_items_perms`._tenant IN (?)) AND `table_main`.`body` LIKE ? ESCAPE '\\' ORDER BY `table_main`.`_createdAt` DESC, `table_main`.`_uid` ASC, `meta`.`rank` ASC LIMIT ? OFFSET ?"
+    ],
+    "joins/bounded_sort_refused_by_joined_condition mariadb/plain": [
+        "sql",
+        "SELECT `table_main`.*, `meta`.`_uid` AS `meta._uid`, `meta`.`rank` AS `meta.rank` FROM `database`.`namespace_items` AS `table_main` LEFT JOIN `database`.`namespace_meta` AS `meta` ON `table_main`.`_uid` = `meta`.`itemId` WHERE `meta`.`rank` IN (?) ORDER BY `table_main`.`_id` ASC, `meta`.`rank` ASC LIMIT ?"
+    ],
+    "joins/unindexed_join_tenant_range postgres/shared": [
+        "sql",
+        "SELECT \"table_main\".*, \"meta\".\"_uid\" AS \"meta._uid\", \"tag\".\"_uid\" AS \"tag._uid\", \"other\".\"_uid\" AS \"other._uid\" FROM \"database\".\"namespace_items\" AS \"table_main\" JOIN \"database\".\"namespace_meta\" AS \"meta\" ON \"table_main\".\"_uid\" = \"meta\".\"itemId\" AND \"meta\"._tenant IN (?) JOIN \"database\".\"namespace_tags\" AS \"tag\" ON \"table_main\".\"_uid\" = \"tag\".\"itemId\" AND \"tag\"._tenant IN (?) JOIN \"database\".\"namespace_other\" AS \"other\" ON \"meta\".\"_uid\" = \"other\".\"_uid\" AND \"other\"._tenant IN (?) WHERE \"table_main\"._tenant IN (?) LIMIT ?"
+    ],
+    "joins/unindexed_join_tenant_range mariadb/shared": [
+        "sql",
+        "SELECT `table_main`.*, `meta`.`_uid` AS `meta._uid`, `tag`.`_uid` AS `tag._uid`, `other`.`_uid` AS `other._uid` FROM `database`.`namespace_items` AS `table_main` JOIN `database`.`namespace_meta` AS `meta` ON `table_main`.`_uid` = `meta`.`itemId` AND `meta`._tenant IN (?) JOIN `database`.`namespace_tags` AS `tag` ON `table_main`.`_uid` = `tag`.`itemId` AND `tag`._tenant IN (?) JOIN `database`.`namespace_other` AS `other` ON `meta`.`_uid` = `other`.`_uid` AND `other`._tenant IN (?) WHERE `table_main`._tenant IN (?) LIMIT ?"
+    ],
+    "joins/unindexed_join_tenant_range mysql/shared": [
+        "sql",
+        "SELECT `table_main`.*, `meta`.`_uid` AS `meta._uid`, `tag`.`_uid` AS `tag._uid`, `other`.`_uid` AS `other._uid` FROM `database`.`namespace_items` AS `table_main` JOIN `database`.`namespace_meta` AS `meta` ON `table_main`.`_uid` = `meta`.`itemId` AND (`meta`._tenant >= ? AND `meta`._tenant <= ?) JOIN `database`.`namespace_tags` AS `tag` ON `table_main`.`_uid` = `tag`.`itemId` AND `tag`._tenant IN (?) JOIN `database`.`namespace_other` AS `other` ON `meta`.`_uid` = `other`.`_uid` AND `other`._tenant IN (?) WHERE `table_main`._tenant IN (?) LIMIT ?"
+    ],
+    "joins/unindexed_join_tenant_range sqlite/shared": [
+        "sql",
+        "SELECT `table_main`.*, `meta`.`_uid` AS `meta._uid`, `tag`.`_uid` AS `tag._uid`, `other`.`_uid` AS `other._uid` FROM `namespace_items` AS `table_main` JOIN `namespace_meta` AS `meta` ON `table_main`.`_uid` COLLATE NOCASE = `meta`.`itemId` AND `meta`._tenant IN (?) JOIN `namespace_tags` AS `tag` ON `table_main`.`_uid` COLLATE NOCASE = `tag`.`itemId` AND `tag`._tenant IN (?) JOIN `namespace_other` AS `other` ON `meta`.`_uid` COLLATE NOCASE = `other`.`_uid` AND `other`._tenant IN (?) WHERE `table_main`._tenant IN (?) LIMIT ?"
+    ],
+    "joins/large_join_permission_subqueries postgres/plain": [
+        "sql",
+        "SELECT \"table_main\".*, \"a\".\"_uid\" AS \"a._uid\", \"b\".\"_uid\" AS \"b._uid\", \"c\".\"_uid\" AS \"c._uid\", \"d\".\"_uid\" AS \"d._uid\", \"e\".\"_uid\" AS \"e._uid\" FROM \"database\".\"namespace_items\" AS \"table_main\" JOIN \"database\".\"namespace_a\" AS \"a\" ON \"table_main\".\"_uid\" = \"a\".\"itemId\" AND (\"a\".\"_permissions\" @> ?::jsonb) JOIN \"database\".\"namespace_b\" AS \"b\" ON \"table_main\".\"_uid\" = \"b\".\"itemId\" AND (\"b\".\"_permissions\" @> ?::jsonb) JOIN \"database\".\"namespace_c\" AS \"c\" ON \"table_main\".\"_uid\" = \"c\".\"itemId\" AND (\"c\".\"_permissions\" @> ?::jsonb) JOIN \"database\".\"namespace_d\" AS \"d\" ON \"table_main\".\"_uid\" = \"d\".\"itemId\" AND (\"d\".\"_permissions\" @> ?::jsonb) LEFT JOIN \"database\".\"namespace_e\" AS \"e\" ON \"table_main\".\"_uid\" = \"e\".\"itemId\" AND (\"e\".\"_permissions\" @> ?::jsonb) WHERE (\"table_main\".\"_permissions\" @> ?::jsonb) LIMIT ?"
+    ],
+    "joins/large_join_permission_subqueries mariadb/plain": [
+        "sql",
+        "SELECT `table_main`.*, `a`.`_uid` AS `a._uid`, `b`.`_uid` AS `b._uid`, `c`.`_uid` AS `c._uid`, `d`.`_uid` AS `d._uid`, `e`.`_uid` AS `e._uid` FROM `database`.`namespace_items` AS `table_main` JOIN `database`.`namespace_a` AS `a` ON `table_main`.`_uid` = `a`.`itemId` AND `a`.`_uid` IN (SELECT _document FROM `database`.`namespace_a_perms` WHERE _permission IN (?) AND _type = ?) JOIN `database`.`namespace_b` AS `b` ON `table_main`.`_uid` = `b`.`itemId` AND `b`.`_uid` IN (SELECT _document FROM `database`.`namespace_b_perms` WHERE _permission IN (?) AND _type = ?) JOIN `database`.`namespace_c` AS `c` ON `table_main`.`_uid` = `c`.`itemId` AND `c`.`_uid` IN (SELECT _document FROM `database`.`namespace_c_perms` WHERE _permission IN (?) AND _type = ?) JOIN `database`.`namespace_d` AS `d` ON `table_main`.`_uid` = `d`.`itemId` AND `d`.`_uid` IN (SELECT _document FROM `database`.`namespace_d_perms` WHERE _permission IN (?) AND _type = ?) LEFT JOIN `database`.`namespace_e` AS `e` ON `table_main`.`_uid` = `e`.`itemId` AND `e`.`_uid` IN (SELECT _document FROM `database`.`namespace_e_perms` WHERE _permission IN (?) AND _type = ?) WHERE `table_main`.`_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ?) LIMIT ?"
+    ],
+    "joins/large_join_permission_subqueries mysql/plain": [
+        "sql",
+        "SELECT `table_main`.*, `a`.`_uid` AS `a._uid`, `b`.`_uid` AS `b._uid`, `c`.`_uid` AS `c._uid`, `d`.`_uid` AS `d._uid`, `e`.`_uid` AS `e._uid` FROM `database`.`namespace_items` AS `table_main` JOIN `database`.`namespace_a` AS `a` ON `table_main`.`_uid` = `a`.`itemId` AND `a`.`_uid` IN (SELECT /*+ NO_SEMIJOIN() */ _document FROM `database`.`namespace_a_perms` WHERE _permission IN (?) AND _type = ?) JOIN `database`.`namespace_b` AS `b` ON `table_main`.`_uid` = `b`.`itemId` AND `b`.`_uid` IN (SELECT /*+ NO_SEMIJOIN() */ _document FROM `database`.`namespace_b_perms` WHERE _permission IN (?) AND _type = ?) JOIN `database`.`namespace_c` AS `c` ON `table_main`.`_uid` = `c`.`itemId` AND `c`.`_uid` IN (SELECT /*+ NO_SEMIJOIN() */ _document FROM `database`.`namespace_c_perms` WHERE _permission IN (?) AND _type = ?) JOIN `database`.`namespace_d` AS `d` ON `table_main`.`_uid` = `d`.`itemId` AND `d`.`_uid` IN (SELECT /*+ NO_SEMIJOIN() */ _document FROM `database`.`namespace_d_perms` WHERE _permission IN (?) AND _type = ?) LEFT JOIN `database`.`namespace_e` AS `e` ON `table_main`.`_uid` = `e`.`itemId` AND `e`.`_uid` IN (SELECT /*+ NO_SEMIJOIN() */ _document FROM `database`.`namespace_e_perms` WHERE _permission IN (?) AND _type = ?) WHERE `table_main`.`_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ?) LIMIT ?"
+    ],
+    "joins/large_join_permission_subqueries sqlite/plain": [
+        "sql",
+        "SELECT `table_main`.*, `a`.`_uid` AS `a._uid`, `b`.`_uid` AS `b._uid`, `c`.`_uid` AS `c._uid`, `d`.`_uid` AS `d._uid`, `e`.`_uid` AS `e._uid` FROM `namespace_items` AS `table_main` JOIN `namespace_a` AS `a` ON `table_main`.`_uid` COLLATE NOCASE = `a`.`itemId` AND `a`.`_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_a_perms` WHERE _permission IN (?) AND _type = ?) JOIN `namespace_b` AS `b` ON `table_main`.`_uid` COLLATE NOCASE = `b`.`itemId` AND `b`.`_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_b_perms` WHERE _permission IN (?) AND _type = ?) JOIN `namespace_c` AS `c` ON `table_main`.`_uid` COLLATE NOCASE = `c`.`itemId` AND `c`.`_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_c_perms` WHERE _permission IN (?) AND _type = ?) JOIN `namespace_d` AS `d` ON `table_main`.`_uid` COLLATE NOCASE = `d`.`itemId` AND `d`.`_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_d_perms` WHERE _permission IN (?) AND _type = ?) LEFT JOIN `namespace_e` AS `e` ON `table_main`.`_uid` COLLATE NOCASE = `e`.`itemId` AND `e`.`_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_e_perms` WHERE _permission IN (?) AND _type = ?) WHERE `table_main`.`_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_items_perms` WHERE _permission IN (?) AND _type = ?) LIMIT ?"
+    ],
+    "joins/aggregate_qualifies_by_declaring_join postgres/plain": [
+        "sql",
+        "SELECT COUNT(*) AS \"total\", SUM(\"meta\".\"rank\"), AVG(\"table_main\".\"price\") AS \"avgPrice\", \"table_main\".\"price\", \"meta\".\"rank\", \"meta\".\"price\" AS \"meta.price\" FROM \"database\".\"namespace_items\" AS \"table_main\" JOIN \"database\".\"namespace_meta\" AS \"meta\" ON \"table_main\".\"_uid\" = \"meta\".\"itemId\" GROUP BY \"table_main\".\"price\", \"meta\".\"price\", \"meta\".\"rank\" LIMIT ?"
+    ],
+    "joins/aggregate_qualifies_by_declaring_join mariadb/plain": [
+        "sql",
+        "SELECT COUNT(*) AS `total`, SUM(`meta`.`rank`), AVG(`table_main`.`price`) AS `avgPrice`, `table_main`.`price`, `meta`.`rank`, `meta`.`price` AS `meta.price` FROM `database`.`namespace_items` AS `table_main` JOIN `database`.`namespace_meta` AS `meta` ON `table_main`.`_uid` = `meta`.`itemId` GROUP BY `table_main`.`price`, `meta`.`price`, `meta`.`rank` LIMIT ?"
+    ],
+    "joins/aggregate_qualifies_by_declaring_join mysql/plain": [
+        "sql",
+        "SELECT COUNT(*) AS `total`, SUM(`meta`.`rank`), AVG(`table_main`.`price`) AS `avgPrice`, `table_main`.`price`, `meta`.`rank`, `meta`.`price` AS `meta.price` FROM `database`.`namespace_items` AS `table_main` JOIN `database`.`namespace_meta` AS `meta` ON `table_main`.`_uid` = `meta`.`itemId` GROUP BY `table_main`.`price`, `meta`.`price`, `meta`.`rank` LIMIT ?"
+    ],
+    "joins/aggregate_qualifies_by_declaring_join sqlite/plain": [
+        "sql",
+        "SELECT COUNT(*) AS `total`, SUM(`meta`.`rank`), AVG(`table_main`.`price`) AS `avgPrice`, `table_main`.`price`, `meta`.`rank`, `meta`.`price` AS `meta.price` FROM `namespace_items` AS `table_main` JOIN `namespace_meta` AS `meta` ON `table_main`.`_uid` COLLATE NOCASE = `meta`.`itemId` GROUP BY `table_main`.`price`, `meta`.`price`, `meta`.`rank` LIMIT ?"
+    ],
+    "joins/aggregate_ambiguous postgres/plain": [
+        "error",
+        "Utopia\\Database\\Exception\\Query",
+        "Attribute \"label\" is ambiguous across joins; qualify it with a join alias"
+    ],
+    "joins/aggregate_ambiguous mariadb/plain": [
+        "error",
+        "Utopia\\Database\\Exception\\Query",
+        "Attribute \"label\" is ambiguous across joins; qualify it with a join alias"
+    ],
+    "joins/aggregate_ambiguous mysql/plain": [
+        "error",
+        "Utopia\\Database\\Exception\\Query",
+        "Attribute \"label\" is ambiguous across joins; qualify it with a join alias"
+    ],
+    "joins/aggregate_ambiguous sqlite/plain": [
+        "error",
+        "Utopia\\Database\\Exception\\Query",
+        "Attribute \"label\" is ambiguous across joins; qualify it with a join alias"
+    ],
+    "joins/aggregate_unknown postgres/plain": [
+        "error",
+        "Utopia\\Database\\Exception\\Query",
+        "Attribute not found in schema: nope"
+    ],
+    "joins/aggregate_unknown mariadb/plain": [
+        "error",
+        "Utopia\\Database\\Exception\\Query",
+        "Attribute not found in schema: nope"
+    ],
+    "joins/aggregate_unknown mysql/plain": [
+        "error",
+        "Utopia\\Database\\Exception\\Query",
+        "Attribute not found in schema: nope"
+    ],
+    "joins/aggregate_unknown sqlite/plain": [
+        "error",
+        "Utopia\\Database\\Exception\\Query",
+        "Attribute not found in schema: nope"
+    ],
+    "joins/bare_order_ambiguous postgres/plain": [
+        "error",
+        "Utopia\\Database\\Exception\\Query",
+        "Attribute \"rank\" is ambiguous across joins; qualify it with a join alias"
+    ],
+    "joins/bare_order_ambiguous mariadb/plain": [
+        "error",
+        "Utopia\\Database\\Exception\\Query",
+        "Attribute \"rank\" is ambiguous across joins; qualify it with a join alias"
+    ],
+    "joins/bare_order_ambiguous mysql/plain": [
+        "error",
+        "Utopia\\Database\\Exception\\Query",
+        "Attribute \"rank\" is ambiguous across joins; qualify it with a join alias"
+    ],
+    "joins/bare_order_ambiguous sqlite/plain": [
+        "error",
+        "Utopia\\Database\\Exception\\Query",
+        "Attribute \"rank\" is ambiguous across joins; qualify it with a join alias"
+    ],
+    "joins/full_outer_join_aggregate_having_order postgres/plain": [
+        "sql",
+        "SELECT DISTINCT COUNT(*) AS \"total\", MAX(\"meta\".\"rank\"), \"table_main\".\"price\", \"meta\".\"rank\", \"meta\".\"price\" AS \"meta.price\" FROM \"database\".\"namespace_items\" AS \"table_main\" FULL OUTER JOIN \"database\".\"namespace_meta\" AS \"meta\" ON \"table_main\".\"_uid\" = \"meta\".\"itemId\" AND ((\"table_main\".\"_permissions\" @> ?::jsonb) OR \"table_main\".\"_uid\" IS NULL) AND (\"meta\".\"_permissions\" @> ?::jsonb) WHERE \"table_main\".\"price\" > ? AND ((\"table_main\".\"_permissions\" @> ?::jsonb) OR \"table_main\".\"_uid\" IS NULL) AND ((\"meta\".\"_permissions\" @> ?::jsonb) OR \"meta\".\"_uid\" IS NULL) GROUP BY \"table_main\".\"price\", \"meta\".\"price\", \"meta\".\"rank\" HAVING COUNT(*) > ? ORDER BY \"table_main\".\"price\" DESC, \"meta\".\"rank\" ASC LIMIT ? OFFSET ?"
+    ],
+    "joins/full_outer_join_aggregate_having_order postgres/shared": [
+        "sql",
+        "SELECT DISTINCT COUNT(*) AS \"total\", MAX(\"meta\".\"rank\"), \"table_main\".\"price\", \"meta\".\"rank\", \"meta\".\"price\" AS \"meta.price\" FROM \"database\".\"namespace_items\" AS \"table_main\" FULL OUTER JOIN \"database\".\"namespace_meta\" AS \"meta\" ON \"table_main\".\"_uid\" = \"meta\".\"itemId\" AND (\"table_main\"._tenant IN (?) OR \"table_main\".\"_uid\" IS NULL) AND \"meta\"._tenant IN (?) AND ((\"table_main\".\"_permissions\" @> ?::jsonb) OR \"table_main\".\"_uid\" IS NULL) AND (\"meta\".\"_permissions\" @> ?::jsonb) WHERE \"table_main\".\"price\" > ? AND (\"table_main\"._tenant IN (?) OR \"table_main\".\"_uid\" IS NULL) AND ((\"table_main\".\"_permissions\" @> ?::jsonb) OR \"table_main\".\"_uid\" IS NULL) AND (\"meta\"._tenant IN (?) OR \"meta\".\"_uid\" IS NULL) AND ((\"meta\".\"_permissions\" @> ?::jsonb) OR \"meta\".\"_uid\" IS NULL) GROUP BY \"table_main\".\"price\", \"meta\".\"price\", \"meta\".\"rank\" HAVING COUNT(*) > ? ORDER BY \"table_main\".\"price\" DESC, \"meta\".\"rank\" ASC LIMIT ? OFFSET ?"
+    ],
+    "joins/full_outer_join_aggregate_having_order mariadb/plain": [
+        "sql",
+        "SELECT DISTINCT COUNT(*) AS `total`, MAX(`foj_rows`.`$foj_col_0`), `foj_rows`.`$foj_col_1`, `foj_rows`.`$foj_col_2`, `foj_rows`.`$foj_col_0` FROM ((SELECT `meta`.`rank` AS `$foj_col_0`, `table_main`.`price` AS `$foj_col_1`, `meta`.`price` AS `$foj_col_2` FROM `database`.`namespace_items` AS `table_main` LEFT JOIN `database`.`namespace_meta` AS `meta` ON `table_main`.`_uid` = `meta`.`itemId` AND `meta`.`_uid` IN (SELECT _document FROM `database`.`namespace_meta_perms` WHERE _permission IN (?) AND _type = ?) WHERE `table_main`.`price` > ? AND `table_main`.`_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ?)) UNION ALL (SELECT `meta`.`rank` AS `$foj_col_0`, `table_main`.`price` AS `$foj_col_1`, `meta`.`price` AS `$foj_col_2` FROM `database`.`namespace_items` AS `table_main` RIGHT JOIN `database`.`namespace_meta` AS `meta` ON `table_main`.`_uid` = `meta`.`itemId` AND (`table_main`.`_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ?) OR `table_main`.`_uid` IS NULL) AND `meta`.`_uid` IN (SELECT _document FROM `database`.`namespace_meta_perms` WHERE _permission IN (?) AND _type = ?) WHERE `table_main`.`price` > ? AND `table_main`.`_uid` IS NULL AND `meta`.`_uid` IS NOT NULL AND (`table_main`.`_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ?) OR `table_main`.`_uid` IS NULL) AND (`meta`.`_uid` IN (SELECT _document FROM `database`.`namespace_meta_perms` WHERE _permission IN (?) AND _type = ?) OR `meta`.`_uid` IS NULL))) AS `foj_rows` GROUP BY `foj_rows`.`$foj_col_1`, `foj_rows`.`$foj_col_2`, `foj_rows`.`$foj_col_0` HAVING COUNT(*) > ? ORDER BY `foj_rows`.`$foj_col_1` DESC, `foj_rows`.`$foj_col_0` ASC LIMIT ? OFFSET ?"
+    ],
+    "joins/full_outer_join_aggregate_having_order mariadb/shared": [
+        "sql",
+        "SELECT DISTINCT COUNT(*) AS `total`, MAX(`foj_rows`.`$foj_col_0`), `foj_rows`.`$foj_col_1`, `foj_rows`.`$foj_col_2`, `foj_rows`.`$foj_col_0` FROM ((SELECT `meta`.`rank` AS `$foj_col_0`, `table_main`.`price` AS `$foj_col_1`, `meta`.`price` AS `$foj_col_2` FROM `database`.`namespace_items` AS `table_main` LEFT JOIN `database`.`namespace_meta` AS `meta` ON `table_main`.`_uid` = `meta`.`itemId` AND `meta`._tenant IN (?) AND `meta`.`_uid` IN (SELECT _document FROM `database`.`namespace_meta_perms` WHERE _permission IN (?) AND _type = ? AND _tenant IN (?)) WHERE `table_main`.`price` > ? AND `table_main`._tenant IN (?) AND `table_main`.`_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ? AND _tenant IN (?))) UNION ALL (SELECT `meta`.`rank` AS `$foj_col_0`, `table_main`.`price` AS `$foj_col_1`, `meta`.`price` AS `$foj_col_2` FROM `database`.`namespace_items` AS `table_main` RIGHT JOIN `database`.`namespace_meta` AS `meta` ON `table_main`.`_uid` = `meta`.`itemId` AND (`table_main`._tenant IN (?) OR `table_main`.`_uid` IS NULL) AND `meta`._tenant IN (?) AND (`table_main`.`_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ? AND _tenant IN (?)) OR `table_main`.`_uid` IS NULL) AND `meta`.`_uid` IN (SELECT _document FROM `database`.`namespace_meta_perms` WHERE _permission IN (?) AND _type = ? AND _tenant IN (?)) WHERE `table_main`.`price` > ? AND `table_main`.`_uid` IS NULL AND `meta`.`_uid` IS NOT NULL AND (`table_main`._tenant IN (?) OR `table_main`.`_uid` IS NULL) AND (`table_main`.`_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ? AND _tenant IN (?)) OR `table_main`.`_uid` IS NULL) AND (`meta`._tenant IN (?) OR `meta`.`_uid` IS NULL) AND (`meta`.`_uid` IN (SELECT _document FROM `database`.`namespace_meta_perms` WHERE _permission IN (?) AND _type = ? AND _tenant IN (?)) OR `meta`.`_uid` IS NULL))) AS `foj_rows` GROUP BY `foj_rows`.`$foj_col_1`, `foj_rows`.`$foj_col_2`, `foj_rows`.`$foj_col_0` HAVING COUNT(*) > ? ORDER BY `foj_rows`.`$foj_col_1` DESC, `foj_rows`.`$foj_col_0` ASC LIMIT ? OFFSET ?"
+    ],
+    "joins/full_outer_join_aggregate_having_order mysql/plain": [
+        "sql",
+        "SELECT DISTINCT COUNT(*) AS `total`, MAX(`foj_rows`.`$foj_col_0`), `foj_rows`.`$foj_col_1`, `foj_rows`.`$foj_col_2`, `foj_rows`.`$foj_col_0` FROM ((SELECT `meta`.`rank` AS `$foj_col_0`, `table_main`.`price` AS `$foj_col_1`, `meta`.`price` AS `$foj_col_2` FROM `database`.`namespace_items` AS `table_main` LEFT JOIN `database`.`namespace_meta` AS `meta` ON `table_main`.`_uid` = `meta`.`itemId` AND `meta`.`_uid` IN (SELECT /*+ NO_SEMIJOIN() */ _document FROM `database`.`namespace_meta_perms` WHERE _permission IN (?) AND _type = ?) WHERE `table_main`.`price` > ? AND `table_main`.`_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ?)) UNION ALL (SELECT `meta`.`rank` AS `$foj_col_0`, `table_main`.`price` AS `$foj_col_1`, `meta`.`price` AS `$foj_col_2` FROM `database`.`namespace_items` AS `table_main` RIGHT JOIN `database`.`namespace_meta` AS `meta` ON `table_main`.`_uid` = `meta`.`itemId` AND (`table_main`.`_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ?) OR `table_main`.`_uid` IS NULL) AND `meta`.`_uid` IN (SELECT /*+ NO_SEMIJOIN() */ _document FROM `database`.`namespace_meta_perms` WHERE _permission IN (?) AND _type = ?) WHERE `table_main`.`price` > ? AND `table_main`.`_uid` IS NULL AND `meta`.`_uid` IS NOT NULL AND (`table_main`.`_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ?) OR `table_main`.`_uid` IS NULL) AND (`meta`.`_uid` IN (SELECT /*+ NO_SEMIJOIN() */ _document FROM `database`.`namespace_meta_perms` WHERE _permission IN (?) AND _type = ?) OR `meta`.`_uid` IS NULL))) AS `foj_rows` GROUP BY `foj_rows`.`$foj_col_1`, `foj_rows`.`$foj_col_2`, `foj_rows`.`$foj_col_0` HAVING COUNT(*) > ? ORDER BY `foj_rows`.`$foj_col_1` DESC, `foj_rows`.`$foj_col_0` ASC LIMIT ? OFFSET ?"
+    ],
+    "joins/full_outer_join_aggregate_having_order mysql/shared": [
+        "sql",
+        "SELECT DISTINCT COUNT(*) AS `total`, MAX(`foj_rows`.`$foj_col_0`), `foj_rows`.`$foj_col_1`, `foj_rows`.`$foj_col_2`, `foj_rows`.`$foj_col_0` FROM ((SELECT `meta`.`rank` AS `$foj_col_0`, `table_main`.`price` AS `$foj_col_1`, `meta`.`price` AS `$foj_col_2` FROM `database`.`namespace_items` AS `table_main` LEFT JOIN `database`.`namespace_meta` AS `meta` ON `table_main`.`_uid` = `meta`.`itemId` AND `meta`._tenant IN (?) AND `meta`.`_uid` IN (SELECT /*+ NO_SEMIJOIN() */ _document FROM `database`.`namespace_meta_perms` WHERE _permission IN (?) AND _type = ? AND _tenant IN (?)) WHERE `table_main`.`price` > ? AND `table_main`._tenant IN (?) AND `table_main`.`_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ? AND _tenant IN (?))) UNION ALL (SELECT `meta`.`rank` AS `$foj_col_0`, `table_main`.`price` AS `$foj_col_1`, `meta`.`price` AS `$foj_col_2` FROM `database`.`namespace_items` AS `table_main` RIGHT JOIN `database`.`namespace_meta` AS `meta` ON `table_main`.`_uid` = `meta`.`itemId` AND (`table_main`._tenant IN (?) OR `table_main`.`_uid` IS NULL) AND `meta`._tenant IN (?) AND (`table_main`.`_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ? AND _tenant IN (?)) OR `table_main`.`_uid` IS NULL) AND `meta`.`_uid` IN (SELECT /*+ NO_SEMIJOIN() */ _document FROM `database`.`namespace_meta_perms` WHERE _permission IN (?) AND _type = ? AND _tenant IN (?)) WHERE `table_main`.`price` > ? AND `table_main`.`_uid` IS NULL AND `meta`.`_uid` IS NOT NULL AND (`table_main`._tenant IN (?) OR `table_main`.`_uid` IS NULL) AND (`table_main`.`_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ? AND _tenant IN (?)) OR `table_main`.`_uid` IS NULL) AND (`meta`._tenant IN (?) OR `meta`.`_uid` IS NULL) AND (`meta`.`_uid` IN (SELECT /*+ NO_SEMIJOIN() */ _document FROM `database`.`namespace_meta_perms` WHERE _permission IN (?) AND _type = ? AND _tenant IN (?)) OR `meta`.`_uid` IS NULL))) AS `foj_rows` GROUP BY `foj_rows`.`$foj_col_1`, `foj_rows`.`$foj_col_2`, `foj_rows`.`$foj_col_0` HAVING COUNT(*) > ? ORDER BY `foj_rows`.`$foj_col_1` DESC, `foj_rows`.`$foj_col_0` ASC LIMIT ? OFFSET ?"
+    ],
+    "joins/full_outer_join_aggregate_having_order sqlite/plain": [
+        "sql",
+        "SELECT DISTINCT COUNT(*) AS `total`, MAX(`foj_rows`.`$foj_col_0`), `foj_rows`.`$foj_col_1`, `foj_rows`.`$foj_col_2`, `foj_rows`.`$foj_col_0` FROM (SELECT `meta`.`rank` AS `$foj_col_0`, `table_main`.`price` AS `$foj_col_1`, `meta`.`price` AS `$foj_col_2` FROM `namespace_items` AS `table_main` LEFT JOIN `namespace_meta` AS `meta` ON `table_main`.`_uid` COLLATE NOCASE = `meta`.`itemId` AND `meta`.`_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_meta_perms` WHERE _permission IN (?) AND _type = ?) WHERE `table_main`.`price` > ? AND `table_main`.`_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_items_perms` WHERE _permission IN (?) AND _type = ?) UNION ALL SELECT `meta`.`rank` AS `$foj_col_0`, `table_main`.`price` AS `$foj_col_1`, `meta`.`price` AS `$foj_col_2` FROM `namespace_items` AS `table_main` RIGHT JOIN `namespace_meta` AS `meta` ON `table_main`.`_uid` COLLATE NOCASE = `meta`.`itemId` AND (`table_main`.`_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_items_perms` WHERE _permission IN (?) AND _type = ?) OR `table_main`.`_uid` IS NULL) AND `meta`.`_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_meta_perms` WHERE _permission IN (?) AND _type = ?) WHERE `table_main`.`price` > ? AND `table_main`.`_uid` IS NULL AND `meta`.`_uid` IS NOT NULL AND (`table_main`.`_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_items_perms` WHERE _permission IN (?) AND _type = ?) OR `table_main`.`_uid` IS NULL) AND (`meta`.`_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_meta_perms` WHERE _permission IN (?) AND _type = ?) OR `meta`.`_uid` IS NULL)) AS `foj_rows` GROUP BY `foj_rows`.`$foj_col_1`, `foj_rows`.`$foj_col_2`, `foj_rows`.`$foj_col_0` HAVING COUNT(*) > ? ORDER BY `foj_rows`.`$foj_col_1` DESC, `foj_rows`.`$foj_col_0` ASC LIMIT ? OFFSET ?"
+    ],
+    "joins/full_outer_join_aggregate_having_order sqlite/shared": [
+        "sql",
+        "SELECT DISTINCT COUNT(*) AS `total`, MAX(`foj_rows`.`$foj_col_0`), `foj_rows`.`$foj_col_1`, `foj_rows`.`$foj_col_2`, `foj_rows`.`$foj_col_0` FROM (SELECT `meta`.`rank` AS `$foj_col_0`, `table_main`.`price` AS `$foj_col_1`, `meta`.`price` AS `$foj_col_2` FROM `namespace_items` AS `table_main` LEFT JOIN `namespace_meta` AS `meta` ON `table_main`.`_uid` COLLATE NOCASE = `meta`.`itemId` AND `meta`._tenant IN (?) AND `meta`.`_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_meta_perms` WHERE _permission IN (?) AND _type = ? AND `namespace_meta_perms`._tenant IN (?)) WHERE `table_main`.`price` > ? AND `table_main`._tenant IN (?) AND `table_main`.`_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_items_perms` WHERE _permission IN (?) AND _type = ? AND `namespace_items_perms`._tenant IN (?)) UNION ALL SELECT `meta`.`rank` AS `$foj_col_0`, `table_main`.`price` AS `$foj_col_1`, `meta`.`price` AS `$foj_col_2` FROM `namespace_items` AS `table_main` RIGHT JOIN `namespace_meta` AS `meta` ON `table_main`.`_uid` COLLATE NOCASE = `meta`.`itemId` AND (`table_main`._tenant IN (?) OR `table_main`.`_uid` IS NULL) AND `meta`._tenant IN (?) AND (`table_main`.`_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_items_perms` WHERE _permission IN (?) AND _type = ? AND `namespace_items_perms`._tenant IN (?)) OR `table_main`.`_uid` IS NULL) AND `meta`.`_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_meta_perms` WHERE _permission IN (?) AND _type = ? AND `namespace_meta_perms`._tenant IN (?)) WHERE `table_main`.`price` > ? AND `table_main`.`_uid` IS NULL AND `meta`.`_uid` IS NOT NULL AND (`table_main`._tenant IN (?) OR `table_main`.`_uid` IS NULL) AND (`table_main`.`_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_items_perms` WHERE _permission IN (?) AND _type = ? AND `namespace_items_perms`._tenant IN (?)) OR `table_main`.`_uid` IS NULL) AND (`meta`._tenant IN (?) OR `meta`.`_uid` IS NULL) AND (`meta`.`_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_meta_perms` WHERE _permission IN (?) AND _type = ? AND `namespace_meta_perms`._tenant IN (?)) OR `meta`.`_uid` IS NULL)) AS `foj_rows` GROUP BY `foj_rows`.`$foj_col_1`, `foj_rows`.`$foj_col_2`, `foj_rows`.`$foj_col_0` HAVING COUNT(*) > ? ORDER BY `foj_rows`.`$foj_col_1` DESC, `foj_rows`.`$foj_col_0` ASC LIMIT ? OFFSET ?"
+    ],
+    "joins/full_outer_join_aggregate_bitwise mariadb/plain": [
+        "sql",
+        "SELECT BIT_AND(`foj_rows`.`$foj_col_0`), BIT_XOR(`foj_rows`.`$foj_col_1`) AS `x`, STDDEV_POP(`foj_rows`.`$foj_col_0`) AS `sd`, COUNT(`foj_rows`.`$foj_col_0`) AS `$inputs:0`, COUNT(`foj_rows`.`$foj_col_1`) AS `$inputs:1` FROM ((SELECT `table_main`.`flags` AS `$foj_col_0`, `meta`.`flags` AS `$foj_col_1` FROM `database`.`namespace_items` AS `table_main` LEFT JOIN `database`.`namespace_meta` AS `meta` ON `table_main`.`_uid` = `meta`.`itemId`) UNION ALL (SELECT `table_main`.`flags` AS `$foj_col_0`, `meta`.`flags` AS `$foj_col_1` FROM `database`.`namespace_items` AS `table_main` RIGHT JOIN `database`.`namespace_meta` AS `meta` ON `table_main`.`_uid` = `meta`.`itemId` WHERE `table_main`.`_uid` IS NULL AND `meta`.`_uid` IS NOT NULL)) AS `foj_rows` LIMIT ?"
+    ],
+    "joins/full_outer_join_aggregate_bitwise mysql/plain": [
+        "sql",
+        "SELECT BIT_AND(`foj_rows`.`$foj_col_0`), BIT_XOR(`foj_rows`.`$foj_col_1`) AS `x`, STDDEV_POP(`foj_rows`.`$foj_col_0`) AS `sd`, COUNT(`foj_rows`.`$foj_col_0`) AS `$inputs:0`, COUNT(`foj_rows`.`$foj_col_1`) AS `$inputs:1` FROM ((SELECT `table_main`.`flags` AS `$foj_col_0`, `meta`.`flags` AS `$foj_col_1` FROM `database`.`namespace_items` AS `table_main` LEFT JOIN `database`.`namespace_meta` AS `meta` ON `table_main`.`_uid` = `meta`.`itemId`) UNION ALL (SELECT `table_main`.`flags` AS `$foj_col_0`, `meta`.`flags` AS `$foj_col_1` FROM `database`.`namespace_items` AS `table_main` RIGHT JOIN `database`.`namespace_meta` AS `meta` ON `table_main`.`_uid` = `meta`.`itemId` WHERE `table_main`.`_uid` IS NULL AND `meta`.`_uid` IS NOT NULL)) AS `foj_rows` LIMIT ?"
+    ],
+    "joins/full_outer_join_right_join_second_half postgres/plain": [
+        "sql",
+        "SELECT \"table_main\".*, \"pre\".\"_uid\" AS \"pre._uid\", \"meta\".\"_uid\" AS \"meta._uid\", \"mid\".\"_uid\" AS \"mid._uid\", \"tail\".\"_uid\" AS \"tail._uid\", \"head\".\"_uid\" AS \"head._uid\", \"any\".\"_uid\" AS \"any._uid\" FROM \"database\".\"namespace_items\" AS \"table_main\" JOIN \"database\".\"namespace_pre\" AS \"pre\" ON \"table_main\".\"_uid\" = \"pre\".\"itemId\" FULL OUTER JOIN \"database\".\"namespace_meta\" AS \"meta\" ON \"table_main\".\"_uid\" = \"meta\".\"itemId\" LEFT JOIN \"database\".\"namespace_mid\" AS \"mid\" ON \"meta\".\"_uid\" = \"mid\".\"metaId\" RIGHT JOIN \"database\".\"namespace_tail\" AS \"tail\" ON \"meta\".\"_uid\" = \"tail\".\"metaId\" RIGHT JOIN \"database\".\"namespace_head\" AS \"head\" ON \"pre\".\"_uid\" = \"head\".\"preId\" CROSS JOIN \"database\".\"namespace_any\" AS \"any\" LIMIT ?"
+    ],
+    "joins/full_outer_join_right_join_second_half mariadb/plain": [
+        "sql",
+        "(SELECT `table_main`.*, `pre`.`_uid` AS `pre._uid`, `meta`.`_uid` AS `meta._uid`, `mid`.`_uid` AS `mid._uid`, `tail`.`_uid` AS `tail._uid`, `head`.`_uid` AS `head._uid`, `any`.`_uid` AS `any._uid` FROM `database`.`namespace_items` AS `table_main` JOIN `database`.`namespace_pre` AS `pre` ON `table_main`.`_uid` = `pre`.`itemId` LEFT JOIN `database`.`namespace_meta` AS `meta` ON `table_main`.`_uid` = `meta`.`itemId` LEFT JOIN `database`.`namespace_mid` AS `mid` ON `meta`.`_uid` = `mid`.`metaId` RIGHT JOIN `database`.`namespace_tail` AS `tail` ON `meta`.`_uid` = `tail`.`metaId` RIGHT JOIN `database`.`namespace_head` AS `head` ON `pre`.`_uid` = `head`.`preId` CROSS JOIN `database`.`namespace_any` AS `any` WHERE (`table_main`.`_uid` IS NOT NULL OR `pre`.`_uid` IS NOT NULL OR `meta`.`_uid` IS NOT NULL OR `mid`.`_uid` IS NOT NULL OR `tail`.`_uid` IS NULL)) UNION ALL (SELECT `table_main`.*, `pre`.`_uid` AS `pre._uid`, `meta`.`_uid` AS `meta._uid`, `mid`.`_uid` AS `mid._uid`, `tail`.`_uid` AS `tail._uid`, `head`.`_uid` AS `head._uid`, `any`.`_uid` AS `any._uid` FROM `database`.`namespace_items` AS `table_main` JOIN `database`.`namespace_pre` AS `pre` ON `table_main`.`_uid` = `pre`.`itemId` RIGHT JOIN `database`.`namespace_meta` AS `meta` ON `table_main`.`_uid` = `meta`.`itemId` LEFT JOIN `database`.`namespace_mid` AS `mid` ON `meta`.`_uid` = `mid`.`metaId` RIGHT JOIN `database`.`namespace_tail` AS `tail` ON `meta`.`_uid` = `tail`.`metaId` RIGHT JOIN `database`.`namespace_head` AS `head` ON `pre`.`_uid` = `head`.`preId` CROSS JOIN `database`.`namespace_any` AS `any` WHERE `table_main`.`_uid` IS NULL AND `pre`.`_uid` IS NULL AND (`meta`.`_uid` IS NOT NULL OR (`mid`.`_uid` IS NULL AND `tail`.`_uid` IS NOT NULL))) LIMIT ?"
+    ],
+    "joins/full_outer_join_right_join_second_half mysql/plain": [
+        "sql",
+        "(SELECT `table_main`.*, `pre`.`_uid` AS `pre._uid`, `meta`.`_uid` AS `meta._uid`, `mid`.`_uid` AS `mid._uid`, `tail`.`_uid` AS `tail._uid`, `head`.`_uid` AS `head._uid`, `any`.`_uid` AS `any._uid` FROM `database`.`namespace_items` AS `table_main` JOIN `database`.`namespace_pre` AS `pre` ON `table_main`.`_uid` = `pre`.`itemId` LEFT JOIN `database`.`namespace_meta` AS `meta` ON `table_main`.`_uid` = `meta`.`itemId` LEFT JOIN `database`.`namespace_mid` AS `mid` ON `meta`.`_uid` = `mid`.`metaId` RIGHT JOIN `database`.`namespace_tail` AS `tail` ON `meta`.`_uid` = `tail`.`metaId` RIGHT JOIN `database`.`namespace_head` AS `head` ON `pre`.`_uid` = `head`.`preId` CROSS JOIN `database`.`namespace_any` AS `any` WHERE (`table_main`.`_uid` IS NOT NULL OR `pre`.`_uid` IS NOT NULL OR `meta`.`_uid` IS NOT NULL OR `mid`.`_uid` IS NOT NULL OR `tail`.`_uid` IS NULL)) UNION ALL (SELECT `table_main`.*, `pre`.`_uid` AS `pre._uid`, `meta`.`_uid` AS `meta._uid`, `mid`.`_uid` AS `mid._uid`, `tail`.`_uid` AS `tail._uid`, `head`.`_uid` AS `head._uid`, `any`.`_uid` AS `any._uid` FROM `database`.`namespace_items` AS `table_main` JOIN `database`.`namespace_pre` AS `pre` ON `table_main`.`_uid` = `pre`.`itemId` RIGHT JOIN `database`.`namespace_meta` AS `meta` ON `table_main`.`_uid` = `meta`.`itemId` LEFT JOIN `database`.`namespace_mid` AS `mid` ON `meta`.`_uid` = `mid`.`metaId` RIGHT JOIN `database`.`namespace_tail` AS `tail` ON `meta`.`_uid` = `tail`.`metaId` RIGHT JOIN `database`.`namespace_head` AS `head` ON `pre`.`_uid` = `head`.`preId` CROSS JOIN `database`.`namespace_any` AS `any` WHERE `table_main`.`_uid` IS NULL AND `pre`.`_uid` IS NULL AND (`meta`.`_uid` IS NOT NULL OR (`mid`.`_uid` IS NULL AND `tail`.`_uid` IS NOT NULL))) LIMIT ?"
+    ],
+    "joins/full_outer_join_right_join_second_half sqlite/plain": [
+        "sql",
+        "SELECT `table_main`.*, `pre`.`_uid` AS `pre._uid`, `meta`.`_uid` AS `meta._uid`, `mid`.`_uid` AS `mid._uid`, `tail`.`_uid` AS `tail._uid`, `head`.`_uid` AS `head._uid`, `any`.`_uid` AS `any._uid` FROM `namespace_items` AS `table_main` JOIN `namespace_pre` AS `pre` ON `table_main`.`_uid` COLLATE NOCASE = `pre`.`itemId` LEFT JOIN `namespace_meta` AS `meta` ON `table_main`.`_uid` COLLATE NOCASE = `meta`.`itemId` LEFT JOIN `namespace_mid` AS `mid` ON `meta`.`_uid` COLLATE NOCASE = `mid`.`metaId` RIGHT JOIN `namespace_tail` AS `tail` ON `meta`.`_uid` COLLATE NOCASE = `tail`.`metaId` RIGHT JOIN `namespace_head` AS `head` ON `pre`.`_uid` COLLATE NOCASE = `head`.`preId` CROSS JOIN `namespace_any` AS `any` WHERE (`table_main`.`_uid` IS NOT NULL OR `pre`.`_uid` IS NOT NULL OR `meta`.`_uid` IS NOT NULL OR `mid`.`_uid` IS NOT NULL OR `tail`.`_uid` IS NULL) UNION ALL SELECT `table_main`.*, `pre`.`_uid` AS `pre._uid`, `meta`.`_uid` AS `meta._uid`, `mid`.`_uid` AS `mid._uid`, `tail`.`_uid` AS `tail._uid`, `head`.`_uid` AS `head._uid`, `any`.`_uid` AS `any._uid` FROM `namespace_items` AS `table_main` JOIN `namespace_pre` AS `pre` ON `table_main`.`_uid` COLLATE NOCASE = `pre`.`itemId` RIGHT JOIN `namespace_meta` AS `meta` ON `table_main`.`_uid` COLLATE NOCASE = `meta`.`itemId` LEFT JOIN `namespace_mid` AS `mid` ON `meta`.`_uid` COLLATE NOCASE = `mid`.`metaId` RIGHT JOIN `namespace_tail` AS `tail` ON `meta`.`_uid` COLLATE NOCASE = `tail`.`metaId` RIGHT JOIN `namespace_head` AS `head` ON `pre`.`_uid` COLLATE NOCASE = `head`.`preId` CROSS JOIN `namespace_any` AS `any` WHERE `table_main`.`_uid` IS NULL AND `pre`.`_uid` IS NULL AND (`meta`.`_uid` IS NOT NULL OR (`mid`.`_uid` IS NULL AND `tail`.`_uid` IS NOT NULL)) LIMIT ?"
+    ],
+    "joins/full_outer_join_right_join_undecidable postgres/plain": [
+        "sql",
+        "SELECT \"table_main\".*, \"meta\".\"_uid\" AS \"meta._uid\", \"tail\".\"_uid\" AS \"tail._uid\" FROM \"database\".\"namespace_items\" AS \"table_main\" FULL OUTER JOIN \"database\".\"namespace_meta\" AS \"meta\" ON \"table_main\".\"_uid\" = \"meta\".\"itemId\" RIGHT JOIN \"database\".\"namespace_tail\" AS \"tail\" ON \"meta\".\"_uid\" = \"tail\".\"metaId\" AND \"table_main\".\"_uid\" = \"tail\".\"itemId\" LIMIT ?"
+    ],
+    "joins/full_outer_join_right_join_undecidable mariadb/plain": [
+        "sql",
+        "(SELECT `table_main`.*, `meta`.`_uid` AS `meta._uid`, `tail`.`_uid` AS `tail._uid` FROM `database`.`namespace_items` AS `table_main` LEFT JOIN `database`.`namespace_meta` AS `meta` ON `table_main`.`_uid` = `meta`.`itemId` RIGHT JOIN `database`.`namespace_tail` AS `tail` ON `meta`.`_uid` = `tail`.`metaId` AND `table_main`.`_uid` = `tail`.`itemId`) UNION ALL (SELECT `table_main`.*, `meta`.`_uid` AS `meta._uid`, `tail`.`_uid` AS `tail._uid` FROM `database`.`namespace_items` AS `table_main` RIGHT JOIN `database`.`namespace_meta` AS `meta` ON `table_main`.`_uid` = `meta`.`itemId` RIGHT JOIN `database`.`namespace_tail` AS `tail` ON `meta`.`_uid` = `tail`.`metaId` AND `table_main`.`_uid` = `tail`.`itemId` WHERE `table_main`.`_uid` IS NULL AND `meta`.`_uid` IS NOT NULL) LIMIT ?"
+    ],
+    "joins/full_outer_join_right_join_undecidable mysql/plain": [
+        "sql",
+        "(SELECT `table_main`.*, `meta`.`_uid` AS `meta._uid`, `tail`.`_uid` AS `tail._uid` FROM `database`.`namespace_items` AS `table_main` LEFT JOIN `database`.`namespace_meta` AS `meta` ON `table_main`.`_uid` = `meta`.`itemId` RIGHT JOIN `database`.`namespace_tail` AS `tail` ON `meta`.`_uid` = `tail`.`metaId` AND `table_main`.`_uid` = `tail`.`itemId`) UNION ALL (SELECT `table_main`.*, `meta`.`_uid` AS `meta._uid`, `tail`.`_uid` AS `tail._uid` FROM `database`.`namespace_items` AS `table_main` RIGHT JOIN `database`.`namespace_meta` AS `meta` ON `table_main`.`_uid` = `meta`.`itemId` RIGHT JOIN `database`.`namespace_tail` AS `tail` ON `meta`.`_uid` = `tail`.`metaId` AND `table_main`.`_uid` = `tail`.`itemId` WHERE `table_main`.`_uid` IS NULL AND `meta`.`_uid` IS NOT NULL) LIMIT ?"
+    ],
+    "joins/full_outer_join_right_join_undecidable sqlite/plain": [
+        "sql",
+        "SELECT `table_main`.*, `meta`.`_uid` AS `meta._uid`, `tail`.`_uid` AS `tail._uid` FROM `namespace_items` AS `table_main` LEFT JOIN `namespace_meta` AS `meta` ON `table_main`.`_uid` COLLATE NOCASE = `meta`.`itemId` RIGHT JOIN `namespace_tail` AS `tail` ON `meta`.`_uid` COLLATE NOCASE = `tail`.`metaId` AND `table_main`.`_uid` COLLATE NOCASE = `tail`.`itemId` UNION ALL SELECT `table_main`.*, `meta`.`_uid` AS `meta._uid`, `tail`.`_uid` AS `tail._uid` FROM `namespace_items` AS `table_main` RIGHT JOIN `namespace_meta` AS `meta` ON `table_main`.`_uid` COLLATE NOCASE = `meta`.`itemId` RIGHT JOIN `namespace_tail` AS `tail` ON `meta`.`_uid` COLLATE NOCASE = `tail`.`metaId` AND `table_main`.`_uid` COLLATE NOCASE = `tail`.`itemId` WHERE `table_main`.`_uid` IS NULL AND `meta`.`_uid` IS NOT NULL LIMIT ?"
+    ],
+    "joins/full_outer_join_distinct_order_not_selected postgres/plain": [
+        "sql",
+        "SELECT DISTINCT \"table_main\".\"price\" FROM \"database\".\"namespace_items\" AS \"table_main\" FULL OUTER JOIN \"database\".\"namespace_meta\" AS \"meta\" ON \"table_main\".\"_uid\" = \"meta\".\"itemId\" ORDER BY \"table_main\".\"label\" ASC LIMIT ?"
+    ],
+    "joins/full_outer_join_distinct_order_not_selected mariadb/plain": [
+        "error",
+        "Utopia\\Database\\Exception\\Query",
+        "A distinct() query over a full outer join can only be ordered by a selected attribute on this database, and label is not selected"
+    ],
+    "joins/full_outer_join_distinct_order_not_selected mysql/plain": [
+        "error",
+        "Utopia\\Database\\Exception\\Query",
+        "A distinct() query over a full outer join can only be ordered by a selected attribute on this database, and label is not selected"
+    ],
+    "joins/full_outer_join_distinct_order_not_selected sqlite/plain": [
+        "error",
+        "Utopia\\Database\\Exception\\Query",
+        "A distinct() query over a full outer join can only be ordered by a selected attribute on this database, and label is not selected"
+    ],
+    "joins/invalid_alias postgres/plain": [
+        "error",
+        "Utopia\\Database\\Exception\\Query",
+        "Join alias must start with a letter or an underscore and contain only letters, digits and underscores"
+    ],
+    "joins/invalid_alias mariadb/plain": [
+        "error",
+        "Utopia\\Database\\Exception\\Query",
+        "Join alias must start with a letter or an underscore and contain only letters, digits and underscores"
+    ],
+    "joins/invalid_alias mysql/plain": [
+        "error",
+        "Utopia\\Database\\Exception\\Query",
+        "Join alias must start with a letter or an underscore and contain only letters, digits and underscores"
+    ],
+    "joins/invalid_alias sqlite/plain": [
+        "error",
+        "Utopia\\Database\\Exception\\Query",
+        "Join alias must start with a letter or an underscore and contain only letters, digits and underscores"
+    ],
+    "joins/authorized_right_join_outer_chain postgres/plain": [
+        "sql",
+        "SELECT \"table_main\".*, \"a\".\"_uid\" AS \"a._uid\", \"b\".\"_uid\" AS \"b._uid\", \"c\".\"_uid\" AS \"c._uid\" FROM \"database\".\"namespace_items\" AS \"table_main\" RIGHT JOIN \"database\".\"namespace_a\" AS \"a\" ON \"table_main\".\"_uid\" = \"a\".\"itemId\" AND ((\"table_main\".\"_permissions\" @> ?::jsonb) OR \"table_main\".\"_uid\" IS NULL) AND (\"a\".\"_permissions\" @> ?::jsonb) CROSS JOIN \"database\".\"namespace_b\" AS \"b\" RIGHT JOIN \"database\".\"namespace_c\" AS \"c\" ON \"table_main\".\"_uid\" = \"c\".\"itemId\" AND ((\"table_main\".\"_permissions\" @> ?::jsonb) OR \"table_main\".\"_uid\" IS NULL) AND (\"c\".\"_permissions\" @> ?::jsonb) AND ((\"a\".\"_permissions\" @> ?::jsonb) OR \"a\".\"_uid\" IS NULL) AND ((\"b\".\"_permissions\" @> ?::jsonb) OR \"b\".\"_uid\" IS NULL) WHERE ((\"table_main\".\"_permissions\" @> ?::jsonb) OR \"table_main\".\"_uid\" IS NULL) AND ((\"a\".\"_permissions\" @> ?::jsonb) OR \"a\".\"_uid\" IS NULL) AND ((\"b\".\"_permissions\" @> ?::jsonb) OR \"b\".\"_uid\" IS NULL) AND ((\"c\".\"_permissions\" @> ?::jsonb) OR \"c\".\"_uid\" IS NULL) LIMIT ?"
+    ],
+    "joins/authorized_right_join_outer_chain postgres/shared": [
+        "sql",
+        "SELECT \"table_main\".*, \"a\".\"_uid\" AS \"a._uid\", \"b\".\"_uid\" AS \"b._uid\", \"c\".\"_uid\" AS \"c._uid\" FROM \"database\".\"namespace_items\" AS \"table_main\" RIGHT JOIN \"database\".\"namespace_a\" AS \"a\" ON \"table_main\".\"_uid\" = \"a\".\"itemId\" AND (\"table_main\"._tenant IN (?) OR \"table_main\".\"_uid\" IS NULL) AND \"a\"._tenant IN (?) AND ((\"table_main\".\"_permissions\" @> ?::jsonb) OR \"table_main\".\"_uid\" IS NULL) AND (\"a\".\"_permissions\" @> ?::jsonb) CROSS JOIN \"database\".\"namespace_b\" AS \"b\" RIGHT JOIN \"database\".\"namespace_c\" AS \"c\" ON \"table_main\".\"_uid\" = \"c\".\"itemId\" AND (\"table_main\"._tenant IN (?) OR \"table_main\".\"_uid\" IS NULL) AND \"c\"._tenant IN (?) AND (\"a\"._tenant IN (?) OR \"a\".\"_uid\" IS NULL) AND (\"b\"._tenant IN (?) OR \"b\".\"_uid\" IS NULL) AND ((\"table_main\".\"_permissions\" @> ?::jsonb) OR \"table_main\".\"_uid\" IS NULL) AND (\"c\".\"_permissions\" @> ?::jsonb) AND ((\"a\".\"_permissions\" @> ?::jsonb) OR \"a\".\"_uid\" IS NULL) AND ((\"b\".\"_permissions\" @> ?::jsonb) OR \"b\".\"_uid\" IS NULL) WHERE (\"table_main\"._tenant IN (?) OR \"table_main\".\"_uid\" IS NULL) AND ((\"table_main\".\"_permissions\" @> ?::jsonb) OR \"table_main\".\"_uid\" IS NULL) AND (\"a\"._tenant IN (?) OR \"a\".\"_uid\" IS NULL) AND ((\"a\".\"_permissions\" @> ?::jsonb) OR \"a\".\"_uid\" IS NULL) AND (\"b\"._tenant IN (?) OR \"b\".\"_uid\" IS NULL) AND ((\"b\".\"_permissions\" @> ?::jsonb) OR \"b\".\"_uid\" IS NULL) AND (\"c\"._tenant IN (?) OR \"c\".\"_uid\" IS NULL) AND ((\"c\".\"_permissions\" @> ?::jsonb) OR \"c\".\"_uid\" IS NULL) LIMIT ?"
+    ],
+    "joins/authorized_right_join_outer_chain mariadb/plain": [
+        "sql",
+        "SELECT `table_main`.*, `a`.`_uid` AS `a._uid`, `b`.`_uid` AS `b._uid`, `c`.`_uid` AS `c._uid` FROM `database`.`namespace_items` AS `table_main` RIGHT JOIN `database`.`namespace_a` AS `a` ON `table_main`.`_uid` = `a`.`itemId` AND (`table_main`.`_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ?) OR `table_main`.`_uid` IS NULL) AND `a`.`_uid` IN (SELECT _document FROM `database`.`namespace_a_perms` WHERE _permission IN (?) AND _type = ?) CROSS JOIN `database`.`namespace_b` AS `b` RIGHT JOIN `database`.`namespace_c` AS `c` ON `table_main`.`_uid` = `c`.`itemId` AND (`table_main`.`_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ?) OR `table_main`.`_uid` IS NULL) AND `c`.`_uid` IN (SELECT _document FROM `database`.`namespace_c_perms` WHERE _permission IN (?) AND _type = ?) AND (`a`.`_uid` IN (SELECT _document FROM `database`.`namespace_a_perms` WHERE _permission IN (?) AND _type = ?) OR `a`.`_uid` IS NULL) AND (`b`.`_uid` IN (SELECT _document FROM `database`.`namespace_b_perms` WHERE _permission IN (?) AND _type = ?) OR `b`.`_uid` IS NULL) WHERE (`table_main`.`_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ?) OR `table_main`.`_uid` IS NULL) AND (`a`.`_uid` IN (SELECT _document FROM `database`.`namespace_a_perms` WHERE _permission IN (?) AND _type = ?) OR `a`.`_uid` IS NULL) AND (`b`.`_uid` IN (SELECT _document FROM `database`.`namespace_b_perms` WHERE _permission IN (?) AND _type = ?) OR `b`.`_uid` IS NULL) AND (`c`.`_uid` IN (SELECT _document FROM `database`.`namespace_c_perms` WHERE _permission IN (?) AND _type = ?) OR `c`.`_uid` IS NULL) LIMIT ?"
+    ],
+    "joins/authorized_right_join_outer_chain mariadb/shared": [
+        "sql",
+        "SELECT `table_main`.*, `a`.`_uid` AS `a._uid`, `b`.`_uid` AS `b._uid`, `c`.`_uid` AS `c._uid` FROM `database`.`namespace_items` AS `table_main` RIGHT JOIN `database`.`namespace_a` AS `a` ON `table_main`.`_uid` = `a`.`itemId` AND (`table_main`._tenant IN (?) OR `table_main`.`_uid` IS NULL) AND `a`._tenant IN (?) AND (`table_main`.`_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ? AND _tenant IN (?)) OR `table_main`.`_uid` IS NULL) AND `a`.`_uid` IN (SELECT _document FROM `database`.`namespace_a_perms` WHERE _permission IN (?) AND _type = ? AND _tenant IN (?)) CROSS JOIN `database`.`namespace_b` AS `b` RIGHT JOIN `database`.`namespace_c` AS `c` ON `table_main`.`_uid` = `c`.`itemId` AND (`table_main`._tenant IN (?) OR `table_main`.`_uid` IS NULL) AND `c`._tenant IN (?) AND (`a`._tenant IN (?) OR `a`.`_uid` IS NULL) AND (`b`._tenant IN (?) OR `b`.`_uid` IS NULL) AND (`table_main`.`_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ? AND _tenant IN (?)) OR `table_main`.`_uid` IS NULL) AND `c`.`_uid` IN (SELECT _document FROM `database`.`namespace_c_perms` WHERE _permission IN (?) AND _type = ? AND _tenant IN (?)) AND (`a`.`_uid` IN (SELECT _document FROM `database`.`namespace_a_perms` WHERE _permission IN (?) AND _type = ? AND _tenant IN (?)) OR `a`.`_uid` IS NULL) AND (`b`.`_uid` IN (SELECT _document FROM `database`.`namespace_b_perms` WHERE _permission IN (?) AND _type = ? AND _tenant IN (?)) OR `b`.`_uid` IS NULL) WHERE (`table_main`._tenant IN (?) OR `table_main`.`_uid` IS NULL) AND (`table_main`.`_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ? AND _tenant IN (?)) OR `table_main`.`_uid` IS NULL) AND (`a`._tenant IN (?) OR `a`.`_uid` IS NULL) AND (`a`.`_uid` IN (SELECT _document FROM `database`.`namespace_a_perms` WHERE _permission IN (?) AND _type = ? AND _tenant IN (?)) OR `a`.`_uid` IS NULL) AND (`b`._tenant IN (?) OR `b`.`_uid` IS NULL) AND (`b`.`_uid` IN (SELECT _document FROM `database`.`namespace_b_perms` WHERE _permission IN (?) AND _type = ? AND _tenant IN (?)) OR `b`.`_uid` IS NULL) AND (`c`._tenant IN (?) OR `c`.`_uid` IS NULL) AND (`c`.`_uid` IN (SELECT _document FROM `database`.`namespace_c_perms` WHERE _permission IN (?) AND _type = ? AND _tenant IN (?)) OR `c`.`_uid` IS NULL) LIMIT ?"
+    ],
+    "joins/authorized_right_join_outer_chain mysql/plain": [
+        "sql",
+        "SELECT `table_main`.*, `a`.`_uid` AS `a._uid`, `b`.`_uid` AS `b._uid`, `c`.`_uid` AS `c._uid` FROM `database`.`namespace_items` AS `table_main` RIGHT JOIN `database`.`namespace_a` AS `a` ON `table_main`.`_uid` = `a`.`itemId` AND (`table_main`.`_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ?) OR `table_main`.`_uid` IS NULL) AND `a`.`_uid` IN (SELECT /*+ NO_SEMIJOIN() */ _document FROM `database`.`namespace_a_perms` WHERE _permission IN (?) AND _type = ?) CROSS JOIN `database`.`namespace_b` AS `b` RIGHT JOIN `database`.`namespace_c` AS `c` ON `table_main`.`_uid` = `c`.`itemId` AND (`table_main`.`_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ?) OR `table_main`.`_uid` IS NULL) AND `c`.`_uid` IN (SELECT /*+ NO_SEMIJOIN() */ _document FROM `database`.`namespace_c_perms` WHERE _permission IN (?) AND _type = ?) AND (`a`.`_uid` IN (SELECT /*+ NO_SEMIJOIN() */ _document FROM `database`.`namespace_a_perms` WHERE _permission IN (?) AND _type = ?) OR `a`.`_uid` IS NULL) AND (`b`.`_uid` IN (SELECT _document FROM `database`.`namespace_b_perms` WHERE _permission IN (?) AND _type = ?) OR `b`.`_uid` IS NULL) WHERE (`table_main`.`_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ?) OR `table_main`.`_uid` IS NULL) AND (`a`.`_uid` IN (SELECT /*+ NO_SEMIJOIN() */ _document FROM `database`.`namespace_a_perms` WHERE _permission IN (?) AND _type = ?) OR `a`.`_uid` IS NULL) AND (`b`.`_uid` IN (SELECT _document FROM `database`.`namespace_b_perms` WHERE _permission IN (?) AND _type = ?) OR `b`.`_uid` IS NULL) AND (`c`.`_uid` IN (SELECT /*+ NO_SEMIJOIN() */ _document FROM `database`.`namespace_c_perms` WHERE _permission IN (?) AND _type = ?) OR `c`.`_uid` IS NULL) LIMIT ?"
+    ],
+    "joins/authorized_right_join_outer_chain mysql/shared": [
+        "sql",
+        "SELECT `table_main`.*, `a`.`_uid` AS `a._uid`, `b`.`_uid` AS `b._uid`, `c`.`_uid` AS `c._uid` FROM `database`.`namespace_items` AS `table_main` RIGHT JOIN `database`.`namespace_a` AS `a` ON `table_main`.`_uid` = `a`.`itemId` AND (`table_main`._tenant IN (?) OR `table_main`.`_uid` IS NULL) AND `a`._tenant IN (?) AND (`table_main`.`_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ? AND _tenant IN (?)) OR `table_main`.`_uid` IS NULL) AND `a`.`_uid` IN (SELECT /*+ NO_SEMIJOIN() */ _document FROM `database`.`namespace_a_perms` WHERE _permission IN (?) AND _type = ? AND _tenant IN (?)) CROSS JOIN `database`.`namespace_b` AS `b` RIGHT JOIN `database`.`namespace_c` AS `c` ON `table_main`.`_uid` = `c`.`itemId` AND (`table_main`._tenant IN (?) OR `table_main`.`_uid` IS NULL) AND `c`._tenant IN (?) AND (`a`._tenant IN (?) OR `a`.`_uid` IS NULL) AND (`b`._tenant IN (?) OR `b`.`_uid` IS NULL) AND (`table_main`.`_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ? AND _tenant IN (?)) OR `table_main`.`_uid` IS NULL) AND `c`.`_uid` IN (SELECT /*+ NO_SEMIJOIN() */ _document FROM `database`.`namespace_c_perms` WHERE _permission IN (?) AND _type = ? AND _tenant IN (?)) AND (`a`.`_uid` IN (SELECT /*+ NO_SEMIJOIN() */ _document FROM `database`.`namespace_a_perms` WHERE _permission IN (?) AND _type = ? AND _tenant IN (?)) OR `a`.`_uid` IS NULL) AND (`b`.`_uid` IN (SELECT _document FROM `database`.`namespace_b_perms` WHERE _permission IN (?) AND _type = ? AND _tenant IN (?)) OR `b`.`_uid` IS NULL) WHERE (`table_main`._tenant IN (?) OR `table_main`.`_uid` IS NULL) AND (`table_main`.`_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ? AND _tenant IN (?)) OR `table_main`.`_uid` IS NULL) AND (`a`._tenant IN (?) OR `a`.`_uid` IS NULL) AND (`a`.`_uid` IN (SELECT /*+ NO_SEMIJOIN() */ _document FROM `database`.`namespace_a_perms` WHERE _permission IN (?) AND _type = ? AND _tenant IN (?)) OR `a`.`_uid` IS NULL) AND (`b`._tenant IN (?) OR `b`.`_uid` IS NULL) AND (`b`.`_uid` IN (SELECT _document FROM `database`.`namespace_b_perms` WHERE _permission IN (?) AND _type = ? AND _tenant IN (?)) OR `b`.`_uid` IS NULL) AND (`c`._tenant IN (?) OR `c`.`_uid` IS NULL) AND (`c`.`_uid` IN (SELECT /*+ NO_SEMIJOIN() */ _document FROM `database`.`namespace_c_perms` WHERE _permission IN (?) AND _type = ? AND _tenant IN (?)) OR `c`.`_uid` IS NULL) LIMIT ?"
+    ],
+    "joins/authorized_right_join_outer_chain sqlite/plain": [
+        "sql",
+        "SELECT `table_main`.*, `a`.`_uid` AS `a._uid`, `b`.`_uid` AS `b._uid`, `c`.`_uid` AS `c._uid` FROM `namespace_items` AS `table_main` RIGHT JOIN `namespace_a` AS `a` ON `table_main`.`_uid` COLLATE NOCASE = `a`.`itemId` AND (`table_main`.`_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_items_perms` WHERE _permission IN (?) AND _type = ?) OR `table_main`.`_uid` IS NULL) AND `a`.`_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_a_perms` WHERE _permission IN (?) AND _type = ?) CROSS JOIN `namespace_b` AS `b` RIGHT JOIN `namespace_c` AS `c` ON `table_main`.`_uid` COLLATE NOCASE = `c`.`itemId` AND (`table_main`.`_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_items_perms` WHERE _permission IN (?) AND _type = ?) OR `table_main`.`_uid` IS NULL) AND `c`.`_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_c_perms` WHERE _permission IN (?) AND _type = ?) AND (`a`.`_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_a_perms` WHERE _permission IN (?) AND _type = ?) OR `a`.`_uid` IS NULL) AND (`b`.`_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_b_perms` WHERE _permission IN (?) AND _type = ?) OR `b`.`_uid` IS NULL) WHERE (`table_main`.`_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_items_perms` WHERE _permission IN (?) AND _type = ?) OR `table_main`.`_uid` IS NULL) AND (`a`.`_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_a_perms` WHERE _permission IN (?) AND _type = ?) OR `a`.`_uid` IS NULL) AND (`b`.`_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_b_perms` WHERE _permission IN (?) AND _type = ?) OR `b`.`_uid` IS NULL) AND (`c`.`_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_c_perms` WHERE _permission IN (?) AND _type = ?) OR `c`.`_uid` IS NULL) LIMIT ?"
+    ],
+    "joins/authorized_right_join_outer_chain sqlite/shared": [
+        "sql",
+        "SELECT `table_main`.*, `a`.`_uid` AS `a._uid`, `b`.`_uid` AS `b._uid`, `c`.`_uid` AS `c._uid` FROM `namespace_items` AS `table_main` RIGHT JOIN `namespace_a` AS `a` ON `table_main`.`_uid` COLLATE NOCASE = `a`.`itemId` AND (`table_main`._tenant IN (?) OR `table_main`.`_uid` IS NULL) AND `a`._tenant IN (?) AND (`table_main`.`_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_items_perms` WHERE _permission IN (?) AND _type = ? AND `namespace_items_perms`._tenant IN (?)) OR `table_main`.`_uid` IS NULL) AND `a`.`_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_a_perms` WHERE _permission IN (?) AND _type = ? AND `namespace_a_perms`._tenant IN (?)) CROSS JOIN `namespace_b` AS `b` RIGHT JOIN `namespace_c` AS `c` ON `table_main`.`_uid` COLLATE NOCASE = `c`.`itemId` AND (`table_main`._tenant IN (?) OR `table_main`.`_uid` IS NULL) AND `c`._tenant IN (?) AND (`a`._tenant IN (?) OR `a`.`_uid` IS NULL) AND (`b`._tenant IN (?) OR `b`.`_uid` IS NULL) AND (`table_main`.`_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_items_perms` WHERE _permission IN (?) AND _type = ? AND `namespace_items_perms`._tenant IN (?)) OR `table_main`.`_uid` IS NULL) AND `c`.`_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_c_perms` WHERE _permission IN (?) AND _type = ? AND `namespace_c_perms`._tenant IN (?)) AND (`a`.`_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_a_perms` WHERE _permission IN (?) AND _type = ? AND `namespace_a_perms`._tenant IN (?)) OR `a`.`_uid` IS NULL) AND (`b`.`_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_b_perms` WHERE _permission IN (?) AND _type = ? AND `namespace_b_perms`._tenant IN (?)) OR `b`.`_uid` IS NULL) WHERE (`table_main`._tenant IN (?) OR `table_main`.`_uid` IS NULL) AND (`table_main`.`_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_items_perms` WHERE _permission IN (?) AND _type = ? AND `namespace_items_perms`._tenant IN (?)) OR `table_main`.`_uid` IS NULL) AND (`a`._tenant IN (?) OR `a`.`_uid` IS NULL) AND (`a`.`_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_a_perms` WHERE _permission IN (?) AND _type = ? AND `namespace_a_perms`._tenant IN (?)) OR `a`.`_uid` IS NULL) AND (`b`._tenant IN (?) OR `b`.`_uid` IS NULL) AND (`b`.`_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_b_perms` WHERE _permission IN (?) AND _type = ? AND `namespace_b_perms`._tenant IN (?)) OR `b`.`_uid` IS NULL) AND (`c`._tenant IN (?) OR `c`.`_uid` IS NULL) AND (`c`.`_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_c_perms` WHERE _permission IN (?) AND _type = ? AND `namespace_c_perms`._tenant IN (?)) OR `c`.`_uid` IS NULL) LIMIT ?"
+    ],
+    "joins/read_permission_update postgres/plain": [
+        "sql",
+        "SELECT \"table_main\".*, \"a\".\"_uid\" AS \"a._uid\" FROM \"database\".\"namespace_items\" AS \"table_main\" JOIN \"database\".\"namespace_a\" AS \"a\" ON \"table_main\".\"_uid\" = \"a\".\"itemId\" AND (\"a\".\"_permissions\" @> ?::jsonb) WHERE (\"table_main\".\"_permissions\" @> ?::jsonb) LIMIT ?"
+    ],
+    "joins/read_permission_update mariadb/plain": [
+        "sql",
+        "SELECT `table_main`.*, `a`.`_uid` AS `a._uid` FROM `database`.`namespace_items` AS `table_main` JOIN `database`.`namespace_a` AS `a` ON `table_main`.`_uid` = `a`.`itemId` AND `a`.`_uid` IN (SELECT _document FROM `database`.`namespace_a_perms` WHERE _permission IN (?) AND _type = ?) WHERE `table_main`.`_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ?) LIMIT ?"
+    ],
+    "joins/read_permission_update mysql/plain": [
+        "sql",
+        "SELECT `table_main`.*, `a`.`_uid` AS `a._uid` FROM `database`.`namespace_items` AS `table_main` JOIN `database`.`namespace_a` AS `a` ON `table_main`.`_uid` = `a`.`itemId` AND `a`.`_uid` IN (SELECT _document FROM `database`.`namespace_a_perms` WHERE _permission IN (?) AND _type = ?) WHERE `table_main`.`_uid` IN (SELECT _document FROM `database`.`namespace_items_perms` WHERE _permission IN (?) AND _type = ?) LIMIT ?"
+    ],
+    "joins/read_permission_update sqlite/plain": [
+        "sql",
+        "SELECT `table_main`.*, `a`.`_uid` AS `a._uid` FROM `namespace_items` AS `table_main` JOIN `namespace_a` AS `a` ON `table_main`.`_uid` COLLATE NOCASE = `a`.`itemId` AND `a`.`_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_a_perms` WHERE _permission IN (?) AND _type = ?) WHERE `table_main`.`_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_items_perms` WHERE _permission IN (?) AND _type = ?) LIMIT ?"
+    ],
+    "find/select_star_with_extras postgres/plain": [
+        "sql",
+        "SELECT * FROM \"database\".\"namespace_items\" AS \"table_main\" LIMIT ?"
+    ],
+    "find/select_star_with_extras mariadb/plain": [
+        "sql",
+        "SELECT * FROM `database`.`namespace_items` AS `table_main` LIMIT ?"
+    ],
+    "find/select_star_with_extras mysql/plain": [
+        "sql",
+        "SELECT * FROM `database`.`namespace_items` AS `table_main` LIMIT ?"
+    ],
+    "find/select_star_with_extras sqlite/plain": [
+        "sql",
+        "SELECT * FROM `namespace_items` AS `table_main` LIMIT ?"
+    ],
+    "find/offset_only postgres/plain": [
+        "sql",
+        "SELECT * FROM \"database\".\"namespace_items\" AS \"table_main\" WHERE \"label\" IN (?) LIMIT ? OFFSET ?"
+    ],
+    "find/offset_only mariadb/plain": [
+        "sql",
+        "SELECT * FROM `database`.`namespace_items` AS `table_main` WHERE `label` IN (?) LIMIT ? OFFSET ?"
+    ],
+    "find/offset_only mysql/plain": [
+        "sql",
+        "SELECT * FROM `database`.`namespace_items` AS `table_main` WHERE `label` IN (?) LIMIT ? OFFSET ?"
+    ],
+    "find/offset_only sqlite/plain": [
+        "sql",
+        "SELECT * FROM `namespace_items` AS `table_main` WHERE `label` IN (?) LIMIT ? OFFSET ?"
+    ],
+    "find/limit_null postgres/plain": [
+        "sql",
+        "SELECT * FROM \"database\".\"namespace_items\" AS \"table_main\" WHERE \"label\" IN (?)"
+    ],
+    "find/limit_null mariadb/plain": [
+        "sql",
+        "SELECT * FROM `database`.`namespace_items` AS `table_main` WHERE `label` IN (?)"
+    ],
+    "find/limit_null mysql/plain": [
+        "sql",
+        "SELECT * FROM `database`.`namespace_items` AS `table_main` WHERE `label` IN (?)"
+    ],
+    "find/limit_null sqlite/plain": [
+        "sql",
+        "SELECT * FROM `namespace_items` AS `table_main` WHERE `label` IN (?)"
+    ],
+    "find/float_bindings postgres/plain": [
+        "sql",
+        "SELECT * FROM \"database\".\"namespace_items\" AS \"table_main\" WHERE \"price\" > ? LIMIT ?"
+    ],
+    "find/float_bindings mariadb/plain": [
+        "sql",
+        "SELECT * FROM `database`.`namespace_items` AS `table_main` WHERE `price` > ? LIMIT ?"
+    ],
+    "find/float_bindings mysql/plain": [
+        "sql",
+        "SELECT * FROM `database`.`namespace_items` AS `table_main` WHERE `price` > ? LIMIT ?"
+    ],
+    "find/float_bindings sqlite/plain": [
+        "sql",
+        "SELECT * FROM `namespace_items` AS `table_main` WHERE `price` > ? LIMIT ?"
+    ],
+    "find/group_without_join postgres/plain": [
+        "sql",
+        "SELECT COUNT(*) AS \"n\", \"_createdAt\", \"label\" FROM \"database\".\"namespace_items\" AS \"table_main\" GROUP BY \"_createdAt\", \"label\" LIMIT ?"
+    ],
+    "find/group_without_join mariadb/plain": [
+        "sql",
+        "SELECT COUNT(*) AS `n`, `_createdAt`, `label` FROM `database`.`namespace_items` AS `table_main` GROUP BY `_createdAt`, `label` LIMIT ?"
+    ],
+    "find/group_without_join mysql/plain": [
+        "sql",
+        "SELECT COUNT(*) AS `n`, `_createdAt`, `label` FROM `database`.`namespace_items` AS `table_main` GROUP BY `_createdAt`, `label` LIMIT ?"
+    ],
+    "find/group_without_join sqlite/plain": [
+        "sql",
+        "SELECT COUNT(*) AS `n`, `_createdAt`, `label` FROM `namespace_items` AS `table_main` GROUP BY `_createdAt`, `label` LIMIT ?"
+    ],
+    "join_without_validation/joined_sum_of_internal_attribute postgres/plain": [
+        "sql",
+        "SELECT SUM(\"sum_attr\") AS \"sum\" FROM (SELECT \"table_main\".\"_id\" AS \"sum_attr\" FROM \"database\".\"namespace_customers\" AS \"table_main\" JOIN \"database\".\"namespace_notes\" AS \"note\" ON \"table_main\".\"_uid\" = \"note\".\"customerId\") AS \"table_count\""
+    ],
+    "join_without_validation/joined_sum_of_internal_attribute mariadb/plain": [
+        "sql",
+        "SELECT SUM(`sum_attr`) AS `sum` FROM (SELECT `table_main`.`_id` AS `sum_attr` FROM `database`.`namespace_customers` AS `table_main` JOIN `database`.`namespace_notes` AS `note` ON `table_main`.`_uid` = `note`.`customerId`) AS `table_count`"
+    ],
+    "join_without_validation/joined_sum_of_internal_attribute mysql/plain": [
+        "sql",
+        "SELECT SUM(`sum_attr`) AS `sum` FROM (SELECT `table_main`.`_id` AS `sum_attr` FROM `database`.`namespace_customers` AS `table_main` JOIN `database`.`namespace_notes` AS `note` ON `table_main`.`_uid` = `note`.`customerId`) AS `table_count`"
+    ],
+    "join_without_validation/joined_sum_of_internal_attribute sqlite/plain": [
+        "sql",
+        "SELECT SUM(`sum_attr`) AS `sum` FROM (SELECT `table_main`.`_id` AS `sum_attr` FROM `namespace_customers` AS `table_main` JOIN `namespace_notes` AS `note` ON `table_main`.`_uid` COLLATE NOCASE = `note`.`customerId`) AS `table_count`"
+    ],
+    "join_without_validation/non_string_column postgres/plain": [
+        "error",
+        "Utopia\\Database\\Exception\\Query",
+        "Join ON requires left and right columns"
+    ],
+    "join_without_validation/non_string_column mariadb/plain": [
+        "error",
+        "Utopia\\Database\\Exception\\Query",
+        "Join ON requires left and right columns"
+    ],
+    "join_without_validation/non_string_column mysql/plain": [
+        "error",
+        "Utopia\\Database\\Exception\\Query",
+        "Join ON requires left and right columns"
+    ],
+    "join_without_validation/non_string_column sqlite/plain": [
+        "error",
+        "Utopia\\Database\\Exception\\Query",
+        "Join ON requires left and right columns"
+    ],
+    "join_without_validation/sum_unknown_prefix_beside_join postgres/plain": [
+        "sql",
+        "SELECT SUM(\"sum_attr\") AS \"sum\" FROM (SELECT \"other\".\"body\" AS \"sum_attr\" FROM \"database\".\"namespace_customers\" AS \"table_main\" JOIN \"database\".\"namespace_notes\" AS \"note\" ON \"table_main\".\"_uid\" = \"note\".\"customerId\") AS \"table_count\""
+    ],
+    "join_without_validation/sum_unknown_prefix_beside_join mariadb/plain": [
+        "sql",
+        "SELECT SUM(`sum_attr`) AS `sum` FROM (SELECT `other`.`body` AS `sum_attr` FROM `database`.`namespace_customers` AS `table_main` JOIN `database`.`namespace_notes` AS `note` ON `table_main`.`_uid` = `note`.`customerId`) AS `table_count`"
+    ],
+    "join_without_validation/sum_unknown_prefix_beside_join mysql/plain": [
+        "sql",
+        "SELECT SUM(`sum_attr`) AS `sum` FROM (SELECT `other`.`body` AS `sum_attr` FROM `database`.`namespace_customers` AS `table_main` JOIN `database`.`namespace_notes` AS `note` ON `table_main`.`_uid` = `note`.`customerId`) AS `table_count`"
+    ],
+    "join_without_validation/sum_unknown_prefix_beside_join sqlite/plain": [
+        "sql",
+        "SELECT SUM(`sum_attr`) AS `sum` FROM (SELECT `other`.`body` AS `sum_attr` FROM `namespace_customers` AS `table_main` JOIN `namespace_notes` AS `note` ON `table_main`.`_uid` COLLATE NOCASE = `note`.`customerId`) AS `table_count`"
+    ],
+    "join_without_validation/sum_quote_char_beside_join postgres/plain": [
+        "sql",
+        "SELECT SUM(\"sum_attr\") AS \"sum\" FROM (SELECT \"other\".\"body\" AS \"sum_attr\" FROM \"database\".\"namespace_customers\" AS \"table_main\" JOIN \"database\".\"namespace_notes\" AS \"note\" ON \"table_main\".\"_uid\" = \"note\".\"customerId\") AS \"table_count\""
+    ],
+    "join_without_validation/sum_quote_char_beside_join mariadb/plain": [
+        "sql",
+        "SELECT SUM(`sum_attr`) AS `sum` FROM (SELECT `other`.`body` AS `sum_attr` FROM `database`.`namespace_customers` AS `table_main` JOIN `database`.`namespace_notes` AS `note` ON `table_main`.`_uid` = `note`.`customerId`) AS `table_count`"
+    ],
+    "join_without_validation/sum_quote_char_beside_join mysql/plain": [
+        "sql",
+        "SELECT SUM(`sum_attr`) AS `sum` FROM (SELECT `other`.`body` AS `sum_attr` FROM `database`.`namespace_customers` AS `table_main` JOIN `database`.`namespace_notes` AS `note` ON `table_main`.`_uid` = `note`.`customerId`) AS `table_count`"
+    ],
+    "join_without_validation/sum_quote_char_beside_join sqlite/plain": [
+        "sql",
+        "SELECT SUM(`sum_attr`) AS `sum` FROM (SELECT `other`.`body` AS `sum_attr` FROM `namespace_customers` AS `table_main` JOIN `namespace_notes` AS `note` ON `table_main`.`_uid` COLLATE NOCASE = `note`.`customerId`) AS `table_count`"
+    ],
+    "join_without_validation/sum_quote_char_without_join postgres/plain": [
+        "sql",
+        "SELECT SUM(\"otherbody\") AS \"sum\" FROM \"database\".\"namespace_customers\" AS \"table_main\""
+    ],
+    "join_without_validation/sum_quote_char_without_join mariadb/plain": [
+        "sql",
+        "SELECT SUM(`otherbody`) AS `sum` FROM `database`.`namespace_customers` AS `table_main`"
+    ],
+    "join_without_validation/sum_quote_char_without_join mysql/plain": [
+        "sql",
+        "SELECT SUM(`otherbody`) AS `sum` FROM `database`.`namespace_customers` AS `table_main`"
+    ],
+    "join_without_validation/sum_quote_char_without_join sqlite/plain": [
+        "sql",
+        "SELECT SUM(`otherbody`) AS `sum` FROM `namespace_customers` AS `table_main`"
+    ],
+    "filtered_aggregate/elem_match_refused mariadb/plain": [
+        "error",
+        "Utopia\\Database\\Exception\\Query",
+        "Unsupported filter type: elemMatch"
+    ],
+    "filtered_aggregate/null_tenant postgres/shared": [
+        "sql",
+        "SELECT COUNT(1) AS \"sum\" FROM \"database\".\"namespace_books\" AS \"table_main\" WHERE \"category\" IN (?) AND \"table_main\"._tenant IN (?) AND (\"_permissions\" @> ?::jsonb)"
+    ],
+    "filtered_aggregate/null_tenant mariadb/shared": [
+        "sql",
+        "SELECT COUNT(1) AS `sum` FROM `database`.`namespace_books` AS `table_main` WHERE `category` IN (?) AND `table_main`._tenant IN (?) AND `_uid` IN (SELECT _document FROM `database`.`namespace_books_perms` WHERE _permission IN (?) AND _type = ? AND _tenant IN (?))"
+    ],
+    "filtered_aggregate/null_tenant mysql/shared": [
+        "sql",
+        "SELECT COUNT(1) AS `sum` FROM `database`.`namespace_books` AS `table_main` WHERE `category` IN (?) AND `table_main`._tenant IN (?) AND `_uid` IN (SELECT _document FROM `database`.`namespace_books_perms` WHERE _permission IN (?) AND _type = ? AND _tenant IN (?))"
+    ],
+    "filtered_aggregate/null_tenant sqlite/shared": [
+        "sql",
+        "SELECT COUNT(1) AS `sum` FROM `namespace_books` AS `table_main` WHERE `category` IN (?) AND `table_main`._tenant IN (?) AND `_uid` COLLATE NOCASE IN (SELECT _document FROM `namespace_books_perms` WHERE _permission IN (?) AND _type = ? AND `namespace_books_perms`._tenant IN (?))"
+    ],
+    "joined_reads/full_outer_join_then_nested_left_join postgres/plain": [
+        "sql",
+        "SELECT \"table_main\".*, \"comment\".\"_uid\" AS \"comment._uid\", \"reply\".\"_uid\" AS \"reply._uid\" FROM \"database\".\"namespace_posts\" AS \"table_main\" FULL OUTER JOIN \"database\".\"namespace_comments\" AS \"comment\" ON \"table_main\".\"_uid\" = \"comment\".\"postId\" LEFT JOIN \"database\".\"namespace_replies\" AS \"reply\" ON \"comment\".\"_uid\" = \"reply\".\"commentId\" AND \"reply\".\"body\" IN (?) ORDER BY \"table_main\".\"_id\" ASC LIMIT ?"
+    ],
+    "joined_reads/full_outer_join_then_nested_left_join mariadb/plain": [
+        "sql",
+        "(SELECT `table_main`.*, `comment`.`_uid` AS `comment._uid`, `reply`.`_uid` AS `reply._uid`, `table_main`.`_id` AS `$foj_ord_0` FROM `database`.`namespace_posts` AS `table_main` LEFT JOIN `database`.`namespace_comments` AS `comment` ON `table_main`.`_uid` = `comment`.`postId` LEFT JOIN `database`.`namespace_replies` AS `reply` ON `comment`.`_uid` = `reply`.`commentId` AND `reply`.`body` IN (?)) UNION ALL (SELECT `table_main`.*, `comment`.`_uid` AS `comment._uid`, `reply`.`_uid` AS `reply._uid`, `table_main`.`_id` AS `$foj_ord_0` FROM `database`.`namespace_posts` AS `table_main` RIGHT JOIN `database`.`namespace_comments` AS `comment` ON `table_main`.`_uid` = `comment`.`postId` LEFT JOIN `database`.`namespace_replies` AS `reply` ON `comment`.`_uid` = `reply`.`commentId` AND `reply`.`body` IN (?) WHERE `table_main`.`_uid` IS NULL AND `comment`.`_uid` IS NOT NULL) ORDER BY `$foj_ord_0` ASC LIMIT ?"
+    ],
+    "joined_reads/full_outer_join_then_nested_left_join mysql/plain": [
+        "sql",
+        "(SELECT `table_main`.*, `comment`.`_uid` AS `comment._uid`, `reply`.`_uid` AS `reply._uid`, `table_main`.`_id` AS `$foj_ord_0` FROM `database`.`namespace_posts` AS `table_main` LEFT JOIN `database`.`namespace_comments` AS `comment` ON `table_main`.`_uid` = `comment`.`postId` LEFT JOIN `database`.`namespace_replies` AS `reply` ON `comment`.`_uid` = `reply`.`commentId` AND `reply`.`body` IN (?)) UNION ALL (SELECT `table_main`.*, `comment`.`_uid` AS `comment._uid`, `reply`.`_uid` AS `reply._uid`, `table_main`.`_id` AS `$foj_ord_0` FROM `database`.`namespace_posts` AS `table_main` RIGHT JOIN `database`.`namespace_comments` AS `comment` ON `table_main`.`_uid` = `comment`.`postId` LEFT JOIN `database`.`namespace_replies` AS `reply` ON `comment`.`_uid` = `reply`.`commentId` AND `reply`.`body` IN (?) WHERE `table_main`.`_uid` IS NULL AND `comment`.`_uid` IS NOT NULL) ORDER BY `$foj_ord_0` ASC LIMIT ?"
+    ],
+    "joined_reads/full_outer_join_then_nested_left_join sqlite/plain": [
+        "sql",
+        "SELECT `table_main`.*, `comment`.`_uid` AS `comment._uid`, `reply`.`_uid` AS `reply._uid`, `table_main`.`_id` AS `$foj_ord_0` FROM `namespace_posts` AS `table_main` LEFT JOIN `namespace_comments` AS `comment` ON `table_main`.`_uid` COLLATE NOCASE = `comment`.`postId` LEFT JOIN `namespace_replies` AS `reply` ON `comment`.`_uid` COLLATE NOCASE = `reply`.`commentId` AND `reply`.`body` IN (?) UNION ALL SELECT `table_main`.*, `comment`.`_uid` AS `comment._uid`, `reply`.`_uid` AS `reply._uid`, `table_main`.`_id` AS `$foj_ord_0` FROM `namespace_posts` AS `table_main` RIGHT JOIN `namespace_comments` AS `comment` ON `table_main`.`_uid` COLLATE NOCASE = `comment`.`postId` LEFT JOIN `namespace_replies` AS `reply` ON `comment`.`_uid` COLLATE NOCASE = `reply`.`commentId` AND `reply`.`body` IN (?) WHERE `table_main`.`_uid` IS NULL AND `comment`.`_uid` IS NOT NULL ORDER BY `$foj_ord_0` ASC LIMIT ?"
+    ],
+    "joined_reads/full_outer_join_then_nested_right_join postgres/plain": [
+        "sql",
+        "SELECT \"table_main\".*, \"comment\".\"_uid\" AS \"comment._uid\", \"reply\".\"_uid\" AS \"reply._uid\" FROM \"database\".\"namespace_posts\" AS \"table_main\" FULL OUTER JOIN \"database\".\"namespace_comments\" AS \"comment\" ON \"table_main\".\"_uid\" = \"comment\".\"postId\" RIGHT JOIN \"database\".\"namespace_replies\" AS \"reply\" ON \"comment\".\"_uid\" = \"reply\".\"commentId\" LIMIT ?"
+    ],
+    "joined_reads/full_outer_join_then_nested_right_join mariadb/plain": [
+        "sql",
+        "(SELECT `table_main`.*, `comment`.`_uid` AS `comment._uid`, `reply`.`_uid` AS `reply._uid` FROM `database`.`namespace_posts` AS `table_main` LEFT JOIN `database`.`namespace_comments` AS `comment` ON `table_main`.`_uid` = `comment`.`postId` RIGHT JOIN `database`.`namespace_replies` AS `reply` ON `comment`.`_uid` = `reply`.`commentId` WHERE (`table_main`.`_uid` IS NOT NULL OR `comment`.`_uid` IS NOT NULL OR `reply`.`_uid` IS NULL)) UNION ALL (SELECT `table_main`.*, `comment`.`_uid` AS `comment._uid`, `reply`.`_uid` AS `reply._uid` FROM `database`.`namespace_posts` AS `table_main` RIGHT JOIN `database`.`namespace_comments` AS `comment` ON `table_main`.`_uid` = `comment`.`postId` RIGHT JOIN `database`.`namespace_replies` AS `reply` ON `comment`.`_uid` = `reply`.`commentId` WHERE `table_main`.`_uid` IS NULL AND (`comment`.`_uid` IS NOT NULL OR `reply`.`_uid` IS NOT NULL)) LIMIT ?"
+    ],
+    "joined_reads/full_outer_join_then_nested_right_join mysql/plain": [
+        "sql",
+        "(SELECT `table_main`.*, `comment`.`_uid` AS `comment._uid`, `reply`.`_uid` AS `reply._uid` FROM `database`.`namespace_posts` AS `table_main` LEFT JOIN `database`.`namespace_comments` AS `comment` ON `table_main`.`_uid` = `comment`.`postId` RIGHT JOIN `database`.`namespace_replies` AS `reply` ON `comment`.`_uid` = `reply`.`commentId` WHERE (`table_main`.`_uid` IS NOT NULL OR `comment`.`_uid` IS NOT NULL OR `reply`.`_uid` IS NULL)) UNION ALL (SELECT `table_main`.*, `comment`.`_uid` AS `comment._uid`, `reply`.`_uid` AS `reply._uid` FROM `database`.`namespace_posts` AS `table_main` RIGHT JOIN `database`.`namespace_comments` AS `comment` ON `table_main`.`_uid` = `comment`.`postId` RIGHT JOIN `database`.`namespace_replies` AS `reply` ON `comment`.`_uid` = `reply`.`commentId` WHERE `table_main`.`_uid` IS NULL AND (`comment`.`_uid` IS NOT NULL OR `reply`.`_uid` IS NOT NULL)) LIMIT ?"
+    ],
+    "joined_reads/full_outer_join_then_nested_right_join sqlite/plain": [
+        "sql",
+        "SELECT `table_main`.*, `comment`.`_uid` AS `comment._uid`, `reply`.`_uid` AS `reply._uid` FROM `namespace_posts` AS `table_main` LEFT JOIN `namespace_comments` AS `comment` ON `table_main`.`_uid` COLLATE NOCASE = `comment`.`postId` RIGHT JOIN `namespace_replies` AS `reply` ON `comment`.`_uid` COLLATE NOCASE = `reply`.`commentId` WHERE (`table_main`.`_uid` IS NOT NULL OR `comment`.`_uid` IS NOT NULL OR `reply`.`_uid` IS NULL) UNION ALL SELECT `table_main`.*, `comment`.`_uid` AS `comment._uid`, `reply`.`_uid` AS `reply._uid` FROM `namespace_posts` AS `table_main` RIGHT JOIN `namespace_comments` AS `comment` ON `table_main`.`_uid` COLLATE NOCASE = `comment`.`postId` RIGHT JOIN `namespace_replies` AS `reply` ON `comment`.`_uid` COLLATE NOCASE = `reply`.`commentId` WHERE `table_main`.`_uid` IS NULL AND (`comment`.`_uid` IS NOT NULL OR `reply`.`_uid` IS NOT NULL) LIMIT ?"
+    ],
+    "joined_reads/distinct_full_outer_join_without_selects postgres/plain": [
+        "sql",
+        "SELECT DISTINCT \"table_main\".*, \"comment\".\"_uid\" AS \"comment._uid\" FROM \"database\".\"namespace_posts\" AS \"table_main\" FULL OUTER JOIN \"database\".\"namespace_comments\" AS \"comment\" ON \"table_main\".\"_uid\" = \"comment\".\"postId\" ORDER BY \"comment\".\"_uid\" ASC, \"table_main\".\"_uid\" DESC LIMIT ?"
+    ],
+    "joined_reads/distinct_full_outer_join_without_selects mariadb/plain": [
+        "sql",
+        "(SELECT DISTINCT `table_main`.*, `comment`.`_uid` AS `comment._uid`, `comment`.`_uid` AS `$foj_ord_0`, `table_main`.`_uid` AS `$foj_ord_1` FROM `database`.`namespace_posts` AS `table_main` LEFT JOIN `database`.`namespace_comments` AS `comment` ON `table_main`.`_uid` = `comment`.`postId`) UNION (SELECT DISTINCT `table_main`.*, `comment`.`_uid` AS `comment._uid`, `comment`.`_uid` AS `$foj_ord_0`, `table_main`.`_uid` AS `$foj_ord_1` FROM `database`.`namespace_posts` AS `table_main` RIGHT JOIN `database`.`namespace_comments` AS `comment` ON `table_main`.`_uid` = `comment`.`postId` WHERE `table_main`.`_uid` IS NULL AND `comment`.`_uid` IS NOT NULL) ORDER BY `$foj_ord_0` ASC, `$foj_ord_1` DESC LIMIT ?"
+    ],
+    "joined_reads/distinct_full_outer_join_without_selects mysql/plain": [
+        "sql",
+        "(SELECT DISTINCT `table_main`.*, `comment`.`_uid` AS `comment._uid`, `comment`.`_uid` AS `$foj_ord_0`, `table_main`.`_uid` AS `$foj_ord_1` FROM `database`.`namespace_posts` AS `table_main` LEFT JOIN `database`.`namespace_comments` AS `comment` ON `table_main`.`_uid` = `comment`.`postId`) UNION (SELECT DISTINCT `table_main`.*, `comment`.`_uid` AS `comment._uid`, `comment`.`_uid` AS `$foj_ord_0`, `table_main`.`_uid` AS `$foj_ord_1` FROM `database`.`namespace_posts` AS `table_main` RIGHT JOIN `database`.`namespace_comments` AS `comment` ON `table_main`.`_uid` = `comment`.`postId` WHERE `table_main`.`_uid` IS NULL AND `comment`.`_uid` IS NOT NULL) ORDER BY `$foj_ord_0` ASC, `$foj_ord_1` DESC LIMIT ?"
+    ],
+    "joined_reads/distinct_full_outer_join_without_selects sqlite/plain": [
+        "sql",
+        "SELECT DISTINCT `table_main`.*, `comment`.`_uid` AS `comment._uid`, `comment`.`_uid` AS `$foj_ord_0`, `table_main`.`_uid` AS `$foj_ord_1` FROM `namespace_posts` AS `table_main` LEFT JOIN `namespace_comments` AS `comment` ON `table_main`.`_uid` COLLATE NOCASE = `comment`.`postId` UNION SELECT DISTINCT `table_main`.*, `comment`.`_uid` AS `comment._uid`, `comment`.`_uid` AS `$foj_ord_0`, `table_main`.`_uid` AS `$foj_ord_1` FROM `namespace_posts` AS `table_main` RIGHT JOIN `namespace_comments` AS `comment` ON `table_main`.`_uid` COLLATE NOCASE = `comment`.`postId` WHERE `table_main`.`_uid` IS NULL AND `comment`.`_uid` IS NOT NULL ORDER BY `$foj_ord_0` ASC, `$foj_ord_1` DESC LIMIT ?"
+    ]
+}

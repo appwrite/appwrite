@@ -63,9 +63,14 @@ pub struct Query(utopia_query::Query);
 /// A `utopia-query` error as the database reports it: the library's
 /// exceptions (`Utopia\Query\Exception` and its subclasses) as
 /// [`Kind::Query`] with the same message and code, the engine's errors as
-/// theirs.
+/// theirs. A database error a hook raised inside a builder (carried as the
+/// previous error of a `Utopia\Query\Exception`, as the SQL hooks do)
+/// comes back unchanged.
 pub(crate) fn query_error(e: utopia_query::Error) -> Error {
     use utopia_query::Error as Q;
+    if let Some(error) = e.previous().and_then(|previous| previous.downcast_ref::<Error>()) {
+        return error.clone();
+    }
     let message = String::from_utf8_lossy(&e.message_bytes()).into_owned();
     let code = e.code();
     let kind = match &e {
@@ -753,7 +758,7 @@ fn sort_strings(strings: &mut [String]) {
     });
 }
 
-fn md5_hex(bytes: &[u8]) -> String {
+pub(crate) fn md5_hex(bytes: &[u8]) -> String {
     use md5::Digest;
     md5::Md5::digest(bytes).iter().map(|b| format!("{b:02x}")).collect()
 }

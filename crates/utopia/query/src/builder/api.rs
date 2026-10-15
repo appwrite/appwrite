@@ -53,12 +53,12 @@ impl<D: Dialect> Builder<D> {
     /// empty table makes a select without `FROM`.
     ///
     /// PHP: `from($table, $alias)`.
+    ///
+    /// On a builder with a [`Scope`](crate::builder::Scope), a non-empty
+    /// table is a collection id read through the scope (see
+    /// [`Builder::scope`]).
     pub fn from(&mut self, table: impl Into<String>, alias: impl Into<String>) -> &mut Self {
-        self.core.table = table.into();
-        self.core.alias = alias.into();
-        self.core.from_subquery = None;
-        self.core.tableless = self.core.table.is_empty();
-        self
+        self.scoped_from(table.into(), alias.into())
     }
 
     /// A select without `FROM`.
@@ -406,7 +406,7 @@ impl<D: Dialect> Builder<D> {
     ///
     /// PHP: `build()`.
     pub fn build(&mut self) -> Result<Statement> {
-        D::build(self)
+        self.scoped_build()
     }
 
     /// `count(attribute)` (`*` counts rows) as `alias`.
@@ -667,7 +667,9 @@ impl<D: Dialect> Builder<D> {
     ///
     /// PHP: `into()`.
     pub fn into(&mut self, table: impl Into<String>) -> &mut Self {
-        self.core.table = table.into();
+        let table = table.into();
+        self.defer_unbound(&format!("insert into table '{table}'"));
+        self.core.table = table;
         self
     }
 
@@ -717,6 +719,7 @@ impl<D: Dialect> Builder<D> {
     ///
     /// PHP: `insert()`.
     pub fn insert(&mut self) -> Result<Statement> {
+        self.check_deferred()?;
         D::insert(self)
     }
 
@@ -724,6 +727,7 @@ impl<D: Dialect> Builder<D> {
     ///
     /// PHP: `insertDefaultValues()`.
     pub fn insert_default_values(&mut self) -> Result<Statement> {
+        self.check_deferred()?;
         D::insert_default_values(self)
     }
 
@@ -731,6 +735,7 @@ impl<D: Dialect> Builder<D> {
     ///
     /// PHP: `insertSelect()`.
     pub fn insert_select(&mut self) -> Result<Statement> {
+        self.check_deferred()?;
         self.base_insert_select()
     }
 
@@ -738,6 +743,7 @@ impl<D: Dialect> Builder<D> {
     ///
     /// PHP: `update()`.
     pub fn update(&mut self) -> Result<Statement> {
+        self.check_deferred()?;
         D::update(self)
     }
 
@@ -745,6 +751,7 @@ impl<D: Dialect> Builder<D> {
     ///
     /// PHP: `delete()`.
     pub fn delete(&mut self) -> Result<Statement> {
+        self.check_deferred()?;
         D::delete(self)
     }
 
