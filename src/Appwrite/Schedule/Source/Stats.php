@@ -15,7 +15,7 @@ use Utopia\Schedule\Trigger\Shifted;
 use Utopia\System\System;
 
 /**
- * What the stats-resources task samples: the region's realtime concurrency,
+ * What the stats-calculations task samples: the region's realtime concurrency,
  * and the resource counts of every project accessed in the last day.
  *
  * Each project takes a slot derived from its id inside the interval, so a
