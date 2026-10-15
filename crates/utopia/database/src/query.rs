@@ -758,7 +758,7 @@ fn sort_strings(strings: &mut [String]) {
     });
 }
 
-fn md5_hex(bytes: &[u8]) -> String {
+pub(crate) fn md5_hex(bytes: &[u8]) -> String {
     use md5::Digest;
     md5::Md5::digest(bytes).iter().map(|b| format!("{b:02x}")).collect()
 }

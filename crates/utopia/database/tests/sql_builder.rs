@@ -52,7 +52,10 @@ mod oracle {
     #[test]
     fn sqlite_like_declares_its_escape() {
         let built = builder::sqlite().from("users", "").filter([Query::starts_with("name", "a_")]).build().unwrap();
-        assert_eq!(json(&built.query, &built.bindings), r#"["SELECT * FROM `users` WHERE `name` LIKE ? ESCAPE '\\'",["a\\_%"]]"#);
+        assert_eq!(
+            json(&built.query, &built.bindings),
+            r#"["SELECT * FROM `users` WHERE `name` LIKE ? ESCAPE '\\'",["a\\_%"]]"#
+        );
     }
 
     #[test]
@@ -174,10 +177,8 @@ mod oracle {
 
     #[test]
     fn postgres_distance_in_meters() {
-        let query = typed(
-            Query::distance_less_than("location", list([Value::Int(10), Value::Int(20)]), 1000, true),
-            "point",
-        );
+        let query =
+            typed(Query::distance_less_than("location", list([Value::Int(10), Value::Int(20)]), 1000, true), "point");
         assert_eq!(
             condition(&builder::postgres().compile_filters(&[query]).unwrap()),
             r#"["(\"location\" && ST_Expand(ST_GeomFromText(?, 4326), ?, ?) AND ST_Distance((\"location\"::geography), ST_SetSRID(ST_GeomFromText(?), 4326)::geography) < ?)",["POINT(10 20)",0.009560263084334466,0.009043717329571146,"POINT(10 20)",1000]]"#
@@ -379,7 +380,10 @@ mod postgres_distance_test {
         let cases = [
             typed(Query::distance_less_than("location", ints(10, 20), 1000, true), "linestring"),
             typed(Query::distance_less_than("location", polygon, 1000, true), "point"),
-            typed(Query::distance_less_than("location", list([Value::Int(10), Value::Float(89.99)]), 5000, true), "point"),
+            typed(
+                Query::distance_less_than("location", list([Value::Int(10), Value::Float(89.99)]), 5000, true),
+                "point",
+            ),
             typed(Query::distance_less_than("location", point(179.99, 0.0), 5000, true), "point"),
             typed(Query::distance_less_than("location", ints(10, 20), f64::NAN, true), "point"),
             typed(Query::distance_less_than("location", ints(10, 20), f64::INFINITY, true), "point"),
@@ -422,7 +426,8 @@ mod postgres_object_path_test {
     #[test]
     fn a_filter_on_an_unsafe_object_path_is_a_query_error() {
         for path in UNSAFE {
-            let error = builder::postgres().compile_filters(&[object(Query::equal(path, strings(&["x"])))]).unwrap_err();
+            let error =
+                builder::postgres().compile_filters(&[object(Query::equal(path, strings(&["x"])))]).unwrap_err();
             assert_eq!(database_error(error).kind(), Kind::Query, "{path}");
         }
     }
@@ -509,11 +514,17 @@ mod scopes {
         let (mut b, _) = scoped();
         b.from("users", "main");
         let error = database_error(b.from("posts", "").build().unwrap_err());
-        assert_eq!(error.message(), "The builder reads collection 'users' as 'main', not 'posts': start another builder");
+        assert_eq!(
+            error.message(),
+            "The builder reads collection 'users' as 'main', not 'posts': start another builder"
+        );
         let (mut b, _) = scoped();
         b.from("users", "");
         let error = database_error(b.from_table("raw", "").err().unwrap());
-        assert_eq!(error.message(), "The builder reads collection 'users' and cannot read table 'raw': start another builder");
+        assert_eq!(
+            error.message(),
+            "The builder reads collection 'users' and cannot read table 'raw': start another builder"
+        );
         let (mut b, _) = scoped();
         b.from("users", "");
         let error = database_error(utopia_query::builder::Builder::into(&mut b, "raw").insert().unwrap_err());

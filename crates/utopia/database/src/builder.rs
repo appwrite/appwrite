@@ -39,8 +39,8 @@
 use std::sync::Arc;
 
 pub use crate::hook::SqlBuilder;
-pub use utopia_query::builder::{Flavor, Scope, ScopeBinding, SqliteFlavor};
 use utopia_query::builder::{Condition, MariaDb, MySql, PostgreSql, Sqlite, Statement};
+pub use utopia_query::builder::{Flavor, Scope, ScopeBinding, SqliteFlavor};
 
 use crate::error::Error;
 use crate::query::Query;
@@ -88,10 +88,7 @@ pub fn postgres() -> PostgreSql {
             if ObjectPath::accepts(attribute.as_bytes()) {
                 return Ok(());
             }
-            Err(query_error(Error::query(format!(
-                "Invalid object path \"{attribute}\": {}",
-                ObjectPath.description()
-            ))))
+            Err(query_error(Error::query(format!("Invalid object path \"{attribute}\": {}", ObjectPath.description()))))
         })),
         indexed_distance: Some(crate::database::DEFAULT_SRID),
         ..sql_flavor()
