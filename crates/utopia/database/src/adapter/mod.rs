@@ -58,6 +58,8 @@
 
 #[cfg(feature = "mongo")]
 pub mod mongo;
+#[cfg(any(feature = "postgres", feature = "mariadb", feature = "sqlite"))]
+pub mod sql;
 
 use std::any::Any;
 use std::future::Future;

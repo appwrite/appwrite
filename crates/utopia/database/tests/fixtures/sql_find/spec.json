@@ -1,0 +1,283 @@
+{
+  "collections": {
+    "authors": {
+      "$id": "authors",
+      "name": "authors",
+      "documentSecurity": true,
+      "attributes": [
+        {"$id": "name", "key": "name", "type": "string", "size": 128, "required": false, "signed": true, "array": false, "filters": []},
+        {"$id": "pages", "key": "pages", "type": "integer", "size": 0, "required": false, "signed": true, "array": false, "filters": []},
+        {"$id": "score", "key": "score", "type": "double", "size": 0, "required": false, "signed": true, "array": false, "filters": []},
+        {"$id": "tags", "key": "tags", "type": "string", "size": 64, "required": false, "signed": true, "array": true, "filters": []},
+        {"$id": "bio", "key": "bio", "type": "string", "size": 512, "required": false, "signed": true, "array": false, "filters": []},
+        {"$id": "active", "key": "active", "type": "boolean", "size": 0, "required": false, "signed": true, "array": false, "filters": []}
+      ],
+      "indexes": [
+        {"$id": "bio_fts", "key": "bio_fts", "type": "fulltext", "attributes": ["bio"], "lengths": [], "orders": []}
+      ]
+    },
+    "books": {
+      "$id": "books",
+      "name": "books",
+      "documentSecurity": true,
+      "attributes": [
+        {"$id": "authorId", "key": "authorId", "type": "string", "size": 64, "required": false, "signed": true, "array": false, "filters": []},
+        {"$id": "title", "key": "title", "type": "string", "size": 128, "required": false, "signed": true, "array": false, "filters": []},
+        {"$id": "pages", "key": "pages", "type": "integer", "size": 0, "required": false, "signed": true, "array": false, "filters": []}
+      ],
+      "indexes": [
+        {"$id": "author", "key": "author", "type": "key", "attributes": ["authorId"], "lengths": [], "orders": []}
+      ]
+    },
+    "reviews": {
+      "$id": "reviews",
+      "name": "reviews",
+      "documentSecurity": false,
+      "attributes": [
+        {"$id": "authorId", "key": "authorId", "type": "string", "size": 64, "required": false, "signed": true, "array": false, "filters": []},
+        {"$id": "stars", "key": "stars", "type": "integer", "size": 0, "required": false, "signed": true, "array": false, "filters": []}
+      ],
+      "indexes": []
+    },
+    "vectors": {
+      "$id": "vectors",
+      "name": "vectors",
+      "engines": ["postgres"],
+      "documentSecurity": false,
+      "attributes": [
+        {"$id": "embedding", "key": "embedding", "type": "vector", "size": 3, "required": false, "signed": true, "array": false, "filters": []},
+        {"$id": "label", "key": "label", "type": "string", "size": 32, "required": false, "signed": true, "array": false, "filters": []}
+      ],
+      "indexes": []
+    }
+  },
+  "documents": {
+    "authors": [
+      {"$id": "a1", "$permissions": ["read(\"any\")"], "name": "Ann", "pages": 10, "score": 1.5, "tags": ["x", "y"], "bio": "loves rust and php", "active": true},
+      {"$id": "a2", "$permissions": ["read(\"user:1\")"], "name": "Bob", "pages": 20, "score": 2.5, "tags": ["y"], "bio": "writes about databases", "active": false},
+      {"$id": "a3", "$permissions": ["read(\"any\")"], "name": "Cid", "pages": 20, "score": null, "tags": [], "bio": "rust compilers", "active": true},
+      {"$id": "a4", "$permissions": [], "name": null, "pages": 5, "score": 0.5, "tags": ["z"], "bio": "", "active": null}
+    ],
+    "books": [
+      {"$id": "b1", "$permissions": ["read(\"any\")"], "authorId": "a1", "title": "One", "pages": 100},
+      {"$id": "b2", "$permissions": ["read(\"user:1\")"], "authorId": "a1", "title": "Two", "pages": 200},
+      {"$id": "b3", "$permissions": ["read(\"any\")"], "authorId": "a2", "title": "Three", "pages": 300},
+      {"$id": "b4", "$permissions": ["read(\"any\")"], "authorId": "zz", "title": "Orphan", "pages": 50}
+    ],
+    "reviews": [
+      {"$id": "r1", "$permissions": ["read(\"any\")"], "authorId": "a1", "stars": 5},
+      {"$id": "r2", "$permissions": ["read(\"any\")"], "authorId": "a3", "stars": 3}
+    ],
+    "vectors": [
+      {"$id": "v1", "$permissions": ["read(\"any\")"], "embedding": [1.0, 0.0, 0.0], "label": "x"},
+      {"$id": "v2", "$permissions": ["read(\"any\")"], "embedding": [0.0, 1.0, 0.0], "label": "y"},
+      {"$id": "v3", "$permissions": ["read(\"any\")"], "embedding": [0.5, 0.5, 0.0], "label": "z"}
+    ]
+  },
+  "joined": {
+    "joinAttributes": {"books": ["authorId", "title", "pages"], "reviews": ["authorId", "stars"]},
+    "joinIndexed": {"books": ["authorId"], "reviews": []}
+  },
+  "scenarios": [
+    {"name": "find_equal", "call": "find", "queries": [{"method": "equal", "attribute": "name", "values": ["Ann", "Bob"]}], "limit": 10},
+    {"name": "find_fast_path", "call": "find", "queries": [], "limit": 2, "offset": 1, "orderAttributes": ["$sequence"], "orderTypes": ["ASC"]},
+    {"name": "find_fast_path_offset_only", "call": "find", "queries": [], "limit": null, "offset": 2, "orderAttributes": ["$sequence"], "orderTypes": ["ASC"]},
+    {"name": "find_no_order", "call": "find", "queries": [], "limit": 25},
+    {"name": "find_comparisons", "call": "find", "queries": [
+      {"method": "notEqual", "attribute": "name", "values": ["Bob"]},
+      {"method": "greaterThanEqual", "attribute": "pages", "values": [5]},
+      {"method": "lessThan", "attribute": "score", "values": [3.25]},
+      {"method": "between", "attribute": "pages", "values": [1, 50]}
+    ], "limit": 10, "orderAttributes": ["name"], "orderTypes": ["DESC"]},
+    {"name": "find_strings", "call": "find", "queries": [
+      {"method": "startsWith", "attribute": "name", "values": ["A_"]},
+      {"method": "endsWith", "attribute": "bio", "values": ["php"]}
+    ], "limit": 10},
+    {"name": "find_nulls_and_groups", "call": "find", "queries": [
+      {"method": "or", "values": [{"method": "isNull", "attribute": "name", "values": []}, {"method": "and", "values": [{"method": "isNotNull", "attribute": "score", "values": []}, {"method": "equal", "attribute": "active", "values": [true]}]}]}
+    ], "limit": 10},
+    {"name": "find_contains_array", "call": "find", "queries": [{"method": "contains", "attribute": "tags", "values": ["y"]}], "types": {"tags": ["string", true]}, "limit": 10},
+    {"name": "find_internal_attributes", "call": "find", "queries": [
+      {"method": "equal", "attribute": "$id", "values": ["a1", "a3"]},
+      {"method": "greaterThan", "attribute": "$sequence", "values": [0]}
+    ], "limit": 10, "orderAttributes": ["$createdAt", "$sequence"], "orderTypes": ["DESC", "ASC"]},
+    {"name": "find_search", "call": "find", "queries": [{"method": "search", "attribute": "bio", "values": ["rust"]}], "limit": 10},
+    {"name": "find_not_search", "call": "find", "queries": [{"method": "notSearch", "attribute": "bio", "values": ["rust"]}], "limit": 10},
+    {"name": "find_search_no_words", "call": "find", "queries": [{"method": "search", "attribute": "bio", "values": ["!!"]}], "limit": 10},
+    {"name": "find_select", "call": "find", "queries": [{"method": "select", "values": ["name", "pages"]}], "limit": 10},
+    {"name": "find_select_internal", "call": "find", "queries": [{"method": "select", "values": ["name", "$id", "$createdAt"]}], "limit": 10},
+    {"name": "find_select_star", "call": "find", "queries": [{"method": "select", "values": ["*"]}], "limit": 10},
+    {"name": "find_page_offset", "call": "find", "queries": [], "limit": 2, "offset": 1, "orderAttributes": ["pages", "$sequence"], "orderTypes": ["DESC", "ASC"]},
+    {"name": "find_offset_without_limit", "call": "find", "queries": [{"method": "greaterThan", "attribute": "pages", "values": [1]}], "limit": null, "offset": 1, "orderAttributes": ["$sequence"], "orderTypes": ["ASC"]},
+    {"name": "find_random", "call": "find", "queries": [], "limit": 3, "orderAttributes": [""], "orderTypes": ["RANDOM"], "noResult": true},
+    {"name": "find_cursor_after", "call": "find", "queries": [], "limit": 10, "orderAttributes": ["pages", "$sequence"], "orderTypes": ["ASC", "ASC"], "cursor": {"pages": 10, "$sequence": 1}, "cursorDirection": "after"},
+    {"name": "find_cursor_before", "call": "find", "queries": [], "limit": 10, "orderAttributes": ["pages", "$sequence"], "orderTypes": ["ASC", "DESC"], "cursor": {"pages": 20, "$sequence": 3}, "cursorDirection": "before"},
+    {"name": "find_cursor_sequence", "call": "find", "queries": [], "limit": 10, "orderAttributes": ["$sequence"], "orderTypes": ["DESC"], "cursor": {"$sequence": 3}, "cursorDirection": "after"},
+    {"name": "find_aggregate_group", "call": "find", "queries": [
+      {"method": "count", "attribute": "*", "alias": "total", "values": []},
+      {"method": "sum", "attribute": "pages", "alias": "pagesSum", "values": []},
+      {"method": "groupBy", "values": ["pages"]}
+    ], "limit": 10, "orderAttributes": ["pages"], "orderTypes": ["ASC"]},
+    {"name": "find_aggregate_plain", "call": "find", "queries": [
+      {"method": "avg", "attribute": "score", "alias": "avgScore", "values": []},
+      {"method": "min", "attribute": "pages", "alias": "", "values": []},
+      {"method": "max", "attribute": "pages", "alias": "most", "values": []}
+    ], "limit": 10},
+    {"name": "find_aggregate_statistics", "call": "find", "queries": [
+      {"method": "stddev", "attribute": "pages", "alias": "sd", "values": []},
+      {"method": "variance", "attribute": "pages", "alias": "var", "values": []}
+    ], "limit": 10},
+    {"name": "find_aggregate_bitwise", "call": "find", "queries": [
+      {"method": "bitAnd", "attribute": "pages", "alias": "andPages", "values": []},
+      {"method": "bitOr", "attribute": "pages", "alias": "", "values": []},
+      {"method": "greaterThan", "attribute": "pages", "values": [1000]}
+    ], "limit": 10},
+    {"name": "find_having", "call": "find", "queries": [
+      {"method": "count", "attribute": "*", "alias": "total", "values": []},
+      {"method": "groupBy", "values": ["pages"]},
+      {"method": "having", "values": [{"method": "greaterThan", "attribute": "total", "values": [1]}]}
+    ], "limit": 10},
+    {"name": "find_distinct", "call": "find", "queries": [{"method": "distinct", "values": []}, {"method": "select", "values": ["pages"]}], "limit": 10, "orderAttributes": ["pages"], "orderTypes": ["ASC"]},
+    {"name": "find_join", "call": "find", "collectionExtra": true, "queries": [
+      {"method": "join", "attribute": "books", "alias": "book", "values": [{"method": "on", "values": ["$id", "=", "authorId"]}]}
+    ], "limit": 10, "orderAttributes": ["$sequence", "book.$sequence"], "orderTypes": ["ASC", "ASC"]},
+    {"name": "find_join_select", "call": "find", "collectionExtra": true, "queries": [
+      {"method": "join", "attribute": "books", "alias": "book", "values": [{"method": "on", "values": ["$id", "=", "authorId"]}]},
+      {"method": "select", "values": ["name", "book.title", "book.*"]},
+      {"method": "greaterThan", "attribute": "book.pages", "values": [150]}
+    ], "limit": 10},
+    {"name": "find_left_join_bounded", "call": "find", "collectionExtra": true, "queries": [
+      {"method": "leftJoin", "attribute": "books", "alias": "book", "values": [{"method": "on", "values": ["$id", "=", "authorId"]}]},
+      {"method": "greaterThan", "attribute": "pages", "values": [1]}
+    ], "limit": 3, "offset": 1, "orderAttributes": ["$sequence", "book.title"], "orderTypes": ["ASC", "DESC"]},
+    {"name": "find_left_join_bounded_cursor", "call": "find", "collectionExtra": true, "queries": [
+      {"method": "leftJoin", "attribute": "books", "alias": "book", "values": [{"method": "on", "values": ["$id", "=", "authorId"]}]},
+      {"method": "search", "attribute": "bio", "values": ["rust"]}
+    ], "limit": 3, "orderAttributes": ["$sequence", "book.title"], "orderTypes": ["ASC", "ASC"], "cursor": {"$sequence": 1, "book.title": "One"}},
+    {"name": "find_right_join", "call": "find", "collectionExtra": true, "queries": [
+      {"method": "rightJoin", "attribute": "books", "alias": "book", "values": [{"method": "on", "values": ["$id", "=", "authorId"]}]}
+    ], "limit": 10, "orderAttributes": ["book.$sequence"], "orderTypes": ["ASC"], "cursor": {"book.$sequence": 1}},
+    {"name": "find_full_outer_join", "call": "find", "collectionExtra": true, "queries": [
+      {"method": "fullOuterJoin", "attribute": "books", "alias": "book", "values": [{"method": "on", "values": ["$id", "=", "authorId"]}]}
+    ], "limit": 10, "offset": 0, "orderAttributes": ["name", "book.title"], "orderTypes": ["ASC", "DESC"], "cursor": {"name": "Ann", "book.title": null}},
+    {"name": "find_full_outer_join_distinct", "call": "find", "collectionExtra": true, "queries": [
+      {"method": "fullOuterJoin", "attribute": "books", "alias": "book", "values": [{"method": "on", "values": ["$id", "=", "authorId"]}]},
+      {"method": "distinct", "values": []},
+      {"method": "select", "values": ["name", "book.title"]}
+    ], "limit": 10, "orderAttributes": ["name", "book.title"], "orderTypes": ["ASC", "ASC"]},
+    {"name": "find_full_outer_join_aggregate", "call": "find", "collectionExtra": true, "queries": [
+      {"method": "fullOuterJoin", "attribute": "books", "alias": "book", "values": [{"method": "on", "values": ["$id", "=", "authorId"]}]},
+      {"method": "count", "attribute": "*", "alias": "total", "values": []},
+      {"method": "sum", "attribute": "pages", "alias": "", "values": []},
+      {"method": "groupBy", "values": ["name", "book.pages"]}
+    ], "limit": 10, "orderAttributes": ["name"], "orderTypes": ["ASC"]},
+    {"name": "find_full_outer_join_then_right", "call": "find", "collectionExtra": true, "queries": [
+      {"method": "fullOuterJoin", "attribute": "books", "alias": "book", "values": [{"method": "on", "values": ["$id", "=", "authorId"]}]},
+      {"method": "rightJoin", "attribute": "reviews", "alias": "review", "values": [{"method": "on", "values": ["book.authorId", "=", "authorId"]}]}
+    ], "limit": 10},
+    {"name": "find_two_full_outer_joins", "call": "find", "collectionExtra": true, "queries": [
+      {"method": "fullOuterJoin", "attribute": "books", "alias": "book", "values": [{"method": "on", "values": ["$id", "=", "authorId"]}]},
+      {"method": "fullOuterJoin", "attribute": "reviews", "alias": "review", "values": [{"method": "on", "values": ["$id", "=", "authorId"]}]}
+    ], "limit": 10},
+    {"name": "find_join_aggregate", "call": "find", "collectionExtra": true, "queries": [
+      {"method": "join", "attribute": "books", "alias": "book", "values": [{"method": "on", "values": ["$id", "=", "authorId"]}]},
+      {"method": "join", "attribute": "reviews", "alias": "review", "values": [{"method": "on", "values": ["$id", "=", "authorId"]}]},
+      {"method": "count", "attribute": "*", "alias": "total", "values": []},
+      {"method": "avg", "attribute": "stars", "alias": "avgStars", "values": []},
+      {"method": "max", "attribute": "pages", "alias": "", "values": []},
+      {"method": "groupBy", "values": ["pages", "book.pages"]}
+    ], "limit": 10},
+    {"name": "find_cross_join", "call": "find", "collectionExtra": true, "queries": [
+      {"method": "crossJoin", "attribute": "reviews", "alias": "review", "values": []},
+      {"method": "equal", "attribute": "review.stars", "values": [5]}
+    ], "limit": 10, "orderAttributes": ["$sequence", "review.$sequence"], "orderTypes": ["ASC", "ASC"]},
+    {"name": "find_join_bare_order", "call": "find", "collectionExtra": true, "queries": [
+      {"method": "join", "attribute": "reviews", "alias": "review", "values": [{"method": "on", "values": ["$id", "=", "authorId"]}]}
+    ], "limit": 10, "orderAttributes": ["stars", "$sequence"], "orderTypes": ["DESC", "ASC"], "cursor": {"stars": 5, "$sequence": 1}},
+    {"name": "find_join_duplicate_alias", "call": "find", "collectionExtra": true, "queries": [
+      {"method": "join", "attribute": "books", "alias": "b", "values": [{"method": "on", "values": ["$id", "=", "authorId"]}]},
+      {"method": "join", "attribute": "reviews", "alias": "B", "values": [{"method": "on", "values": ["$id", "=", "authorId"]}]}
+    ], "limit": 10},
+    {"name": "find_join_missing_on", "call": "find", "collectionExtra": true, "queries": [
+      {"method": "join", "attribute": "books", "alias": "book", "values": [{"method": "on", "values": ["", "=", "authorId"]}]}
+    ], "limit": 10},
+    {"name": "find_unknown_column", "call": "find", "queries": [{"method": "equal", "attribute": "missing", "values": [1]}], "limit": 10},
+    {"name": "find_authorized", "call": "find", "auth": ["any"], "queries": [{"method": "greaterThan", "attribute": "pages", "values": [1]}], "limit": 10, "orderAttributes": ["$sequence"], "orderTypes": ["ASC"]},
+    {"name": "find_authorized_update", "call": "find", "auth": ["any", "user:1"], "queries": [], "limit": 10, "forPermission": "update"},
+    {"name": "find_authorized_join", "call": "find", "auth": ["any"], "collectionExtra": true, "joinDocumentSecurity": {"books": true, "reviews": false}, "queries": [
+      {"method": "join", "attribute": "books", "alias": "book", "values": [{"method": "on", "values": ["$id", "=", "authorId"]}]},
+      {"method": "leftJoin", "attribute": "reviews", "alias": "review", "values": [{"method": "on", "values": ["$id", "=", "authorId"]}]}
+    ], "limit": 10, "orderAttributes": ["$sequence", "book.$sequence"], "orderTypes": ["ASC", "ASC"]},
+    {"name": "find_authorized_right_join", "call": "find", "auth": ["user:1"], "collectionExtra": true, "joinDocumentSecurity": {"books": true}, "queries": [
+      {"method": "rightJoin", "attribute": "books", "alias": "book", "values": [{"method": "on", "values": ["$id", "=", "authorId"]}]}
+    ], "limit": 10},
+    {"name": "find_authorized_full_outer_join", "call": "find", "auth": ["any"], "collectionExtra": true, "joinDocumentSecurity": {"books": true}, "queries": [
+      {"method": "fullOuterJoin", "attribute": "books", "alias": "book", "values": [{"method": "on", "values": ["$id", "=", "authorId"]}]}
+    ], "limit": 10},
+    {"name": "find_authorized_granted", "call": "find", "auth": ["any"], "collectionExtra": true, "collectionGranted": true, "joinDocumentSecurity": {"books": false}, "queries": [
+      {"method": "join", "attribute": "books", "alias": "book", "values": [{"method": "on", "values": ["$id", "=", "authorId"]}]}
+    ], "limit": 10},
+    {"name": "find_authorized_bounded", "call": "find", "auth": ["any"], "collectionExtra": true, "joinDocumentSecurity": {"books": true}, "queries": [
+      {"method": "leftJoin", "attribute": "books", "alias": "book", "values": [{"method": "on", "values": ["$id", "=", "authorId"]}]}
+    ], "limit": 2, "orderAttributes": ["$id", "book.pages"], "orderTypes": ["DESC", "ASC"], "cursor": {"$id": "a3", "book.pages": null}},
+    {"name": "find_vector", "call": "find", "collection": "vectors", "engines": ["postgres"], "queries": [{"method": "vectorCosine", "attribute": "embedding", "values": [[1, 0, 0]]}], "limit": 2},
+    {"name": "find_vector_cursor", "call": "find", "collection": "vectors", "engines": ["postgres"], "queries": [{"method": "vectorEuclidean", "attribute": "embedding", "values": [[1, 0, 0]]}], "limit": 2, "orderAttributes": ["$sequence"], "orderTypes": ["ASC"], "cursor": {"$sequence": 1, "$distance": 0.5}},
+    {"name": "find_vector_cursor_without_distance", "call": "find", "collection": "vectors", "engines": ["postgres"], "queries": [{"method": "vectorDot", "attribute": "embedding", "values": [[1, 0, 0]]}], "limit": 2, "orderAttributes": ["$sequence"], "orderTypes": ["ASC"], "cursor": {"$sequence": 1}},
+    {"name": "find_join_search_joined", "call": "find", "collectionExtra": true, "queries": [
+      {"method": "join", "attribute": "books", "alias": "book", "values": [{"method": "on", "values": ["$id", "=", "authorId"]}]},
+      {"method": "search", "attribute": "book.title", "values": ["One"]},
+      {"method": "notSearch", "attribute": "bio", "values": ["databases"]}
+    ], "limit": 10},
+    {"name": "find_join_select_joined_only", "call": "find", "collectionExtra": true, "queries": [
+      {"method": "leftJoin", "attribute": "books", "alias": "book", "values": [{"method": "on", "values": ["$id", "=", "authorId"]}, {"method": "greaterThan", "attribute": "pages", "values": [10]}]},
+      {"method": "select", "values": ["book.title", "book.$id"]}
+    ], "limit": 10, "orderAttributes": ["book.title"], "orderTypes": ["DESC"], "cursor": {"book.title": "Two"}},
+    {"name": "find_join_nullable_cursor", "call": "find", "collectionExtra": true, "queries": [
+      {"method": "leftJoin", "attribute": "reviews", "alias": "review", "values": [{"method": "on", "values": ["$id", "=", "authorId"]}]}
+    ], "limit": 10, "orderAttributes": ["review.stars", "$sequence"], "orderTypes": ["DESC", "ASC"], "cursor": {"review.stars": null, "$sequence": 2}, "cursorDirection": "before"},
+    {"name": "find_full_outer_join_random_cursor", "call": "find", "collectionExtra": true, "queries": [
+      {"method": "fullOuterJoin", "attribute": "books", "alias": "book", "values": [{"method": "on", "values": ["$id", "=", "authorId"]}]},
+      {"method": "lessThan", "attribute": "book.pages", "values": [250]}
+    ], "limit": 10, "offset": 1, "orderAttributes": ["book.pages", ""], "orderTypes": ["DESC", "RANDOM"], "cursor": {"book.pages": 300}, "cursorDirection": "before", "noResult": true},
+    {"name": "find_distinct_plain", "call": "find", "queries": [{"method": "distinct", "values": []}], "limit": 10, "orderAttributes": ["$sequence"], "orderTypes": ["ASC"]},
+    {"name": "find_regex", "call": "find", "engines": ["postgres", "mariadb", "mysql"], "queries": [{"method": "regex", "attribute": "name", "values": ["^A"]}], "limit": 10},
+    {"name": "find_exists", "call": "find", "queries": [{"method": "exists", "values": ["score", "name"]}], "limit": 10},
+    {"name": "find_like_escape", "call": "find", "queries": [{"method": "contains", "attribute": "bio", "values": ["50%_off"]}], "limit": 10},
+    {"name": "count_not_search_join", "call": "count", "collectionExtra": true, "queries": [
+      {"method": "leftJoin", "attribute": "books", "alias": "book", "values": [{"method": "on", "values": ["$id", "=", "authorId"]}]},
+      {"method": "notSearch", "attribute": "bio", "values": ["rust"]}
+    ]},
+    {"name": "count_or_group", "call": "count", "queries": [{"method": "or", "values": [{"method": "equal", "attribute": "name", "values": ["Ann"]}, {"method": "isNull", "attribute": "name", "values": []}]}]},
+    {"name": "count_order", "call": "count", "queries": [{"method": "orderDesc", "attribute": "pages", "values": []}, {"method": "limit", "values": [2]}]},
+    {"name": "sum_dotted_main", "call": "sum", "attribute": "table_main.pages", "collectionExtra": true, "queries": [
+      {"method": "rightJoin", "attribute": "reviews", "alias": "review", "values": [{"method": "on", "values": ["$id", "=", "authorId"]}]}
+    ]},
+    {"name": "count_all", "call": "count", "queries": []},
+    {"name": "count_all_max", "call": "count", "queries": [], "max": 2},
+    {"name": "count_filter", "call": "count", "queries": [{"method": "greaterThan", "attribute": "pages", "values": [5]}]},
+    {"name": "count_filter_max", "call": "count", "queries": [{"method": "greaterThan", "attribute": "pages", "values": [5]}], "max": 2},
+    {"name": "count_search", "call": "count", "queries": [{"method": "search", "attribute": "bio", "values": ["rust"]}]},
+    {"name": "count_select", "call": "count", "queries": [{"method": "select", "values": ["name"]}, {"method": "equal", "attribute": "name", "values": ["Ann"]}]},
+    {"name": "count_authorized", "call": "count", "auth": ["any"], "queries": [{"method": "greaterThan", "attribute": "pages", "values": [1]}]},
+    {"name": "count_authorized_all", "call": "count", "auth": ["user:1"], "queries": [], "max": 3},
+    {"name": "count_authorized_select", "call": "count", "auth": ["any"], "queries": [{"method": "select", "values": ["name"]}]},
+    {"name": "count_join", "call": "count", "collectionExtra": true, "queries": [
+      {"method": "join", "attribute": "books", "alias": "book", "values": [{"method": "on", "values": ["$id", "=", "authorId"]}]},
+      {"method": "greaterThan", "attribute": "book.pages", "values": [10]}
+    ], "max": 10},
+    {"name": "count_full_outer_join", "call": "count", "auth": ["any"], "collectionExtra": true, "joinDocumentSecurity": {"books": true}, "queries": [
+      {"method": "fullOuterJoin", "attribute": "books", "alias": "book", "values": [{"method": "on", "values": ["$id", "=", "authorId"]}]}
+    ]},
+    {"name": "sum_all", "call": "sum", "attribute": "pages", "queries": []},
+    {"name": "sum_filter", "call": "sum", "attribute": "score", "queries": [{"method": "lessThan", "attribute": "pages", "values": [15]}]},
+    {"name": "sum_filter_max", "call": "sum", "attribute": "pages", "queries": [{"method": "lessThan", "attribute": "pages", "values": [25]}], "max": 2},
+    {"name": "sum_select", "call": "sum", "attribute": "pages", "queries": [{"method": "select", "values": ["pages"]}]},
+    {"name": "sum_authorized", "call": "sum", "attribute": "pages", "auth": ["any"], "queries": []},
+    {"name": "sum_join", "call": "sum", "attribute": "book.pages", "collectionExtra": true, "queries": [
+      {"method": "join", "attribute": "books", "alias": "book", "values": [{"method": "on", "values": ["$id", "=", "authorId"]}]}
+    ], "max": 5},
+    {"name": "sum_full_outer_join", "call": "sum", "attribute": "pages", "collectionExtra": true, "queries": [
+      {"method": "fullOuterJoin", "attribute": "books", "alias": "book", "values": [{"method": "on", "values": ["$id", "=", "authorId"]}]}
+    ], "max": 5}
+  ]
+}
