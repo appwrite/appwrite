@@ -676,6 +676,7 @@ impl Database {
     /// ([`crate::Document::class`]). PHP checks the class exists and extends
     /// `Document`; Rust has no class to check.
     pub fn set_document_type(&self, collection: &str, class: &str) -> &Self {
+        crate::document::register_class(class);
         let mut settings = self.settings();
         match settings.document_types.iter_mut().find(|(c, _)| c == collection) {
             Some(entry) => entry.1 = class.to_owned(),

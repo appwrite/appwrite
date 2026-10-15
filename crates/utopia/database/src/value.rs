@@ -186,9 +186,10 @@ pub fn to_query_array(array: &Array) -> utopia_query::Array {
 }
 
 /// A query value as a document value: the inverse of [`to_query`]. A row of
-/// class `Utopia\Database\Document` (or of a document class registered with
-/// a database) becomes a [`Document`] of that class; any other row its
-/// fields as an array; a nested query [`Ext::Query`]; a `NullsPosition` case
+/// a document class (`Utopia\Database\Document`, `Collection`, or a custom
+/// document type: [`crate::document::is_document_class`]) becomes a
+/// [`Document`] of that class; any other row (an `Operator`, a BSON value,
+/// an `ArrayObject` such as `Utopia\Audit\Log`) its fields as an array; a nested query [`Ext::Query`]; a `NullsPosition` case
 /// its backing value.
 pub fn from_query(value: &utopia_query::Value) -> Value {
     use utopia_query::{Object, Value as Q};
@@ -204,10 +205,10 @@ pub fn from_query(value: &utopia_query::Value) -> Value {
         Q::Ext(Object::Nulls(n)) => Value::Str(Str::from_static(n.as_str())),
         Q::Ext(Object::Row { class, fields }) => {
             let fields = from_query_array(fields);
-            if class == "Utopia\\Database\\Operator" || class.starts_with("MongoDB\\") {
-                Value::Array(fields)
-            } else {
+            if crate::document::is_document_class(class) {
                 Value::from(Document::from_array_unchecked(fields).with_class(class.as_str()))
+            } else {
+                Value::Array(fields)
             }
         }
     }

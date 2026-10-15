@@ -66,6 +66,30 @@ impl SetType {
     }
 }
 
+/// The classes documents were given besides [`CLASS`] and `Collection` (the
+/// custom document types): what [`is_document_class`] knows.
+static CLASSES: std::sync::LazyLock<std::sync::RwLock<std::collections::HashSet<String>>> =
+    std::sync::LazyLock::new(Default::default);
+
+/// Records `class` as a document class.
+pub(crate) fn register_class(class: &str) {
+    if is_document_class(class) {
+        return;
+    }
+    CLASSES.write().unwrap_or_else(|e| e.into_inner()).insert(class.to_owned());
+}
+
+/// Whether `class` is a document class (`instanceof Document`):
+/// `Utopia\Database\Document`, `Utopia\Database\Collection`, or a class a
+/// document was given ([`Document::with_class`],
+/// `Database::set_document_type`). Any other class, such as an
+/// `ArrayObject` like `Utopia\Audit\Log`, is not.
+pub fn is_document_class(class: &str) -> bool {
+    class == CLASS
+        || class == crate::collection::CLASS
+        || CLASSES.read().unwrap_or_else(|e| e.into_inner()).contains(class)
+}
+
 /// A document: attributes in insertion order, each a [`Value`]. Nested
 /// documents (relationships) are [`Value::Ext`] with [`Ext::Document`].
 ///
@@ -291,7 +315,12 @@ impl Document {
     /// (`Database::setDocumentType`).
     pub fn with_class(mut self, class: impl Into<Str>) -> Self {
         let class = class.into();
-        self.class = if class.as_bytes() == CLASS.as_bytes() { None } else { Some(class) };
+        if class.as_bytes() == CLASS.as_bytes() {
+            self.class = None;
+        } else {
+            register_class(&String::from_utf8_lossy(class.as_bytes()));
+            self.class = Some(class);
+        }
         self
     }
 
