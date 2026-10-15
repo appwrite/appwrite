@@ -22,6 +22,7 @@ import { RenameEnvironmentDialog } from '@/components/pages/projects/$projectId/
 import {
   projectEnvironmentDotClass,
   type ProjectEnvironmentOption,
+  resolveProjectEnvironmentSelection,
   useProjectEnvironmentSelection,
 } from '@/lib/project-environments'
 import {
@@ -107,17 +108,18 @@ export function EnvironmentSwitcher({
     [projectId, project?.name, environments],
   )
 
-  const selected =
-    options.find((option) => option.id === selectedEnvironmentId) ?? options[0]!
+  const { selected: resolvedSelection, isStale } =
+    resolveProjectEnvironmentSelection(options, selectedEnvironmentId)
+  // `options` always starts with the project, so a selection always resolves.
+  const selected = resolvedSelection!
 
   // A stored id can outlive its environment (deleted here or on another
   // device), so drop it once a loaded list says it is gone. Only a successful
   // list counts: mid-flight, and on failure, the project is the only option.
   useEffect(() => {
-    if (error || !isFetched || !selectedEnvironmentId) return
-    if (options.some((option) => option.id === selectedEnvironmentId)) return
+    if (error || !isFetched || !isStale) return
     selectEnvironment(null)
-  }, [error, isFetched, selectedEnvironmentId, options, selectEnvironment])
+  }, [error, isFetched, isStale, selectEnvironment])
 
   // Self-hosted has no `/project/environments` routes, and a member without
   // project read access cannot list them: show nothing rather than an error.

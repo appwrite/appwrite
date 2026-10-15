@@ -2,6 +2,7 @@ import * as React from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
+import { isValidProjectEnvironmentId } from '@/lib/project-environments'
 import { Info } from 'lucide-react'
 
 export interface IdInputProps {
@@ -63,12 +64,11 @@ function validateDedicatedId(id: string): boolean {
   return /^[A-Za-z0-9]+$/.test(id)
 }
 
-/** Mirrors the server-side `ProjectId` validator (projects and environments). */
-function validateProjectId(id: string): boolean {
-  if (!id || id.length === 0) return true
-  if (id.length > 36) return false
-  return /^[a-z0-9][a-z0-9-]*$/.test(id)
-}
+/**
+ * Mirrors the server-side `ProjectId` validator (projects and environments).
+ * Shared with the create dialog so the input and the form agree on the rule.
+ */
+const validateProjectId = isValidProjectEnvironmentId
 
 export function IdInput({
   value,
@@ -96,18 +96,14 @@ export function IdInput({
   const [inputValue, setInputValue] = React.useState(value || '')
   const [error, setError] = React.useState<string | null>(null)
 
-  // Sync input value with prop value
+  // Sync input value with prop value. `error` is deliberately not touched
+  // here: `handleToggle` already clears it when the panel opens, and an effect
+  // keyed on `value` cleared it on the render right after every keystroke, so
+  // a controlled caller (one that echoes `onChange` back as `value`) never saw
+  // the "Invalid ID format" message below.
   React.useEffect(() => {
     setInputValue(value || '')
   }, [value])
-
-  // Initialize input value when opened
-  React.useEffect(() => {
-    if (isOpen) {
-      setInputValue(value || '')
-      setError(null)
-    }
-  }, [isOpen, value])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value
@@ -189,9 +185,7 @@ export function IdInput({
 
           <div className="flex items-start gap-2 rounded-lg border border-border bg-muted/30 p-3">
             <Info className="h-4 w-4 shrink-0 text-muted-foreground mt-0.5" />
-            <p className="text-[12px] text-muted-foreground">
-              {idHelpText}
-            </p>
+            <p className="text-[12px] text-muted-foreground">{idHelpText}</p>
           </div>
         </div>
       )}

@@ -16,7 +16,10 @@ import {
   PROJECT_NAME_MAX_LENGTH,
   useCreateProjectEnvironment,
 } from '@/lib/react-query/hooks'
-import { PROJECT_ENVIRONMENT_ID_MAX_LENGTH } from '@/lib/project-environments'
+import {
+  isValidProjectEnvironmentId,
+  PROJECT_ENVIRONMENT_ID_MAX_LENGTH,
+} from '@/lib/project-environments'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { useT, type Translator } from '@/lib/i18n/translate'
 
@@ -87,6 +90,11 @@ export function CreateEnvironmentDialog({
     }
   }
 
+  // `IdInput` reports a bad id inline but still hands it up, so the dialog is
+  // what keeps a server-side `ProjectId` rejection from being the first signal.
+  const trimmedEnvironmentId = environmentId?.trim() ?? ''
+  const isEnvironmentIdValid = isValidProjectEnvironmentId(trimmedEnvironmentId)
+
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {}
 
@@ -98,7 +106,9 @@ export function CreateEnvironmentDialog({
     }
 
     setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
+    // An invalid id is reported inline by `IdInput` and already disables
+    // Create, so here it only has to stop the request.
+    return Object.keys(newErrors).length === 0 && isEnvironmentIdValid
   }
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -192,7 +202,8 @@ export function CreateEnvironmentDialog({
               disabled={
                 createEnvironmentMutation.isPending ||
                 !name.trim() ||
-                name.trim().length > PROJECT_NAME_MAX_LENGTH
+                name.trim().length > PROJECT_NAME_MAX_LENGTH ||
+                !isEnvironmentIdValid
               }
             >
               {t('Create')}

@@ -19,6 +19,17 @@ export interface ProjectEnvironmentOption {
 export const PROJECT_ENVIRONMENT_ID_MAX_LENGTH = 36
 
 /**
+ * Mirrors `Appwrite\Utopia\Database\Validator\ProjectId`, which validates both
+ * project ids and environment ids. An empty id counts as valid because the
+ * create dialog reads it as "auto-generate" and sends `ID.unique()` instead.
+ */
+export function isValidProjectEnvironmentId(environmentId: string): boolean {
+  if (!environmentId) return true
+  if (environmentId.length > PROJECT_ENVIRONMENT_ID_MAX_LENGTH) return false
+  return /^[a-z0-9][a-z0-9-]*$/.test(environmentId)
+}
+
+/**
  * Dot colors for the switcher. The project itself always takes the first one;
  * every other environment keeps the same color between renders because the
  * color is derived from its id (an environment has no type to key on).
@@ -52,13 +63,50 @@ export function projectEnvironmentDotClass(
 
 const STORAGE_EVENT = 'projectEnvironmentChange'
 
-function storageKey(projectId: string) {
+/** Per-device selection key. Exported so tests can read what the UI wrote. */
+export function projectEnvironmentStorageKey(projectId: string): string {
   return `console.projectEnvironment.${projectId}`
 }
 
-function readEnvironmentId(projectId: string): string | null {
+/** Stored environment id, or `null` for the project itself (and during SSR). */
+export function readStoredProjectEnvironmentId(
+  projectId: string,
+): string | null {
   if (typeof window === 'undefined') return null
-  return window.localStorage.getItem(storageKey(projectId))
+  return window.localStorage.getItem(projectEnvironmentStorageKey(projectId))
+}
+
+/** Persist the selection. `null` clears it, which means the project itself. */
+export function writeStoredProjectEnvironmentId(
+  projectId: string,
+  environmentId: string | null,
+): void {
+  if (typeof window === 'undefined') return
+  const key = projectEnvironmentStorageKey(projectId)
+  if (environmentId) {
+    window.localStorage.setItem(key, environmentId)
+  } else {
+    window.localStorage.removeItem(key)
+  }
+}
+
+/**
+ * Resolve a stored selection against the rows the switcher lists. `options`
+ * always starts with the project itself, which is the fallback for an id no
+ * row matches. `isStale` marks exactly that case: the stored environment is
+ * gone (deleted here or on another device) and the id should be dropped.
+ */
+export function resolveProjectEnvironmentSelection(
+  options: readonly ProjectEnvironmentOption[],
+  selectedEnvironmentId: string | null,
+): { selected: ProjectEnvironmentOption | undefined; isStale: boolean } {
+  const match = selectedEnvironmentId
+    ? options.find((option) => option.id === selectedEnvironmentId)
+    : undefined
+  return {
+    selected: match ?? options[0],
+    isStale: !!selectedEnvironmentId && !match,
+  }
 }
 
 /**
@@ -74,7 +122,8 @@ export function useProjectEnvironmentSelection(projectId: string) {
   >(null)
 
   useEffect(() => {
-    const sync = () => setSelectedEnvironmentId(readEnvironmentId(projectId))
+    const sync = () =>
+      setSelectedEnvironmentId(readStoredProjectEnvironmentId(projectId))
     sync()
     window.addEventListener(STORAGE_EVENT, sync)
     window.addEventListener('storage', sync)
@@ -86,11 +135,7 @@ export function useProjectEnvironmentSelection(projectId: string) {
 
   const selectEnvironment = useCallback(
     (environmentId: string | null) => {
-      if (environmentId) {
-        window.localStorage.setItem(storageKey(projectId), environmentId)
-      } else {
-        window.localStorage.removeItem(storageKey(projectId))
-      }
+      writeStoredProjectEnvironmentId(projectId, environmentId)
       window.dispatchEvent(new CustomEvent(STORAGE_EVENT))
     },
     [projectId],
