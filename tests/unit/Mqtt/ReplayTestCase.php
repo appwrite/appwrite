@@ -14,12 +14,14 @@ use Tests\Unit\Mqtt\Fakes\RecordingAdapter;
 use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;
 use Utopia\Database\Adapter\Memory;
+use Utopia\Database\Attribute;
+use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DI\Container;
 use Utopia\Mqtt\Connection;
@@ -78,28 +80,32 @@ abstract class ReplayTestCase extends TestCase
             Permission::delete(Role::any()),
         ];
 
-        $this->database->createCollection('projects', [], [], $any, false);
+        $this->database->createCollection(Collection::create('projects', permissions: $any, documentSecurity: false));
 
-        $this->database->createCollection('topics', [], [], $any, false);
-        $this->database->createAttribute('topics', 'name', Database::VAR_STRING, 255, true);
-        $this->database->createAttribute('topics', 'sequence', Database::VAR_INTEGER, 0, false, 0);
-        $this->database->createAttribute('topics', 'qos', Database::VAR_INTEGER, 0, false, Packet::QOS_1);
-        $this->database->createAttribute('topics', 'expiry', Database::VAR_INTEGER, 0, false, null, false);
+        $this->database->createCollection(Collection::create('topics', attributes: [
+            Attribute::string('name', 255, true),
+            Attribute::integer('sequence', default: 0),
+            Attribute::integer('qos', default: Packet::QOS_1),
+            Attribute::integer('expiry', signed: false),
+        ], permissions: $any, documentSecurity: false));
 
-        $this->database->createCollection('providers', [], [], $any, false);
-        $this->database->createAttribute('providers', 'provider', Database::VAR_STRING, 255, true);
-        $this->database->createAttribute('providers', 'enabled', Database::VAR_BOOLEAN, 0, false, true);
-        $this->database->createAttribute('providers', 'options', Database::VAR_STRING, 16384, false, null, filters: ['json']);
+        $this->database->createCollection(Collection::create('providers', attributes: [
+            Attribute::string('provider', 255, true),
+            Attribute::boolean('enabled', default: true),
+            Attribute::string('options', 16384, filters: ['json']),
+        ], permissions: $any, documentSecurity: false));
 
-        $this->database->createCollection('pushLedger', [], [], $any, false);
-        $this->database->createAttribute('pushLedger', 'topic', Database::VAR_STRING, 255, true);
-        $this->database->createAttribute('pushLedger', 'data', Database::VAR_STRING, 65535, true);
-        $this->database->createAttribute('pushLedger', 'messageId', Database::VAR_STRING, 255, false);
-        $this->database->createAttribute('pushLedger', 'sequence', Database::VAR_INTEGER, 0, true);
+        $this->database->createCollection(Collection::create('pushLedger', attributes: [
+            Attribute::string('topic', 255, true),
+            Attribute::string('data', 65535, true),
+            Attribute::string('messageId', 255),
+            Attribute::integer('sequence', true),
+        ], permissions: $any, documentSecurity: false));
 
-        $this->database->createCollection('subscribers', [], [], $any, false);
-        $this->database->createAttribute('subscribers', 'topicInternalId', Database::VAR_STRING, 255, true);
-        $this->database->createAttribute('subscribers', 'userId', Database::VAR_STRING, 255, true);
+        $this->database->createCollection(Collection::create('subscribers', attributes: [
+            Attribute::string('topicInternalId', 255, true),
+            Attribute::string('userId', 255, true),
+        ], permissions: $any, documentSecurity: false));
 
         $container = new Container();
         $container->set('getConsoleDB', fn () => fn (): Database => $this->database, []);
@@ -132,7 +138,7 @@ abstract class ReplayTestCase extends TestCase
         // is granted. Reserved users/<id> topics are owner-gated and ignore this.
         if ($subscribed) {
             $this->database->createDocument('subscribers', new Document([
-                '$id' => ID::unique(),
+                '$id' => Id::unique(),
                 'topicInternalId' => (string) $topic->getSequence(),
                 'userId' => self::USER,
             ]));
@@ -151,7 +157,7 @@ abstract class ReplayTestCase extends TestCase
     {
         $createdAt = DateTime::format((new \DateTime())->setTimestamp($this->now - $age));
 
-        $this->database->withPreserveDates(function () use ($topic, $from, $to, $createdAt): void {
+        $this->database->withPreserveDates(true, function () use ($topic, $from, $to, $createdAt): void {
             foreach (\range($from, $to) as $sequence) {
                 $this->database->createDocument('pushLedger', new Document([
                     '$createdAt' => $createdAt,
@@ -168,7 +174,7 @@ abstract class ReplayTestCase extends TestCase
     protected function seedProvider(string $provider, bool $enabled, ?int $expiry): string
     {
         return $this->database->createDocument('providers', new Document([
-            '$id' => ID::unique(),
+            '$id' => Id::unique(),
             'provider' => $provider,
             'enabled' => $enabled,
             'options' => ['qos' => null, 'expiry' => $expiry],

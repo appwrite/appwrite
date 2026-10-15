@@ -5,7 +5,7 @@ namespace Tests\E2E\Services\Organization;
 use Appwrite\Tests\Async;
 use Tests\E2E\Client;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\System\System;
@@ -21,7 +21,7 @@ trait KeysBase
     public function testCreateKey(): void
     {
         $key = $this->createKey(
-            ID::unique(),
+            Id::unique(),
             'My API Key',
             ['users.read', 'users.write'],
         );
@@ -61,7 +61,7 @@ trait KeysBase
         $expire = '2030-01-01T00:00:00.000+00:00';
 
         $key = $this->createKey(
-            ID::unique(),
+            Id::unique(),
             'Expiring Key',
             ['users.read'],
             $expire,
@@ -82,7 +82,7 @@ trait KeysBase
     public function testCreateKeyWithEmptyScopes(): void
     {
         $key = $this->createKey(
-            ID::unique(),
+            Id::unique(),
             'Empty Scopes Key',
             [],
         );
@@ -107,7 +107,7 @@ trait KeysBase
         ];
 
         $key = $this->client->call(Client::METHOD_POST, $this->keysPath(), $headers, [
-            'keyId' => ID::unique(),
+            'keyId' => Id::unique(),
             'name' => 'V22 Compat Key',
             'scopes' => null,
         ]);
@@ -122,7 +122,7 @@ trait KeysBase
     public function testUpdateKeyWithNullScopesV22BackwardCompat(): void
     {
         $key = $this->createKey(
-            ID::unique(),
+            Id::unique(),
             'V22 Update Compat Key',
             ['users.read'],
         );
@@ -152,7 +152,7 @@ trait KeysBase
     public function testCreateKeyWithoutAuthentication(): void
     {
         $response = $this->createKey(
-            ID::unique(),
+            Id::unique(),
             'No Auth Key',
             ['users.read'],
             null,
@@ -176,7 +176,7 @@ trait KeysBase
     public function testCreateKeyMissingName(): void
     {
         $response = $this->createKey(
-            ID::unique(),
+            Id::unique(),
             null,
             ['users.read'],
         );
@@ -187,7 +187,7 @@ trait KeysBase
     public function testCreateKeyInvalidScope(): void
     {
         $response = $this->createKey(
-            ID::unique(),
+            Id::unique(),
             'Invalid Scope Key',
             ['invalid.scope'],
         );
@@ -197,7 +197,7 @@ trait KeysBase
 
     public function testCreateKeyDuplicateId(): void
     {
-        $keyId = ID::unique();
+        $keyId = Id::unique();
 
         $key = $this->createKey(
             $keyId,
@@ -251,7 +251,7 @@ trait KeysBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'keyId' => ID::unique(),
+            'keyId' => Id::unique(),
             'name' => 'Key Made By Key',
             'scopes' => ['users.read'],
         ]);
@@ -268,7 +268,7 @@ trait KeysBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $ephemeral['body']['secret'],
         ], [
-            'keyId' => ID::unique(),
+            'keyId' => Id::unique(),
             'name' => 'Key Made By Ephemeral Key',
             'scopes' => ['users.read'],
         ]);
@@ -404,7 +404,7 @@ trait KeysBase
     public function testUpdateKey(): void
     {
         $key = $this->createKey(
-            ID::unique(),
+            Id::unique(),
             'Original Key',
             ['users.read'],
         );
@@ -436,7 +436,7 @@ trait KeysBase
     public function testUpdateKeyName(): void
     {
         $key = $this->createKey(
-            ID::unique(),
+            Id::unique(),
             'Name Before',
             ['users.read'],
         );
@@ -457,7 +457,7 @@ trait KeysBase
     public function testUpdateKeyScopes(): void
     {
         $key = $this->createKey(
-            ID::unique(),
+            Id::unique(),
             'Scopes Key',
             ['users.read'],
         );
@@ -477,7 +477,7 @@ trait KeysBase
     public function testUpdateKeySetExpire(): void
     {
         $key = $this->createKey(
-            ID::unique(),
+            Id::unique(),
             'No Expire Key',
             ['users.read'],
         );
@@ -499,7 +499,7 @@ trait KeysBase
     public function testUpdateKeyRemoveExpire(): void
     {
         $key = $this->createKey(
-            ID::unique(),
+            Id::unique(),
             'Expire Key',
             ['users.read'],
             '2030-01-01T00:00:00.000+00:00',
@@ -521,7 +521,7 @@ trait KeysBase
     public function testUpdateKeyWithoutAuthentication(): void
     {
         $key = $this->createKey(
-            ID::unique(),
+            Id::unique(),
             'Auth Update Key',
             ['users.read'],
         );
@@ -549,7 +549,7 @@ trait KeysBase
     public function testUpdateKeyInvalidScope(): void
     {
         $key = $this->createKey(
-            ID::unique(),
+            Id::unique(),
             'Invalid Scope Update',
             ['users.read'],
         );
@@ -572,7 +572,7 @@ trait KeysBase
     public function testGetKey(): void
     {
         $key = $this->createKey(
-            ID::unique(),
+            Id::unique(),
             'Get Test Key',
             ['users.read', 'databases.read'],
         );
@@ -610,7 +610,7 @@ trait KeysBase
     public function testGetKeyWithoutAuthentication(): void
     {
         $key = $this->createKey(
-            ID::unique(),
+            Id::unique(),
             'Auth Get Key',
             ['users.read'],
         );
@@ -635,21 +635,21 @@ trait KeysBase
     {
         // Create multiple keys
         $key1 = $this->createKey(
-            ID::unique(),
+            Id::unique(),
             'List Key Alpha',
             ['users.read'],
         );
         $this->assertSame(201, $key1['headers']['status-code']);
 
         $key2 = $this->createKey(
-            ID::unique(),
+            Id::unique(),
             'List Key Beta',
             ['databases.read'],
         );
         $this->assertSame(201, $key2['headers']['status-code']);
 
         $key3 = $this->createKey(
-            ID::unique(),
+            Id::unique(),
             'List Key Gamma',
             ['users.write'],
         );
@@ -685,14 +685,14 @@ trait KeysBase
     public function testListKeysWithLimit(): void
     {
         $key1 = $this->createKey(
-            ID::unique(),
+            Id::unique(),
             'Limit Key 1',
             ['users.read'],
         );
         $this->assertSame(201, $key1['headers']['status-code']);
 
         $key2 = $this->createKey(
-            ID::unique(),
+            Id::unique(),
             'Limit Key 2',
             ['users.write'],
         );
@@ -715,7 +715,7 @@ trait KeysBase
     public function testListKeysWithoutTotal(): void
     {
         $key = $this->createKey(
-            ID::unique(),
+            Id::unique(),
             'No Total Key',
             ['users.read'],
         );
@@ -735,14 +735,14 @@ trait KeysBase
     public function testListKeysCursorPagination(): void
     {
         $key1 = $this->createKey(
-            ID::unique(),
+            Id::unique(),
             'Cursor Key 1',
             ['users.read'],
         );
         $this->assertSame(201, $key1['headers']['status-code']);
 
         $key2 = $this->createKey(
-            ID::unique(),
+            Id::unique(),
             'Cursor Key 2',
             ['users.write'],
         );
@@ -795,7 +795,7 @@ trait KeysBase
     public function testDeleteKey(): void
     {
         $key = $this->createKey(
-            ID::unique(),
+            Id::unique(),
             'Delete Key',
             ['users.read'],
         );
@@ -829,7 +829,7 @@ trait KeysBase
     public function testDeleteKeyWithoutAuthentication(): void
     {
         $key = $this->createKey(
-            ID::unique(),
+            Id::unique(),
             'Delete Auth Key',
             ['users.read'],
         );
@@ -853,7 +853,7 @@ trait KeysBase
     public function testDeleteKeyRemovedFromList(): void
     {
         $key = $this->createKey(
-            ID::unique(),
+            Id::unique(),
             'Delete List Key',
             ['users.read'],
         );
@@ -883,7 +883,7 @@ trait KeysBase
     public function testDeleteKeyDoubleDelete(): void
     {
         $key = $this->createKey(
-            ID::unique(),
+            Id::unique(),
             'Double Delete Key',
             ['users.read'],
         );
@@ -908,7 +908,7 @@ trait KeysBase
     public function testListKeysWithOrganizationHeader(): void
     {
         $key = $this->createKey(
-            ID::unique(),
+            Id::unique(),
             'Organization Header Key',
             ['users.read'],
         );
@@ -939,7 +939,7 @@ trait KeysBase
         $this->assertSame('Organization Header Key Updated', $updated['body']['name']);
 
         $created = $this->client->call(Client::METHOD_POST, $this->keysPath(), $headers, [
-            'keyId' => ID::unique(),
+            'keyId' => Id::unique(),
             'name' => 'Organization Header Created Key',
             'scopes' => ['users.read'],
         ]);
@@ -973,7 +973,7 @@ trait KeysBase
     public function testListKeysFromOtherOrganization(): void
     {
         $key = $this->createKey(
-            ID::unique(),
+            Id::unique(),
             'Other Organization Key',
             ['users.read'],
         );
@@ -981,7 +981,7 @@ trait KeysBase
         $keyId = $key['body']['$id'];
 
         $otherTeam = $this->createTeamFixture($this->getConsoleHeaders(), [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'Other Organization',
         ]);
         $this->assertSame(200, $otherTeam['headers']['status-code']);
@@ -1017,7 +1017,7 @@ trait KeysBase
     public function testListKeysWithSiblingProjectKey(): void
     {
         $sibling = $this->client->call(Client::METHOD_POST, '/projects', $this->getConsoleHeaders(), [
-            'projectId' => ID::unique(),
+            'projectId' => Id::unique(),
             'name' => 'Sibling Project',
             'teamId' => $this->getTeamId(),
             'region' => System::getEnv('_APP_REGION', 'default'),

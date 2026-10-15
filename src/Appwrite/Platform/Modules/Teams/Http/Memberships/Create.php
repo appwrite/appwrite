@@ -24,10 +24,10 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
 use Utopia\Database\Query;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
@@ -233,7 +233,7 @@ class Create extends Action
 
             $hash = $proofForPassword->hash($proofForPassword->generate());
 
-            $userId = ID::unique();
+            $userId = Id::unique();
 
             $userDocument = new Document([
                 '$id' => $userId,
@@ -295,7 +295,7 @@ class Create extends Action
 
         $secret = $proofForToken->generate();
         if ($membership->isEmpty()) {
-            $membershipId = ($membershipId === '' || $membershipId == 'unique()') ? ID::unique() : $membershipId;
+            $membershipId = ($membershipId === '' || $membershipId === 'unique()') ? Id::unique() : $membershipId;
             $membership = new Document([
                 '$id' => $membershipId,
                 '$permissions' => [
@@ -524,7 +524,7 @@ class Create extends Action
                 $message = $message->render();
 
                 $messageDoc = new Document([
-                    '$id' => ID::unique(),
+                    '$id' => Id::unique(),
                     'data' => [
                         'content' => $message,
                     ],

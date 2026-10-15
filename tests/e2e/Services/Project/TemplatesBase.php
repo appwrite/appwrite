@@ -3,7 +3,7 @@
 namespace Tests\E2E\Services\Project;
 
 use Tests\E2E\Client;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
 
 trait TemplatesBase
@@ -1091,7 +1091,7 @@ trait TemplatesBase
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], [
-                'userId' => ID::unique(),
+                'userId' => Id::unique(),
                 'email' => $email,
                 'password' => $password,
                 'name' => 'Session Alert ' . $localeLabel,
