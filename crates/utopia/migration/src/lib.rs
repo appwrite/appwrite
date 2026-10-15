@@ -4,7 +4,7 @@
 //! [`Transfer`] runs one into the other, recording every resource in a
 //! shared [`Cache`] and reporting per-status counters.
 //!
-//! PHP: `utopia-php/migration` 2.1. Each PHP class maps onto one item:
+//! PHP: `utopia-php/migration` 3.1. Each PHP class maps onto one item:
 //!
 //! | PHP | Rust |
 //! |---|---|

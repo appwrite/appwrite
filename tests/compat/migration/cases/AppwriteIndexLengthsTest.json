@@ -981,11 +981,11 @@
             "enabled": true,
             "name": "Orders",
             "search": "orders Orders",
+            "$sequence": "1",
             "$id": "orders",
             "$createdAt": "<masked>",
             "$updatedAt": "<masked>",
             "$permissions": [],
-            "$sequence": "1",
             "$collection": "database_1",
             "attributes": [
               {
@@ -1071,7 +1071,8 @@
             ]
           }
         }
-      ]
+      ],
+      "blocked": "utopia-database 8.x: Document::getArrayCopy() of a document read back puts $sequence before $id, $createdAt, $updatedAt and $permissions (the Rust 7.x port puts it after them)"
     },
     {
       "name": "testRestoredIndexWithoutSourceLengthsFailsTheAdapterLimit",
@@ -2035,11 +2036,11 @@
             "enabled": true,
             "name": "Orders",
             "search": "orders Orders",
+            "$sequence": "1",
             "$id": "orders",
             "$createdAt": "<masked>",
             "$updatedAt": "<masked>",
             "$permissions": [],
-            "$sequence": "1",
             "$collection": "database_1",
             "attributes": [
               {
@@ -2096,7 +2097,8 @@
             "indexes": []
           }
         }
-      ]
+      ],
+      "blocked": "utopia-database 8.x: Document::getArrayCopy() of a document read back puts $sequence before $id, $createdAt, $updatedAt and $permissions (the Rust 7.x port puts it after them)"
     },
     {
       "name": "testZeroSourceLengthMeansNoPrefix",
@@ -3078,11 +3080,11 @@
             "enabled": true,
             "name": "Orders",
             "search": "orders Orders",
+            "$sequence": "1",
             "$id": "orders",
             "$createdAt": "<masked>",
             "$updatedAt": "<masked>",
             "$permissions": [],
-            "$sequence": "1",
             "$collection": "database_1",
             "attributes": [
               {
@@ -3168,7 +3170,8 @@
             ]
           }
         }
-      ]
+      ],
+      "blocked": "utopia-database 8.x: Document::getArrayCopy() of a document read back puts $sequence before $id, $createdAt, $updatedAt and $permissions (the Rust 7.x port puts it after them)"
     },
     {
       "name": "testAnOverwriteDoesNotTreatALengthOnlyDifferenceAsAMatch",
@@ -4184,11 +4187,11 @@
             "enabled": true,
             "name": "Orders",
             "search": "orders Orders",
+            "$sequence": "1",
             "$id": "orders",
             "$createdAt": "<masked>",
             "$updatedAt": "<masked>",
             "$permissions": [],
-            "$sequence": "1",
             "$collection": "database_1",
             "attributes": [],
             "indexes": [
@@ -4223,7 +4226,8 @@
             ]
           }
         }
-      ]
+      ],
+      "blocked": "utopia-database 8.x: Document::getArrayCopy() of a document read back puts $sequence before $id, $createdAt, $updatedAt and $permissions (the Rust 7.x port puts it after them)"
     }
   ]
 }

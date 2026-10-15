@@ -70,6 +70,12 @@
       "rust-container": "http://compat-migration-api:8080",
       "runner": "http://127.0.0.1:17820"
     },
+    "migration-silent": {
+      "php": "compat-migration-api:8081",
+      "rust": "127.0.0.1:17823",
+      "rust-container": "compat-migration-api:8081",
+      "runner": "127.0.0.1:17823"
+    },
     "migration-nhost-db": {
       "php": "compat-migration-nhost-db:5432",
       "rust": "127.0.0.1:17821",

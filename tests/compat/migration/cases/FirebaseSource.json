@@ -633,7 +633,7 @@
               "path": "/identitytoolkit.googleapis.com/identitytoolkit/v3/relyingparty/downloadAccount",
               "query": "",
               "headers": {
-                "accept": "*/*",
+                "accept": "application/json",
                 "authorization": "Bearer test-token",
                 "content-type": "application/json",
                 "user-agent": "<masked>"
@@ -656,7 +656,7 @@
               "path": "/firestore.googleapis.com/v1/projects/test-project/databases/(default)/documents:listCollectionIds",
               "query": "",
               "headers": {
-                "accept": "*/*",
+                "accept": "application/json",
                 "authorization": "Bearer test-token",
                 "content-type": "application/json",
                 "user-agent": "<masked>"
@@ -670,7 +670,6 @@
               "headers": {
                 "accept": "*/*",
                 "authorization": "Bearer test-token",
-                "content-type": "application/json",
                 "user-agent": "<masked>"
               },
               "body": ""
@@ -682,7 +681,6 @@
               "headers": {
                 "accept": "*/*",
                 "authorization": "Bearer test-token",
-                "content-type": "application/json",
                 "user-agent": "<masked>"
               },
               "body": ""
@@ -716,7 +714,6 @@
               "headers": {
                 "accept": "*/*",
                 "authorization": "Bearer test-token",
-                "content-type": "application/json",
                 "user-agent": "<masked>"
               },
               "body": ""
@@ -739,7 +736,6 @@
               "headers": {
                 "accept": "*/*",
                 "authorization": "Bearer test-token",
-                "content-type": "application/json",
                 "user-agent": "<masked>"
               },
               "body": ""
@@ -1490,7 +1486,7 @@
               "path": "/firestore.googleapis.com/v1/projects/test-project/databases/(default)/documents:listCollectionIds",
               "query": "",
               "headers": {
-                "accept": "*/*",
+                "accept": "application/json",
                 "authorization": "Bearer test-token",
                 "content-type": "application/json",
                 "user-agent": "<masked>"
