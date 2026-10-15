@@ -30,40 +30,80 @@ type Diagnostic = {
   message: string
 }
 
-const SEPARATOR = ' | '
-
-function literalAt(text: string, start: number): string | null {
-  if (text[start] !== '"') {
-    return null
+// tsc prints union members in the order their types were first created, so a
+// new literal anywhere can reorder a long union, such as the route paths, and
+// change every message that quotes it. Sort the top-level members of each
+// quoted type so a message only depends on what the union holds.
+export function canonical(message: string): string {
+  const quotes: number[] = []
+  for (let i = 0; i < message.length; i++) {
+    // An apostrophe inside a word, as in `can't`, does not quote a type.
+    if (
+      message[i] === "'" &&
+      !(isWord(message[i - 1]) && isWord(message[i + 1]))
+    ) {
+      quotes.push(i)
+    }
   }
-  const end = text.indexOf('"', start + 1)
-  return end === -1 ? null : text.slice(start, end + 1)
+  let result = ''
+  let last = 0
+  for (let q = 0; q + 1 < quotes.length; q += 2) {
+    result +=
+      message.slice(last, quotes[q] + 1) +
+      sortUnion(message.slice(quotes[q] + 1, quotes[q + 1]))
+    last = quotes[q + 1]
+  }
+  return result + message.slice(last)
 }
 
-// tsc prints a union in the order its members were first created, which shifts
-// when unrelated code mentions one of them, so compare literal unions sorted.
-function sortUnions(message: string): string {
-  let result = ''
-  let index = 0
-  while (index < message.length) {
-    const first = literalAt(message, index)
-    if (first === null) {
-      result += message[index]
-      index++
-      continue
+function isWord(char: string | undefined): boolean {
+  return (
+    char !== undefined &&
+    ((char >= 'a' && char <= 'z') ||
+      (char >= 'A' && char <= 'Z') ||
+      (char >= '0' && char <= '9'))
+  )
+}
+
+function sortUnion(type: string): string {
+  const members: string[] = []
+  let depth = 0
+  let quoted = false
+  let start = 0
+  for (let i = 0; i < type.length; i++) {
+    const char = type[i]
+    if (quoted) {
+      if (char === '\\') i++
+      else if (char === '"') quoted = false
+    } else if (char === '"') {
+      quoted = true
+    } else if ('<({['.includes(char)) {
+      depth++
+    } else if ('>)}]'.includes(char) && type[i - 1] !== '=') {
+      // `=>` closes nothing.
+      depth--
+    } else if (depth === 0 && type.startsWith(' | ', i)) {
+      members.push(type.slice(start, i))
+      start = i + 3
+      i += 2
     }
-    const members = [first]
-    let end = index + first.length
-    while (message.startsWith(SEPARATOR, end)) {
-      const next = literalAt(message, end + SEPARATOR.length)
-      if (next === null) {
-        break
-      }
-      members.push(next)
-      end += SEPARATOR.length + next.length
+  }
+  if (members.length === 0) {
+    return type
+  }
+  members.push(type.slice(start))
+  return members.sort().join(' | ')
+}
+
+// Baselines written before `canonical` keep tsc's member order.
+function normalize(baseline: Baseline): Baseline {
+  const result: Baseline = {}
+  for (const [file, messages] of Object.entries(baseline)) {
+    for (const [message, count] of Object.entries(messages)) {
+      const key = canonical(message)
+      result[file] ??= {}
+      result[file][key] = (result[file][key] ?? 0) + count
     }
-    result += members.sort().join(SEPARATOR)
-    index = end
   }
   return result
 }
@@ -75,7 +115,7 @@ function parse(line: string): Diagnostic | null {
     return null
   }
   // Messages can quote absolute module paths, which differ between machines.
-  const message = sortUnions(
+  const message = canonical(
     line.slice(start + 'error '.length).replaceAll(`${ROOT}/`, ''),
   )
   if (start === 0) {
@@ -118,19 +158,6 @@ function group(diagnostics: Diagnostic[]): Baseline {
     baseline[file][message] = (baseline[file][message] ?? 0) + 1
   }
   return baseline
-}
-
-// Baselines written before unions were sorted still match.
-function normalize(baseline: Baseline): Baseline {
-  const result: Baseline = {}
-  for (const [file, messages] of Object.entries(baseline)) {
-    result[file] = {}
-    for (const [message, count] of Object.entries(messages)) {
-      const key = sortUnions(message)
-      result[file][key] = (result[file][key] ?? 0) + count
-    }
-  }
-  return result
 }
 
 const sorted = (baseline: Baseline): Baseline =>

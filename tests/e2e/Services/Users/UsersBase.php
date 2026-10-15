@@ -1027,6 +1027,35 @@ trait UsersBase
         $this->assertSame($created, \array_column($listed['body']['users'], '$id'), 'Main lists users in the order they were created when no order is given');
     }
 
+    public function testListUsersTotalAcceptsBooleanStrings(): void
+    {
+        $user = $this->client->call(Client::METHOD_POST, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'userId' => Id::unique(),
+            'email' => Id::unique() . '@localhost.test',
+            'password' => 'password',
+        ]);
+        $this->assertSame(201, $user['headers']['status-code']);
+
+        foreach (['false' => 0, '0' => 0, 'true' => 1, '1' => 1] as $total => $expected) {
+            $users = $this->client->call(Client::METHOD_GET, '/users', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'queries' => [
+                    Query::equal('$id', [$user['body']['$id']])->toString(),
+                ],
+                'total' => (string) $total,
+            ]);
+
+            $this->assertSame(200, $users['headers']['status-code']);
+            $this->assertCount(1, $users['body']['users']);
+            $this->assertSame($expected, $users['body']['total'], 'total=' . $total . ' must yield a total of ' . $expected);
+        }
+    }
+
     public function testListUsers(): void
     {
         // Cursor assertions require users created in order, without earlier test data.
