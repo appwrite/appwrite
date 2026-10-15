@@ -30,8 +30,13 @@ impl Sql {
     /// Runs `sql` as SQLite's transaction statements run (`prepare()`, then
     /// `execute()`).
     async fn sqlite_statement(&self, sql: &str) -> Result<bool> {
+        // `$this->prepare($sql)->execute()`: the statement itself, not
+        // `execute()`, so the profiler does not log it (PHP
+        // `SQLite::startTransaction()`, `commitTransaction()`,
+        // `rollbackTransaction()`).
         let mut prepared = self.prepare_statement(sql, None).await?;
-        self.execute(&mut prepared).await
+        let mut pdo = self.connection.lock().await;
+        prepared.statement.execute(&mut pdo).await
     }
 
     /// `startTransaction()`: a transaction, or a savepoint inside one.
