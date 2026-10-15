@@ -5,10 +5,13 @@ on:
     tags:
       - cl-*
 
+permissions:
+  contents: read
+
 jobs:
   build-publish:
     name: Build and Publish
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
     - name: Checkout repository
@@ -16,6 +19,7 @@ jobs:
       with:
         fetch-depth: 2
         submodules: recursive
+        persist-credentials: false
 
     - name: Set up QEMU
       uses: docker/setup-qemu-action@ce360397dd3f832beb865e1373c09c0e9f86d70a # v4.0.0
@@ -45,7 +49,6 @@ jobs:
         target: production
         build-args: |
           VERSION=${{ steps.meta.outputs.version }}
-          VITE_APPWRITE_GROWTH_ENDPOINT=https://growth.appwrite.io/v1
           VITE_GA_PROJECT=G-L7G2B6PLDS
           VITE_CONSOLE_MODE=cloud
         push: true

@@ -83,7 +83,7 @@ class Create extends Action
             ->param('documentSecurity', false, new Boolean(true), 'Enables configuring permissions for individual documents. A user needs one of document or collection level permissions to access a document. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('enabled', true, new Boolean(), 'Is collection enabled? When set to \'disabled\', users cannot access the collection but Server SDKs with and API key can still read and write to the collection. No data is lost when this is toggled.', true)
             ->param('attributes', [], new ArrayList(new JSONObject(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of attribute definitions to create. Each attribute should contain: key (string), type (string: string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, point, linestring, polygon, email, url, ip, enum), size (integer, required for string and varchar types), required (boolean, optional), default (mixed, optional), array (boolean, optional), and type-specific options.', true)
-            ->param('indexes', [], new ArrayList(new JSONObject(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of index definitions to create. Each index should contain: key (string), type (string: key, fulltext, unique, spatial), attributes (array of attribute keys), orders (array of ASC/DESC, optional), and lengths (array of integers, optional).', true)
+            ->param('indexes', [], new ArrayList(new JSONObject(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of index definitions to create. Each index should contain: key (string), type (string: key, fulltext, unique, spatial, trigram), attributes (array of attribute keys), orders (array of ASC/DESC, optional), and lengths (array of integers, optional).', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('getDatabasesDB')
@@ -248,15 +248,15 @@ class Create extends Action
                 $dbForProject->createDocuments('indexes', $indexDocuments);
             }
         } catch (DuplicateException) {
-            $this->cleanup($dbForProject, $databaseKey, $collectionKey, $collection->getId());
+            $this->cleanup($dbForProject, $dbForDatabases, $databaseKey, $collectionKey, $collection->getId());
             throw new Exception($this->getDuplicateException(), params: [$collectionId]);
         } catch (\Throwable $e) {
-            $this->cleanup($dbForProject, $databaseKey, $collectionKey, $collection->getId());
+            $this->cleanup($dbForProject, $dbForDatabases, $databaseKey, $collectionKey, $collection->getId());
             throw $e;
         }
 
         $dbForProject->purgeCachedDocument('database_' . $database->getSequence(), $collection->getId());
-        $dbForProject->purgeCachedCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
+        $dbForDatabases->purgeCachedCollection('database_' . $database->getSequence() . '_collection_' . $collection->getSequence());
 
         // Reload the collection so its subquery filters include the schema created above.
         $collection = $authorization->skip(fn () => $dbForProject->getDocument($databaseKey, $collection->getId()));
@@ -428,17 +428,15 @@ class Create extends Action
         ];
     }
 
-    /**
-     * Cleanup on failure: delete the collection document and the underlying DB collection
-     */
     protected function cleanup(
         Database $dbForProject,
+        Database $dbForDatabases,
         string $databaseId,
         string $collectionId,
         string $collectionDocumentId
     ): void {
         try {
-            $dbForProject->deleteCollection($collectionId);
+            $dbForDatabases->deleteCollection($collectionId);
         } catch (\Throwable) {
             // Ignore cleanup errors for collection deletion
         }

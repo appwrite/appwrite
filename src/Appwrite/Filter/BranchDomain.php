@@ -2,6 +2,7 @@
 
 namespace Appwrite\Filter;
 
+use Utopia\Validator\Domain as DomainValidator;
 use Utopia\Validator\Text;
 
 class BranchDomain implements Filter
@@ -24,6 +25,8 @@ class BranchDomain implements Filter
      * - 'resourceId' (string): The resource ID (site or function)
      * - 'projectId' (string): The project ID
      * - 'sitesDomain' (string): The base sites domain
+     *
+     * @throws \InvalidArgumentException When the result is not a valid hostname
      */
     public function apply(mixed $input): mixed
     {
@@ -35,6 +38,14 @@ class BranchDomain implements Filter
         $branchPrefix = $this->generateBranchPrefix($branch);
         $resourceProjectHash = substr(hash('sha256', $resourceId . $projectId), 0, self::HASH_SUFFIX_LENGTH);
         $domain = \strtolower("branch-{$branchPrefix}-{$resourceProjectHash}.{$sitesDomain}");
+
+        // The branch name is user input. Before it was sanitized, a "/" in it was
+        // stored as part of the rule's domain, which no browser, edge or CDN can
+        // address. Refuse to return such a name so it never reaches a rule.
+        if (!(new DomainValidator())->isValid($domain)) {
+            throw new \InvalidArgumentException("Branch domain \"{$domain}\" is not a valid hostname.");
+        }
+
         return $domain;
     }
 

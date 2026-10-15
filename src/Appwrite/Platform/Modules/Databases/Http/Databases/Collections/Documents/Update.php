@@ -17,6 +17,8 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Conflict as ConflictException;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
+use Utopia\Database\Exception\Limit as LimitException;
+use Utopia\Database\Exception\NotFound as NotFoundException;
 use Utopia\Database\Exception\Relationship as RelationshipException;
 use Utopia\Database\Exception\Structure as StructureException;
 use Utopia\Database\Exception\Unique as UniqueException;
@@ -63,6 +65,12 @@ class Update extends Action
                 group: $this->getSDKGroup(),
                 name: self::getName(),
                 description: '/docs/references/databases/update-document.md',
+                requestExamples: [
+                    'update' => [
+                        'summary' => 'Update document data',
+                        'value' => ['data' => ['username' => 'walter.obrien']],
+                    ],
+                ],
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 responses: [
                     new SDKResponse(
@@ -176,7 +184,7 @@ class Update extends Action
 
         $operations = 0;
 
-        $setCollection = (function (Document $collection, Document $document) use ($isAPIKey, $isPrivilegedUser, &$setCollection, $dbForProject, $database, &$operations, $authorization) {
+        $setCollection = (function (Document $collection, Document $document) use ($isAPIKey, $isPrivilegedUser, &$setCollection, $dbForProject, $dbForDatabases, $database, &$operations, $authorization) {
             $operations++;
 
             $relationships = \array_filter(
@@ -220,10 +228,14 @@ class Update extends Action
                     if ($relation instanceof Document) {
                         $relation = $this->removeReadonlyAttributes($relation, $isAPIKey || $isPrivilegedUser);
 
-                        $oldDocument = $authorization->skip(fn () => $dbForProject->getDocument(
+                        $oldDocument = $authorization->skip(fn () => $dbForDatabases->getDocument(
                             'database_' . $database->getSequence() . '_collection_' . $relatedCollection->getSequence(),
                             $relation->getId()
                         ));
+
+                        if (!$isAPIKey && !$isPrivilegedUser) {
+                            $this->validateRelatedPermissions($relation->getAttribute('$permissions'), $oldDocument, $authorization);
+                        }
 
                         // Attribute $collection is required for Utopia.
                         $relation->setAttribute(
@@ -339,10 +351,18 @@ class Update extends Action
             throw new Exception($this->getUniqueConstraintException(), previous: $e);
         } catch (DuplicateException $e) {
             throw new Exception($this->getDuplicateException(), previous: $e, params: [$documentId]);
+        } catch (NotFoundException $e) {
+            if ($authorization->skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId))->isEmpty()) {
+                throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
+            }
+            // The table exists, so a column the write's schema listed was deleted or renamed before the write ran
+            throw new Exception($this->getStructureNotFoundException(), 'The schema changed while this request was running. Please try again.', previous: $e);
         } catch (RelationshipException $e) {
             throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, $e->getMessage());
         } catch (StructureException $e) {
             throw new Exception($this->getStructureException(), $e->getMessage());
+        } catch (LimitException $e) {
+            throw new Exception($this->getLimitException(), $e->getMessage());
         }
 
         $collectionsCache = [];

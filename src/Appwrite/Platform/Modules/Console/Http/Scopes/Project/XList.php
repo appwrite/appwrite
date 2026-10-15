@@ -11,6 +11,7 @@ use Utopia\Config\Config;
 use Utopia\Database\Document;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Validator\Boolean;
 
 class XList extends Action
 {
@@ -43,11 +44,12 @@ class XList extends Action
                 ],
                 contentType: ContentType::JSON
             ))
+            ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
             ->inject('response')
             ->callback($this->action(...));
     }
 
-    public function action(Response $response): void
+    public function action(bool $includeTotal, Response $response): void
     {
         $scopesConfig = Config::getParam('projectScopes', []);
 
@@ -62,7 +64,7 @@ class XList extends Action
         }
 
         $response->dynamic(new Document([
-            'total' => \count($scopes),
+            'total' => $includeTotal ? \count($scopes) : 0,
             'scopes' => $scopes,
         ]), Response::MODEL_CONSOLE_KEY_SCOPE_LIST);
     }

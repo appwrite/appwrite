@@ -48,6 +48,15 @@ class Update extends DocumentsUpdate
                 group: $this->getSDKGroup(),
                 name: self::getName(),
                 description: '/docs/references/tablesdb/update-rows.md',
+                requestExamples: [
+                    'updateSelected' => [
+                        'summary' => 'Update explicitly selected rows',
+                        'value' => [
+                            'data' => ['username' => 'walter.obrien'],
+                            'queries' => ['{"method":"equal","attribute":"$id","values":["<ROW_ID>"]}'],
+                        ],
+                    ],
+                ],
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(

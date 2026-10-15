@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         colors="true"
+         beStrictAboutTestsThatDoNotTestAnything="true"
+         bootstrap="vendor/autoload.php"
+         cacheDirectory=".phpunit.cache">
+    <testsuites>
+        <testsuite name="unit">
+            <directory>tests</directory>
+            <exclude>tests/E2E</exclude>
+        </testsuite>
+        <testsuite name="e2e">
+            <directory>tests/E2E</directory>
+        </testsuite>
+    </testsuites>
+    <source>
+        <include>
+            <directory>src</directory>
+        </include>
+    </source>
+</phpunit>

@@ -47,6 +47,12 @@ class Installation extends Model
                 'description' => 'VCS (Version Control System) installation ID.',
                 'default' => '',
                 'example' => '5322',
+            ])
+            ->addRule('organizationUrl', [
+                'type' => self::TYPE_STRING,
+                'description' => 'VCS (Version Control System) organization URL. Points at the configured instance, which is not the provider\'s own host for a self-hosted install.',
+                'default' => '',
+                'example' => 'https://github.com/appwrite',
             ]);
     }
 

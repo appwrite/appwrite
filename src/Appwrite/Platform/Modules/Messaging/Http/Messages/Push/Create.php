@@ -94,6 +94,17 @@ class Create extends Action
                 group: 'messages',
                 name: 'createPush',
                 description: '/docs/references/messaging/create-push.md',
+                requestExamples: [
+                    'draft' => [
+                        'summary' => 'Create a push notification draft without sending it',
+                        'value' => [
+                            'messageId' => '<MESSAGE_ID>',
+                            'title' => 'Welcome',
+                            'body' => 'Welcome to our app.',
+                            'draft' => true,
+                        ],
+                    ],
+                ],
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
@@ -121,6 +132,7 @@ class Create extends Action
             ->param('contentAvailable', false, new Boolean(), 'If set to true, the notification will be delivered in the background. Available only for iOS Platform.', true)
             ->param('critical', false, new Boolean(), 'If set to true, the notification will be marked as critical. This requires the app to have the critical notification entitlement. Available only for iOS Platform.', true)
             ->param('priority', 'high', new WhiteList(['normal', 'high']), 'Set the notification priority. "normal" will consider device state and may not deliver notifications immediately. "high" will always attempt to immediately deliver the notification.', true, enum: new Enum(name: 'MessagePriority'))
+            ->param('channelId', '', new Text(256), 'ID of the notification channel to deliver the notification on. The app must have already created a channel with this ID, otherwise the channel from the app manifest is used. Available only for Android Platform.', true)
             ->inject('queueForEvents')
             ->inject('dbForProject')
             ->inject('dbForPlatform')
@@ -131,7 +143,7 @@ class Create extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $messageId, string $title, string $body, ?array $topics, ?array $users, ?array $targets, null|array|\stdClass $data, string $action, string $image, string $icon, string $sound, string $color, string $tag, int $badge, bool $draft, ?string $scheduledAt, bool $contentAvailable, bool $critical, string $priority, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, MessagingPublisher $publisherForMessaging, Response $response, array $platform)
+    public function action(string $messageId, string $title, string $body, ?array $topics, ?array $users, ?array $targets, null|array|\stdClass $data, string $action, string $image, string $icon, string $sound, string $color, string $tag, int $badge, bool $draft, ?string $scheduledAt, bool $contentAvailable, bool $critical, string $priority, string $channelId, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, MessagingPublisher $publisherForMessaging, Response $response, array $platform)
     {
         $data = $this->normalizeJsonObject($data);
 
@@ -251,6 +263,9 @@ class Create extends Action
         }
         if (!empty($priority)) {
             $pushData['priority'] = $priority;
+        }
+        if (!empty($channelId)) {
+            $pushData['channelId'] = $channelId;
         }
 
         $message = new Document([

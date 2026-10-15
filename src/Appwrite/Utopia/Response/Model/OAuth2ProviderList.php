@@ -33,6 +33,7 @@ class OAuth2ProviderList extends Model
                     Response::MODEL_OAUTH2_YANDEX,
                     Response::MODEL_OAUTH2_X,
                     Response::MODEL_OAUTH2_WORDPRESS,
+                    Response::MODEL_OAUTH2_WEBFLOW,
                     Response::MODEL_OAUTH2_TWITCH,
                     Response::MODEL_OAUTH2_STRIPE,
                     Response::MODEL_OAUTH2_SPOTIFY,

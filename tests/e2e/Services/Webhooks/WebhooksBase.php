@@ -2,7 +2,9 @@
 
 namespace Tests\E2E\Services\Webhooks;
 
+use Appwrite\Event\Event;
 use Appwrite\Tests\Async;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\E2E\Client;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -53,6 +55,7 @@ trait WebhooksBase
         ]);
         $this->assertEquals(200, $row['headers']['status-code']);
 
+        $deliveryIds = [];
         foreach ($webhooks as $prefix => $webhookId) {
             foreach (['create' => 'created', 'update' => 'updated'] as $action => $value) {
                 $event = "{$prefix}.{$databaseId}.tables.{$tableId}.rows.{$rowId}.{$action}";
@@ -63,13 +66,78 @@ trait WebhooksBase
                 });
                 $this->assertNotEmpty($delivery, 'Missing webhook delivery: ' . $event);
                 $this->assertSame($value, $delivery['data']['value']);
+                $this->assertNotEmpty($delivery['headers']['X-Appwrite-Webhook-Delivery-Id'] ?? '');
+                $deliveryIds[] = $delivery['headers']['X-Appwrite-Webhook-Delivery-Id'];
             }
             $this->deleteWebhook($webhookId);
         }
+        // Two events, each to two webhooks: every delivery is told apart from the other three.
+        $this->assertCount(4, \array_unique($deliveryIds));
         $this->client->call(Client::METHOD_DELETE, '/tablesdb/' . $databaseId, $headers);
     }
 
     // Tests for all auth scenarios
+
+    #[Group('queueRetry')]
+    public function testRedeliveryRetriesOnlyTheWebhookThatFailed(): void
+    {
+        // Test for SUCCESS: an event that one webhook accepted and another failed is retried
+        // for the failed one only, under a delivery id of its own.
+        $userId = ID::unique();
+        $event = "users.{$userId}.create";
+
+        $healthy = $this->createWebhook(ID::unique(), 'Healthy', [$event], true, 'http://request-catcher-webhook:5000/', false, null, null);
+        $this->assertSame(201, $healthy['headers']['status-code']);
+        $healthyId = $healthy['body']['$id'];
+
+        // Nothing listens on this port, so the first delivery fails to connect.
+        $failing = $this->createWebhook(ID::unique(), 'Failing', [$event], true, 'http://request-catcher-webhook:5001/', false, null, null);
+        $this->assertSame(201, $failing['headers']['status-code']);
+        $failingId = $failing['body']['$id'];
+
+        try {
+            $user = $this->client->call(Client::METHOD_POST, '/users', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'userId' => $userId,
+                'email' => $userId . '@localhost.test',
+                'password' => 'password',
+            ]);
+            $this->assertSame(201, $user['headers']['status-code']);
+
+            // One failed attempt counted, one delivery to the webhook that accepted it.
+            $this->assertEventually(function () use ($failingId) {
+                $this->assertSame(1, $this->getWebhook($failingId)['body']['attempts']);
+            }, 15000, 500);
+            $this->assertEventually(function () use ($healthyId) {
+                $this->assertCount(1, $this->webhookDeliveries($healthyId));
+            }, 15000, 500);
+
+            // The endpoint recovers. The webhook URL only accepts allowed hosts, so the recovery
+            // is a move to the request catcher. The broker parks the failed event until retried.
+            $moved = $this->updateWebhook($failingId, 'Failing', [$event], true, 'http://request-catcher-webhook:5000/', false, null, null);
+            $this->assertSame(200, $moved['headers']['status-code']);
+
+            $this->assertEventually(function () use ($failingId) {
+                $this->retryFailedWebhooks();
+                $this->assertCount(1, $this->webhookDeliveries($failingId));
+            }, 30000, 1000);
+
+            $healthyDeliveries = $this->webhookDeliveries($healthyId);
+            $failingDeliveries = $this->webhookDeliveries($failingId);
+            $this->assertCount(1, $healthyDeliveries, 'The retry sent the event again to the webhook that had accepted it');
+
+            $healthyDeliveryId = $healthyDeliveries[0]['headers']['X-Appwrite-Webhook-Delivery-Id'] ?? '';
+            $failingDeliveryId = $failingDeliveries[0]['headers']['X-Appwrite-Webhook-Delivery-Id'] ?? '';
+            $this->assertNotEmpty($healthyDeliveryId);
+            $this->assertNotEmpty($failingDeliveryId);
+            $this->assertNotSame($healthyDeliveryId, $failingDeliveryId);
+        } finally {
+            $this->deleteWebhook($healthyId);
+            $this->deleteWebhook($failingId);
+        }
+    }
 
     public function testCreateWebhook(): void
     {
@@ -157,7 +225,7 @@ trait WebhooksBase
         $this->assertEquals(201, $webhook['headers']['status-code']);
         $this->assertNotEmpty($webhook['body']['$id']);
         $this->assertEquals('username', $webhook['body']['authUsername']);
-        $this->assertEquals('password', $webhook['body']['authPassword']);
+        $this->assertSame('', $webhook['body']['authPassword']);
         $this->assertEquals(true, $webhook['body']['tls']);
 
         // Verify via GET
@@ -167,6 +235,47 @@ trait WebhooksBase
 
         // Cleanup
         $this->deleteWebhook($webhook['body']['$id']);
+
+        $tooLongPassword = $this->createWebhook(
+            ID::unique(),
+            'Webhook With Too Long Password',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            true,
+            'username',
+            \str_repeat('p', 2049)
+        );
+        $this->assertSame(400, $tooLongPassword['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $tooLongPassword['body']['type']);
+
+        // The username column holds 255 chars, so that is the longest the API accepts.
+        $longestUsername = $this->createWebhook(
+            ID::unique(),
+            'Webhook With Longest Username',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            true,
+            \str_repeat('u', 255),
+            'password'
+        );
+        $this->assertSame(201, $longestUsername['headers']['status-code']);
+        $this->assertSame(\str_repeat('u', 255), $longestUsername['body']['authUsername']);
+        $this->deleteWebhook($longestUsername['body']['$id']);
+
+        $tooLongUsername = $this->createWebhook(
+            ID::unique(),
+            'Webhook With Too Long Username',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            true,
+            \str_repeat('u', 256),
+            'password'
+        );
+        $this->assertSame(400, $tooLongUsername['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $tooLongUsername['body']['type']);
     }
 
     public function testCreateWebhookEnabled(): void
@@ -456,12 +565,52 @@ trait WebhooksBase
 
         $this->assertEquals(200, $updated['headers']['status-code']);
         $this->assertEquals('newuser', $updated['body']['authUsername']);
-        $this->assertEquals('newpass', $updated['body']['authPassword']);
+        $this->assertSame('', $updated['body']['authPassword']);
 
         // Verify via GET
         $get = $this->getWebhook($webhookId);
         $this->assertEquals(200, $get['headers']['status-code']);
         $this->assertEquals('newuser', $get['body']['authUsername']);
+
+        // 4-byte characters are the worst case for the encrypted size of the longest accepted password.
+        $longest = $this->updateWebhook(
+            $webhookId,
+            'HTTP Auth Webhook',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            true,
+            \str_repeat('u', 255),
+            \str_repeat('🔑', 2048)
+        );
+        $this->assertSame(200, $longest['headers']['status-code']);
+        $this->assertSame(\str_repeat('u', 255), $longest['body']['authUsername']);
+        $this->assertSame('', $longest['body']['authPassword']);
+
+        $tooLongPassword = $this->updateWebhook(
+            $webhookId,
+            'HTTP Auth Webhook',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            true,
+            'newuser',
+            \str_repeat('p', 2049)
+        );
+        $this->assertSame(400, $tooLongPassword['headers']['status-code']);
+
+        $tooLongUsername = $this->updateWebhook(
+            $webhookId,
+            'HTTP Auth Webhook',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            true,
+            \str_repeat('u', 256),
+            null
+        );
+        $this->assertSame(400, $tooLongUsername['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $tooLongUsername['body']['type']);
 
         // Cleanup
         $this->deleteWebhook($webhookId);
@@ -715,7 +864,7 @@ trait WebhooksBase
         $this->assertEquals('https://appwrite.io/updated', $updated['body']['url']);
         $this->assertEquals(true, $updated['body']['tls']);
         $this->assertEquals('user', $updated['body']['authUsername']);
-        $this->assertEquals('pass', $updated['body']['authPassword']);
+        $this->assertSame('', $updated['body']['authPassword']);
 
         // Cleanup
         $this->deleteWebhook($webhookId);
@@ -1109,6 +1258,211 @@ trait WebhooksBase
         $this->deleteWebhook($webhookId);
     }
 
+    public function testWebhookAuthPasswordNotExposedInResponses(): void
+    {
+        $webhook = $this->createWebhook(
+            ID::unique(),
+            'Password Exposure Test',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            null,
+            'hook-user',
+            'hook-password'
+        );
+
+        $this->assertSame(201, $webhook['headers']['status-code']);
+        $webhookId = $webhook['body']['$id'];
+        $this->assertSame('hook-user', $webhook['body']['authUsername']);
+        $this->assertSame('', $webhook['body']['authPassword']);
+        $this->assertArrayNotHasKey('httpPass', $webhook['body']);
+
+        $get = $this->getWebhook($webhookId);
+        $this->assertSame(200, $get['headers']['status-code']);
+        $this->assertSame('hook-user', $get['body']['authUsername']);
+        $this->assertSame('', $get['body']['authPassword']);
+        $this->assertArrayNotHasKey('httpPass', $get['body']);
+
+        $list = $this->listWebhooks(null, true);
+        $this->assertSame(200, $list['headers']['status-code']);
+        foreach ($list['body']['webhooks'] as $item) {
+            $this->assertSame('', $item['authPassword']);
+            $this->assertArrayNotHasKey('httpPass', $item);
+        }
+
+        $updated = $this->updateWebhook(
+            $webhookId,
+            'Password Exposure Test Updated',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            null,
+            'hook-user',
+            'new-hook-password'
+        );
+        $this->assertSame(200, $updated['headers']['status-code']);
+        $this->assertSame('', $updated['body']['authPassword']);
+        $this->assertArrayNotHasKey('httpPass', $updated['body']);
+
+        $this->deleteWebhook($webhookId);
+    }
+
+    public function testUpdateWebhookKeepsAuthPasswordWhenOmitted(): void
+    {
+        // The longest password the API accepts must be stored and delivered intact.
+        $password = \str_repeat('p', 2048);
+
+        $webhook = $this->createWebhook(
+            ID::unique(),
+            'Password Retention Test',
+            ['users.*.create'],
+            null,
+            'http://request-catcher-webhook:5000/',
+            false,
+            'hook-user',
+            $password
+        );
+
+        $this->assertSame(201, $webhook['headers']['status-code']);
+        $webhookId = $webhook['body']['$id'];
+
+        // Clients can no longer read the password back, so an update that omits it must keep the stored one.
+        $updated = $this->updateWebhook(
+            $webhookId,
+            'Password Retention Test Renamed',
+            ['users.*.create'],
+            null,
+            'http://request-catcher-webhook:5000/',
+            false,
+            'hook-user',
+            null
+        );
+        $this->assertSame(200, $updated['headers']['status-code']);
+
+        $user = $this->client->call(Client::METHOD_POST, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'userId' => ID::unique(),
+            'email' => uniqid() . 'retention@localhost.test',
+            'password' => 'password',
+            'name' => 'Retention User',
+        ]);
+        $this->assertSame(201, $user['headers']['status-code']);
+        $userId = $user['body']['$id'];
+
+        $this->assertSame('Basic ' . \base64_encode('hook-user:' . $password), $this->getDeliveryAuthorization($webhookId, $userId));
+
+        $this->deleteWebhook($webhookId);
+    }
+
+    public function testUpdateWebhookClearsAuthPasswordWhenUrlChanges(): void
+    {
+        $webhook = $this->createWebhook(
+            ID::unique(),
+            'Password Redirect Test',
+            ['users.*.create'],
+            null,
+            'http://request-catcher-webhook:5000/',
+            false,
+            'hook-user',
+            'hook-password'
+        );
+
+        $this->assertSame(201, $webhook['headers']['status-code']);
+        $webhookId = $webhook['body']['$id'];
+
+        // A key that cannot read the password must not be able to send it to a new endpoint.
+        $updated = $this->updateWebhook(
+            $webhookId,
+            'Password Redirect Test',
+            ['users.*.create'],
+            null,
+            'http://request-catcher-webhook:5000/redirected',
+            false,
+            'hook-user',
+            null
+        );
+        $this->assertSame(200, $updated['headers']['status-code']);
+
+        $user = $this->client->call(Client::METHOD_POST, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'userId' => ID::unique(),
+            'email' => uniqid() . 'redirect@localhost.test',
+            'password' => 'password',
+            'name' => 'Redirect User',
+        ]);
+        $this->assertSame(201, $user['headers']['status-code']);
+
+        $this->assertSame('', $this->getDeliveryAuthorization($webhookId, $user['body']['$id']));
+
+        $this->deleteWebhook($webhookId);
+    }
+
+    public function testUpdateWebhookClearsAuthPasswordWhenTlsVerificationDisabled(): void
+    {
+        $webhook = $this->createWebhook(
+            ID::unique(),
+            'Password Downgrade Test',
+            ['users.*.create'],
+            null,
+            'http://request-catcher-webhook:5000/',
+            true,
+            'hook-user',
+            'hook-password'
+        );
+
+        $this->assertSame(201, $webhook['headers']['status-code']);
+        $webhookId = $webhook['body']['$id'];
+
+        // Same URL, but turning off certificate verification must not keep a credential the key cannot read.
+        $updated = $this->updateWebhook(
+            $webhookId,
+            'Password Downgrade Test',
+            ['users.*.create'],
+            null,
+            'http://request-catcher-webhook:5000/',
+            false,
+            'hook-user',
+            null
+        );
+        $this->assertSame(200, $updated['headers']['status-code']);
+
+        $user = $this->client->call(Client::METHOD_POST, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'userId' => ID::unique(),
+            'email' => uniqid() . 'downgrade@localhost.test',
+            'password' => 'password',
+            'name' => 'Downgrade User',
+        ]);
+        $this->assertSame(201, $user['headers']['status-code']);
+
+        $this->assertSame('', $this->getDeliveryAuthorization($webhookId, $user['body']['$id']));
+
+        $this->deleteWebhook($webhookId);
+    }
+
+    private function getDeliveryAuthorization(string $webhookId, string $userId): string
+    {
+        $delivery = $this->getLastRequestForProject($this->getProject()['$id'], queryParams: [
+            'header_X-Appwrite-Webhook-Id' => $webhookId,
+        ], maxAttempts: 30, probe: function (array $request) use ($userId) {
+            $this->assertStringContainsString(
+                "users.{$userId}.create",
+                $request['headers']['X-Appwrite-Webhook-Events'] ?? ''
+            );
+        });
+        $this->assertNotEmpty($delivery, 'Missing webhook delivery for ' . $webhookId);
+
+        $headers = \array_change_key_case($delivery['headers'], CASE_LOWER);
+
+        return $headers['authorization'] ?? '';
+    }
+
     // URL validation tests
 
     public function testCreateWebhookWithPrivateDomain(): void
@@ -1180,6 +1534,19 @@ trait WebhooksBase
         );
 
         $this->assertEquals(400, $webhook['headers']['status-code']);
+
+        $tooLongUrl = $this->createWebhook(
+            ID::unique(),
+            'Too Long URL Webhook',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io/' . \str_repeat('a', 250),
+            null,
+            null,
+            null
+        );
+        $this->assertSame(400, $tooLongUrl['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $tooLongUrl['body']['type']);
     }
 
     public function testUpdateWebhookInvalidUrlScheme(): void
@@ -1356,7 +1723,7 @@ trait WebhooksBase
         $this->assertEquals(true, $get['body']['enabled']);
         $this->assertEquals(true, $get['body']['tls']);
         $this->assertEquals('myuser', $get['body']['authUsername']);
-        $this->assertEquals('mypass', $get['body']['authPassword']);
+        $this->assertSame('', $get['body']['authPassword']);
         $this->assertEmpty($get['body']['secret']);
         $this->assertEquals(0, $get['body']['attempts']);
         $this->assertEquals('', $get['body']['logs']);
@@ -1962,7 +2329,7 @@ trait WebhooksBase
         // Values should be correct
         $this->assertEquals(true, $webhook['body']['security']);
         $this->assertEquals('olduser', $webhook['body']['httpUser']);
-        $this->assertEquals('oldpass', $webhook['body']['httpPass']);
+        $this->assertSame('', $webhook['body']['httpPass']);
         $this->assertNotEmpty($webhook['body']['signatureKey']);
         $this->assertSame(128, \strlen($webhook['body']['signatureKey']));
 
@@ -2017,7 +2384,7 @@ trait WebhooksBase
 
         $this->assertEquals(true, $updated['body']['security']);
         $this->assertEquals('updateduser', $updated['body']['httpUser']);
-        $this->assertEquals('updatedpass', $updated['body']['httpPass']);
+        $this->assertSame('', $updated['body']['httpPass']);
 
         // Cleanup
         $this->deleteWebhook($webhookId);
@@ -2063,7 +2430,7 @@ trait WebhooksBase
 
         $this->assertEquals(true, $get['body']['security']);
         $this->assertEquals('getuser', $get['body']['httpUser']);
-        $this->assertEquals('getpass', $get['body']['httpPass']);
+        $this->assertSame('', $get['body']['httpPass']);
         $this->assertEmpty($get['body']['signatureKey']);
 
         // Cleanup
@@ -2119,7 +2486,7 @@ trait WebhooksBase
 
         $this->assertEquals(true, $item['security']);
         $this->assertEquals('listuser', $item['httpUser']);
-        $this->assertEquals('listpass', $item['httpPass']);
+        $this->assertSame('', $item['httpPass']);
 
         // Cleanup
         $this->deleteWebhook($webhookId);
@@ -2171,6 +2538,31 @@ trait WebhooksBase
     }
 
     // Helpers
+
+    /**
+     * Every request the webhook request catcher received from one webhook.
+     *
+     * @return list<array<string, mixed>>
+     */
+    protected function webhookDeliveries(string $webhookId): array
+    {
+        $response = @\file_get_contents('http://request-catcher-webhook:5000/__find_request__?' . \http_build_query([
+            'header_X-Appwrite-Webhook-Id' => $webhookId,
+        ]));
+        $requests = \is_string($response) ? \json_decode($response, true) : [];
+
+        return \array_map($this->decodeRequestData(...), \is_array($requests) ? $requests : []);
+    }
+
+    /**
+     * Run what an operator runs to retry the webhooks the broker parked as failed.
+     */
+    protected function retryFailedWebhooks(): void
+    {
+        // The way an operator runs it: no --limit, which must retry every failed job.
+        \exec('queue-retry --name=' . \escapeshellarg(Event::WEBHOOK_QUEUE_NAME) . ' 2>&1', $output, $exitCode);
+        $this->assertSame(0, $exitCode, \implode("\n", $output));
+    }
 
     /**
      * @param array<string>|null $queries

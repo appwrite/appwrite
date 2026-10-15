@@ -104,6 +104,9 @@ return [
             'impersonator' => [
                 '$description' => 'This event triggers when a user\'s impersonator capability is updated.',
             ],
+            'avatar' => [
+                '$description' => 'This event triggers when a user\'s photo is updated.',
+            ],
         ]
     ],
     'databases' => [

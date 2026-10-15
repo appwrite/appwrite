@@ -5,7 +5,7 @@ namespace Utopia\Agents\Adapters;
 use Psr\Http\Client\ClientInterface;
 use Utopia\Agents\Adapter;
 use Utopia\Agents\Message;
-use Utopia\Psr18\StreamingClientInterface;
+use Utopia\Client\Psr18\StreamingClientInterface;
 
 class Ollama extends Adapter
 {

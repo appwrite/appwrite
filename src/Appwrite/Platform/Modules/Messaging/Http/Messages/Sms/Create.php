@@ -73,6 +73,16 @@ class Create extends Action
                     group: 'messages',
                     name: 'createSMS',
                     description: '/docs/references/messaging/create-sms.md',
+                    requestExamples: [
+                        'draft' => [
+                            'summary' => 'Create an SMS draft without sending it',
+                            'value' => [
+                                'messageId' => '<MESSAGE_ID>',
+                                'content' => 'Welcome to our app.',
+                                'draft' => true,
+                            ],
+                        ],
+                    ],
                     auth: [AuthType::ADMIN, AuthType::KEY],
                     responses: [
                         new SDKResponse(

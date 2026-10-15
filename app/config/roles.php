@@ -28,13 +28,13 @@ $member = [
     'projects.read',
     'locale.read',
     'avatars.read',
+    'avatars.write',
     'executions.read',
     'executions.write',
     'targets.read',
     'targets.write',
     'subscribers.write',
     'subscribers.read',
-    'assistant.read',
     'rules.read',
 ];
 
@@ -101,6 +101,7 @@ $admins = [
     'usage.read',
     'locale.read',
     'avatars.read',
+    'avatars.write',
     'health.read',
     'functions.read',
     'functions.write',

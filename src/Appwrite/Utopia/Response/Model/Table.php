@@ -57,7 +57,7 @@ class Table extends Model
             ->addRule('rowSecurity', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Whether row-level permissions are enabled. [Learn more about permissions](https://appwrite.io/docs/permissions).',
-                'default' => '',
+                'default' => false,
                 'example' => true,
             ])
             ->addRule('columns', [

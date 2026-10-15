@@ -141,7 +141,8 @@ class Screenshots extends Action
                 'bannerDisabled' => true,
                 'projectCheckDisabled' => true,
                 'previewAuthDisabled' => true,
-                'deploymentStatusIgnored' => true
+                'deploymentStatusIgnored' => true,
+                'runtimeEphemeral' => true,
             ]);
 
             $headers = [
@@ -155,7 +156,7 @@ class Screenshots extends Action
             $captures = [];
             foreach (['screenshotLight' => 'light', 'screenshotDark' => 'dark'] as $key => $theme) {
                 $captures[$key] = $screenshots->create(
-                    url: $routerHost . '/?appwrite-preview=1&appwrite-theme=' . $theme,
+                    url: $routerHost . '/',
                     theme: $theme,
                     headers: $headers,
                     sleep: $sleep,

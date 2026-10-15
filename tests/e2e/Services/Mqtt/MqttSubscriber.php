@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\E2E\Services\Mqtt;
 
 use Utopia\Mqtt\Packet;
+use Utopia\Mqtt\Packet\Disconnect;
 use Utopia\Mqtt\Packet\Specs\V5;
 use Utopia\Mqtt\Properties;
 use Utopia\Mqtt\Property;
@@ -25,6 +26,12 @@ final class MqttSubscriber
 
     /** @var Packet[] PUBLISH packets read before the SUBACK (replay), drained by consume(). */
     private array $pending = [];
+
+    /** The Reason String (property 0x1F) from the last CONNACK, or null when absent. */
+    private ?string $connackReason = null;
+
+    /** The Authentication Method (property 0x15) echoed on the last CONNACK, or null when absent. */
+    private ?string $connackAuthMethod = null;
 
     public function __construct(
         private readonly string $host,
@@ -60,7 +67,29 @@ final class MqttSubscriber
         }
 
         // CONNACK body: [acknowledge flags][reason code][properties].
+        $this->connackReason = null;
+        $this->connackAuthMethod = null;
+        if (\strlen($packet->body) > 2) {
+            [$properties] = Properties::parse($packet->body, 2);
+            $reason = $properties->get(Property::REASON_STRING);
+            $this->connackReason = \is_string($reason) ? $reason : null;
+            $authMethod = $properties->get(Property::AUTHENTICATION_METHOD);
+            $this->connackAuthMethod = \is_string($authMethod) ? $authMethod : null;
+        }
+
         return \ord($packet->body[1] ?? "\x80");
+    }
+
+    /** The Authentication Method (MQTT 5.0 property 0x15) echoed on the last CONNACK, or null. */
+    public function connackAuthMethod(): ?string
+    {
+        return $this->connackAuthMethod;
+    }
+
+    /** The Reason String (MQTT 5.0 property 0x1F) from the last CONNACK, or null when absent. */
+    public function connackReason(): ?string
+    {
+        return $this->connackReason;
     }
 
     /**
@@ -199,6 +228,29 @@ final class MqttSubscriber
                 return true;
             }
         }
+    }
+
+    /**
+     * The reason code of the DISCONNECT the broker sends within $timeout seconds, or null when none
+     * arrives (a timeout, or a close without one). PUBLISH packets read meanwhile are kept for consume().
+     */
+    public function awaitDisconnect(float $timeout): ?int
+    {
+        if (!\is_resource($this->socket)) {
+            return null;
+        }
+
+        $deadline = microtime(true) + $timeout;
+        while (($packet = $this->readPacket($deadline)) !== null) {
+            if ($packet->type === Packet::DISCONNECT) {
+                return Disconnect::decode($packet->body)->reasonCode;
+            }
+            if ($packet->type === Packet::PUBLISH) {
+                $this->pending[] = $packet;
+            }
+        }
+
+        return null;
     }
 
     public function disconnect(): void

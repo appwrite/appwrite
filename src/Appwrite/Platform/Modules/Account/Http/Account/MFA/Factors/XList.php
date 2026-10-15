@@ -67,24 +67,24 @@ class XList extends Action
                 )
             ])
             ->inject('response')
-            ->inject('user')
+            ->inject('targetUser')
             ->inject('project')
             ->callback($this->action(...));
     }
 
-    public function action(Response $response, Document $user, Document $project): void
+    public function action(Response $response, Document $targetUser, Document $project): void
     {
-        $mfaRecoveryCodes = $user->getAttribute('mfaRecoveryCodes', []);
+        $mfaRecoveryCodes = $targetUser->getAttribute('mfaRecoveryCodes', []);
         $recoveryCodeEnabled = \is_array($mfaRecoveryCodes) && \count($mfaRecoveryCodes) > 0;
 
-        $totp = TOTP::getAuthenticatorFromUser($user);
+        $totp = TOTP::getAuthenticatorFromUser($targetUser);
 
         $mfaFactors = $project->getAttribute('auths', [])['mfaFactors'] ?? [];
 
         $factors = new Document([
             Type::TOTP => ($mfaFactors['totp'] ?? true) && $totp !== null && $totp->getAttribute('verified', false),
-            Type::EMAIL => ($mfaFactors['email'] ?? true) && $user->getAttribute('email', false) && $user->getAttribute('emailVerification', false),
-            Type::PHONE => ($mfaFactors['phone'] ?? true) && $user->getAttribute('phone', false) && $user->getAttribute('phoneVerification', false),
+            Type::EMAIL => ($mfaFactors['email'] ?? true) && $targetUser->getAttribute('email', false) && $targetUser->getAttribute('emailVerification', false),
+            Type::PHONE => ($mfaFactors['phone'] ?? true) && $targetUser->getAttribute('phone', false) && $targetUser->getAttribute('phoneVerification', false),
             Type::RECOVERY_CODE => $recoveryCodeEnabled,
             Type::CUSTOM => $mfaFactors['custom'] ?? false
         ]);

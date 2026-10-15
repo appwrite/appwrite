@@ -1,0 +1,8 @@
+# issue-triage.lock.yml is compiled by gh-aw from issue-triage.md.
+rules:
+  excessive-permissions:
+    ignore:
+      - issue-triage.lock.yml
+  adhoc-packages:
+    ignore:
+      - issue-triage.lock.yml

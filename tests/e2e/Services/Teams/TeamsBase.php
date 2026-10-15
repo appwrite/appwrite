@@ -113,7 +113,7 @@ trait TeamsBase
         }
 
         $teamId = ID::unique();
-        $response2 = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+        $response2 = $this->postTeam(array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -133,7 +133,7 @@ trait TeamsBase
             ], $this->getHeaders());
             $response = $this->client->call(Client::METHOD_POST, '/teams', $headers, []);
             $this->assertEquals(400, $response['headers']['status-code']);
-            $response = $this->client->call(Client::METHOD_POST, '/teams', $headers, [
+            $response = $this->postTeam($headers, [
                 'teamId' => $response1['body']['$id'],
                 'name' => 'John',
             ]);
@@ -165,6 +165,29 @@ trait TeamsBase
         $this->assertGreaterThan(-1, $response3['body']['total']);
         $this->assertIsInt($response3['body']['total']);
         $this->assertEquals(true, $dateValidator->isValid($response3['body']['$createdAt']));
+
+        // A project-scoped role is longer than a bare ID
+        $role = 'project-' . ID::unique() . '-developer';
+        $response4 = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'teamId' => ID::unique(),
+            'name' => 'Aston Villa',
+            'roles' => [$role],
+        ]);
+
+        $this->assertEquals(201, $response4['headers']['status-code']);
+
+        // An API key creates the team without a creator membership to read the role from
+        if ($this->getSide() !== 'server') {
+            $memberships = $this->client->call(Client::METHOD_GET, '/teams/' . $response4['body']['$id'] . '/memberships', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+
+            $this->assertContains($role, $memberships['body']['memberships'][0]['roles']);
+        }
 
         /**
          * Test for FAILURE
