@@ -10,11 +10,9 @@ import type { Index } from '@/lib/docs'
 const EXAMPLE = `use utopia_http::{Bytes, Http, Request, Response};
 
 let mut http = Http::new("UTC");
-http.get("/hello")?.inject("response").action(|scope| {
-    Box::pin(async move {
-        scope.response.text("Hello, World!");
-        Ok(())
-    })
+http.get("/hello")?.inject("response").action(async |scope| {
+    scope.response.text("Hello, World!");
+    Ok(())
 });
 
 let request = Request::new("GET", "/hello", [], Bytes::new());

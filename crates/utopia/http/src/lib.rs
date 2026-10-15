@@ -73,7 +73,7 @@ pub use error::{Error, Result};
 pub use files::{EXTENSIONS, File, Files};
 pub use headers::Headers;
 pub use hook::{
-    Action, BoxFuture, Check, Default as ParamDefault, Hook, Param, Resource, Resources, Route, Scope, action,
+    Action, BoxFuture, Callback, Check, Default as ParamDefault, Hook, Param, Resource, Resources, Route, Scope, action,
 };
 pub use http::{Http, RouteBuilder, RouteMatch, mode};
 pub use params::{

@@ -1,6 +1,7 @@
 //! Actions: what an endpoint, task or worker does, described once.
 
 use std::borrow::Cow;
+use std::future::Future;
 use std::sync::Arc;
 
 use indexmap::IndexMap;
@@ -241,6 +242,41 @@ pub enum Callback {
     Task(utopia_servers::Action),
     /// A queue job or worker hook callback.
     Worker(utopia_queue::hook::Action),
+}
+
+impl Callback {
+    /// An HTTP callback: `Callback::http(async |scope| { .. })`, as
+    /// [`utopia_http::action`] takes it.
+    pub fn http<F>(f: F) -> Self
+    where
+        F: for<'a> utopia_http::Callback<'a>
+            + AsyncFn(utopia_http::Scope<'_>) -> utopia_http::Result<()>
+            + Send
+            + Sync
+            + 'static,
+    {
+        Callback::Http(utopia_http::action(f))
+    }
+
+    /// A CLI callback: `Callback::task(|args| async move { .. })`, as
+    /// [`utopia_servers::action`] takes it.
+    pub fn task<F, Fut>(f: F) -> Self
+    where
+        F: Fn(utopia_servers::Arguments) -> Fut + Send + Sync + 'static,
+        Fut: Future<Output = Result<(), utopia_servers::Error>> + Send + 'static,
+    {
+        Callback::Task(utopia_servers::action(f))
+    }
+
+    /// A queue callback: `Callback::worker(|scope| async move { .. })`, as
+    /// [`utopia_queue::hook::action`] takes it.
+    pub fn worker<F, Fut>(f: F) -> Self
+    where
+        F: Fn(utopia_queue::hook::Scope) -> Fut + Send + Sync + 'static,
+        Fut: Future<Output = utopia_queue::Result<()>> + Send + 'static,
+    {
+        Callback::Worker(utopia_queue::hook::action(f))
+    }
 }
 
 impl std::fmt::Debug for Callback {
