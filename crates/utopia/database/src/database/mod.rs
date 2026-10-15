@@ -61,18 +61,22 @@ mod transactions;
 #[cfg(all(test, feature = "memory"))]
 #[allow(dead_code)]
 mod cache_engine_tests;
+#[cfg(all(test, feature = "memory"))]
+#[allow(dead_code)]
+pub(crate) mod cache_fixtures;
 #[cfg(test)]
 mod core_memory_tests;
 #[cfg(test)]
 mod core_tests;
-#[cfg(all(test, feature = "memory"))]
-#[allow(dead_code)]
-pub(crate) mod cache_fixtures;
+#[cfg(test)]
+pub(crate) mod fixtures;
+#[cfg(test)]
+mod hook_tests;
 #[cfg(all(test, feature = "memory"))]
 #[allow(dead_code)]
 pub(crate) mod observed;
 #[cfg(test)]
-pub(crate) mod fixtures;
+pub(crate) mod relationship_spy;
 #[cfg(test)]
 mod schema_tests;
 #[cfg(test)]
@@ -80,9 +84,9 @@ pub(crate) mod spy;
 #[cfg(test)]
 pub(crate) mod testing;
 #[cfg(all(test, feature = "memory"))]
-pub(crate) mod testing_memory;
-#[cfg(all(test, feature = "memory"))]
 pub(crate) mod testing_intercepted;
+#[cfg(all(test, feature = "memory"))]
+pub(crate) mod testing_memory;
 
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, MutexGuard, RwLock};

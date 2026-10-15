@@ -8,7 +8,9 @@ use crate::adapter::memory::Memory;
 use crate::cache::testing::{Leasable, over};
 use crate::database::Database;
 use crate::database::cache_fixtures::run;
-use crate::database::cache_fixtures::{collection, database_over, doc, ids, setup, string, strings, unavailable, with_id};
+use crate::database::cache_fixtures::{
+    collection, database_over, doc, ids, setup, string, strings, unavailable, with_id,
+};
 use crate::document::Document;
 use crate::error::{Kind, Result};
 use crate::filter::{Callback, Codec};

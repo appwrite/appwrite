@@ -15,7 +15,7 @@ use crate::database::testing::{Call, Reply, StubAdapter, block_on, uncached};
 use crate::database::{Hook, METADATA, collection_definition};
 use crate::operator::Operator;
 use crate::permission::Permission;
-use crate::relationship::{Relationship, RelationshipDeleteAction};
+use crate::relationship::Relationship;
 use crate::role::Role;
 use crate::value::{list, string};
 
@@ -661,79 +661,5 @@ fn authorize_refuses_an_invalid_relationship_value() {
         let parent = doc(vec![("$id", string("p1")), ("items", list([Value::Int(3)]))]);
         let error = hook.authorize(&collections[0], &parent, None, None).await.unwrap_err();
         assert_eq!(error.kind(), Kind::Relationship);
-    });
-}
-
-// ----- through the database's reads and writes -----
-
-/// A stub that stores created documents and answers reads of them, for the
-/// tests that relate documents through the database.
-fn storing(collections: Vec<Collection>) -> Arc<StubAdapter> {
-    let stored: Arc<std::sync::Mutex<Vec<(String, Document)>>> = Arc::default();
-    let definitions = definitions(collections);
-    let adapter = StubAdapter::new();
-    adapter.on(move |call| match call {
-        Call::GetDocument { collection: c, .. } if c.id() == METADATA => definitions(call),
-        Call::CreateDocument { collection, document } => {
-            stored.lock().unwrap().push((collection.id().to_owned(), document.clone()));
-            None
-        }
-        Call::GetDocument { collection, id, .. } => {
-            let stored = stored.lock().unwrap();
-            let found = stored.iter().find(|(c, d)| c == collection.id() && d.id() == id).map(|(_, d)| d.clone());
-            Some(Reply::Document(found.unwrap_or_default()))
-        }
-        _ => None,
-    });
-    adapter
-}
-
-#[test]
-
-fn creating_a_parent_creates_its_new_related_documents() {
-    block_on(async {
-        let collections = relationship_collections();
-        let adapter = storing(collections.clone());
-        let (_db, hook) = attached(adapter.clone());
-        let parent = doc(vec![
-            ("$id", string("p1")),
-            ("$permissions", list([string(Permission::read(&Role::any()))])),
-            ("items", list([Value::from(doc(vec![("$id", string("i1"))]))])),
-        ]);
-        let created = hook.after_document_create(&collections[0], parent).await.unwrap();
-        assert!(!created.has("items"));
-        let writes = adapter.calls_of("createDocument");
-        assert!(writes.iter().any(|c| matches!(c, Call::CreateDocument { document, .. } if document.id() == "i1"
-            && document.get("parent") == Some(&string("p1")))));
-    });
-}
-
-#[test]
-
-fn a_restricting_relationship_refuses_the_delete() {
-    block_on(async {
-        let mut collections = relationship_collections();
-        let restricted = collection(
-            "parents",
-            1,
-            vec![relation(
-                "items",
-                Relationship::one_to_many("items").two_way_key("parent").on_delete(RelationshipDeleteAction::Restrict),
-                RelationshipSide::Parent,
-            )],
-            any_permissions(),
-        );
-        collections[0] = restricted.clone();
-        let definitions = definitions(collections);
-        let adapter = StubAdapter::new();
-        adapter.on(move |call| match call {
-            Call::Find { .. } => Some(Reply::Documents(vec![doc(vec![("$id", string("i1"))])])),
-            _ => definitions(call),
-        });
-        let (_db, hook) = attached(adapter);
-        let error =
-            hook.before_document_delete(&restricted, &doc(vec![("$id", string("p1"))]), false).await.unwrap_err();
-        assert_eq!(error.kind(), Kind::Restricted);
-        assert_eq!(error.message(), "Cannot delete document because it has at least one related document.");
     });
 }
