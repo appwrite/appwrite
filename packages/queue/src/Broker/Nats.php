@@ -98,6 +98,16 @@ class Nats implements Synchronous, Consumer, Bounded
     private const int MAX_STREAM_NAME = 255;
     private const string METADATA_IDENTITY = 'utopia_queue_identity';
 
+    /**
+     * Work streams this process has seen owned by the queue publishing to them, as
+     * stream => identity. Static, not per instance: a pool builds a broker per
+     * connection and a recycled worker rebuilds the pool, and the point is one
+     * identity read per queue per process rather than per connection.
+     *
+     * @var array<string, string>
+     */
+    private static array $ownedStreams = [];
+
     // Consumer-metadata key marking a work consumer provisioned with one delivery past
     // maxDeliver, so a broker adopting it can tell that spare from a larger budget.
     private const string METADATA_SPARE_DELIVERY = 'utopia_queue_spare_delivery';
@@ -578,11 +588,9 @@ class Nats implements Synchronous, Consumer, Bounded
      * cheaply once the leader is back -- and, as on a broker that has provisioned,
      * it is otherwise left to republishing() to wait out.
      *
-     * Not provisioning changes two things on the publish path, both still enforced
-     * by the consumer's own provisioning. A publisher no longer writes its settings
-     * over a stream that exists, and no longer runs the stream-name collision guard:
-     * a queue whose name collides with an existing queue's stream publishes into it,
-     * and the guard refuses the colliding queue's consumer at its first receive.
+     * A publisher no longer writes its settings over a stream that exists; the
+     * consumer's own provisioning still does. The stream-name collision guard still
+     * runs before the first publish, as one read per queue per process (guardOnce()).
      *
      * @template T
      * @param \Closure(): T $publish
@@ -590,6 +598,8 @@ class Nats implements Synchronous, Consumer, Bounded
      */
     private function provisioningIfAbsent(Queue $queue, \Closure $publish): mixed
     {
+        $this->guardOnce($queue);
+
         try {
             return $publish();
         } catch (NoRespondersException $error) {
@@ -601,6 +611,29 @@ class Nats implements Synchronous, Consumer, Bounded
         $this->ensure($queue);
 
         return $publish();
+    }
+
+    /**
+     * Refuse to publish into a stream another queue owns, at the cost of one read.
+     *
+     * Publishing straight to the work subject would otherwise skip guardStreamName():
+     * a queue whose name collides with an existing queue's stream would land its
+     * messages there, and that queue's consumer would run them. So the guard still
+     * runs before the first publish -- once per process, as a read with no write --
+     * and only a stream confirmed to be this queue's is remembered. An absent stream
+     * is not: the publish then gets No Responders, and ensure() guards and creates it.
+     */
+    private function guardOnce(Queue $queue): void
+    {
+        $stream = $this->workStream($queue);
+        $identity = $this->identity($queue);
+        if ((self::$ownedStreams[$stream] ?? null) === $identity) {
+            return;
+        }
+
+        if ($this->guardStreamName($queue, $identity) === $identity) {
+            self::$ownedStreams[$stream] = $identity;
+        }
     }
 
     /**
@@ -1657,8 +1690,10 @@ class Nats implements Synchronous, Consumer, Bounded
      * backstop for the run-one-namespace-per-account contract, not a concurrency lock:
      * two colliding names provisioned at the very same instant can still both create
      * the (identical) stream before either sees the other.
+     *
+     * @return string|null The identity that owns the stream, or null when it is absent
      */
-    private function guardStreamName(Queue $queue, string $identity): void
+    private function guardStreamName(Queue $queue, string $identity): ?string
     {
         // The dead stream (work name + suffix) is the longest, so if it fits, both do.
         // Fixed-width names never overflow, but a long queue name can -- fail clearly
@@ -1680,6 +1715,8 @@ class Nats implements Synchronous, Consumer, Bounded
         if ($owner !== null && $owner !== $identity) {
             throw new \RuntimeException("NATS stream \"{$stream}\" already belongs to queue \"{$owner}\", not \"{$identity}\"; rename one queue.");
         }
+
+        return $owner;
     }
 
     /** Move messages that exhausted maxDeliver (per the advisory) onto the dead stream. */

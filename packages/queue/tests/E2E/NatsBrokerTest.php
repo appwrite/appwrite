@@ -668,6 +668,36 @@ final class NatsBrokerTest extends TestCase
         $this->broker->receive(new Queue("c_{$suffix}"), 1);
     }
 
+    /**
+     * The guard also holds on the publish path, without provisioning: a queue whose
+     * name collides with an existing queue's stream is refused before it publishes,
+     * so its messages never reach the other queue's consumer.
+     */
+    public function testACollidingQueueCannotPublishIntoAnotherQueuesStream(): void
+    {
+        $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
+        $suffix = substr(md5(uniqid('', true)), 0, 6);
+        $owner = new Nats(Connection::connect($url));
+        $other = new Nats(Connection::connect($url));
+
+        try {
+            $this->assertTrue($owner->publish(new Queue("p.{$suffix}"), ['ok' => 1]));
+
+            try {
+                $other->publish(new Queue("p_{$suffix}"), ['wrong' => 1]);
+                $this->fail('expected the colliding publish to be refused');
+            } catch (\RuntimeException $e) {
+                $this->assertStringContainsString('already belongs', $e->getMessage());
+            }
+
+            $stream = Connection::connect($url)->jetStream()->getStreamInfo('Q_P_' . strtoupper($suffix));
+            $this->assertSame(1, $stream->state->messages, "nothing from the colliding queue reached the owner's stream");
+        } finally {
+            $owner->close();
+            $other->close();
+        }
+    }
+
     public function testCollidingQueueNamesFailAcrossInstances(): void
     {
         // The guard reads the owning identity from the stream's metadata, so it holds
@@ -691,7 +721,8 @@ final class NatsBrokerTest extends TestCase
     }
 
     /**
-     * A publisher whose queue already exists sends no JetStream API request at all.
+     * A publisher whose queue already exists writes nothing to JetStream: it reads the
+     * stream's owner once per process for the collision guard, and that is all.
      *
      * Every pooled broker used to provision each queue on its first publish: the
      * identity read, both stream writes and the consumer write, all answered by the
@@ -710,70 +741,85 @@ final class NatsBrokerTest extends TestCase
         $this->assertSame([], $consumer->receive($queue, 1));
 
         $requests = new \ArrayObject();
-        $publisher = new Nats(Connection::connect(new ConnectionOptions(
-            servers: $url,
-            transportFactory: static fn (): Transport => new readonly class (new TcpTransport(), $requests) implements Transport {
-                /** @param \ArrayObject<int, string> $requests */
-                public function __construct(private TcpTransport $inner, private \ArrayObject $requests)
-                {
-                }
+        $spy = static fn (): Transport => new readonly class (new TcpTransport(), $requests) implements Transport {
+            /** @param \ArrayObject<int, string> $requests */
+            public function __construct(private TcpTransport $inner, private \ArrayObject $requests)
+            {
+            }
 
-                public function connect(string $host, int $port, float $timeout): void
-                {
-                    $this->inner->connect($host, $port, $timeout);
-                }
+            public function connect(string $host, int $port, float $timeout): void
+            {
+                $this->inner->connect($host, $port, $timeout);
+            }
 
-                public function write(string $data): int
-                {
-                    preg_match_all('/^H?PUB (\$JS\.API\.\S+)/m', $data, $api);
-                    foreach ($api[1] as $subject) {
-                        $this->requests[] = $subject;
+            public function write(string $data): int
+            {
+                foreach (explode("\r\n", $data) as $line) {
+                    $words = explode(' ', $line);
+                    if (\in_array($words[0], ['PUB', 'HPUB'], true) && str_starts_with($words[1] ?? '', '$JS.API.')) {
+                        $this->requests[] = $words[1];
                     }
-
-                    return $this->inner->write($data);
                 }
 
-                public function read(int $maxBytes, ?float $timeout = null): string
-                {
-                    return $this->inner->read($maxBytes, $timeout);
-                }
+                return $this->inner->write($data);
+            }
 
-                public function readLine(?float $timeout = null): string
-                {
-                    return $this->inner->readLine($timeout);
-                }
+            public function read(int $maxBytes, ?float $timeout = null): string
+            {
+                return $this->inner->read($maxBytes, $timeout);
+            }
 
-                /** @param array<string, mixed> $options */
-                public function upgradeTls(array $options): void
-                {
-                    $this->inner->upgradeTls($options);
-                }
+            public function readLine(?float $timeout = null): string
+            {
+                return $this->inner->readLine($timeout);
+            }
 
-                public function isConnected(): bool
-                {
-                    return $this->inner->isConnected();
-                }
+            /** @param array<string, mixed> $options */
+            public function upgradeTls(array $options): void
+            {
+                $this->inner->upgradeTls($options);
+            }
 
-                public function close(): void
-                {
-                    $this->inner->close();
-                }
-            },
-        )));
+            public function isConnected(): bool
+            {
+                return $this->inner->isConnected();
+            }
+
+            public function close(): void
+            {
+                $this->inner->close();
+            }
+        };
+        $publisher = new Nats(Connection::connect(new ConnectionOptions(servers: $url, transportFactory: $spy)));
 
         try {
             $this->assertTrue($publisher->publish($queue, ['task' => 'a']));
             $this->assertTrue($publisher->publishMany($queue, [['task' => 'b'], ['task' => 'c']]));
 
-            $this->assertSame([], $requests->getArrayCopy(), 'no JetStream API request for a queue that exists');
+            $this->assertSame(
+                ['$JS.API.STREAM.INFO.Q_' . strtoupper($queue->name)],
+                $requests->getArrayCopy(),
+                'one identity read for the collision guard, and no stream or consumer write',
+            );
+
+            // A pool builds a broker per connection; the next one in this process
+            // trusts the identity already confirmed and sends nothing at all.
+            $requests->exchangeArray([]);
+            $next = new Nats(Connection::connect(new ConnectionOptions(servers: $url, transportFactory: $spy)));
+            try {
+                $this->assertTrue($next->publish($queue, ['task' => 'd']));
+            } finally {
+                $next->close();
+            }
+            $this->assertSame([], $requests->getArrayCopy(), 'no JetStream API request from a later broker in the same process');
 
             $js = Connection::connect($url)->jetStream();
             $stream = $js->getStreamInfo('Q_' . strtoupper($queue->name));
-            $this->assertSame(3, $stream->state->messages, 'every payload stored');
+            $this->assertSame(4, $stream->state->messages, 'every payload stored');
             $this->assertSame(1_000, $stream->config->maxMsgs, "the consumer's settings stand");
 
-            $received = $consumer->receive($queue, 1, 3);
-            $this->assertSame(['a', 'b', 'c'], array_column(array_map(static fn (Message $message): array => $message->getPayload(), $received), 'task'));
+            $received = $consumer->receive($queue, 1, 4);
+            $this->assertSame(['a', 'b', 'c', 'd'], array_column(array_map(static fn (Message $message): array => $message->getPayload(), $received), 'task'));
         } finally {
             $publisher->close();
             $consumer->close();
