@@ -2195,7 +2195,8 @@
             "html",
             "scheduledAt",
             "replyToEmail",
-            "replyToName"
+            "replyToName",
+            "emails"
         ],
         "messaging.createFCMProvider": [
             "providerId",
@@ -2470,7 +2471,8 @@
             "scheduledAt",
             "attachments",
             "replyToEmail",
-            "replyToName"
+            "replyToName",
+            "emails"
         ],
         "messaging.updateFCMProvider": [
             "providerId",
@@ -6152,7 +6154,8 @@
             "html",
             "scheduledAt",
             "replyToEmail",
-            "replyToName"
+            "replyToName",
+            "emails"
         ],
         "messaging.createFCMProvider": [
             "providerId",
@@ -6427,7 +6430,8 @@
             "scheduledAt",
             "attachments",
             "replyToEmail",
-            "replyToName"
+            "replyToName",
+            "emails"
         ],
         "messaging.updateFCMProvider": [
             "providerId",
