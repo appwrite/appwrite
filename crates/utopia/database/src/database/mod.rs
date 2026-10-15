@@ -59,6 +59,8 @@ mod scopes;
 mod transactions;
 
 #[cfg(test)]
+mod core_tests;
+#[cfg(test)]
 pub(crate) mod testing;
 
 use std::collections::HashMap;
