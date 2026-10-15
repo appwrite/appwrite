@@ -269,7 +269,7 @@ val response = account.updateRecoveryOTP(
 ```
 {% /multicode %}
 
-Appwrite checks the new password against [password strength](/docs/products/auth/security#password-strength), [password dictionary](/docs/products/auth/security#password-dictionary), and [password history](/docs/products/auth/security#password-history). When the option to reject [breached passwords](/docs/products/auth/security#breached-passwords) is on, Appwrite checks that too. When the new password fails a check, the code stays valid. Ask the user for a different password and confirm again with the same code.
+Appwrite checks the new password against [password strength](/docs/products/auth/security#password-strength), [password dictionary](/docs/products/auth/security#password-dictionary), and [password history](/docs/products/auth/security#password-history). When the option to reject [breached passwords](/docs/products/auth/security#breached-passwords) is on, Appwrite checks that too. If the new password fails a check, the code stays valid. Ask the user for a different password and confirm again with the same code.
 
 A code that is wrong, has expired, or was already used fails with `user_invalid_token`. If the code was sent to an address with no active account, confirming fails with `user_not_found` instead, so show the same "invalid code" message for both errors. A successful reset doesn't create a session, so sign the user in with the new password afterwards.
 
