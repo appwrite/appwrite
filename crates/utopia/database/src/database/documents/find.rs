@@ -60,8 +60,20 @@ impl Database {
 
     /// What [`Database::find`] and [`Database::aggregate`] share
     /// (`fetch()`): `aggregate` is whether the queries must aggregate
-    /// (`aggregate()`) or must not (`find()`).
-    async fn fetch(
+    /// (`aggregate()`) or must not (`find()`). The bulk writes read their
+    /// pages through it under the definition they resolved.
+    pub(crate) fn fetch<'a>(
+        &'a self,
+        collection: &'a Collection,
+        queries: Vec<Query>,
+        for_permission: PermissionType,
+        aggregate: bool,
+    ) -> BoxFuture<'a, Result<Vec<Document>>> {
+        Box::pin(self.fetch_documents(collection, queries, for_permission, aggregate))
+    }
+
+    /// [`Database::fetch`]'s body.
+    async fn fetch_documents(
         &self,
         collection: &Collection,
         queries: Vec<Query>,
@@ -254,16 +266,18 @@ impl Database {
                     && !adapter.in_transaction()
                     && joins.is_empty()
                 {
-                    let field = || {
-                        self.query_cache_field(Some(collection), &query_cache_queries, "documents", for_permission)
-                    };
+                    let field =
+                        || self.query_cache_field(Some(collection), &query_cache_queries, "documents", for_permission);
                     let context = if skip_auth { authorization.skip_sync(field)? } else { field()? };
                     if let Some(context) = context {
                         let cache_queries = assoc(vec![
                             (
                                 "input",
                                 Value::Array(
-                                    query_cache_queries.iter().map(|q| super::super::keys::serialize_query(q)).collect(),
+                                    query_cache_queries
+                                        .iter()
+                                        .map(|q| super::super::keys::serialize_query(q))
+                                        .collect(),
                                 ),
                             ),
                             (
@@ -274,7 +288,9 @@ impl Database {
                             ("offset", Value::Int(offset.unwrap_or(0))),
                             (
                                 "orderAttributes",
-                                Value::Array(order_attributes.iter().map(|a| Value::Str(Str::from(a.as_str()))).collect()),
+                                Value::Array(
+                                    order_attributes.iter().map(|a| Value::Str(Str::from(a.as_str()))).collect(),
+                                ),
                             ),
                             (
                                 "orderTypes",
@@ -390,7 +406,8 @@ impl Database {
         let mut results = self.decorate_documents(Event::DocumentFind, collection, nodes).await?;
 
         if collection_id == METADATA {
-            results = results.into_iter().map(|node| self.to_collection(node).map(Document::from)).collect::<Result<_>>()?;
+            results =
+                results.into_iter().map(|node| self.to_collection(node).map(Document::from)).collect::<Result<_>>()?;
         }
 
         self.trigger(Event::DocumentFind, || Domain::DocumentFound {
@@ -452,8 +469,11 @@ impl Database {
         let count = self.inner.adapter.count(&collection, queries, max);
         let count = if skip_auth { self.authorization().skip(count).await? } else { count.await? };
 
-        self.trigger(Event::DocumentCount, || Domain::DocumentCounted { collection: collection.id().to_owned(), count })
-            .await?;
+        self.trigger(Event::DocumentCount, || Domain::DocumentCounted {
+            collection: collection.id().to_owned(),
+            count,
+        })
+        .await?;
 
         Ok(count)
     }
@@ -737,7 +757,9 @@ impl Database {
 
         let filters: Vec<Query> = queries
             .into_iter()
-            .filter(|q| !matches!(q.method(), Method::Limit | Method::Offset | Method::CursorAfter | Method::CursorBefore))
+            .filter(|q| {
+                !matches!(q.method(), Method::Limit | Method::Offset | Method::CursorAfter | Method::CursorBefore)
+            })
             .collect();
 
         let pages = Pages {
@@ -850,9 +872,7 @@ impl Pages {
         page.extend(self.queries.iter().cloned());
 
         let documents = self.database.find(&self.collection, page, self.for_permission).await?;
-        let pages = !documents.is_empty()
-            && documents.len() as i64 == size
-            && self.remaining.is_none_or(|r| r > size);
+        let pages = !documents.is_empty() && documents.len() as i64 == size && self.remaining.is_none_or(|r| r > size);
 
         if pages && let Some(last) = documents.last() {
             if self.check.is_none() {
@@ -952,7 +972,9 @@ pub(crate) fn alias_aggregates(mut queries: Vec<Query>) -> Result<Vec<Query>> {
             continue;
         }
         if taken.iter().any(|t| t == alias) {
-            return Err(Error::query(format!("Invalid query: Aggregate alias \"{alias}\" is given to more than one aggregate")));
+            return Err(Error::query(format!(
+                "Invalid query: Aggregate alias \"{alias}\" is given to more than one aggregate"
+            )));
         }
         taken.push(alias.to_owned());
     }

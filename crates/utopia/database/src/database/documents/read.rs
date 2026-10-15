@@ -404,16 +404,69 @@ impl Database {
         documents: Vec<Document>,
         selections: Vec<Query>,
     ) -> Result<Vec<Document>> {
-        let _ = (collection, documents, selections);
-        todo!("reads area: refetchDocuments")
+        if documents.is_empty() {
+            return Ok(documents);
+        }
+        let sequences = documents
+            .iter()
+            .map(|d| match d.sequence() {
+                Some(s) => Ok(super::find::sequence_text(s)),
+                None => Err(Error::database(format!("Cannot refetch document without a $sequence: {}", d.id()))),
+            })
+            .collect::<Result<Vec<String>>>()?;
+
+        let mut refetched_map: std::collections::HashMap<String, Document> = std::collections::HashMap::new();
+        let chunk_size = usize::try_from(self.max_query_values().max(1)).unwrap_or(1);
+        for chunk in sequences.chunks(chunk_size) {
+            let mut queries = vec![Query::equal(document::SEQUENCE, chunk.to_vec()), Query::limit(chunk.len() as i64)];
+            queries.extend(selections.iter().cloned());
+            let refetched = self
+                .authorization()
+                .skip(self.silent(self.skip_query_hooks(self.find(collection.id(), queries, PermissionType::Read))))
+                .await?;
+            for document in refetched {
+                let Some(sequence) = document.sequence() else {
+                    return Err(Error::database(format!(
+                        "Cannot index refetched document without a $sequence: {}",
+                        document.id()
+                    )));
+                };
+                refetched_map.insert(super::find::sequence_text(sequence), document);
+            }
+        }
+
+        Ok(documents
+            .into_iter()
+            .zip(sequences.iter())
+            .map(|(document, sequence)| refetched_map.get(sequence).cloned().unwrap_or(document))
+            .collect())
     }
 
     /// Strips the attributes `select_queries` do not select from each
     /// document, keeping the internal ones (`applySelectFiltersToDocuments()`,
     /// internal).
     pub fn apply_select_filters_to_documents(&self, documents: &mut [Document], select_queries: &[Query]) {
-        let _ = (documents, select_queries);
-        todo!("reads area: applySelectFiltersToDocuments")
+        if select_queries.is_empty() || documents.is_empty() {
+            return;
+        }
+        let mut keep: Vec<String> = Vec::new();
+        for query in select_queries {
+            for value in query.values().values() {
+                keep.push(crate::value::to_text(&crate::value::from_query(value)));
+            }
+        }
+        if keep.iter().any(|k| k == "*") {
+            return;
+        }
+        keep.extend(self.internal_attributes().iter().map(|a| a.key.clone()));
+        for document in documents.iter_mut() {
+            let keys: Vec<String> = document.keys().map(|k| super::super::filters::key_text(&k)).collect();
+            for key in keys {
+                if !keep.contains(&key) && !key.starts_with('$') {
+                    document.remove(&key);
+                }
+            }
+        }
     }
 }
 
