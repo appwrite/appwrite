@@ -59,6 +59,7 @@ mod macros;
 
 pub mod adapter;
 pub mod attribute;
+pub mod builder;
 pub mod capability;
 pub mod change;
 pub mod collection;
