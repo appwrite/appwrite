@@ -8,7 +8,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 
 final class DocumentsDBObjectFidelityTest extends Scope
 {
@@ -22,8 +22,8 @@ final class DocumentsDBObjectFidelityTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ];
-        $databaseId = ID::unique();
-        $collectionId = ID::unique();
+        $databaseId = Id::unique();
+        $collectionId = Id::unique();
 
         $database = $this->client->call(Client::METHOD_POST, '/documentsdb', $headers, [
             'databaseId' => $databaseId,
