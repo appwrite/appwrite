@@ -38,16 +38,6 @@ php_object!(DatabaseObj, "Database", |_d| json!({"$database": true}));
 pub struct AuthorizationObj(pub Arc<utopia_database::Authorization>);
 php_object!(AuthorizationObj, "Validator\\Authorization", |_a| json!({"$authorization": true}));
 
-/// A `Validator\Authorization\Input` held as an object (no public
-/// properties).
-#[derive(Clone)]
-pub struct InputObj(pub utopia_database::validator::authorization::Input);
-php_object!(
-    InputObj,
-    "Validator\\Authorization\\Input",
-    |_i| json!({"$value": "Validator\\Authorization\\Input", "fields": {}})
-);
-
 /// A profiler held as an object.
 #[derive(Clone)]
 pub struct ProfilerObj(pub Arc<utopia_database::Profiler>);
@@ -71,9 +61,10 @@ php_object!(RegistryObj, "Filter\\Registry", |r| {
 pub struct SnapshotObj(pub utopia_database::state::Snapshot);
 php_object!(SnapshotObj, "State\\Snapshot", |s| super::objects::snapshot(&s.0));
 
-/// A query builder held as an object (`{"$builder": true}`).
+/// A query builder held as an object (`{"$builder": true}`), with the
+/// database that runs its statements (PHP's executor), if any.
 #[derive(Clone)]
-pub struct BuilderObj(pub Arc<std::sync::Mutex<utopia_database::hook::SqlBuilder>>);
+pub struct BuilderObj(pub Arc<std::sync::Mutex<utopia_database::hook::SqlBuilder>>, pub Option<Database>);
 php_object!(BuilderObj, "Query\\Builder", |_b| json!({"$builder": true}));
 
 /// A schema builder held as an object (`{"$schema": true}`).
@@ -897,9 +888,10 @@ fn section_raw_statements<'a>(
         let cb = |k: &str| calls.required(k, a.raw(k));
         let _ = (&s, &cb);
         Ok(Some(match method {
-            "from" => object(BuilderObj(Arc::new(std::sync::Mutex::new(
-                db.from(&s("collection")?, &a.string_or("alias", "")?)?,
-            )))),
+            "from" => object(BuilderObj(
+                Arc::new(std::sync::Mutex::new(db.from(&s("collection")?, &a.string_or("alias", "")?)?)),
+                Some(db.clone()),
+            )),
             "schema" => object(SchemaObj(Arc::new(std::sync::Mutex::new(db.schema()?)))),
             "query" => ok(db.query(&statement(a, "query")?).await)?,
             "mutate" => ok(db.mutate(&statement(a, "query")?).await)?,

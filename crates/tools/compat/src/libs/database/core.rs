@@ -123,7 +123,7 @@ pub async fn authorization(
         Ok(match method {
             "getDescription" => auth.description().into_obj(),
             "isValid" => match a.obj("value")? {
-                Some(obj) => match obj.downcast_ref::<database::InputObj>() {
+                Some(obj) => match obj.downcast_ref::<objects::services::InputObj>() {
                     Some(input) => auth.is_valid(&input.0).into_obj(),
                     None => utopia_validators::Validator::is_valid(&**auth, &Json::Null).into_obj(),
                 },
