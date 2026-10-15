@@ -1,14 +1,6 @@
 {
-  "updated": "2026-10-15T17:16:00Z",
+  "updated": "2026-10-15T18:18:00Z",
   "tasks": [
-    {
-      "id": "db8-php-enter",
-      "title": "Database 8: PHP harness registry bug and flaky recordings",
-      "area": "Database 8",
-      "status": "progress",
-      "note": "Core::enter() wipes a case's formats and filters before every op when the case has no db.open (about 230 sqlite Unit differences), and some recordings hold PHP load flakes (\"transaction was lost\", \"Failed to persist metadata\"). Fix enter(), re-record both.",
-      "updated": "2026-10-15T17:16:00Z"
-    },
     {
       "id": "db8-mirror",
       "title": "Database 8: Mirror in Rust",
@@ -22,8 +14,8 @@
       "title": "Database 8: the remaining PHP-vs-Rust differences",
       "area": "Database 8",
       "status": "progress",
-      "note": "PHP object identity (createDocument mutating its input), TypeErrors on garbage adapter input, enum objects in documents, and recorder artifacts (unmasked connection ids, STAT4, REGEXP).",
-      "updated": "2026-10-15T17:16:00Z"
+      "note": "PHP object identity (createDocument mutating its input), TypeErrors on garbage adapter input, enum objects in documents, and recorder artifacts (unmasked connection ids, STAT4, REGEXP). Plus two cases the PHP fix surfaced: Query\\Method::Relationship missing in Rust, and the query-cache filter-signature hash.",
+      "updated": "2026-10-15T18:18:00Z"
     },
     {
       "id": "db8-green",
@@ -96,6 +88,14 @@
       "status": "todo",
       "note": "Delete .github/ci/focus.json and mark the PR ready for review.",
       "updated": "2026-10-15T16:30:00Z"
+    },
+    {
+      "id": "db8-php-enter",
+      "title": "Database 8: PHP harness registry bug and flaky recordings",
+      "area": "Database 8",
+      "status": "done",
+      "note": "Core::enter() keeps a case's registrations, and recordings that held PHP load flakes are re-recorded: 60 cases (42 unit, 18 e2e). Nine cases keep a \"transaction was lost\" error because it is the behaviour they test.",
+      "updated": "2026-10-15T18:18:00Z"
     },
     {
       "id": "db8-push",
