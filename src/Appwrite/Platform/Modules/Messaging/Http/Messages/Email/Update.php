@@ -63,7 +63,6 @@ class Update extends Action
             ->param('topics', null, fn (Database $dbForProject) => new Nullable(new ArrayList(new UID($dbForProject->getMaxUidLength()))), 'List of Topic IDs.', true, ['dbForProject'])
             ->param('users', null, fn (Database $dbForProject) => new Nullable(new ArrayList(new UID($dbForProject->getMaxUidLength()))), 'List of User IDs.', true, ['dbForProject'])
             ->param('targets', null, fn (Database $dbForProject) => new Nullable(new ArrayList(new UID($dbForProject->getMaxUidLength()))), 'List of Targets IDs.', true, ['dbForProject'])
-            ->param('emails', null, new Nullable(new ArrayList(new Email())), 'List of email addresses to send the message to. Use this to deliver to recipients that are not backed by an Appwrite user, target, or topic.', true)
             ->param('subject', null, new Nullable(new Text(998)), 'Email Subject.', true)
             ->param('content', null, new Nullable(new Text(64230)), 'Email Content.', true)
             ->param('draft', null, new Nullable(new Boolean()), 'Is message a draft', true)
@@ -74,6 +73,7 @@ class Update extends Action
             ->param('attachments', null, new Nullable(new ArrayList(new CompoundUID())), 'Array of compound ID strings of bucket IDs and file IDs to be attached to the email. They should be formatted as <BUCKET_ID>:<FILE_ID>.', true)
             ->param('replyToEmail', null, new Nullable(new Email(allowEmpty: true)), 'Email address to reply to. Pass an empty string to restore the provider or sender default.', true)
             ->param('replyToName', null, new Nullable(new Text(128, 0)), 'Name of the reply to recipient. Pass an empty string to restore the provider or sender default.', true)
+            ->param('emails', null, new Nullable(new ArrayList(new Email())), 'List of email addresses to send the message to. Use this to deliver to recipients that are not backed by an Appwrite user, target, or topic.', true)
             ->inject('queueForEvents')
             ->inject('dbForProject')
             ->inject('dbForPlatform')
@@ -83,7 +83,7 @@ class Update extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $messageId, ?array $topics, ?array $users, ?array $targets, ?array $emails, ?string $subject, ?string $content, ?bool $draft, ?bool $html, ?array $cc, ?array $bcc, ?string $scheduledAt, ?array $attachments, ?string $replyToEmail, ?string $replyToName, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, MessagingPublisher $publisherForMessaging, Response $response)
+    public function action(string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $subject, ?string $content, ?bool $draft, ?bool $html, ?array $cc, ?array $bcc, ?string $scheduledAt, ?array $attachments, ?string $replyToEmail, ?string $replyToName, ?array $emails, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, MessagingPublisher $publisherForMessaging, Response $response)
     {
         $message = $dbForProject->getDocument('messages', $messageId);
 
