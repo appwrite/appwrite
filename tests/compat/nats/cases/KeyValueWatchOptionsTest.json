@@ -384,21 +384,15 @@
           "expect": null
         },
         {
-          "op": "conn.process_message",
+          "op": "conn.wait",
           "args": {
             "conn": {
               "$ref": "c"
             },
-            "timeout": 0.5,
-            "quiet": true
+            "count": 0,
+            "timeout": 0.5
           },
-          "mask": {
-            "paths": [
-              ""
-            ],
-            "reason": "whether something arrived during the pause depends on timing"
-          },
-          "expect": "<masked>"
+          "expect": null
         },
         {
           "op": "conn.unsubscribe",
