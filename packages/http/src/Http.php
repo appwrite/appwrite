@@ -8,6 +8,8 @@ use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Telemetry\Adapter\None as NoTelemetry;
 use Utopia\Telemetry\Histogram;
 use Utopia\Telemetry\UpDownCounter;
+use Utopia\Validator\Boolean;
+use Utopia\Validator\Nullable;
 use Utopia\Validator\Validator;
 
 class Http
@@ -759,6 +761,10 @@ class Http
                 }
             }
 
+            if ($paramExists) {
+                $value = $this->coerce($param, $value);
+            }
+
             $hook->setParamValue($key, $value);
             $arguments[$param['order']] = $value;
         }
@@ -902,6 +908,32 @@ class Http
         if (!$validator->isValid($value)) {
             throw new Exception('Invalid `' . $key . '` param: ' . $validator->getDescription(), 400);
         }
+    }
+
+    /**
+     * Convert a boolean string accepted by a loose Boolean validator into a real bool.
+     *
+     * @param  array<string, mixed>  $param
+     */
+    private function coerce(array $param, mixed $value): mixed
+    {
+        $boolean = match ($value) {
+            'true', '1' => true,
+            'false', '0' => false,
+            default => null,
+        };
+
+        if ($boolean === null) {
+            return $value;
+        }
+
+        $validator = $this->resolveValidator($param);
+
+        while ($validator instanceof Nullable) {
+            $validator = $validator->getValidator();
+        }
+
+        return $validator instanceof Boolean ? $boolean : $value;
     }
 
     /**

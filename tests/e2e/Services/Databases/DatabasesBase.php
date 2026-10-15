@@ -5077,6 +5077,28 @@ trait DatabasesBase
         );
     }
 
+    public function testListDocumentsTotalAcceptsBooleanStrings(): void
+    {
+        $data = $this->setupDocuments();
+        $documentIds = $data['documentIds'];
+
+        foreach (['false' => 0, '0' => 0, 'true' => \count($documentIds), '1' => \count($documentIds)] as $total => $expected) {
+            $documents = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($data['databaseId'], $data['moviesId']), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'queries' => [
+                    Query::equal('$id', $documentIds)->toString(),
+                ],
+                'total' => (string) $total,
+            ]);
+
+            $this->assertSame(200, $documents['headers']['status-code']);
+            $this->assertCount(\count($documentIds), $documents['body'][$this->getRecordResource()]);
+            $this->assertSame($expected, $documents['body']['total'], 'total=' . $total . ' must yield a total of ' . $expected);
+        }
+    }
+
     public function testListDocumentsWithCache(): void
     {
         if (!$this->getSupportForAttributes()) {
