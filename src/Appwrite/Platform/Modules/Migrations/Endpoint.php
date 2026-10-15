@@ -5,6 +5,8 @@ namespace Appwrite\Platform\Modules\Migrations;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\PublicHostname;
 use InvalidArgumentException;
+use Utopia\Client\Destinations;
+use Utopia\Client\Destinations\Anywhere;
 use Utopia\Client\Destinations\IPRange;
 use Utopia\Client\Destinations\PublicInternet;
 use Utopia\DNS\Lookup;
@@ -18,6 +20,8 @@ use Utopia\Validator\URL;
 class Endpoint
 {
     private URL $url;
+
+    private PublicInternet $policy;
 
     private PublicHostname $hostname;
 
@@ -45,7 +49,8 @@ class Endpoint
         }
 
         $this->url = new URL(['http', 'https']);
-        $this->hostname = new PublicHostname(new PublicInternet(...$ranges), $lookup);
+        $this->policy = new PublicInternet(...$ranges);
+        $this->hostname = new PublicHostname($this->policy, $lookup);
     }
 
     /**
@@ -53,44 +58,29 @@ class Endpoint
      */
     public function validate(string $url): void
     {
-        $this->resolve($url);
+        $this->destinations($url);
     }
 
     /**
-     * The CURLOPT_RESOLVE entries that pin a request to the address its host was checked
-     * against. None for an IP literal, which curl never resolves, or a host allowed by name.
-     *
-     * @return list<string>
+     * Where requests to the endpoint may connect. The source's client checks every
+     * connection and redirect hop against them, on the address it actually reached. A host
+     * allowed by name may connect anywhere, since the operator trusts it.
      *
      * @throws Exception When the URL is not an allowed endpoint
      */
-    public function resolve(string $url): array
+    public function destinations(string $url): Destinations
     {
         try {
-            $address = $this->address($url);
+            return $this->check($url);
         } catch (InvalidArgumentException $exception) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid `endpoint`: ' . $exception->getMessage());
         }
-
-        if ($address === null) {
-            return [];
-        }
-
-        $host = (string) \parse_url($url, PHP_URL_HOST);
-        $port = \parse_url($url, PHP_URL_PORT) ?? (\strtolower((string) \parse_url($url, PHP_URL_SCHEME)) === 'https' ? 443 : 80);
-        $address = \str_contains($address, ':') ? "[{$address}]" : $address;
-
-        // curl drops a trailing dot before it looks the host up, so pin both spellings
-        return \array_values(\array_map(
-            fn (string $name): string => "{$name}:{$port}:{$address}",
-            \array_unique([$host, \rtrim($host, '.')]),
-        ));
     }
 
     /**
      * @throws InvalidArgumentException When the URL is not an allowed endpoint
      */
-    private function address(string $url): ?string
+    private function check(string $url): Destinations
     {
         if (!$this->url->isValid($url)) {
             throw new InvalidArgumentException($this->url->getDescription());
@@ -103,12 +93,12 @@ class Endpoint
         $host = (string) \parse_url($url, PHP_URL_HOST);
 
         if (\in_array($this->normalize($host), $this->hostnames, true)) {
-            return null;
+            return new Anywhere();
         }
 
-        $address = $this->hostname->address($host);
+        $this->hostname->address($host);
 
-        return \filter_var(\trim($host, '[]'), FILTER_VALIDATE_IP) === false ? $address : null;
+        return $this->policy;
     }
 
     /**

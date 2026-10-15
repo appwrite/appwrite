@@ -325,7 +325,7 @@ class Migrations extends Action
         };
 
         if ($migrationSource instanceof SourceAppwrite && $credentials['endpoint'] !== $this->getInternalEndpoint()) {
-            $migrationSource->setResolver($this->migrationEndpoint->resolve(...));
+            $migrationSource->setDestinations($this->migrationEndpoint->destinations($credentials['endpoint']));
         }
 
         $resources = $migration->getAttribute('resources', []);

@@ -9,33 +9,21 @@ use Appwrite\Platform\Modules\Migrations\Endpoint;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Tests\Unit\Network\FixedLookup;
+use Utopia\Client\Destinations\Anywhere;
 
 final class EndpointTest extends TestCase
 {
-    public function testPinsAPublicHostToTheAddressItWasCheckedAgainst(): void
+    public function testPublicHostIsConfinedToPublicAddresses(): void
     {
-        $endpoint = $this->endpoint();
+        foreach (['https://example.com/v1', 'http://example.com./v1/users?limit=1', 'https://[2606:4700:4700::1111]/v1', 'https://1.1.1.1/v1'] as $url) {
+            $destinations = $this->endpoint()->destinations($url);
 
-        $this->assertSame(['example.com:443:93.184.215.14'], $endpoint->resolve('https://example.com/v1'));
-        $this->assertSame(['example.com:80:93.184.215.14'], $endpoint->resolve('http://example.com/v1/users?limit=1'));
-        $this->assertSame(['example.com:8443:93.184.215.14'], $endpoint->resolve('https://example.com:8443/v1'));
-        $this->assertSame(['ipv6.example.com:443:[2606:4700:4700::1111]'], $endpoint->resolve('https://ipv6.example.com/v1'));
-    }
-
-    public function testPinsBothSpellingsOfAHostWithATrailingDot(): void
-    {
-        $this->assertSame(
-            ['example.com.:443:93.184.215.14', 'example.com:443:93.184.215.14'],
-            $this->endpoint()->resolve('https://example.com./v1'),
-        );
-    }
-
-    public function testDoesNotPinAPublicAddress(): void
-    {
-        $endpoint = $this->endpoint();
-
-        $this->assertSame([], $endpoint->resolve('https://1.1.1.1/v1'));
-        $this->assertSame([], $endpoint->resolve('https://[2606:4700:4700::1111]/v1'));
+            $this->assertTrue($destinations->allows('93.184.215.14'), $url);
+            $this->assertFalse($destinations->allows('10.0.0.1'), $url);
+            $this->assertFalse($destinations->allows('169.254.169.254'), $url);
+            $this->assertFalse($destinations->allows('127.0.0.1'), $url);
+            $this->assertFalse($destinations->permitsProxy(), $url);
+        }
     }
 
     /**
@@ -62,7 +50,7 @@ final class EndpointTest extends TestCase
     {
         $endpoint = $this->endpoint('', 'appwrite');
 
-        foreach ([$endpoint->resolve(...), $endpoint->validate(...)] as $check) {
+        foreach ([$endpoint->destinations(...), $endpoint->validate(...)] as $check) {
             try {
                 $check($url);
                 $this->fail("Accepted {$url}");
@@ -78,19 +66,24 @@ final class EndpointTest extends TestCase
     {
         $endpoint = $this->endpoint('', '172.16.238.0/24');
 
-        $this->assertSame(['appwrite.test:80:172.16.238.10'], $endpoint->resolve('http://appwrite.test/v1'));
-        $this->assertSame([], $endpoint->resolve('http://172.16.238.10/v1'));
+        foreach (['http://appwrite.test/v1', 'http://172.16.238.10/v1'] as $url) {
+            $destinations = $endpoint->destinations($url);
+
+            $this->assertTrue($destinations->allows('172.16.238.99'), $url);
+            $this->assertFalse($destinations->allows('127.0.0.1'), $url);
+        }
 
         $this->expectException(Exception::class);
-        $endpoint->resolve('http://127.0.0.1/v1');
+        $endpoint->validate('http://127.0.0.1/v1');
     }
 
-    public function testHostAllowedByNameIsNotPinned(): void
+    public function testHostAllowedByNameMayConnectAnywhere(): void
     {
         $endpoint = $this->endpoint('', ' Appwrite. ');
 
-        $this->assertSame([], $endpoint->resolve('http://appwrite/v1'));
-        $this->assertSame([], $endpoint->resolve('http://APPWRITE./v1'));
+        $this->assertInstanceOf(Anywhere::class, $endpoint->destinations('http://appwrite/v1'));
+        $this->assertInstanceOf(Anywhere::class, $endpoint->destinations('http://APPWRITE./v1'));
+        $this->assertNotInstanceOf(Anywhere::class, $endpoint->destinations('https://example.com/v1'));
         $endpoint->validate('http://appwrite/v1');
     }
 
@@ -121,10 +114,15 @@ final class EndpointTest extends TestCase
     {
         $endpoint = $this->endpoint('172.16.238.0/24, 127.0.0.1', 'appwrite, 10.0.0.0/8');
 
-        $this->assertSame(['appwrite.test:80:172.16.238.10'], $endpoint->resolve('http://appwrite.test/v1'));
-        $this->assertSame([], $endpoint->resolve('http://127.0.0.1/v1'));
-        $this->assertSame([], $endpoint->resolve('http://appwrite/v1'));
-        $this->assertSame(['rebind.example.com:443:93.184.215.14'], $endpoint->resolve('https://rebind.example.com/v1'));
+        $this->assertInstanceOf(Anywhere::class, $endpoint->destinations('http://appwrite/v1'));
+
+        $destinations = $endpoint->destinations('https://rebind.example.com/v1');
+        foreach (['172.16.238.10', '127.0.0.1', '10.1.2.3', '93.184.215.14'] as $address) {
+            $this->assertTrue($destinations->allows($address), $address);
+        }
+        foreach (['169.254.169.254', '::1', '192.168.1.1'] as $address) {
+            $this->assertFalse($destinations->allows($address), $address);
+        }
 
         foreach (['http://169.254.169.254/v1', 'http://[::1]/v1', 'http://192.168.1.1/v1'] as $url) {
             try {
