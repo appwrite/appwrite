@@ -264,7 +264,7 @@ pub fn numeric_bounds(b: &NumericBounds) -> Json {
 }
 
 fn collection_doc(c: &utopia_database::Collection) -> Json {
-    codec::encode_document(&c.to_document())
+    codec::encode_document(&c.to_document().with_class(utopia_database::collection::CLASS))
 }
 
 /// A typed event (`Event\Domain` and its subclasses) on the wire.
