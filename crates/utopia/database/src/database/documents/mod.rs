@@ -26,6 +26,8 @@ mod find_tests;
 mod read_memory_tests;
 #[cfg(test)]
 mod queries_hook_tests;
+#[cfg(test)]
+mod resolved_read_tests;
 pub(crate) mod joins;
 mod numeric;
 mod read;

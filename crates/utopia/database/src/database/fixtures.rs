@@ -127,6 +127,140 @@ pub(crate) fn doc(pairs: Vec<(&str, Value)>) -> Document {
     Document::from_pairs(pairs).unwrap()
 }
 
+/// What an [`ObservedCache`] runs before each operation: the PHP name of
+/// the operation and its key; an error fails the operation.
+pub(crate) type CacheInterceptor = Arc<dyn Fn(&str, &str) -> std::result::Result<(), String> + Send + Sync>;
+
+/// A cache adapter over [`crate::cache::testing::Leasable`] counting its
+/// operations and the loads of each key, and letting a test fail any of
+/// them (`Tests\Unit\Cache\CountingCache`, and the anonymous failing
+/// caches of PHP's tests).
+pub(crate) struct ObservedCache {
+    inner: Arc<crate::cache::testing::Leasable>,
+    operations: Mutex<usize>,
+    loads: Mutex<Vec<(String, usize)>>,
+    interceptor: Mutex<Option<CacheInterceptor>>,
+}
+
+impl ObservedCache {
+    /// A counting cache over a new leasable cache, and the cache object.
+    pub(crate) fn new() -> (Arc<Self>, Arc<Cache>) {
+        let adapter = Arc::new(ObservedCache {
+            inner: crate::cache::testing::Leasable::new(),
+            operations: Mutex::new(0),
+            loads: Mutex::new(Vec::new()),
+            interceptor: Mutex::new(None),
+        });
+        (adapter.clone(), Arc::new(Cache::from_dyn(adapter)))
+    }
+
+    /// Runs `interceptor` before every operation from now on.
+    pub(crate) fn intercept(
+        &self,
+        interceptor: impl Fn(&str, &str) -> std::result::Result<(), String> + Send + Sync + 'static,
+    ) {
+        *self.interceptor.lock().unwrap() = Some(Arc::new(interceptor));
+    }
+
+    /// `getOperations()`.
+    pub(crate) fn operations(&self) -> usize {
+        *self.operations.lock().unwrap()
+    }
+
+    /// How many times `key` was loaded (`getLoads()[$key]`).
+    pub(crate) fn loads(&self, key: &str) -> usize {
+        self.loads.lock().unwrap().iter().find(|(k, _)| k == key).map_or(0, |(_, n)| *n)
+    }
+
+    /// `resetOperations()`.
+    pub(crate) fn reset(&self) {
+        *self.operations.lock().unwrap() = 0;
+        self.loads.lock().unwrap().clear();
+    }
+
+    fn count(&self, operation: &str, key: &str) -> utopia_cache::Result<()> {
+        *self.operations.lock().unwrap() += 1;
+        let interceptor = self.interceptor.lock().unwrap().clone();
+        match interceptor {
+            Some(i) => i(operation, key).map_err(utopia_cache::Error::Runtime),
+            None => Ok(()),
+        }
+    }
+}
+
+impl utopia_cache::Adapter for ObservedCache {
+    async fn load(&self, key: &str, ttl: i64, hash: &str) -> utopia_cache::Result<Option<php_std::Value>> {
+        {
+            let mut loads = self.loads.lock().unwrap();
+            match loads.iter_mut().find(|(k, _)| k == key) {
+                Some(entry) => entry.1 += 1,
+                None => loads.push((key.to_owned(), 1)),
+            }
+        }
+        self.count("load", key)?;
+        self.inner.load(key, ttl, hash).await
+    }
+
+    async fn save(&self, key: &str, data: &php_std::Value, hash: &str, ttl: i64) -> utopia_cache::Result<bool> {
+        self.count("save", key)?;
+        self.inner.save(key, data, hash, ttl).await
+    }
+
+    async fn touch(&self, key: &str, hash: &str) -> utopia_cache::Result<bool> {
+        self.count("touch", key)?;
+        self.inner.touch(key, hash).await
+    }
+
+    async fn list(&self, key: &str) -> utopia_cache::Result<Vec<String>> {
+        self.count("list", key)?;
+        self.inner.list(key).await
+    }
+
+    async fn purge(&self, key: &str, hash: &str) -> utopia_cache::Result<bool> {
+        self.count("purge", key)?;
+        self.inner.purge(key, hash).await
+    }
+
+    async fn flush(&self) -> utopia_cache::Result<bool> {
+        self.count("flush", "")?;
+        self.inner.flush().await
+    }
+
+    async fn ping(&self) -> utopia_cache::Result<bool> {
+        self.count("ping", "")?;
+        self.inner.ping().await
+    }
+
+    async fn size(&self) -> utopia_cache::Result<i64> {
+        self.count("getSize", "")?;
+        self.inner.size().await
+    }
+
+    fn name(&self, key: Option<&str>) -> &str {
+        self.inner.name(key)
+    }
+
+    fn leasable(&self) -> bool {
+        true
+    }
+
+    async fn generation(&self, key: &str) -> utopia_cache::Result<String> {
+        self.count("getGeneration", key)?;
+        self.inner.generation(key).await
+    }
+
+    async fn save_with_lease(
+        &self,
+        key: &str,
+        data: &php_std::Value,
+        hash: &str,
+        generation: &str,
+    ) -> utopia_cache::Result<bool> {
+        self.count("saveWithLease", key)?;
+        self.inner.save_with_lease(key, data, hash, generation).await
+    }
+}
+
 /// `RecordingLifecycle`: every event it handles, in order.
 #[derive(Default)]
 pub(crate) struct Recorder(Mutex<Vec<Domain>>);

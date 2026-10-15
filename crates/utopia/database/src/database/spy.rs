@@ -29,6 +29,7 @@ use crate::document::Document;
 use crate::error::{Error, Result};
 use crate::hook::{Tenancy, Transform, Write};
 use crate::index::Index;
+use crate::permission::PermissionType;
 use crate::profiler::Profiler;
 use crate::query::Query;
 use crate::schema;
@@ -45,15 +46,57 @@ pub(crate) enum Stage {
     After,
 }
 
-/// What a [`Spy`] runs around each engine call: the PHP name of the
-/// method, and the stage.
-pub(crate) type Interceptor = Arc<dyn Fn(&str, Stage) -> Result<()> + Send + Sync>;
+/// An engine call a [`Spy`] intercepts.
+#[derive(Clone, Copy)]
+pub(crate) struct Seen<'a> {
+    /// The PHP name of the method.
+    pub(crate) method: &'a str,
+    /// Before or after the inner call.
+    pub(crate) stage: Stage,
+    /// The collection definition the call is given, if any.
+    pub(crate) collection: Option<&'a Collection>,
+    /// The collection name the call is given, if any (the definition's id
+    /// when it is given one).
+    pub(crate) name: Option<&'a str>,
+    /// The document id the call is given, if any.
+    pub(crate) id: Option<&'a str>,
+    /// Whether a `getDocument()` locks the row.
+    pub(crate) for_update: bool,
+    /// The permission a `find()` reads under.
+    pub(crate) for_permission: Option<PermissionType>,
+}
+
+impl<'a> Seen<'a> {
+    fn of(method: &'a str) -> Self {
+        Seen { method, stage: Stage::Before, collection: None, name: None, id: None, for_update: false, for_permission: None }
+    }
+
+    fn on(mut self, collection: &'a Collection) -> Self {
+        self.collection = Some(collection);
+        self.name = Some(collection.id());
+        self
+    }
+
+    fn named(mut self, name: &'a str) -> Self {
+        self.name = Some(name);
+        self
+    }
+
+    fn id(mut self, id: &'a str) -> Self {
+        self.id = Some(id);
+        self
+    }
+}
+
+/// What a [`Spy`] runs around each engine call.
+pub(crate) type Interceptor = Arc<dyn Fn(&Seen<'_>) -> Result<()> + Send + Sync>;
 
 /// An adapter recording and intercepting another's engine calls. See the
 /// [module docs](self).
 pub(crate) struct Spy {
     inner: Arc<dyn Adapter>,
     interceptor: Mutex<Option<Interceptor>>,
+    pending: Mutex<Vec<(&'static str, futures_util::future::BoxFuture<'static, ()>)>>,
     calls: Mutex<Vec<String>>,
     added: Mutex<Vec<Capability>>,
     removed: Mutex<Vec<Capability>>,
@@ -65,6 +108,7 @@ impl Spy {
         Arc::new(Spy {
             inner,
             interceptor: Mutex::new(None),
+            pending: Mutex::new(Vec::new()),
             calls: Mutex::new(Vec::new()),
             added: Mutex::new(Vec::new()),
             removed: Mutex::new(Vec::new()),
@@ -82,8 +126,19 @@ impl Spy {
     }
 
     /// Runs `interceptor` around every engine call from now on.
-    pub(crate) fn intercept(&self, interceptor: impl Fn(&str, Stage) -> Result<()> + Send + Sync + 'static) {
+    pub(crate) fn intercept(&self, interceptor: impl Fn(&Seen<'_>) -> Result<()> + Send + Sync + 'static) {
         *self.interceptor.lock().unwrap() = Some(Arc::new(interceptor));
+    }
+
+    /// Runs `work` once, before the next call of `method` reaches the
+    /// inner adapter (what PHP's tests do in an overriding method).
+    pub(crate) fn before_next(&self, method: &'static str, work: futures_util::future::BoxFuture<'static, ()>) {
+        self.pending.lock().unwrap().push((method, work));
+    }
+
+    /// Whether work queued with [`Spy::before_next`] is still waiting.
+    pub(crate) fn pending(&self) -> bool {
+        !self.pending.lock().unwrap().is_empty()
     }
 
     /// Stops intercepting.
@@ -120,32 +175,41 @@ impl Spy {
         self.calls.lock().unwrap().clear();
     }
 
-    fn enter(&self, method: &str) -> Result<()> {
-        self.calls.lock().unwrap().push(method.to_owned());
-        self.run(method, Stage::Before)
+    async fn enter(&self, seen: Seen<'_>) -> Result<()> {
+        let work = {
+            let mut pending = self.pending.lock().unwrap();
+            pending.iter().position(|(m, _)| *m == seen.method).map(|i| pending.remove(i).1)
+        };
+        if let Some(work) = work {
+            work.await;
+        }
+        self.calls.lock().unwrap().push(seen.method.to_owned());
+        self.run(seen)
     }
 
-    fn run(&self, method: &str, stage: Stage) -> Result<()> {
+    fn run(&self, seen: Seen<'_>) -> Result<()> {
         let interceptor = self.interceptor.lock().unwrap().clone();
         match interceptor {
-            Some(i) => i(method, stage),
+            Some(i) => i(&seen),
             None => Ok(()),
         }
     }
 
-    fn leave<T>(&self, method: &str, result: Result<T>) -> Result<T> {
+    fn leave<T>(&self, mut seen: Seen<'_>, result: Result<T>) -> Result<T> {
         let value = result?;
-        self.run(method, Stage::After)?;
+        seen.stage = Stage::After;
+        self.run(seen)?;
         Ok(value)
     }
 }
 
 /// An engine call: recorded, intercepted before and after.
 macro_rules! call {
-    ($self:ident, $method:literal, $call:expr) => {{
-        $self.enter($method)?;
+    ($self:ident, $seen:expr, $call:expr) => {{
+        let seen = $seen;
+        $self.enter(seen).await?;
         let result = $call.await;
-        $self.leave($method, result)
+        $self.leave(seen, result)
     }};
 }
 
@@ -338,15 +402,15 @@ impl Adapter for Spy {
     }
 
     async fn start_transaction(&self) -> Result<bool> {
-        call!(self, "startTransaction", self.inner.start_transaction())
+        call!(self, Seen::of("startTransaction"), self.inner.start_transaction())
     }
 
     async fn commit_transaction(&self) -> Result<bool> {
-        call!(self, "commitTransaction", self.inner.commit_transaction())
+        call!(self, Seen::of("commitTransaction"), self.inner.commit_transaction())
     }
 
     async fn rollback_transaction(&self) -> Result<bool> {
-        call!(self, "rollbackTransaction", self.inner.rollback_transaction())
+        call!(self, Seen::of("rollbackTransaction"), self.inner.rollback_transaction())
     }
 
     async fn transaction_strategy(&self) -> Result<TransactionStrategy> {
@@ -370,47 +434,47 @@ impl Adapter for Spy {
     }
 
     async fn create(&self, name: &str) -> Result<bool> {
-        call!(self, "create", self.inner.create(name))
+        call!(self, Seen::of("create"), self.inner.create(name))
     }
 
     async fn update(&self, name: &str, new: &str) -> Result<bool> {
-        call!(self, "update", self.inner.update(name, new))
+        call!(self, Seen::of("update"), self.inner.update(name, new))
     }
 
     async fn exists(&self, database: &str) -> Result<bool> {
-        call!(self, "exists", self.inner.exists(database))
+        call!(self, Seen::of("exists"), self.inner.exists(database))
     }
 
     async fn collection_exists(&self, database: &str, collection: &str) -> Result<bool> {
-        call!(self, "collectionExists", self.inner.collection_exists(database, collection))
+        call!(self, Seen::of("collectionExists"), self.inner.collection_exists(database, collection))
     }
 
     async fn list(&self) -> Result<Vec<Document>> {
-        call!(self, "list", self.inner.list())
+        call!(self, Seen::of("list"), self.inner.list())
     }
 
     async fn delete(&self, name: &str) -> Result<bool> {
-        call!(self, "delete", self.inner.delete(name))
+        call!(self, Seen::of("delete"), self.inner.delete(name))
     }
 
     async fn create_collection(&self, collection: &str, attributes: &[Attribute], indexes: &[Index]) -> Result<bool> {
-        call!(self, "createCollection", self.inner.create_collection(collection, attributes, indexes))
+        call!(self, Seen::of("createCollection").named(collection), self.inner.create_collection(collection, attributes, indexes))
     }
 
     async fn delete_collection(&self, collection: &str) -> Result<bool> {
-        call!(self, "deleteCollection", self.inner.delete_collection(collection))
+        call!(self, Seen::of("deleteCollection").named(collection), self.inner.delete_collection(collection))
     }
 
     async fn analyze_collection(&self, collection: &str) -> Result<bool> {
-        call!(self, "analyzeCollection", self.inner.analyze_collection(collection))
+        call!(self, Seen::of("analyzeCollection").named(collection), self.inner.analyze_collection(collection))
     }
 
     async fn size_of_collection(&self, collection: &str) -> Result<i64> {
-        call!(self, "getSizeOfCollection", self.inner.size_of_collection(collection))
+        call!(self, Seen::of("getSizeOfCollection").named(collection), self.inner.size_of_collection(collection))
     }
 
     async fn size_of_collection_on_disk(&self, collection: &str) -> Result<i64> {
-        call!(self, "getSizeOfCollectionOnDisk", self.inner.size_of_collection_on_disk(collection))
+        call!(self, Seen::of("getSizeOfCollectionOnDisk").named(collection), self.inner.size_of_collection_on_disk(collection))
     }
 
     fn attribute_width(&self, collection: &Collection) -> Result<i64> {
@@ -426,35 +490,35 @@ impl Adapter for Spy {
     }
 
     async fn create_attribute(&self, collection: &str, attribute: &Attribute) -> Result<bool> {
-        call!(self, "createAttribute", self.inner.create_attribute(collection, attribute))
+        call!(self, Seen::of("createAttribute").named(collection), self.inner.create_attribute(collection, attribute))
     }
 
     async fn create_attributes(&self, collection: &str, attributes: &[Attribute]) -> Result<bool> {
-        call!(self, "createAttributes", self.inner.create_attributes(collection, attributes))
+        call!(self, Seen::of("createAttributes").named(collection), self.inner.create_attributes(collection, attributes))
     }
 
     async fn update_attribute(&self, collection: &str, key: &str, attribute: &Attribute) -> Result<bool> {
-        call!(self, "updateAttribute", self.inner.update_attribute(collection, key, attribute))
+        call!(self, Seen::of("updateAttribute").named(collection), self.inner.update_attribute(collection, key, attribute))
     }
 
     async fn relax_attribute_required(&self, collection: &str, id: &str) -> Result<bool> {
-        call!(self, "relaxAttributeRequired", self.inner.relax_attribute_required(collection, id))
+        call!(self, Seen::of("relaxAttributeRequired").named(collection), self.inner.relax_attribute_required(collection, id))
     }
 
     async fn delete_attribute(&self, collection: &str, key: &str) -> Result<bool> {
-        call!(self, "deleteAttribute", self.inner.delete_attribute(collection, key))
+        call!(self, Seen::of("deleteAttribute").named(collection), self.inner.delete_attribute(collection, key))
     }
 
     async fn rename_attribute(&self, collection: &str, old: &str, new: &str) -> Result<bool> {
-        call!(self, "renameAttribute", self.inner.rename_attribute(collection, old, new))
+        call!(self, Seen::of("renameAttribute").named(collection), self.inner.rename_attribute(collection, old, new))
     }
 
     async fn schema_attributes(&self, collection: &str) -> Result<Vec<schema::Column>> {
-        call!(self, "getSchemaAttributes", self.inner.schema_attributes(collection))
+        call!(self, Seen::of("getSchemaAttributes").named(collection), self.inner.schema_attributes(collection))
     }
 
     async fn schema_indexes(&self, collection: &str) -> Result<Vec<schema::Index>> {
-        call!(self, "getSchemaIndexes", self.inner.schema_indexes(collection))
+        call!(self, Seen::of("getSchemaIndexes").named(collection), self.inner.schema_indexes(collection))
     }
 
     fn schema_index_type(&self, kind: IndexType) -> IndexType {
@@ -472,23 +536,23 @@ impl Adapter for Spy {
         attribute_types: &[(String, ColumnType)],
         collation: &[(String, String)],
     ) -> Result<bool> {
-        call!(self, "createIndex", self.inner.create_index(collection, index, attribute_types, collation))
+        call!(self, Seen::of("createIndex").named(collection), self.inner.create_index(collection, index, attribute_types, collation))
     }
 
     async fn delete_index(&self, collection: &str, key: &str) -> Result<bool> {
-        call!(self, "deleteIndex", self.inner.delete_index(collection, key))
+        call!(self, Seen::of("deleteIndex").named(collection), self.inner.delete_index(collection, key))
     }
 
     async fn rename_index(&self, collection: &str, old: &str, new: &str) -> Result<bool> {
-        call!(self, "renameIndex", self.inner.rename_index(collection, old, new))
+        call!(self, Seen::of("renameIndex").named(collection), self.inner.rename_index(collection, old, new))
     }
 
     async fn create_document(&self, collection: &Collection, document: Document) -> Result<Document> {
-        call!(self, "createDocument", self.inner.create_document(collection, document))
+        call!(self, Seen::of("createDocument").on(collection), self.inner.create_document(collection, document))
     }
 
     async fn create_documents(&self, collection: &Collection, documents: Vec<Document>) -> Result<Vec<Document>> {
-        call!(self, "createDocuments", self.inner.create_documents(collection, documents))
+        call!(self, Seen::of("createDocuments").on(collection), self.inner.create_documents(collection, documents))
     }
 
     async fn get_document(
@@ -498,7 +562,7 @@ impl Adapter for Spy {
         queries: Vec<Query>,
         for_update: bool,
     ) -> Result<Document> {
-        call!(self, "getDocument", self.inner.get_document(collection, id, queries, for_update))
+        call!(self, Seen { for_update, ..Seen::of("getDocument").on(collection).id(id) }, self.inner.get_document(collection, id, queries, for_update))
     }
 
     async fn update_document(
@@ -508,7 +572,7 @@ impl Adapter for Spy {
         document: Document,
         skip_permissions: bool,
     ) -> Result<Document> {
-        call!(self, "updateDocument", self.inner.update_document(collection, id, document, skip_permissions))
+        call!(self, Seen::of("updateDocument").on(collection).id(id), self.inner.update_document(collection, id, document, skip_permissions))
     }
 
     async fn update_documents(
@@ -518,7 +582,7 @@ impl Adapter for Spy {
         documents: Vec<Document>,
         skip_permissions: &[String],
     ) -> Result<i64> {
-        call!(self, "updateDocuments", self.inner.update_documents(collection, updates, documents, skip_permissions))
+        call!(self, Seen::of("updateDocuments").on(collection), self.inner.update_documents(collection, updates, documents, skip_permissions))
     }
 
     async fn increase_document_attribute(
@@ -531,15 +595,11 @@ impl Adapter for Spy {
         min: Option<Value>,
         max: Option<Value>,
     ) -> Result<bool> {
-        call!(
-            self,
-            "increaseDocumentAttribute",
-            self.inner.increase_document_attribute(collection, id, attribute, value, updated_at, min, max)
-        )
+        call!(self, Seen::of("increaseDocumentAttribute").on(collection).id(id), self.inner.increase_document_attribute(collection, id, attribute, value, updated_at, min, max))
     }
 
     async fn delete_document(&self, collection: &Collection, id: &str) -> Result<bool> {
-        call!(self, "deleteDocument", self.inner.delete_document(collection, id))
+        call!(self, Seen::of("deleteDocument").on(collection).id(id), self.inner.delete_document(collection, id))
     }
 
     async fn delete_documents(
@@ -548,15 +608,15 @@ impl Adapter for Spy {
         sequences: Vec<Value>,
         permission_ids: Vec<String>,
     ) -> Result<i64> {
-        call!(self, "deleteDocuments", self.inner.delete_documents(collection, sequences, permission_ids))
+        call!(self, Seen::of("deleteDocuments").on(collection), self.inner.delete_documents(collection, sequences, permission_ids))
     }
 
     async fn find(&self, collection: &Collection, queries: Vec<Query>, options: Find) -> Result<Vec<Document>> {
-        call!(self, "find", self.inner.find(collection, queries, options))
+        call!(self, Seen { for_permission: Some(options.for_permission), ..Seen::of("find").on(collection) }, self.inner.find(collection, queries, options))
     }
 
     async fn count(&self, collection: &Collection, queries: Vec<Query>, max: Option<i64>) -> Result<i64> {
-        call!(self, "count", self.inner.count(collection, queries, max))
+        call!(self, Seen::of("count").on(collection), self.inner.count(collection, queries, max))
     }
 
     async fn sum(
@@ -566,11 +626,11 @@ impl Adapter for Spy {
         queries: Vec<Query>,
         max: Option<i64>,
     ) -> Result<Value> {
-        call!(self, "sum", self.inner.sum(collection, attribute, queries, max))
+        call!(self, Seen::of("sum").on(collection), self.inner.sum(collection, attribute, queries, max))
     }
 
     async fn get_sequences(&self, collection: &Collection, documents: Vec<Document>) -> Result<Vec<Document>> {
-        call!(self, "getSequences", self.inner.get_sequences(collection, documents))
+        call!(self, Seen::of("getSequences").on(collection), self.inner.get_sequences(collection, documents))
     }
 
     fn read_concurrency(&self) -> usize {
