@@ -7,6 +7,7 @@
 
 mod database;
 mod epoch;
+mod invalidation;
 mod lease;
 mod query_purge;
 mod scope;
