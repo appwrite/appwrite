@@ -33,7 +33,6 @@ function hashEnvironmentId(environmentId: string): number {
   return Math.abs(hash)
 }
 
-/** Tailwind background class for an environment's dot. */
 export function projectEnvironmentDotClass(
   environment: ProjectEnvironmentOption,
 ): string {

@@ -86,7 +86,7 @@ export function useProjectEnvironments(
   region?: string,
   enabled = true,
 ) {
-  const { data, isLoading, isFetched, error, refetch } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     ...projectEnvironmentsQueryOptions(projectId, region),
     enabled: !!projectId && enabled,
   })
@@ -97,8 +97,6 @@ export function useProjectEnvironments(
     environments,
     total: data?.total ?? 0,
     isLoading,
-    /** False while disabled or in flight: callers wait before trusting the list. */
-    isFetched,
     error,
     refetch,
   }

@@ -109,8 +109,6 @@ export function CreateEnvironmentDialog({
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
 
-    // An invalid id is reported inline by `IdInput` and already disables
-    // Create; this only stops a submit that got past the disabled button.
     if (!isEnvironmentIdValid || !validate()) {
       return
     }

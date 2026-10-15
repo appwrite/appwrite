@@ -92,9 +92,7 @@ export function IdInput({
   const [inputValue, setInputValue] = React.useState(value || '')
   const [error, setError] = React.useState<string | null>(null)
 
-  // Sync input value with prop value. `error` is deliberately not touched
-  // here: `handleToggle` already clears it on open, and clearing it on `value`
-  // wiped the message a keystroke had just set for every controlled caller.
+  // Sync input value with prop value
   React.useEffect(() => {
     setInputValue(value || '')
   }, [value])
@@ -105,7 +103,6 @@ export function IdInput({
 
     // Validate as user types
     if (newValue.length > maxLength) {
-      // The counter next to the field carries the number.
       setError('ID is too long')
     } else if (newValue && !validateId(newValue)) {
       setError('Invalid ID format')

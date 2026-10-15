@@ -3,8 +3,7 @@
  *
  * Both are validated server-side by
  * `Appwrite\Utopia\Database\Validator\ProjectId`: a-z, 0-9 and hyphen, no
- * leading hyphen, at most 36 characters. This module has no dependencies so
- * the shared `IdInput` primitive can read the rule without importing a feature.
+ * leading hyphen, at most 36 characters.
  */
 
 export const PROJECT_ID_MAX_LENGTH = 36
