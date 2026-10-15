@@ -23,8 +23,8 @@ abstract class Adapter
 
     /**
      * Bring an existing database structure up to date without changing any
-     * policy setup() applies, such as retention. Adapters whose setup() does
-     * more than create missing structure override this.
+     * policy setup() applies to it, such as retention. Adapters whose setup()
+     * does more than create missing structure override this.
      */
     public function migrate(): void
     {

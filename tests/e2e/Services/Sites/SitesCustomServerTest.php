@@ -2063,6 +2063,63 @@ final class SitesCustomServerTest extends Scope
         $this->cleanupSite($siteId);
     }
 
+    public function testCreateDeploymentRejectsShortChunk(): void
+    {
+        $siteId = $this->setupSite([
+            'buildRuntime' => 'node-22',
+            'fallbackFile' => '',
+            'framework' => 'other',
+            'name' => 'Short Chunk Site',
+            'outputDirectory' => './',
+            'providerBranch' => 'main',
+            'providerRootDirectory' => './',
+            'siteId' => Id::unique()
+        ]);
+
+        $upload = function (string $range, string $body, ?string $resumeId = null) use ($siteId): array {
+            $headers = [
+                'content-type' => 'multipart/form-data',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'content-range' => $range,
+            ];
+
+            if ($resumeId !== null) {
+                $headers['x-appwrite-id'] = $resumeId;
+            }
+
+            return $this->client->call(Client::METHOD_POST, '/sites/' . $siteId . '/deployments', array_merge($headers, $this->getHeaders()), [
+                'code' => new \CURLFile('data://application/x-gzip;base64,' . base64_encode($body), 'application/x-gzip', 'code.tar.gz'),
+                'activate' => 'false',
+            ]);
+        };
+
+        $chunkSize = 5 * 1024 * 1024;
+        $totalSize = $chunkSize + 1024;
+
+        $first = $upload('bytes 0-' . ($chunkSize - 1) . '/' . $totalSize, str_repeat('a', $chunkSize));
+        $this->assertEquals(202, $first['headers']['status-code']);
+        $deploymentId = $first['body']['$id'];
+
+        /**
+         * Test for FAILURE
+         * The last chunk carries fewer bytes than its range announces.
+         */
+        $last = $upload('bytes ' . $chunkSize . '-' . ($totalSize - 1) . '/' . $totalSize, str_repeat('b', 10), $deploymentId);
+        $this->assertEquals(400, $last['headers']['status-code']);
+        $this->assertEquals('storage_invalid_content_range', $last['body']['type']);
+
+        $deployment = $this->getDeployment($siteId, $deploymentId);
+        $this->assertEquals(200, $deployment['headers']['status-code']);
+        $this->assertEquals('failed', $deployment['body']['status']);
+
+        // A retried chunk returns the failed deployment instead of writing to the removed source.
+        $retry = $upload('bytes ' . $chunkSize . '-' . ($totalSize - 1) . '/' . $totalSize, str_repeat('b', 1024), $deploymentId);
+        $this->assertEquals(202, $retry['headers']['status-code']);
+        $this->assertEquals('failed', $retry['body']['status']);
+
+        $this->cleanupSite($siteId);
+    }
+
     public function testListDeployments(): void
     {
         $siteId = $this->setupSite([

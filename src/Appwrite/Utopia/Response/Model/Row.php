@@ -2,11 +2,22 @@
 
 namespace Appwrite\Utopia\Response\Model;
 
+use Appwrite\Utopia\Database\Documents\Aggregate;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Document as DatabaseDocument;
 
 class Row extends Any
 {
+    private const array STORED_ATTRIBUTES = [
+        '$id',
+        '$sequence',
+        '$tableId',
+        '$databaseId',
+        '$createdAt',
+        '$updatedAt',
+        '$permissions',
+    ];
+
     /**
      * Get Name
      *
@@ -83,7 +94,11 @@ class Row extends Any
         $document->removeAttribute('$collection');
         $document->removeAttribute('$tenant');
 
-        if (!$document->isEmpty()) {
+        if ($document->offsetExists('$id') && \in_array($document->getAttribute('$id'), [null, ''], true)) {
+            foreach (self::STORED_ATTRIBUTES as $attribute) {
+                $document->removeAttribute($attribute);
+            }
+        } elseif (!$document->isEmpty() && !$document instanceof Aggregate) {
             $document->setAttribute('$sequence', (string)$document->getAttribute('$sequence', ''));
             $document->setAttribute('$createdAt', (string)$document->getAttribute('$createdAt', ''));
             $document->setAttribute('$updatedAt', (string)$document->getAttribute('$updatedAt', ''));

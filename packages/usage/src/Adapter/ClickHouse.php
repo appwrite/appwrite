@@ -1193,8 +1193,8 @@ class ClickHouse extends SQL
 
     /**
      * Create the database, tables, daily materialized view and projections,
-     * and add the columns and skip indexes an existing table lacks. Every
-     * statement is idempotent, and the retention TTL is left as it is.
+     * and add the columns and skip indexes an existing table lacks. A table
+     * created here gets the retention TTL; an existing table keeps its own.
      *
      * @throws Exception
      */
@@ -1314,6 +1314,18 @@ class ClickHouse extends SQL
         $this->query("ALTER TABLE {$table} ADD COLUMN IF NOT EXISTS `ingestId` String DEFAULT '' CODEC(ZSTD(3))");
     }
 
+    private function declareRetention(ClickHouseTable $table): void
+    {
+        if ($this->retention !== null) {
+            $table->ttl($this->getRetentionExpression());
+        }
+    }
+
+    private function getRetentionExpression(): string
+    {
+        return "toDateTime(time) + INTERVAL {$this->retention} DAY";
+    }
+
     /**
      * Apply (or strip) the retention TTL on a table as a separate idempotent
      * ALTER. CREATE TABLE IF NOT EXISTS won't add a TTL to an existing table,
@@ -1332,7 +1344,7 @@ class ClickHouse extends SQL
         if ($this->retention !== null) {
             $this->query(
                 "ALTER TABLE {$escapedTable} "
-                . "MODIFY TTL toDateTime(time) + INTERVAL {$this->retention} DAY "
+                . 'MODIFY TTL ' . $this->getRetentionExpression() . ' '
                 . 'SETTINGS materialize_ttl_after_modify = 0'
             );
             return;
@@ -1369,6 +1381,8 @@ class ClickHouse extends SQL
     }
 
     private const BASE_KEY_COLUMNS = ['id', 'metric', 'value', 'time', 'tenant'];
+
+    private const IDENTIFIER_CHARACTERS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_';
 
     private function ensureGaugeDimColumns(): void
     {
@@ -1413,28 +1427,174 @@ class ClickHouse extends SQL
     }
 
     /**
+     * Add the dimension columns a table lacks, and converge the type and codec
+     * of any that predate the current definition. Converging a type schedules
+     * a ClickHouse mutation that rewrites that column; a codec change applies
+     * to parts written or merged afterwards.
+     *
      * @param array<int, string> $columns
      */
     private function ensureDimColumns(string $tableName, array $columns, string $type): void
     {
         $escapedTable = $this->escapeIdentifier($this->database)
             . '.' . $this->escapeIdentifier($tableName);
+        $existing = $this->getColumnShapes($tableName);
 
         $adds = [];
+        $modifies = [];
+        $drifted = [];
         foreach ($columns as $column) {
             if (in_array($column, self::BASE_KEY_COLUMNS, true)) {
                 continue;
             }
-            $adds[] = 'ADD COLUMN IF NOT EXISTS '
-                . $this->escapeIdentifier($column)
-                . ' ' . $this->getColumnType($column, $type);
+
+            $definition = $this->getColumnDefinition($column, $type);
+            if (!isset($existing[$column])) {
+                $adds[] = 'ADD COLUMN IF NOT EXISTS ' . $definition;
+            } elseif (!$this->hasColumnShape($existing[$column], $column, $type)) {
+                $modifies[] = 'MODIFY COLUMN ' . $definition;
+                $drifted[] = $column;
+            }
         }
 
-        if ($adds === []) {
+        if ($adds !== []) {
+            $this->query("ALTER TABLE {$escapedTable} " . implode(', ', $adds));
+        }
+
+        if ($modifies === []) {
             return;
         }
 
-        $this->query("ALTER TABLE {$escapedTable} " . implode(', ', $adds));
+        $this->modifyColumns($tableName, $drifted, $modifies);
+    }
+
+    /**
+     * ClickHouse refuses to change a column a skip index covers, so the
+     * covering indexes are dropped, the columns modified, and the same indexes
+     * added and materialized again. An interrupted run leaves the columns
+     * drifted or the indexes missing, and the next run (ensureIndexes() for
+     * the library's own indexes) picks up from there.
+     *
+     * @param list<string> $columns
+     * @param list<string> $modifies
+     */
+    private function modifyColumns(string $tableName, array $columns, array $modifies): void
+    {
+        $escapedTable = $this->escapeIdentifier($this->database)
+            . '.' . $this->escapeIdentifier($tableName);
+        $indexes = $this->getSkipIndexesCovering($tableName, $columns);
+
+        if ($indexes !== []) {
+            $this->query("ALTER TABLE {$escapedTable} " . implode(', ', array_map(
+                fn (array $index): string => 'DROP INDEX IF EXISTS ' . $this->escapeIdentifier($index['name']),
+                $indexes,
+            )));
+        }
+
+        $this->query("ALTER TABLE {$escapedTable} " . implode(', ', $modifies));
+
+        if ($indexes === []) {
+            return;
+        }
+
+        $this->query("ALTER TABLE {$escapedTable} " . implode(', ', array_map(
+            fn (array $index): string => 'ADD INDEX IF NOT EXISTS ' . $this->escapeIdentifier($index['name'])
+                . " ({$index['expression']}) TYPE {$index['type']} GRANULARITY {$index['granularity']}",
+            $indexes,
+        )));
+        $this->query("ALTER TABLE {$escapedTable} " . implode(', ', array_map(
+            fn (array $index): string => 'MATERIALIZE INDEX ' . $this->escapeIdentifier($index['name']),
+            $indexes,
+        )));
+    }
+
+    /**
+     * @param list<string> $columns
+     * @return list<array{name: string, expression: string, type: string, granularity: int}>
+     */
+    private function getSkipIndexesCovering(string $tableName, array $columns): array
+    {
+        $rows = $this->decodeRows($this->query(
+            'SELECT name, expr, type_full, granularity FROM system.data_skipping_indices '
+            . 'WHERE database = {database:String} AND table = {table:String} FORMAT JSON',
+            ['database' => $this->database, 'table' => $tableName],
+        ));
+
+        $indexes = [];
+        foreach ($rows as $row) {
+            if (!is_string($row['name'] ?? null) || !is_string($row['expr'] ?? null) || !is_string($row['type_full'] ?? null)) {
+                continue;
+            }
+
+            if (array_intersect($columns, $this->getIdentifiers($row['expr'])) === []) {
+                continue;
+            }
+
+            $indexes[] = [
+                'name' => $row['name'],
+                'expression' => $row['expr'],
+                'type' => $row['type_full'],
+                'granularity' => self::toInt($row['granularity'] ?? 1) ?: 1,
+            ];
+        }
+
+        return $indexes;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function getIdentifiers(string $expression): array
+    {
+        $identifiers = [];
+        $length = strlen($expression);
+        $position = strcspn($expression, self::IDENTIFIER_CHARACTERS);
+        while ($position < $length) {
+            $size = strspn($expression, self::IDENTIFIER_CHARACTERS, $position);
+            $identifiers[] = substr($expression, $position, $size);
+            $position += $size;
+            $position += strcspn($expression, self::IDENTIFIER_CHARACTERS, $position);
+        }
+
+        return $identifiers;
+    }
+
+    /**
+     * @return array<string, array{type: string, codec: string}>
+     */
+    private function getColumnShapes(string $tableName): array
+    {
+        $rows = $this->decodeRows($this->query(
+            'SELECT name, type, compression_codec AS codec FROM system.columns '
+            . 'WHERE database = {database:String} AND table = {table:String} FORMAT JSON',
+            ['database' => $this->database, 'table' => $tableName],
+        ));
+
+        $shapes = [];
+        foreach ($rows as $row) {
+            if (!is_string($row['name'] ?? null) || !is_string($row['type'] ?? null) || !is_string($row['codec'] ?? null)) {
+                continue;
+            }
+            $shapes[$row['name']] = ['type' => $row['type'], 'codec' => $row['codec']];
+        }
+
+        return $shapes;
+    }
+
+    /**
+     * A column without a codec override keeps whatever codec it has.
+     *
+     * @param array{type: string, codec: string} $shape
+     */
+    private function hasColumnShape(array $shape, string $column, string $type): bool
+    {
+        if ($shape['type'] !== $this->getColumnType($column, $type)) {
+            return false;
+        }
+
+        $codec = $this->getColumnCodec($column);
+
+        return $codec === '' || \str_replace(' ', '', $shape['codec']) === \str_replace(' ', '', $codec);
     }
 
     /**
@@ -1577,6 +1737,10 @@ class ClickHouse extends SQL
             ->partitionBy('toYYYYMM(time)')
             ->settings(['index_granularity' => 8192, 'allow_nullable_key' => 1]);
 
+        if ($type === Usage::TYPE_EVENT) {
+            $this->declareRetention($table);
+        }
+
         $statement = $table->createIfNotExists();
 
         $this->query($this->qualifyDdl($statement->query, $tableName));
@@ -1666,6 +1830,8 @@ class ClickHouse extends SQL
             ->orderBy($dailyOrderBy)
             ->partitionBy('toYYYYMM(time)')
             ->settings(['index_granularity' => 8192, 'allow_nullable_key' => 1]);
+
+        $this->declareRetention($table);
 
         $statement = $table->createIfNotExists();
 
