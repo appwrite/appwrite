@@ -16,6 +16,7 @@ use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Usage\Context;
+use Appwrite\Utopia\Database\Attribute;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Console;
@@ -531,12 +532,7 @@ class Update extends Action
                 // collection loaded via getCollection() during commit, which
                 // already has the schema needed to match update event payloads.
                 $schema = $collections[$collectionId] ?? $collection;
-                $relationships = [];
-                foreach ($schema->getAttribute('attributes', []) as $attribute) {
-                    if (($attribute['type'] ?? null) === Database::VAR_RELATIONSHIP) {
-                        $relationships[] = $attribute['key'];
-                    }
-                }
+                $relationships = \array_keys(Attribute::relationships($schema));
 
                 // Get project and function/webhook events (cached)
                 $project = $queueForEvents->getProject();

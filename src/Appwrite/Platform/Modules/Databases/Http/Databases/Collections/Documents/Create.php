@@ -15,6 +15,7 @@ use Appwrite\SDK\Parameter;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Usage\Context;
 use Appwrite\Usage\Operations;
+use Appwrite\Utopia\Database\Attribute;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response as UtopiaResponse;
@@ -487,13 +488,7 @@ class Create extends Action
             $this->getResponseModel()
         );
 
-        $relationships = \array_map(
-            fn ($document) => $document->getAttribute('key'),
-            \array_filter(
-                $collection->getAttribute('attributes', []),
-                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
-            )
-        );
+        $relationships = \array_keys(Attribute::relationships($collection));
 
         $queueForEvents
             ->setParam('documentId', $created[0]->getId())
