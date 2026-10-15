@@ -68,9 +68,14 @@ class Get extends Action
             $firebase = new Firebase($serviceAccount);
             $report = $firebase->report($resources);
         } catch (\Throwable $e) {
+            $message = !empty($e->getMessage())
+                ? 'Failed to generate migration report: ' . $e->getMessage()
+                : 'Unable to connect to the migration source. Please verify your credentials and ensure the source is reachable from this server. Check for network restrictions such as firewalls, IP allowlists, or outbound connectivity limits.';
+
             throw new Exception(
-                Exception::MIGRATION_PROVIDER_ERROR,
-                'Unable to connect to the migration source. Please verify your credentials and ensure the source is reachable from this server. Check for network restrictions such as firewalls, IP allowlists, or outbound connectivity limits.'
+                type: Exception::MIGRATION_PROVIDER_ERROR,
+                message: $message,
+                previous: $e
             );
         }
 
