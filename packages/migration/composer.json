@@ -22,10 +22,7 @@
         }
     },
     "scripts": {
-        "test": "./vendor/bin/phpunit",
-        "lint": "./vendor/bin/pint --test",
-        "format": "./vendor/bin/pint",
-        "check": "./vendor/bin/phpstan analyse --level 3 src tests bin --memory-limit 2G"
+        "test": "phpunit"
     },
     "require": {
         "php": ">=8.5",
@@ -42,10 +39,7 @@
     },
     "require-dev": {
         "ext-pdo": "*",
-        "phpunit/phpunit": "11.*",
-        "vlucas/phpdotenv": "5.*",
-        "laravel/pint": "1.*",
-        "phpstan/phpstan": "^2.1"
+        "vlucas/phpdotenv": "5.*"
     },
     "config": {
         "allow-plugins": {

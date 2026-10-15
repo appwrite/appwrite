@@ -9,3 +9,4 @@ localBackup/
 .env.prod
 serviceAccount.json
 .phpactor.json
+composer.lock
