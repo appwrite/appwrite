@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { WafRuleAction, type Models } from '@appwrite.io/console'
+import { WafRuleAction } from '@appwrite.io/console'
+import type { FirewallRule } from '@/lib/firewall/types'
 import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -58,7 +59,7 @@ interface UpdateRuleProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   projectId: string
-  rule: Models.WafRule | null
+  rule: FirewallRule | null
 }
 
 export function UpdateRule({

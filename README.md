@@ -83,7 +83,7 @@ docker run -it --rm \
     --volume /var/run/docker.sock:/var/run/docker.sock \
     --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
     --entrypoint="install" \
-    appwrite/appwrite:2.4.0
+    appwrite/appwrite:2.5.0
 ```
 
 ### Windows
@@ -96,7 +96,7 @@ docker run -it --rm ^
     --volume //var/run/docker.sock:/var/run/docker.sock ^
     --volume "%cd%"/appwrite:/usr/src/code/appwrite:rw ^
     --entrypoint="install" ^
-    appwrite/appwrite:2.4.0
+    appwrite/appwrite:2.5.0
 ```
 
 #### PowerShell
@@ -107,7 +107,7 @@ docker run -it --rm `
     --volume /var/run/docker.sock:/var/run/docker.sock `
     --volume ${pwd}/appwrite:/usr/src/code/appwrite:rw `
     --entrypoint="install" `
-    appwrite/appwrite:2.4.0
+    appwrite/appwrite:2.5.0
 ```
 
 Once the installer is running, open the URL printed in the terminal (it includes a one-time secret) to complete the setup wizard. After installation, go to http://localhost to access the Appwrite console from your browser. Please note that on non-Linux native hosts, the server might take a few minutes to start after completing the installation.
@@ -123,7 +123,7 @@ docker run -it --rm \
     --volume /var/run/docker.sock:/var/run/docker.sock \
     --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
     --entrypoint="install" \
-    appwrite/appwrite:2.4.0
+    appwrite/appwrite:2.5.0
 ```
 
 Use the same `--env DOCKER_API_VERSION=...` flag with `--entrypoint="upgrade"` when upgrading.
@@ -233,7 +233,7 @@ Getting started with your platform of choice is also covered in the tutorials be
 
 ### SDKs
 
-Below is a list of currently supported platforms and languages. If you would like to help us add support to your platform of choice, you can go over to our [SDK Generator](https://github.com/appwrite/sdk-generator) project and view our [contribution guide](https://github.com/appwrite/sdk-generator/blob/master/CONTRIBUTING.md).
+Below is a list of currently supported platforms and languages. If you would like to help us add support to your platform of choice, you can go over to our [SDK Generator](https://github.com/appwrite/sdk-generator) project and view our [contribution guide](https://github.com/appwrite/sdk-generator/blob/main/CONTRIBUTING.md).
 
 #### Client
 
@@ -242,6 +242,7 @@ Below is a list of currently supported platforms and languages. If you would lik
 - :white_check_mark: &nbsp; [Apple](https://github.com/appwrite/sdk-for-apple)
 - :white_check_mark: &nbsp; [Android](https://github.com/appwrite/sdk-for-android)
 - :white_check_mark: &nbsp; [React Native](https://github.com/appwrite/sdk-for-react-native)
+- :white_check_mark: &nbsp; [Unity](https://github.com/appwrite/sdk-for-unity)
 
 #### Server
 

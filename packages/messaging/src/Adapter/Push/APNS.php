@@ -52,7 +52,7 @@ class APNS extends PushAdapter
             $payload['aps']['alert']['body'] = $message->getBody();
         }
         if (!\is_null($message->getData())) {
-            $payload['aps']['data'] = $message->getData();
+            $payload['data'] = $message->getData();
         }
         if (!\is_null($message->getAction())) {
             $payload['aps']['category'] = $message->getAction();
@@ -75,11 +75,29 @@ class APNS extends PushAdapter
         if (!\is_null($message->getContentAvailable())) {
             $payload['aps']['content-available'] = (int) $message->getContentAvailable();
         }
+        if (!\is_null($message->getMutableContent())) {
+            $payload['aps']['mutable-content'] = (int) $message->getMutableContent();
+        }
+
+        $priority = null;
         if (!\is_null($message->getPriority())) {
-            $payload['headers']['apns-priority'] = match ($message->getPriority()) {
+            $priority = match ($message->getPriority()) {
                 Priority::HIGH => '10',
                 Priority::NORMAL => '5',
             };
+        }
+
+        // No user-facing content means a background push: Apple requires type background, priority 5,
+        // and content-available (and rejects an alert push that carries no alert).
+        $background = \is_null($message->getTitle())
+            && \is_null($message->getBody())
+            && \is_null($message->getSound())
+            && \is_null($message->getCritical())
+            && \is_null($message->getBadge());
+        $pushType = $background ? 'background' : 'alert';
+        if ($background) {
+            $priority = '5';
+            $payload['aps']['content-available'] = 1;
         }
 
         $claims = [
@@ -106,38 +124,40 @@ class APNS extends PushAdapter
             $urls[] = $endpoint . '/3/device/' . $token;
         }
 
-        $results = $this->requestMulti(
-            method: 'POST',
-            urls: $urls,
-            headers: [
-                'Content-Type: application/json',
-                'Authorization: Bearer ' . $jwt,
-                'apns-topic: ' . $this->bundleId,
-                'apns-push-type: alert',
-            ],
-            bodies: [$payload],
-        );
+        $headers = [
+            'Content-Type: application/json',
+            'Authorization: Bearer ' . $jwt,
+            'apns-topic: ' . $this->bundleId,
+            'apns-push-type: ' . $pushType,
+        ];
+        if (!\is_null($priority)) {
+            $headers[] = 'apns-priority: ' . $priority;
+        }
 
         $response = new Response($this->getType());
 
-        foreach ($results as $result) {
-            $device = basename($result['url']);
-            $statusCode = $result['statusCode'];
+        $this->requestMulti(
+            method: 'POST',
+            urls: $urls,
+            headers: $headers,
+            bodies: [$payload],
+            onResult: function (array $result) use ($response): void {
+                $device = basename($result['url']);
 
-            switch ($statusCode) {
-                case 200:
+                if ($result['statusCode'] === 200) {
                     $response->incrementDeliveredTo();
                     $response->addResult($device);
-                    break;
-                default:
-                    $error = ($result['response']['reason'] ?? null) === 'ExpiredToken' || ($result['response']['reason'] ?? null) === 'BadDeviceToken'
-                        ? $this->getExpiredErrorMessage()
-                        : ($result['response']['reason'] ?? ($result['error'] ?: 'Unknown error'));
 
-                    $response->addResult($device, $error);
-                    break;
-            }
-        }
+                    return;
+                }
+
+                $error = ($result['response']['reason'] ?? null) === 'ExpiredToken' || ($result['response']['reason'] ?? null) === 'BadDeviceToken'
+                    ? $this->getExpiredErrorMessage()
+                    : ($result['response']['reason'] ?? ($result['error'] ?: 'Unknown error'));
+
+                $response->addResult($device, $error);
+            },
+        );
 
         return $response->toArray();
     }

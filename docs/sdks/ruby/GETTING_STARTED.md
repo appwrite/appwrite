@@ -12,7 +12,7 @@ client
     .set_endpoint(ENV["APPWRITE_ENDPOINT"]) # Your API Endpoint
     .set_project(ENV["APPWRITE_PROJECT"]) # Your project ID
     .set_key(ENV["APPWRITE_SECRET"]) # Your secret API key
-    .setSelfSigned() # Use only on dev mode with a self-signed SSL cert
+    .set_self_signed # Use only on dev mode with a self-signed SSL cert
 ;
 ```
 
@@ -22,7 +22,7 @@ Once your SDK object is set, create any of the Appwrite service objects and choo
 ```ruby
 users = Appwrite::Users.new(client);
 
-user = users.create(userId: Appwrite::ID::unique(), email: "email@example.com", phone: "+123456789", password: "password", name: "Walter O'Brien");
+user = users.create(user_id: Appwrite::ID::unique(), email: "email@example.com", phone: "+123456789", password: "password", name: "Walter O'Brien");
 ```
 
 ### Full Example
@@ -35,12 +35,12 @@ client
     .set_endpoint(ENV["APPWRITE_ENDPOINT"]) # Your API Endpoint
     .set_project(ENV["APPWRITE_PROJECT"]) # Your project ID
     .set_key(ENV["APPWRITE_SECRET"]) # Your secret API key
-    .setSelfSigned() # Use only on dev mode with a self-signed SSL cert
+    .set_self_signed # Use only on dev mode with a self-signed SSL cert
 ;
 
 users = Appwrite::Users.new(client);
 
-user = users.create(userId: Appwrite::ID::unique(), email: "email@example.com", phone: "+123456789", password: "password", name: "Walter O'Brien");
+user = users.create(user_id: Appwrite::ID::unique(), email: "email@example.com", phone: "+123456789", password: "password", name: "Walter O'Brien");
 ```
 
 ### Error Handling
@@ -50,7 +50,7 @@ The Appwrite Ruby SDK raises `Appwrite::Exception` object with `message`, `code`
 users = Appwrite::Users.new(client);
 
 begin
-    user = users.create(userId: Appwrite::ID::unique(), email: "email@example.com", phone: "+123456789", password: "password", name: "Walter O'Brien");
+    user = users.create(user_id: Appwrite::ID::unique(), email: "email@example.com", phone: "+123456789", password: "password", name: "Walter O'Brien");
 rescue Appwrite::Exception => error
     puts error.message
 end
