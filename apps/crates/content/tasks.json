@@ -1,6 +1,38 @@
 {
-  "updated": "2026-10-15T19:14:00Z",
+  "updated": "2026-10-15T19:17:00Z",
   "tasks": [
+    {
+      "id": "users-ci-parity",
+      "title": "Users parity: 44 differences in CI",
+      "area": "Services",
+      "status": "progress",
+      "updated": "2026-10-15T19:17:00Z",
+      "note": "30 from custom-domain rule origins (401 vs 403, one header fewer), 8 internal IDs in queued messages, 6 team searches. Clean in a local run, so reproducing in a CI-like stack first."
+    },
+    {
+      "id": "lib-sync",
+      "title": "Sync http and usage with main",
+      "area": "Libraries",
+      "status": "progress",
+      "updated": "2026-10-15T19:17:00Z",
+      "note": "main changed packages/usage (ClickHouse column codecs) and packages/http (a boolean param default) after the crates last synced."
+    },
+    {
+      "id": "migration-newer",
+      "title": "Migration: port what packages/migration added after 3.1.2",
+      "area": "Libraries",
+      "status": "progress",
+      "note": "CI now runs migration from packages/migration on main: PHP SDK 30.4.0, project environments, passkey RP ID, password options, membership IDs, topic QoS and expiry, messaging reply-to and channelId. Porting them all.",
+      "updated": "2026-10-15T19:17:00Z"
+    },
+    {
+      "id": "php-image",
+      "title": "Rebuild the local PHP image",
+      "area": "Environment",
+      "status": "progress",
+      "note": "Rebuilding the local stack the way CI does, as part of reproducing CI's Users parity differences.",
+      "updated": "2026-10-15T19:17:00Z"
+    },
     {
       "id": "db8-recordings",
       "title": "Database 8: the last recording fixes",
@@ -24,22 +56,6 @@
       "status": "blocked",
       "note": "The Rust unit tests replay every recorded case; database has 401 differences left (the three tasks above), so Checks / Rust and the database-* lanes stay red until they land.",
       "updated": "2026-10-15T17:16:00Z"
-    },
-    {
-      "id": "php-image",
-      "title": "Rebuild the local PHP image",
-      "area": "Environment",
-      "status": "todo",
-      "note": "main moved packages/query and packages/migration after the appwrite image was built, so new PHP processes fail in init.php. Needed before the Users parity diff can run locally again.",
-      "updated": "2026-10-15T16:30:00Z"
-    },
-    {
-      "id": "migration-newer",
-      "title": "Migration: port what packages/migration added after 3.1.2",
-      "area": "Libraries",
-      "status": "todo",
-      "note": "Project environments, the passkey relying-party ID, passwordPwned and passwordRotation, membership IDs, topic QoS and expiry, and the reply-to and channelId options on messaging providers. The dev image still runs migration 3.1.2, so compat cannot check them yet.",
-      "updated": "2026-10-15T16:30:00Z"
     },
     {
       "id": "filters-mutate",
