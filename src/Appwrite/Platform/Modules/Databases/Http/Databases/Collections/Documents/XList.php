@@ -154,14 +154,13 @@ class XList extends Action
 
         try {
             $parsed = Query::groupByType($queries);
-            $paged = $parsed->limit === null ? [...$queries, Query::limit(APP_LIMIT_LIST_DEFAULT)] : $queries;
             $find = match (true) {
                 $parsed->isAggregation() => fn (): array => \array_map(
                     static fn (array $row): Document => new Document($row),
-                    $dbForDatabases->aggregate($collectionTableId, $paged),
+                    $dbForDatabases->aggregate($collectionTableId, $queries),
                 ),
-                $parsed->selections !== [] => fn (): array => $dbForDatabases->find($collectionTableId, $paged),
-                default => fn (): array => $dbForDatabases->skipRelationships(fn (): array => $dbForDatabases->find($collectionTableId, $paged)),
+                $parsed->selections !== [] => fn (): array => $dbForDatabases->find($collectionTableId, $queries),
+                default => fn (): array => $dbForDatabases->skipRelationships(fn (): array => $dbForDatabases->find($collectionTableId, $queries)),
             };
 
             if ($transactionId !== null) {
