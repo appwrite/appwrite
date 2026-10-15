@@ -24,6 +24,7 @@ final class Mutex implements Lock
     {
         if (! $this->inCoroutine()) {
             if ($timeout < 0.0) {
+                // Outside a coroutine nothing else runs to release the mutex, so this blocks for good.
                 while ($this->syncHeld) {
                     usleep(10_000);
                 }

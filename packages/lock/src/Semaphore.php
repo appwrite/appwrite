@@ -29,6 +29,7 @@ final class Semaphore implements Lock
     {
         if (! $this->inCoroutine()) {
             if ($timeout < 0.0) {
+                // Outside a coroutine nothing else runs to free a permit, so this blocks for good.
                 while ($this->syncHeld >= $this->permits) {
                     usleep(10_000);
                 }
