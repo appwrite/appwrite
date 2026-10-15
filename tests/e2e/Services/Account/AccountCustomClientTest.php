@@ -1497,6 +1497,90 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals($response['body']['name'], $data['name']);
     }
 
+    #[Retry(count: 1)]
+    public function testUpdateAccountEmailClearsRecovery(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $email = uniqid() . 'recovery-email@localhost.test';
+        $newEmail = uniqid() . 'recovery-email-new@localhost.test';
+        $password = 'password';
+        $headers = [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ];
+
+        $response = $this->client->call(Client::METHOD_POST, '/account', $headers, [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => $password,
+            'name' => 'Recovery Email User',
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $userId = $response['body']['$id'];
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $headers, [
+            'email' => $email,
+            'password' => $password,
+        ]);
+        $this->assertEquals(201, $session['headers']['status-code']);
+        $cookie = $session['cookies']['a_session_' . $projectId];
+
+        $recovery = $this->client->call(Client::METHOD_POST, '/account/recovery', $headers, [
+            'email' => $email,
+            'url' => 'http://localhost/recovery',
+        ]);
+        $this->assertEquals(201, $recovery['headers']['status-code']);
+
+        $lastEmail = $this->getLastEmailByAddress($email, function ($mail) {
+            $this->assertStringContainsString('Password Reset', (string) $mail['subject']);
+        });
+        $tokens = $this->extractQueryParamsFromEmailLink($lastEmail['html']);
+        $secret = $tokens['secret'] ?? '';
+        $this->assertNotEmpty($secret);
+
+        $update = $this->client->call(Client::METHOD_PATCH, '/account/email', array_merge($headers, [
+            'cookie' => 'a_session_' . $projectId . '=' . $cookie,
+        ]), [
+            'email' => $newEmail,
+            'password' => $password,
+        ]);
+        $this->assertEquals(200, $update['headers']['status-code']);
+        $this->assertEquals($newEmail, $update['body']['email']);
+
+        $account = $this->client->call(Client::METHOD_GET, '/account', array_merge($headers, [
+            'cookie' => 'a_session_' . $projectId . '=' . $cookie,
+        ]));
+        $this->assertEquals(200, $account['headers']['status-code']);
+        $this->assertEquals($newEmail, $account['body']['email']);
+
+        $stale = $this->client->call(Client::METHOD_PUT, '/account/recovery', $headers, [
+            'userId' => $userId,
+            'secret' => $secret,
+            'password' => 'new-password',
+        ]);
+        $this->assertEquals(401, $stale['headers']['status-code']);
+
+        $newRecovery = $this->client->call(Client::METHOD_POST, '/account/recovery', $headers, [
+            'email' => $newEmail,
+            'url' => 'http://localhost/recovery',
+        ]);
+        $this->assertEquals(201, $newRecovery['headers']['status-code']);
+
+        $newMail = $this->getLastEmailByAddress($newEmail, function ($mail) {
+            $this->assertStringContainsString('Password Reset', (string) $mail['subject']);
+        });
+        $newTokens = $this->extractQueryParamsFromEmailLink($newMail['html']);
+        $this->assertNotEmpty($newTokens['secret'] ?? '');
+
+        $complete = $this->client->call(Client::METHOD_PUT, '/account/recovery', $headers, [
+            'userId' => $userId,
+            'secret' => $newTokens['secret'],
+            'password' => 'new-password',
+        ]);
+        $this->assertEquals(200, $complete['headers']['status-code']);
+    }
+
     public function testUpdateAccountPrefs(): void
     {
         $data = $this->setupAccountWithUpdatedEmail();

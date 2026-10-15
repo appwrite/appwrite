@@ -3891,6 +3891,22 @@ Http::patch('/v1/account/email')
             if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
                 $authorization->skip(fn () => $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $email)));
             }
+            if ($oldEmail !== $email) {
+                $sequence = $user->getSequence();
+                if ($sequence !== '' && $sequence !== null) {
+                    $authorization->skip(fn () => $dbForProject->deleteDocuments('tokens', [
+                        Query::equal('userInternalId', [$sequence]),
+                        Query::equal('type', [
+                            TOKEN_TYPE_RECOVERY,
+                            TOKEN_TYPE_RECOVERY_OTP,
+                            TOKEN_TYPE_VERIFICATION,
+                            TOKEN_TYPE_VERIFICATION_OTP,
+                            TOKEN_TYPE_MAGIC_URL,
+                            TOKEN_TYPE_EMAIL,
+                        ]),
+                    ]));
+                }
+            }
             $dbForProject->purgeCachedDocument('users', $user->getId());
         } catch (Duplicate) {
             throw new Exception(Exception::GENERAL_BAD_REQUEST);
