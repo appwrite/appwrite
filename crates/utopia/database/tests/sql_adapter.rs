@@ -68,3 +68,61 @@ async fn statements_carry_metadata_comments() {
         "/* request: a* /b */\n\n\t\t\tSELECT name FROM sqlite_master\n\t\t\tWHERE type='table' AND name = :table\n\t\t"
     );
 }
+
+/// The compat servers: (engine, DSN).
+const SERVERS: [(Engine, &str); 3] = [
+    (Engine::Postgres, "pgsql:host=localhost;port=16432;dbname=root"),
+    (Engine::MariaDb, "mysql:host=localhost;port=16306;charset=utf8mb4"),
+    (Engine::MySql, "mysql:host=localhost;port=16307;charset=utf8mb4"),
+];
+
+async fn server(engine: Engine, dsn: &str) -> Option<Sql> {
+    match Sql::connect(engine, dsn, Some("root"), Some("password")).await {
+        Ok(adapter) => Some(adapter),
+        Err(e) => {
+            eprintln!("skipping {engine:?}: {}", e.message());
+            None
+        }
+    }
+}
+
+#[tokio::test]
+async fn servers_create_rename_and_delete_databases() {
+    for (engine, dsn) in SERVERS {
+        let Some(adapter) = server(engine, dsn).await else { continue };
+        let name = format!("l3a_db_{}", std::process::id());
+        let renamed = format!("{name}_r");
+        let _ = adapter.delete(&name).await;
+        let _ = adapter.delete(&renamed).await;
+        assert!(adapter.create(&name).await.unwrap(), "{engine:?}");
+        assert!(adapter.exists(&name).await.unwrap(), "{engine:?}");
+        assert!(adapter.create(&name).await.unwrap(), "{engine:?} creating twice");
+        assert!(adapter.update(&name, &renamed).await.unwrap(), "{engine:?}");
+        assert!(!adapter.exists(&name).await.unwrap(), "{engine:?}");
+        assert!(adapter.exists(&renamed).await.unwrap(), "{engine:?}");
+        let missing = adapter.update(&name, &renamed).await.unwrap_err();
+        assert_eq!(missing.message(), "Database not found");
+        assert!(adapter.delete(&renamed).await.unwrap(), "{engine:?}");
+        assert!(!utopia_database::adapter::Connection::id(&adapter).await.unwrap().is_empty());
+        assert_eq!(utopia_database::adapter::Connection::hostname(&adapter).await.unwrap(), "localhost");
+    }
+}
+
+#[tokio::test]
+async fn servers_nest_transactions() {
+    for (engine, dsn) in SERVERS {
+        let Some(adapter) = server(engine, dsn).await else { continue };
+        let value = with_transaction(&adapter, || async {
+            assert!(adapter.in_transaction());
+            let inner: utopia_database::Result<i64> =
+                with_transaction(&adapter, || async { Err(utopia_database::Error::query("inner")) }).await;
+            assert_eq!(inner.unwrap_err().message(), "inner");
+            Ok(3)
+        })
+        .await
+        .unwrap();
+        assert_eq!(value, 3, "{engine:?}");
+        assert!(!adapter.in_transaction());
+        assert!(!adapter.pdo().lock().await.in_transaction(), "{engine:?}");
+    }
+}
