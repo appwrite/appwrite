@@ -8,8 +8,10 @@
 mod attributes;
 mod collections;
 mod indexes;
+mod memory;
 mod permissions;
 mod relationships;
+mod types;
 
 use std::sync::{Arc, Mutex};
 

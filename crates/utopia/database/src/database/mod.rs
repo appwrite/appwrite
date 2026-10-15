@@ -72,6 +72,8 @@ pub(crate) mod spy;
 pub(crate) mod testing;
 #[cfg(all(test, feature = "memory"))]
 pub(crate) mod testing_memory;
+#[cfg(all(test, feature = "memory"))]
+pub(crate) mod testing_intercepted;
 
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, MutexGuard, RwLock};
