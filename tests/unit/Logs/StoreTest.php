@@ -27,6 +27,7 @@ final class StoreTest extends TestCase
             'resourceId' => 'fn',
             'resourceInternalId' => '10',
             'deploymentId' => 'dep',
+            'region' => 'fra',
             'timestamp' => '2026-08-25T10:00:00.000+00:00',
             'stream' => 'stdout',
             'message' => 'hello',
@@ -41,6 +42,7 @@ final class StoreTest extends TestCase
         $this->assertSame('log1', $row['id']);
         $this->assertSame('functions', $row['resourceType']);
         $this->assertSame('dep', $row['deploymentId']);
+        $this->assertSame('fra', $row['region']);
         $this->assertSame('stdout', $row['stream']);
         $this->assertSame('hello', $row['message']);
         $this->assertSame('2026-09-08 10:00:00.000', $row['expiresAt']);
@@ -49,6 +51,7 @@ final class StoreTest extends TestCase
     public function testSetupCreatesMergeTreeTable(): void
     {
         $client = new CapturingClient([
+            new Response(200),
             new Response(200),
             new Response(200),
             new Response(200),
@@ -65,7 +68,8 @@ final class StoreTest extends TestCase
         $this->assertStringContainsString('CREATE TABLE IF NOT EXISTS', $bodies[1]);
         $this->assertStringContainsString('ENGINE = MergeTree', $bodies[1]);
         $this->assertStringContainsString('ORDER BY (projectId, deploymentId, timestamp, id)', $bodies[1]);
-        $this->assertStringContainsString('MODIFY TTL expiresAt DELETE', $bodies[3]);
+        $this->assertStringContainsString('ADD COLUMN IF NOT EXISTS region', $bodies[2]);
+        $this->assertStringContainsString('MODIFY TTL expiresAt DELETE', $bodies[4]);
     }
 
     public function testFindsAndCountsWithDeploymentFilter(): void
@@ -73,6 +77,7 @@ final class StoreTest extends TestCase
         $client = new FilteringClient([
             [
                 'id' => 'log-stdout',
+                'region' => 'fra',
                 'resourceType' => 'functions',
                 'resourceId' => 'fn',
                 'resourceInternalId' => '10',
@@ -83,6 +88,7 @@ final class StoreTest extends TestCase
             ],
             [
                 'id' => 'log-stderr',
+                'region' => 'fra',
                 'resourceType' => 'functions',
                 'resourceId' => 'fn',
                 'resourceInternalId' => '10',
@@ -93,6 +99,7 @@ final class StoreTest extends TestCase
             ],
             [
                 'id' => 'log-other',
+                'region' => 'fra',
                 'resourceType' => 'functions',
                 'resourceId' => 'fn',
                 'resourceInternalId' => '10',
@@ -117,6 +124,49 @@ final class StoreTest extends TestCase
         $this->assertSame('log-stderr', $logs[0]->getId());
         $this->assertSame('stderr', $logs[0]->getAttribute('stream'));
         $this->assertSame('dep', $logs[0]->getAttribute('deploymentId'));
+        $this->assertSame(1, $total);
+    }
+
+    public function testFindsAndCountsWithRegionFilter(): void
+    {
+        $client = new FilteringClient([
+            [
+                'id' => 'log-fra',
+                'resourceType' => 'functions',
+                'resourceId' => 'fn',
+                'resourceInternalId' => '10',
+                'deploymentId' => 'dep',
+                'region' => 'fra',
+                'timestamp' => '2026-08-25 10:00:00.000',
+                'stream' => 'stdout',
+                'message' => 'from fra',
+            ],
+            [
+                'id' => 'log-nyc',
+                'resourceType' => 'functions',
+                'resourceId' => 'fn',
+                'resourceInternalId' => '10',
+                'deploymentId' => 'dep',
+                'region' => 'nyc',
+                'timestamp' => '2026-08-25 10:00:01.000',
+                'stream' => 'stdout',
+                'message' => 'from nyc',
+            ],
+        ]);
+
+        $store = $this->store($client);
+        $queries = [
+            Query::equal('deploymentId', ['dep']),
+            Query::equal('region', ['nyc']),
+            Query::limit(10),
+        ];
+
+        $logs = $store->find('project', $queries);
+        $total = $store->count('project', $queries, 100);
+
+        $this->assertCount(1, $logs);
+        $this->assertSame('log-nyc', $logs[0]->getId());
+        $this->assertSame('nyc', $logs[0]->getAttribute('region'));
         $this->assertSame(1, $total);
     }
 
@@ -297,7 +347,7 @@ final class FilteringClient implements ClientInterface
     private function match(string $sql, array $params): array
     {
         $filters = [];
-        foreach (['deploymentId', 'stream', 'resourceType', 'resourceId', 'resourceInternalId'] as $column) {
+        foreach (['deploymentId', 'region', 'stream', 'resourceType', 'resourceId', 'resourceInternalId'] as $column) {
             $needle = $column . ' IN ({';
             $pos = \strpos($sql, $needle);
             if ($pos === false) {
