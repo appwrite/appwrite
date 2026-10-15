@@ -18,6 +18,13 @@ import {
   type FunctionWithEmail,
 } from '@/lib/function-email'
 
+/** Lets sibling settings cards wait for an in-flight email update. */
+export function functionEmailMutationKey(
+  functionId: string | null | undefined,
+) {
+  return ['function', 'email', functionId]
+}
+
 interface FunctionEmailCardProps {
   projectId: string | null | undefined
   functionId: string | null | undefined
@@ -41,6 +48,7 @@ export function FunctionEmailCard({
   const [emailEnabled, setEmailEnabled] = useSyncStateFromServer(savedEnabled)
 
   const updateMutation = useMutation({
+    mutationKey: functionEmailMutationKey(functionId),
     mutationFn: async (nextEnabled: boolean) => {
       if (!projectId || !functionId)
         throw new Error('Project ID and Function ID are required')

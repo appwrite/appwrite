@@ -10,7 +10,11 @@ import {
 } from '@/lib/react-query/hooks'
 import { sdk } from '@/lib/appwrite/sdk'
 import { getActiveProfileFeatures } from '@/lib/console-profiles'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import {
+  useIsMutating,
+  useMutation,
+  useQueryClient,
+} from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
 import { toast } from 'sonner'
 import { Plus, X } from 'lucide-react'
@@ -33,7 +37,10 @@ import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { ScopeEditor } from '@/components/global/shared/ScopeEditor'
 import { useT } from '@/lib/i18n/translate'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
-import { FunctionEmailCard } from './FunctionEmailCard'
+import {
+  FunctionEmailCard,
+  functionEmailMutationKey,
+} from './FunctionEmailCard'
 
 export function View() {
   const t = useT()
@@ -175,10 +182,13 @@ export function View() {
 
   // Each save sends the whole function, so only one may be in flight or the
   // later request would restore the other card's old value.
+  const emailPending =
+    useIsMutating({ mutationKey: functionEmailMutationKey(functionId) }) > 0
   const executionsPending =
     scheduleMutation.isPending ||
     eventsMutation.isPending ||
-    scopesMutation.isPending
+    scopesMutation.isPending ||
+    emailPending
 
   if (funcLoading) {
     return (
