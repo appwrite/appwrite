@@ -753,8 +753,7 @@
             "$collection": "database_1_collection_1"
           }
         }
-      ],
-      "blocked": "utopia-database 8.x: Document::getArrayCopy() of a document read back puts $sequence before $id, $createdAt, $updatedAt and $permissions (the Rust 7.x port puts it after them)"
+      ]
     },
     {
       "name": "testRowImportKeepsDeclaredFieldsBetweenUndeclaredOnes",
@@ -1560,8 +1559,7 @@
             "$collection": "database_1_collection_1"
           }
         }
-      ],
-      "blocked": "utopia-database 8.x: Document::getArrayCopy() of a document read back puts $sequence before $id, $createdAt, $updatedAt and $permissions (the Rust 7.x port puts it after them)"
+      ]
     },
     {
       "name": "testRowImportStoresFullyDeclaredRowsUnchanged",
@@ -2429,8 +2427,7 @@
             "$collection": "database_1_collection_1"
           }
         }
-      ],
-      "blocked": "utopia-database 8.x: Document::getArrayCopy() of a document read back puts $sequence before $id, $createdAt, $updatedAt and $permissions (the Rust 7.x port puts it after them)"
+      ]
     }
   ]
 }

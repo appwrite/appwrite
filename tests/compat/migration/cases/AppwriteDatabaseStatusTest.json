@@ -239,8 +239,7 @@
             "$collection": "databases"
           }
         }
-      ],
-      "blocked": "utopia-database 8.x: Document::getArrayCopy() of a document read back puts $sequence before $id, $createdAt, $updatedAt and $permissions (the Rust 7.x port puts it after them)"
+      ]
     },
     {
       "name": "testDatabaseCreationOmitsStatusThroughLegacyAndExplicitEntrypoints (explicit)",
@@ -488,8 +487,7 @@
             "$collection": "databases"
           }
         }
-      ],
-      "blocked": "utopia-database 8.x: Document::getArrayCopy() of a document read back puts $sequence before $id, $createdAt, $updatedAt and $permissions (the Rust 7.x port puts it after them)"
+      ]
     },
     {
       "name": "testDatabaseCreationPreservesLifecycleThroughLegacyAndExplicitEntrypoints (legacy)",
@@ -740,8 +738,7 @@
             "$collection": "databases"
           }
         }
-      ],
-      "blocked": "utopia-database 8.x: Document::getArrayCopy() of a document read back puts $sequence before $id, $createdAt, $updatedAt and $permissions (the Rust 7.x port puts it after them)"
+      ]
     },
     {
       "name": "testDatabaseCreationPreservesLifecycleThroughLegacyAndExplicitEntrypoints (explicit)",
@@ -1000,8 +997,7 @@
             "$collection": "databases"
           }
         }
-      ],
-      "blocked": "utopia-database 8.x: Document::getArrayCopy() of a document read back puts $sequence before $id, $createdAt, $updatedAt and $permissions (the Rust 7.x port puts it after them)"
+      ]
     },
     {
       "name": "testIncompleteDatabasesAreRecoveredImmediately (fail)",
@@ -1505,8 +1501,7 @@
             }
           ]
         }
-      ],
-      "blocked": "utopia-database 8.x: Document::getArrayCopy() of a document read back puts $sequence before $id, $createdAt, $updatedAt and $permissions (the Rust 7.x port puts it after them); utopia-database 8.x: collection metadata holds each attribute as Attribute::toDocument() ($id, key, type, size, required, default, signed, array, format, formatOptions, filters[, options])"
+      ]
     },
     {
       "name": "testIncompleteDatabasesAreRecoveredImmediately (skip)",
@@ -2010,8 +2005,7 @@
             }
           ]
         }
-      ],
-      "blocked": "utopia-database 8.x: Document::getArrayCopy() of a document read back puts $sequence before $id, $createdAt, $updatedAt and $permissions (the Rust 7.x port puts it after them); utopia-database 8.x: collection metadata holds each attribute as Attribute::toDocument() ($id, key, type, size, required, default, signed, array, format, formatOptions, filters[, options])"
+      ]
     },
     {
       "name": "testIncompleteDatabasesAreRecoveredImmediately (overwrite with an older source)",
@@ -2515,8 +2509,7 @@
             }
           ]
         }
-      ],
-      "blocked": "utopia-database 8.x: Document::getArrayCopy() of a document read back puts $sequence before $id, $createdAt, $updatedAt and $permissions (the Rust 7.x port puts it after them); utopia-database 8.x: collection metadata holds each attribute as Attribute::toDocument() ($id, key, type, size, required, default, signed, array, format, formatOptions, filters[, options])"
+      ]
     },
     {
       "name": "testIncompleteDatabasesAreRecoveredImmediately (overwrite with a newer source)",
@@ -3020,8 +3013,7 @@
             }
           ]
         }
-      ],
-      "blocked": "utopia-database 8.x: Document::getArrayCopy() of a document read back puts $sequence before $id, $createdAt, $updatedAt and $permissions (the Rust 7.x port puts it after them); utopia-database 8.x: collection metadata holds each attribute as Attribute::toDocument() ($id, key, type, size, required, default, signed, array, format, formatOptions, filters[, options])"
+      ]
     },
     {
       "name": "a failed database without its collection is recovered under OnDuplicate::Fail",
@@ -3413,8 +3405,7 @@
             }
           ]
         }
-      ],
-      "blocked": "utopia-database 8.x: Document::getArrayCopy() of a document read back puts $sequence before $id, $createdAt, $updatedAt and $permissions (the Rust 7.x port puts it after them); utopia-database 8.x: collection metadata holds each attribute as Attribute::toDocument() ($id, key, type, size, required, default, signed, array, format, formatOptions, filters[, options])"
+      ]
     },
     {
       "name": "a provisioning database without its collection is recovered under OnDuplicate::Fail",
@@ -3806,8 +3797,7 @@
             }
           ]
         }
-      ],
-      "blocked": "utopia-database 8.x: Document::getArrayCopy() of a document read back puts $sequence before $id, $createdAt, $updatedAt and $permissions (the Rust 7.x port puts it after them); utopia-database 8.x: collection metadata holds each attribute as Attribute::toDocument() ($id, key, type, size, required, default, signed, array, format, formatOptions, filters[, options])"
+      ]
     },
     {
       "name": "testReadyFlipAttemptsEveryDatabaseAndReportsEveryFailure, without failures: every database is flipped",
@@ -4177,8 +4167,7 @@
             "$collection": "databases"
           }
         }
-      ],
-      "blocked": "utopia-database 8.x: Document::getArrayCopy() of a document read back puts $sequence before $id, $createdAt, $updatedAt and $permissions (the Rust 7.x port puts it after them)"
+      ]
     }
   ]
 }

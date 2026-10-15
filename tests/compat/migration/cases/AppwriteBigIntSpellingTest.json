@@ -874,8 +874,7 @@
             "$collection": "_metadata"
           }
         }
-      ],
-      "blocked": "utopia-database 8.x: Document::getArrayCopy() of a document read back puts $sequence before $id, $createdAt, $updatedAt and $permissions (the Rust 7.x port puts it after them)"
+      ]
     },
     {
       "name": "testAStoredBigIntegerSpellingIsNotDroppedAndRecreated",
@@ -2148,8 +2147,7 @@
             "$collection": "_metadata"
           }
         }
-      ],
-      "blocked": "utopia-database 8.x: the destination compares deployed and wanted attributes and indexes through Attribute::fromDocument()->apply(new Attribute\\Update()), Index::fromDocument()/fromArray() and Attribute::typeFromStored() (legacy 7.x metadata spellings and the bigint/biginteger type names normalised); the Rust port compares the stored values as 2.x did; utopia-database 8.x: Document::getArrayCopy() of a document read back puts $sequence before $id, $createdAt, $updatedAt and $permissions (the Rust 7.x port puts it after them)"
+      ]
     }
   ]
 }

@@ -5,7 +5,8 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 use php_std::{Array, Value};
-use utopia_database::{Database as Db, Document, Query};
+use utopia_database::{Capability, Database as Db, Document, PermissionType, Query};
+use utopia_query::schema::ColumnType;
 
 use crate::error::{Error, Result};
 use crate::exception::Exception;
@@ -92,10 +93,15 @@ impl std::fmt::Debug for DatabaseReader {
 
 /// A document as a plain array (`getArrayCopy()`).
 pub fn plain(doc: &Document) -> Array {
-    match utopia_database::value::to_plain(&utopia_database::Value::Array(doc.array_copy(&[], &[]))) {
+    match utopia_database::value::to_plain(&utopia_database::Value::Array(doc.array_copy())) {
         Value::Array(a) => a,
         _ => Array::new(),
     }
+}
+
+/// A plain value as a query value.
+fn query_value(v: Value) -> utopia_query::Value {
+    utopia_database::value::to_query(&utopia_database::value::from_plain(v))
 }
 
 fn sequence(doc: &Document) -> String {
@@ -214,14 +220,14 @@ impl Reader for DatabaseReader {
                     Value::Array(a) => a.values().cloned().collect(),
                     v => vec![v.clone()],
                 };
-                queries.push(Query::equal("$id", list.into_iter().map(utopia_database::value::from_plain)));
+                queries.push(Query::equal("$id", list.into_iter().map(query_value).collect::<Vec<_>>()));
             }
         }
         let selected_relevant = resources.iter().filter(|r| relevant.contains(&r.as_str())).count();
         if selected_relevant == 1 && is_supported(&database_types, resources) {
             return Ok(());
         }
-        let databases = self.db.find("databases", queries, Db::PERMISSION_READ).await?;
+        let databases = self.db.find("databases", queries, PermissionType::Read).await?;
         let selected: Vec<String> =
             resources.iter().filter(|r| database_types.contains(&r.as_str())).cloned().collect();
         let plain_dbs: Vec<Array> = databases.iter().map(plain).collect();
@@ -242,7 +248,7 @@ impl Reader for DatabaseReader {
             }
             let spec = database_resources(t).expect("known database type");
             let db_seq = sequence(doc);
-            let tables = self.db.find(&format!("database_{db_seq}"), Vec::new(), Db::PERMISSION_READ).await?;
+            let tables = self.db.find(&format!("database_{db_seq}"), Vec::new(), PermissionType::Read).await?;
             if is_supported(&[spec.entity], resources) {
                 let e = report.entry(spec.entity.to_owned()).or_insert(Value::Int(0));
                 *e = Value::Int(crate::resources::cast_int(e) + tables.len() as i64);
@@ -256,8 +262,8 @@ impl Reader for DatabaseReader {
                 }
                 let common = || {
                     vec![
-                        Query::equal("databaseInternalId", [utopia_database::Value::from(db_seq.as_str())]),
-                        Query::equal("collectionInternalId", [utopia_database::Value::from(t_seq.as_str())]),
+                        Query::equal("databaseInternalId", [db_seq.as_str()]),
+                        Query::equal("collectionInternalId", [t_seq.as_str()]),
                     ]
                 };
                 if is_supported(&[spec.field], resources) {
@@ -276,7 +282,7 @@ impl Reader for DatabaseReader {
     }
 
     async fn list_databases(&self, queries: Vec<ReaderQuery>) -> Result<Vec<Array>> {
-        Ok(self.db.find("databases", db_queries(queries), Db::PERMISSION_READ).await?.iter().map(plain).collect())
+        Ok(self.db.find("databases", db_queries(queries), PermissionType::Read).await?.iter().map(plain).collect())
     }
 
     async fn list_tables(&self, database: &ResourceRef, queries: Vec<ReaderQuery>) -> Result<Vec<Array>> {
@@ -287,7 +293,7 @@ impl Reader for DatabaseReader {
         if d.is_empty() {
             return Err(not_found(database, "Database not found"));
         }
-        match self.db.find(&format!("database_{}", sequence(&d)), db_queries(queries), Db::PERMISSION_READ).await {
+        match self.db.find(&format!("database_{}", sequence(&d)), db_queries(queries), PermissionType::Read).await {
             Ok(rows) => Ok(rows.iter().map(plain).collect()),
             Err(e) => Err(wrap(database, e)),
         }
@@ -296,9 +302,9 @@ impl Reader for DatabaseReader {
     async fn list_columns(&self, table: &ResourceRef, queries: Vec<ReaderQuery>) -> Result<Vec<Array>> {
         let (database, t) = self.table_documents(table).await?;
         let mut queries = db_queries(queries);
-        queries.push(Query::equal("databaseInternalId", [utopia_database::Value::from(sequence(&database).as_str())]));
-        queries.push(Query::equal("collectionInternalId", [utopia_database::Value::from(sequence(&t).as_str())]));
-        let columns = match self.db.find("attributes", queries, Db::PERMISSION_READ).await {
+        queries.push(Query::equal("databaseInternalId", [sequence(&database)]));
+        queries.push(Query::equal("collectionInternalId", [sequence(&t)]));
+        let columns = match self.db.find("attributes", queries, PermissionType::Read).await {
             Ok(c) => c,
             Err(e) => return Err(wrap(table, e)),
         };
@@ -306,7 +312,7 @@ impl Reader for DatabaseReader {
             .iter()
             .map(|c| {
                 let mut a = plain(c);
-                if a.get_str("type").map(cast_string).as_deref() == Some(Db::VAR_RELATIONSHIP) {
+                if a.get_str("type").map(cast_string).as_deref() == Some(ColumnType::Relationship.as_str()) {
                     if let Some(Value::Array(options)) = a.get_str("options").cloned() {
                         for (k, v) in options.iter() {
                             a.set(k.to_owned(), v.clone());
@@ -322,9 +328,9 @@ impl Reader for DatabaseReader {
     async fn list_indexes(&self, table: &ResourceRef, queries: Vec<ReaderQuery>) -> Result<Vec<Array>> {
         let (database, t) = self.table_documents(table).await?;
         let mut queries = db_queries(queries);
-        queries.push(Query::equal("databaseInternalId", [utopia_database::Value::from(sequence(&database).as_str())]));
-        queries.push(Query::equal("collectionInternalId", [utopia_database::Value::from(sequence(&t).as_str())]));
-        match self.db.find("indexes", queries, Db::PERMISSION_READ).await {
+        queries.push(Query::equal("databaseInternalId", [sequence(&database)]));
+        queries.push(Query::equal("collectionInternalId", [sequence(&t)]));
+        match self.db.find("indexes", queries, PermissionType::Read).await {
             Ok(rows) => Ok(rows.iter().map(plain).collect()),
             Err(e) => Err(wrap(table, e)),
         }
@@ -334,7 +340,7 @@ impl Reader for DatabaseReader {
         let (database, t) = self.table_documents(table).await?;
         let id = format!("database_{}_collection_{}", sequence(&database), sequence(&t));
         let db = self.rows_db(Some(&database));
-        match db.find(&id, db_queries(queries), Db::PERMISSION_READ).await {
+        match db.find(&id, db_queries(queries), PermissionType::Read).await {
             Ok(rows) => Ok(rows.iter().map(plain).collect()),
             Err(e) => Err(wrap(table, e)),
         }
@@ -348,11 +354,11 @@ impl Reader for DatabaseReader {
     }
 
     fn query_select(&self, columns: Vec<String>) -> ReaderQuery {
-        ReaderQuery::Database(Query::select(columns.iter().map(|c| utopia_database::Value::from(c.as_str()))))
+        ReaderQuery::Database(Query::select(columns))
     }
 
     fn query_equal(&self, column: &str, values: Vec<Value>) -> ReaderQuery {
-        ReaderQuery::Database(Query::equal(column, values.into_iter().map(utopia_database::value::from_plain)))
+        ReaderQuery::Database(Query::equal(column, values.into_iter().map(query_value).collect::<Vec<_>>()))
     }
 
     /// PHP switches on the resource's exact class, so a `DocumentsDB` or
@@ -386,7 +392,7 @@ impl Reader for DatabaseReader {
             }
             _ => return Err(unsupported()),
         };
-        Ok(ReaderQuery::Database(Query::cursor_after(document)))
+        Ok(ReaderQuery::Database(Query::cursor_after(&document)))
     }
 
     fn query_limit(&self, limit: i64) -> ReaderQuery {
@@ -394,7 +400,7 @@ impl Reader for DatabaseReader {
     }
 
     fn support_for_attributes(&self) -> bool {
-        self.db.adapter().support_for_attributes()
+        self.db.adapter().supports(Capability::DefinedAttributes)
     }
 }
 

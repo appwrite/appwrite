@@ -1169,8 +1169,7 @@
             "isSigned": false
           }
         }
-      ],
-      "blocked": "utopia-database 8.x: the destination compares deployed and wanted attributes and indexes through Attribute::fromDocument()->apply(new Attribute\\Update()), Index::fromDocument()/fromArray() and Attribute::typeFromStored() (legacy 7.x metadata spellings and the bigint/biginteger type names normalised); the Rust port compares the stored values as 2.x did"
+      ]
     },
     {
       "name": "testAnUnchangedAttributeWithLegacyMetadataIsSkipped (datetime without its type filter)",
@@ -2340,8 +2339,7 @@
             "isSigned": false
           }
         }
-      ],
-      "blocked": "utopia-database 8.x: the destination compares deployed and wanted attributes and indexes through Attribute::fromDocument()->apply(new Attribute\\Update()), Index::fromDocument()/fromArray() and Attribute::typeFromStored() (legacy 7.x metadata spellings and the bigint/biginteger type names normalised); the Rust port compares the stored values as 2.x did"
+      ]
     },
     {
       "name": "testAnUnchangedAttributeWithLegacyMetadataIsSkipped (unsized 32-bit integer)",
@@ -3523,8 +3521,7 @@
             "isSigned": true
           }
         }
-      ],
-      "blocked": "utopia-database 8.x: the destination compares deployed and wanted attributes and indexes through Attribute::fromDocument()->apply(new Attribute\\Update()), Index::fromDocument()/fromArray() and Attribute::typeFromStored() (legacy 7.x metadata spellings and the bigint/biginteger type names normalised); the Rust port compares the stored values as 2.x did"
+      ]
     },
     {
       "name": "testAnUnchangedAttributeWithLegacyMetadataIsSkipped (oversized 64-bit integer)",
@@ -4702,8 +4699,7 @@
             "isSigned": true
           }
         }
-      ],
-      "blocked": "utopia-database 8.x: the destination compares deployed and wanted attributes and indexes through Attribute::fromDocument()->apply(new Attribute\\Update()), Index::fromDocument()/fromArray() and Attribute::typeFromStored() (legacy 7.x metadata spellings and the bigint/biginteger type names normalised); the Rust port compares the stored values as 2.x did"
+      ]
     },
     {
       "name": "testARealChangeBehindLegacyMetadataIsStillApplied (string size)",

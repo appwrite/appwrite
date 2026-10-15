@@ -36,14 +36,13 @@ fn pdo_error(e: &tokio_postgres::Error) -> Error {
     match e.as_db_error() {
         Some(db) => {
             let sqlstate = db.code().code().to_owned();
-            Error::Pdo {
-                message: format!(
-                    "SQLSTATE[{sqlstate}]: {}: 7 ERROR:  {}",
-                    utopia_database::adapter::postgres::pdo::describe(&sqlstate),
-                    db.message()
-                ),
-                sqlstate,
-            }
+            let message = utopia_database::adapter::sql::pdo::PdoError::driver(
+                &sqlstate,
+                7,
+                &format!("ERROR:  {}", db.message()),
+            )
+            .message;
+            Error::Pdo { message, sqlstate }
         }
         None => Error::Pdo { message: format!("SQLSTATE[08006] [7] {e}"), sqlstate: "08006".to_owned() },
     }

@@ -609,8 +609,7 @@
             "$collection": "databases"
           }
         }
-      ],
-      "blocked": "utopia-database 8.x: Document::getArrayCopy() of a document read back puts $sequence before $id, $createdAt, $updatedAt and $permissions (the Rust 7.x port puts it after them)"
+      ]
     },
     {
       "name": "testInterruptedRunLeavesItsDatabasesProvisioning",
@@ -1238,8 +1237,7 @@
             "$collection": "databases"
           }
         }
-      ],
-      "blocked": "utopia-database 8.x: Document::getArrayCopy() of a document read back puts $sequence before $id, $createdAt, $updatedAt and $permissions (the Rust 7.x port puts it after them)"
+      ]
     },
     {
       "name": "testOneFailedReadyFlipStillSweepsEveryOverwrittenTable, without the failure: the sweep drops the legacy columns",
@@ -2687,8 +2685,7 @@
             }
           ]
         }
-      ],
-      "blocked": "utopia-database 8.x: Document::getArrayCopy() of a document read back puts $sequence before $id, $createdAt, $updatedAt and $permissions (the Rust 7.x port puts it after them)"
+      ]
     }
   ]
 }
