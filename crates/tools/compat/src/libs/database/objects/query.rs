@@ -270,6 +270,7 @@ fn query_static(method: &str, a: &Args) -> R<Option<Obj>> {
         "or" => query(B::logical(Method::Or, queries_values(a, "queries")?)),
         "and" => query(B::logical(Method::And, queries_values(a, "queries")?)),
         "elemMatch" => query(B::new(Method::ElemMatch, attr()?, queries_values(a, "queries")?, "")),
+        "relationship" => query(B::new(Method::Relationship, attr()?, queries_values(a, "queries")?, "")),
         "having" => query(B::logical(Method::Having, queries_values(a, "queries")?)),
         "union" => query(B::logical(Method::Union, queries_values(a, "queries")?)),
         "unionAll" => query(B::logical(Method::UnionAll, queries_values(a, "queries")?)),
