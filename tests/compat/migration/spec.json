@@ -1,6 +1,6 @@
 {
   "lib": "migration",
-  "description": "utopia-php/migration 3.1: resources (auth, databases, storage, functions, sites, messaging, integrations, settings, domains, backups), the transfer with its cache and status counters, the sources (Appwrite over the API or the database, Supabase, NHost, Firebase, CSV, JSON) and destinations (Appwrite, CSV, JSON, a local backup), and halaxa/json-machine's streaming parser the JSON source reads with.",
+  "description": "utopia-php/migration 4.0 (unreleased): resources (auth, databases, storage, functions, sites, messaging, integrations, settings, domains, backups), the transfer with its cache and status counters, the sources (Appwrite over the API or the database, Supabase, NHost, Firebase, CSV, JSON) and destinations (Appwrite, CSV, JSON, a local backup), and halaxa/json-machine's streaming parser the JSON source reads with.",
   "complete": true,
   "php": {
     "src": [
@@ -81,6 +81,7 @@
         "Utopia\\Migration\\Resources\\Messaging\\Subscriber::__construct",
         "Utopia\\Migration\\Resources\\Messaging\\Topic::__construct",
         "Utopia\\Migration\\Resources\\Settings\\Labels::__construct",
+        "Utopia\\Migration\\Resources\\Settings\\Environment::__construct",
         "Utopia\\Migration\\Resources\\Settings\\ProjectVariable::__construct",
         "Utopia\\Migration\\Resources\\Settings\\Protocols::__construct",
         "Utopia\\Migration\\Resources\\Settings\\SMTP::__construct",
@@ -141,6 +142,7 @@
         "Utopia\\Migration\\Resources\\Messaging\\Subscriber::fromArray",
         "Utopia\\Migration\\Resources\\Messaging\\Topic::fromArray",
         "Utopia\\Migration\\Resources\\Settings\\Labels::fromArray",
+        "Utopia\\Migration\\Resources\\Settings\\Environment::fromArray",
         "Utopia\\Migration\\Resources\\Settings\\ProjectVariable::fromArray",
         "Utopia\\Migration\\Resources\\Settings\\Protocols::fromArray",
         "Utopia\\Migration\\Resources\\Settings\\SMTP::fromArray",
@@ -218,6 +220,9 @@
         "Utopia\\Migration\\Resources\\Auth\\Policies::getDenyCorporateEmail",
         "Utopia\\Migration\\Resources\\Auth\\Policies::getDenyDisposableEmail",
         "Utopia\\Migration\\Resources\\Auth\\Policies::getDenyFreeEmail",
+        "Utopia\\Migration\\Resources\\Auth\\Policies::getPasskeyRpId",
+        "Utopia\\Migration\\Resources\\Auth\\Policies::getPasswordPwned",
+        "Utopia\\Migration\\Resources\\Auth\\Policies::getPasswordRotation",
         "Utopia\\Migration\\Resources\\Auth\\Policies::getMembershipsUserAccessedAt",
         "Utopia\\Migration\\Resources\\Auth\\Policies::getMfaFactors",
         "Utopia\\Migration\\Resources\\Auth\\Policies::getPasswordStrength",
@@ -436,8 +441,13 @@
         "Utopia\\Migration\\Resources\\Messaging\\Subscriber::getUserName",
         "Utopia\\Migration\\Resources\\Messaging\\Topic::getGroup",
         "Utopia\\Migration\\Resources\\Messaging\\Topic::getName",
+        "Utopia\\Migration\\Resources\\Messaging\\Topic::getExpiry",
+        "Utopia\\Migration\\Resources\\Messaging\\Topic::getQos",
         "Utopia\\Migration\\Resources\\Messaging\\Topic::getSubscribe",
         "Utopia\\Migration\\Resources\\Messaging\\Topic::getTopicName",
+        "Utopia\\Migration\\Resources\\Settings\\Environment::getEnvironmentName",
+        "Utopia\\Migration\\Resources\\Settings\\Environment::getGroup",
+        "Utopia\\Migration\\Resources\\Settings\\Environment::getName",
         "Utopia\\Migration\\Resources\\Settings\\Labels::getGroup",
         "Utopia\\Migration\\Resources\\Settings\\Labels::getLabels",
         "Utopia\\Migration\\Resources\\Settings\\Labels::getName",
@@ -572,6 +582,7 @@
         "Utopia\\Migration\\Resources\\Messaging\\Provider::jsonSerialize",
         "Utopia\\Migration\\Resources\\Messaging\\Subscriber::jsonSerialize",
         "Utopia\\Migration\\Resources\\Messaging\\Topic::jsonSerialize",
+        "Utopia\\Migration\\Resources\\Settings\\Environment::jsonSerialize",
         "Utopia\\Migration\\Resources\\Settings\\Labels::jsonSerialize",
         "Utopia\\Migration\\Resources\\Settings\\ProjectVariable::jsonSerialize",
         "Utopia\\Migration\\Resources\\Settings\\Protocols::jsonSerialize",
@@ -1448,6 +1459,49 @@
           }
         }
       ]
+    },
+    "request_target.new": {
+      "doc": "TargetRequestTest's RequestTarget: a Target with an endpoint (a template: `{api}` is the migration-api fixture, `{port}` its port) and a public request() of Target::call()",
+      "covers": []
+    },
+    "resolver.new": {
+      "doc": "The tests' resolvers: `pin` returns `<host>:<port>:<fixture address>` for the URL it receives, `refuse` throws Exception('Refused'); each records the URLs it receives",
+      "covers": []
+    },
+    "resolver.urls": {
+      "doc": "The URLs a resolver received, the fixture's address read back as `{api}` and its port as `{port}`",
+      "covers": []
+    },
+    "target.configure": {
+      "doc": "$target->setFollowRedirects($follow), ->setResolver($resolver) (null clears it) and ->setDestinations() (`public`: new PublicInternet(); `service`: PublicInternet admitting the fixture's address), on a request target, a source or a destination",
+      "covers": [
+        "Utopia\\Migration\\Target::setFollowRedirects",
+        "Utopia\\Migration\\Target::setResolver",
+        "Utopia\\Migration\\Target::setDestinations",
+        "Utopia\\Migration\\Sources\\Appwrite::setResolver",
+        "Utopia\\Migration\\Sources\\Appwrite::setDestinations"
+      ]
+    },
+    "target.request": {
+      "doc": "$target->request($method, $path, $params) on a RequestTarget, with `http_proxy` set to `proxy` meanwhile: `{response}`, or `{error: {class, code, message}}` (no message when `message` is false, the transports wording failures differently; a refused destination as `not an allowed destination` without its address or code)",
+      "covers": []
+    },
+    "appwrite_client.new": {
+      "doc": "new Sources\\Appwrite\\Client() with setEndpoint($endpoint), an endpoint template as for request_target.new",
+      "covers": []
+    },
+    "appwrite_client.configure": {
+      "doc": "$client->setResolver($resolver) (null clears it), ->setDestinations() (as target.configure) and ->setEndpoint($endpoint)",
+      "covers": [
+        "Utopia\\Migration\\Sources\\Appwrite\\Client::setResolver",
+        "Utopia\\Migration\\Sources\\Appwrite\\Client::setDestinations"
+      ]
+    },
+    "appwrite_client.call": {
+      "doc": "$client->call($method, $path, [], $params, $responseType) on a client, or on a source's own client (`source`): `{response}` or `{error}` as target.request; the transport refuses redirects (Client\\RedirectRefusal) unless the response type is `location`",
+      "covers": [
+        "Utopia\\Migration\\Sources\\Appwrite\\Client\\RedirectRefusal::*"
+      ]
     }
   },
   "generators": {
@@ -1469,7 +1523,7 @@
         "\"\\\\\"",
         "\"\\\\\\\"\"",
         "\"\\u00e9\"",
-        "\"é\"",
+        "\"\u00e9\"",
         "1",
         "-2.5e3",
         "0",
@@ -1774,6 +1828,11 @@
       "symbol": "Utopia\\Migration\\Target::call",
       "php": "cURL sends its default user agent with the PHP version (`<os>-<release>:php-<version>`).",
       "reason": "The Rust client sends `<os>-<release>:rust`; the cases mask the recorded user-agent header (`/*/headers/user-agent`). Every other header and the body are compared."
+    },
+    {
+      "symbol": "Utopia\\Migration\\Target::setResolver",
+      "php": "Without a resolver, cURL sends requests through the proxy the environment names (`http_proxy`); with one it sets `CURLOPT_PROXY` empty, so pinned requests (Target::call() and the Appwrite source's SDK client) never go through a proxy.",
+      "reason": "utopia-client's transport has no proxy support, so Rust requests never go through a proxy, pinned or not. The cases pin requests with `http_proxy` set on PHP: both go direct."
     }
   ],
   "bench": {

@@ -1,0 +1,794 @@
+{
+  "source": "packages/migration/tests/Sources/AppwriteClientTest.php",
+  "cases": [
+    {
+      "name": "a redirect is not followed",
+      "steps": [
+        {
+          "op": "api.routes",
+          "args": {
+            "project": "cli-${ns}",
+            "routes": [
+              {
+                "method": "GET",
+                "path": "/redirect",
+                "status": 302,
+                "headers": {
+                  "Location": "/p/cli-${ns}/echo"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "path": "/redirect-file",
+                "status": 302,
+                "headers": {
+                  "Location": "file:///etc/hosts"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "path": "/echo",
+                "status": 200,
+                "body": {
+                  "method": "GET",
+                  "host": "{host}",
+                  "uri": "{uri}"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "appwrite_client.new",
+          "args": {
+            "endpoint": "{api}/p/cli-${ns}"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "appwrite_client.call",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "method": "GET",
+            "path": "/redirect",
+            "params": {
+              "to": "/echo"
+            }
+          },
+          "expect": {
+            "error": {
+              "class": "Appwrite\\AppwriteException",
+              "code": 302,
+              "message": "302: Redirects are not followed"
+            }
+          }
+        },
+        {
+          "op": "api.requests",
+          "args": {
+            "project": "cli-${ns}"
+          },
+          "mask": {
+            "paths": [
+              "/*/headers/user-agent"
+            ],
+            "reason": "Target::call() requests carry cURL's user agent, `<os>-<release>:php-<version>` on PHP and `<os>-<release>:rust` on Rust"
+          },
+          "expect": [
+            {
+              "method": "GET",
+              "path": "/redirect",
+              "query": "to=%2Fecho",
+              "headers": {
+                "accept": "*/*",
+                "user-agent": "<masked>",
+                "x-appwrite-response-format": "2.0.0",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "30.4.0"
+              },
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a location response returns the redirect target",
+      "steps": [
+        {
+          "op": "api.routes",
+          "args": {
+            "project": "cli-${ns}",
+            "routes": [
+              {
+                "method": "GET",
+                "path": "/redirect",
+                "status": 302,
+                "headers": {
+                  "Location": "/p/cli-${ns}/echo"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "path": "/redirect-file",
+                "status": 302,
+                "headers": {
+                  "Location": "file:///etc/hosts"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "path": "/echo",
+                "status": 200,
+                "body": {
+                  "method": "GET",
+                  "host": "{host}",
+                  "uri": "{uri}"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "appwrite_client.new",
+          "args": {
+            "endpoint": "{api}/p/cli-${ns}"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "appwrite_client.call",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "method": "GET",
+            "path": "/redirect",
+            "params": {
+              "to": "/echo"
+            },
+            "response_type": "location"
+          },
+          "expect": {
+            "response": "/p/cli-${ns}/echo"
+          }
+        },
+        {
+          "op": "api.requests",
+          "args": {
+            "project": "cli-${ns}"
+          },
+          "mask": {
+            "paths": [
+              "/*/headers/user-agent"
+            ],
+            "reason": "Target::call() requests carry cURL's user agent, `<os>-<release>:php-<version>` on PHP and `<os>-<release>:rust` on Rust"
+          },
+          "expect": [
+            {
+              "method": "GET",
+              "path": "/redirect",
+              "query": "to=%2Fecho",
+              "headers": {
+                "accept": "*/*",
+                "user-agent": "<masked>",
+                "x-appwrite-response-format": "2.0.0",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "30.4.0"
+              },
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "the resolver pins the connection, once per client",
+      "steps": [
+        {
+          "op": "api.routes",
+          "args": {
+            "project": "cli-${ns}",
+            "routes": [
+              {
+                "method": "GET",
+                "path": "/redirect",
+                "status": 302,
+                "headers": {
+                  "Location": "/p/cli-${ns}/echo"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "path": "/redirect-file",
+                "status": 302,
+                "headers": {
+                  "Location": "file:///etc/hosts"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "path": "/echo",
+                "status": 200,
+                "body": {
+                  "method": "GET",
+                  "host": "{host}",
+                  "uri": "{uri}"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "appwrite_client.new",
+          "args": {
+            "endpoint": "http://pinned.invalid:{port}/p/cli-${ns}"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resolver.new",
+          "args": {
+            "mode": "pin"
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "appwrite_client.configure",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "resolver": {
+              "$ref": "r"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "appwrite_client.call",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "method": "GET",
+            "path": "/echo",
+            "params": {
+              "a": "b"
+            }
+          },
+          "expect": {
+            "response": {
+              "method": "GET",
+              "host": "pinned.invalid:{port}",
+              "uri": "/echo?a=b"
+            }
+          }
+        },
+        {
+          "op": "appwrite_client.call",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "method": "GET",
+            "path": "/echo"
+          },
+          "expect": {
+            "response": {
+              "method": "GET",
+              "host": "pinned.invalid:{port}",
+              "uri": "/echo"
+            }
+          }
+        },
+        {
+          "op": "resolver.urls",
+          "args": {
+            "resolver": {
+              "$ref": "r"
+            }
+          },
+          "expect": [
+            "http://pinned.invalid:{port}/p/cli-${ns}"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "the resolver bypasses the environment proxy",
+      "steps": [
+        {
+          "op": "api.routes",
+          "args": {
+            "project": "cli-${ns}",
+            "routes": [
+              {
+                "method": "GET",
+                "path": "/redirect",
+                "status": 302,
+                "headers": {
+                  "Location": "/p/cli-${ns}/echo"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "path": "/redirect-file",
+                "status": 302,
+                "headers": {
+                  "Location": "file:///etc/hosts"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "path": "/echo",
+                "status": 200,
+                "body": {
+                  "method": "GET",
+                  "host": "{host}",
+                  "uri": "{uri}"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "appwrite_client.new",
+          "args": {
+            "endpoint": "http://pinned.invalid:{port}/p/cli-${ns}"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resolver.new",
+          "args": {
+            "mode": "pin"
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "appwrite_client.configure",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "resolver": {
+              "$ref": "r"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "appwrite_client.call",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "method": "GET",
+            "path": "/echo",
+            "proxy": "http://127.0.0.1:1"
+          },
+          "expect": {
+            "response": {
+              "method": "GET",
+              "host": "pinned.invalid:{port}",
+              "uri": "/echo"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "the resolver runs again when the endpoint changes",
+      "steps": [
+        {
+          "op": "api.routes",
+          "args": {
+            "project": "cli-${ns}",
+            "routes": [
+              {
+                "method": "GET",
+                "path": "/redirect",
+                "status": 302,
+                "headers": {
+                  "Location": "/p/cli-${ns}/echo"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "path": "/redirect-file",
+                "status": 302,
+                "headers": {
+                  "Location": "file:///etc/hosts"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "path": "/echo",
+                "status": 200,
+                "body": {
+                  "method": "GET",
+                  "host": "{host}",
+                  "uri": "{uri}"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "appwrite_client.new",
+          "args": {
+            "endpoint": "http://first.invalid:{port}/p/cli-${ns}"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resolver.new",
+          "args": {
+            "mode": "pin"
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "appwrite_client.configure",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "resolver": {
+              "$ref": "r"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "appwrite_client.call",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "method": "GET",
+            "path": "/echo"
+          },
+          "expect": {
+            "response": {
+              "method": "GET",
+              "host": "first.invalid:{port}",
+              "uri": "/echo"
+            }
+          }
+        },
+        {
+          "op": "appwrite_client.configure",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "endpoint": "http://second.invalid:{port}/p/cli-${ns}"
+          },
+          "expect": null
+        },
+        {
+          "op": "appwrite_client.call",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "method": "GET",
+            "path": "/echo"
+          },
+          "expect": {
+            "response": {
+              "method": "GET",
+              "host": "second.invalid:{port}",
+              "uri": "/echo"
+            }
+          }
+        },
+        {
+          "op": "resolver.urls",
+          "args": {
+            "resolver": {
+              "$ref": "r"
+            }
+          },
+          "expect": [
+            "http://first.invalid:{port}/p/cli-${ns}",
+            "http://second.invalid:{port}/p/cli-${ns}"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "the resolver can refuse the endpoint",
+      "steps": [
+        {
+          "op": "api.routes",
+          "args": {
+            "project": "cli-${ns}",
+            "routes": [
+              {
+                "method": "GET",
+                "path": "/redirect",
+                "status": 302,
+                "headers": {
+                  "Location": "/p/cli-${ns}/echo"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "path": "/redirect-file",
+                "status": 302,
+                "headers": {
+                  "Location": "file:///etc/hosts"
+                },
+                "body": ""
+              },
+              {
+                "method": "GET",
+                "path": "/echo",
+                "status": 200,
+                "body": {
+                  "method": "GET",
+                  "host": "{host}",
+                  "uri": "{uri}"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "appwrite_client.new",
+          "args": {
+            "endpoint": "{api}/p/cli-${ns}"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resolver.new",
+          "args": {
+            "mode": "refuse"
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "appwrite_client.configure",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "resolver": {
+              "$ref": "r"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "appwrite_client.call",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "method": "GET",
+            "path": "/echo"
+          },
+          "expect": {
+            "error": {
+              "class": "Exception",
+              "code": 0,
+              "message": "Refused"
+            }
+          }
+        },
+        {
+          "op": "appwrite_client.call",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "method": "GET",
+            "path": "/echo"
+          },
+          "expect": {
+            "error": {
+              "class": "Exception",
+              "code": 0,
+              "message": "Refused"
+            }
+          }
+        },
+        {
+          "op": "resolver.urls",
+          "args": {
+            "resolver": {
+              "$ref": "r"
+            }
+          },
+          "expect": [
+            "{api}/p/cli-${ns}",
+            "{api}/p/cli-${ns}"
+          ]
+        },
+        {
+          "op": "api.requests",
+          "args": {
+            "project": "cli-${ns}"
+          },
+          "mask": {
+            "paths": [
+              "/*/headers/user-agent"
+            ],
+            "reason": "Target::call() requests carry cURL's user agent, `<os>-<release>:php-<version>` on PHP and `<os>-<release>:rust` on Rust"
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "the source passes its resolver to the client",
+      "steps": [
+        {
+          "op": "api.routes",
+          "args": {
+            "project": "cli-${ns}",
+            "routes": []
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "appwrite_source.new",
+          "args": {
+            "project": "cli-${ns}",
+            "endpoint": "http://pinned.invalid:{port}/v1"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resolver.new",
+          "args": {
+            "mode": "pin"
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "target.configure",
+          "args": {
+            "target": {
+              "$ref": "s"
+            },
+            "resolver": {
+              "$ref": "r"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "target.report",
+          "args": {
+            "target": {
+              "$ref": "s"
+            },
+            "resources": [
+              "user"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "The requested route was not found."
+            }
+          }
+        },
+        {
+          "op": "resolver.urls",
+          "args": {
+            "resolver": {
+              "$ref": "r"
+            }
+          },
+          "expect": [
+            "http://pinned.invalid:{port}/v1"
+          ]
+        },
+        {
+          "op": "api.requests",
+          "args": {
+            "project": "cli-${ns}"
+          },
+          "expect": [
+            {
+              "method": "GET",
+              "path": "/v1/users",
+              "query": "queries%5B0%5D=%7B%22method%22%3A%22limit%22%2C%22values%22%3A%5B1%5D%7D",
+              "headers": {
+                "accept": "application/json",
+                "user-agent": "AppwritePHPSDK/30.4.0 ()",
+                "x-appwrite-key": "test-key",
+                "x-appwrite-project": "cli-${ns}",
+                "x-appwrite-response-format": "2.0.0",
+                "x-sdk-language": "php",
+                "x-sdk-name": "PHP",
+                "x-sdk-platform": "server",
+                "x-sdk-version": "30.4.0"
+              },
+              "body": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

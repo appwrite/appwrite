@@ -34,7 +34,8 @@ use Utopia\Usage\UsageQuery;
 /**
  * An adapter recording every call (AccumulatorTest's RecordingAdapter and
  * TenantTest's TenantRecordingAdapter in one): addBatch() succeeds or
- * fails as told, reads return nothing.
+ * fails as told, or throws once after `throwAfter` more calls, reads
+ * return nothing.
  */
 final class Recording extends UsageAdapter
 {
@@ -42,6 +43,9 @@ final class Recording extends UsageAdapter
     public array $calls = [];
 
     public bool $succeed = true;
+
+    /** Number of further addBatch() calls to accept before the next one throws once. */
+    public ?int $throwAfter = null;
 
     public function getName(): string
     {
@@ -59,6 +63,13 @@ final class Recording extends UsageAdapter
 
     public function addBatch(array $metrics, string $type, int $batchSize = 1000): bool
     {
+        if ($this->throwAfter === 0) {
+            $this->throwAfter = null;
+            throw new \Exception('Insert failed');
+        }
+        if ($this->throwAfter !== null) {
+            $this->throwAfter--;
+        }
         $this->calls[] = ['method' => 'addBatch', 'type' => $type, 'batchSize' => $batchSize, 'metrics' => array_map(Adapter::entry(...), array_values($metrics)), 'succeed' => $this->succeed];
 
         return $this->succeed;
@@ -153,6 +164,7 @@ final class Adapter implements Base, Benchmarks
             'recording.new' => function (array $a, Session $s) {
                 $recording = new Recording();
                 $recording->succeed = (bool) ($a['succeed'] ?? true);
+                $recording->throwAfter = $a['throw_after'] ?? null;
 
                 return $s->handle($recording);
             },
@@ -165,6 +177,13 @@ final class Adapter implements Base, Benchmarks
                 $recording = self::recording($a, $s);
                 $calls = $recording->calls;
                 $recording->calls = [];
+                if (isset($a['tag'])) {
+                    foreach ($calls as $i => $call) {
+                        if (isset($call['metrics'])) {
+                            $calls[$i]['metrics'] = array_map(fn (array $m) => $m['tags'][$a['tag']] ?? null, $call['metrics']);
+                        }
+                    }
+                }
 
                 return $calls;
             },
@@ -173,6 +192,11 @@ final class Adapter implements Base, Benchmarks
             'usage.health_check' => fn (array $a, Session $s) => self::usage($a, $s)->healthCheck(),
             'usage.setup' => function (array $a, Session $s) {
                 self::usage($a, $s)->setup();
+
+                return;
+            },
+            'usage.migrate' => function (array $a, Session $s) {
+                self::usage($a, $s)->migrate();
 
                 return;
             },
@@ -263,15 +287,19 @@ final class Adapter implements Base, Benchmarks
             },
             'accumulator.new' => fn (array $a, Session $s) => $s->handle(new Accumulator(self::usage($a, $s))),
             'accumulator.collect' => function (array $a, Session $s) {
-                self::accumulator($a, $s)->collect(
-                    $a['tenant'],
-                    $a['metric'],
-                    $a['value'],
-                    $a['type'],
-                    self::value($a['tags'] ?? []),
-                    isset($a['time']) ? self::value($a['time']) : null,
-                    $a['allow_negative'] ?? false,
-                );
+                $tags = self::value($a['tags'] ?? []);
+                // `repeat: n` collects n entries, tagged `resourceId` 0 to n - 1.
+                foreach (isset($a['repeat']) ? range(0, $a['repeat'] - 1) : [null] as $i) {
+                    self::accumulator($a, $s)->collect(
+                        $a['tenant'],
+                        $a['metric'],
+                        $a['value'],
+                        $a['type'],
+                        $i === null ? $tags : [...$tags, 'resourceId' => (string) $i],
+                        isset($a['time']) ? self::value($a['time']) : null,
+                        $a['allow_negative'] ?? false,
+                    );
+                }
 
                 return true;
             },

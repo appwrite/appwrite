@@ -16,6 +16,8 @@ use Tests\Compat\Fault;
 use Tests\Compat\Session;
 use Utopia\Cache\Adapter\Memory as MemoryCache;
 use Utopia\Cache\Cache as UtopiaCache;
+use Utopia\Client\Destinations\IPRange;
+use Utopia\Client\Destinations\PublicInternet;
 use Utopia\Database\Adapter\Memory as MemoryAdapter;
 use Utopia\Database\Attribute as UtopiaAttribute;
 use Utopia\Database\Capability;
@@ -40,6 +42,7 @@ use Utopia\Migration\Resources\Database\Database as DatabaseResource;
 use Utopia\Migration\ResourceSelector;
 use Utopia\Migration\Source;
 use Utopia\Migration\Sources\Appwrite as SourceAppwrite;
+use Utopia\Migration\Sources\Appwrite\Client as AppwriteSourceClient;
 use Utopia\Migration\Sources\Appwrite\Reader\API as APIReader;
 use Utopia\Migration\Sources\Appwrite\Reader\Database as DatabaseReader;
 use Utopia\Migration\Sources\CSV as SourceCSV;
@@ -47,6 +50,7 @@ use Utopia\Migration\Sources\JSON as SourceJSON;
 use Utopia\Migration\Sources\NHost;
 use Utopia\Migration\Sources\Supabase;
 use Utopia\Migration\Target;
+use Utopia\Migration\Tests\General\RequestTarget;
 use Utopia\Migration\Transfer;
 use Utopia\Migration\Warning;
 use Utopia\Query\Schema\ColumnType;
@@ -117,9 +121,19 @@ final class Adapter implements Base, Benchmarks
             'resource.new' => fn (array $a, Session $s) => $s->handle(new (self::RESOURCES . $a['class'])(...Values::args($a['args'] ?? [], $s))),
             'resource.from_array' => function (array $a, Session $s) {
                 $class = self::RESOURCES . $a['class'];
-                $resource = isset($a['provider'])
-                    ? OAuth2Provider::fromArray($a['provider'], Values::args($a['array'], $s))
-                    : $class::fromArray(Values::args($a['array'], $s));
+                try {
+                    $resource = isset($a['provider'])
+                        ? OAuth2Provider::fromArray($a['provider'], Values::args($a['array'], $s))
+                        : $class::fromArray(Values::args($a['array'], $s));
+                } catch (\TypeError $e) {
+                    // PHP appends the call site inside fromArray() (", called in <file> on
+                    // line <n>"), which Rust has no counterpart of; the rest is compared.
+                    $at = \strpos($e->getMessage(), ', called in ');
+                    if ($at === false) {
+                        throw $e;
+                    }
+                    throw new \TypeError(\substr($e->getMessage(), 0, $at), (int) $e->getCode(), $e);
+                }
 
                 return $resource === null ? null : $s->handle($resource);
             },
@@ -429,6 +443,86 @@ final class Adapter implements Base, Benchmarks
 
                 return ['body' => $body, 'error' => $error, 'within' => $elapsed >= $a['min'] && $elapsed < $a['max']];
             },
+            // TargetRequestTest, TargetDestinationsTest and AppwriteClientTest:
+            // where requests go. Endpoints are templates (`{api}`: the
+            // migration-api fixture, `{port}`: its port), and results read
+            // them back so both runtimes compare equal.
+            'request_target.new' => fn (array $a, Session $s) => $s->handle(new RequestTarget(self::endpoint($s, $a['endpoint']))),
+            'resolver.new' => function (array $a, Session $s) {
+                $api = (string) \parse_url($s->service('migration-api'), PHP_URL_HOST);
+
+                return $s->handle(new ResolverFixture($a['mode'], \gethostbyname($api)));
+            },
+            'resolver.urls' => fn (array $a, Session $s) => self::reach($s, $s->get($a['resolver'])->urls),
+            'target.configure' => function (array $a, Session $s) {
+                $target = $s->get($a['target']);
+                if (\array_key_exists('follow', $a)) {
+                    $target->setFollowRedirects($a['follow']);
+                }
+                if (\array_key_exists('resolver', $a)) {
+                    $target->setResolver($a['resolver'] === null ? null : $s->get($a['resolver'])(...));
+                }
+                if (isset($a['destinations'])) {
+                    $target->setDestinations(self::destinations($s, $a['destinations']));
+                }
+
+                return;
+            },
+            'target.request' => function (array $a, Session $s) {
+                $target = $s->get($a['target']);
+                $proxy = $a['proxy'] ?? null;
+                if ($proxy !== null) {
+                    \putenv('http_proxy=' . $proxy);
+                }
+                try {
+                    return ['response' => self::reach($s, $target->request($a['method'], $a['path'], $a['params'] ?? []))];
+                } catch (\Throwable $e) {
+                    return ['error' => self::failure($s, $e, $a['message'] ?? true)];
+                } finally {
+                    if ($proxy !== null) {
+                        \putenv('http_proxy');
+                    }
+                }
+            },
+            'appwrite_client.new' => function (array $a, Session $s) {
+                $client = new AppwriteSourceClient();
+                $client->setEndpoint(self::endpoint($s, $a['endpoint']));
+
+                return $s->handle($client);
+            },
+            'appwrite_client.configure' => function (array $a, Session $s) {
+                $client = $s->get($a['client']);
+                if (\array_key_exists('resolver', $a)) {
+                    $client->setResolver($a['resolver'] === null ? null : $s->get($a['resolver'])(...));
+                }
+                if (isset($a['destinations'])) {
+                    $client->setDestinations(self::destinations($s, $a['destinations']));
+                }
+                if (isset($a['endpoint'])) {
+                    $client->setEndpoint(self::endpoint($s, $a['endpoint']));
+                }
+
+                return;
+            },
+            'appwrite_client.call' => function (array $a, Session $s) {
+                // The source's own client is protected: read it as DestinationsSource::sdk() does.
+                $client = isset($a['source'])
+                    ? (fn () => $this->client)->call($s->get($a['source']))
+                    : $s->get($a['client']);
+                $proxy = $a['proxy'] ?? null;
+                if ($proxy !== null) {
+                    \putenv('http_proxy=' . $proxy);
+                }
+                try {
+                    return ['response' => self::reach($s, $client->call($a['method'], $a['path'], [], $a['params'] ?? [], $a['response_type'] ?? null))];
+                } catch (\Throwable $e) {
+                    return ['error' => self::failure($s, $e, $a['message'] ?? true)];
+                } finally {
+                    if ($proxy !== null) {
+                        \putenv('http_proxy');
+                    }
+                }
+            },
             'db.subquery_filters' => function (array $a, Session $s) {
                 // Appwrite's virtual attributes of a database's collection of
                 // tables: its columns and indexes.
@@ -462,7 +556,7 @@ final class Adapter implements Base, Benchmarks
 
                 return $s->handle(new SourceAppwrite(
                     $a['project'] ?? 'source-project',
-                    ($a['api'] ?? false) ? $s->service('migration-api') . '/v1' : ($a['endpoint'] ?? 'http://example.test/v1'),
+                    ($a['api'] ?? false) ? $s->service('migration-api') . '/v1' : self::endpoint($s, $a['endpoint'] ?? 'http://example.test/v1'),
                     $a['key'] ?? 'test-key',
                     static fn (?UtopiaDocument $document = null): ?UtopiaDatabase => $db,
                     $type,
@@ -598,6 +692,68 @@ final class Adapter implements Base, Benchmarks
     /**
      * @return array<string, mixed>
      */
+    /**
+     * An endpoint template: `{api}` is the migration-api fixture, `{port}` its port.
+     */
+    private static function endpoint(Session $s, string $template): string
+    {
+        if (!\str_contains($template, '{')) {
+            return $template;
+        }
+        $api = $s->service('migration-api');
+
+        return \str_replace(['{api}', '{port}'], [$api, (string) \parse_url($api, PHP_URL_PORT)], $template);
+    }
+
+    /**
+     * `value` with the fixture's address read back as `{api}`, its host and port as
+     * `{authority}` and its port as `{port}`.
+     */
+    private static function reach(Session $s, mixed $value): mixed
+    {
+        $api = $s->service('migration-api');
+        $port = ':' . \parse_url($api, PHP_URL_PORT);
+        $authority = \parse_url($api, PHP_URL_HOST) . $port;
+        if (\is_string($value)) {
+            return \str_replace([$api, $authority, $port], ['{api}', '{authority}', ':{port}'], $value);
+        }
+        if (\is_array($value)) {
+            return \array_map(static fn (mixed $v) => self::reach($s, $v), $value);
+        }
+
+        return $value;
+    }
+
+    /**
+     * `public`: the public internet; `service`: the public internet and the fixture's address.
+     */
+    private static function destinations(Session $s, string $name): PublicInternet
+    {
+        $api = (string) \parse_url($s->service('migration-api'), PHP_URL_HOST);
+
+        return match ($name) {
+            'public' => new PublicInternet(),
+            'service' => new PublicInternet(new IPRange(\gethostbyname($api))),
+            default => throw new Fault('unknown destinations ' . $name),
+        };
+    }
+
+    /**
+     * A request's exception: its class and code, and its message unless the runtimes'
+     * transports word it differently (`$message` false). A refused destination names the
+     * address the runtime reached and the transport's own error code, so only the refusal is kept.
+     *
+     * @return array<string, mixed>
+     */
+    private static function failure(Session $s, \Throwable $e, bool $message): array
+    {
+        if (\str_contains($e->getMessage(), 'not an allowed destination')) {
+            return ['class' => $e::class, 'code' => null, 'message' => 'not an allowed destination'];
+        }
+
+        return ['class' => $e::class, 'code' => $e->getCode(), 'message' => $message ? self::reach($s, $e->getMessage()) : null];
+    }
+
     private static function serviceAccount(): array
     {
         return \json_decode((string) \file_get_contents(__DIR__ . '/fixtures/firebase/service-account.json'), true);

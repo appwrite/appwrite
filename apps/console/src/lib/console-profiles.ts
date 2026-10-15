@@ -99,6 +99,10 @@ export type ConsoleProfileFeatures = {
    * Off until that's confirmed.
    */
   analyticsTrafficFilter: boolean
+  /** Appwrite push messaging provider (create wizard and its QoS/expiry settings). */
+  appwritePush: boolean
+  /** Inbound email (SMTP) trigger card in function Executions settings. */
+  functionEmail: boolean
 }
 
 /** Short labels for debug UI (profile comparison, etc.). */
@@ -139,6 +143,8 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   blogDrafts: 'Blog drafts',
   analytics: 'Analytics',
   analyticsTrafficFilter: 'Analytics humans/bots filter',
+  appwritePush: 'Appwrite push',
+  functionEmail: 'Function email trigger',
 }
 
 export type ConsoleProfile = {
@@ -192,6 +198,9 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       // Off until launch; enable from Debug → Feature flags.
       analytics: false,
       analyticsTrafficFilter: false,
+      appwritePush: false,
+      // Off until launch; enable from Debug → Feature flags.
+      functionEmail: false,
     },
   },
   'self-hosted': {
@@ -232,6 +241,8 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       blogDrafts: false,
       analytics: false,
       analyticsTrafficFilter: false,
+      appwritePush: false,
+      functionEmail: false,
     },
   },
 }

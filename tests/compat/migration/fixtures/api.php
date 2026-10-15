@@ -15,7 +15,8 @@ declare(strict_types=1);
  * Routes:
  *   POST /__fixture/routes   {project, routes: [{method, path, status, body, headers, times}]}
  *                            replaces the project's answers; a `*` path segment matches any segment, a final `**` the rest,
- *                            `times` (default unlimited) limits how often a route answers
+ *                            `times` (default unlimited) limits how often a route answers; a body's `{base}`,
+ *                            `{host}` and `{uri}` are replaced with the caller's base URL, Host header and URI
  *   GET  /__fixture/requests?project=P
  *                            the project's requests since the last read: [{method, path, query,
  *                            headers, body}], multipart bodies as their fields and files
@@ -130,16 +131,22 @@ final class Api
                 $response->header((string) $name, (string) $value);
             }
             // `{base}` in a body is this server as the caller reached it (with
-            // the project's path prefix), for URLs the library calls back.
-            $base = 'http://' . ($request->header['host'] ?? 'localhost') . ($pathProject ? '/p/' . $project : '');
+            // the project's path prefix), for URLs the library calls back;
+            // `{host}` is the Host header and `{uri}` the path (without the
+            // prefix) and query the caller asked for, as an echo server answers.
+            $host = (string) ($request->header['host'] ?? 'localhost');
+            $base = 'http://' . $host . ($pathProject ? '/p/' . $project : '');
+            $query = (string) ($request->server['query_string'] ?? '');
+            $uri = $path . ($query === '' ? '' : '?' . $query);
+            $placeholders = ['{base}' => $base, '{host}' => $host, '{uri}' => $uri];
             $body = $route['body'] ?? [];
             if (\is_string($body)) {
                 $response->status((int) ($route['status'] ?? 200));
-                $response->end(\str_replace('{base}', $base, $body));
+                $response->end(\strtr($body, $placeholders));
             } else {
                 $response->status((int) ($route['status'] ?? 200));
                 $response->header('Content-Type', 'application/json; charset=utf-8');
-                $response->end(\str_replace('{base}', \addcslashes($base, '/'), (string) \json_encode($body)));
+                $response->end(\strtr((string) \json_encode($body), \array_map(static fn (string $v) => \addcslashes($v, '/'), $placeholders)));
             }
 
             return;

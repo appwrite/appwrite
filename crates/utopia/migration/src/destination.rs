@@ -5,7 +5,7 @@ use async_trait::async_trait;
 use crate::error::Result;
 use crate::resource::ResourceRef;
 use crate::source::{ResourceIds, Sink, Source};
-use crate::target::Target;
+use crate::target::{Destinations, Resolver, Target};
 use crate::transfer::{Report, ResourceSelector};
 
 /// Called with each batch a destination imported.
@@ -33,6 +33,27 @@ pub trait Destination: crate::target::AsAny + Send {
 
     /// The shared state, mutably.
     fn target_mut(&mut self) -> &mut Target;
+
+    /// Whether its HTTP calls follow redirects (they do not by default).
+    ///
+    /// PHP: `setFollowRedirects()`.
+    fn set_follow_redirects(&mut self, follow: bool) {
+        self.target_mut().set_follow_redirects(follow);
+    }
+
+    /// Pins its HTTP calls to the addresses `resolver` returns for each URL.
+    ///
+    /// PHP: `setResolver()`.
+    fn set_resolver(&mut self, resolver: Option<Resolver>) {
+        self.target_mut().set_resolver(resolver);
+    }
+
+    /// Confines its HTTP calls to `destinations`.
+    ///
+    /// PHP: `setDestinations()`.
+    fn set_destinations(&mut self, destinations: Destinations) {
+        self.target_mut().set_destinations(destinations);
+    }
 
     /// Checks the destination can take `resources` (an error when it
     /// cannot); destinations report no counts.

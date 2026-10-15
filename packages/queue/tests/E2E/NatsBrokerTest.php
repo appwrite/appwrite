@@ -776,6 +776,65 @@ final class NatsBrokerTest extends TestCase
     }
 
     /**
+     * The max-deliveries advisory reaches a broker that consumes, however many publish.
+     *
+     * The advisory group hands each advisory to one subscriber. A publisher that joins
+     * the group never drains it, so in a fleet of publishers -- api, realtime, functions
+     * all publishing into a queue one worker consumes -- nearly every advisory landed on
+     * a connection that never read it. That is the fallback for a message whose spare
+     * delivery died unacknowledged as well, and it stayed on the work stream.
+     */
+    public function testPublishersDoNotSwallowTheMaxDeliveriesAdvisory(): void
+    {
+        $url = getenv('NATS_URL') ?: 'nats://127.0.0.1:14225';
+        $queue = new Queue('t_' . substr(md5(uniqid('', true)), 0, 8));
+        $stream = 'Q_' . strtoupper($queue->name);
+
+        // The worker has consumed before anything is published, as a running fleet has.
+        $consumer = new Nats(Connection::connect($url), ackWait: 1.0, maxDeliver: 2);
+        $this->assertSame([], $consumer->receive($queue, 1));
+
+        $publishers = [];
+        for ($i = 0; $i < 8; $i++) {
+            $publishers[$i] = new Nats(Connection::connect($url), ackWait: 1.0, maxDeliver: 2);
+            $publishers[$i]->publish($queue, ['poison' => $i]);
+        }
+
+        // Every delivery, the spare included, is taken by a worker that dies holding it:
+        // fetched straight off the durable and never acknowledged, so no broker parks it.
+        $js = Connection::connect($url)->jetStream();
+        $worker = $js->getConsumer($stream, 'worker');
+        for ($delivery = 1; $delivery <= 3; $delivery++) {
+            $fetched = 0;
+            $deadline = microtime(true) + 10.0;
+            while ($fetched < 8 && microtime(true) < $deadline) {
+                foreach ($worker->fetch(8 - $fetched, 2.0, false) as $ignored) {
+                    $fetched++;
+                }
+            }
+            $this->assertSame(8, $fetched, "delivery {$delivery} of every message");
+            usleep(1_500_000); // past ackWait, so the server redelivers or gives up
+        }
+
+        // Advisory delivery is asynchronous; pump the consume path until the dead stream
+        // holds them all, bounded so a swallowed advisory fails rather than hangs.
+        $dead = 0;
+        $deadline = microtime(true) + 15.0;
+        while ($dead < 8 && microtime(true) < $deadline) {
+            $this->assertSame([], $consumer->receive($queue, 1), 'an exhausted message must not reach a handler');
+            $dead = $js->getStreamInfo($stream . '_DEAD')->state->messages;
+        }
+
+        $this->assertSame(8, $dead, 'every exhausted message is on the dead stream');
+        $this->assertSame(0, $js->getStreamInfo($stream)->state->messages, 'work stream holds nothing');
+
+        foreach ($publishers as $publisher) {
+            $publisher->close();
+        }
+        $consumer->close();
+    }
+
+    /**
      * getQueueSize() must be safe to call while another coroutine is blocked in
      * receive() on the SAME broker — the shape the Swoole worker runs, where the
      * OpenTelemetry depth gauge fires getQueueSize() on a timer coroutine while the
@@ -1340,8 +1399,9 @@ final class NatsBrokerTest extends TestCase
         //
         // Without the group every worker receives the advisory and each
         // publishes its own copy of the exhausted message, so the dead letter
-        // multiplies by the worker count.
-        $this->broker->publish($this->queue, ['task' => 'a']);
+        // multiplies by the worker count. Taken on the receive path: a publisher
+        // never drains it, see testPublishersDoNotSwallowTheMaxDeliveriesAdvisory().
+        $this->broker->receive($this->queue, 1);
 
         $advisories = new \ReflectionProperty(Nats::class, 'advisories');
         /** @var array<string, \Utopia\NATS\Subscription> $subscriptions */

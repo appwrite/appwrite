@@ -32,4 +32,4 @@ utopia-async = { workspace = true, features = ["hyper"] }
 
 [package.metadata.utopia]
 category = "security"
-php-sync = "da0119eda7c139b8f99b13d814e5a99f9b5ac418"
+php-sync = "13eb67db5fd3c88f728dd89d23350e75be9db6a3"

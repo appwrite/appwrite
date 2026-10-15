@@ -26,11 +26,9 @@ Register a route for a method and a path, and give it an action that writes the 
 use utopia_http::{Bytes, Http, Request, Response};
 
 let mut http = Http::new("UTC");
-http.get("/hello")?.inject("response").action(|scope| {
-    Box::pin(async move {
-        scope.response.text("Hello, World!");
-        Ok(())
-    })
+http.get("/hello")?.inject("response").action(async |scope| {
+    scope.response.text("Hello, World!");
+    Ok(())
 });
 
 let request = Request::new("GET", "/hello", [], Bytes::new());
@@ -56,14 +54,12 @@ http.get("/users/:userId")?
     .param("userId", Param::new(json!(""), Text::new(36), "The user ID."))
     .param("fields", Param::new(json!("name"), Text::new(64), "Fields to return.").optional(true))
     .inject("response")
-    .action(|scope| {
-        Box::pin(async move {
-            let user = scope.param("userId").and_then(Value::as_str).unwrap_or_default();
-            let fields = scope.param("fields").and_then(Value::as_str).unwrap_or_default();
-            let text = format!("{user}: {fields}");
-            scope.response.text(&text);
-            Ok(())
-        })
+    .action(async |scope| {
+        let user = scope.param("userId").and_then(Value::as_str).unwrap_or_default();
+        let fields = scope.param("fields").and_then(Value::as_str).unwrap_or_default();
+        let text = format!("{user}: {fields}");
+        scope.response.text(&text);
+        Ok(())
     });
 
 let mut bodies = Vec::new();
@@ -91,22 +87,18 @@ http.get("/files")?
     .param("limit", Param::new(json!("25"), Range::new(1, 100), "Page size.").optional(true))
     .param("order", Param::new(json!("asc"), WhiteList::new(&["asc", "desc"]), "Sort order.").optional(true))
     .inject("response")
-    .action(|scope| {
-        Box::pin(async move {
-            let limit = scope.param("limit").and_then(Value::as_str).unwrap_or_default();
-            let order = scope.param("order").and_then(Value::as_str).unwrap_or_default();
-            let text = format!("{limit} {order}");
-            scope.response.text(&text);
-            Ok(())
-        })
-    });
-http.error().inject("error").inject("response").action(|scope| {
-    Box::pin(async move {
-        let error = scope.error().expect("error hooks receive the error");
-        scope.response.set_status_code(error.code())?;
-        scope.response.text(&error.to_string());
+    .action(async |scope| {
+        let limit = scope.param("limit").and_then(Value::as_str).unwrap_or_default();
+        let order = scope.param("order").and_then(Value::as_str).unwrap_or_default();
+        let text = format!("{limit} {order}");
+        scope.response.text(&text);
         Ok(())
-    })
+    });
+http.error().inject("error").inject("response").action(async |scope| {
+    let error = scope.error().expect("error hooks receive the error");
+    scope.response.set_status_code(error.code())?;
+    scope.response.text(&error.to_string());
+    Ok(())
 });
 
 let mut results = Vec::new();
@@ -138,16 +130,14 @@ http.post("/users")?
     .param("name", Param::new(json!(""), Text::new(128), "Full name."))
     .param("age", Param::new(json!(0), Range::new(0, 150), "Age in years."))
     .inject("response")
-    .action(|scope| {
-        Box::pin(async move {
-            let user = json!({
-                "name": scope.param("name").cloned().unwrap_or(Value::Null),
-                "age": scope.param("age").cloned().unwrap_or(Value::Null),
-            });
-            scope.response.set_status_code(201)?;
-            scope.response.json(&user)?;
-            Ok(())
-        })
+    .action(async |scope| {
+        let user = json!({
+            "name": scope.param("name").cloned().unwrap_or(Value::Null),
+            "age": scope.param("age").cloned().unwrap_or(Value::Null),
+        });
+        scope.response.set_status_code(201)?;
+        scope.response.json(&user)?;
+        Ok(())
     });
 
 let body = Bytes::from_static(br#"{"name":"Ada Lovelace","age":36}"#);
@@ -168,19 +158,17 @@ Read request headers from the request, and add headers and cookies to the respon
 use utopia_http::{Bytes, Cookie, Http, Request, Response};
 
 let mut http = Http::new("UTC");
-http.get("/session")?.inject("request").inject("response").action(|scope| {
-    Box::pin(async move {
-        let agent = scope.request.header_line_or("user-agent", "unknown");
-        scope.response.add_header("Cache-Control", "no-store");
-        scope.response.add_cookie(Cookie {
-            name: "Session".into(),
-            value: Some("abc123".into()),
-            http_only: Some(true),
-            ..Cookie::default()
-        });
-        scope.response.text(&agent);
-        Ok(())
-    })
+http.get("/session")?.inject("request").inject("response").action(async |scope| {
+    let agent = scope.request.header_line_or("user-agent", "unknown");
+    scope.response.add_header("Cache-Control", "no-store");
+    scope.response.add_cookie(Cookie {
+        name: "Session".into(),
+        value: Some("abc123".into()),
+        http_only: Some(true),
+        ..Cookie::default()
+    });
+    scope.response.text(&agent);
+    Ok(())
 });
 
 let request = Request::new("GET", "/session", [("User-Agent", "curl/8.0")], Bytes::new());
@@ -206,29 +194,21 @@ let mut http = Http::new("UTC");
 let log: Arc<Log> = Arc::default();
 http.resources().set("log", log.clone());
 
-http.init().inject("log").action(|scope| {
-    Box::pin(async move {
-        scope.resource::<Log>("log").unwrap().lock().unwrap().push("init");
-        Ok(())
-    })
+http.init().inject("log").action(async |scope| {
+    scope.resource::<Log>("log").unwrap().lock().unwrap().push("init");
+    Ok(())
 });
-http.init().groups(&["api"]).inject("log").action(|scope| {
-    Box::pin(async move {
-        scope.resource::<Log>("log").unwrap().lock().unwrap().push("api init");
-        Ok(())
-    })
+http.init().groups(&["api"]).inject("log").action(async |scope| {
+    scope.resource::<Log>("log").unwrap().lock().unwrap().push("api init");
+    Ok(())
 });
-http.shutdown().inject("log").action(|scope| {
-    Box::pin(async move {
-        scope.resource::<Log>("log").unwrap().lock().unwrap().push("shutdown");
-        Ok(())
-    })
+http.shutdown().inject("log").action(async |scope| {
+    scope.resource::<Log>("log").unwrap().lock().unwrap().push("shutdown");
+    Ok(())
 });
-http.get("/v1/users")?.groups(&["api"]).inject("log").action(|scope| {
-    Box::pin(async move {
-        scope.resource::<Log>("log").unwrap().lock().unwrap().push("action");
-        Ok(())
-    })
+http.get("/v1/users")?.groups(&["api"]).inject("log").action(async |scope| {
+    scope.resource::<Log>("log").unwrap().lock().unwrap().push("action");
+    Ok(())
 });
 
 let request = Request::new("GET", "/v1/users", [], Bytes::new());
@@ -246,14 +226,12 @@ use serde_json::json;
 use utopia_http::{Bytes, Error, Http, Request, Response};
 
 let mut http = Http::new("UTC");
-http.get("/teams/:teamId")?.action(|_| Box::pin(async { Err(Error::http("Team not found", 404)) }));
-http.error().inject("error").inject("response").action(|scope| {
-    Box::pin(async move {
-        let error = scope.error().expect("error hooks receive the error");
-        scope.response.set_status_code(error.code())?;
-        scope.response.json(&json!({ "message": error.to_string(), "code": error.code() }))?;
-        Ok(())
-    })
+http.get("/teams/:teamId")?.action(async |_| Err(Error::http("Team not found", 404)));
+http.error().inject("error").inject("response").action(async |scope| {
+    let error = scope.error().expect("error hooks receive the error");
+    scope.response.set_status_code(error.code())?;
+    scope.response.json(&json!({ "message": error.to_string(), "code": error.code() }))?;
+    Ok(())
 });
 
 let mut bodies = Vec::new();
@@ -289,15 +267,13 @@ http.get("/greet/:name")?
     .inject("greeter")
     .inject("locale")
     .inject("response")
-    .action(|scope| {
-        Box::pin(async move {
-            let greeting = &scope.resource::<Greeter>("greeter").unwrap().greeting;
-            let locale = scope.resource::<String>("locale").unwrap();
-            let name = scope.param("name").and_then(Value::as_str).unwrap_or_default();
-            let text = format!("{greeting}, {name}! ({locale})");
-            scope.response.text(&text);
-            Ok(())
-        })
+    .action(async |scope| {
+        let greeting = &scope.resource::<Greeter>("greeter").unwrap().greeting;
+        let locale = scope.resource::<String>("locale").unwrap();
+        let name = scope.param("name").and_then(Value::as_str).unwrap_or_default();
+        let text = format!("{greeting}, {name}! ({locale})");
+        scope.response.text(&text);
+        Ok(())
     });
 
 let context = http.context();
@@ -323,21 +299,17 @@ let mut route = http
     .get("/users/:userId")?
     .param("userId", Param::new(json!(""), Text::new(36), "The user ID."))
     .inject("response")
-    .action(|scope| {
-        Box::pin(async move {
-            let user = scope.param("userId").and_then(Value::as_str).unwrap_or_default().to_owned();
-            scope.response.text(&user);
-            Ok(())
-        })
+    .action(async |scope| {
+        let user = scope.param("userId").and_then(Value::as_str).unwrap_or_default().to_owned();
+        scope.response.text(&user);
+        Ok(())
     });
 route.alias("/members/:userId")?;
 
-http.routes(&["GET", "POST"], "/oauth/userinfo")?.inject("request").inject("response").action(|scope| {
-    Box::pin(async move {
-        let method = scope.request.method().to_owned();
-        scope.response.text(&method);
-        Ok(())
-    })
+http.routes(&["GET", "POST"], "/oauth/userinfo")?.inject("request").inject("response").action(async |scope| {
+    let method = scope.request.method().to_owned();
+    scope.response.text(&method);
+    Ok(())
 });
 
 let mut bodies = Vec::new();

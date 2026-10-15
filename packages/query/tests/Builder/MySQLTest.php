@@ -12620,17 +12620,15 @@ class MySQLTest extends TestCase
         $this->assertSame('POLYGON((0 0, 1 0, 1 1, 0 0))', $binding);
     }
 
-    public function testGeometryToWktFallbackPoint(): void
+    public function testGeometryToWktRejectsAPointWithExtraOrdinates(): void
     {
-        $result = new Builder()
+        $this->expectException(ValidationException::class);
+        $this->expectExceptionMessage('expected an [x, y] point');
+
+        new Builder()
             ->from('locations')
             ->filterIntersects('geom', ['10', '20', 'extra'])
             ->build();
-        $this->assertBindingCount($result);
-
-        /** @var string $binding */
-        $binding = $result->bindings[0];
-        $this->assertSame('POINT(10 20)', $binding);
     }
 
     public function testSpatialAttributeTypeRedirectToSpatialEquals(): void

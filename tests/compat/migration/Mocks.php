@@ -14,6 +14,7 @@ use Utopia\Migration\Tests\Adapters\MockSource;
 
 require_once \dirname(__DIR__, 3) . '/packages/migration/tests/Adapters/MockSource.php';
 require_once \dirname(__DIR__, 3) . '/packages/migration/tests/Adapters/MockDestination.php';
+require_once \dirname(__DIR__, 3) . '/packages/migration/tests/General/RequestTarget.php';
 
 /**
  * The PHP suite's test doubles: its MockSource and MockDestination, and the
@@ -264,5 +265,33 @@ final class ShortTimeoutTarget extends Target
     public function fetch(string $url): array|string
     {
         return $this->call('GET', $url);
+    }
+}
+
+/**
+ * The resolvers of TargetRequestTest and AppwriteClientTest: `pin` connects
+ * the URL's host and port to `address` (the fixture's), `refuse` throws.
+ * Records every URL it receives.
+ */
+final class ResolverFixture
+{
+    /** @var list<string> */
+    public array $urls = [];
+
+    public function __construct(private readonly string $mode, private readonly string $address)
+    {
+    }
+
+    /**
+     * @return array<string>
+     */
+    public function __invoke(string $url): array
+    {
+        $this->urls[] = $url;
+        if ($this->mode === 'refuse') {
+            throw new \Exception('Refused');
+        }
+
+        return [\parse_url($url, PHP_URL_HOST) . ':' . \parse_url($url, PHP_URL_PORT) . ':' . $this->address];
     }
 }

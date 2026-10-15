@@ -25,6 +25,15 @@ pub type Resource = Arc<dyn Any + Send + Sync>;
 /// PHP: the callable given to `action()`.
 pub type Action = Arc<dyn Fn(Arguments) -> BoxFuture<'static, Result<(), Error>> + Send + Sync>;
 
+/// Wraps an async closure over the resolved [`Arguments`] into an [`Action`].
+pub fn action<F, Fut>(f: F) -> Action
+where
+    F: Fn(Arguments) -> Fut + Send + Sync + 'static,
+    Fut: Future<Output = Result<(), Error>> + Send + 'static,
+{
+    Arc::new(move |args| Box::pin(f(args)))
+}
+
 /// Builds a param's default from its injections.
 pub type DefaultFactory = Arc<dyn Fn(&[Resource]) -> Value + Send + Sync>;
 
@@ -497,7 +506,7 @@ impl Hook {
         F: Fn(Arguments) -> Fut + Send + Sync + 'static,
         Fut: Future<Output = Result<(), Error>> + Send + 'static,
     {
-        self.action = Arc::new(move |args| Box::pin(f(args)));
+        self.action = action(f);
         self
     }
 

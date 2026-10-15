@@ -243,6 +243,12 @@ pub struct Policies {
     pub deny_free_email: Option<bool>,
     /// Reject corporate emails.
     pub deny_corporate_email: Option<bool>,
+    /// The leaked-password check: `enabled`, `sessions` and `users`.
+    pub password_pwned: Option<Array>,
+    /// Forced password rotation: `enabled` and `maxAge`.
+    pub password_rotation: Option<Array>,
+    /// The passkey relying party ID.
+    pub passkey_rp_id: Option<String>,
 }
 
 impl Default for Policies {
@@ -268,6 +274,9 @@ impl Default for Policies {
             deny_disposable_email: None,
             deny_free_email: None,
             deny_corporate_email: None,
+            password_pwned: None,
+            password_rotation: None,
+            passkey_rp_id: None,
         }
     }
 }
@@ -321,9 +330,16 @@ impl Policies {
             )?,
             deny_free_email: to_opt_bool(&i.or("denyFreeEmail", Value::Null), &p(20, "denyFreeEmail"))?,
             deny_corporate_email: to_opt_bool(&i.or("denyCorporateEmail", Value::Null), &p(21, "denyCorporateEmail"))?,
+            ..d
         };
         let created = to_string(&i.or("createdAt", Value::from("")), &p(22, "createdAt"))?;
         let updated = to_string(&i.or("updatedAt", Value::from("")), &p(23, "updatedAt"))?;
+        let policies = Policies {
+            password_pwned: to_opt_array(&i.or("passwordPwned", Value::Null), &p(24, "passwordPwned"))?,
+            password_rotation: to_opt_array(&i.or("passwordRotation", Value::Null), &p(25, "passwordRotation"))?,
+            passkey_rp_id: to_opt_string(&i.or("passkeyRpId", Value::Null), &p(26, "passkeyRpId"))?,
+            ..policies
+        };
         Ok(policies.resource(id, created, updated))
     }
 }

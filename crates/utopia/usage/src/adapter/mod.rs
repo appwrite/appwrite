@@ -111,6 +111,16 @@ pub trait Adapter: Send + Sync {
     /// PHP: `setup()`.
     async fn setup(&self) -> Result<()>;
 
+    /// Brings an existing storage up to date without changing any policy
+    /// [`Adapter::setup`] applies to it, such as retention. Adapters whose
+    /// `setup` does more than create missing structure override this; by
+    /// default it is `setup`.
+    ///
+    /// PHP: `migrate()`.
+    async fn migrate(&self) -> Result<()> {
+        self.setup().await
+    }
+
     /// Appends `metrics` of `kind`, at most `batch_size` per write.
     ///
     /// PHP: `addBatch($metrics, $type, $batchSize)`.

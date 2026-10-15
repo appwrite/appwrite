@@ -43,7 +43,7 @@
 //! build
 //!     .desc("Build the project")
 //!     .param("email", Param::new(json!(null), Text::new(0), "Valid email address"))
-//!     .callback(Callback::Task(std::sync::Arc::new(|_args| Box::pin(async { Ok(()) }))));
+//!     .callback(Callback::task(|_args| async { Ok(()) }));
 //! let mut tasks = Service::new(ServiceType::TASK);
 //! tasks.add_action("build", build);
 //!

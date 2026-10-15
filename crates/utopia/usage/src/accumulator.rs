@@ -93,43 +93,49 @@ impl Accumulator {
         Ok(self)
     }
 
-    /// Writes the buffer: events in one batch, gauges in another. Entries of
-    /// a batch the adapter refused stay buffered; an error leaves the
-    /// batches written before it cleared.
+    /// Writes the buffer: events, then gauges, at most [`BATCH_SIZE`]
+    /// entries per batch, each removed from the buffer as soon as it is
+    /// written. A batch the adapter refused stays buffered, so a retry never
+    /// writes an earlier batch twice; an error leaves the batches written
+    /// before it cleared.
     ///
     /// PHP: `flush()`.
     pub async fn flush(&mut self) -> Result<bool> {
-        if self.buffer.is_empty() {
-            self.flushed_at = php_std::datetime::microtime_float();
-            return Ok(true);
-        }
-        let mut ok = true;
+        let mut written = true;
         for kind in [Kind::Event, Kind::Gauge] {
-            let (keys, entries): (Vec<String>, Vec<Entry>) = self
-                .buffer
-                .iter()
-                .filter(|(_, b)| b.kind == kind)
-                .map(|(k, b)| {
-                    let mut entry = b.entry.clone();
-                    entry.time = b.time.clone().map(|t| Time::At(Box::new(t)));
-                    (k.clone(), entry)
-                })
-                .unzip();
-            if entries.is_empty() {
-                continue;
-            }
-            if self.usage.add_batch(&entries, kind, BATCH_SIZE).await? {
-                for key in keys {
-                    self.buffer.shift_remove(&key);
-                }
-            } else {
-                ok = false;
+            let keys: Vec<String> =
+                self.buffer.iter().filter(|(_, b)| b.kind == kind).map(|(k, _)| k.clone()).collect();
+            for batch in keys.chunks(BATCH_SIZE as usize) {
+                written = self.write(kind, batch).await? && written;
             }
         }
         if self.buffer.is_empty() {
             self.flushed_at = php_std::datetime::microtime_float();
         }
-        Ok(ok)
+        Ok(written)
+    }
+
+    /// Writes the entries under `keys` as one batch and removes them from
+    /// the buffer when the adapter accepts it.
+    ///
+    /// PHP: `write()` (private).
+    async fn write(&mut self, kind: Kind, keys: &[String]) -> Result<bool> {
+        let entries: Vec<Entry> = keys
+            .iter()
+            .filter_map(|k| self.buffer.get(k))
+            .map(|b| {
+                let mut entry = b.entry.clone();
+                entry.time = b.time.clone().map(|t| Time::At(Box::new(t)));
+                entry
+            })
+            .collect();
+        if !self.usage.add_batch(&entries, kind, BATCH_SIZE).await? {
+            return Ok(false);
+        }
+        for key in keys {
+            self.buffer.shift_remove(key);
+        }
+        Ok(true)
     }
 
     /// How many distinct entries are buffered.

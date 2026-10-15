@@ -2238,8 +2238,11 @@
             },
             "getName": "policies",
             "getOriginalId": "",
+            "getPasskeyRpId": null,
             "getPasswordDictionary": false,
             "getPasswordHistory": 5,
+            "getPasswordPwned": null,
+            "getPasswordRotation": null,
             "getPasswordStrength": {
               "min": 10,
               "uppercase": true,

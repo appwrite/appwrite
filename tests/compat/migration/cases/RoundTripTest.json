@@ -1,0 +1,578 @@
+{
+  "source": "packages/migration/tests/Resources/RoundTripTest.php",
+  "cases": [
+    {
+      "name": "a topic carries its qos and expiry",
+      "steps": [
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Messaging\\Topic",
+            "args": {
+              "id": "news",
+              "name": "News",
+              "subscribe": [
+                "users"
+              ],
+              "qos": 1,
+              "expiry": 3600
+            }
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.json",
+          "args": {
+            "resource": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "id": "news",
+            "name": "News",
+            "subscribe": [
+              "users"
+            ],
+            "createdAt": "",
+            "updatedAt": "",
+            "qos": 1,
+            "expiry": 3600
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Messaging\\Topic",
+            "array": {
+              "id": "news",
+              "name": "News",
+              "subscribe": [
+                "users"
+              ],
+              "createdAt": "",
+              "updatedAt": "",
+              "qos": 1,
+              "expiry": 3600
+            }
+          },
+          "bind": "back",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "back"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Messaging\\Topic",
+            "getCreatedAt": "",
+            "getExpiry": 3600,
+            "getGroup": "messaging",
+            "getId": "news",
+            "getMessage": "",
+            "getName": "topic",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getQos": 1,
+            "getSequence": "",
+            "getStatus": "pending",
+            "getSubscribe": [
+              "users"
+            ],
+            "getTopicName": "News",
+            "getUpdatedAt": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "a topic without qos and expiry leaves them to the destination",
+      "steps": [
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Messaging\\Topic",
+            "array": {
+              "id": "news",
+              "name": "News"
+            }
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Messaging\\Topic",
+            "getCreatedAt": "",
+            "getExpiry": null,
+            "getGroup": "messaging",
+            "getId": "news",
+            "getMessage": "",
+            "getName": "topic",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getQos": null,
+            "getSequence": "",
+            "getStatus": "pending",
+            "getSubscribe": [],
+            "getTopicName": "News",
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Messaging\\Topic",
+            "array": {
+              "id": "news",
+              "name": "News",
+              "qos": "x"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "TypeError",
+              "message": "Utopia\\Migration\\Resources\\Messaging\\Topic::__construct(): Argument #6 ($qos) must be of type ?int, string given"
+            }
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Messaging\\Topic",
+            "array": {
+              "id": "news",
+              "name": "News",
+              "qos": "2",
+              "expiry": 1.5
+            }
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        }
+      ]
+    },
+    {
+      "name": "policies carry password-pwned, password-rotation and the passkey relying party",
+      "steps": [
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Auth\\Policies",
+            "args": {
+              "id": "project",
+              "passwordPwned": {
+                "enabled": true,
+                "sessions": false,
+                "users": true
+              },
+              "passwordRotation": {
+                "enabled": true,
+                "maxAge": 86400
+              },
+              "passkeyRpId": "example.com"
+            }
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.json",
+          "args": {
+            "resource": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "id": "project",
+            "passwordHistory": 0,
+            "sessionDuration": 31536000,
+            "sessionsLimit": 100,
+            "userLimit": 0,
+            "passwordDictionary": false,
+            "personalDataCheck": false,
+            "sessionAlerts": false,
+            "sessionInvalidation": false,
+            "membershipsUserId": true,
+            "membershipsUserEmail": true,
+            "membershipsUserName": true,
+            "membershipsUserMfa": true,
+            "membershipsUserPhone": true,
+            "membershipsUserAccessedAt": null,
+            "passwordStrength": null,
+            "mfaFactors": null,
+            "denyAliasedEmail": null,
+            "denyDisposableEmail": null,
+            "denyFreeEmail": null,
+            "denyCorporateEmail": null,
+            "passwordPwned": {
+              "enabled": true,
+              "sessions": false,
+              "users": true
+            },
+            "passwordRotation": {
+              "enabled": true,
+              "maxAge": 86400
+            },
+            "passkeyRpId": "example.com",
+            "createdAt": "",
+            "updatedAt": ""
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Auth\\Policies",
+            "array": {
+              "id": "project",
+              "passwordPwned": {
+                "enabled": true,
+                "sessions": false,
+                "users": true
+              },
+              "passwordRotation": {
+                "enabled": true,
+                "maxAge": 86400
+              },
+              "passkeyRpId": "example.com"
+            }
+          },
+          "bind": "back",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "back"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\Policies",
+            "getCreatedAt": "",
+            "getDenyAliasedEmail": null,
+            "getDenyCorporateEmail": null,
+            "getDenyDisposableEmail": null,
+            "getDenyFreeEmail": null,
+            "getGroup": "auth",
+            "getId": "project",
+            "getMembershipsUserAccessedAt": null,
+            "getMembershipsUserEmail": true,
+            "getMembershipsUserId": true,
+            "getMembershipsUserMfa": true,
+            "getMembershipsUserName": true,
+            "getMembershipsUserPhone": true,
+            "getMessage": "",
+            "getMfaFactors": null,
+            "getName": "policies",
+            "getOriginalId": "",
+            "getPasskeyRpId": "example.com",
+            "getPasswordDictionary": false,
+            "getPasswordHistory": 0,
+            "getPasswordPwned": {
+              "enabled": true,
+              "sessions": false,
+              "users": true
+            },
+            "getPasswordRotation": {
+              "enabled": true,
+              "maxAge": 86400
+            },
+            "getPasswordStrength": null,
+            "getPermissions": [],
+            "getPersonalDataCheck": false,
+            "getSequence": "",
+            "getSessionAlerts": false,
+            "getSessionDuration": 31536000,
+            "getSessionInvalidation": false,
+            "getSessionsLimit": 100,
+            "getStatus": "pending",
+            "getUpdatedAt": "",
+            "getUserLimit": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "policies from an older source leave the new ones unreported",
+      "steps": [
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Auth\\Policies",
+            "array": {
+              "id": "project"
+            }
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Auth\\Policies",
+            "getCreatedAt": "",
+            "getDenyAliasedEmail": null,
+            "getDenyCorporateEmail": null,
+            "getDenyDisposableEmail": null,
+            "getDenyFreeEmail": null,
+            "getGroup": "auth",
+            "getId": "project",
+            "getMembershipsUserAccessedAt": null,
+            "getMembershipsUserEmail": true,
+            "getMembershipsUserId": true,
+            "getMembershipsUserMfa": true,
+            "getMembershipsUserName": true,
+            "getMembershipsUserPhone": true,
+            "getMessage": "",
+            "getMfaFactors": null,
+            "getName": "policies",
+            "getOriginalId": "",
+            "getPasskeyRpId": null,
+            "getPasswordDictionary": false,
+            "getPasswordHistory": 0,
+            "getPasswordPwned": null,
+            "getPasswordRotation": null,
+            "getPasswordStrength": null,
+            "getPermissions": [],
+            "getPersonalDataCheck": false,
+            "getSequence": "",
+            "getSessionAlerts": false,
+            "getSessionDuration": 31536000,
+            "getSessionInvalidation": false,
+            "getSessionsLimit": 100,
+            "getStatus": "pending",
+            "getUpdatedAt": "",
+            "getUserLimit": 0
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Auth\\Policies",
+            "array": {
+              "id": "project",
+              "passwordPwned": "yes"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "TypeError",
+              "message": "Utopia\\Migration\\Resources\\Auth\\Policies::__construct(): Argument #24 ($passwordPwned) must be of type ?array, string given"
+            }
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Auth\\Policies",
+            "array": {
+              "id": "project",
+              "passkeyRpId": [
+                "x"
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "TypeError",
+              "message": "Utopia\\Migration\\Resources\\Auth\\Policies::__construct(): Argument #26 ($passkeyRpId) must be of type ?string, array given"
+            }
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Auth\\Policies",
+            "array": {
+              "id": "project",
+              "createdAt": [],
+              "passwordRotation": 1
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "TypeError",
+              "message": "Utopia\\Migration\\Resources\\Auth\\Policies::__construct(): Argument #22 ($createdAt) must be of type string, array given"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "an environment carries its name",
+      "steps": [
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Settings\\Environment",
+            "args": {
+              "id": "staging",
+              "name": "Staging"
+            }
+          },
+          "bind": "e",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.json",
+          "args": {
+            "resource": {
+              "$ref": "e"
+            }
+          },
+          "expect": {
+            "id": "staging",
+            "name": "Staging",
+            "createdAt": "",
+            "updatedAt": ""
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Settings\\Environment",
+            "array": {
+              "id": "staging",
+              "name": "Staging",
+              "createdAt": "",
+              "updatedAt": ""
+            }
+          },
+          "bind": "back",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "back"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Settings\\Environment",
+            "getCreatedAt": "",
+            "getEnvironmentName": "Staging",
+            "getGroup": "projects",
+            "getId": "staging",
+            "getMessage": "",
+            "getName": "project-environment",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "",
+            "getStatus": "pending",
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Settings\\Environment",
+            "array": {
+              "id": "dev"
+            }
+          },
+          "bind": "bare",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.describe",
+          "args": {
+            "resource": {
+              "$ref": "bare"
+            }
+          },
+          "expect": {
+            "class": "Utopia\\Migration\\Resources\\Settings\\Environment",
+            "getCreatedAt": "",
+            "getEnvironmentName": "",
+            "getGroup": "projects",
+            "getId": "dev",
+            "getMessage": "",
+            "getName": "project-environment",
+            "getOriginalId": "",
+            "getPermissions": [],
+            "getSequence": "",
+            "getStatus": "pending",
+            "getUpdatedAt": ""
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Settings\\Environment",
+            "array": {
+              "id": "dev",
+              "name": [
+                "x"
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "TypeError",
+              "message": "Utopia\\Migration\\Resources\\Settings\\Environment::__construct(): Argument #2 ($name) must be of type string, array given"
+            }
+          }
+        },
+        {
+          "op": "resource.from_array",
+          "args": {
+            "class": "Settings\\Environment",
+            "array": {
+              "name": "x"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "TypeError",
+              "message": "Utopia\\Migration\\Resources\\Settings\\Environment::__construct(): Argument #1 ($id) must be of type string, null given"
+            }
+          }
+        },
+        {
+          "op": "resource.json_encode",
+          "args": {
+            "resource": {
+              "$ref": "e"
+            }
+          },
+          "expect": "{\"id\":\"staging\",\"name\":\"Staging\",\"createdAt\":\"\",\"updatedAt\":\"\"}"
+        }
+      ]
+    }
+  ]
+}

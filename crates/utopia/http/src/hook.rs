@@ -11,7 +11,7 @@ use std::sync::{Arc, Mutex};
 
 use indexmap::IndexMap;
 use serde_json::Value;
-use utopia_validators::Validator;
+use utopia_validators::{Type, Validator};
 
 use crate::error::{Error, Result};
 use crate::http::Http;
@@ -30,12 +30,31 @@ pub type Resource = Arc<dyn Any + Send + Sync>;
 /// future.
 pub type Action = Arc<dyn for<'a> Fn(Scope<'a>) -> BoxFuture<'a, Result<()>> + Send + Sync>;
 
-/// Wraps an async callback into an [`Action`].
+/// An async closure over a call's [`Scope`] whose future is `Send`:
+/// `async |scope| { .. }`, as [`action`] takes it.
+///
+/// It reads what it needs from the scope's params and injections. A closure
+/// that borrows state it captured is not a `Callback`: register that state as
+/// a resource and inject it instead.
+pub trait Callback<'a>: Fn(Scope<'a>) -> <Self as Callback<'a>>::Future {
+    /// The future the closure returns.
+    type Future: Future<Output = Result<()>> + Send + 'a;
+}
+
+impl<'a, F, Fut> Callback<'a> for F
+where
+    F: Fn(Scope<'a>) -> Fut,
+    Fut: Future<Output = Result<()>> + Send + 'a,
+{
+    type Future = Fut;
+}
+
+/// Wraps an async closure into an [`Action`].
 pub fn action<F>(f: F) -> Action
 where
-    F: for<'a> Fn(Scope<'a>) -> BoxFuture<'a, Result<()>> + Send + Sync + 'static,
+    F: for<'a> Callback<'a> + AsyncFn(Scope<'_>) -> Result<()> + Send + Sync + 'static,
 {
-    Arc::new(f)
+    Arc::new(move |scope| Box::pin(f(scope)))
 }
 
 /// A container of resources by name, falling back to a parent container.
@@ -336,9 +355,9 @@ impl Hook {
     /// PHP: `action($callback)`.
     pub fn action<F>(&mut self, f: F) -> &mut Self
     where
-        F: for<'a> Fn(Scope<'a>) -> BoxFuture<'a, Result<()>> + Send + Sync + 'static,
+        F: for<'a> Callback<'a> + AsyncFn(Scope<'_>) -> Result<()> + Send + Sync + 'static,
     {
-        self.action = Some(Arc::new(f));
+        self.action = Some(action(f));
         self
     }
 
@@ -575,7 +594,7 @@ impl Http {
                     Default::Factory(f) => f(&context.resolve(&param.injections)?),
                 }
             };
-            let value = match path_value {
+            let mut value = match path_value {
                 Some(v) => Value::String(v.clone()),
                 None => arg,
             };
@@ -590,6 +609,9 @@ impl Http {
                         return Err(Error::http(format!("Invalid `{key}` param: {}", validator.description()), 400));
                     }
                 }
+                if exists {
+                    value = self.coerce(param, context, value)?;
+                }
             }
             args.push((key.clone(), value));
         }
@@ -603,6 +625,21 @@ impl Http {
             injected.push((name.clone(), resource));
         }
         Ok((args, injected))
+    }
+
+    /// `coerce()`: a loose boolean (`"true"`, `"1"`, `1`, `"false"`, `"0"`,
+    /// `0`) checked by a boolean validator (also inside `Nullable`) becomes
+    /// that boolean; any other value is left as it is.
+    fn coerce(&self, param: &Param, context: &Resources, value: Value) -> Result<Value> {
+        let boolean = match &value {
+            Value::String(s) if s == "true" || s == "1" => true,
+            Value::String(s) if s == "false" || s == "0" => false,
+            Value::Number(n) if n.as_i64() == Some(1) => true,
+            Value::Number(n) if n.as_i64() == Some(0) => false,
+            _ => return Ok(value),
+        };
+        let validator = self.validator(param, context)?;
+        Ok(if validator.kind() == Type::Boolean && !validator.is_array() { Value::Bool(boolean) } else { value })
     }
 
     fn validator(&self, param: &Param, context: &Resources) -> Result<Arc<dyn Validator>> {

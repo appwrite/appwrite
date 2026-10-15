@@ -30,6 +30,84 @@ type Diagnostic = {
   message: string
 }
 
+// tsc prints union members in the order their types were first created, so a
+// new literal anywhere can reorder a long union, such as the route paths, and
+// change every message that quotes it. Sort the top-level members of each
+// quoted type so a message only depends on what the union holds.
+export function canonical(message: string): string {
+  const quotes: number[] = []
+  for (let i = 0; i < message.length; i++) {
+    // An apostrophe inside a word, as in `can't`, does not quote a type.
+    if (
+      message[i] === "'" &&
+      !(isWord(message[i - 1]) && isWord(message[i + 1]))
+    ) {
+      quotes.push(i)
+    }
+  }
+  let result = ''
+  let last = 0
+  for (let q = 0; q + 1 < quotes.length; q += 2) {
+    result +=
+      message.slice(last, quotes[q] + 1) +
+      sortUnion(message.slice(quotes[q] + 1, quotes[q + 1]))
+    last = quotes[q + 1]
+  }
+  return result + message.slice(last)
+}
+
+function isWord(char: string | undefined): boolean {
+  return (
+    char !== undefined &&
+    ((char >= 'a' && char <= 'z') ||
+      (char >= 'A' && char <= 'Z') ||
+      (char >= '0' && char <= '9'))
+  )
+}
+
+function sortUnion(type: string): string {
+  const members: string[] = []
+  let depth = 0
+  let quoted = false
+  let start = 0
+  for (let i = 0; i < type.length; i++) {
+    const char = type[i]
+    if (quoted) {
+      if (char === '\\') i++
+      else if (char === '"') quoted = false
+    } else if (char === '"') {
+      quoted = true
+    } else if ('<({['.includes(char)) {
+      depth++
+    } else if ('>)}]'.includes(char) && type[i - 1] !== '=') {
+      // `=>` closes nothing.
+      depth--
+    } else if (depth === 0 && type.startsWith(' | ', i)) {
+      members.push(type.slice(start, i))
+      start = i + 3
+      i += 2
+    }
+  }
+  if (members.length === 0) {
+    return type
+  }
+  members.push(type.slice(start))
+  return members.sort().join(' | ')
+}
+
+// Baselines written before `canonical` keep tsc's member order.
+function normalize(baseline: Baseline): Baseline {
+  const result: Baseline = {}
+  for (const [file, messages] of Object.entries(baseline)) {
+    for (const [message, count] of Object.entries(messages)) {
+      const key = canonical(message)
+      result[file] ??= {}
+      result[file][key] = (result[file][key] ?? 0) + count
+    }
+  }
+  return result
+}
+
 // `src/a.tsx(12,5): error TS2339: Property 'x'...` -> `src/a.tsx`, `TS2339: Property 'x'...`
 function parse(line: string): Diagnostic | null {
   const start = line.indexOf(MARKER)
@@ -37,7 +115,9 @@ function parse(line: string): Diagnostic | null {
     return null
   }
   // Messages can quote absolute module paths, which differ between machines.
-  const message = line.slice(start + 'error '.length).replaceAll(`${ROOT}/`, '')
+  const message = canonical(
+    line.slice(start + 'error '.length).replaceAll(`${ROOT}/`, ''),
+  )
   if (start === 0) {
     return { file: GLOBAL, message }
   }
@@ -143,7 +223,8 @@ function against(baseline: Baseline): string[] {
     console.log(`No baseline at ${ref}, nothing to compare against.`)
     return []
   }
-  return compare(JSON.parse(result.stdout.toString()), baseline).added
+  return compare(normalize(JSON.parse(result.stdout.toString())), baseline)
+    .added
 }
 
 async function main() {
@@ -157,7 +238,7 @@ async function main() {
     return
   }
 
-  const baseline: Baseline = await Bun.file(BASELINE).json()
+  const baseline = normalize(await Bun.file(BASELINE).json())
   const { added, fixed } = compare(baseline, current)
   const grown = against(baseline)
 

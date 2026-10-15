@@ -309,6 +309,7 @@ impl Destination for Appwrite {
             types::PROJECT_LABELS,
             types::PROJECT_SERVICES,
             types::PROJECT_EMAIL_TEMPLATE,
+            types::PROJECT_ENVIRONMENT,
             types::BACKUP_POLICY,
             types::RULE,
         ]

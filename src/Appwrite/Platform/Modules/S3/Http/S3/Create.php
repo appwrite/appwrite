@@ -8,6 +8,7 @@ use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Functions\EventProcessor;
+use Appwrite\Platform\Modules\S3\Requests\CompleteMultipartUpload;
 use Appwrite\Platform\Modules\S3\Responses\S3Xml;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
@@ -163,7 +164,7 @@ class Create extends Base
             // acknowledged parts. Nesting the multipart lock around the object
             // lock inside completeMultipartUpload would also need two
             // connections from the fail-fast lock pool at once.
-            $selected = $this->completedParts($this->requestBody($request));
+            $selected = CompleteMultipartUpload::parts($this->requestBody($request));
             $upload = $this->multipartUploadForBucket($cache, $project, $this->query($request, 'uploadId'), $bucketId, $key);
             [$file, $event] = $this->completeMultipartUpload($locks, $dbForProject, $cache, $project, $deviceForFiles, $bucket, $upload, $selected);
             if ($event !== null) {

@@ -30,6 +30,31 @@ pub const STALL_TIMEOUT: i64 = 30;
 /// PHP: `Target::REQUEST_TIMEOUT`.
 pub const REQUEST_TIMEOUT: i64 = 30;
 
+/// Pins a request to addresses: it receives the request URL and returns the
+/// entries (`host:port:address[,address]`) its connection must use, or an
+/// error to refuse the URL.
+///
+/// PHP: the `\Closure(string): array<string>` of `Target::setResolver()`,
+/// whose entries are cURL's `CURLOPT_RESOLVE`.
+pub type Resolver = Arc<dyn Fn(&str) -> Result<Vec<String>> + Send + Sync>;
+
+/// Where requests may connect (PHP: `Utopia\Client\Destinations`).
+pub type Destinations = Arc<dyn utopia_client::Destinations>;
+
+/// A shared [`Destinations`] as the policy a `utopia-client` client takes.
+#[derive(Debug)]
+pub(crate) struct Shared(pub(crate) Destinations);
+
+impl utopia_client::Destinations for Shared {
+    fn allows(&self, address: &str) -> bool {
+        self.0.allows(address)
+    }
+
+    fn permits_proxy(&self) -> bool {
+        self.0.permits_proxy()
+    }
+}
+
 /// Downcasting of sources and destinations to their concrete types (to read
 /// a mock's or a destination's own state after a transfer that owns it).
 pub trait AsAny: std::any::Any {
@@ -55,7 +80,7 @@ impl<T: std::any::Any> AsAny for T {
 ///
 /// PHP: `Utopia\Migration\Target` (the properties; the abstract methods are
 /// on [`crate::Source`] and [`crate::Destination`]).
-#[derive(Debug, Default)]
+#[derive(Default)]
 pub struct Target {
     cache: Option<Arc<Cache>>,
     /// Errors collected (`getErrors()`).
@@ -81,6 +106,27 @@ pub struct Target {
     /// Seconds [`Target::call`] waits without receiving a byte (PHP:
     /// `static::STALL_TIMEOUT`).
     pub stall_timeout: i64,
+    /// Whether [`Target::call`] follows redirects (PHP: `$followRedirects`).
+    pub follow_redirects: bool,
+    /// The resolver [`Target::call`] pins each request with (PHP: `$resolver`).
+    pub resolver: Option<Resolver>,
+    /// Where [`Target::call`] may connect (`None`: anywhere).
+    pub destinations: Option<Destinations>,
+}
+
+impl std::fmt::Debug for Target {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Target")
+            .field("errors", &self.errors)
+            .field("warnings", &self.warnings)
+            .field("endpoint", &self.endpoint)
+            .field("root_resource_id", &self.root_resource_id)
+            .field("root_resource_type", &self.root_resource_type)
+            .field("follow_redirects", &self.follow_redirects)
+            .field("resolver", &self.resolver.is_some())
+            .field("destinations", &self.destinations)
+            .finish_non_exhaustive()
+    }
 }
 
 /// An HTTP response of [`Target::call`]: its body, decoded when JSON.
@@ -152,6 +198,35 @@ impl Target {
         self.cache.is_some()
     }
 
+    /// Whether [`Target::call`] follows redirects; it does not by default,
+    /// and a redirect is then an error.
+    ///
+    /// PHP: `setFollowRedirects()`.
+    pub fn set_follow_redirects(&mut self, follow: bool) -> &mut Self {
+        self.follow_redirects = follow;
+        self
+    }
+
+    /// Pins each request of [`Target::call`] to the addresses `resolver`
+    /// returns for its URL (`None`: DNS decides).
+    ///
+    /// PHP: `setResolver()`.
+    pub fn set_resolver(&mut self, resolver: Option<Resolver>) -> &mut Self {
+        self.resolver = resolver;
+        self
+    }
+
+    /// Where the requests of [`Target::call`] may connect. Each connection
+    /// and redirect hop is checked against the address it actually reached,
+    /// so DNS cannot answer differently between a check and the connection.
+    /// Unset, requests may connect anywhere.
+    ///
+    /// PHP: `setDestinations()`.
+    pub fn set_destinations(&mut self, destinations: Destinations) -> &mut Self {
+        self.destinations = Some(destinations);
+        self
+    }
+
     /// Collects an error.
     ///
     /// PHP: `addError()`.
@@ -189,7 +264,10 @@ impl Target {
     /// headers merged with `headers` (an empty value is not sent) and
     /// `params` as the query string (GET and HEAD, RFC 3986) or the body
     /// (JSON when `Content-Type` is `application/json`, otherwise a form in
-    /// RFC 3986). Follows redirects, with no limit on the whole request: it
+    /// RFC 3986), pinned to the [`Target::resolver`]'s addresses and confined
+    /// to the [`Target::destinations`] when set. A redirect is an error
+    /// (`<status>: Redirects are not followed`) unless
+    /// [`Target::follow_redirects`]; the request has no overall time limit: it
     /// fails when the connection takes over [`Target::connect_timeout`]
     /// seconds, or when no byte arrives for [`Target::stall_timeout`]
     /// seconds. A JSON response (its `Content-Type` starts with

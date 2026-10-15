@@ -9,39 +9,31 @@ use utopia_http::{App, Cookie, Http, Param, ServerOptions, serve_listener};
 
 fn app() -> Http {
     let mut http = Http::new("UTC");
-    let _ = http.get("/").unwrap().inject("response").action(|s| {
-        Box::pin(async move {
-            s.response.add_cookie(Cookie { name: "Session".into(), value: Some("a b".into()), ..Default::default() });
-            s.response.text("Hello World!");
-            Ok(())
-        })
+    let _ = http.get("/").unwrap().inject("response").action(async |s| {
+        s.response.add_cookie(Cookie { name: "Session".into(), value: Some("a b".into()), ..Default::default() });
+        s.response.text("Hello World!");
+        Ok(())
     });
     let _ = http
         .get("/value/:value")
         .unwrap()
         .param("value", Param::new(serde_json::Value::from(""), utopia_validators::Text::new(64), ""))
         .inject("response")
-        .action(|s| {
-            Box::pin(async move {
-                let v = s.param("value").and_then(|v| v.as_str()).unwrap_or("").to_owned();
-                s.response.send(v.as_bytes());
-                Ok(())
-            })
+        .action(async |s| {
+            let v = s.param("value").and_then(|v| v.as_str()).unwrap_or("").to_owned();
+            s.response.send(v.as_bytes());
+            Ok(())
         });
-    let _ = http.get("/chunked").unwrap().inject("response").action(|s| {
-        Box::pin(async move {
-            s.response.chunk(b"Hello ", false);
-            utopia_async::sleep(Duration::from_millis(50)).await;
-            s.response.chunk(b"World!", true);
-            Ok(())
-        })
+    let _ = http.get("/chunked").unwrap().inject("response").action(async |s| {
+        s.response.chunk(b"Hello ", false);
+        utopia_async::sleep(Duration::from_millis(50)).await;
+        s.response.chunk(b"World!", true);
+        Ok(())
     });
-    let _ = http.get("/slow").unwrap().inject("response").action(|s| {
-        Box::pin(async move {
-            utopia_async::sleep(Duration::from_millis(300)).await;
-            s.response.send(b"slow");
-            Ok(())
-        })
+    let _ = http.get("/slow").unwrap().inject("response").action(async |s| {
+        utopia_async::sleep(Duration::from_millis(300)).await;
+        s.response.send(b"slow");
+        Ok(())
     });
     let _ = http.get("/silent").unwrap();
     http

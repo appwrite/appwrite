@@ -1,4 +1,4 @@
-//! Project settings: variables, protocols, labels, services, SMTP and webhooks.
+//! Project settings: variables, protocols, labels, services, environments, SMTP and webhooks.
 
 use php_std::{Array, Value};
 
@@ -43,6 +43,40 @@ impl Labels {
         let i = Input::new(array);
         let (id, c, u) = ids(&i, "Utopia\\Migration\\Resources\\Settings\\Labels::__construct", 3)?;
         Ok(Labels { labels: cast_array(&i.or("labels", Value::Array(Array::new()))) }.resource(id, c, u))
+    }
+}
+
+/// An environment of the project: a separate project in the same
+/// organization, billed under its parent. Only the environment itself is
+/// carried; its own resources belong to a different project.
+///
+/// PHP: `Utopia\Migration\Resources\Settings\Environment`.
+#[derive(Debug, Clone, PartialEq, Default)]
+pub struct Environment {
+    /// The name (`getEnvironmentName()`).
+    pub name: String,
+}
+
+impl Environment {
+    /// A resource of this environment.
+    pub fn resource(
+        self,
+        id: impl Into<String>,
+        created_at: impl Into<String>,
+        updated_at: impl Into<String>,
+    ) -> ResourceRef {
+        based(Kind::Environment(self), id.into(), created_at.into(), updated_at.into())
+    }
+
+    /// PHP: `Environment::fromArray()`.
+    pub fn from_array(array: &Array) -> Result<ResourceRef> {
+        let i = Input::new(array);
+        let class = "Utopia\\Migration\\Resources\\Settings\\Environment::__construct";
+        let id = to_string(&i.raw("id"), &param(class, 1, "id"))?;
+        let name = to_string(&i.or("name", Value::from("")), &param(class, 2, "name"))?;
+        let created = to_string(&i.or("createdAt", Value::from("")), &param(class, 3, "createdAt"))?;
+        let updated = to_string(&i.or("updatedAt", Value::from("")), &param(class, 4, "updatedAt"))?;
+        Ok(Environment { name }.resource(id, created, updated))
     }
 }
 

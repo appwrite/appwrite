@@ -60,13 +60,13 @@
       ]
     },
     "recording.new": {
-      "doc": "a fixture adapter recording every call (addBatch() returns `succeed`), as a handle: the tests' RecordingAdapter and TenantRecordingAdapter, an adapter implemented outside the library"
+      "doc": "a fixture adapter recording every call (addBatch() returns `succeed`; with `throw_after: n`, the call after the next n throws `Insert failed` once), as a handle: the tests' RecordingAdapter and TenantRecordingAdapter, an adapter implemented outside the library"
     },
     "recording.succeed": {
       "doc": "sets what the recording adapter's addBatch() returns"
     },
     "recording.calls": {
-      "doc": "the calls recorded since the last recording.calls: {method, tenant} or {method: addBatch, type, batchSize, metrics: [{tenant, metric, value, tags, allowNegative, time?}], succeed}"
+      "doc": "the calls recorded since the last recording.calls: {method, tenant} or {method: addBatch, type, batchSize, metrics: [{tenant, metric, value, tags, allowNegative, time?}], succeed}; with `tag`, each batch's metrics are the values of that tag"
     },
     "usage.new": {
       "doc": "new Usage(adapter), as a handle",
@@ -105,6 +105,14 @@
         "Utopia\\Usage\\Usage::setup",
         "Utopia\\Usage\\Adapter\\ClickHouse::setup",
         "Utopia\\Usage\\Adapter\\Database::setup"
+      ]
+    },
+    "usage.migrate": {
+      "doc": "$usage->migrate()",
+      "covers": [
+        "Utopia\\Usage\\Usage::migrate",
+        "Utopia\\Usage\\Adapter::migrate",
+        "Utopia\\Usage\\Adapter\\ClickHouse::migrate"
       ]
     },
     "usage.add_batch": {
@@ -805,7 +813,7 @@
       ]
     },
     "accumulator.collect": {
-      "doc": "$accumulator->collect(tenant, metric, value, type, tags, time, allow_negative) (true: it returned itself)",
+      "doc": "$accumulator->collect(tenant, metric, value, type, tags, time, allow_negative) (true: it returned itself); `repeat: n` collects n entries, tagged `resourceId` \"0\" to n - 1, as the tests' loops do",
       "covers": [
         "Utopia\\Usage\\Accumulator::collect"
       ]

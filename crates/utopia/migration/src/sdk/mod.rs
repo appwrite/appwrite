@@ -1,4 +1,4 @@
-//! The Appwrite API, as the Appwrite PHP SDK 30.2.2 calls it.
+//! The Appwrite API, as the Appwrite PHP SDK 30.4.0 calls it.
 //!
 //! The official Rust SDK (`appwrite`) is not used: it pins dependency
 //! versions older than the workspace's and builds request bodies from hash
@@ -15,6 +15,8 @@ pub mod query;
 pub mod spec;
 pub mod spec_types;
 
+use std::sync::{Arc, Mutex};
+
 use bytes::Bytes;
 use indexmap::IndexMap;
 use php_std::encoding::{QueryEncoding, http_build_query};
@@ -23,10 +25,11 @@ use utopia_client::{Anywhere, Http, Request};
 
 use crate::error::{Error, Result};
 use crate::http::{Part, multipart};
+use crate::target::{Destinations, Resolver, Shared};
 use spec_types::{Field, Method};
 
 /// The SDK version the requests name.
-pub const VERSION: &str = "30.2.2";
+pub const VERSION: &str = "30.4.0";
 
 /// The response format the requests ask for.
 pub const RESPONSE_FORMAT: &str = "2.0.0";
@@ -34,13 +37,35 @@ pub const RESPONSE_FORMAT: &str = "2.0.0";
 /// A client of one project's API.
 ///
 /// PHP: `Appwrite\Client`.
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct Client {
     endpoint: String,
     headers: IndexMap<String, String>,
     config: IndexMap<String, String>,
     timeout: Option<i64>,
     connect_timeout: Option<i64>,
+    refuse_redirects: bool,
+    resolver: Option<Resolver>,
+    destinations: Option<Destinations>,
+    /// The resolver's entries for the endpoint, per transport (following
+    /// redirects, and not for `location` responses), kept until a setting
+    /// changes as PHP keeps the HTTP clients it built them for. Clones
+    /// share it, as PHP's reader shares the client object.
+    resolved: Arc<Mutex<[Option<Vec<String>>; 2]>>,
+}
+
+impl std::fmt::Debug for Client {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Client")
+            .field("endpoint", &self.endpoint)
+            .field("headers", &self.headers)
+            .field("timeout", &self.timeout)
+            .field("connect_timeout", &self.connect_timeout)
+            .field("refuse_redirects", &self.refuse_redirects)
+            .field("resolver", &self.resolver.is_some())
+            .field("destinations", &self.destinations)
+            .finish_non_exhaustive()
+    }
 }
 
 impl Default for Client {
@@ -86,7 +111,46 @@ impl Client {
             config: IndexMap::new(),
             timeout: None,
             connect_timeout: None,
+            refuse_redirects: false,
+            resolver: None,
+            destinations: None,
+            resolved: Arc::default(),
         }
+    }
+
+    /// `resetHttpClient()`: the next request resolves the endpoint again.
+    fn reset(&mut self) {
+        self.resolved = Arc::default();
+    }
+
+    /// Refuses redirects: a 3xx response is an error (`<status>: Redirects
+    /// are not followed`) instead of being followed.
+    ///
+    /// PHP: `Utopia\Migration\Sources\Appwrite\Client`, the SDK client
+    /// whose transport is wrapped in `Client\RedirectRefusal`.
+    pub fn refuse_redirects(&mut self) -> &mut Self {
+        self.refuse_redirects = true;
+        self
+    }
+
+    /// Pins every connection to the addresses `resolver` returns for the
+    /// endpoint (`None`: DNS decides); it errs to refuse the endpoint.
+    ///
+    /// PHP: `Sources\Appwrite\Client::setResolver()`.
+    pub fn set_resolver(&mut self, resolver: Option<Resolver>) -> &mut Self {
+        self.resolver = resolver;
+        self.reset();
+        self
+    }
+
+    /// Confines the client's connections to `destinations`, every redirect
+    /// hop included.
+    ///
+    /// PHP: `Sources\Appwrite\Client::setDestinations()`.
+    pub fn set_destinations(&mut self, destinations: Destinations) -> &mut Self {
+        self.destinations = Some(destinations);
+        self.reset();
+        self
     }
 
     /// Sets the endpoint; it must start with `http://` or `https://`.
@@ -100,6 +164,7 @@ impl Client {
             });
         }
         self.endpoint = endpoint.to_owned();
+        self.reset();
         Ok(self)
     }
 
@@ -113,6 +178,7 @@ impl Client {
     /// PHP: `Client::setTimeout()`.
     pub fn set_timeout(&mut self, seconds: i64) -> &mut Self {
         self.timeout = Some(seconds);
+        self.reset();
         self
     }
 
@@ -121,6 +187,7 @@ impl Client {
     /// PHP: `Client::setConnectTimeout()`.
     pub fn set_connect_timeout(&mut self, seconds: i64) -> &mut Self {
         self.connect_timeout = Some(seconds);
+        self.reset();
         self
     }
 
@@ -165,6 +232,47 @@ impl Client {
         path: &str,
         headers: &[(&str, String)],
         params: &[(String, Input)],
+    ) -> Result<Response> {
+        self.request(method, path, headers, params, false).await
+    }
+
+    /// Sends a request whose answer is a redirect, and returns its
+    /// `location` header: the redirect is neither followed nor refused.
+    ///
+    /// PHP: `Client::call($method, $path, $headers, $params, 'location')`.
+    pub async fn location(
+        &self,
+        method: &str,
+        path: &str,
+        headers: &[(&str, String)],
+        params: &[(String, Input)],
+    ) -> Result<String> {
+        match self.request(method, path, headers, params, true).await? {
+            Value::Str(location) => Ok(String::from_utf8_lossy(location.as_bytes()).into_owned()),
+            _ => Ok(String::new()),
+        }
+    }
+
+    /// `getHttpClient($followRedirects)`'s resolver entries: the cached
+    /// ones, or the resolver's for the endpoint (not cached when it errs).
+    fn resolve(&self, location: bool) -> Result<Option<Vec<String>>> {
+        let Some(resolver) = &self.resolver else { return Ok(None) };
+        let slot = usize::from(location);
+        if let Some(entries) = &self.resolved.lock().unwrap_or_else(|e| e.into_inner())[slot] {
+            return Ok(Some(entries.clone()));
+        }
+        let entries = resolver(&self.endpoint)?;
+        self.resolved.lock().unwrap_or_else(|e| e.into_inner())[slot] = Some(entries.clone());
+        Ok(Some(entries))
+    }
+
+    async fn request(
+        &self,
+        method: &str,
+        path: &str,
+        headers: &[(&str, String)],
+        params: &[(String, Input)],
+        location: bool,
     ) -> Result<Response> {
         let mut all = self.headers.clone();
         for (k, v) in headers {
@@ -230,10 +338,21 @@ impl Client {
             body = Some(query(&plain(params, false)).into_bytes());
             all.entry("content-type".to_owned()).or_insert_with(|| "application/x-www-form-urlencoded".to_owned());
         }
-        let mut client = utopia_client::Client::new(Http::new())
-            .with_destinations(Anywhere)
-            .with_follow_redirects(true, 50)
-            .map_err(transport)?;
+        // `createHttpClient()` resolves the endpoint; the resolver's own
+        // error is not the client's.
+        let http = match self.resolve(location)? {
+            Some(entries) => Http::new().with_resolve(entries),
+            None => Http::new(),
+        };
+        let client = utopia_client::Client::new(http);
+        let client = match &self.destinations {
+            Some(d) => client.with_destinations(Shared(d.clone())),
+            None => client.with_destinations(Anywhere),
+        };
+        // The migration's client never follows a redirect: it refuses it,
+        // except for a `location` response, which returns it.
+        let follow = !self.refuse_redirects && !location;
+        let mut client = client.with_follow_redirects(follow, 50).map_err(transport)?;
         if let Some(seconds) = self.timeout {
             client = client.with_timeout(seconds as f64).map_err(transport)?;
         }
@@ -252,11 +371,24 @@ impl Client {
         }
         let response = client.send(request).await.map_err(transport)?;
         let status = response.status();
+        if self.refuse_redirects && !location && (300..400).contains(&status) {
+            // `RedirectRefusal`'s `RequestException`, as `call()` rethrows it.
+            return Err(Error::Appwrite {
+                message: format!("{status}: Redirects are not followed"),
+                code: i64::from(status),
+                error_type: String::new(),
+                response: String::new(),
+            });
+        }
         // `getHeaderLine('content-type')`: its values joined, case kept.
         let mut content = String::new();
+        let mut redirect = String::new();
         for (name, values) in response.headers().iter() {
+            let line = || values.iter().map(|v| v.trim()).collect::<Vec<_>>().join(", ");
             if name.trim().eq_ignore_ascii_case("content-type") {
-                content = values.iter().map(|v| v.trim()).collect::<Vec<_>>().join(", ");
+                content = line();
+            } else if name.trim().eq_ignore_ascii_case("location") {
+                redirect = line();
             }
         }
         let raw = response.bytes().clone();
@@ -285,6 +417,9 @@ impl Client {
                     }
                 }
             });
+        }
+        if location {
+            return Ok(Value::from(redirect.as_str()));
         }
         Ok(decoded)
     }
