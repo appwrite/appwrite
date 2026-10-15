@@ -61,7 +61,7 @@ class Test implements Adapter
 
         return new class ($register) extends Counter {
             /**
-             * @var array<int, float|int>
+             * @phpstan-var list<float|int>
              */
             public array $values = [];
 
@@ -94,7 +94,7 @@ class Test implements Adapter
 
         return new class ($register) extends Histogram {
             /**
-             * @var array<int, float|int>
+             * @phpstan-var list<float|int>
              */
             public array $values = [];
 
@@ -127,7 +127,7 @@ class Test implements Adapter
 
         return new class ($register) extends Gauge {
             /**
-             * @var array<int, float|int>
+             * @phpstan-var list<float|int>
              */
             public array $values = [];
 
@@ -160,7 +160,7 @@ class Test implements Adapter
 
         return new class ($register) extends UpDownCounter {
             /**
-             * @var array<int, float|int>
+             * @phpstan-var list<float|int>
              */
             public array $values = [];
 
@@ -194,7 +194,7 @@ class Test implements Adapter
         return $this->observableGauges[$name]
             ?? $this->unobservedGauges[$name]
             ??= new class ($register) extends ObservableGauge {
-                /** @var list<\Closure> */
+                /** @phpstan-var list<\Closure> */
                 public array $callbacks = [];
 
                 /**

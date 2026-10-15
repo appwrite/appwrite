@@ -190,6 +190,31 @@ trait TransactionsBase
         $this->assertEquals(400, $response['headers']['status-code']);
     }
 
+    public function testListTransactionsTotal(): void
+    {
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), $headers);
+        $this->assertEquals(201, $transaction['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, $this->getTransactionUrl(), $headers, [
+            'total' => true,
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertGreaterThanOrEqual(1, $response['body']['total']);
+        $this->assertNotEmpty($response['body']['transactions']);
+
+        $response = $this->client->call(Client::METHOD_GET, $this->getTransactionUrl(), $headers, [
+            'total' => false,
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(0, $response['body']['total']);
+        $this->assertNotEmpty($response['body']['transactions']);
+    }
+
     /**
      * Test adding operations to a transaction
      */
@@ -1568,6 +1593,88 @@ trait TransactionsBase
         $this->assertEquals(400, $response['headers']['status-code']); // Bad request - already rolled back
     }
 
+    public function testConcurrentCommit(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $database = $this->client->call(Client::METHOD_POST, $this->getDatabaseUrl(), $headers, [
+            'databaseId' => ID::unique(),
+            'name' => 'ConcurrentCommitDB',
+        ]);
+        $databaseId = $database['body']['$id'];
+
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'ConcurrentCommitCollection',
+            'permissions' => [
+                Permission::create(Role::any()),
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+            ],
+        ]);
+        $collectionId = $collection['body']['$id'];
+
+        if ($this->getSupportForAttributes()) {
+            $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, 'integer', null), $headers, [
+                'key' => 'counter',
+                'required' => false,
+                'default' => 0,
+            ]);
+
+            $this->waitForAllAttributes($databaseId, $collectionId);
+        }
+
+        $document = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId, null), $headers, [
+            $this->getRecordIdParam() => 'counter_doc',
+            'data' => ['counter' => 0],
+        ]);
+        $this->assertEquals(201, $document['headers']['status-code']);
+
+        $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), $headers);
+        $transactionId = $transaction['body']['$id'];
+
+        $operations = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl($transactionId) . '/operations', $headers, [
+            'operations' => [
+                [
+                    'databaseId' => $databaseId,
+                    $this->getContainerIdParam() => $collectionId,
+                    'action' => 'increment',
+                    $this->getRecordIdParam() => 'counter_doc',
+                    'data' => [
+                        $this->getSchemaParam() => 'counter',
+                        'value' => 1,
+                    ],
+                ],
+            ],
+        ]);
+        $this->assertEquals(201, $operations['headers']['status-code']);
+
+        $responses = $this->client->callConcurrently(array_fill(0, 4, [
+            Client::METHOD_PATCH,
+            $this->getTransactionUrl($transactionId),
+            $headers,
+            ['commit' => true],
+        ]));
+
+        $committed = array_values(array_filter($responses, fn (array $response): bool => $response['headers']['status-code'] === 200));
+        $rejected = array_filter($responses, fn (array $response): bool => $response['headers']['status-code'] === 400);
+        $statuses = json_encode(array_map(fn (array $response): int => $response['headers']['status-code'], $responses));
+
+        $this->assertCount(1, $committed, 'Exactly one concurrent commit may apply the transaction: ' . $statuses);
+        $this->assertCount(3, $rejected, 'Every other concurrent commit must be rejected: ' . $statuses);
+        $this->assertEquals('committed', $committed[0]['body']['status']);
+        foreach ($rejected as $response) {
+            $this->assertEquals(Exception::TRANSACTION_NOT_READY, $response['body']['type']);
+        }
+
+        $document = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId, 'counter_doc'), $headers);
+        $this->assertEquals(1, $document['body']['counter']);
+    }
+
     /**
      * Test operations on non-existent documents
      */
@@ -1856,6 +1963,7 @@ trait TransactionsBase
         $this->assertEquals($databaseId, $delivery['data']['$databaseId']);
         $this->assertEquals($collectionId, $delivery['data'][$this->getContainerIdResponseKey()]);
         $this->assertArrayNotHasKey($this->getOppositeContainerIdResponseKey(), $delivery['data']);
+        $this->assertArrayNotHasKey('$collection', $delivery['data']);
     }
 
     /**
@@ -1995,6 +2103,105 @@ trait TransactionsBase
 
         $this->assertEquals('Updated via normal route', $response['body']['name']);
         $this->assertEquals(150, $response['body']['counter']);
+    }
+
+    /**
+     * Rows a commit wrote are purged from the cache after COMMIT. Each write purges inside a savepoint,
+     * so a read between that purge and COMMIT caches the pre-commit row. Readers poll for the whole commit,
+     * and filler creates keep it open long enough for them to land in that window.
+     */
+    public function testGetAfterCommitWithConcurrentReads(): void
+    {
+        $databaseId = $this->getSharedDatabase();
+        $collectionId = $this->getSharedCollection();
+
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        for ($round = 0; $round < 3; $round++) {
+            $documentId = ID::unique();
+            $created = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId, null), $headers, [
+                $this->getRecordIdParam() => $documentId,
+                'data' => ['name' => 'open'],
+            ]);
+            $this->assertEquals(201, $created['headers']['status-code']);
+
+            $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), $headers);
+            $this->assertEquals(201, $transaction['headers']['status-code']);
+            $transactionId = $transaction['body']['$id'];
+
+            $operations = [[
+                'action' => 'update',
+                'databaseId' => $databaseId,
+                $this->getContainerIdParam() => $collectionId,
+                $this->getRecordIdParam() => $documentId,
+                'data' => ['name' => 'done'],
+            ]];
+            for ($i = 0; $i < 90; $i++) {
+                $operations[] = [
+                    'action' => 'create',
+                    'databaseId' => $databaseId,
+                    $this->getContainerIdParam() => $collectionId,
+                    $this->getRecordIdParam() => ID::unique(),
+                    'data' => ['name' => 'filler'],
+                ];
+            }
+            $staged = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl($transactionId) . '/operations', $headers, [
+                'operations' => $operations,
+            ]);
+            $this->assertEquals(201, $staged['headers']['status-code']);
+
+            $curlHeaders = \array_map(fn ($key, $value) => "{$key}: {$value}", \array_keys($headers), $headers);
+            $request = function (string $method, string $path, ?array $body = null) use ($curlHeaders) {
+                $handle = \curl_init($this->client->getEndpoint() . $path);
+                \curl_setopt_array($handle, [
+                    CURLOPT_CUSTOMREQUEST => $method,
+                    CURLOPT_HTTPHEADER => $curlHeaders,
+                    CURLOPT_RETURNTRANSFER => true,
+                    CURLOPT_TIMEOUT => 120,
+                ]);
+                if ($body !== null) {
+                    \curl_setopt($handle, CURLOPT_POSTFIELDS, \json_encode($body));
+                }
+                return $handle;
+            };
+
+            $multi = \curl_multi_init();
+            $commit = $request(Client::METHOD_PATCH, $this->getTransactionUrl($transactionId), ['commit' => true]);
+            \curl_multi_add_handle($multi, $commit);
+            $readers = [];
+            $committed = null;
+            while ($committed === null) {
+                while (\count($readers) < 8) {
+                    $reader = $request(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId, $documentId));
+                    \curl_multi_add_handle($multi, $reader);
+                    $readers[\spl_object_id($reader)] = $reader;
+                }
+                \curl_multi_exec($multi, $running);
+                \curl_multi_select($multi, 0.01);
+                while ($info = \curl_multi_info_read($multi)) {
+                    \curl_multi_remove_handle($multi, $info['handle']);
+                    if ($info['handle'] === $commit) {
+                        $committed = \json_decode(\curl_multi_getcontent($commit), true);
+                    } else {
+                        unset($readers[\spl_object_id($info['handle'])]);
+                    }
+                }
+            }
+            foreach ($readers as $reader) {
+                \curl_multi_remove_handle($multi, $reader);
+            }
+            \curl_multi_close($multi);
+
+            $this->assertEquals('committed', $committed['status'] ?? null);
+
+            $after = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId, $documentId), $headers);
+            $this->assertEquals(200, $after['headers']['status-code']);
+            $this->assertEquals('done', $after['body']['name']);
+        }
     }
 
     /**

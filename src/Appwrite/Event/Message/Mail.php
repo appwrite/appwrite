@@ -22,6 +22,7 @@ final class Mail extends Base
         public readonly array $customMailOptions = [],
         public readonly array $events = [],
         public readonly array $platform = [],
+        public readonly array $headers = [],
     ) {
     }
 
@@ -30,7 +31,7 @@ final class Mail extends Base
         $platform = !empty($this->platform) ? $this->platform : Config::getParam('platform', []);
 
         return [
-            'project' => $this->project?->getArrayCopy(),
+            'project' => $this->project === null ? null : ProjectContext::fromDocument($this->project)->toArray(),
             'recipient' => $this->recipient,
             'name' => $this->name,
             'subject' => $this->subject,
@@ -44,6 +45,7 @@ final class Mail extends Base
             'customMailOptions' => $this->customMailOptions,
             'events' => $this->events,
             'platform' => $platform,
+            'headers' => $this->headers,
         ];
     }
 
@@ -64,6 +66,7 @@ final class Mail extends Base
             customMailOptions: $data['customMailOptions'] ?? [],
             events: $data['events'] ?? [],
             platform: $data['platform'] ?? [],
+            headers: $data['headers'] ?? [],
         );
     }
 }

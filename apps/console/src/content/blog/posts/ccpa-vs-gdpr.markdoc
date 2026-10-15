@@ -1,0 +1,136 @@
+---
+layout: post
+title: "CCPA vs GDPR: Understanding the differences and implications"
+description: Learn more about the difference between CCPA and GDPR and what you need to keep in mind when building your applications.
+date: 2024-09-19
+lastUpdated: 2026-06-29
+cover: /images/blog/ccpa-gdpr.avif
+timeToRead: 8
+author: jake-barnby
+category: security
+featured: false
+faqs:
+  - question: "What is the main difference between GDPR and CCPA?"
+    answer: "GDPR is an EU-wide regulation that protects personal data of EU residents and applies to any organization that processes it. CCPA is a state-level US law that protects California residents and applies only to for-profit businesses meeting specific revenue or volume thresholds. GDPR has broader scope, stricter consent requirements, and higher penalties relative to the size of the business."
+  - question: "Do I need to comply with GDPR if my app is hosted in the US?"
+    answer: "Yes, if you process personal data of EU residents, GDPR applies regardless of where your servers are located. The law is based on whose data you handle, not where the business operates. That includes things like names, emails, IP addresses, and cookie identifiers."
+  - question: "What counts as personal data under GDPR and CCPA?"
+    answer: "Under GDPR, personal data is any information that relates to an identifiable individual, including IP addresses, location data, and cookie IDs. CCPA includes similar identifiers and also covers browsing history, geolocation, and inferences drawn from a user's profile. Both definitions are broad enough that most app data ends up qualifying."
+  - question: "Does Appwrite help with GDPR and CCPA compliance?"
+    answer: "Appwrite is GDPR and CCPA compliant as a platform and gives you the building blocks you need, including controlled permissions, encryption in transit and at rest, and APIs for deleting user data. The application layer is still your responsibility, including consent flows and user-facing data export. See the [Appwrite GDPR](/docs/advanced/security/gdpr) and CCPA pages for specifics."
+  - question: "How do I handle a data deletion request as a developer?"
+    answer: "Have a documented process to identify all places where the user's data exists, then delete or anonymize it within the time window the law requires (30 days for CCPA, one month for GDPR, both extendable in limited cases). In Appwrite, that usually means deleting rows in [Appwrite Databases](/docs/products/databases), removing storage files, and revoking auth sessions for that user."
+  - question: "What are the penalties for non-compliance with GDPR and CCPA?"
+    answer: "GDPR fines can reach up to 4 percent of global annual revenue or 20 million euros, whichever is higher. CCPA fines are smaller per incident (up to 7,500 dollars for intentional violations) but they add up quickly across many users. Either way, the reputational damage usually costs more than the fine."
+---
+When you build your application, one of the first things you need to set up is your database and authentication. In other words, you're handling and storing user data. But with this data comes great responsibility. 
+
+If you’re here, you probably want to understand how to handle this responsibility and manage user data properly. In this blog, we’ll break down some of the major compliance standards like **California Consumer Privacy Act (CCPA)** and the **General Data Protection Regulation (GDPR),**  highlight their differences, and guide you on how to stay compliant with these regulations.
+
+# Overview of CCPA vs GDPR
+
+## What is GDPR?
+
+The General Data Protection Regulation [GDPR](https://appwrite.io/docs/advanced/security/gdpr) is a comprehensive **data protection** law that came into effect on May 25, 2018, across the European Union (EU). It aims to protect the **personal data** of EU citizens and harmonize privacy laws across Europe. GDPR applies to all businesses, regardless of location, that process the personal data of EU residents. Any developers building applications for EU residents must be GDPR-compliant.
+
+## What is CCPA?
+
+The California Consumer Privacy Act [CCPA](https://oag.ca.gov/privacy/ccpa), enacted on January 1, 2020, is a state-level privacy law in the United States that applies to residents of California. The **CCPA for developers** is often considered the most significant U.S. privacy regulation, giving Californians more control over their personal data and how businesses handle it. Developers looking to build **CCPA-compliant apps** must implement features that allow users to exercise their rights under the CCPA.
+
+Here is a straightforward overview to compare the two:
+
+| **California Consumer Privacy Act (CCPA)** | **General Data Protection Regulation (GDPR)** |
+| --- | --- |
+| Provides rights to California residents who are consumers. | Grants rights to individuals residing in the EU. |
+| Covers personal information that can identify, relate to, describe, or be associated with a consumer or household, with certain exceptions. | Covers all personal data of an individual, excluding household data. Only anonymized information is outside its scope. |
+| Applies to for-profit companies operating in California that meet specific financial thresholds, as well as their service providers. | Governs data controllers and processors that handle personal data of EU residents. |
+
+# To who do the laws apply?
+
+## Who must comply with GDPR
+
+- GDPR applies to businesses operating within the EU, offering goods and services to, or monitoring the behavior of EU residents.
+- It covers personal data processing, including names, emails, IP addresses, location data, and more.
+- Applies to companies of all sizes, as long as they process the personal data of EU residents.
+
+## Who must comply with CCPA
+
+- CCPA applies to for-profit businesses operating in California or serving California residents and that meet at least one of these thresholds:
+    1. Gross annual revenues of over $25 million.
+    2. Buy, receive, sell, or share the personal information of 50,000 or more California consumers, households, or devices.
+    3. Derive 50% or more of their annual revenues from selling California consumers' personal information.
+- Businesses that meet these thresholds need to prioritize **CCPA compliance** by ensuring **user data control** and clear **opt-out functionality** for data sales.
+
+# What are the definitions of personal data?
+
+## GDPR
+
+Under GDPR, personal data is broadly defined as any information that relates to an identified or identifiable individual. This includes names and email addresses, as well as things like IP addresses, location data, and cookie identifiers. Ensuring secure data management for these data types is a key aspect of compliance for developers.
+
+## CCPA
+
+The [CCPA](https://appwrite.io/docs/advanced/security/ccpa) defines personal information similarly but includes additional categories such as browsing history, geolocation data, and inferences drawn from personal data to create a consumer profile. The law emphasizes the sale of personal information, so developers must implement opt-out functionality to meet CPA compliance.
+
+# What are a consumer’s rights?
+
+Both GDPR and CCPA provide users with enhanced rights regarding their personal data, but the rights differ slightly.
+
+## Under GDPR, consumers have:
+
+- **Right to access**: Individuals can request access to their data and information on how it is processed.
+- **Right to rectification**: Users can ask for inaccuracies in their personal data to be corrected.
+- **Right to erasure (Right to be forgotten)**: Individuals can request that their personal data be deleted.
+- **Right to restrict processing**: Consumers can request to limit the use of their personal data.
+- **Right to data portability**: Individuals can receive their data in a machine-readable format and transfer it to another service.
+- **Right to object**: Consumers can object to the processing of their data under certain conditions.
+- **Right not to be subject to automated decision-making**: Including profiling based on personal data.
+
+## Under CCPA, consumers have:
+
+- **Right to access**: Users can request a copy of the personal information collected about them in the previous 12 months.
+- **Right to deletion**: Individuals can ask that their data be deleted (with some exceptions, such as for completing transactions or legal compliance).
+- **Right to opt-out of the sale of personal information**: California residents can instruct companies not to sell their personal data to third parties.
+- **Right to non-discrimination**: Businesses cannot discriminate against consumers for exercising their CCPA rights (e.g., charging them higher prices or offering lower-quality services).
+- **Right to correct**: Consumers can correct any inaccurate personal information a business has about them.
+- **Right to limit:** Consumers can limit how businesses use and share their sensitive personal information.
+
+# How are both laws enforced?
+
+## GDPR penalties
+
+GDPR imposes severe penalties for non-compliance:
+
+- Fines can be up to €20 million or 4% of the company’s global annual revenue, whichever is higher.
+- Non-compliance can lead to significant financial and reputational damage, making **privacy by design** a priority for developers.
+
+## CCPA penalties
+
+CCPA penalties are less severe but still impactful:
+
+- Fines of up to $2,500 per violation or $7,500 for intentional violations.
+- There is also a provision for consumers to sue businesses directly for certain types of data breaches, which can result in additional financial liability for companies.
+
+# Opt-in vs. opt-out
+
+**GDPR** requires businesses to obtain explicit consent (opt-in) before processing personal data, particularly sensitive data categories like health or financial information.
+
+**CCPA** operates primarily on an opt-out basis, where businesses can process personal information unless the consumer explicitly opts out, particularly regarding the sale of personal information. This means developers need to implement developer-friendly CCPA tools and secure APIs for CCPA compliance to ensure consumers can easily exercise their rights.
+
+# Global implications for developers
+
+If you’re building applications or services that target a global audience, you may need to comply with both **CCPA** and **GDPR**. The overlap between the two means you can streamline some compliance efforts, but you’ll also need to account for the specific requirements of each law.
+
+For example:
+
+- Under **GDPR**, [consent management and data minimization are key](https://appwrite.io/blog/post/7-steps-to-achieve-gdpr-compliance-for-startups), so developers need to build features like granular consent capture and access logs.
+- Under **CCPA**, the emphasis on **opt-out mechanisms** for data sales means that developers should build clear, user-friendly options for consumers to opt out of data selling practices.
+
+Using platforms like Appwrite, which offers compliant backend services with built-in Appwrite privacy features, developers can ensure their applications meet both CCPA and GDPR standards. With Appwrite’s secure backend and [privacy compliance solutions](https://appwrite.io/docs/advanced/security/gdpr), developers can seamlessly integrate privacy controls like opt-out functionality, user data control, and secure data management into their applications.
+
+# Building with privacy in mind
+
+Both the **CCPA** and **GDPR** are designed to empower consumers and provide them with more control over their personal data, but they take different approaches to achieve this goal. For developers, the key takeaway is that compliance isn’t just about meeting legal requirements; it’s about fostering trust with users. By designing **privacy-conscious applications**, developers can ensure they meet both **CCPA** and **GDPR** standards, keeping their products legally compliant and user-focused.
+
+Understanding the differences between CCPA and GDPR helps developers build apps that protect privacy and are transparent. Using developer-friendly platforms like Appwrite, which offer privacy-focused tools and secure APIs, makes it much easier to create apps that comply with both CCPA and GDPR.
+
+Take a look at our [documentation](https://appwrite.io/docs) to learn more about how we approach security and compliance.

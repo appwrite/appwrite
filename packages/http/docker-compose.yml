@@ -1,0 +1,37 @@
+services:
+    fpm:
+        build:
+            context: .
+            dockerfile: Dockerfile.fpm
+        ports:
+            - "19020:80"
+        volumes:
+            - ./src:/usr/share/nginx/html/src
+            - ./tests:/usr/share/nginx/html/tests
+        networks:
+            - testing
+        healthcheck:
+            test: ["CMD", "php", "-r", "exit(@fsockopen('127.0.0.1', 80) ? 0 : 1);"]
+            interval: 2s
+            timeout: 2s
+            retries: 15
+            start_period: 2s
+    swoole:
+        build:
+            context: .
+            dockerfile: Dockerfile.swoole
+        ports:
+            - "19501:80"
+        volumes:
+            - ./src:/usr/src/code/src
+            - ./tests:/usr/src/code/tests
+        networks:
+            - testing
+        healthcheck:
+            test: ["CMD", "php", "-r", "exit(@fsockopen('127.0.0.1', 80) ? 0 : 1);"]
+            interval: 2s
+            timeout: 2s
+            retries: 15
+            start_period: 2s
+networks:
+  testing:

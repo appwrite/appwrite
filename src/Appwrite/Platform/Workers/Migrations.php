@@ -3,17 +3,21 @@
 namespace Appwrite\Platform\Workers;
 
 use Ahc\Jwt\JWT;
+use Appwrite\AppwriteException;
+use Appwrite\Client;
 use Appwrite\Event\Message\Mail as MailMessage;
 use Appwrite\Event\Message\Migration;
 use Appwrite\Event\Publisher\Mail as MailPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Extend\Exception;
+use Appwrite\Network\Validator\PublicHostname;
+use Appwrite\Services\TablesDB;
 use Appwrite\Template\Template;
 use Appwrite\Usage\Context;
 use Utopia\Compression\Compression;
 use Utopia\Config\Config;
-use Utopia\Console;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
@@ -41,6 +45,7 @@ use Utopia\Migration\Sources\Firebase;
 use Utopia\Migration\Sources\JSON;
 use Utopia\Migration\Sources\NHost;
 use Utopia\Migration\Sources\Supabase;
+use Utopia\Migration\Target;
 use Utopia\Migration\Transfer;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
@@ -51,11 +56,14 @@ use Utopia\Validator\Hostname;
 
 class Migrations extends Action
 {
+    private const string SCOPE_PROBE_ID = 'migration-scope-probe';
+
     protected ?Database $dbForProject;
     protected ?Database $dbForPlatform;
     protected ?Device $deviceForMigrations;
     protected ?Device $deviceForFiles;
     protected ?Document $project;
+    protected ?PublicHostname $publicHostname = null;
 
     protected ?Document $sourceProject = null;
 
@@ -101,6 +109,7 @@ class Migrations extends Action
             ->inject('publisherForUsage')
             ->inject('plan')
             ->inject('authorization')
+            ->inject('publicHostname')
             ->callback($this->action(...));
     }
 
@@ -122,6 +131,7 @@ class Migrations extends Action
         UsagePublisher $publisherForUsage,
         array $plan,
         Authorization $authorization,
+        PublicHostname $publicHostname,
     ): void {
         $migrationMessage = Migration::fromArray($message->getPayload());
         $this->getDatabasesDB = $getDatabasesDB;
@@ -148,6 +158,7 @@ class Migrations extends Action
         $this->dbForProject = $dbForProject;
         $this->dbForPlatform = $dbForPlatform;
         $this->project = $project;
+        $this->publicHostname = $publicHostname;
 
         $platform = $migrationMessage->platform ?: Config::getParam('platform', []);
 
@@ -165,6 +176,7 @@ class Migrations extends Action
             $this->dbForProject = null;
             $this->dbForPlatform = null;
             $this->project = null;
+            $this->publicHostname = null;
             $this->deviceForMigrations = null;
             $this->deviceForFiles = null;
             $this->plan = [];
@@ -234,6 +246,14 @@ class Migrations extends Action
                 && (!$isAppwriteToAppwrite || $sourceRegion === $destinationRegion);
 
             if ($isLocalSource) {
+                if ($this->sourceProject->getSequence() !== $this->project->getSequence()) {
+                    $this->authenticateSource(
+                        $credentials['projectId'],
+                        $credentials['apiKey'] ?? '',
+                        $migration->getAttribute('resources', []),
+                    );
+                }
+
                 $projectDB = call_user_func($this->getProjectDB, $this->sourceProject);
             } elseif ($isAppwriteToAppwrite) {
                 $useAppwriteApiSource = true;
@@ -255,7 +275,8 @@ class Migrations extends Action
             Supabase::getName() => new Supabase(
                 $credentials['endpoint'],
                 $credentials['apiKey'],
-                $credentials['databaseHost'],
+                // Connect Postgres to the address just checked, so DNS cannot answer differently (SSRF)
+                $this->publicHostname->address($credentials['databaseHost']),
                 'postgres',
                 $credentials['username'],
                 $credentials['password'],
@@ -301,6 +322,67 @@ class Migrations extends Action
         $this->sourceReport = $migrationSource->report($resources);
 
         return $migrationSource;
+    }
+
+    /**
+     * The database source reads the source project's tables directly, so the submitted
+     * key is never presented to the source API. Probe the source API with it first so
+     * only a key that can read those resources in that project reaches the database.
+     *
+     * @param array<string> $resources
+     * @throws Exception
+     */
+    private function authenticateSource(string $projectId, string $key, array $resources): void
+    {
+        $resources = empty($resources) ? SourceAppwrite::getSupportedResources() : $resources;
+
+        if (!Resource::isSupported(Transfer::GROUP_DATABASES_RESOURCES, $resources)) {
+            return;
+        }
+
+        $tablesDB = new TablesDB(
+            (new Client())
+                ->setEndpoint('http://' . System::getEnv('_APP_MIGRATION_HOST') . '/v1')
+                ->setProject($projectId)
+                ->setKey($key)
+                ->setConnectTimeout(Target::CONNECT_TIMEOUT)
+                ->setTimeout(Target::REQUEST_TIMEOUT)
+        );
+
+        try {
+            $tablesDB->list();
+
+            if (Resource::isSupported([Resource::TYPE_TABLE, Resource::TYPE_COLUMN, Resource::TYPE_INDEX, Resource::TYPE_ROW], $resources)) {
+                $this->probeScope(fn () => $tablesDB->listTables(self::SCOPE_PROBE_ID));
+            }
+
+            if (Resource::isSupported(Resource::TYPE_ROW, $resources)) {
+                $this->probeScope(fn () => $tablesDB->listRows(self::SCOPE_PROBE_ID, self::SCOPE_PROBE_ID));
+            }
+        } catch (AppwriteException $error) {
+            // No status means no response came back, which says nothing about the key.
+            $type = $error->getCode() === 0
+                ? Exception::MIGRATION_PROVIDER_ERROR
+                : Exception::MIGRATION_SOURCE_UNAUTHORIZED;
+
+            throw new Exception($type, previous: $error);
+        }
+    }
+
+    /**
+     * The probe database never exists, so reaching its lookup means the key passed the scope check.
+     *
+     * @throws AppwriteException
+     */
+    private function probeScope(callable $probe): void
+    {
+        try {
+            $probe();
+        } catch (AppwriteException $error) {
+            if ($error->getType() !== Exception::DATABASE_NOT_FOUND) {
+                throw $error;
+            }
+        }
     }
 
     /**
@@ -572,6 +654,13 @@ class Migrations extends Action
             Console::error('File: ' . $th->getFile());
             Console::error('Line: ' . $th->getLine());
             Console::error($th->getTraceAsString());
+
+            // Sources wrap what failed; the innermost cause names the request that failed.
+            for ($previous = $th->getPrevious(); $previous !== null; $previous = $previous->getPrevious()) {
+                Console::error('Caused by: ' . $previous::class . ': ' . $previous->getMessage());
+                Console::error('File: ' . $previous->getFile() . ':' . $previous->getLine());
+                Console::error($previous->getTraceAsString());
+            }
 
             $migration->setAttribute('status', 'failed');
             $migration->setAttribute('stage', 'finished');

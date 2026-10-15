@@ -1,0 +1,130 @@
+---
+layout: tutorial
+title: Exchange the code for tokens
+description: Handle the callback, exchange the authorization code for tokens on the server, and sign the user in.
+step: 6
+---
+
+The OAuth2 server redirects back to Vantage's redirect URI with a `code` and the `state`. Vantage exchanges that code for tokens on its server, reads the user's profile, and signs them in.
+
+# Add the token functions {% #token-functions %}
+
+Extend `consumer/src/lib/oauth.ts` with the exchange and userinfo calls. The exchange authenticates with the client secret using HTTP Basic auth, which is why it must run on the server.
+
+```ts
+// consumer/src/lib/oauth.ts (additions)
+const clientSecret = process.env.OAUTH_CLIENT_SECRET!
+
+export type Tokens = {
+  access_token: string
+  refresh_token: string
+  id_token: string
+  expires_in: number
+  scope: string
+}
+
+/** Exchange an authorization code for tokens. */
+export async function exchangeCode(code: string): Promise<Tokens> {
+  const basic = Buffer.from(`${clientId}:${clientSecret}`).toString('base64')
+  const res = await fetch(`${issuer}/token`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Basic ${basic}`,
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: new URLSearchParams({
+      grant_type: 'authorization_code',
+      code,
+      redirect_uri: redirectUri,
+    }),
+  })
+  if (!res.ok) throw new Error(`Token exchange failed: ${res.status}`)
+  return res.json()
+}
+
+export type UserInfo = {
+  sub: string
+  name?: string
+  email?: string
+  email_verified?: boolean
+}
+
+/** Read the signed-in user's profile from the userinfo endpoint. */
+export async function fetchUserInfo(accessToken: string): Promise<UserInfo> {
+  const res = await fetch(`${issuer}/userinfo`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  })
+  if (!res.ok) throw new Error(`userinfo failed: ${res.status}`)
+  return res.json()
+}
+```
+
+# Handle the callback {% #callback %}
+
+Create `consumer/src/routes/oauth.callback.tsx`. Its loader runs on the server: it checks the `state` against the session, exchanges the code, reads the profile, stores it in the session, and sends the user to the dashboard.
+
+```tsx
+// consumer/src/routes/oauth.callback.tsx
+import { createFileRoute, redirect } from '@tanstack/react-router'
+import { createServerFn } from '@tanstack/react-start'
+import { getRequestUrl } from '@tanstack/react-start/server'
+import { exchangeCode, fetchUserInfo, vantageSession } from '../lib/oauth'
+
+const handleCallback = createServerFn().handler(async () => {
+  const url = getRequestUrl()
+  const code = url.searchParams.get('code')
+  const state = url.searchParams.get('state')
+  const session = await vantageSession()
+
+  // The state must match the value we set in /oauth/start.
+  if (!code || !state || state !== session.data.state) {
+    throw redirect({ to: '/', search: { error: 'invalid_state' } })
+  }
+
+  const tokens = await exchangeCode(code)
+  const user = await fetchUserInfo(tokens.access_token)
+
+  await session.update({
+    accessToken: tokens.access_token,
+    user,
+    state: undefined,
+  })
+
+  throw redirect({ to: '/dashboard' })
+})
+
+export const Route = createFileRoute('/oauth/callback')({
+  loader: async () => {
+    await handleCallback()
+  },
+  component: () => null,
+})
+```
+
+The client secret and the tokens live only inside these server functions. The browser only ever holds Vantage's own signed session cookie.
+
+# Show the signed-in user {% #dashboard %}
+
+![Vantage dashboard showing the signed-in user's TaskFlow identity](/images/docs/oauth-server/guide/vantage-dashboard.avif)
+
+The dashboard reads the user from the session and renders it. Create `consumer/src/routes/dashboard.tsx`:
+
+```tsx
+// consumer/src/routes/dashboard.tsx (loader)
+import { createFileRoute, redirect } from '@tanstack/react-router'
+import { createServerFn } from '@tanstack/react-start'
+import { vantageSession, type UserInfo } from '../lib/oauth'
+
+const loadUser = createServerFn().handler(async (): Promise<UserInfo> => {
+  const session = await vantageSession()
+  if (!session.data.user) throw redirect({ to: '/' })
+  return session.data.user as UserInfo
+})
+
+export const Route = createFileRoute('/dashboard')({
+  component: Dashboard,
+  loader: async () => ({ user: await loadUser() }),
+})
+```
+
+The component renders `user.name`, `user.email`, and `user.sub` from the loader data. That profile came from TaskFlow, through the authorization code flow you built. Run the whole thing next.

@@ -54,7 +54,8 @@ class Microsoft extends OAuth2
             'state' => \json_encode($this->state),
             'scope' => \implode(' ', $this->getScopes()),
             'response_type' => 'code',
-            'response_mode' => 'query'
+            'response_mode' => 'query',
+            'prompt' => $this->getPrompt() ?: null,
         ]);
     }
 
@@ -229,5 +230,17 @@ class Microsoft extends OAuth2
         $secret = $this->getAppSecret();
 
         return $secret['tenantID'] ?? '';
+    }
+
+    /**
+     * Extracts the prompt values from the JSON stored in appSecret
+     *
+     * @return string
+     */
+    protected function getPrompt(): string
+    {
+        $secret = $this->getAppSecret();
+
+        return \implode(' ', $secret['prompt'] ?? []);
     }
 }

@@ -317,6 +317,31 @@ return [
         'description' => 'Authenticator could not be found on the current user.',
         'code' => 404,
     ],
+    Exception::USER_REAUTHENTICATION_REQUIRED => [
+        'name' => Exception::USER_REAUTHENTICATION_REQUIRED,
+        'description' => 'This action requires a recent sign-in. Sign in again or complete an MFA challenge, then retry.',
+        'code' => 401,
+    ],
+    Exception::USER_PASSKEY_NOT_FOUND => [
+        'name' => Exception::USER_PASSKEY_NOT_FOUND,
+        'description' => 'Passkey with the requested ID could not be found on the current user.',
+        'code' => 404,
+    ],
+    Exception::USER_PASSKEY_ALREADY_EXISTS => [
+        'name' => Exception::USER_PASSKEY_ALREADY_EXISTS,
+        'description' => 'This passkey is already registered in the project.',
+        'code' => 409,
+    ],
+    Exception::USER_PASSKEY_LIMIT_EXCEEDED => [
+        'name' => Exception::USER_PASSKEY_LIMIT_EXCEEDED,
+        'description' => 'The maximum number of passkeys for this user has been reached. Delete an existing passkey to add a new one.',
+        'code' => 400,
+    ],
+    Exception::USER_PASSKEY_INVALID => [
+        'name' => Exception::USER_PASSKEY_INVALID,
+        'description' => 'The passkey credential could not be verified. Please restart the ceremony and try again.',
+        'code' => 401,
+    ],
     Exception::USER_RECOVERY_CODES_NOT_FOUND => [
         'name' => Exception::USER_RECOVERY_CODES_NOT_FOUND,
         'description' => 'Recovery codes could not be found on the current user.',
@@ -360,6 +385,11 @@ return [
     Exception::USER_OAUTH2_TOKEN_INVALID => [
         'name' => Exception::USER_OAUTH2_TOKEN_INVALID,
         'description' => 'The provided ID token is invalid, expired, or failed verification.',
+        'code' => 401,
+    ],
+    Exception::USER_OAUTH2_STATE_INVALID => [
+        'name' => Exception::USER_OAUTH2_STATE_INVALID,
+        'description' => 'The OAuth2 sign-in was not started from this browser, or it took too long to complete. Please start the sign-in again.',
         'code' => 401,
     ],
     Exception::USER_OAUTH2_PROVIDER_ERROR => [
@@ -422,6 +452,11 @@ return [
         'description' => 'A JWT cannot be created from a request authorized with a JWT. Authenticate with a session cookie or session header instead.',
         'code' => 403,
     ],
+    Exception::USER_IMPERSONATION_READ_ONLY => [
+        'name' => Exception::USER_IMPERSONATION_READ_ONLY,
+        'description' => 'This account action is not allowed while impersonating a user.',
+        'code' => 403,
+    ],
     Exception::API_KEY_EXPIRED => [
         'name' => Exception::API_KEY_EXPIRED,
         'description' => 'The ephemeral API key has expired. Please don\'t use ephemeral API keys for more than duration of the execution.',
@@ -472,6 +507,11 @@ return [
         'name' => Exception::MEMBERSHIP_NOT_FOUND,
         'description' => 'Membership with the requested ID could not be found.',
         'code' => 404,
+    ],
+    Exception::MEMBERSHIP_ALREADY_EXISTS => [
+        'name' => Exception::MEMBERSHIP_ALREADY_EXISTS,
+        'description' => 'Membership with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
+        'code' => 409,
     ],
     Exception::MEMBERSHIP_ALREADY_CONFIRMED => [
         'name' => Exception::MEMBERSHIP_ALREADY_CONFIRMED,
@@ -1342,6 +1382,11 @@ return [
         'name' => Exception::MIGRATION_SOURCE_PROJECT_NOT_FOUND,
         'description' => 'The source project for the provided projectId was not found. Verify the projectId and the API key has access to it.',
         'code' => 404,
+    ],
+    Exception::MIGRATION_SOURCE_UNAUTHORIZED => [
+        'name' => Exception::MIGRATION_SOURCE_UNAUTHORIZED,
+        'description' => 'The source API key cannot read the requested resources of the source project. Verify the projectId, the API key, and that the key has read scopes for every resource you are migrating.',
+        'code' => 401,
     ],
     Exception::MIGRATION_SOURCE_TYPE_INVALID => [
         'name' => Exception::MIGRATION_SOURCE_TYPE_INVALID,

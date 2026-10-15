@@ -1,0 +1,35 @@
+{
+    "name": "utopia-php/query",
+    "description": "A simple library providing a query abstraction for filtering, ordering, and pagination",
+    "type": "library",
+    "keywords": [
+        "php",
+        "framework",
+        "upf",
+        "utopia",
+        "query"
+    ],
+    "license": "MIT",
+    "minimum-stability": "stable",
+    "autoload": {
+        "psr-4": {
+            "Utopia\\Query\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Utopia\\Query\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit --testsuite unit --exclude-group=performance",
+        "test:performance": "phpunit --testsuite unit --group=performance",
+        "test:e2e": "phpunit --testsuite e2e"
+    },
+    "require": {
+        "php": ">=8.4"
+    },
+    "require-dev": {
+        "mongodb/mongodb": "^2.0"
+    }
+}

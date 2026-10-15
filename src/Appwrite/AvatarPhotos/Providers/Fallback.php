@@ -41,12 +41,16 @@ class Fallback extends Photo
     }
 
     /**
-     * Draw the person mark centred on the neutral surface.
+     * Draw the person mark centred on the neutral surface, as a PNG.
      *
      * Mirrors buildSvg() — the same 24x24 heroicons geometry, in Imagick
      * primitives. Keep the two in step.
+     *
+     * @param int $width  Output width in pixels.
+     * @param int $height Output height in pixels.
+     * @return string Raw PNG bytes.
      */
-    private function render(int $width, int $height): string
+    public function render(int $width, int $height): string
     {
         $box = \min($width, $height) * 0.55;
         $scale = $box / 24;

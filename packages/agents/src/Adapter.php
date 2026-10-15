@@ -7,11 +7,11 @@ use Psr\Http\Message\ResponseInterface;
 use Swoole\Coroutine;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Adapter\SwooleCoroutine\Client as SwooleAdapter;
-use Utopia\Client as HttpClient;
+use Utopia\Client\Client as HttpClient;
 use Utopia\Client\Pool as HttpClientPool;
+use Utopia\Client\Psr18\StreamingClientInterface;
 use Utopia\Pools\Adapter\Swoole as SwoolePoolAdapter;
 use Utopia\Pools\Pool as Connections;
-use Utopia\Psr18\StreamingClientInterface;
 use Utopia\Psr7\Method;
 use Utopia\Psr7\Request\Factory;
 

@@ -1,0 +1,19 @@
+$ORIGIN localhost.
+@  86400  IN  SOA   @  root (
+                  1999010100 ; serial
+                       10800 ; refresh (3 hours)
+                         900 ; retry (15 minutes)
+                      604800 ; expire (1 week)
+                       86400 ; minimum (1 day)
+                    )
+@  86400  IN  NS    @
+@  86400  IN  A     127.0.0.1
+@  86400  IN  AAAA  ::1
+large  300  IN  TXT   "Lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua"
+large  300  IN  TXT   "Ut enim ad minim veniam quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat"
+large  300  IN  TXT   "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur"
+large  300  IN  TXT   "Excepteur sint occaecat cupidatat non proident sunt in culpa qui officia deserunt mollit anim id est laborum"
+large  300  IN  TXT   "Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium totam rem aperiam"
+large  300  IN  TXT   "Eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo"
+large  300  IN  TXT   "Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit sed quia consequuntur magni dolores"
+large  300  IN  TXT   "Neque porro quisquam est qui dolorem ipsum quia dolor sit amet consectetur adipisci velit"

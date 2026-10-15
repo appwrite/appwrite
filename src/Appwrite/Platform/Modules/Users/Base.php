@@ -21,7 +21,7 @@ use Utopia\Emails\Email;
 
 class Base extends Action
 {
-    protected function createUser(Hash $hash, string $userId, ?string $email, ?string $password, ?string $phone, ?string $name, Document $project, Database $dbForProject, Hooks $hooks, array $plan, ?bool $passwordPwned = null): Document
+    protected function createUser(Hash $hash, string $userId, ?string $email, ?string $password, ?string $phone, ?string $name, Document $project, Database $dbForProject, Hooks $hooks, array $plan, ProofsPassword $proofForPassword, ?bool $passwordPwned = null): Document
     {
         $name = $name ?? '';
         $plaintextPassword = $password;
@@ -99,17 +99,16 @@ class Base extends Action
 
             $isHashed = !$hash instanceof Plaintext;
 
-            $defaultHash = new ProofsPassword();
             if (!empty($password)) {
-                if (!$isHashed) { // Password was never hashed, hash it with the default hash
-                    $hashedPassword = $defaultHash->hash($password);
-                    $hash = $defaultHash->getHash();
+                if (!$isHashed) { // Password was never hashed, hash it with the configured default
+                    $hashedPassword = $proofForPassword->hash($password);
+                    $hash = $proofForPassword->getHash();
                 } else {
                     $hashedPassword = $password;
                 }
             } else {
                 // when password is not provided, plaintext was set as the default hash causing the issue
-                $hash = $defaultHash->getHash();
+                $hash = $proofForPassword->getHash();
                 $isHashed = !$hash instanceof Plaintext;
             }
 

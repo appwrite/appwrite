@@ -5,103 +5,64 @@ declare(strict_types=1);
 namespace Tests\Unit\Network;
 
 use Appwrite\Extend\Exception;
+use Appwrite\Network\Validator\PublicHostname;
+use Appwrite\Network\Validator\PublicURL;
 use Appwrite\Platform\Modules\Avatars\Http\Favicon\Get;
-use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
-use Utopia\Fetch\Adapter;
-use Utopia\Fetch\Options\Request as RequestOptions;
-use Utopia\Fetch\Response;
+use Psr\Http\Client\ClientInterface;
+use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
+use Utopia\Client\Destinations\PublicInternet;
+use Utopia\Psr7\Response;
+use Utopia\Psr7\Stream;
 
 final class FetcherTest extends TestCase
 {
-    public function testAssertSafeAcceptsPublicIpLiteral(): void
-    {
-        // Should not throw
-        TestableGet::assertSafe('http://1.1.1.1/');
-        TestableGet::assertSafe('https://8.8.8.8/path');
-        $this->expectNotToPerformAssertions();
-    }
-
-    #[DataProvider('unsafeUrls')]
-    public function testAssertSafeRejectsUnsafeUrls(string $url, string $reasonFragment): void
-    {
-        try {
-            TestableGet::assertSafe($url);
-            $this->fail("Expected Exception for {$url}");
-        } catch (Exception $e) {
-            $this->assertSame(Exception::AVATAR_REMOTE_URL_FAILED, $e->getType());
-            $this->assertStringContainsString(
-                $reasonFragment,
-                $e->getMessage(),
-                "Wrong rejection reason for {$url}"
-            );
-        }
-    }
-
-    public static function unsafeUrls(): \Iterator
-    {
-        yield 'loopback v4' => ['http://127.0.0.1/iam', 'private or reserved'];
-        yield 'loopback v6' => ['http://[::1]/iam', 'private or reserved'];
-        yield 'link-local imds' => ['http://169.254.169.254/latest/', 'private or reserved'];
-        yield 'private rfc1918 a' => ['http://10.0.0.5/secret', 'private or reserved'];
-        yield 'private rfc1918 b' => ['http://192.168.1.1/admin', 'private or reserved'];
-        yield 'private rfc1918 c' => ['http://172.16.0.1/x', 'private or reserved'];
-        yield 'cgnat' => ['http://100.64.0.1/x', 'private or reserved'];
-        yield 'ipv4-mapped loopback' => ['http://[::ffff:127.0.0.1]/x', 'private or reserved'];
-        yield '6to4 imds' => ['http://[2002:a9fe:a9fe::]/x', 'private or reserved'];
-        yield 'file scheme' => ['file:///etc/passwd', "Scheme 'file' is not allowed"];
-        yield 'gopher scheme' => ['gopher://attacker/x', "Scheme 'gopher' is not allowed"];
-        yield 'ftp scheme' => ['ftp://internal/file', "Scheme 'ftp' is not allowed"];
-        yield 'no scheme' => ['example.com/path', "Scheme '' is not allowed"];
-        yield 'malformed no host' => ['http:///path', 'Malformed URL'];
-        yield 'unknown psl' => ['http://not-a-real-tld.notreal/x', 'not a known public domain'];
-    }
-
     public function testFetchFollowsPublicRedirect(): void
     {
-        $adapter = $this->scriptedAdapter([
+        $client = $this->scriptedClient([
             $this->redirect('https://1.1.1.1/final'),
             $this->ok('FINAL_BODY'),
         ]);
 
         $fetcher = new TestableGet();
-        $response = $fetcher->fetchForTest('http://8.8.8.8/start', $adapter);
+        $response = $fetcher->fetchForTest('http://8.8.8.8/start', $client);
 
         $this->assertSame(200, $response->getStatusCode());
-        $this->assertSame('FINAL_BODY', $response->getBody());
-        $this->assertSame(2, $adapter->callCount);
+        $this->assertSame('FINAL_BODY', (string) $response->getBody());
+        $this->assertSame(2, $client->callCount);
     }
 
     public function testFetchBlocksRedirectToPrivateIp(): void
     {
         // This is the exact SSRF chain from the report:
         //   public attacker page → 302 → 169.254.169.254 (AWS IMDS)
-        $adapter = $this->scriptedAdapter([
+        $client = $this->scriptedClient([
             $this->redirect('http://169.254.169.254/latest/meta-data/iam/security-credentials/'),
             // This second response must NEVER be served — the fetcher should
-            // reject the redirect target before calling send() again.
+            // reject the redirect target before calling sendRequest() again.
             $this->ok('SHOULD_NEVER_LEAK'),
         ]);
 
         $fetcher = new TestableGet();
 
         try {
-            $fetcher->fetchForTest('http://8.8.8.8/attacker-page', $adapter);
+            $fetcher->fetchForTest('http://8.8.8.8/attacker-page', $client);
             $this->fail('Expected Exception');
         } catch (Exception $e) {
             $this->assertSame(Exception::AVATAR_REMOTE_URL_FAILED, $e->getType());
             $this->assertStringContainsString('169.254.169.254', $e->getMessage());
             $this->assertSame(
                 1,
-                $adapter->callCount,
-                'Redirect target should not have been fetched — only the initial request should hit the adapter'
+                $client->callCount,
+                'Redirect target should not have been fetched — only the initial request should hit the client'
             );
         }
     }
 
     public function testFetchBlocksRedirectToLoopback(): void
     {
-        $adapter = $this->scriptedAdapter([
+        $client = $this->scriptedClient([
             $this->redirect('http://127.0.0.1:9999/secrets'),
             $this->ok('SHOULD_NEVER_LEAK'),
         ]);
@@ -109,12 +70,12 @@ final class FetcherTest extends TestCase
         $fetcher = new TestableGet();
 
         try {
-            $fetcher->fetchForTest('http://8.8.8.8/attacker-page', $adapter);
+            $fetcher->fetchForTest('http://8.8.8.8/attacker-page', $client);
             $this->fail('Expected Exception');
         } catch (Exception $e) {
             $this->assertSame(Exception::AVATAR_REMOTE_URL_FAILED, $e->getType());
             $this->assertStringContainsString('127.0.0.1', $e->getMessage());
-            $this->assertSame(1, $adapter->callCount);
+            $this->assertSame(1, $client->callCount);
         }
     }
 
@@ -122,22 +83,22 @@ final class FetcherTest extends TestCase
     {
         // Edge case: a server on a public IP returns a relative redirect.
         // We resolve it against the (still public) base and continue — safe.
-        $adapter = $this->scriptedAdapter([
+        $client = $this->scriptedClient([
             $this->redirect('/different-path'),
             $this->ok('FINAL'),
         ]);
 
         $fetcher = new TestableGet();
-        $response = $fetcher->fetchForTest('http://8.8.8.8/start', $adapter);
+        $response = $fetcher->fetchForTest('http://8.8.8.8/start', $client);
 
-        $this->assertSame('FINAL', $response->getBody());
+        $this->assertSame('FINAL', (string) $response->getBody());
     }
 
     public function testFetchRejectsRedirectChainOverLimit(): void
     {
         // Six redirects all to public targets; with maxRedirects=5 the sixth
         // hop trips the limit.
-        $adapter = $this->scriptedAdapter([
+        $client = $this->scriptedClient([
             $this->redirect('https://1.1.1.1/2'),
             $this->redirect('https://1.0.0.1/3'),
             $this->redirect('https://8.8.8.8/4'),
@@ -150,12 +111,12 @@ final class FetcherTest extends TestCase
 
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Too many redirects');
-        $fetcher->fetchForTest('http://8.8.8.8/0', $adapter);
+        $fetcher->fetchForTest('http://8.8.8.8/0', $client);
     }
 
     public function testFetchBlocksNonHttpRedirect(): void
     {
-        $adapter = $this->scriptedAdapter([
+        $client = $this->scriptedClient([
             $this->redirect('file:///etc/passwd'),
             $this->ok('SHOULD_NEVER_LEAK'),
         ]);
@@ -163,63 +124,53 @@ final class FetcherTest extends TestCase
         $fetcher = new TestableGet();
 
         try {
-            $fetcher->fetchForTest('http://8.8.8.8/page', $adapter);
+            $fetcher->fetchForTest('http://8.8.8.8/page', $client);
             $this->fail('Expected Exception');
         } catch (Exception $e) {
             $this->assertSame(Exception::AVATAR_REMOTE_URL_FAILED, $e->getType());
-            $this->assertStringContainsString("Scheme 'file'", $e->getMessage());
-            $this->assertSame(1, $adapter->callCount);
+            $this->assertStringContainsString('valid URL', $e->getMessage());
+            $this->assertSame(1, $client->callCount);
         }
     }
 
-    private function redirect(string $location): Response
+    private function redirect(string $location): ResponseInterface
     {
-        // Mix the header key case on purpose. Fetcher must normalise per
-        // RFC 7230 §3.2; if it ever drops to a naive lowercase lookup the
-        // entire redirect-following suite fails — that's the regression
-        // signal we want.
-        return new Response(302, '', ['Location' => $location]);
+        return (new Response(302))->withHeader('Location', $location);
     }
 
-    private function ok(string $body): Response
+    private function ok(string $body): ResponseInterface
     {
-        return new Response(200, $body, []);
+        return new Response(200, body: new Stream($body));
     }
 
     /**
-     * @param Response[] $responses
+     * @param ResponseInterface[] $responses
      */
-    private function scriptedAdapter(array $responses): ScriptedAdapter
+    private function scriptedClient(array $responses): ScriptedClient
     {
-        return new ScriptedAdapter($responses);
+        return new ScriptedClient($responses);
     }
 }
 
 /**
- * Test-only adapter that returns a pre-scripted list of responses in order.
+ * Test-only client that returns a pre-scripted list of responses in order.
  * Exposed as a named class so PHPStan can see the callCount property.
  */
-class ScriptedAdapter implements Adapter
+class ScriptedClient implements ClientInterface
 {
     public int $callCount = 0;
 
-    /** @param Response[] $responses */
+    /** @param ResponseInterface[] $responses */
     public function __construct(private array $responses)
     {
     }
 
-    public function send(
-        string $url,
-        string $method,
-        mixed $body,
-        array $headers,
-        RequestOptions $options,
-        ?callable $chunkCallback = null
-    ): Response {
+    public function sendRequest(RequestInterface $request): ResponseInterface
+    {
         $response = $this->responses[$this->callCount] ?? null;
         $this->callCount++;
         if ($response === null) {
-            throw new \RuntimeException("Adapter ran out of scripted responses (call {$this->callCount})");
+            throw new \RuntimeException("Client ran out of scripted responses (call {$this->callCount})");
         }
         return $response;
     }
@@ -238,13 +189,8 @@ class TestableGet extends Get
     {
     }
 
-    public static function assertSafe(string $url): void
+    public function fetchForTest(string $url, ClientInterface $client): ResponseInterface
     {
-        parent::assertSafeUrl($url);
-    }
-
-    public function fetchForTest(string $url, Adapter $adapter): Response
-    {
-        return $this->safeFetch($url, 'test', $adapter);
+        return $this->safeFetch($url, 'test', new PublicURL(new PublicHostname(new PublicInternet(), new FixedLookup())), $client);
     }
 }

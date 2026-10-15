@@ -28,6 +28,7 @@ class Key
         protected bool $projectCheckDisabled = false,
         protected bool $previewAuthDisabled = false,
         protected bool $deploymentStatusIgnored = false,
+        protected bool $runtimeEphemeral = false,
     ) {
     }
 
@@ -76,12 +77,10 @@ class Key
         return $this->disabledMetrics;
     }
 
-
     public function getHostnameOverride(): bool
     {
         return $this->hostnameOverride;
     }
-
 
     public function isBannerDisabled(): bool
     {
@@ -101,6 +100,11 @@ class Key
     public function isProjectCheckDisabled(): bool
     {
         return $this->projectCheckDisabled;
+    }
+
+    public function isRuntimeEphemeral(): bool
+    {
+        return $this->runtimeEphemeral;
     }
 
     /**
@@ -163,6 +167,7 @@ class Key
                 $projectCheckDisabled = $payload['projectCheckDisabled'] ?? false;
                 $previewAuthDisabled = $payload['previewAuthDisabled'] ?? false;
                 $deploymentStatusIgnored = $payload['deploymentStatusIgnored'] ?? false;
+                $runtimeEphemeral = $payload['runtimeEphemeral'] ?? false;
                 $scopes = \array_merge($payload['scopes'] ?? [], $scopes);
 
                 if (!$projectCheckDisabled && $projectId !== $project->getId()) {
@@ -183,7 +188,8 @@ class Key
                     $bannerDisabled,
                     $projectCheckDisabled,
                     $previewAuthDisabled,
-                    $deploymentStatusIgnored
+                    $deploymentStatusIgnored,
+                    $runtimeEphemeral
                 );
             case API_KEY_STANDARD:
                 $key = $project->find(

@@ -55,6 +55,17 @@ class Create extends Action
                 group: 'messages',
                 name: 'createEmail',
                 description: '/docs/references/messaging/create-email.md',
+                requestExamples: [
+                    'draft' => [
+                        'summary' => 'Create an email draft without sending it',
+                        'value' => [
+                            'messageId' => '<MESSAGE_ID>',
+                            'subject' => 'Welcome',
+                            'content' => 'Welcome to our app.',
+                            'draft' => true,
+                        ],
+                    ],
+                ],
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
@@ -72,12 +83,12 @@ class Create extends Action
             ->param('emails', [], new ArrayList(new Email()), 'List of email addresses to send the message to. Use this to deliver to recipients that are not backed by an Appwrite user, target, or topic.', true)
             ->param('cc', [], fn (Database $dbForProject) => new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'Array of target IDs to be added as CC.', true, ['dbForProject'])
             ->param('bcc', [], fn (Database $dbForProject) => new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'Array of target IDs to be added as BCC.', true, ['dbForProject'])
-            ->param('attachments', [], new ArrayList(new CompoundUID()), 'Array of compound ID strings of bucket IDs and file IDs to be attached to the email. They should be formatted as <BUCKET_ID>:<FILE_ID>.', true)
-            ->param('replyToEmail', '', new Email(allowEmpty: true), 'Email address to reply to. If not set, defaults to the sender email address.', true)
-            ->param('replyToName', '', new Text(128, 0), 'Name of the reply to recipient. If not set, defaults to the sender name.', true)
+            ->param('attachments', [], new Nullable(new ArrayList(new CompoundUID())), 'Array of compound ID strings of bucket IDs and file IDs to be attached to the email. They should be formatted as <BUCKET_ID>:<FILE_ID>.', true)
             ->param('draft', false, new Boolean(), 'Is message a draft', true)
             ->param('html', false, new Boolean(), 'Is content of type HTML', true)
             ->param('scheduledAt', null, new Nullable(new DatetimeValidator(requireDateInFuture: true)), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
+            ->param('replyToEmail', '', new Email(allowEmpty: true), 'Email address to reply to. If not set, defaults to the sender email address.', true)
+            ->param('replyToName', '', new Text(128, 0), 'Name of the reply to recipient. If not set, defaults to the sender name.', true)
             ->inject('queueForEvents')
             ->inject('dbForProject')
             ->inject('dbForPlatform')
@@ -87,7 +98,7 @@ class Create extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $messageId, string $subject, string $content, ?array $topics, ?array $users, ?array $targets, ?array $emails, ?array $cc, ?array $bcc, ?array $attachments, string $replyToEmail, string $replyToName, bool $draft, bool $html, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, MessagingPublisher $publisherForMessaging, Response $response)
+    public function action(string $messageId, string $subject, string $content, ?array $topics, ?array $users, ?array $targets, ?array $emails, ?array $cc, ?array $bcc, ?array $attachments, bool $draft, bool $html, ?string $scheduledAt, string $replyToEmail, string $replyToName, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, MessagingPublisher $publisherForMessaging, Response $response)
     {
         $messageId = $messageId == 'unique()'
             ? ID::unique()

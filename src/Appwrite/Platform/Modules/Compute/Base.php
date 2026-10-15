@@ -15,12 +15,11 @@ use Appwrite\Platform\Permission as AppwritePermission;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Utopia\Bus\Bus;
 use Utopia\Config\Config;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Http\Adapter\Swoole\Request;
@@ -102,8 +101,8 @@ class Base extends Action
         if (empty($providerInstallationId)) {
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
-        $owner = $vcs->getOwnerName($providerInstallationId);
         $providerRepositoryId = $function->getAttribute('providerRepositoryId', '');
+        $owner = $vcs->getOwnerName($providerInstallationId, (int) $providerRepositoryId);
         try {
             $repositoryName = $vcs->getRepositoryName($providerRepositoryId);
             if (empty($repositoryName)) {
@@ -187,11 +186,7 @@ class Base extends Action
             );
         } else {
             $deployment = $dbForProject->createDocument('deployments', new Document([
-                '$permissions' => [
-                    Permission::read(Role::any()),
-                    Permission::update(Role::any()),
-                    Permission::delete(Role::any()),
-                ],
+                '$permissions' => Deployments::permissions(),
                 ...$deployment->getArrayCopy(),
                 'status' => 'waiting',
             ]));
@@ -216,8 +211,8 @@ class Base extends Action
         if (empty($providerInstallationId)) {
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
-        $owner = $vcs->getOwnerName($providerInstallationId);
         $providerRepositoryId = $site->getAttribute('providerRepositoryId', '');
+        $owner = $vcs->getOwnerName($providerInstallationId, (int) $providerRepositoryId);
         try {
             $repositoryName = $vcs->getRepositoryName($providerRepositoryId);
             if (empty($repositoryName)) {
@@ -266,11 +261,7 @@ class Base extends Action
 
         $deployment = $dbForProject->createDocument('deployments', new Document([
             '$id' => $deploymentId,
-            '$permissions' => [
-                Permission::read(Role::any()),
-                Permission::update(Role::any()),
-                Permission::delete(Role::any()),
-            ],
+            '$permissions' => Deployments::permissions(),
             'resourceId' => $site->getId(),
             'resourceInternalId' => $site->getSequence(),
             'resourceType' => 'sites',
@@ -361,13 +352,23 @@ class Base extends Action
         }
 
         // VCS branch preview
+        $branchDomain = null;
         if (!empty($providerBranch)) {
-            $domain = (new BranchDomainFilter())->apply([
-                'branch' => $providerBranch,
-                'resourceId' => $site->getId(),
-                'projectId' => $project->getId(),
-                'sitesDomain' => $sitesDomain,
-            ]);
+            try {
+                $branchDomain = (new BranchDomainFilter())->apply([
+                    'branch' => $providerBranch,
+                    'resourceId' => $site->getId(),
+                    'projectId' => $project->getId(),
+                    'sitesDomain' => $sitesDomain,
+                ]);
+            } catch (\InvalidArgumentException $error) {
+                // Deploy without a branch preview rather than store an unreachable rule
+                Console::warning('Skipping branch preview rule: ' . $error->getMessage());
+            }
+        }
+
+        if ($branchDomain !== null) {
+            $domain = $branchDomain;
             $ruleId = md5($domain);
             try {
                 $rule = $authorization->skip(
@@ -440,41 +441,51 @@ class Base extends Action
             return;
         }
 
-        $domain = (new BranchDomainFilter())->apply([
-            'branch' => $branchName,
-            'resourceId' => $site->getId(),
-            'projectId' => $project->getId(),
-            'sitesDomain' => $sitesDomain,
-        ]);
-        $ruleId = md5($domain);
-
         try {
-            $rule = $dbForPlatform->createDocument('rules', new Document([
-                '$id' => $ruleId,
+            $domain = (new BranchDomainFilter())->apply([
+                'branch' => $branchName,
+                'resourceId' => $site->getId(),
                 'projectId' => $project->getId(),
-                'projectInternalId' => $project->getSequence(),
-                'domain' => $domain,
-                'type' => 'deployment',
-                'trigger' => 'deployment',
-                'deploymentId' => $deployment->getId(),
-                'deploymentInternalId' => $deployment->getSequence(),
-                'deploymentResourceType' => 'site',
-                'deploymentResourceId' => $site->getId(),
-                'deploymentResourceInternalId' => $site->getSequence(),
-                'deploymentVcsProviderBranch' => $branchName,
-                'status' => 'verified',
-                'certificateId' => '',
-                'search' => implode(' ', [$ruleId, $domain]),
-                'owner' => 'Appwrite',
-                'region' => $project->getAttribute('region'),
-            ]));
-            $bus->dispatch(new RuleCreated($rule->getArrayCopy()));
-        } catch (Duplicate) {
-            $rule = $dbForPlatform->updateDocument('rules', $ruleId, new Document([
-                'deploymentId' => $deployment->getId(),
-                'deploymentInternalId' => $deployment->getSequence(),
-            ]));
-            $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
+                'sitesDomain' => $sitesDomain,
+            ]);
+        } catch (\InvalidArgumentException $error) {
+            // Skip only the preview rule: manual rules pinned to the branch
+            // below still follow the deployment.
+            Console::warning('Skipping branch preview rule: ' . $error->getMessage());
+            $domain = null;
+        }
+
+        if ($domain !== null) {
+            $ruleId = md5($domain);
+
+            try {
+                $rule = $dbForPlatform->createDocument('rules', new Document([
+                    '$id' => $ruleId,
+                    'projectId' => $project->getId(),
+                    'projectInternalId' => $project->getSequence(),
+                    'domain' => $domain,
+                    'type' => 'deployment',
+                    'trigger' => 'deployment',
+                    'deploymentId' => $deployment->getId(),
+                    'deploymentInternalId' => $deployment->getSequence(),
+                    'deploymentResourceType' => 'site',
+                    'deploymentResourceId' => $site->getId(),
+                    'deploymentResourceInternalId' => $site->getSequence(),
+                    'deploymentVcsProviderBranch' => $branchName,
+                    'status' => 'verified',
+                    'certificateId' => '',
+                    'search' => implode(' ', [$ruleId, $domain]),
+                    'owner' => 'Appwrite',
+                    'region' => $project->getAttribute('region'),
+                ]));
+                $bus->dispatch(new RuleCreated($rule->getArrayCopy()));
+            } catch (Duplicate) {
+                $rule = $dbForPlatform->updateDocument('rules', $ruleId, new Document([
+                    'deploymentId' => $deployment->getId(),
+                    'deploymentInternalId' => $deployment->getSequence(),
+                ]));
+                $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
+            }
         }
 
         $dbForPlatform->forEach('rules', function (Document $rule) use ($dbForPlatform, $deployment, $bus) {

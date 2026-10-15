@@ -25,6 +25,11 @@ class OAuth2GitHub extends OAuth2Base
         return '5e07c00000000000000000000000000000198bcc';
     }
 
+    public function getPromptValues(): array
+    {
+        return ['select_account'];
+    }
+
     public function getClientIdDescription(): string
     {
         return parent::getClientIdDescription() . ' For GitHub Apps, use the "App ID" when both an App ID and client ID are available.';

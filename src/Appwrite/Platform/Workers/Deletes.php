@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Workers;
 use Appwrite\Bus\Events\RuleDeleted;
 use Appwrite\Deletes\Identities;
 use Appwrite\Deletes\Targets;
+use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Message\Usage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
@@ -15,13 +16,13 @@ use Appwrite\Usage\Connection as UsageConnection;
 use Appwrite\Usage\Context as UsageContext;
 use Executor\Executor;
 use Throwable;
-use Utopia\Abuse\Adapters\TimeLimit\Database as AbuseDatabase;
+use Utopia\Abuse\Adapter\TimeLimit\Database as AbuseDatabase;
 use Utopia\Bus\Bus;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
 use Utopia\Cdn\Certificates\Provider;
 use Utopia\Config\Config;
-use Utopia\Console;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -35,6 +36,7 @@ use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Span\Span;
 use Utopia\Storage\Device;
+use Utopia\Storage\DeviceType;
 use Utopia\System\System;
 use Utopia\Usage\Tenant as UsageTenant;
 
@@ -1095,11 +1097,26 @@ class Deletes extends Action
             Query::orderAsc()
         ], $dbForProject);
 
+        // Delete authenticators, including passkeys, and their pending challenges
+        $this->deleteByGroup('authenticators', [
+            Query::equal('userInternalId', [$userInternalId]),
+            Query::orderAsc()
+        ], $dbForProject);
+
+        $this->deleteByGroup('challenges', [
+            Query::equal('userInternalId', [$userInternalId]),
+            Query::orderAsc()
+        ], $dbForProject);
+
         // Delete identities
         Identities::delete($dbForProject, Query::equal('userInternalId', [$userInternalId]));
 
         // Delete targets
         Targets::delete($dbForProject, Query::equal('userInternalId', [$userInternalId]));
+
+        // Delete photos, including files a racing upload or delete left behind.
+        // The trailing slash keeps the prefix match from reaching a user whose ID starts the same.
+        getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId())->deletePath(APP_STORAGE_PHOTOS . '/' . $userId . '/');
     }
 
     /**
@@ -1576,6 +1593,15 @@ class Deletes extends Action
         $deploymentId = $deployment->getId();
         $buildPath = $deployment->getAttribute('buildPath', '');
 
+        // A build canceled or deleted before it completed never had its staged
+        // source moved (see Deployments::payload()). Unlinking follows
+        // symlinked parent directories the build could plant, so clean up only
+        // inside the builds tree.
+        $staged = Deployments::stagedSourcePath($device, $deploymentId);
+        if ($device->getType() === DeviceType::Local && \realpath(\dirname($staged)) === \dirname($staged)) {
+            $device->delete($staged);
+        }
+
         if (empty($buildPath)) {
             Console::info("No build files for deployment " . $deploymentId);
             return;
@@ -1704,35 +1730,13 @@ class Deletes extends Action
     protected function listByGroup(string $collection, array $queries, Database $database, ?callable $callback = null): void
     {
         $count = 0;
-        $limit = 1000;
-        $sum = $limit;
-        $cursor = null;
-
         $start = \microtime(true);
 
-        while ($sum === $limit) {
-
-            $queries = \array_merge([Query::limit($limit)], $queries);
-
-            if ($cursor !== null) {
-                $queries[] = Query::cursorAfter($cursor);
+        foreach ($database->iterate($collection, [Query::limit(1000), ...$queries]) as $document) {
+            if ($callback !== null) {
+                $callback($document);
             }
-
-            $results = $database->find($collection, $queries);
-
-            $sum = \count($results);
-
-            if ($sum > 0) {
-                $cursor = $results[$sum - 1];
-            }
-
-            foreach ($results as $document) {
-                if (is_callable($callback)) {
-                    $callback($document);
-                }
-
-                $count++;
-            }
+            $count++;
         }
 
         $end = \microtime(true);
@@ -1937,7 +1941,7 @@ class Deletes extends Action
             return;
         }
 
-        $expired = DateTime::addSeconds(new \DateTime(), -1 * 60 * 60 * 24 * 7);
+        $expired = DateTime::addSeconds(new \DateTime(), -APP_PUSH_LEDGER_RETENTION);
 
         $dbForProject->deleteDocuments('pushLedger', [
             Query::lessThan('$createdAt', $expired),
