@@ -1351,6 +1351,11 @@ export const jaSharedUiDictionary: Record<string, string> = {
   'Suggested app': 'おすすめアプリ',
   'App key copied': 'アプリキーをコピーしました',
   'Load more': 'さらに読み込む',
+
+  // Shared description field and the settings card that pairs it with a name
+  'Name and description': '名前と説明',
+  'Description (optional)': '説明 (任意)',
+  'What is this for?': '用途は何ですか?',
   'Loading more failed. Try again.':
     'さらに読み込めませんでした。もう一度お試しください。',
 }

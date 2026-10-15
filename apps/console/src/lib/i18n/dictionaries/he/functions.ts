@@ -319,7 +319,9 @@ export const heFunctionsDictionary: Record<string, string> = {
     'הגעתם למגבלת הפונקציות בתוכנית שלכם.',
   'Function name': 'שם הפונקציה',
   'Function name is required': 'שם הפונקציה הוא שדה חובה',
-  'Function name used for identification': 'שם הפונקציה משמש לזיהוי',
+  'Name and description used to identify this function':
+    'השם והתיאור שמזהים את הפונקציה הזו',
+  'What does this function do?': 'מה הפונקציה הזו עושה?',
   'Function not found': 'הפונקציה לא נמצאה',
   'Function templates will appear here when they are available in the catalog.':
     'תבניות פונקציות יופיעו כאן כאשר יהיו זמינות בקטלוג.',

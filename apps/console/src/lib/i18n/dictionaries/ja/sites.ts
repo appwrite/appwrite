@@ -92,10 +92,12 @@ export const jaSitesDictionary: Record<string, string> = {
   'Your site is currently being deployed.': 'サイトは現在デプロイ中です。',
   'Filters coming soon': 'フィルターは近日公開',
   'Loading settings...': '設定を読み込み中...',
-  'Site name used for identification': '識別用のサイト名',
+  'Name and description used to identify this site':
+    'このサイトを識別するための名前と説明です',
+  'What is this site for?': 'このサイトの用途は何ですか?',
   'Enter site name': 'サイト名を入力',
-  'Site name updated successfully': 'サイト名を更新しました',
-  'Failed to update site name': 'サイト名の更新に失敗しました',
+  'Site updated successfully': 'サイトを更新しました',
+  'Failed to update site': 'サイトの更新に失敗しました',
   'Site name is required': 'サイト名は必須です',
   // Settings: status card
   'Enable or disable this site without deleting it.':

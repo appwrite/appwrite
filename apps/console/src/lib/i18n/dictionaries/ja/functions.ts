@@ -166,7 +166,9 @@ export const jaFunctionsDictionary: Record<string, string> = {
   'Function is disabled': '関数は無効です',
   'Function name': '関数名',
   'Function name is required': '関数名は必須です',
-  'Function name used for identification': '識別用の関数名',
+  'Name and description used to identify this function':
+    'この関数を識別するための名前と説明です',
+  'What does this function do?': 'この関数は何をしますか?',
   'Function not found': '関数が見つかりません',
   'Function updated successfully': '関数を更新しました',
   'Function URL': '関数 URL',
