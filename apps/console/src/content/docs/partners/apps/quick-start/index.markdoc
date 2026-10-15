@@ -363,7 +363,7 @@ using Appwrite.Models;
 using Appwrite.Services;
 
 Client client = new Client()
-    .SetEndPoint("<PROJECT_ENDPOINT>") // From the project listing
+    .SetEndpoint("<PROJECT_ENDPOINT>") // From the project listing
     .SetProject("<PROJECT_ID>")
     .SetBearer("Bearer <ACCESS_TOKEN>"); // The same access token
 
@@ -378,8 +378,8 @@ package main
 import (
     "fmt"
 
-    "github.com/appwrite/sdk-for-go/client"
-    "github.com/appwrite/sdk-for-go/tablesdb"
+    "github.com/appwrite/sdk-for-go/v7/client"
+    "github.com/appwrite/sdk-for-go/v7/tablesdb"
 )
 
 func main() {

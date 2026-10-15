@@ -65,7 +65,7 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Domains\Domain;
@@ -271,7 +271,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
 
                 $sessionExists = false;
                 $jwtSessionId = $payload['sessionId'] ?? '';
-                if (!empty($jwtSessionId) && !empty($user->find('$id', $jwtSessionId, 'sessions'))) {
+                if (!empty($jwtSessionId) && \array_any($user->getAttribute('sessions', []), static fn (Document $session): bool => $session->getId() === $jwtSessionId)) {
                     $sessionExists = true;
                 }
 
@@ -279,10 +279,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                 $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
                 if (!$project->isEmpty() && !$user->isEmpty()) {
                     $teamId = $project->getAttribute('teamId', '');
-                    $membership = $user->find('teamId', $teamId, 'memberships');
-                    if (!empty($membership)) {
-                        $membershipExists = true;
-                    }
+                    $membershipExists = \array_any($user->getAttribute('memberships', []), static fn (Document $membership): bool => $membership->getAttribute('teamId') === $teamId);
                 }
 
                 if ($userExists && $sessionExists && $membershipExists) {
@@ -384,7 +381,7 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             }
         }
 
-        $executionId = ID::unique();
+        $executionId = Id::unique();
 
         $headers = \array_merge([], $requestHeaders);
         $headers['x-appwrite-execution-id'] = $executionId;
@@ -1183,7 +1180,7 @@ Http::init()
                    }
                }
 
-               $ruleId = $isMd5 ? md5($domain->get()) : ID::unique();
+               $ruleId = $isMd5 ? md5($domain->get()) : Id::unique();
                $document = new Document([
                    '$id' => $ruleId,
                    'domain' => $domain->get(),

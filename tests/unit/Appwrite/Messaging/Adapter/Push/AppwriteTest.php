@@ -11,10 +11,12 @@ use PHPUnit\Framework\TestCase;
 use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;
 use Utopia\Database\Adapter\Memory;
+use Utopia\Database\Attribute;
+use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Messaging\Exception\InvalidArgumentException;
 use Utopia\Messaging\Messages\Email;
@@ -106,19 +108,31 @@ final class AppwriteTest extends TestCase
 
         // The topic counter (`sequence`, incremented per publish) plus the `name` the adapter
         // resolves from the id and fans out under (subscribers match on the name, not the id).
-        $this->database->createCollection('topics', [], [], $any, false);
-        $this->database->createAttribute('topics', 'sequence', Database::VAR_INTEGER, 0, false, 0);
-        $this->database->createAttribute('topics', 'name', Database::VAR_STRING, 255, false);
+        $this->database->createCollection(Collection::create(
+            id: 'topics',
+            attributes: [
+                Attribute::integer(key: 'sequence', default: 0),
+                Attribute::string(key: 'name', size: 255),
+            ],
+            permissions: $any,
+            documentSecurity: false,
+        ));
 
         // The append-only ledger. `data` is a plain string here (the adapter passes an
         // already-encoded JSON envelope); the production collection's json filter is a
         // storage detail, not adapter behaviour.
-        $this->database->createCollection('pushLedger', [], [], $any, false);
-        $this->database->createAttribute('pushLedger', 'topic', Database::VAR_STRING, 255, true);
-        $this->database->createAttribute('pushLedger', 'data', Database::VAR_STRING, 65535, true);
-        $this->database->createAttribute('pushLedger', 'messageId', Database::VAR_STRING, 255, false);
-        $this->database->createAttribute('pushLedger', 'messageInternalId', Database::VAR_STRING, 255, false);
-        $this->database->createAttribute('pushLedger', 'sequence', Database::VAR_INTEGER, 0, true);
+        $this->database->createCollection(Collection::create(
+            id: 'pushLedger',
+            attributes: [
+                Attribute::string(key: 'topic', size: 255, required: true),
+                Attribute::string(key: 'data', size: 65535, required: true),
+                Attribute::string(key: 'messageId', size: 255),
+                Attribute::string(key: 'messageInternalId', size: 255),
+                Attribute::integer(key: 'sequence', required: true),
+            ],
+            permissions: $any,
+            documentSecurity: false,
+        ));
     }
 
     /** Seed a topic row with a starting sequence (the current tail) and its subscriber-facing name. */
@@ -202,8 +216,8 @@ final class AppwriteTest extends TestCase
         $this->assertCount(1, $broker->published);
         $publish = $broker->published[0];
         $this->assertSame(self::PROJECT_ID, $publish['projectId']);
-        // The fan-out carries the topic name subscribers match on, not the id.
-        $this->assertSame(['topic-1-name'], $publish['channels']);
+        // The fan-out carries the topic id subscribers match on, not the name.
+        $this->assertSame(['topic-1'], $publish['channels']);
         $this->assertSame(1, $publish['options']['qos']);
         // The ledger stores exactly what was published.
         $this->assertSame($row->getAttribute('data'), $publish['options']['payload']);
@@ -350,7 +364,7 @@ final class AppwriteTest extends TestCase
         $this->assertCount(1, $ledger);
         $this->assertSame('topic-1', $ledger[0]->getAttribute('topic'));
         $this->assertCount(1, $broker->published);
-        $this->assertSame(['topic-1-name'], $broker->published[0]['channels']);
+        $this->assertSame(['topic-1'], $broker->published[0]['channels']);
     }
 
     public function testFanOutFailureIsRecordedPerTopic(): void
@@ -359,8 +373,8 @@ final class AppwriteTest extends TestCase
         // failure, yet the durable row is already written for later replay.
         $this->seedTopic('topic-1', 0);
         $broker = new FakeBroker();
-        // The broker rejects by the fanned-out channel, which is the topic name.
-        $broker->failTopics = ['topic-1-name'];
+        // The broker rejects by the fanned-out channel, which is the topic id.
+        $broker->failTopics = ['topic-1'];
 
         $response = $this->adapter($broker)->send(new Push(
             to: ['topic-1'],

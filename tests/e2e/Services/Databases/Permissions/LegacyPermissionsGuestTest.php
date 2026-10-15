@@ -11,9 +11,9 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\SchemaPolling;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 
 final class LegacyPermissionsGuestTest extends Scope
 {
@@ -30,7 +30,7 @@ final class LegacyPermissionsGuestTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'InvalidDocumentDatabase',
         ]);
         $this->assertEquals(201, $database['headers']['status-code']);
@@ -42,7 +42,7 @@ final class LegacyPermissionsGuestTest extends Scope
             $this->getContainerUrl($databaseId),
             $this->getServerHeader(),
             [
-                $this->getContainerIdParam() => ID::unique(),
+                $this->getContainerIdParam() => Id::unique(),
                 'name' => 'Movies',
                 'permissions' => [
                     Permission::read(Role::any()),
@@ -57,7 +57,7 @@ final class LegacyPermissionsGuestTest extends Scope
             $this->getContainerUrl($databaseId),
             $this->getServerHeader(),
             [
-                $this->getContainerIdParam() => ID::unique(),
+                $this->getContainerIdParam() => Id::unique(),
                 'name' => 'Movies',
                 'permissions' => [],
                 $this->getSecurityParam() => true,
@@ -121,7 +121,7 @@ final class LegacyPermissionsGuestTest extends Scope
             $this->getRecordUrl($databaseId, $publicCollectionId),
             $this->getServerHeader(),
             [
-                $this->getRecordIdParam() => ID::unique(),
+                $this->getRecordIdParam() => Id::unique(),
                 'data' => [
                     'title' => 'Lorem',
                 ],
@@ -133,7 +133,7 @@ final class LegacyPermissionsGuestTest extends Scope
             $this->getRecordUrl($databaseId, $privateCollectionId),
             $this->getServerHeader(),
             [
-                $this->getRecordIdParam() => ID::unique(),
+                $this->getRecordIdParam() => Id::unique(),
                 'data' => [
                     'title' => 'Lorem',
                 ],
@@ -188,7 +188,7 @@ final class LegacyPermissionsGuestTest extends Scope
                 'x-appwrite-project' => $this->getProject()['$id'],
             ],
             [
-                $this->getRecordIdParam() => ID::unique(),
+                $this->getRecordIdParam() => Id::unique(),
                 'data' => [
                     'title' => 'Lorem',
                 ]
@@ -206,7 +206,7 @@ final class LegacyPermissionsGuestTest extends Scope
                 'x-appwrite-project' => $this->getProject()['$id'],
             ],
             [
-                $this->getRecordIdParam() => ID::unique(),
+                $this->getRecordIdParam() => Id::unique(),
                 'data' => [
                     'title' => 'Lorem',
                 ],
@@ -214,6 +214,8 @@ final class LegacyPermissionsGuestTest extends Scope
         );
 
         $this->assertEquals(401, $privateResponse['headers']['status-code']);
+        $this->assertSame('user_unauthorized', $privateResponse['body']['type']);
+        $this->assertSame("No permissions provided for action 'create'", $privateResponse['body']['message'], 'Main reported the collection create check');
 
         // Create a document in private collection with API key so we can test that update and delete are also not allowed
         $privateResponse = $this->client->call(
@@ -221,7 +223,7 @@ final class LegacyPermissionsGuestTest extends Scope
             $this->getRecordUrl($databaseId, $privateCollectionId),
             $this->getServerHeader(),
             [
-                $this->getRecordIdParam() => ID::unique(),
+                $this->getRecordIdParam() => Id::unique(),
                 'data' => [
                     'title' => 'Lorem',
                 ],
@@ -298,7 +300,7 @@ final class LegacyPermissionsGuestTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey']
             ]),
             [
-                'databaseId' => ID::unique(),
+                'databaseId' => Id::unique(),
                 'name' => 'GuestPermissionsWrite',
             ]
         );
@@ -311,7 +313,7 @@ final class LegacyPermissionsGuestTest extends Scope
             $this->getContainerUrl($databaseId),
             $this->getServerHeader(),
             [
-                $this->getContainerIdParam() => ID::unique(),
+                $this->getContainerIdParam() => Id::unique(),
                 'name' => 'Movies',
                 'permissions' => [
                     Permission::create(Role::any()),
@@ -343,7 +345,7 @@ final class LegacyPermissionsGuestTest extends Scope
                 'x-appwrite-project' => $this->getProject()['$id'],
             ],
             [
-                $this->getRecordIdParam() => ID::unique(),
+                $this->getRecordIdParam() => Id::unique(),
                 'data' => [
                     'title' => 'Thor: Ragnarok',
                 ],
