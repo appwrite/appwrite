@@ -144,7 +144,7 @@ final class ExifToolTest extends TestCase
     {
         \exec('ps -eo args', $lines);
 
-        return \count(\array_filter($lines, fn (string $line) => \str_starts_with($line, 'perl ') && \str_contains($line, '-stay_open')));
+        return \count(\array_filter($lines, fn (string $line) => \str_contains($line, 'exiftool') && \str_contains($line, '-stay_open')));
     }
 
     private function createPhoto(string $format, ?string $icc = null): string
