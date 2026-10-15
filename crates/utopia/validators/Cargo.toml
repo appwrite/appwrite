@@ -15,3 +15,6 @@ thiserror.workspace = true
 
 [package.metadata.utopia]
 php-sync = "bf7bd52d83df090e06824cf3c1d0a996f28e5f8b"
+# The Utopia site's category, here rather than in packages/validators/composer.json:
+# a change there re-checks its dependents linked, and migration cannot resolve.
+category = "utilities"
