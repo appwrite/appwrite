@@ -8,6 +8,7 @@
 mod attributes;
 mod collections;
 mod indexes;
+mod memory;
 mod permissions;
 mod relationships;
 

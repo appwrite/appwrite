@@ -508,7 +508,7 @@ impl Database {
                         Ok(true) => created.push(attribute.clone()),
                         Ok(false) => {}
                         Err(error) => {
-                            self.cleanup_attributes(collection, &created, 3).await;
+                            self.cleanup_attributes(collection, &created, 3).await?;
                             return Err(error);
                         }
                     }
@@ -859,22 +859,25 @@ impl Database {
     }
 
     /// Drops the columns of `attributes` (`cleanupAttributes()`): the
-    /// messages of the cleanups that failed. PHP catches `Exception` only,
-    /// so an engine error (`\Error`) escapes it; here it is collected too,
-    /// as the rollback it serves returns no error of its own.
+    /// messages of the cleanups that failed.
+    ///
+    /// Fails with an engine error (PHP's `\Error`, which its `catch
+    /// (Exception)` lets through) unchanged.
     pub(crate) async fn cleanup_attributes(
         &self,
         collection: &str,
         attributes: &[Attribute],
         attempts: u32,
-    ) -> Vec<String> {
+    ) -> Result<Vec<String>> {
         let mut errors = Vec::new();
         for attribute in attributes {
-            if let Err(error) = self.cleanup_attribute(collection, &attribute.key, attempts).await {
-                errors.push(error.message().to_owned());
+            match self.cleanup_attribute(collection, &attribute.key, attempts).await {
+                Ok(()) => {}
+                Err(error) if error.is_engine_error() => return Err(error),
+                Err(error) => errors.push(error.message().to_owned()),
             }
         }
-        errors
+        Ok(errors)
     }
 }
 

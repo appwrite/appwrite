@@ -21,8 +21,9 @@ pub(crate) enum Rollback<'a> {
     /// An undo whose failure is reported after the persist error
     /// (`$silentRollback = true`).
     Silent(BoxFuture<'a, Result<()>>),
-    /// An undo that returns the errors it met (`$rollbackReturnsErrors = true`).
-    Errors(BoxFuture<'a, Vec<String>>),
+    /// An undo that returns the errors it met (`$rollbackReturnsErrors = true`);
+    /// an error it raises itself reaches the caller unchanged.
+    Errors(BoxFuture<'a, Result<Vec<String>>>),
 }
 
 impl Database {
@@ -147,7 +148,7 @@ impl Database {
             match rollback {
                 Rollback::None => {}
                 Rollback::Errors(undo) => {
-                    let errors = undo.await;
+                    let errors = undo.await?;
                     if !errors.is_empty() {
                         return Err(Error::database(format!(
                             "Failed to persist metadata after retries and cleanup encountered errors for {description}: {} | Cleanup errors: {}",

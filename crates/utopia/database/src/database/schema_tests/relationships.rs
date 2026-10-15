@@ -4,7 +4,7 @@
 
 use super::{Fixture, definition, describe, sequenced};
 use crate::attribute::Attribute;
-use crate::database::testing::{Call, Reply, block_on};
+use crate::database::testing::{Call, Reply, block_on, limits};
 use crate::error::{Error, Kind};
 use crate::index::Index;
 use crate::relationship::{Relationship, RelationshipSide, Update};
@@ -25,6 +25,8 @@ fn library() -> Fixture {
         sequenced("authors", "2", vec![Attribute::string("name", 64), books], Vec::new()),
     ]);
     f.adapter.with_relationships();
+    // The sequences are integers, as on the engines PHP runs these on.
+    f.adapter.set_limits(crate::adapter::Limits { id_type: utopia_query::schema::ColumnType::Integer, ..limits() });
     f
 }
 

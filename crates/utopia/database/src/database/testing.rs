@@ -188,6 +188,10 @@ pub(crate) enum Call {
         collection: String,
         relationship: Relationship,
     },
+    RelaxAttributeRequired {
+        collection: String,
+        key: String,
+    },
     UpdateRelationship {
         collection: String,
         relationship: Relationship,
@@ -243,6 +247,7 @@ impl Call {
             Call::GetSequences { .. } => "getSequences",
             Call::UpsertDocuments { .. } => "upsertDocuments",
             Call::CreateRelationship { .. } => "createRelationship",
+            Call::RelaxAttributeRequired { .. } => "relaxAttributeRequired",
             Call::UpdateRelationship { .. } => "updateRelationship",
             Call::DeleteRelationship { .. } => "deleteRelationship",
         }
@@ -423,7 +428,7 @@ impl StubAdapter {
     }
 }
 
-fn bool_reply(reply: Option<Reply>, default: bool) -> Result<bool> {
+pub(crate) fn bool_reply(reply: Option<Reply>, default: bool) -> Result<bool> {
     match reply {
         None => Ok(default),
         Some(Reply::Bool(b)) => Ok(b),
@@ -432,7 +437,7 @@ fn bool_reply(reply: Option<Reply>, default: bool) -> Result<bool> {
     }
 }
 
-fn int_reply(reply: Option<Reply>, default: i64) -> Result<i64> {
+pub(crate) fn int_reply(reply: Option<Reply>, default: i64) -> Result<i64> {
     match reply {
         None => Ok(default),
         Some(Reply::Int(i)) => Ok(i),
@@ -441,7 +446,7 @@ fn int_reply(reply: Option<Reply>, default: i64) -> Result<i64> {
     }
 }
 
-fn document_reply(reply: Option<Reply>, default: Document) -> Result<Document> {
+pub(crate) fn document_reply(reply: Option<Reply>, default: Document) -> Result<Document> {
     match reply {
         None => Ok(default),
         Some(Reply::Document(d)) => Ok(d),
@@ -450,7 +455,7 @@ fn document_reply(reply: Option<Reply>, default: Document) -> Result<Document> {
     }
 }
 
-fn documents_reply(reply: Option<Reply>, default: Vec<Document>) -> Result<Vec<Document>> {
+pub(crate) fn documents_reply(reply: Option<Reply>, default: Vec<Document>) -> Result<Vec<Document>> {
     match reply {
         None => Ok(default),
         Some(Reply::Documents(d)) => Ok(d),
