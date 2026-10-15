@@ -47,7 +47,7 @@ function getCreateErrorMessage(error: unknown, t: Translator): string {
       return error.message
     }
   }
-  return getErrorMessage(error, 'Failed to create environment')
+  return getErrorMessage(error, t('Failed to create environment'))
 }
 
 export function CreateEnvironmentDialog({

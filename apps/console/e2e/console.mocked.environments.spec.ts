@@ -7,13 +7,13 @@ import { expect, test } from './fixtures'
  *
  * The `/project/environments` routes are cloud-only, so there is no backend to
  * run these against: the API is mocked at the network layer and the real
- * sidebar, dialogs and selection storage run on top of it. What is asserted is
- * the request the page sends (an environment is created with the id the user
- * typed, or with `ID.unique()` when the field is blank) and what the page does
- * with each failure the endpoints can return.
+ * sidebar and dialogs run on top of it. An environment is a project of its own,
+ * so switching opens it, and every environment call has to go through the
+ * parent even while the Console shows an environment. What is asserted is the
+ * request the page sends and where it navigates.
  *
- * The surface stays behind the `showProjectEnvironments` debug override and the
- * `projectEnvironments` profile feature; both gates are covered below.
+ * The surface is behind the `projectEnvironments` profile feature, which is off
+ * by default; the specs turn it on through the debug profile override.
  */
 
 const NOW = '2026-10-14T09:30:00.000+00:00'
@@ -125,10 +125,8 @@ type Scenario = {
   createError?: ApiError
   /** Error for PATCH /project/environments/:id. */
   renameError?: ApiError
-  /** `projectEnvironments` profile feature. Cloud has it on; omit for that. */
+  /** `projectEnvironments` profile feature. Omit for the on state most specs need. */
   projectEnvironments?: boolean
-  /** The debug override. Omit for the on state the other specs need. */
-  showProjectEnvironments?: boolean
 }
 
 /** What the page asked the API for, so the assertions can check the request. */
@@ -136,6 +134,10 @@ type Recorded = {
   listCalls: number
   /** Decoded query string of each GET, so the ordering and limit are pinned. */
   listQueries: string[]
+  /** `X-Appwrite-Project` of every environment call: always the parent. */
+  environmentCallProjects: string[]
+  /** Decoded query string of each organization project list. */
+  projectListQueries: string[]
   created: Array<{ environmentId?: string; name?: string }>
   renamed: Array<{ environmentId: string; name?: string }>
   deleted: string[]
@@ -155,34 +157,18 @@ async function mockAppwriteApi(
   scenario: Scenario,
   recorded: Recorded,
 ) {
-  const {
-    showProjectEnvironments = true,
-    projectEnvironments,
-    environments = [STAGING, PREVIEW],
-  } = scenario
+  const { projectEnvironments = true, environments = [STAGING, PREVIEW] } =
+    scenario
 
-  await page.addInitScript(
-    ({ debugFlag, featureOverride }) => {
-      window.localStorage.setItem(
-        'debug:showProjectEnvironments',
-        debugFlag ? 'true' : 'false',
-      )
-      if (featureOverride !== null) {
-        window.localStorage.setItem(
-          'debug:consoleProfile',
-          JSON.stringify({
-            id: 'cloud',
-            features: { projectEnvironments: featureOverride },
-          }),
-        )
-      }
-    },
-    {
-      debugFlag: showProjectEnvironments,
-      featureOverride:
-        typeof projectEnvironments === 'boolean' ? projectEnvironments : null,
-    },
-  )
+  await page.addInitScript((enabled) => {
+    window.localStorage.setItem(
+      'debug:consoleProfile',
+      JSON.stringify({
+        id: 'cloud',
+        features: { projectEnvironments: enabled },
+      }),
+    )
+  }, projectEnvironments)
 
   // Rows the list endpoint returns; create and delete keep it in step so the
   // refetch the mutations trigger reflects what the user just did.
@@ -208,6 +194,11 @@ async function mockAppwriteApi(
       })
 
     // ---- project environments -------------------------------------------
+    if (apiPath.startsWith('/project/environments')) {
+      recorded.environmentCallProjects.push(
+        request.headers()['x-appwrite-project'] ?? '',
+      )
+    }
     if (apiPath === '/project/environments') {
       if (request.method() === 'POST') {
         const payload = request.postDataJSON() ?? {}
@@ -293,14 +284,17 @@ async function mockAppwriteApi(
       return json(200, ORGANIZATION)
     if (apiPath.endsWith('/memberships'))
       return json(200, { total: 0, memberships: [] })
-    if (apiPath === '/projects' || apiPath === '/organization/projects')
+    if (apiPath === '/projects' || apiPath === '/organization/projects') {
+      recorded.projectListQueries.push(decodeURIComponent(url.search))
       return json(200, { total: 1, projects: [PROJECT] })
-    if (
-      apiPath === '/project' ||
-      apiPath === `/projects/${PROJECT.$id}` ||
-      apiPath === `/projects/${PROJECT.$id}/console-access`
-    )
-      return json(200, PROJECT)
+    }
+    // The parent and each environment are projects the Console can open.
+    const projectId =
+      apiPath === '/project'
+        ? request.headers()['x-appwrite-project']
+        : apiPath.match(/^\/projects\/([^/]+)(?:\/console-access)?$/)?.[1]
+    const project = [PROJECT, ...rows].find((row) => row.$id === projectId)
+    if (project) return json(200, project)
 
     return json(404, {
       message: 'Not found',
@@ -315,6 +309,8 @@ function newRecorded(): Recorded {
   return {
     listCalls: 0,
     listQueries: [],
+    environmentCallProjects: [],
+    projectListQueries: [],
     created: [],
     renamed: [],
     deleted: [],
@@ -322,10 +318,14 @@ function newRecorded(): Recorded {
 }
 
 /** Opens a project page that renders the sidebar (settings has no loader). */
-async function openProject(page: Page) {
-  await page.goto(`/projects/${PROJECT.$id}/settings`, {
+async function openProject(page: Page, projectId: string = PROJECT.$id) {
+  await page.goto(`/projects/${projectId}/settings`, {
     waitUntil: 'domcontentloaded',
   })
+}
+
+function projectUrl(projectId: string) {
+  return new RegExp(`/projects/${projectId}(?:[/?#]|$)`)
 }
 
 /**
@@ -346,21 +346,6 @@ async function openSwitcher(page: Page) {
   return page.getByRole('menu')
 }
 
-/** Selects a row in the switcher, which is what rename and delete act on. */
-async function selectEnvironment(page: Page, name: string) {
-  const menu = await openSwitcher(page)
-  await menu.getByRole('menuitem', { name, exact: false }).click()
-  await expect(page.getByRole('button', SWITCHER)).toContainText(name)
-}
-
-function storedSelection(page: Page) {
-  return page.evaluate(
-    (projectId) =>
-      window.localStorage.getItem(`console.projectEnvironment.${projectId}`),
-    PROJECT.$id,
-  )
-}
-
 test.describe('project environment switcher (mocked API)', () => {
   test('lists the project first and its environments under it', async ({
     page,
@@ -369,7 +354,7 @@ test.describe('project environment switcher (mocked API)', () => {
     await mockAppwriteApi(page, {}, recorded)
     await openProject(page)
 
-    // Nothing is stored yet, so the project is the selected environment.
+    // The Console is showing the parent, so the parent is selected.
     const trigger = page.getByRole('button', SWITCHER)
     await expect(trigger).toContainText(PROJECT.name, { timeout: 30_000 })
 
@@ -402,43 +387,38 @@ test.describe('project environment switcher (mocked API)', () => {
     ).toHaveCount(0)
   })
 
-  test('switching an environment persists the selection per project', async ({
+  test('switching opens the environment, and back opens the parent', async ({
     page,
   }) => {
     const recorded = newRecorded()
     await mockAppwriteApi(page, {}, recorded)
     await openProject(page)
 
-    await selectEnvironment(page, STAGING.name)
-    // One toast per switch; a second switch stacks another, so check it here.
-    await expect(page.getByText('Environment switched').first()).toBeVisible()
-    expect(await storedSelection(page)).toBe(STAGING.$id)
+    const menu = await openSwitcher(page)
+    await menu.getByRole('menuitem', { name: STAGING.name }).click()
+    await expect(page).toHaveURL(projectUrl(STAGING.$id))
+    await expect(page.getByRole('button', SWITCHER)).toContainText(STAGING.name)
 
-    // Back to the project: the key is removed rather than set to the project id.
-    await selectEnvironment(page, PROJECT.name)
-    expect(await storedSelection(page)).toBeNull()
+    const reopened = await openSwitcher(page)
+    await reopened.getByRole('menuitem', { name: PROJECT.name }).click()
+    await expect(page).toHaveURL(projectUrl(PROJECT.$id))
   })
 
-  test('falls back to the project when the stored environment is gone', async ({
-    page,
-  }) => {
+  test('inside an environment, lists from the parent', async ({ page }) => {
     const recorded = newRecorded()
-    await mockAppwriteApi(page, { environments: [PREVIEW] }, recorded)
-    await page.addInitScript(
-      ({ projectId, environmentId }) => {
-        window.localStorage.setItem(
-          `console.projectEnvironment.${projectId}`,
-          environmentId,
-        )
-      },
-      { projectId: PROJECT.$id, environmentId: 'deleted-on-another-device' },
-    )
-    await openProject(page)
+    await mockAppwriteApi(page, {}, recorded)
+    await openProject(page, STAGING.$id)
 
-    const trigger = page.getByRole('button', SWITCHER)
-    await expect(trigger).toContainText(PROJECT.name, { timeout: 30_000 })
-    // A loaded list that does not contain the stored id clears it.
-    await expect.poll(() => storedSelection(page)).toBeNull()
+    const menu = await openSwitcher(page)
+    const rows = menu.getByRole('menuitem')
+    await expect(rows.nth(0)).toContainText(PROJECT.name)
+    await expect(rows.nth(1)).toContainText(STAGING.name)
+    // The environment routes act on the calling project's environments, so
+    // asking the environment itself would list nothing.
+    expect(recorded.environmentCallProjects).not.toHaveLength(0)
+    expect(new Set(recorded.environmentCallProjects)).toEqual(
+      new Set([PROJECT.$id]),
+    )
   })
 
   test('shows only the project when it has no environments', async ({
@@ -482,9 +462,9 @@ test.describe('project environment switcher (mocked API)', () => {
       { environmentId: 'eu-preview', name: 'EU Preview' },
     ])
 
-    // Create switches to the new environment and it is listed after the refetch.
+    // The new environment is a project of its own, and create opens it.
+    await expect(page).toHaveURL(projectUrl('eu-preview'))
     await expect(page.getByRole('button', SWITCHER)).toContainText('EU Preview')
-    expect(await storedSelection(page)).toBe('eu-preview')
   })
 
   test('creates with an ID.unique() id when the field is left blank', async ({
@@ -624,11 +604,10 @@ test.describe('project environment switcher (mocked API)', () => {
     ])
   })
 
-  test('renames the selected environment', async ({ page }) => {
+  test('renames the environment being shown', async ({ page }) => {
     const recorded = newRecorded()
     await mockAppwriteApi(page, {}, recorded)
-    await openProject(page)
-    await selectEnvironment(page, STAGING.name)
+    await openProject(page, STAGING.$id)
 
     const menu = await openSwitcher(page)
     await menu.getByRole('menuitem', { name: 'Rename environment' }).click()
@@ -650,9 +629,10 @@ test.describe('project environment switcher (mocked API)', () => {
     expect(recorded.renamed).toEqual([
       { environmentId: STAGING.$id, name: 'Staging EU' },
     ])
-    // The id is unchanged, so the selection survives the rename.
     await expect(page.getByRole('button', SWITCHER)).toContainText('Staging EU')
-    expect(await storedSelection(page)).toBe(STAGING.$id)
+    expect(new Set(recorded.environmentCallProjects)).toEqual(
+      new Set([PROJECT.$id]),
+    )
   })
 
   test('keeps the rename dialog usable when the rename fails', async ({
@@ -674,8 +654,7 @@ test.describe('project environment switcher (mocked API)', () => {
       },
       recorded,
     )
-    await openProject(page)
-    await selectEnvironment(page, STAGING.name)
+    await openProject(page, STAGING.$id)
 
     const menu = await openSwitcher(page)
     await menu.getByRole('menuitem', { name: 'Rename environment' }).click()
@@ -697,8 +676,7 @@ test.describe('project environment switcher (mocked API)', () => {
   test('deletes through the type-the-name confirmation', async ({ page }) => {
     const recorded = newRecorded()
     await mockAppwriteApi(page, {}, recorded)
-    await openProject(page)
-    await selectEnvironment(page, STAGING.name)
+    await openProject(page, STAGING.$id)
 
     const menu = await openSwitcher(page)
     await menu.getByRole('menuitem', { name: 'Delete environment' }).click()
@@ -722,9 +700,11 @@ test.describe('project environment switcher (mocked API)', () => {
 
     await expect(page.getByText('Environment deleted')).toBeVisible()
     expect(recorded.deleted).toEqual([STAGING.$id])
-    // Deleting the selected environment falls back to the project.
-    await expect(page.getByRole('button', SWITCHER)).toContainText(PROJECT.name)
-    expect(await storedSelection(page)).toBeNull()
+    expect(new Set(recorded.environmentCallProjects)).toEqual(
+      new Set([PROJECT.$id]),
+    )
+    // The environment being shown is gone, so the parent opens.
+    await expect(page).toHaveURL(projectUrl(PROJECT.$id))
 
     const reopened = await openSwitcher(page)
     await expect(
@@ -733,6 +713,23 @@ test.describe('project environment switcher (mocked API)', () => {
     await expect(
       reopened.getByRole('menuitem', { name: PREVIEW.name }),
     ).toBeVisible()
+  })
+
+  test('leaves environments out of organization project lists', async ({
+    page,
+  }) => {
+    const recorded = newRecorded()
+    await mockAppwriteApi(page, {}, recorded)
+    await page.goto(`/organizations/${ORGANIZATION.$id}`, {
+      waitUntil: 'domcontentloaded',
+    })
+
+    await expect
+      .poll(() => recorded.projectListQueries.length)
+      .toBeGreaterThan(0)
+    for (const query of recorded.projectListQueries) {
+      expect(query).toContain('{"method":"isNull","attribute":"parentId"}')
+    }
   })
 
   test('renders nothing when the endpoint is absent (self-hosted backend)', async ({
@@ -768,16 +765,6 @@ test.describe('project environment switcher (mocked API)', () => {
   test('asks for nothing when the profile feature is off', async ({ page }) => {
     const recorded = newRecorded()
     await mockAppwriteApi(page, { projectEnvironments: false }, recorded)
-    await openProject(page)
-
-    await waitForSidebar(page)
-    await expect(page.getByRole('button', SWITCHER)).toHaveCount(0)
-    expect(recorded.listCalls).toBe(0)
-  })
-
-  test('asks for nothing when the debug override is off', async ({ page }) => {
-    const recorded = newRecorded()
-    await mockAppwriteApi(page, { showProjectEnvironments: false }, recorded)
     await openProject(page)
 
     await waitForSidebar(page)

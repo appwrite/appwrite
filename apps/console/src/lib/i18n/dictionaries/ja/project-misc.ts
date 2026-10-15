@@ -3271,7 +3271,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   // Project environment switcher
   Environments: '環境',
   'Switch environment': '環境を切り替え',
-  'Environment switched': '環境を切り替えました',
   'Create environment': '環境を作成',
   'Rename environment': '環境の名前を変更',
   'Delete environment': '環境を削除',

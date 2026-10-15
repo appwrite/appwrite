@@ -3287,7 +3287,6 @@ export const heProjectMiscDictionary: Record<string, string> = {
   // Project environment switcher
   Environments: 'סביבות',
   'Switch environment': 'החלפת סביבה',
-  'Environment switched': 'הסביבה הוחלפה',
   'Create environment': 'יצירת סביבה',
   'Rename environment': 'שינוי שם הסביבה',
   'Delete environment': 'מחיקת סביבה',

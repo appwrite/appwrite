@@ -84,7 +84,7 @@ export function RenameEnvironmentDialog({
       toast.success(t('Environment renamed'))
       onOpenChange(false)
     } catch (err: unknown) {
-      toast.error(getErrorMessage(err, 'Failed to rename environment'))
+      toast.error(getErrorMessage(err, t('Failed to rename environment')))
     }
   }
 

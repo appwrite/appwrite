@@ -1,11 +1,12 @@
 /**
  * React Query hooks for project environments.
  *
- * An environment is itself a project document, linked to the current project by
- * `parentId`, so the list returns `Models.Project` rows and never contains the
- * project it belongs to. Cloud only — the endpoints live in the cloud API, so
- * callers gate on the `projectEnvironments` profile feature and the queries
- * stay quiet (no retry) where the routes are absent.
+ * An environment is itself a project, linked to its parent by `parentId`, so the
+ * list returns `Models.Project` rows and never contains the parent. `projectId`
+ * here is always the parent, also while the Console is inside one of its
+ * environments: the routes act on the calling project's environments. Cloud
+ * only, so callers gate on the `projectEnvironments` profile feature and the
+ * queries stay quiet (no retry) where the routes are absent.
  */
 
 import {
@@ -171,10 +172,14 @@ export function useUpdateProjectEnvironment(
         .forProject(projectId, region)
         .project.updateEnvironment({ environmentId, name: name.trim() })
     },
-    onSuccess: async () => {
-      await queryClient.refetchQueries({
-        queryKey: ['project-environments', 'project', projectId],
-      })
+    onSuccess: async (_environment, { environmentId }) => {
+      await Promise.all([
+        queryClient.refetchQueries({
+          queryKey: ['project-environments', 'project', projectId],
+        }),
+        // The environment is a project the Console may be showing right now.
+        queryClient.invalidateQueries({ queryKey: ['project', environmentId] }),
+      ])
     },
   })
 }

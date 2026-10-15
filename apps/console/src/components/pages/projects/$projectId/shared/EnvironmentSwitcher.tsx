@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
+import { Link, useNavigate } from '@tanstack/react-router'
 import { Check, ChevronsUpDown, Pencil, Plus, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
@@ -22,9 +23,6 @@ import { RenameEnvironmentDialog } from '@/components/pages/projects/$projectId/
 import {
   projectEnvironmentDotClass,
   type ProjectEnvironmentOption,
-  type ProjectEnvironmentOptions,
-  resolveProjectEnvironmentSelection,
-  useProjectEnvironmentSelection,
 } from '@/lib/project-environments'
 import {
   useDeleteProjectEnvironment,
@@ -70,78 +68,80 @@ export function EnvironmentSwitcher({
   isMobile = false,
 }: EnvironmentSwitcherProps) {
   const t = useT()
+  const navigate = useNavigate()
   const { features } = useConsoleProfile()
   const environmentsEnabled = features.projectEnvironments
-  const { project } = useProject(projectId)
+  // `projectId` is whichever project the Console is showing, which may be an
+  // environment. The switcher always lists from the parent, which is also the
+  // only project the environment routes accept.
+  const { project, projectData } = useProject(projectId)
+  const parentProjectId = projectData
+    ? projectData.parentId || projectData.$id
+    : undefined
+  const { project: parentProject } = useProject(parentProjectId)
   const region = project?.region
-  const { environments, isFetched, error } = useProjectEnvironments(
-    projectId,
+  const { environments, error } = useProjectEnvironments(
+    parentProjectId,
     region,
     environmentsEnabled,
   )
-  const { selectedEnvironmentId, selectEnvironment } =
-    useProjectEnvironmentSelection(projectId)
 
   const [createOpen, setCreateOpen] = useState(false)
   const [renameOpen, setRenameOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
 
   const deleteEnvironmentMutation = useDeleteProjectEnvironment(
-    projectId,
+    parentProjectId,
     region,
   )
 
-  // The project itself is the default environment: it is the parent of every
-  // environment and is never one of the rows the list endpoint returns.
-  const options = useMemo<ProjectEnvironmentOptions>(
-    () => [
-      {
-        id: projectId,
-        name: project?.name || projectId,
-        isDefault: true,
-      },
-      ...environments.map((environment) => ({
-        id: environment.$id,
-        name: environment.name || environment.$id,
-        isDefault: false,
-      })),
-    ],
-    [projectId, project?.name, environments],
+  // The parent is the default environment and is never one of the rows the
+  // list endpoint returns.
+  const options = useMemo<ProjectEnvironmentOption[]>(
+    () =>
+      parentProjectId
+        ? [
+            {
+              id: parentProjectId,
+              name: parentProject?.name || parentProjectId,
+              isDefault: true,
+            },
+            ...environments.map((environment) => ({
+              id: environment.$id,
+              name: environment.name || environment.$id,
+              isDefault: false,
+            })),
+          ]
+        : [],
+    [parentProjectId, parentProject?.name, environments],
   )
-
-  const { selected, isStale } = resolveProjectEnvironmentSelection(
-    options,
-    selectedEnvironmentId,
-  )
-
-  // A stored id can outlive its environment (deleted here or on another
-  // device), so drop it once a loaded list says it is gone. Only a successful
-  // list counts: mid-flight, and on failure, the project is the only option.
-  useEffect(() => {
-    if (error || !isFetched || !isStale) return
-    selectEnvironment(null)
-  }, [error, isFetched, isStale, selectEnvironment])
 
   // Self-hosted has no `/project/environments` routes, and a member without
   // project read access cannot list them: show nothing rather than an error.
-  if (!environmentsEnabled || error) return null
+  if (!environmentsEnabled || error || !project || !parentProjectId) return null
 
-  const handleSelect = (next: ProjectEnvironmentOption) => {
-    if (next.id === selected.id) return
-    selectEnvironment(next.isDefault ? null : next.id)
-    toast.success(t('Environment switched'))
+  const selected: ProjectEnvironmentOption = {
+    id: project.$id,
+    name: project.name || project.$id,
+    isDefault: project.$id === parentProjectId,
   }
+
+  const openProject = (nextProjectId: string) =>
+    navigate({
+      to: '/projects/$projectId',
+      params: { projectId: nextProjectId },
+    })
 
   const handleConfirmDelete = () => {
     closeDialogBeforeOverlayUnmount(() => setDeleteOpen(false))
     deleteEnvironmentMutation.mutate(selected.id, {
       onSuccess: () => {
-        selectEnvironment(null)
         toast.success(t('Environment deleted'))
+        openProject(parentProjectId)
       },
       onError: (deleteError: Error) => {
         toast.error(
-          getErrorMessage(deleteError, 'Failed to delete environment'),
+          getErrorMessage(deleteError, t('Failed to delete environment')),
         )
       },
     })
@@ -210,21 +210,31 @@ export function EnvironmentSwitcher({
             return (
               <DropdownMenuItem
                 key={option.id}
-                onSelect={() => handleSelect(option)}
+                asChild
                 className={cn('gap-2', isActive && 'bg-accent/50')}
               >
-                <span className="flex h-4 w-4 shrink-0 items-center justify-center">
-                  <EnvironmentDot environment={option} />
-                </span>
-                <span className="min-w-0 flex-1 truncate text-[13px]">
-                  {option.name}
-                </span>
-                <Check
-                  className={cn(
-                    'h-3.5 w-3.5 shrink-0',
-                    isActive ? 'text-foreground' : 'invisible',
-                  )}
-                />
+                <Link
+                  to="/projects/$projectId"
+                  params={{ projectId: option.id }}
+                  // Opening the current project again would only leave the
+                  // page for its root.
+                  onClick={
+                    isActive ? (event) => event.preventDefault() : undefined
+                  }
+                >
+                  <span className="flex h-4 w-4 shrink-0 items-center justify-center">
+                    <EnvironmentDot environment={option} />
+                  </span>
+                  <span className="min-w-0 flex-1 truncate text-[13px]">
+                    {option.name}
+                  </span>
+                  <Check
+                    className={cn(
+                      'h-3.5 w-3.5 shrink-0',
+                      isActive ? 'text-foreground' : 'invisible',
+                    )}
+                  />
+                </Link>
               </DropdownMenuItem>
             )
           })}
@@ -239,8 +249,8 @@ export function EnvironmentSwitcher({
               {t('Create environment')}
             </MenuItemContent>
           </DropdownMenuItem>
-          {/* The project is managed from its own settings, so rename and delete
-              only apply to the environments listed under it. */}
+          {/* The parent is managed from its own settings, so rename and delete
+              only apply to the environment being shown. */}
           {!selected.isDefault && (
             <>
               <DropdownMenuItem
@@ -271,15 +281,15 @@ export function EnvironmentSwitcher({
       <CreateEnvironmentDialog
         open={createOpen}
         onOpenChange={setCreateOpen}
-        projectId={projectId}
+        projectId={parentProjectId}
         region={region}
-        onCreated={(environmentId) => selectEnvironment(environmentId)}
+        onCreated={openProject}
       />
 
       <RenameEnvironmentDialog
         open={renameOpen}
         onOpenChange={setRenameOpen}
-        projectId={projectId}
+        projectId={parentProjectId}
         region={region}
         environment={selected.isDefault ? null : selected}
       />
