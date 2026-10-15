@@ -1197,8 +1197,7 @@ async fn query_cache(q: &Arc<cache::Query>, this: &Obj, method: &str, a: &Args) 
         Some(j) if a.decode_value(j).is_ok_and(|v| matches!(v, Value::Null)) => Err(Fail::php(
             "TypeError",
             format!(
-                "Utopia\\Database\\Cache\\Query::{}(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 609",
-                method
+                "Utopia\\Database\\Cache\\Query::{method}(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 609"
             ),
         )),
         _ => a.req::<Entry>("entry"),
