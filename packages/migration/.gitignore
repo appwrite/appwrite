@@ -1,0 +1,11 @@
+/vendor/
+/.idea/
+*.cache
+.env
+test-service-account.json
+.DS_Store
+localBackup/
+.vscode/
+.env.prod
+serviceAccount.json
+.phpactor.json

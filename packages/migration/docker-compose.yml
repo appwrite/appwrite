@@ -1,0 +1,62 @@
+services:
+  supabase-db:
+    build:
+      context: .
+      target: supabase-db
+    ports:
+      - "5432:5432"
+    networks:
+      - tests
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+
+  nhost-db:
+    build:
+      context: .
+      target: nhost-db
+    networks:
+      - tests
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+
+  nhost-storage:
+    image: mockoon/cli:latest
+    command: ["--data", "/mockoon/api.json", "--port", "80", "--disable-log-to-file"]
+    networks:
+      - tests
+    volumes:
+      - ./tests/Migration/resources/nhost:/mockoon
+
+  supabase-api:
+    image: mockoon/cli:latest
+    command: ["--data", "/mockoon/api.json", "--port", "80", "--disable-log-to-file"]
+    networks:
+      - tests
+    volumes:
+      - ./tests/Migration/resources/supabase:/mockoon
+
+  tests:
+    build:
+      context: .
+    networks:
+      - tests
+    volumes:
+      - ./src:/app/src
+      - ./tests:/app/tests
+      - ./phpunit.xml:/app/phpunit.xml
+    depends_on:
+      - supabase-db
+      - nhost-db
+      - nhost-storage
+    environment:
+      - NHOST_DB_URL=postgres://postgres:postgres@nhost-db:5432/postgres
+      - SUPABASE_DB_URL=postgres://postgres:postgres@supabase-db:5432/postgres
+
+networks:
+  tests:

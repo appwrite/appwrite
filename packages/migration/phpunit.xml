@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<phpunit
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.5/phpunit.xsd"
+        bootstrap="tests/bootstrap.php"
+        colors="true"
+        stopOnFailure="false"
+        cacheDirectory=".phpunit.cache" backupStaticProperties="false">
+    <testsuites>
+        <testsuite name="E2E">
+            <directory>./tests/Migration/E2E</directory>
+        </testsuite>
+        <testsuite name="Unit">
+            <directory>./tests/Migration/Unit</directory>
+        </testsuite>
+    </testsuites>
+</phpunit>

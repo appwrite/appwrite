@@ -1,0 +1,56 @@
+{
+    "name": "utopia-php/migration",
+    "description": "A simple library to migrate resources between services.",
+    "type": "library",
+    "keywords": [
+        "php",
+        "framework",
+        "upf",
+        "utopia",
+        "migration"
+    ],
+    "license": "MIT",
+    "minimum-stability": "stable",
+    "autoload": {
+        "psr-4": {
+            "Utopia\\Migration\\": "src/Migration"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Utopia\\Tests\\": "tests/Migration"
+        }
+    },
+    "scripts": {
+        "test": "./vendor/bin/phpunit",
+        "lint": "./vendor/bin/pint --test",
+        "format": "./vendor/bin/pint",
+        "check": "./vendor/bin/phpstan analyse --level 3 src tests bin --memory-limit 2G"
+    },
+    "require": {
+        "php": ">=8.5",
+        "ext-curl": "*",
+        "ext-openssl": "*",
+        "appwrite/appwrite": "^30.2.2",
+        "utopia-php/database": "^8.1.2",
+        "utopia-php/storage": "4.*",
+        "utopia-php/dsn": "0.2.*",
+        "halaxa/json-machine": "^1.2",
+        "psr/http-client": "^1.0",
+        "utopia-php/client": "^0.6",
+        "utopia-php/psr7": "^0.2.1"
+    },
+    "require-dev": {
+        "ext-pdo": "*",
+        "phpunit/phpunit": "11.*",
+        "vlucas/phpdotenv": "5.*",
+        "laravel/pint": "1.*",
+        "phpstan/phpstan": "^2.1"
+    },
+    "config": {
+        "allow-plugins": {
+            "php-http/discovery": true,
+            "tbachert/spi": true
+        }
+    }
+}
