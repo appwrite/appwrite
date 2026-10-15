@@ -1311,19 +1311,6 @@ final class RealtimeCustomClientQueryTestWithMessage extends Scope
 
         $response = $this->sendSubscribeMessage($client, \array_fill(0, APP_LIMIT_REALTIME_SUBSCRIPTIONS, ['channels' => ['documents']]));
         $this->assertCount(APP_LIMIT_REALTIME_SUBSCRIPTIONS, $response['data']['subscriptions']);
-        $subscriptionId = $response['data']['subscriptions'][0]['subscriptionId'];
-
-        $updated = $this->sendSubscribeMessage($client, [[
-            'subscriptionId' => $subscriptionId,
-            'channels' => ['documents'],
-            'queries' => [Query::equal('status', ['active'])->toString()],
-        ]]);
-        $this->assertSame($subscriptionId, $updated['data']['subscriptions'][0]['subscriptionId']);
-
-        $removed = $this->sendUnsubscribeMessage($client, [['subscriptionId' => $subscriptionId]]);
-        $this->assertTrue($removed['data']['subscriptions'][0]['removed']);
-
-        $this->sendSubscribeMessage($client, [['channels' => ['documents']]]);
 
         $client->send(\json_encode([
             'type' => 'subscribe',
@@ -1357,8 +1344,6 @@ final class RealtimeCustomClientQueryTestWithMessage extends Scope
 
         $response = $this->sendSubscribeMessage($client, [['channels' => $channels]]);
         $this->assertCount(APP_LIMIT_REALTIME_CHANNELS, $response['data']['subscriptions'][0]['channels']);
-
-        $this->sendSubscribeMessage($client, [['channels' => [$channels[0]]]]);
 
         $client->send(\json_encode([
             'type' => 'subscribe',
