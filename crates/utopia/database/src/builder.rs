@@ -211,6 +211,9 @@ impl SqlBuilder {
         fn set(&mut self, row: utopia_query::Array);
         /// `scope($scope)`: fails once the builder read a collection.
         fn scope(&mut self, scope: Arc<dyn Scope>);
+        /// `from($table, $alias)`, failing at once (as PHP throws) when a
+        /// bound builder is given another collection or alias.
+        fn from_checked(&mut self, table: &str, alias: &str);
         /// `fromTable($table, $alias)`: fails once the builder read a collection.
         fn from_table(&mut self, table: &str, alias: &str);
         /// `addHook($hook)`.

@@ -61,6 +61,20 @@ impl<D: Dialect> Builder<D> {
         self.scoped_from(table.into(), alias.into())
     }
 
+    /// [`Builder::from`], failing at once as PHP's `from()` throws: a bound
+    /// builder refuses another collection or alias here instead of at the
+    /// next statement.
+    ///
+    /// PHP: `ScopesCollections::from()`.
+    pub fn from_checked(&mut self, table: impl Into<String>, alias: impl Into<String>) -> crate::Result<&mut Self> {
+        let refused = self.core.deferred.is_some();
+        self.scoped_from(table.into(), alias.into());
+        if !refused && let Some(error) = self.core.deferred.take() {
+            return Err(error);
+        }
+        Ok(self)
+    }
+
     /// A select without `FROM`.
     ///
     /// PHP: `fromNone()`.

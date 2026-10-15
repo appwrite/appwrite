@@ -510,6 +510,16 @@ mod scopes {
     }
 
     #[test]
+    fn from_checked_refuses_another_alias_at_once() {
+        let (mut b, _) = scoped();
+        b.from_checked("users", "").unwrap();
+        let error = database_error(b.from_checked("users", "u").err().unwrap());
+        assert_eq!(error.message(), "The builder reads collection 'users', not 'users' as 'u': start another builder");
+        assert!(b.from_checked("users", "").is_ok(), "the same collection and alias keep the binding");
+        b.build().unwrap();
+    }
+
+    #[test]
     fn a_bound_builder_refuses_another_collection() {
         let (mut b, _) = scoped();
         b.from("users", "main");
