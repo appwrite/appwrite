@@ -39,7 +39,7 @@ impl Uid {
     /// `getDescription()`.
     pub fn description(&self) -> String {
         format!(
-            "UID must contain at most {} chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore",
+            "UID must contain at most {} chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a leading period, hyphen, or underscore",
             self.key.max_length()
         )
     }
