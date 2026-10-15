@@ -6234,9 +6234,57 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Transaction",
-              "message": "Failed to execute transaction: the transaction was lost before it could commit"
+            "$document": {
+              "$id": "player1",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "name": "Player 1",
+              "$collection": "players",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1",
+              "team": {
+                "$document": {
+                  "name": "Team 1",
+                  "$id": "team1",
+                  "$sequence": "1",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"any\")"
+                  ],
+                  "$collection": "teams",
+                  "supporters": [
+                    {
+                      "$document": {
+                        "name": "Supporter 1",
+                        "$id": "supporter1",
+                        "$sequence": "1",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "$collection": "supporters"
+                      }
+                    },
+                    {
+                      "$document": {
+                        "name": "Supporter 2",
+                        "$id": "supporter2",
+                        "$sequence": "2",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "$collection": "supporters"
+                      }
+                    }
+                  ]
+                }
+              }
             }
           }
         },
@@ -6247,7 +6295,58 @@
             "id": "player1"
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "name": "Player 1",
+              "$sequence": "1",
+              "$id": "player1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "players",
+              "team": {
+                "$document": {
+                  "name": "Team 1",
+                  "$id": "team1",
+                  "$sequence": "1",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"any\")"
+                  ],
+                  "$collection": "teams",
+                  "supporters": [
+                    {
+                      "$document": {
+                        "name": "Supporter 1",
+                        "$id": "supporter1",
+                        "$sequence": "1",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "$collection": "supporters"
+                      }
+                    },
+                    {
+                      "$document": {
+                        "name": "Supporter 2",
+                        "$id": "supporter2",
+                        "$sequence": "2",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "$collection": "supporters"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
           }
         },
         {
@@ -6314,7 +6413,7 @@
                       "$document": {
                         "name": "Player 2",
                         "$id": "player2",
-                        "$sequence": "1",
+                        "$sequence": "2",
                         "$createdAt": "<now>",
                         "$updatedAt": "<now>",
                         "$permissions": [
@@ -6327,7 +6426,7 @@
                       "$document": {
                         "name": "Player 3",
                         "$id": "player3",
-                        "$sequence": "2",
+                        "$sequence": "3",
                         "$createdAt": "<now>",
                         "$updatedAt": "<now>",
                         "$permissions": [
@@ -6375,7 +6474,7 @@
                       "$document": {
                         "name": "Player 2",
                         "$id": "player2",
-                        "$sequence": "1",
+                        "$sequence": "2",
                         "$createdAt": "<now>",
                         "$updatedAt": "<now>",
                         "$permissions": [
@@ -6388,7 +6487,7 @@
                       "$document": {
                         "name": "Player 3",
                         "$id": "player3",
-                        "$sequence": "2",
+                        "$sequence": "3",
                         "$createdAt": "<now>",
                         "$updatedAt": "<now>",
                         "$permissions": [

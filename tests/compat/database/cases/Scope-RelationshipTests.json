@@ -40619,10 +40619,24 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to create collection metadata for 'u0000000000000000178': Failed to execute transaction: the transaction was lost before it could commit"
-            }
+            "$document": {
+              "$id": "u0000000000000000178",
+              "name": "u0000000000000000178",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
           }
         },
         {
@@ -40713,9 +40727,14 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$document": {
+              "$id": "parent1",
+              "$collection": "u0000000000000000178",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1",
+              "children": []
             }
           }
         },
@@ -40734,9 +40753,25 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$document": {
+              "$id": "child1",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "u0000000000000000179",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1",
+              "parent": {
+                "$document": {
+                  "$id": "parent1",
+                  "$sequence": "1",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [],
+                  "$collection": "u0000000000000000178"
+                }
+              }
             }
           }
         },
@@ -40755,9 +40790,25 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$document": {
+              "$id": "child2",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "u0000000000000000179",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2",
+              "parent": {
+                "$document": {
+                  "$id": "parent1",
+                  "$sequence": "1",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [],
+                  "$collection": "u0000000000000000178"
+                }
+              }
             }
           }
         },
@@ -40776,9 +40827,25 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$document": {
+              "$id": "child3",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "u0000000000000000179",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "3",
+              "parent": {
+                "$document": {
+                  "$id": "parent1",
+                  "$sequence": "1",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [],
+                  "$collection": "u0000000000000000178"
+                }
+              }
             }
           }
         },
@@ -40802,12 +40869,7 @@
             "collection": "u0000000000000000178",
             "id": "parent1"
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
-            }
-          }
+          "expect": true
         },
         {
           "op": "database.set_max_query_values",
@@ -40825,10 +40887,7 @@
             "id": "parent1"
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
-            }
+            "$document": {}
           }
         },
         {

@@ -98063,9 +98063,21 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to persist metadata after retries for attribute creation 'value': Failed to execute transaction: the transaction was lost before it could commit"
+            "$value": "Attribute",
+            "fields": {
+              "key": "value",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Double"
+              },
+              "size": null,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
             }
           }
         },
@@ -98085,9 +98097,17 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$id": "zero_doc",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "value": 0.0,
+              "$collection": "test_zero_values",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
             }
           }
         },
@@ -98111,7 +98131,18 @@
             }
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "value": 5.0,
+              "$id": "zero_doc",
+              "$sequence": "1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "test_zero_values"
+            }
           }
         },
         {
@@ -98134,7 +98165,18 @@
             }
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "value": 0.0,
+              "$id": "zero_doc",
+              "$sequence": "1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "test_zero_values"
+            }
           }
         },
         {
@@ -98157,7 +98199,18 @@
             }
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "value": 0.0,
+              "$id": "zero_doc",
+              "$sequence": "1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "test_zero_values"
+            }
           }
         },
         {
@@ -98172,7 +98225,18 @@
             }
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "value": 99.0,
+              "$sequence": "1",
+              "$id": "zero_doc",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "test_zero_values"
+            }
           }
         },
         {
@@ -98195,7 +98259,18 @@
             }
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "value": 1.0,
+              "$id": "zero_doc",
+              "$sequence": "1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "test_zero_values"
+            }
           }
         },
         {

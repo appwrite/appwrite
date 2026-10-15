@@ -43958,9 +43958,24 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Transaction",
-              "message": "Failed to execute transaction: the transaction was lost before it could commit"
+            "$document": {
+              "$sequence": "2",
+              "$id": "p2",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "u0000000000000000190",
+              "partner": {
+                "$document": {
+                  "$id": "c1",
+                  "$sequence": "1",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [],
+                  "toy": null,
+                  "$collection": "u0000000000000000191"
+                }
+              }
             }
           }
         },
@@ -43989,7 +44004,7 @@
                 "$updatedAt": "<now>",
                 "$permissions": [],
                 "$collection": "u0000000000000000190",
-                "partner": null
+                "partner": "c1"
               }
             },
             "calls": {
@@ -44005,7 +44020,7 @@
                         "$updatedAt": "<now>",
                         "$permissions": [],
                         "$collection": "u0000000000000000190",
-                        "partner": null
+                        "partner": "c1"
                       }
                     }
                   ]
@@ -44039,7 +44054,7 @@
                 "$updatedAt": "<now>",
                 "$permissions": [],
                 "$collection": "u0000000000000000191",
-                "parent": null,
+                "parent": "p2",
                 "toy": null
               }
             },
@@ -44056,7 +44071,7 @@
                         "$updatedAt": "<now>",
                         "$permissions": [],
                         "$collection": "u0000000000000000191",
-                        "parent": null,
+                        "parent": "p2",
                         "toy": null
                       }
                     }
