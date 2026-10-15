@@ -9,6 +9,7 @@ mod authorize_grants;
 mod create_returns_stored;
 mod delete_action;
 mod hook;
+mod links;
 mod nested_pre_check;
 mod nested_preparation;
 
