@@ -31,6 +31,7 @@ export type { RuntimeConfig }
 
 const EMPTY_CONFIG: RuntimeConfig = {
   appwriteEndpoint: '',
+  appwriteVersion: '',
   consoleProfile: '',
   fingerprintKey: '',
   stripePublishableKey: '',
