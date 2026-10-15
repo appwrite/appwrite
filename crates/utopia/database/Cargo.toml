@@ -51,6 +51,7 @@ utopia-query.workspace = true
 xxhash-rust.workspace = true
 
 [dev-dependencies]
+indexmap.workspace = true
 tokio = { workspace = true, features = ["sync", "time", "rt", "macros", "rt-multi-thread"] }
 
 [package.metadata.utopia]
