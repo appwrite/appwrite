@@ -34,6 +34,7 @@ class Store
         'resourceId',
         'resourceInternalId',
         'deploymentId',
+        'region',
         'timestamp',
         'stream',
         'message',
@@ -46,6 +47,7 @@ class Store
         'resourceId' => ['resourceId', 'String'],
         'resourceInternalId' => ['resourceInternalId', 'String'],
         'deploymentId' => ['deploymentId', 'String'],
+        'region' => ['region', 'String'],
         'timestamp' => ['timestamp', 'DateTime'],
         'stream' => ['stream', 'String'],
         'message' => ['message', 'String'],
@@ -92,6 +94,7 @@ class Store
                 resourceId String,
                 resourceInternalId String,
                 deploymentId String,
+                region LowCardinality(String),
                 timestamp DateTime64(6),
                 stream LowCardinality(String),
                 message String CODEC(ZSTD(3)),
@@ -100,6 +103,12 @@ class Store
             ENGINE = MergeTree
             PARTITION BY cityHash64(projectId) % 32
             ORDER BY (projectId, deploymentId, timestamp, id)
+            SQL);
+
+        $this->query(<<<SQL
+            ALTER TABLE {$table}
+            ADD COLUMN IF NOT EXISTS region LowCardinality(String) DEFAULT ''
+            AFTER deploymentId
             SQL);
 
         $retention = \max(0, $this->retention);
@@ -133,7 +142,7 @@ class Store
             ));
             $ready = (int) ($rows[0]['tables'] ?? 0) === 1;
             if ($ready) {
-                $this->query('SELECT projectId, id, deploymentId, timestamp, stream, expiresAt FROM ' . $this->table() . ' LIMIT 0 FORMAT JSON');
+                $this->query('SELECT projectId, id, deploymentId, region, timestamp, stream, expiresAt FROM ' . $this->table() . ' LIMIT 0 FORMAT JSON');
             }
 
             return [
@@ -303,6 +312,7 @@ class Store
             'resourceId' => (string) $log->getAttribute('resourceId', ''),
             'resourceInternalId' => (string) $log->getAttribute('resourceInternalId', ''),
             'deploymentId' => (string) $log->getAttribute('deploymentId', ''),
+            'region' => (string) $log->getAttribute('region', ''),
             'timestamp' => $this->date($timestamp),
             'stream' => $stream,
             'message' => (string) $log->getAttribute('message', ''),
@@ -579,6 +589,7 @@ class Store
             'resourceId' => (string) ($row['resourceId'] ?? ''),
             'resourceInternalId' => (string) ($row['resourceInternalId'] ?? ''),
             'deploymentId' => (string) ($row['deploymentId'] ?? ''),
+            'region' => (string) ($row['region'] ?? ''),
             'timestamp' => $timestamp,
             'stream' => (string) ($row['stream'] ?? ''),
             'message' => (string) ($row['message'] ?? ''),
