@@ -522,7 +522,7 @@ impl Query {
     ///
     /// PHP: `shape()`.
     pub fn shape(&self) -> String {
-        let logical = matches!(self.method, Method::And | Method::Or | Method::ElemMatch);
+        let logical = matches!(self.method, Method::And | Method::Or | Method::ElemMatch | Method::Relationship);
         if !logical && !self.is_nested_join() {
             return format!("{}:{}", self.method.as_str(), self.attribute);
         }
@@ -1087,6 +1087,26 @@ impl Query {
         Query::new(Method::ElemMatch, attribute, self::queries(queries), "")
     }
 
+    /// `relationship`: queries, written against the related collection,
+    /// that shape the documents populated for the relationship attribute.
+    /// It is nested, and `validate()` skips it: its queries name another
+    /// collection's attributes.
+    ///
+    /// ```
+    /// use utopia_query::{Method, Query};
+    ///
+    /// let query = Query::relationship("books", [Query::limit(2)]);
+    /// assert_eq!(query.method(), Method::Relationship);
+    /// assert!(Method::Relationship.is_nested());
+    /// assert_eq!(query.shape(), "relationship:books(limit:)");
+    /// assert!(Query::validate(&[query], &["title"]).unwrap().is_empty());
+    /// ```
+    ///
+    /// PHP: `Query::relationship()`.
+    pub fn relationship(attribute: impl Into<String>, queries: impl IntoIterator<Item = Query>) -> Self {
+        Query::new(Method::Relationship, attribute, self::queries(queries), "")
+    }
+
     fn aggregate(method: Method, attribute: impl Into<String>, alias: impl Into<String>) -> Self {
         Query::new(method, attribute, Array::default(), alias)
     }
@@ -1493,14 +1513,25 @@ impl Query {
         use Method::*;
         for query in queries {
             let method = query.method;
-            if method.is_nested() {
-                Query::validate_into(query.nested(), allowed, errors)?;
-                continue;
-            }
+            // A relationship's queries name the related collection's
+            // attributes: skipped before nested queries are walked.
             if matches!(
                 method,
-                Limit | Offset | CursorAfter | CursorBefore | OrderRandom | Distinct | Select | Exists | NotExists
+                Limit
+                    | Offset
+                    | CursorAfter
+                    | CursorBefore
+                    | OrderRandom
+                    | Distinct
+                    | Select
+                    | Exists
+                    | NotExists
+                    | Relationship
             ) {
+                continue;
+            }
+            if method.is_nested() {
+                Query::validate_into(query.nested(), allowed, errors)?;
                 continue;
             }
             if method == GroupBy {

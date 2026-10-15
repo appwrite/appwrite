@@ -190,6 +190,9 @@ backed_enum! {
         ContainsAll = "containsAll",
         /// `elemMatch`: an array element matches every nested query.
         ElemMatch = "elemMatch",
+        /// `relationship`: queries, written against the related collection,
+        /// that shape the documents populated for a relationship attribute.
+        Relationship = "relationship",
         /// `count`.
         Count = "count",
         /// `countDistinct`.
@@ -346,7 +349,16 @@ impl Method {
     ///
     /// PHP: `isNested()`.
     pub fn is_nested(self) -> bool {
-        matches!(self, Method::And | Method::Or | Method::ElemMatch | Method::Having | Method::Union | Method::UnionAll)
+        matches!(
+            self,
+            Method::And
+                | Method::Or
+                | Method::ElemMatch
+                | Method::Relationship
+                | Method::Having
+                | Method::Union
+                | Method::UnionAll
+        )
     }
 
     /// Whether this is an aggregate.

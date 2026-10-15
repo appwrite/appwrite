@@ -14,7 +14,7 @@ async fn a_handle_without_user_functions_has_no_regexp() {
     let options = Options { user_functions: false, ..Options::default() };
     let mut pdo = Pdo::connect_with("sqlite::memory:", None, None, options).await.unwrap();
     assert!(!pdo.register_regexp());
-    let error = pdo.query(QUERY).await.err().expect("REGEXP is not registered");
+    let Err(error) = pdo.query(QUERY).await else { panic!("REGEXP is not registered") };
     assert!(error.message().contains("no such function: REGEXP"), "{}", error.message());
 }
 
