@@ -271,10 +271,6 @@ $createSession = function (string $userId, string $secret, Request $request, Res
         locale: $locale->default,
     ));
 
-    $queueForEvents
-        ->setParam('userId', $user->getId())
-        ->setParam('sessionId', $session->getId());
-
     $encoded = $store
         ->setProperty('id', $user->getId())
         ->setProperty('secret', $sessionSecret)
@@ -301,7 +297,10 @@ $createSession = function (string $userId, string $secret, Request $request, Res
         ->setAttribute('secret', $encoded)
     ;
 
-    $queueForEvents->setPayload($response->output($session, Response::MODEL_SESSION), sensitive: ['secret']);
+    $queueForEvents
+        ->setParam('userId', $user->getId())
+        ->setParam('sessionId', $session->getId())
+        ->setPayload($response->output($session, Response::MODEL_SESSION), sensitive: ['secret']);
 
     $response->dynamic($session, Response::MODEL_SESSION);
 };
@@ -1353,11 +1352,6 @@ Http::post('/v1/account/sessions/anonymous')
 
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
-        $queueForEvents
-            ->setParam('userId', $user->getId())
-            ->setParam('sessionId', $session->getId())
-        ;
-
         $encoded = $store
             ->setProperty('id', $user->getId())
             ->setProperty('secret', $secret)
@@ -1383,7 +1377,11 @@ Http::post('/v1/account/sessions/anonymous')
             ->setAttribute('secret', $encoded)
         ;
 
-        $queueForEvents->setPayload($response->output($session, Response::MODEL_SESSION), sensitive: ['secret']);
+        $queueForEvents
+            ->setParam('userId', $user->getId())
+            ->setParam('sessionId', $session->getId())
+            ->setPayload($response->output($session, Response::MODEL_SESSION), sensitive: ['secret'])
+        ;
 
         $response->dynamic($session, Response::MODEL_SESSION);
     });
