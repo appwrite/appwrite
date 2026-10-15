@@ -656,6 +656,13 @@ final class RealtimeCustomClientQueryTestWithMessage extends Scope
             \str_contains($response['data']['message'], 'contains') ||
             \str_contains($response['data']['message'], 'endsWith')
         );
+
+        $response = $this->receiveSubscribeMessageResponse(['documents'], $headers, [
+            Query::equal('status', \array_fill(0, APP_LIMIT_ARRAY_ELEMENT_SIZE, 'a'))->toString(),
+        ]);
+        $this->assertEquals('error', $response['type']);
+        $this->assertEquals(1003, $response['data']['code']);
+        $this->assertStringContainsString('Queries are too long', (string) $response['data']['message']);
     }
 
     public function testConnectionJWT(): void
@@ -1298,6 +1305,85 @@ final class RealtimeCustomClientQueryTestWithMessage extends Scope
             $client->close();
         } catch (ConnectionException) {
             // already closed by the server
+        }
+    }
+
+    public function testSubscriptionLimit(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $client = $this->getWebsocket([], [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . ($this->getUser()['session'] ?? ''),
+        ], timeout: 10);
+
+        $response = $this->sendSubscribeMessage($client, \array_fill(0, APP_LIMIT_REALTIME_SUBSCRIPTIONS, ['channels' => ['documents']]));
+        $this->assertCount(APP_LIMIT_REALTIME_SUBSCRIPTIONS, $response['data']['subscriptions']);
+        $subscriptionId = $response['data']['subscriptions'][0]['subscriptionId'];
+
+        $updated = $this->sendSubscribeMessage($client, [[
+            'subscriptionId' => $subscriptionId,
+            'channels' => ['documents'],
+            'queries' => [Query::equal('status', ['active'])->toString()],
+        ]]);
+        $this->assertSame($subscriptionId, $updated['data']['subscriptions'][0]['subscriptionId']);
+
+        $removed = $this->sendUnsubscribeMessage($client, [['subscriptionId' => $subscriptionId]]);
+        $this->assertTrue($removed['data']['subscriptions'][0]['removed']);
+
+        $this->sendSubscribeMessage($client, [['channels' => ['documents']]]);
+
+        $client->send(\json_encode([
+            'type' => 'subscribe',
+            'data' => [['channels' => ['documents']]],
+        ]));
+
+        try {
+            $response = \json_decode($client->receive(), true);
+            $this->assertEquals('error', $response['type'] ?? null);
+            $this->assertEquals(1008, $response['data']['code'] ?? null);
+            $this->assertStringContainsString('Too many subscriptions', (string) ($response['data']['message'] ?? ''));
+        } catch (ConnectionException) {
+            $this->addToAssertionCount(1);
+        }
+
+        try {
+            $client->close();
+        } catch (ConnectionException) {
+        }
+    }
+
+    public function testChannelLimit(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $client = $this->getWebsocket([], [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . ($this->getUser()['session'] ?? ''),
+        ], timeout: 10);
+
+        $channels = \array_map(fn (int $i) => 'buckets.' . $i . '.files', \range(1, APP_LIMIT_REALTIME_CHANNELS));
+
+        $response = $this->sendSubscribeMessage($client, [['channels' => $channels]]);
+        $this->assertCount(APP_LIMIT_REALTIME_CHANNELS, $response['data']['subscriptions'][0]['channels']);
+
+        $this->sendSubscribeMessage($client, [['channels' => [$channels[0]]]]);
+
+        $client->send(\json_encode([
+            'type' => 'subscribe',
+            'data' => [['channels' => ['files']]],
+        ]));
+
+        try {
+            $response = \json_decode($client->receive(), true);
+            $this->assertEquals('error', $response['type'] ?? null);
+            $this->assertEquals(1008, $response['data']['code'] ?? null);
+            $this->assertStringContainsString('Too many channels', (string) ($response['data']['message'] ?? ''));
+        } catch (ConnectionException) {
+            $this->addToAssertionCount(1);
+        }
+
+        try {
+            $client->close();
+        } catch (ConnectionException) {
         }
     }
 }
