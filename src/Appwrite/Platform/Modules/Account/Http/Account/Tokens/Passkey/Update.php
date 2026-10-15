@@ -17,10 +17,10 @@ use Utopia\Auth\Proofs\Token as ProofsToken;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
 use Utopia\Database\Query;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
@@ -76,7 +76,7 @@ class Update extends Action
             ))
             ->label('abuse-limit', 10)
             ->label('abuse-key', 'url:{url},ip:{ip}')
-            ->param('challengeId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Challenge ID returned by createPasskeyToken.', false, ['dbForProject'])
+            ->param('challengeId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Challenge ID returned by createPasskeyToken.', false, ['dbForProject'])
             ->param('credential', [], new Assoc(), 'Authentication credential returned by the authenticator, in the JSON form produced by `PublicKeyCredential.toJSON()`.')
             ->inject('request')
             ->inject('response')
@@ -155,7 +155,7 @@ class Update extends Action
 
         $secret = $proofForToken->generate();
         $token = $authorization->skip(fn () => $dbForProject->createDocument('tokens', new Document([
-            '$id' => ID::unique(),
+            '$id' => Id::unique(),
             '$permissions' => [
                 Permission::read(Role::user($user->getId())),
                 Permission::update(Role::user($user->getId())),

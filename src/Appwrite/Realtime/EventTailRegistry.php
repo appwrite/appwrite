@@ -70,7 +70,7 @@ class EventTailRegistry
      * its filter without leaving a stale entry behind. Entries are dropped only by
      * remove()/removeConnection() (i.e. unsubscribe or disconnect), matching the tree.
      *
-     * @param array<string,mixed> $filters result of RuntimeQuery::compile()
+     * @param array<string,mixed> $filters result of RuntimeQuery::prepare()
      * @param string $role the team role this tail was authorized with
      */
     public function add(int $connId, string $subId, string $projectId, array $filters, float $now, string $role = ''): void

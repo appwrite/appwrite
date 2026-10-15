@@ -13,10 +13,10 @@ use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use Utopia\Compression\Compression;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
 use Utopia\Database\Query;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\System\System;
 
@@ -47,7 +47,7 @@ final class StorageCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'bucketId' => ID::unique(),
+            'bucketId' => Id::unique(),
             'name' => 'Test Bucket',
             'fileSecurity' => true,
         ]);
@@ -75,7 +75,7 @@ final class StorageCustomServerTest extends Scope
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => new CURLFile($source, 'image/png', 'autogravity.png'),
         ]);
         \unlink($source);
@@ -145,7 +145,7 @@ final class StorageCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'bucketId' => ID::unique(),
+            'bucketId' => Id::unique(),
             'name' => 'Test Bucket',
             'fileSecurity' => true,
         ]);
@@ -167,7 +167,7 @@ final class StorageCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'bucketId' => ID::custom('bucket1'),
+            'bucketId' => Id::custom('bucket1'),
             'name' => 'Test Bucket',
             'fileSecurity' => true,
         ]);
@@ -181,7 +181,7 @@ final class StorageCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'bucketId' => ID::unique(),
+            'bucketId' => Id::unique(),
             'name' => '',
             'fileSecurity' => true,
         ]);
@@ -198,7 +198,7 @@ final class StorageCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'bucketId' => ID::custom('bucket1'),
+            'bucketId' => Id::custom('bucket1'),
             'name' => 'Test Bucket 1',
             'fileSecurity' => true,
         ]);
@@ -379,7 +379,7 @@ final class StorageCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'bucketId' => ID::unique(),
+            'bucketId' => Id::unique(),
             'name' => 'Test Bucket Updated',
             'enabled' => false,
             'fileSecurity' => true,
@@ -415,7 +415,7 @@ final class StorageCustomServerTest extends Scope
         ], $this->getHeaders());
 
         $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', $headers, [
-            'bucketId' => ID::unique(),
+            'bucketId' => Id::unique(),
             'name' => 'Test Bucket Null Update',
             'maximumFileSize' => 1000000,
             'compression' => Compression::GZIP,
@@ -448,7 +448,7 @@ final class StorageCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'bucketId' => ID::unique(),
+            'bucketId' => Id::unique(),
             'name' => 'Test Bucket Delete',
             'fileSecurity' => true,
         ]);
@@ -512,7 +512,7 @@ final class StorageCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'bucketId' => ID::unique(),
+            'bucketId' => Id::unique(),
             'name' => 'Antivirus Chunked Upload Bucket',
             'fileSecurity' => true,
             'antivirus' => true,
