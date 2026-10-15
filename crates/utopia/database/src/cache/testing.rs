@@ -35,6 +35,7 @@ struct Intercepts {
     load: Option<Intercept<Option<Value>>>,
     save: Option<Intercept<bool>>,
     purge: Option<Intercept<bool>>,
+    generation: Option<Intercept<String>>,
 }
 
 /// Mirrors how utopia-php/cache's Redis adapters store keys: every key is a
@@ -132,6 +133,12 @@ impl Leasable {
     /// Answers `purge()` calls with `intercept` when it returns `Some`.
     pub(crate) fn on_purge(&self, intercept: impl Fn(&str, &str) -> Option<Result<bool>> + Send + Sync + 'static) {
         self.intercepts.write().unwrap().purge = Some(Box::new(move |k, h, _| intercept(k, h)));
+    }
+
+    /// Answers `getGeneration()` calls with `intercept` when it returns
+    /// `Some`.
+    pub(crate) fn on_generation(&self, intercept: impl Fn(&str) -> Option<Result<String>> + Send + Sync + 'static) {
+        self.intercepts.write().unwrap().generation = Some(Box::new(move |k, _, _| intercept(k)));
     }
 
     /// `failActivations()`: an active epoch is not saved.
@@ -362,6 +369,11 @@ impl Adapter for Leasable {
 
     fn generation(&self, key: &str) -> impl Future<Output = Result<String>> + Send {
         self.count();
+        if let Some(answer) =
+            self.intercepts.read().unwrap().generation.as_ref().and_then(|i| i(key, "", &Value::Null))
+        {
+            return std::future::ready(answer);
+        }
         let generation = self.state().generations.get(key).copied().unwrap_or(0).to_string();
         std::future::ready(Ok(generation))
     }

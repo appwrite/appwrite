@@ -5,6 +5,7 @@
 //! `Documents/DocumentCache*Test`, `Documents/Transaction*ReadTest`,
 //! `Event/DocumentPurgeTest` and `Transactions/NoRetryTest`.
 
+mod database;
 mod query_purge;
 
 use std::sync::Arc;

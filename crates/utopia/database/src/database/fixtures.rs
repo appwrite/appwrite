@@ -36,24 +36,47 @@ pub(crate) async fn memory_database(cache: Arc<Cache>) -> Database {
     database_over(Arc::new(Memory::new()), cache).await
 }
 
+/// Read, create, update and delete for any (PHP fixtures' `permissions()`).
+pub(crate) fn any_permissions() -> Vec<String> {
+    let any = Role::any();
+    vec![Permission::read(&any), Permission::create(&any), Permission::update(&any), Permission::delete(&any)]
+}
+
 /// A collection `id` without attributes, readable and writable by any.
 pub(crate) fn open_collection(id: &str, document_security: bool) -> Collection {
-    let any = Role::any();
-    Collection::create(
-        id,
-        id,
-        Vec::new(),
-        Vec::new(),
-        Some(vec![Permission::read(&any), Permission::create(&any), Permission::update(&any), Permission::delete(&any)]),
-        document_security,
-        Default::default(),
-    )
-    .expect("a valid collection")
+    collection(id, Vec::new(), Vec::new(), Some(any_permissions()), document_security)
+}
+
+/// A collection (`Collection::create(...)`).
+pub(crate) fn collection(
+    id: &str,
+    attributes: Vec<crate::Attribute>,
+    indexes: Vec<crate::Index>,
+    permissions: Option<Vec<String>>,
+    document_security: bool,
+) -> Collection {
+    Collection::create(id, id, attributes, indexes, permissions, document_security, Default::default())
+        .expect("a valid collection")
+}
+
+/// A string attribute of 255 characters (`Attribute::string(key: ...)`).
+pub(crate) fn string(key: &str) -> crate::Attribute {
+    crate::Attribute::string(key, 255)
 }
 
 /// A document of the given attributes.
 pub(crate) fn doc(pairs: Vec<(&str, Value)>) -> Document {
     Document::from_pairs(pairs).expect("a valid document")
+}
+
+/// A list of strings as a value (`$permissions`, `['a', 'b']`).
+pub(crate) fn strings<S: AsRef<str>>(items: impl IntoIterator<Item = S>) -> Value {
+    Value::Array(items.into_iter().map(|s| Value::Str(crate::value::Str::from(s.as_ref()))).collect())
+}
+
+/// A failure of the cache (`RuntimeException('Cache unavailable')`).
+pub(crate) fn unavailable<T>() -> utopia_cache::Result<T> {
+    Err(utopia_cache::Error::Runtime("Cache unavailable".into()))
 }
 
 /// A document with just an id.
