@@ -234,7 +234,12 @@ export async function fetchActiveProjects(
       ]
     : []
 
-  const statusQueries = getProjectStatusQueries()
+  // Environments are reached through their project's switcher, not listed beside it.
+  const hideEnvironments = getActiveProfileFeatures().projectEnvironments
+  const statusQueries = [
+    ...getProjectStatusQueries(),
+    ...(hideEnvironments ? [Query.isNull('parentId')] : []),
+  ]
   const trimmedSearch = search?.trim() ?? ''
   const searchQueries = trimmedSearch
     ? [projectListSearchOrQuery(trimmedSearch)]
@@ -267,7 +272,8 @@ export async function fetchActiveProjects(
         direct.teamId === teamId &&
         // Pasting an id must not reveal a project outside the member's scope.
         (!isRestricted || allowedIdSet.has(direct.$id)) &&
-        projectMatchesActiveListStatus(direct)
+        projectMatchesActiveListStatus(direct) &&
+        !(hideEnvironments && direct.parentId)
       ) {
         return {
           projects: page === 0 ? [direct] : [],
@@ -336,6 +342,9 @@ export async function fetchProjectsByIds(
       Query.select(getProjectListSelect()),
       Query.equal('teamId', teamId),
       ...getProjectStatusQueries(),
+      ...(getActiveProfileFeatures().projectEnvironments
+        ? [Query.isNull('parentId')]
+        : []),
       idQuery,
       Query.limit(validIds.length),
     ],
