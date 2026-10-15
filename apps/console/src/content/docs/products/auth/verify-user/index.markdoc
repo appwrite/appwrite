@@ -8,6 +8,10 @@ User verification in Appwrite allows you to verify user email addresses and phon
 
 # Verify email {% #verify-email %}
 
+You can verify a user's email with a link or with a code. A link suits web apps, because the user opens it and lands on a verification page you host. A code suits mobile apps, desktop apps, and any app without a hosted page, because the user types the code into your app and stays in it.
+
+## Verify with a link {% #verify-with-link %}
+
 To verify a user's email, first ensure the user is logged in so that the verification email can be sent to the user who created the account. Then, send the verification email specifying a redirect URL. The verification secrets will be appended as query parameters to the redirect URL.
 
 {% multicode %}
@@ -167,6 +171,114 @@ val response = account.updateVerification(
 )
 ```
 {% /multicode %}
+
+## Verify with a code {% #verify-with-code %}
+
+To verify a user's email with a code, first make sure the user is logged in. Then send the verification email. Appwrite emails the user a 6-digit code that is valid for 15 minutes. Keep the `userId` from the returned token, because you need it to confirm the code.
+
+{% multicode %}
+```client-web
+import { Client, Account } from "appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const account = new Account(client);
+
+const token = await account.createEmailVerificationOTP();
+
+const userId = token.userId;
+```
+
+```client-flutter
+import 'package:appwrite/appwrite.dart';
+
+final client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+final account = Account(client);
+
+final token = await account.createEmailVerificationOTP();
+
+final userId = token.userId;
+```
+
+```client-apple
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+
+let account = Account(client)
+
+let token = try await account.createEmailVerificationOTP()
+
+let userId = token.userId
+```
+
+```client-android-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Account
+
+val client = Client(context)
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<PROJECT_ID>")
+
+val account = Account(client)
+
+val token = account.createEmailVerificationOTP()
+
+val userId = token.userId
+```
+{% /multicode %}
+
+Next, ask the user for the code from the email. Confirm it by passing the user ID and the code as the `secret`.
+
+{% multicode %}
+```client-web
+const response = await account.updateEmailVerificationOTP({
+    userId,
+    secret: '<CODE>'
+});
+```
+
+```client-flutter
+final response = await account.updateEmailVerificationOTP(
+    userId: userId,
+    secret: '<CODE>',
+);
+```
+
+```client-apple
+let response = try await account.updateEmailVerificationOTP(
+    userId: userId,
+    secret: "<CODE>"
+)
+```
+
+```client-android-kotlin
+val response = account.updateEmailVerificationOTP(
+    userId = userId,
+    secret = "<CODE>"
+)
+```
+{% /multicode %}
+
+When the code matches, Appwrite marks the user's email as verified and deletes the code, so it can't be used again. Sending a new code doesn't cancel earlier ones, so any code that hasn't expired still works.
+
+{% info title="Security phrase" %}
+Set `phrase` to `true` when you send the code to add a random security phrase to the email. The returned token includes the same phrase in its `phrase` field. Show it in your app, so the user can check that it matches the phrase in the email before they enter the code.
+{% /info %}
+
+These are the errors you're most likely to handle in this flow:
+
+- `user_email_already_verified`: the user's email is already verified, so Appwrite doesn't send a code.
+- `user_email_not_found`: the user has no email address on their account, for example an anonymous user.
+- `user_invalid_token`: the code is wrong, has expired, or was already used.
+- `general_rate_limit_exceeded`: the user made more than 10 requests in an hour. Sending a code and confirming a code count toward the same limit.
 
 # Verify phone {% #verify-phone %}
 
