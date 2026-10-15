@@ -66,7 +66,7 @@ use std::future::Future;
 
 pub use adapter::{Adapter, Channel, Stack};
 pub use group::Group;
-pub use pool::{Connection, Pool};
+pub use pool::{Connection, Liveness, Pool};
 
 /// The getting started guide (`guide.md`), compiled and run with the doctests.
 #[cfg(doctest)]

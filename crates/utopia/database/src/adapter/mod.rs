@@ -64,6 +64,7 @@ use std::future::Future;
 use std::sync::{Arc, Mutex, MutexGuard};
 
 use async_trait::async_trait;
+use futures_util::future::BoxFuture;
 use php_std::datetime::DateTime;
 use utopia_query::schema::{ColumnType, IndexType};
 use utopia_query::{CursorDirection, OrderDirection};
@@ -85,6 +86,13 @@ use crate::schema;
 use crate::state::Scoped;
 use crate::validator::authorization::Authorization;
 use crate::value::{Array, Value};
+
+#[cfg(feature = "memory")]
+pub mod memory;
+#[cfg(feature = "pool")]
+pub mod pool;
+#[cfg(feature = "redis")]
+pub mod redis;
 
 /// The latest datetime an adapter stores (`Adapter::MAX_DATETIME`).
 pub const MAX_DATETIME: &str = "9999-12-31 23:59:59";
@@ -391,6 +399,12 @@ impl TimeoutState {
         if event == Event::All {
             inner.0 = milliseconds;
         }
+    }
+
+    /// The timeouts set, by event in the order they were first set
+    /// (`$timeouts`); [`Event::All`] is the global one.
+    pub fn entries(&self) -> Vec<(Event, i64)> {
+        self.inner.lock().unwrap_or_else(|e| e.into_inner()).1.clone()
     }
 
     /// Clears the timeout of `event`, or every timeout for [`Event::All`]
@@ -1054,6 +1068,21 @@ pub trait Adapter: Send + Sync + 'static {
     fn served_by_replica(&self) -> bool {
         false
     }
+
+    /// Runs a transaction on another adapter: [`with_transaction`] hands
+    /// it the transaction's `body`, which runs the attempts on the adapter
+    /// it is given. By default the transaction runs on this adapter, and
+    /// `body` is given back.
+    ///
+    /// PHP: `Pool::withTransaction()` (a pool pins one connection for the
+    /// calling coroutine and runs the transaction there, so every statement
+    /// of the callback shares its session).
+    fn transaction_scope<'a>(
+        &'a self,
+        body: TransactionBody<'a>,
+    ) -> std::result::Result<BoxFuture<'a, Result<()>>, TransactionBody<'a>> {
+        Err(body)
+    }
 }
 
 /// How [`with_transaction`] runs a callback, as [`Adapter::transaction_strategy`]
@@ -1084,6 +1113,11 @@ pub enum TransactionStrategy {
     },
 }
 
+/// The body of a transaction an [`Adapter::transaction_scope`] runs: given
+/// the adapter the transaction runs on, it runs [`with_transaction`]'s
+/// attempts there and says whether they succeeded.
+pub type TransactionBody<'a> = Box<dyn FnOnce(Arc<dyn Adapter>) -> BoxFuture<'a, bool> + Send + 'a>;
+
 /// Runs `callback` in a transaction (`withTransaction()`): commits when it
 /// succeeds, rolls back when it fails, and runs it again after a failure
 /// [`Adapter::is_retryable`] accepts, up to twice, 50 ms and 100 ms apart.
@@ -1092,7 +1126,48 @@ pub enum TransactionStrategy {
 ///
 /// Fails ([`Kind::Transaction`]) when the transaction was lost before the
 /// callback returned or before it could commit.
-pub async fn with_transaction<A, T, F, Fut>(adapter: &A, mut callback: F) -> Result<T>
+///
+/// An adapter with an [`Adapter::transaction_scope`] (a pool) runs the
+/// attempts on the adapter it chooses.
+pub async fn with_transaction<A, T, F, Fut>(adapter: &A, callback: F) -> Result<T>
+where
+    A: Adapter + ?Sized,
+    F: FnMut() -> Fut + Send,
+    Fut: Future<Output = Result<T>> + Send,
+    T: Send,
+{
+    let mut slot: Option<Result<T>> = None;
+    let mut callback = Some(callback);
+    let scope = {
+        let (slot, callback) = (&mut slot, &mut callback);
+        let body: TransactionBody<'_> = Box::new(move |inner: Arc<dyn Adapter>| {
+            Box::pin(async move {
+                let Some(callback) = callback.take() else { return false };
+                let result = attempts(&*inner, callback).await;
+                let succeeded = result.is_ok();
+                *slot = Some(result);
+                succeeded
+            })
+        });
+        match adapter.transaction_scope(body) {
+            Ok(scope) => Some(scope.await),
+            Err(_) => None,
+        }
+    };
+    match scope {
+        Some(scoped) => {
+            scoped?;
+            slot.unwrap_or_else(|| Err(Error::transaction("Failed to execute transaction")))
+        }
+        None => match callback.take() {
+            Some(callback) => attempts(adapter, callback).await,
+            None => Err(Error::transaction("Failed to execute transaction")),
+        },
+    }
+}
+
+/// The attempts of [`with_transaction`] on `adapter`.
+async fn attempts<A, T, F, Fut>(adapter: &A, mut callback: F) -> Result<T>
 where
     A: Adapter + ?Sized,
     F: FnMut() -> Fut,
