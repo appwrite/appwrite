@@ -47,10 +47,8 @@ import { marketingProductToolkit } from '@/lib/marketing/product-toolkit'
 import { PRODUCT_NAV_REGISTRY } from '@/lib/products/registry'
 import type { ProductNavItemId } from '@/lib/products/types'
 import {
-  getMarketingHomeOgImage,
-  MARKETING_HOME_OG_IMAGE_HEIGHT,
-  MARKETING_HOME_OG_IMAGE_WIDTH,
   getMarketingPageMetaTags,
+  MARKETING_HOME_OG_IMAGE_PARAMS,
   MARKETING_HOMEPAGE_TITLE,
 } from '@/lib/marketing/route-meta'
 import { getEnglishCatalog, useI18n } from '@/lib/i18n'
@@ -252,9 +250,7 @@ export function getHomePageHead() {
         pageName: 'Home',
         title: MARKETING_HOMEPAGE_TITLE,
         description: HOME_COPY.seoDescription,
-        ogImage: getMarketingHomeOgImage(),
-        ogImageWidth: MARKETING_HOME_OG_IMAGE_WIDTH,
-        ogImageHeight: MARKETING_HOME_OG_IMAGE_HEIGHT,
+        ogImageParams: MARKETING_HOME_OG_IMAGE_PARAMS,
       }),
       { property: 'og:url', content: canonical },
     ],

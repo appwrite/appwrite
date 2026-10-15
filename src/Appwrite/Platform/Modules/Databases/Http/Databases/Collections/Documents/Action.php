@@ -508,7 +508,7 @@ abstract class Action extends DatabasesAction
             fn ($document) => $document->getAttribute('key'),
             \array_filter(
                 $collection->getAttribute('attributes', []),
-                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+                fn ($attribute) => $attribute->getAttribute('type') === ColumnType::Relationship->value
             )
         );
 
