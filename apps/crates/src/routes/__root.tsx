@@ -4,10 +4,10 @@ import appCss from '../styles.css?url'
 import { Analytics } from '@/components/Analytics'
 import { Crumbs } from '@/components/Crumbs'
 import { Header } from '@/components/Header'
-import { FAVICON } from '@/components/Logo'
 import { Footer } from '@/components/Footer'
 import { LibraryMenu, Sidebar } from '@/components/Sidebar'
 import { loadIndex, type Navigation } from '@/lib/docs'
+import { share } from '@/lib/share'
 
 export const Route = createRootRoute({
   loader: () => loadIndex(),
@@ -15,12 +15,20 @@ export const Route = createRootRoute({
     meta: [
       { charSet: 'utf-8' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-      { title: 'Utopia for Rust' },
-      { name: 'description', content: 'Documentation of the Utopia libraries in Rust.' },
+      // Safari tints its toolbar to the page.
+      { name: 'theme-color', content: '#11100D' },
+      ...share({
+        description: 'Small, focused crates for HTTP, validation, authentication, databases, queues and storage, built and maintained by Appwrite.',
+      }),
     ],
     links: [
       { rel: 'stylesheet', href: appCss },
-      { rel: 'icon', type: 'image/svg+xml', href: FAVICON },
+      // The crate, with no ground: the SVG by default; the same in an ICO where SVG is not read (Safari,
+      // and tools asking for /favicon.ico; sized 32x32 so Chrome still takes the SVG); and on a dark
+      // square in an opaque 180px PNG for Apple's home screen and favourites.
+      { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
+      { rel: 'icon', href: '/favicon.ico', sizes: '32x32' },
+      { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' },
       { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
       { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossOrigin: 'anonymous' },
       // Archivo (with its width axis) for titles, Geist for text, Geist Mono for code and labels.

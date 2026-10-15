@@ -5,9 +5,10 @@
   "scripts": {
     "generate": "cd ../.. && bin/compat crates",
     "dev": "vite dev",
-    "build": "vite build && bun scripts/link-css.ts",
+    "build": "bun scripts/og.tsx && vite build && bun scripts/link-css.ts",
     "start": "vite preview",
-    "check": "tsc --noEmit"
+    "check": "tsc --noEmit",
+    "og": "bun scripts/og.tsx"
   },
   "dependencies": {
     "@tanstack/react-router": "1.170.41",
@@ -23,6 +24,7 @@
     "remark-gfm": "^4.0.1"
   },
   "devDependencies": {
+    "@resvg/resvg-js": "^2.6.2",
     "@tailwindcss/vite": "^4.0.6",
     "@types/d3-chord": "^3.0.6",
     "@types/d3-shape": "^3.2.0",
@@ -31,6 +33,7 @@
     "@types/react": "^19.1.13",
     "@types/react-dom": "^19.1.9",
     "@vitejs/plugin-react": "5.2.0",
+    "satori": "^0.57.2",
     "tailwindcss": "^4.1.13",
     "typescript": "^5.7.2",
     "vite": "npm:rolldown-vite@7.3.1",

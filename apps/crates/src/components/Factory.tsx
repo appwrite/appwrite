@@ -351,6 +351,10 @@ function Faces({ b }: { b: Block }) {
   )
 }
 
+/** Appwrite as its makers count it: one platform of eight products, before the services and crates the board draws. */
+const PLATFORMS = 1
+const PRODUCTS = 8
+
 /** The board: its body, the logo along its front edge, sockets, cards, the bus with its lanes and packets, and the traces. */
 function Furniture({ plan }: { plan: Plan }) {
   const { X, Y, sockets, cards, bus, lanes, traces } = plan.board
@@ -364,7 +368,7 @@ function Furniture({ plan }: { plan: Plan }) {
       <g transform={`matrix(1 ${K} 0 1 ${lx.toFixed(2)} ${(ly + 2.4).toFixed(2)})`}>
         <AppwriteLogo className="engraving-logo" transform="scale(0.44)" />
         <text className="engraving mono" x={66} y={8.4}>
-          {plan.components.length} SERVICES · {plan.shared.length} CRATES
+          {PLATFORMS} PLATFORM · {PRODUCTS} PRODUCTS · {plan.components.length} SERVICES · {plan.shared.length} CRATES
         </text>
       </g>
       <polygon className="bus" points={points([bus.x0, bus.y0, 0], [bus.x1, bus.y0, 0], [bus.x1, bus.y1, 0], [bus.x0, bus.y1, 0])} />
@@ -434,7 +438,7 @@ const Scene = memo(function Scene({
       viewBox={`${left.toFixed(1)} ${top.toFixed(1)} ${(right - left).toFixed(1)} ${(bottom - top).toFixed(1)}`}
       className="block h-auto w-full"
       role="img"
-      aria-label={`Appwrite, drawn as ${plan.components.length} services built from ${plan.shared.length} crates`}
+      aria-label={`Appwrite, ${PLATFORMS} platform of ${PRODUCTS} products, drawn as ${plan.components.length} services built from ${plan.shared.length} crates`}
       onPointerLeave={onLeave}
     >
       {/* The board floats: its shadow on the ground below, softened, and everything above bobbing gently. */}
