@@ -8,7 +8,7 @@ User verification in Appwrite allows you to verify user email addresses and phon
 
 # Verify email {% #verify-email %}
 
-You can verify a user's email with a link or with a code. A link suits web apps, because the user opens it and lands on a verification page you host. A code suits mobile apps, desktop apps, and any app without a hosted page, because the user types the code into your app and stays in it.
+You can verify a user's email with a link or with a code. A link suits web apps, because the user opens it and lands on a verification page in your app. A code suits mobile apps, desktop apps, and any app without a hosted page. The user types the code into your app and doesn't leave it.
 
 ## Verify with a link {% #verify-with-link %}
 
@@ -270,10 +270,10 @@ val response = account.updateEmailVerificationOTP(
 When the code matches, Appwrite marks the user's email as verified and deletes the code, so it can't be used again. Sending a new code doesn't cancel earlier ones, so any code that hasn't expired still works.
 
 {% info title="Security phrase" %}
-Set `phrase` to `true` when you send the code to add a random security phrase to the email. The returned token includes the same phrase in its `phrase` field. Show it in your app, so the user can check that it matches the phrase in the email before they enter the code.
+To add a random security phrase to the email, set `phrase` to `true` in the call that sends the code. The returned token holds the same phrase in its `phrase` field. Show the phrase in your app, so the user can compare it with the phrase in the email before they enter the code.
 {% /info %}
 
-These are the errors you're most likely to handle in this flow:
+Your app needs to handle these errors in this flow:
 
 - `user_email_already_verified`: the user's email is already verified, so Appwrite doesn't send a code.
 - `user_email_not_found`: the user has no email address on their account, for example an anonymous user.

@@ -113,7 +113,7 @@ promise.then(function (response) {
 
 # Password Recovery {% #password-recovery %}
 
-Users who forget their password can reset it with a link or with a code. A link opens a password reset page that you host. A code lets the user reset the password without leaving your app, which suits mobile and desktop apps.
+Users who forget their password can reset it with a link or with a code. A link opens a password reset page in your app. A code lets the user reset the password without leaving your app, which suits mobile and desktop apps.
 
 ## Recover with a link {% #recover-with-link %}
 
@@ -231,7 +231,7 @@ val userId = token.userId
 ```
 {% /multicode %}
 
-If no active user has that email address, Appwrite sends no email but still returns a token with a random `userId`. This response looks the same in both cases, so it doesn't reveal whether an account exists. Show the user the same message either way, for example "If an account exists for this email, a code is on its way."
+If no active user has that email address, Appwrite sends no email but still returns a token with a random `userId`. The response to this call looks the same in both cases, so it doesn't reveal whether an account exists. Show the user the same message either way, for example "If an account exists for this email, a code is on its way."
 
 Next, ask the user for the code from the email and a new password. Confirm the reset by passing the user ID, the code as the `secret`, and the new password.
 
@@ -269,9 +269,11 @@ val response = account.updateRecoveryOTP(
 ```
 {% /multicode %}
 
-Appwrite checks the new password against the password policies your project has turned on: [password strength](/docs/products/auth/security#password-strength), [password dictionary](/docs/products/auth/security#password-dictionary), [password history](/docs/products/auth/security#password-history), and the option to reject [breached passwords](/docs/products/auth/security#breached-passwords). A code that is wrong, has expired, or was already used fails with `user_invalid_token`. A successful reset doesn't create a session, so sign the user in with the new password afterwards.
+Appwrite checks the new password against [password strength](/docs/products/auth/security#password-strength), [password dictionary](/docs/products/auth/security#password-dictionary), and [password history](/docs/products/auth/security#password-history). When the option to reject [breached passwords](/docs/products/auth/security#breached-passwords) is on, Appwrite checks that too. When the new password fails a check, the code stays valid. Ask the user for a different password and confirm again with the same code.
 
-To add a security phrase to the email and the returned token, set `phrase` to `true` when you send the code, the same way as when you [verify an email with a code](/docs/products/auth/verify-user#verify-with-code).
+A code that is wrong, has expired, or was already used fails with `user_invalid_token`. If the code was sent to an address with no active account, confirming fails with `user_not_found` instead, so show the same "invalid code" message for both errors. A successful reset doesn't create a session, so sign the user in with the new password afterwards.
+
+To add a security phrase to the email and the returned token, set `phrase` to `true` in the call that sends the code, the same way as for [email verification with a code](/docs/products/auth/verify-user#verify-with-code).
 
 # Security {% #security %}
 
