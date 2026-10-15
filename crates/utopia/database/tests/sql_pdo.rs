@@ -132,7 +132,7 @@ fn assert_refused<T: std::fmt::Debug>(result: utopia_database::Result<T>) {
 mod pdo {
     use super::*;
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn method_call_is_forwarded_to_pdo() {
         let mut pdo = memory().await;
         let mut statement = pdo.query("SELECT 1").await.unwrap();
@@ -140,7 +140,7 @@ mod pdo {
         assert_eq!(statement.fetch_column(0).unwrap(), Some(s("1")));
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn lost_connection_retries_call() {
         let mut pdo = memory().await;
         pdo.exec("CREATE TABLE marker (a)").await.unwrap();
@@ -152,7 +152,7 @@ mod pdo {
         assert!(!has_table(&mut pdo, "marker").await, "the call ran again on a new connection");
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn non_lost_connection_exception_is_rethrown() {
         let mut pdo = memory().await;
         pdo.exec("CREATE TABLE marker (a)").await.unwrap();
@@ -165,7 +165,7 @@ mod pdo {
         assert!(has_table(&mut pdo, "marker").await, "no reconnect");
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn reconnect_creates_new_pdo_instance() {
         let mut pdo = memory().await;
         pdo.exec("CREATE TABLE marker (a)").await.unwrap();
@@ -173,7 +173,7 @@ mod pdo {
         assert!(!has_table(&mut pdo, "marker").await, "Reconnect should create a new connection");
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn method_call_for_prepare() {
         let mut pdo = memory().await;
         let statement = pdo.prepare("SELECT * FROM sqlite_master").unwrap();
@@ -184,7 +184,7 @@ mod pdo {
     /// `testPrepareNativeReconnectsOutsideTransaction`: with emulated
     /// prepares nothing reaches the server at prepare time, so the loss
     /// surfaces when the statement executes, which recovers it.
-    #[tokio::test]
+    #[utopia_async::test]
     async fn prepare_native_reconnects_outside_transaction() {
         let mut pdo = memory().await;
         let mut statement = pdo.prepare("SELECT 1").unwrap();
@@ -196,7 +196,7 @@ mod pdo {
     /// `testPrepareNativeThrowsWhenNativePrepareReturnsFalse`: a native
     /// prepare cannot return `false` here; an empty statement is PHP's
     /// `ValueError`, and SQLite's prepare reports its error.
-    #[tokio::test]
+    #[utopia_async::test]
     async fn prepare_native_reports_a_statement_it_cannot_prepare() {
         let mut pdo = memory().await;
         let error = pdo.prepare("").unwrap_err();
@@ -206,7 +206,7 @@ mod pdo {
         assert_eq!(error.message(), "SQLSTATE[HY000]: General error: 1 near \"INVALID\": syntax error");
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn reconnect_replays_the_configured_session() {
         let mut pdo = memory().await;
         pdo.configure("cache", "PRAGMA cache_size = 100").await.unwrap();
@@ -223,7 +223,7 @@ mod pdo {
         assert_eq!(column(&mut pdo, "PRAGMA foreign_keys").await, Some(s("1")));
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn call_retried_after_a_lost_connection_runs_on_the_configured_session() {
         let mut pdo = memory().await;
         pdo.configure("marker", "CREATE TEMP TABLE marker AS SELECT 7 AS value").await.unwrap();
@@ -234,7 +234,7 @@ mod pdo {
         assert_eq!(statement.fetch_column(0).unwrap(), Some(s("7")));
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn reconnect_keeps_the_lost_connection_when_the_session_cannot_be_replayed() {
         let mut pdo = memory().await;
         pdo.exec("CREATE TEMP TABLE local (value INTEGER)").await.unwrap();
@@ -251,7 +251,7 @@ mod pdo {
         );
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn reconnect_replays_attributes() {
         let mut pdo = memory().await;
         assert!(pdo.set_attribute(Attribute::Case(Case::Upper)));
@@ -267,7 +267,7 @@ mod pdo {
         assert_eq!(dump_array(&statement.fetch_assoc().unwrap()), "[VALUE=>\"1\"]");
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn statements_after_a_lost_transaction_are_refused_until_it_is_rolled_back() {
         let file = TempFile::new("refused");
         let mut pdo = Pdo::connect(&file.dsn(), None, None).await.unwrap();
@@ -296,7 +296,7 @@ mod pdo {
         assert_eq!(values(&file).await, vec!["5"]);
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn a_refused_statement_carries_the_lost_connection() {
         let file = TempFile::new("carries");
         let mut pdo = Pdo::connect(&file.dsn(), None, None).await.unwrap();
@@ -319,7 +319,7 @@ mod pdo {
         );
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn a_rollback_statement_ends_a_lost_transaction() {
         let file = TempFile::new("rollback-statement");
         let mut pdo = Pdo::connect(&file.dsn(), None, None).await.unwrap();
@@ -335,7 +335,7 @@ mod pdo {
         assert_eq!(values(&file).await, vec!["2"]);
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn an_explicit_reconnect_ends_a_lost_transaction() {
         let file = TempFile::new("explicit");
         let mut pdo = Pdo::connect(&file.dsn(), None, None).await.unwrap();
@@ -351,7 +351,7 @@ mod pdo {
         assert_eq!(values(&file).await, vec!["2"]);
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn a_rollback_that_finds_the_connection_lost_ends_the_transaction() {
         let file = TempFile::new("rollback-lost");
         let mut pdo = Pdo::connect(&file.dsn(), None, None).await.unwrap();
@@ -374,7 +374,7 @@ mod pdo {
 mod pdo_statement {
     use super::*;
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn execute_reconnects_reprepares_and_replays_when_not_in_transaction() {
         let mut pdo = memory().await;
         pdo.exec("CREATE TABLE marker (a)").await.unwrap();
@@ -388,7 +388,7 @@ mod pdo_statement {
         assert!(!has_table(&mut pdo, "marker").await, "the statement ran on a new connection");
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn execute_rethrows_and_does_not_reconnect_inside_transaction() {
         let mut pdo = memory().await;
         pdo.exec("CREATE TABLE marker (a)").await.unwrap();
@@ -403,7 +403,7 @@ mod pdo_statement {
         assert!(has_table(&mut pdo, "marker").await, "no reconnect");
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn execute_rethrows_non_connection_errors() {
         let mut pdo = memory().await;
         pdo.exec("CREATE TABLE marker (a)").await.unwrap();
@@ -417,7 +417,7 @@ mod pdo_statement {
     }
 
     /// `testForwardsCallsAndPropertiesToUnderlyingStatement`.
-    #[tokio::test]
+    #[utopia_async::test]
     async fn reports_the_row_count() {
         let mut pdo = memory().await;
         pdo.exec("CREATE TABLE t (a); INSERT INTO t VALUES (1), (2), (3), (4), (5), (6), (7)").await.unwrap();
@@ -427,7 +427,7 @@ mod pdo_statement {
     }
 
     /// `testIsIterableAndDelegatesIterationToTheStatement`.
-    #[tokio::test]
+    #[utopia_async::test]
     async fn iterates_rows() {
         let mut pdo = memory().await;
         let mut statement = pdo.query("SELECT 1 AS id UNION SELECT 2").await.unwrap();
@@ -441,7 +441,7 @@ mod pdo_statement {
     /// `testDoesNotReconnectForNonExecuteMethods`: results are read when the
     /// statement executes, so fetching never reaches the connection: a lost
     /// connection does not affect it and nothing reconnects.
-    #[tokio::test]
+    #[utopia_async::test]
     async fn does_not_reconnect_for_non_execute_methods() {
         let mut pdo = memory().await;
         pdo.exec("CREATE TABLE marker (a)").await.unwrap();
@@ -458,7 +458,7 @@ mod pdo_statement {
     /// `testBindParamReplaysCurrentValueAfterReconnect` /
     /// `testReplaysMixedBindingsInOriginalCallOrder`: values are bound by
     /// value; the binding applied last is the one replayed.
-    #[tokio::test]
+    #[utopia_async::test]
     async fn replays_the_last_binding_after_reconnect() {
         let mut pdo = memory().await;
         let mut statement = pdo.prepare("SELECT :id AS id").unwrap();
@@ -471,7 +471,7 @@ mod pdo_statement {
         assert_eq!(statement.fetch_column(0).unwrap(), Some(s("new")));
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn execute_retried_after_a_lost_connection_runs_on_the_configured_session() {
         let mut pdo = memory().await;
         pdo.configure("marker", "CREATE TEMP TABLE marker AS SELECT 7 AS value").await.unwrap();
@@ -482,7 +482,7 @@ mod pdo_statement {
         assert_eq!(statement.fetch_column(0).unwrap(), Some(s("7")));
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn a_statement_is_refused_after_a_lost_transaction() {
         let mut pdo = memory().await;
         let mut statement = pdo.prepare("SELECT 1").unwrap();
@@ -501,7 +501,7 @@ mod pdo_statement {
 mod pdo_configure {
     use super::*;
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn configure_rejects_a_statement_the_engine_refuses() {
         let mut pdo = memory().await;
 
@@ -513,7 +513,7 @@ mod pdo_configure {
         assert_eq!(rows(&mut pdo, "SELECT 1 AS value").await, "[[value=>\"1\"]]");
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn configure_keeps_the_earlier_statement_when_a_later_one_is_refused() {
         let mut pdo = memory().await;
         pdo.configure("marker", "CREATE TEMP TABLE marker AS SELECT 7 AS value").await.unwrap();
@@ -540,7 +540,7 @@ mod pdo_statement_fetch_mode {
         (pdo, statement)
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn fetch_mode_is_kept_across_a_reconnect() {
         let (mut pdo, mut statement) = lost(Options::default()).await;
         statement.set_fetch_mode(FetchMode::Num);
@@ -549,7 +549,7 @@ mod pdo_statement_fetch_mode {
         assert_eq!(dump(&statement.fetch().unwrap().unwrap()), "[0=>\"7\",1=>\"8\"]");
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn fetch_mode_arguments_are_kept_across_a_reconnect() {
         let (mut pdo, mut statement) = lost(Options::default()).await;
         statement.set_fetch_mode(FetchMode::Column(1));
@@ -558,7 +558,7 @@ mod pdo_statement_fetch_mode {
         assert_eq!(dump_array(&statement.fetch_all().unwrap()), "[0=>\"8\"]");
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn without_a_fetch_mode_the_reconnected_statement_uses_the_default() {
         let options = Options { fetch_mode: FetchMode::Both, ..Options::default() };
         let (mut pdo, mut statement) = lost(options).await;
@@ -633,7 +633,7 @@ mod emulation {
         Ok(dump_rows(&statement.fetch_all_assoc()))
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn binds_positional_and_named_parameters() {
         for (name, mut pdo) in all().await {
             let quoted = "it's \"q\" \\ \n";
@@ -694,7 +694,7 @@ mod emulation {
         }
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn reports_binding_errors() {
         let count =
             "SQLSTATE[HY093]: Invalid parameter number: number of bound variables does not match number of tokens";
@@ -762,7 +762,7 @@ mod emulation {
         }
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn fetches_as_php_does() {
         for (name, mut pdo) in all().await {
             let dup = rows(&mut pdo, "SELECT 1 AS a, 2 AS b, 3 AS a").await;
@@ -804,7 +804,7 @@ mod emulation {
         }
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn prints_engine_types_as_php_does() {
         for (name, mut pdo) in all().await {
             let (sql, expected) = match name {
@@ -835,7 +835,7 @@ mod emulation {
         }
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn quotes_as_the_driver_does() {
         for (name, pdo) in all().await {
             let quoted = pdo.quote(b"it's \"x\" \\ \n \x1a").unwrap().map(|q| q.as_bytes().to_vec());
@@ -858,7 +858,7 @@ mod emulation {
         }
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn reports_errors_as_php_does() {
         for (name, mut pdo) in all().await {
             let error = pdo.query("SELEC 1").await.unwrap_err();
@@ -944,7 +944,7 @@ mod emulation {
         }
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn writes_rows_counts_and_ids() {
         for (name, mut pdo) in all().await {
             let my = name.starts_with('m');
@@ -1020,7 +1020,7 @@ mod emulation {
         }
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn postgres_specifics() {
         let Some(mut pdo) = servers::connect(servers::POSTGRES).await else { return };
         // `??` is an escaped `?` when values are bound, and left as it is
@@ -1057,7 +1057,7 @@ mod emulation {
         assert_eq!(pdo.driver().name(), "pgsql");
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn mysql_rowsets() {
         for dsn in [servers::MARIADB, servers::MYSQL] {
             let Some(mut pdo) = servers::connect(dsn).await else { continue };
@@ -1148,7 +1148,7 @@ mod emulation {
         }
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn connect_errors() {
         let error = Pdo::connect("foo:bar", None, None).await.unwrap_err();
         assert_eq!((error.kind(), error.message(), error.code()), (Kind::Pdo, "could not find driver", 0));
@@ -1242,7 +1242,7 @@ mod lost {
         })
         .into_owned();
         admin.query(&format!("SELECT pg_terminate_backend({pid})")).await.unwrap();
-        tokio::time::sleep(Duration::from_millis(200)).await;
+        utopia_async::sleep(Duration::from_millis(200)).await;
     }
 
     async fn kill(admin: &mut Pdo, pdo: &mut Pdo) {
@@ -1253,13 +1253,13 @@ mod lost {
         })
         .into_owned();
         admin.exec(&format!("KILL {id}")).await.unwrap();
-        tokio::time::sleep(Duration::from_millis(200)).await;
+        utopia_async::sleep(Duration::from_millis(200)).await;
     }
 
     /// PostgreSQL: a failed connection reports a transaction, so the
     /// wrapper does not retry: it reconnects and refuses statements until
     /// the caller rolls back, as PHP does.
-    #[tokio::test]
+    #[utopia_async::test]
     async fn postgres() {
         let Some(mut admin) = servers::connect(servers::POSTGRES).await else { return };
         let mut pdo = servers::connect(servers::POSTGRES).await.unwrap();
@@ -1289,7 +1289,7 @@ mod lost {
 
     /// MySQL and MariaDB: outside a transaction the statement runs again on
     /// a new connection; inside one the transaction is lost.
-    #[tokio::test]
+    #[utopia_async::test]
     async fn mysql() {
         for dsn in [servers::MARIADB, servers::MYSQL] {
             let Some(mut admin) = servers::connect(dsn).await else { continue };
@@ -1318,7 +1318,7 @@ mod lost {
 }
 
 /// The handle and its futures cross threads, as an adapter shares them
-/// behind a `tokio::sync::Mutex`.
+/// behind a `utopia_async::sync::Mutex`.
 #[test]
 fn handles_and_futures_are_send() {
     fn send<T: Send>(_: &T) {}

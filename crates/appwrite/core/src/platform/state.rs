@@ -145,7 +145,7 @@ async fn connect(dsn: &DatabaseDsn, size: usize) -> Result<Connections, BootErro
             Err(e) if attempt < 30 => {
                 tracing::warn!(error = %e, database = dsn.name, "waiting for the database");
                 attempt += 1;
-                tokio::time::sleep(Duration::from_secs(1)).await;
+                utopia_async::sleep(Duration::from_secs(1)).await;
             }
             Err(e) => return Err(e.into()),
         }

@@ -524,7 +524,7 @@ pub async fn call_op(op: &str, args: &Json, session: &mut Session) -> OpResult {
             Outcome::Ok(Json::Object(counts.into_iter().map(|(k, n)| (k, json!(n))).collect()))
         }
         "sleep" => {
-            tokio::time::sleep(std::time::Duration::from_secs_f64(a.f64("ms")? / 1000.0)).await;
+            utopia_async::sleep(std::time::Duration::from_secs_f64(a.f64("ms")? / 1000.0)).await;
             Outcome::Ok(Json::Null)
         }
         _ => return Err(Fault::new(format!("circuit-breaker: unknown operation `{op}`"))),

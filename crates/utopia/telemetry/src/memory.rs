@@ -261,7 +261,7 @@ mod tests {
         assert_eq!(telemetry.values(Kind::Counter, "x"), Some(vec![Number::Int(1), Number::Int(3)]));
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn observable_gauges_share_one_instrument_per_name() {
         let telemetry = MemoryTelemetry::new();
         telemetry.observable_gauge("g", None, None).observe(|o| o.observe(1.into(), &[("pool", Value::from("a"))]));

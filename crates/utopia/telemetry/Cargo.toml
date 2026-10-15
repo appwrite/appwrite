@@ -11,22 +11,22 @@ publish.workspace = true
 [features]
 default = ["otlp"]
 # The OpenTelemetry backend: OTLP/protobuf over HTTP(S).
-otlp = ["dep:bytes", "dep:http-body-util", "dep:hyper", "dep:hyper-rustls", "dep:hyper-util", "dep:rustls", "dep:tokio", "dep:tower-service"]
+otlp = ["dep:bytes", "dep:http-body-util", "dep:hyper", "dep:hyper-rustls", "dep:hyper-util", "dep:rustls", "dep:utopia-async", "dep:tower-service"]
 
 [dependencies]
 bytes = { workspace = true, optional = true }
 http-body-util = { workspace = true, optional = true }
 hyper = { workspace = true, features = ["client", "http1"], optional = true }
 hyper-rustls = { workspace = true, optional = true }
-hyper-util = { workspace = true, features = ["client-legacy", "http1", "tokio"], optional = true }
+hyper-util = { workspace = true, features = ["client-legacy", "http1"], optional = true }
 php-std.workspace = true
 rustls = { workspace = true, optional = true }
 thiserror.workspace = true
-tokio = { workspace = true, features = ["rt", "time", "net"], optional = true }
+utopia-async = { workspace = true, optional = true, features = ["hyper"] }
 tower-service = { workspace = true, optional = true }
 
 [dev-dependencies]
-tokio = { workspace = true, features = ["rt", "macros", "time", "net", "io-util"] }
+utopia-async.workspace = true
 
 [package.metadata.utopia]
 category = "observability"

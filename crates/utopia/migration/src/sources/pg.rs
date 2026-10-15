@@ -92,7 +92,7 @@ impl Pg {
             ),
             sqlstate: "08006".to_owned(),
         })?;
-        tokio::spawn(async move {
+        utopia_async::spawn(async move {
             let _ = connection.await;
         });
         Ok(Pg { client, error_code: std::sync::Mutex::new(None) })

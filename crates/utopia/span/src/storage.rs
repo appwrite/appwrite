@@ -80,11 +80,11 @@ impl Storage for Memory {
     }
 }
 
-tokio::task_local! {
+utopia_async::task_local! {
     static CURRENT: RefCell<Option<Span>>;
 }
 
-/// One current span per tokio task.
+/// One current span per task.
 ///
 /// A task gets its own slot by running inside [`Task::scope`]; outside a
 /// scope there is no current span and [`Storage::set`] does nothing.
@@ -95,7 +95,7 @@ tokio::task_local! {
 /// ```
 /// use utopia_span::{Span, Storage, Task};
 ///
-/// # tokio::runtime::Builder::new_current_thread().build().unwrap().block_on(async {
+/// # utopia_async::Builder::current_thread().build().unwrap().block_on(async {
 /// let storage = Task::new();
 /// storage.set(Some(Span::new("ignored")));
 /// assert!(storage.get().is_none()); // outside a scope

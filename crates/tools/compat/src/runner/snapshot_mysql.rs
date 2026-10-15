@@ -24,7 +24,7 @@
 //! namespace in names becomes `${ns}` like everywhere else. Cleanup drops the
 //! database and the `${ns}_<name>` databases next to it.
 //!
-//! The runner is synchronous and may itself run inside a Tokio runtime (the
+//! The runner is synchronous and may itself run inside a runtime (the
 //! PHP-free replay), so each call runs on its own thread with its own
 //! single-threaded runtime.
 
@@ -59,7 +59,7 @@ const BINARY: &[&str] = &[
 fn with_conn<T: Send + 'static>(url: &str, f: Work<T>) -> Result<T, String> {
     let url = url.to_owned();
     std::thread::spawn(move || {
-        let rt = tokio::runtime::Builder::new_current_thread().enable_all().build().map_err(|e| e.to_string())?;
+        let rt = utopia_async::Builder::current_thread().build().map_err(|e| e.to_string())?;
         rt.block_on(async move {
             let opts = Opts::from_url(&url).map_err(|e| format!("mysql {url}: {e}"))?;
             let mut conn = Conn::new(OptsBuilder::from_opts(opts).prefer_socket(false))

@@ -1,6 +1,6 @@
 [package]
 name = "utopia-async-macros"
-description = "The #[utopia_async::test] attribute: runs an async test on a utopia-async runtime."
+description = "The #[utopia_async::main] and #[utopia_async::test] attributes: run an async function on a utopia-async runtime."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

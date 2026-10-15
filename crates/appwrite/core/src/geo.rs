@@ -8,9 +8,8 @@ use std::time::Duration;
 use bytes::Bytes;
 use http_body_util::{BodyExt, Empty};
 use hyper_util::client::legacy::Client;
-use hyper_util::client::legacy::connect::HttpConnector;
-use hyper_util::rt::TokioExecutor;
 use serde_json::Value;
+use utopia_async::hyper::{Connector, Executor};
 
 const CACHE_SIZE: usize = 10_000;
 
@@ -75,16 +74,16 @@ impl GeoRecord {
 pub struct Geo {
     endpoint: Option<String>,
     secret: String,
-    client: Client<HttpConnector, Empty<Bytes>>,
+    client: Client<Connector, Empty<Bytes>>,
     cache: Mutex<HashMap<String, Arc<GeoRecord>>>,
 }
 
 impl Geo {
     pub fn new(endpoint: Option<String>, secret: Option<String>) -> Self {
-        let mut connector = HttpConnector::new();
+        let mut connector = Connector::new();
         connector.set_connect_timeout(Some(Duration::from_secs(3)));
         connector.set_nodelay(true);
-        let client = Client::builder(TokioExecutor::new()).pool_max_idle_per_host(64).build(connector);
+        let client = Client::builder(Executor).pool_max_idle_per_host(64).build(connector);
         let enabled = endpoint.is_some() && secret.is_some();
         Self {
             endpoint: if enabled { endpoint.map(|e| e.trim_end_matches('/').to_owned()) } else { None },
@@ -124,7 +123,7 @@ impl Geo {
                 _ => None,
             }
         };
-        match tokio::time::timeout(Duration::from_secs(3), lookup).await {
+        match utopia_async::timeout(Duration::from_secs(3), lookup).await {
             Ok(Some(record)) => {
                 let record = Arc::new(record);
                 if let Ok(mut cache) = self.cache.lock() {

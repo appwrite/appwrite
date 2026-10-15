@@ -4,7 +4,7 @@
 
 use std::sync::Arc;
 
-use tokio::sync::oneshot;
+use utopia_async::sync::oneshot;
 
 use super::s;
 use crate::adapter::memory::Memory;

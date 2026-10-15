@@ -226,7 +226,7 @@ pub async fn bench(name: &str, session: &mut Session) -> Result<Bench, Fault> {
     Ok(match name {
         "parse_msg" => {
             let fake = Fake::new(Map::new());
-            let parser = Rc::new(tokio::sync::Mutex::new(Parser::new()));
+            let parser = Rc::new(utopia_async::sync::Mutex::new(Parser::new()));
             let mut frame = b"MSG orders.created 7 _INBOX.abc 64\r\n".to_vec();
             frame.extend(std::iter::repeat_n(b'x', 64));
             frame.extend_from_slice(b"\r\n");
@@ -241,7 +241,7 @@ pub async fn bench(name: &str, session: &mut Session) -> Result<Bench, Fault> {
         }
         "parse_hmsg" => {
             let fake = Fake::new(Map::new());
-            let parser = Rc::new(tokio::sync::Mutex::new(Parser::new()));
+            let parser = Rc::new(utopia_async::sync::Mutex::new(Parser::new()));
             let block = "NATS/1.0\r\nNats-Msg-Id: 42\r\nX-Trace: abc\r\n\r\n";
             let frame =
                 format!("HMSG orders.created 7 {} {}\r\n{block}hello\r\n", block.len(), block.len() + 5).into_bytes();
@@ -261,7 +261,7 @@ pub async fn bench(name: &str, session: &mut Session) -> Result<Bench, Fault> {
         }),
         "publish" => {
             let fake = Fake::new(Map::new());
-            let conn = Rc::new(tokio::sync::Mutex::new(
+            let conn = Rc::new(utopia_async::sync::Mutex::new(
                 fake_connection(&fake, ConnectionOptions::default()).await.map_err(|e| Fault::new(e.to_string()))?,
             ));
             let payload = vec![b'p'; 128];
@@ -280,7 +280,7 @@ pub async fn bench(name: &str, session: &mut Session) -> Result<Bench, Fault> {
             fake.set_rules(vec![
                 json!({"when": {"prefix": "PUB "}, "do": [{"reply": {"subject": "work", "payload": "ok"}}]}),
             ]);
-            let conn = Rc::new(tokio::sync::Mutex::new(
+            let conn = Rc::new(utopia_async::sync::Mutex::new(
                 fake_connection(&fake, ConnectionOptions::default()).await.map_err(|e| Fault::new(e.to_string()))?,
             ));
             Bench::future(move || {
@@ -310,7 +310,7 @@ pub async fn bench(name: &str, session: &mut Session) -> Result<Bench, Fault> {
             )
             .await
             .map_err(|e| Fault::new(e.to_string()))?;
-            let conn = Rc::new(tokio::sync::Mutex::new(conn));
+            let conn = Rc::new(utopia_async::sync::Mutex::new(conn));
             Bench::future(move || {
                 let (conn, subject) = (conn.clone(), subject.clone());
                 async move {
@@ -514,7 +514,7 @@ impl Transport for Fake {
             if rule_matches(rule.get("when").unwrap_or(&Value::Null), data) {
                 for action in rule.get("do").and_then(Value::as_array).map_or(&[][..], Vec::as_slice) {
                     if let Some(ms) = self.act(action, data)? {
-                        tokio::time::sleep(Duration::from_millis(ms)).await;
+                        utopia_async::sleep(Duration::from_millis(ms)).await;
                     }
                 }
             }
@@ -596,7 +596,7 @@ async fn fake_connection(fake: &Fake, options: ConnectionOptions) -> utopia_nats
 
 // --- Handles ---
 
-type Shared<T> = Arc<tokio::sync::Mutex<T>>;
+type Shared<T> = Arc<utopia_async::sync::Mutex<T>>;
 type Log = Arc<Mutex<Vec<Value>>>;
 
 /// A connection with what its callbacks recorded, and its fake transport.
@@ -613,7 +613,7 @@ struct Sub {
 }
 
 fn shared<T: Send + 'static>(session: &mut Session, value: T) -> Value {
-    session.handle(Arc::new(tokio::sync::Mutex::new(value)))
+    session.handle(Arc::new(utopia_async::sync::Mutex::new(value)))
 }
 
 fn get<T: Send + 'static>(session: &Session, args: &Args<'_>, key: &str) -> Result<Shared<T>, Fault> {

@@ -61,7 +61,7 @@ let command = gitea.clone_command("acme", "website", "v1.*", clone_type::TAG, "/
 println!("{command}");
 # Ok(())
 # }
-# tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap().block_on(run()).unwrap();
+# utopia_async::run(run()).unwrap();
 ```
 
 ```php

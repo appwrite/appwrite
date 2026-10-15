@@ -25,7 +25,7 @@ use std::time::{Duration, Instant};
 use hyper_util::client::legacy::connect::{Connected, Connection};
 
 use crate::io::{AsyncRead, AsyncWrite, ReadBuf};
-use crate::net::TcpStream;
+use crate::net::{TcpSocket, TcpStream};
 use crate::time::Sleep;
 
 /// Runs hyper's background work (connection tasks, HTTP/2 streams) as tasks
@@ -171,13 +171,22 @@ pub struct Connector {
     connect_timeout: Option<Duration>,
     keepalive: Option<Duration>,
     nodelay: bool,
+    send_buffer_size: Option<usize>,
+    recv_buffer_size: Option<usize>,
 }
 
 impl Connector {
     /// A connector for `http://` URIs, without a connect timeout, keepalive
     /// or `TCP_NODELAY`.
     pub fn new() -> Connector {
-        Connector { enforce_http: true, connect_timeout: None, keepalive: None, nodelay: false }
+        Connector {
+            enforce_http: true,
+            connect_timeout: None,
+            keepalive: None,
+            nodelay: false,
+            send_buffer_size: None,
+            recv_buffer_size: None,
+        }
     }
 
     /// Whether only `http://` URIs are accepted; turn it off when a TLS
@@ -202,6 +211,33 @@ impl Connector {
         self.nodelay = nodelay;
     }
 
+    /// The socket's send buffer size (`SO_SNDBUF`; `None`: the system's).
+    pub fn set_send_buffer_size(&mut self, size: Option<usize>) {
+        self.send_buffer_size = size;
+    }
+
+    /// The socket's receive buffer size (`SO_RCVBUF`; `None`: the
+    /// system's).
+    pub fn set_recv_buffer_size(&mut self, size: Option<usize>) {
+        self.recv_buffer_size = size;
+    }
+
+    /// Connects to `addr`, with the buffer sizes set before connecting.
+    async fn dial(&self, addr: std::net::SocketAddr) -> io::Result<TcpStream> {
+        if self.send_buffer_size.is_none() && self.recv_buffer_size.is_none() {
+            return TcpStream::connect(addr).await;
+        }
+        let socket = if addr.is_ipv4() { TcpSocket::new_v4()? } else { TcpSocket::new_v6()? };
+        let size = |bytes: usize| u32::try_from(bytes).unwrap_or(u32::MAX);
+        if let Some(bytes) = self.send_buffer_size {
+            socket.set_send_buffer_size(size(bytes))?;
+        }
+        if let Some(bytes) = self.recv_buffer_size {
+            socket.set_recv_buffer_size(size(bytes))?;
+        }
+        socket.connect(addr).await
+    }
+
     async fn connect(self, uri: http::Uri) -> io::Result<Io<TcpStream>> {
         let invalid = |message: &str| io::Error::new(io::ErrorKind::InvalidInput, message.to_owned());
         let scheme = uri.scheme_str();
@@ -220,11 +256,11 @@ impl Connector {
         let mut last = None;
         for addr in addrs {
             let attempt = match budget {
-                Some(budget) => match crate::timeout(budget, TcpStream::connect(addr)).await {
+                Some(budget) => match crate::timeout(budget, self.dial(addr)).await {
                     Ok(attempt) => attempt,
                     Err(_) => Err(io::Error::new(io::ErrorKind::TimedOut, "connect timeout")),
                 },
-                None => TcpStream::connect(addr).await,
+                None => self.dial(addr).await,
             };
             match attempt {
                 Ok(stream) => {

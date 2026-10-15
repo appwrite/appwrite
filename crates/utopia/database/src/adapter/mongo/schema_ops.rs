@@ -523,7 +523,7 @@ impl Mongo {
                         }
                     }
                 }
-                tokio::time::sleep((base * 2u32.pow(retry)).min(max)).await;
+                utopia_async::sleep((base * 2u32.pow(retry)).min(max)).await;
                 retry += 1;
             }
             Err(Error::database(format!("Index {id} creation timed out after {RETRIES} retries")))

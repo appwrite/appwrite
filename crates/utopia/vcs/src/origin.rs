@@ -565,7 +565,7 @@ impl Origin {
             std::env::temp_dir().to_string_lossy().trim_end_matches('/'),
             php_std::system::uniqid("", false)
         );
-        tokio::fs::create_dir_all(&directory)
+        utopia_async::fs::create_dir_all(&directory)
             .await
             .map_err(|_| Error::exception("Failed to create a temporary directory for the Git operation.", 0))?;
         Ok(directory)
@@ -2326,7 +2326,7 @@ impl Git for Origin {
             }
             let absolute = format!("{directory}/{relative}");
             let parent = std::path::Path::new(&absolute).parent().map(|p| p.to_path_buf()).unwrap_or_default();
-            if !parent.is_dir() && tokio::fs::create_dir_all(&parent).await.is_err() {
+            if !parent.is_dir() && utopia_async::fs::create_dir_all(&parent).await.is_err() {
                 return Err(Error::exception(format!("Failed to create directory for {filepath}"), 0));
             }
             let checkout = std::fs::canonicalize(&directory).ok();
@@ -2343,7 +2343,7 @@ impl Git for Origin {
             if escapes || is_link {
                 return Err(Error::exception(format!("File path escapes the repository: {filepath}"), 0));
             }
-            if tokio::fs::write(&absolute, content).await.is_err() {
+            if utopia_async::fs::write(&absolute, content).await.is_err() {
                 return Err(Error::exception(format!("Failed to write {filepath}"), 0));
             }
             self.execute(

@@ -124,7 +124,7 @@ pub const COLLECTION: &str = "abuse";
 /// ```
 /// use utopia_abuse::{TimeLimit, time_limit};
 ///
-/// # tokio::runtime::Builder::new_current_thread().build()?.block_on(async {
+/// # utopia_async::Builder::current_thread().build()?.block_on(async {
 /// let store = time_limit::Database::new(std::sync::Arc::new(time_limit::Memory::new()));
 /// store.setup().await?;
 /// let limit = TimeLimit::new("ip:{ip}", 1, 60, store)?.with_param("{ip}", "203.0.113.7");

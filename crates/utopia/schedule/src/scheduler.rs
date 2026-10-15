@@ -187,7 +187,7 @@ fn non_negative(value: f64) -> f64 {
 ///     }
 /// }
 ///
-/// # tokio::runtime::Builder::new_current_thread().build()?.block_on(async {
+/// # utopia_async::Builder::current_thread().build()?.block_on(async {
 /// let start = DateTime::parse(b"2026-08-18 03:00:30", None, &TzInfo::utc(), Timestamp { sec: 0, usec: 0 }).unwrap();
 /// let clock = Arc::new(TestClock::new(&start));
 /// let mut scheduler = Scheduler::new(Minutely(vec!["fn"]), MemoryStore::new(), clock.clone(), Options::default())?;

@@ -19,7 +19,7 @@
 //! ```
 //! use utopia_circuit_breaker::{CircuitBreaker, Options, State};
 //!
-//! # tokio::runtime::Builder::new_current_thread().enable_all().build()?.block_on(async {
+//! # utopia_async::run(async {
 //! let breaker = CircuitBreaker::new(Options { minimum_throughput: 2, ..Options::default() })?;
 //!
 //! for _ in 0..2 {
@@ -307,7 +307,7 @@ fn same_backend(a: &Weak<dyn Telemetry>, b: &Arc<dyn Telemetry>) -> bool {
 ///
 /// let breaker = CircuitBreaker::new(Options { timeout: 60, ..Options::default() })?;
 ///
-/// tokio::runtime::Builder::new_current_thread().enable_all().build()?.block_on(async {
+/// utopia_async::run(async {
 ///     breaker.trip().await?;
 ///     assert_eq!(breaker.state().await?, State::Open);
 ///     assert_eq!(breaker.call(|| "fallback", async { Ok::<_, &str>("live") }).await?, "fallback");
@@ -922,7 +922,7 @@ mod tests {
         Err("failed")
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn opens_on_the_failure_rate() {
         let breaker = CircuitBreaker::new(Options { minimum_throughput: 2, ..Options::default() }).unwrap();
         for _ in 0..2 {
@@ -932,7 +932,7 @@ mod tests {
         assert_eq!(breaker.failures().await.unwrap(), 2);
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn shares_the_verdict_through_a_table() {
         let table = SharedTable::default();
         let options = Options { key: "users-api".into(), minimum_throughput: 2, ..Options::default() };

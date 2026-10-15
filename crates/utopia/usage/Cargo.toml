@@ -29,7 +29,7 @@ utopia-query.workspace = true
 utopia-validators = { workspace = true, optional = true }
 
 [dev-dependencies]
-tokio = { workspace = true, features = ["rt", "macros", "net", "time"] }
+utopia-async.workspace = true
 
 [package.metadata.utopia]
 category = "observability"

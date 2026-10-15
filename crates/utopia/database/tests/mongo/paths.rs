@@ -38,7 +38,7 @@ fn reply_with_index_metadata(fake: &Fake) {
     });
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn many_to_many_keys_are_renamed_in_the_junction_of_either_side() {
     let fake = Fake::new();
     fake.on("find", |args| {
@@ -82,7 +82,7 @@ async fn many_to_many_keys_are_renamed_in_the_junction_of_either_side() {
     );
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn fulltext_indexes_are_created_without_the_collation() {
     let fake = Fake::new();
     let adapter = adapter(&fake).await;
@@ -101,7 +101,7 @@ async fn fulltext_indexes_are_created_without_the_collation() {
     assert_eq!(at(&specifications[1], "collation"), Some(&Bson::Document(doc! { "locale": "en", "strength": 1 })));
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn unique_index_creation_waits_until_the_build_is_ready() {
     let fake = Fake::new();
     let listings = Arc::new(AtomicI64::new(0));
@@ -117,7 +117,7 @@ async fn unique_index_creation_waits_until_the_build_is_ready() {
     assert_eq!(listings.load(Ordering::Relaxed), 2, "The index list must be read again while the build is not ready");
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn index_creation_failures_are_mapped() {
     let fake = Fake::new();
     fake.on("createIndexes", |_| Err(error("Index already exists with a different name", 85)));
@@ -127,7 +127,7 @@ async fn index_creation_failures_are_mapped() {
     assert_error_contains(result, Kind::Duplicate, "Index already exists");
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn renaming_an_index_the_metadata_does_not_list_is_refused() {
     let fake = Fake::new();
     fake.on("find", |_| {
@@ -144,7 +144,7 @@ async fn renaming_an_index_the_metadata_does_not_list_is_refused() {
     assert!(fake.args("createIndexes").is_empty());
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn renaming_an_index_the_schema_does_not_have_fails_with_the_driver_error() {
     let fake = Fake::new();
     reply_with_index_metadata(&fake);
@@ -156,7 +156,7 @@ async fn renaming_an_index_the_schema_does_not_have_fails_with_the_driver_error(
     assert!(fake.args("createIndexes").is_empty());
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn renaming_an_index_the_schema_has_rebuilds_it_under_the_new_name() {
     let fake = Fake::new();
     reply_with_index_metadata(&fake);
@@ -171,7 +171,7 @@ async fn renaming_an_index_the_schema_has_rebuilds_it_under_the_new_name() {
     assert_eq!(names, vec![Bson::String("by_name".into())]);
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn a_non_numeric_power_exponent_is_refused() {
     let fake = Fake::new();
     let update = utopia_database::Document::from_pairs([(
@@ -185,7 +185,7 @@ async fn a_non_numeric_power_exponent_is_refused() {
     assert!(fake.args("query").is_empty(), "No update may reach the server");
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn sequences_are_read_beyond_the_first_batch() {
     let fake = Fake::new();
     fake.on("find", |_| {
@@ -207,7 +207,7 @@ async fn sequences_are_read_beyond_the_first_batch() {
     assert_eq!(cursors, vec![Bson::Int64(7)]);
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn sequence_read_failures_are_mapped() {
     let fake = Fake::new();
     fake.on("find", |_| Err(error("operation exceeded time limit", 50)));
@@ -216,7 +216,7 @@ async fn sequence_read_failures_are_mapped() {
     assert_error(result, Kind::Timeout, "Query timed out");
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn integer_operator_operands_are_cast_before_the_write() {
     let fake = Fake::new();
     let adapter = adapter(&fake).await;
@@ -238,7 +238,7 @@ async fn integer_operator_operands_are_cast_before_the_write() {
     assert_error_contains(result, Kind::Type, "outside the signed 64-bit range");
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn array_attributes_are_decoded_or_wrapped_before_the_write() {
     let fake = Fake::new();
     let adapter = adapter(&fake).await;
@@ -272,7 +272,7 @@ async fn array_attributes_are_decoded_or_wrapped_before_the_write() {
     assert_error_contains(result, Kind::Database, "Failed to decode JSON for attribute tags");
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn stored_values_are_read_back_by_their_attribute_type() {
     let fake = Fake::new();
     let adapter = adapter(&fake).await;
@@ -311,7 +311,7 @@ async fn stored_values_are_read_back_by_their_attribute_type() {
     assert_error_contains(result, Kind::Database, "Failed to decode JSON for attribute tags");
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn schemaless_casting_keeps_strings_that_are_not_dates() {
     let fake = Fake::new();
     let adapter = adapter(&fake).await;
@@ -332,7 +332,7 @@ async fn schemaless_casting_keeps_strings_that_are_not_dates() {
 
 /// The `Int64` half of PHP's test has no counterpart: the driver decodes
 /// every BSON integer as an integer, as utopia-php/mongo unwraps `Int64`.
-#[tokio::test]
+#[utopia_async::test]
 async fn numeric_dates_and_int64_values_are_converted() {
     let fake = Fake::new();
     let adapter = adapter(&fake).await;
@@ -355,7 +355,7 @@ async fn numeric_dates_and_int64_values_are_converted() {
     assert_eq!(after.get("count"), Some(&Value::Int(9_007_199_254_740_993)));
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn reconnect_reconnects_the_client() {
     let fake = Fake::new();
     let adapter = adapter(&fake).await;
@@ -366,7 +366,7 @@ async fn reconnect_reconnects_the_client() {
     assert_eq!(fake.args("connect").len(), connections + 1);
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn operators_refuse_operands_of_the_wrong_type() {
     let fake = Fake::new();
     let cases = [
@@ -393,7 +393,7 @@ async fn operators_refuse_operands_of_the_wrong_type() {
     assert!(fake.args("query").is_empty(), "No update may reach the server");
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn a_read_ending_on_a_full_batch_kills_its_cursor() {
     let fake = Fake::new();
     fake.on("find", |_| {
@@ -411,7 +411,7 @@ async fn a_read_ending_on_a_full_batch_kills_its_cursor() {
     assert_eq!(commands, vec![Bson::Document(doc! { "killCursors": "paths_books", "cursors": [7] })]);
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn responses_without_a_cursor_id_end_the_read() {
     let fake = Fake::new();
     fake.on("find", |_| Ok(Bson::Document(doc! { "cursor": { "firstBatch": [{ "_uid": "first" }] } })));
@@ -430,7 +430,7 @@ async fn responses_without_a_cursor_id_end_the_read() {
     assert!(fake.args("query").is_empty(), "A cursor the server closed must not be killed");
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn dollar_prefixed_user_key_round_trips() {
     let fake = Fake::new();
     fake.on("find", |_| Ok(batch(vec![doc! { "_uid": "first", "_custom": "x" }])));

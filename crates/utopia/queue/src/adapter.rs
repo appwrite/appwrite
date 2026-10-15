@@ -6,7 +6,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
-use tokio::sync::{Notify, Semaphore};
+use utopia_async::sync::{Notify, Semaphore};
 
 use crate::connection::BoxFuture;
 use crate::contract::Consumer;
@@ -247,7 +247,7 @@ impl Adapter {
                 let loops = futures_util::future::join_all(
                     queues.iter().map(|spec| self.run(spec, message.clone(), success.clone(), error.clone())),
                 );
-                let (results, ()) = tokio::join!(loops, async {
+                let (results, ()) = utopia_async::join!(loops, async {
                     maintenance.await;
                 });
                 let _ = maintaining;
@@ -264,7 +264,7 @@ impl Adapter {
         while maintaining.load(Ordering::SeqCst) && !self.is_stopped() {
             let mut waited = 0.0;
             while waited < MAINTENANCE_INTERVAL && !self.is_stopped() {
-                tokio::time::sleep(Duration::from_secs_f64(MAINTENANCE_POLL)).await;
+                utopia_async::sleep(Duration::from_secs_f64(MAINTENANCE_POLL)).await;
                 waited += MAINTENANCE_POLL;
             }
             if self.is_stopped() {
@@ -310,7 +310,7 @@ impl Adapter {
                 if let Err(report) = error(None, e, Arc::new(Resources::child(self.resources.clone()))).await {
                     self.unreported("receive", &text, &report);
                 }
-                tokio::time::sleep(Duration::from_secs(RECEIVE_BACKOFF)).await;
+                utopia_async::sleep(Duration::from_secs(RECEIVE_BACKOFF)).await;
                 Vec::new()
             }
         }
@@ -346,9 +346,9 @@ impl Adapter {
                 (consumer.clone(), deliveries.clone(), finished.clone(), done.clone(), error.clone(), queue.clone());
             let trace = self.trace.clone();
             let resources = self.resources.clone();
-            tokio::spawn(async move {
+            utopia_async::spawn(async move {
                 while !done.load(Ordering::SeqCst) {
-                    let wait = tokio::time::timeout(Duration::from_secs_f64(beat), finished.notified()).await;
+                    let wait = utopia_async::timeout(Duration::from_secs_f64(beat), finished.notified()).await;
                     if wait.is_ok() || done.load(Ordering::SeqCst) {
                         break;
                     }
@@ -368,12 +368,12 @@ impl Adapter {
                 }
             })
         });
-        let mut tasks = tokio::task::JoinSet::new();
+        let mut tasks = utopia_async::task::JoinSet::new();
         let mut next_id: u64 = 0;
         let in_flight = |d: &Arc<Mutex<HashMap<u64, Message>>>| d.lock().map(|d| d.len()).unwrap_or(0);
         while !self.is_stopped() {
             while prefetch - in_flight(&deliveries).min(prefetch) < (prefetch / 2).max(1) && !self.is_stopped() {
-                let _ = tokio::time::timeout(Duration::from_millis(100), available.notified()).await;
+                let _ = utopia_async::timeout(Duration::from_millis(100), available.notified()).await;
             }
             if self.is_stopped() {
                 break;

@@ -12,7 +12,7 @@ use utopia_database::adapter::Adapter;
 use utopia_database::adapter::sql::{Engine, Sql};
 use utopia_database::profiler::Profiler;
 
-#[tokio::test]
+#[utopia_async::test]
 async fn transaction_statements_are_not_profiled() {
     let adapter = Sql::connect(Engine::Sqlite, "sqlite::memory:", None, None).await.unwrap();
     let profiler = Arc::new(Profiler::new());

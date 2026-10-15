@@ -300,9 +300,9 @@ impl Gitea {
             if let Some(parent) = std::path::Path::new(&full).parent()
                 && !parent.is_dir()
             {
-                let _ = tokio::fs::create_dir_all(parent).await;
+                let _ = utopia_async::fs::create_dir_all(parent).await;
             }
-            let _ = tokio::fs::write(&full, content).await;
+            let _ = utopia_async::fs::write(&full, content).await;
             exec(&git::git(&dir)?.argument("add")?.argument("--")?.argument(filepath)?).await?;
             exec(&git::git(&dir)?.argument("commit")?.option("-m", message)?).await?;
             exec(&git::git(&dir)?.argument("push")?.argument("origin")?.argument(branch)?).await?;

@@ -1,4 +1,4 @@
-A DNS server receives small binary packets, decodes a question, finds the records that answer it and sends an encoded response back, over UDP, TCP or HTTPS. This library covers each step: the message codec, zones and zone files, resolvers, a server on Tokio, a client, and validators for what users type into DNS settings. This guide covers the common tasks.
+A DNS server receives small binary packets, decodes a question, finds the records that answer it and sends an encoded response back, over UDP, TCP or HTTPS. This library covers each step: the message codec, zones and zone files, resolvers, a server on Network, a client, and validators for what users type into DNS settings. This guide covers the common tasks.
 
 ## Encode and decode messages
 
@@ -112,14 +112,14 @@ echo strtok(File::export($zone, includeComments: false), "\n"), "\n"; // $ORIGIN
 
 ## Serve
 
-A `Server` answers with a resolver; the Tokio adapter listens on UDP, TCP and DNS over HTTPS. `Handler::handle` is what the adapter calls for each packet, so a server can be tried without sockets.
+A `Server` answers with a resolver; the `Network` adapter listens on UDP, TCP and DNS over HTTPS. `Handler::handle` is what the adapter calls for each packet, so a server can be tried without sockets.
 
 ```
 use utopia_dns::message::{Message, Question, Record};
 use utopia_dns::resolver::Memory;
 use utopia_dns::{Handler, Protocol, Server, Zone};
 
-# tokio::runtime::Builder::new_current_thread().build().unwrap().block_on(async {
+# utopia_async::Builder::current_thread().build().unwrap().block_on(async {
 let zone = Zone::new(
     "example.test",
     vec![Record::new("www.example.test", Record::TYPE_TXT).with_ttl(60).with_rdata("hello")],

@@ -64,7 +64,7 @@ const SCOPE: &str = "cloud";
 /// let telemetry = OpenTelemetry::with_transport("edge", "edge-databases", "instance", capture.clone());
 /// telemetry.counter("http.requests", Some("{request}"), None).add(1, &[("route", Value::from("/v1/health"))]);
 ///
-/// let exported = tokio::runtime::Runtime::new()?.block_on(telemetry.collect());
+/// let exported = utopia_async::Runtime::new()?.block_on(telemetry.collect());
 /// assert!(exported);
 /// assert_eq!(capture.0.lock().unwrap().len(), 1);
 /// # Ok::<(), Box<dyn std::error::Error>>(())

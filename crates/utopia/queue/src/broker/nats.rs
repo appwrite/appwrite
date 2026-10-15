@@ -12,7 +12,7 @@ use async_nats::jetstream::{self, AckKind, Context};
 use async_nats::{Client, HeaderMap, Subscriber};
 use futures_util::{FutureExt, StreamExt};
 use php_std::{Array, Value};
-use tokio::sync::Mutex;
+use utopia_async::sync::Mutex;
 
 use super::Provisioning;
 use crate::codec::{Codec, Json};
@@ -412,7 +412,7 @@ impl Nats {
             match delay {
                 Some(d) if retryable && Instant::now() + Duration::from_secs_f64(d) < deadline => {
                     if d > 0.0 {
-                        tokio::time::sleep(Duration::from_secs_f64(d)).await;
+                        utopia_async::sleep(Duration::from_secs_f64(d)).await;
                     }
                 }
                 _ => return Err(error),
@@ -746,7 +746,7 @@ impl Nats {
                         return Err(Error::Nats { class, message });
                     }
                     let window = PROVISION_BACKOFF_MS << (attempt - 1);
-                    tokio::time::sleep(Duration::from_millis(crate::connection::jitter(window))).await;
+                    utopia_async::sleep(Duration::from_millis(crate::connection::jitter(window))).await;
                 }
                 other => return other,
             }

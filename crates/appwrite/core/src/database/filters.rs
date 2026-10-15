@@ -559,7 +559,7 @@ mod tests {
         assert_eq!(ours, php);
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn user_search_drops_falsy_values() {
         let mut user = Document::default();
         user.put("$id", Value::from("u1"));

@@ -1,4 +1,4 @@
-//! The HTTP/1.1 transport: TCP and TLS on tokio, written to send the same
+//! The HTTP/1.1 transport: TCP and TLS on utopia-async, written to send the same
 //! bytes, and read responses the same way, as PHP's cURL adapter.
 
 use std::io::Write as _;
@@ -11,9 +11,9 @@ use std::time::{Duration, Instant};
 
 use bytes::{Bytes, BytesMut};
 use std::sync::Mutex;
-use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt, ReadBuf};
-use tokio::net::TcpStream;
 use tokio_rustls::client::TlsStream;
+use utopia_async::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt, ReadBuf};
+use utopia_async::net::TcpStream;
 
 use crate::adapter::{Adapter, Options, Sink, Tls};
 use crate::message::{Body, Headers, Request, Response};
@@ -40,7 +40,7 @@ const EXPECT_THRESHOLD: u64 = 1024 * 1024;
 /// How long to wait for `100 Continue` before sending the body anyway.
 const EXPECT_TIMEOUT: Duration = Duration::from_secs(1);
 
-/// The HTTP/1.1 transport: TCP and TLS (rustls) on tokio.
+/// The HTTP/1.1 transport: TCP and TLS (rustls) on utopia-async.
 ///
 /// It sends what PHP's cURL adapter sends: `Host` first, `Accept: */*` and
 /// `Accept-Encoding` unless the request sets them, then the request's own
@@ -156,7 +156,7 @@ impl Clock {
     async fn run<T>(&self, received: usize, work: impl Future<Output = T>) -> Result<T, Error> {
         match self.deadline {
             None => Ok(work.await),
-            Some(deadline) => tokio::time::timeout_at(deadline.into(), work).await.map_err(|_| self.timeout(received)),
+            Some(deadline) => utopia_async::time::timeout_at(deadline, work).await.map_err(|_| self.timeout(received)),
         }
     }
 }
@@ -306,7 +306,7 @@ impl Http {
                     .map_err(Retry::Fail)?
                     .map_err(|e| retry(send_error(e)))?;
                 // Wait for 100 Continue; a final answer instead means the body is not wanted.
-                let waited = tokio::time::timeout(EXPECT_TIMEOUT, connection.read_head(clock, request.method())).await;
+                let waited = utopia_async::timeout(EXPECT_TIMEOUT, connection.read_head(clock, request.method())).await;
                 match waited {
                     Ok(Ok(head)) if head.code == 100 => interim.extend_from_slice(&head.raw),
                     Ok(Ok(head)) => early = Some(head),
@@ -385,7 +385,9 @@ impl Http {
             }
         };
 
-        let addresses: Vec<SocketAddr> = match within(deadline, tokio::net::lookup_host((host.as_str(), port))).await {
+        let addresses: Vec<SocketAddr> = match within(deadline, utopia_async::net::lookup_host((host.as_str(), port)))
+            .await
+        {
             Err(()) => return Err(timed_out()),
             Ok(Err(_)) => return Err(Error::Dns(format!("Could not resolve host: {host} (Domain name not found)"))),
             Ok(Ok(found)) => found.collect(),
@@ -470,7 +472,7 @@ fn terminated(received: &[u8]) -> bool {
 async fn within<F: Future>(deadline: Option<Instant>, work: F) -> Result<F::Output, ()> {
     match deadline {
         None => Ok(work.await),
-        Some(d) => tokio::time::timeout_at(d.into(), work).await.map_err(|_| ()),
+        Some(d) => utopia_async::time::timeout_at(d, work).await.map_err(|_| ()),
     }
 }
 
@@ -498,7 +500,7 @@ async fn body_size(request: &Request) -> Result<u64, Error> {
     match request.get_body() {
         Body::Empty => Ok(0),
         Body::Bytes(b) => Ok(b.len() as u64),
-        Body::File(path) => tokio::fs::metadata(path).await.map(|m| m.len()).map_err(|e| {
+        Body::File(path) => utopia_async::fs::metadata(path).await.map(|m| m.len()).map_err(|e| {
             Error::InvalidArgument(format!("Unable to read the request body from {}: {e}", path.display()))
         }),
     }
@@ -594,8 +596,8 @@ async fn send_body(connection: &mut Connection, body: &Body, clock: Clock) -> Re
     }
 }
 
-async fn open(path: &Path) -> Result<tokio::fs::File, Error> {
-    tokio::fs::File::open(path)
+async fn open(path: &Path) -> Result<utopia_async::fs::File, Error> {
+    utopia_async::fs::File::open(path)
         .await
         .map_err(|e| Error::InvalidArgument(format!("Unable to read the request body from {}: {e}", path.display())))
 }

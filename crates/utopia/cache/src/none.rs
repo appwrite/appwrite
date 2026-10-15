@@ -14,7 +14,7 @@ use crate::adapter::{Adapter, coerce};
 /// use php_std::types::Value;
 /// use utopia_cache::{Adapter, None};
 ///
-/// # tokio::runtime::Runtime::new()?.block_on(async {
+/// # utopia_async::Runtime::new()?.block_on(async {
 /// assert!(!None.save("key", &Value::from("value"), "", 0).await?);
 /// assert_eq!(None.load("key", 60, "").await?, Option::None);
 /// assert!(None.purge("key", "").await?);

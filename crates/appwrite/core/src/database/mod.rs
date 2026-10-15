@@ -208,7 +208,7 @@ mod tests {
     /// The keys PHP's `Factory` databases give (`getCacheKeys()` and
     /// `getQueryCacheKey()` printed by PHP 8.1.3 with Appwrite's filters):
     /// the cache is shared, so they must be the same.
-    #[tokio::test]
+    #[utopia_async::test]
     async fn cache_keys_match_php() {
         let databases = databases().await;
         let authorization = Databases::unchecked();

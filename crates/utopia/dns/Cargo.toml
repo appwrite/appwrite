@@ -13,18 +13,16 @@ bytes.workspace = true
 getrandom.workspace = true
 http-body-util.workspace = true
 hyper = { workspace = true, features = ["server", "http1", "http2"] }
-hyper-util = { workspace = true, features = ["server-auto", "http1", "http2", "tokio"] }
+hyper-util = { workspace = true, features = ["server-auto", "http1", "http2"] }
 php-std.workspace = true
 rustls.workspace = true
 serde_json.workspace = true
-tokio = { workspace = true, features = ["net", "time", "io-util", "rt", "sync"] }
+utopia-async = { workspace = true, features = ["hyper"] }
 tokio-rustls.workspace = true
 utopia-domains.workspace = true
 utopia-telemetry.workspace = true
 utopia-validators.workspace = true
 
-[dev-dependencies]
-tokio = { workspace = true, features = ["rt", "macros", "net", "time"] }
 
 [package.metadata.utopia]
 category = "servers"

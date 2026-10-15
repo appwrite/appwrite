@@ -61,7 +61,7 @@ pub trait Adapter: Sized + Send + Sync + 'static {
     /// A handle on a running engine instance.
     type Handle: Handle;
     /// A spawned task's handle.
-    type JoinHandle<T: Send + 'static>: JoinHandle<T>;
+    type JoinHandle<T>: JoinHandle<T>;
     /// A timer future.
     type Sleep: Sleep;
     /// A TCP connection.
@@ -184,7 +184,12 @@ pub trait Handle: Clone + Send + Sync + 'static {
 }
 
 /// A spawned task: awaiting it gives the task's output, or why it has none.
-pub trait JoinHandle<T>: Future<Output = Result<T, JoinError>> + Send + Unpin + 'static {
+///
+/// It is `Send` and `Sync` when `T` is `Send`, as the engines' handles are;
+/// the contract leaves that to the type rather than bounding `T`, so a
+/// handle to a task with a borrowed output (`&'static str`) is still `Send`
+/// inside other futures.
+pub trait JoinHandle<T>: Future<Output = Result<T, JoinError>> + Unpin {
     /// Cancels the task: it stops at its next await point.
     fn abort(&self);
 
@@ -234,6 +239,16 @@ pub trait TcpStream: AsyncRead + AsyncWrite + Debug + Send + Sync + Unpin + Size
 
     /// Turns TCP keepalive on, probing after `time` idle, or off (`None`).
     fn set_keepalive(&self, time: Option<Duration>) -> io::Result<()>;
+
+    /// Makes closing the connection reset it (`SO_LINGER` of zero) instead
+    /// of a graceful close.
+    fn set_zero_linger(&self) -> io::Result<()>;
+
+    /// The pending socket error (`SO_ERROR`), clearing it.
+    fn take_error(&self) -> io::Result<Option<io::Error>>;
+
+    /// Reads received bytes without consuming them.
+    fn peek<'a>(&'a self, buf: &'a mut [u8]) -> impl Future<Output = io::Result<usize>> + Send + 'a;
 
     /// Splits the connection into halves that can be used from two tasks.
     fn into_split(self) -> (Self::ReadHalf, Self::WriteHalf);
@@ -344,6 +359,10 @@ pub trait File: AsyncRead + AsyncWrite + AsyncSeek + Debug + Send + Sync + Unpin
 
     /// The standard library file, once pending work is done.
     fn into_std(self) -> impl Future<Output = std::fs::File> + Send;
+
+    /// The standard library file, when no work is pending; the file itself
+    /// otherwise.
+    fn try_into_std(self) -> Result<std::fs::File, Self>;
 
     /// The file's metadata.
     fn metadata(&self) -> impl Future<Output = io::Result<Metadata>> + Send + '_;

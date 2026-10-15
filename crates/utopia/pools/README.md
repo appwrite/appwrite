@@ -16,7 +16,7 @@ This library is maintained by the [Appwrite team](https://appwrite.io).
 utopia-pools = { git = "https://github.com/utopia-rs/pools" }
 ```
 
-Opening a connection to a database or a cache costs a round trip or more, so a service keeps a few open and reuses them. A pool does the bookkeeping: it creates connections on demand up to a fixed size, lends them one caller at a time, takes them back, and makes callers wait when all are lent. The pool is async, so the examples run it on a Tokio runtime. This guide covers the common tasks.
+Opening a connection to a database or a cache costs a round trip or more, so a service keeps a few open and reuses them. A pool does the bookkeeping: it creates connections on demand up to a fixed size, lends them one caller at a time, takes them back, and makes callers wait when all are lent. The pool is async, so the examples run it with `utopia_async::run`. This guide covers the common tasks.
 
 ## Run work with a pooled connection
 
@@ -27,7 +27,7 @@ use utopia_pools::{Pool, Stack};
 
 let pool = Pool::new(Stack::new(), "db", 4, || async { Ok::<_, std::io::Error>("connection".to_owned()) }, 1.0)?;
 
-let length = tokio::runtime::Builder::new_current_thread().enable_all().build()?.block_on(async {
+let length = utopia_async::run(async {
     pool.with(async |connection: &String| Ok::<_, utopia_pools::Error>(connection.len())).await
 })?;
 
@@ -43,7 +43,7 @@ use utopia_pools::{Pool, Stack};
 
 let pool = Pool::new(Stack::new(), "db", 2, || async { Ok::<_, std::io::Error>("connection".to_owned()) }, 0.0)?;
 
-tokio::runtime::Builder::new_current_thread().enable_all().build()?.block_on(async {
+utopia_async::run(async {
     let connection = pool.pop().await?;
     assert_eq!(pool.count(), 1);
     pool.reclaim(&connection);
@@ -64,7 +64,7 @@ use utopia_pools::{Channel, Pool};
 
 let pool = Pool::new(Channel::new(), "db", 1, || async { Ok::<_, std::io::Error>("connection".to_owned()) }, 0.05)?;
 
-tokio::runtime::Builder::new_current_thread().enable_all().build()?.block_on(async {
+utopia_async::run(async {
     let held = pool.pop().await?;
     let error = pool.pop().await.unwrap_err();
     assert_eq!(error.to_string(), "Pool 'db' could not provide a connection within 0.05s (size 1, active 1, idle 0)");
@@ -99,7 +99,7 @@ impl Resource for Connection {
 
 let pool = Pool::new(Stack::new(), "nats", 1, || async { Ok::<_, std::io::Error>(Connection { pings: AtomicUsize::new(0) }) }, 0.0)?;
 
-tokio::runtime::Builder::new_current_thread().enable_all().build()?.block_on(async {
+utopia_async::run(async {
     let connection = pool.pop().await?;
     pool.reclaim(&connection);
     pool.maintain().await;
@@ -119,7 +119,7 @@ let make = |name: &str, value: &'static str| Pool::new(Stack::new(), name, 1, mo
 let mut group = Group::new();
 group.add(make("db", "postgres")?).add(make("cache", "redis")?);
 
-let both = tokio::runtime::Builder::new_current_thread().enable_all().build()?.block_on(async {
+let both = utopia_async::run(async {
     group.with(&["db", "cache"], async |resources| Ok::<_, utopia_pools::Error>(resources.iter().map(|r| **r).collect::<Vec<_>>().join("+"))).await
 })?;
 

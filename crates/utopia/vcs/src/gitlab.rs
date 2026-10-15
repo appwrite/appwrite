@@ -386,7 +386,7 @@ impl Adapter for GitLab {
             if !matches!(response.at("patch_id_sha"), Value::Null) {
                 break;
             }
-            tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+            utopia_async::sleep(std::time::Duration::from_secs(1)).await;
         }
 
         let mut files = Vec::new();

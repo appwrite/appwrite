@@ -225,7 +225,7 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
                 let section = async {
                     let now = live.fetch_add(1, Ordering::SeqCst) + 1;
                     max.fetch_max(now, Ordering::SeqCst);
-                    tokio::time::sleep(hold).await;
+                    utopia_async::sleep(hold).await;
                     live.fetch_sub(1, Ordering::SeqCst);
                 };
                 match each!(&lock, l => l.with_lock(w, section).await) {

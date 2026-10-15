@@ -53,7 +53,7 @@ pub struct Rule {
 /// ```
 /// use utopia_abuse::{TokenBucket, token_bucket};
 ///
-/// # tokio::runtime::Builder::new_current_thread().build()?.block_on(async {
+/// # utopia_async::Builder::current_thread().build()?.block_on(async {
 /// // A full bucket of 10, refilled at 1 token every 2 seconds.
 /// let limit = TokenBucket::new("ip:{ip}", 10, 0.5, token_bucket::None)?;
 /// let verdict = limit.check_at(1_700_000_000.25).await?;

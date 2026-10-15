@@ -181,7 +181,7 @@ impl<T: Tables> TablesDb<T> {
             if self.tables.pending(&self.database, TABLE_ID, indexes).await? == 0 {
                 return Ok(());
             }
-            tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+            utopia_async::sleep(std::time::Duration::from_secs(1)).await;
         }
         Err(Error::Exception(format!("Failed to setup {}.", if indexes { "indexes" } else { "columns" })))
     }

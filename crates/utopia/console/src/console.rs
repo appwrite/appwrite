@@ -207,7 +207,7 @@ pub fn is_interactive() -> bool {
 /// `time()`. PHP's engine errors (`\Error`) skip `$onError`; Rust has none.
 ///
 /// ```
-/// # tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap().block_on(async {
+/// # utopia_async::run(async {
 /// use std::time::Duration;
 /// use utopia_console::repeat;
 ///
@@ -254,7 +254,7 @@ where
     H: FnMut(E) -> Result<(), E>,
 {
     if !delay.is_zero() {
-        tokio::time::sleep(delay).await;
+        utopia_async::sleep(delay).await;
     }
     loop {
         let start = Instant::now();
@@ -267,7 +267,7 @@ where
         let spent = Duration::from_secs(start.elapsed().as_secs());
         let pause = sleep.saturating_sub(spent);
         if !pause.is_zero() {
-            tokio::time::sleep(pause).await;
+            utopia_async::sleep(pause).await;
         }
     }
 }

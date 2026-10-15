@@ -92,7 +92,7 @@ impl<T: Store + ?Sized> Store for Arc<T> {
 /// ```
 /// use utopia_schedule::{Claim, MemoryStore, Store};
 ///
-/// # tokio::runtime::Builder::new_current_thread().build()?.block_on(async {
+/// # utopia_async::Builder::current_thread().build()?.block_on(async {
 /// let store = MemoryStore::new();
 /// assert!(store.swap(None, &Claim::new("leader", 100.5, None, None)).await?);
 /// assert!(!store.swap(None, &Claim::new("standby", 200.0, None, None)).await?);

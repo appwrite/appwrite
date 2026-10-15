@@ -1,6 +1,6 @@
 {
   "lib": "mqtt",
-  "description": "utopia-php/mqtt: MQTT 5.0 and 3.1.1 brokers: the packet codec (V3/V5 encoders, decoded packets, properties), a subscription trie, per-connection delivery state, a broker over adapters (Swoole on TCP, TLS and WebSocket with a timing wheel; Rust: Tokio, Memory), and a client.",
+  "description": "utopia-php/mqtt: MQTT 5.0 and 3.1.1 brokers: the packet codec (V3/V5 encoders, decoded packets, properties), a subscription trie, per-connection delivery state, a broker over adapters (Swoole on TCP, TLS and WebSocket with a timing wheel; Rust: Network, Memory), and a client.",
   "complete": true,
   "php": {
     "src": [
@@ -1367,7 +1367,7 @@
       ]
     },
     "swoole.new": {
-      "doc": "new Swoole([]) (Rust: Tokio::new): the constructor's argument check; with listeners it is exercised by e2e.run",
+      "doc": "new Swoole([]) (Rust: Network::new): the constructor's argument check; with listeners it is exercised by e2e.run",
       "covers": [
         "Utopia\\Mqtt\\Adapter\\Swoole::__construct"
       ]
@@ -1418,7 +1418,7 @@
       ]
     },
     "e2e.run": {
-      "doc": "starts a broker on the network adapter, runs client steps against it and stops it. mode `fixture`: tests/compat/mqtt/server.php's fixture handlers (packages/mqtt's E2E fixture) on Swoole (Rust: the same handlers on Tokio); mode `broker`: a Server with the Recorder handler and a one-second TimingWheel. Listeners: TCP, WebSocket and, when services.sh wrote the certificate, TLS. Steps (see session() in Adapter.php): connect, send, receive, connected, close, listen, log, ws_connect, ws_send, ws_receive, ws_close, sleep",
+      "doc": "starts a broker on the network adapter, runs client steps against it and stops it. mode `fixture`: tests/compat/mqtt/server.php's fixture handlers (packages/mqtt's E2E fixture) on Swoole (Rust: the same handlers on Network); mode `broker`: a Server with the Recorder handler and a one-second TimingWheel. Listeners: TCP, WebSocket and, when services.sh wrote the certificate, TLS. Steps (see session() in Adapter.php): connect, send, receive, connected, close, listen, log, ws_connect, ws_send, ws_receive, ws_close, sleep",
       "covers": [
         "Utopia\\Mqtt\\Adapter\\Swoole::start",
         "Utopia\\Mqtt\\Adapter\\Swoole::shutdown",
@@ -2226,7 +2226,7 @@
     {
       "symbol": "Utopia\\Mqtt\\Adapter\\Swoole::__construct",
       "php": "The Swoole server runs `workers` worker processes (one Swoole\\Server per process, bound when constructed; a WebSocket transport is made the primary port), and a TLS listener's certificate errors are Swoole's at start.",
-      "reason": "Tokio serves every listener on the runtime it starts on, binds in start() (Error::Runtime `Could not listen on host:port.` for an address in use, or for a certificate it cannot load), and calls the worker start hook once per worker id."
+      "reason": "Network serves every listener on the runtime it starts on, binds in start() (Error::Runtime `Could not listen on host:port.` for an address in use, or for a certificate it cannot load), and calls the worker start hook once per worker id."
     }
   ],
   "bench": {

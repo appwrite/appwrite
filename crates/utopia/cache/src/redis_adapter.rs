@@ -24,7 +24,7 @@ use crate::{Codec, Envelope, Error, Json, Result};
 /// use php_std::types::Value;
 /// use utopia_cache::{Adapter, Redis};
 ///
-/// # tokio::runtime::Runtime::new()?.block_on(async {
+/// # utopia_async::Runtime::new()?.block_on(async {
 /// let client = redis::Client::open("redis://localhost:6379")?;
 /// let cache = Redis::new(client.get_connection_manager().await?);
 /// cache.save("docs:user:1", &Value::from("Ada"), "", 0).await?;

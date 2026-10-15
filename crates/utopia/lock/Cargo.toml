@@ -14,10 +14,8 @@ php-std.workspace = true
 redis.workspace = true
 rustix.workspace = true
 thiserror.workspace = true
-tokio = { workspace = true, features = ["sync", "time"] }
+utopia-async.workspace = true
 
-[dev-dependencies]
-tokio = { workspace = true, features = ["rt", "macros", "time", "sync"] }
 
 [package.metadata.utopia]
 category = "platform"

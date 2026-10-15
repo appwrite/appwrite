@@ -13,10 +13,10 @@ use rustls::crypto::CryptoProvider;
 use rustls::pki_types::pem::PemObject;
 use rustls::pki_types::{CertificateDer, ServerName, UnixTime};
 use rustls::{ClientConfig, DigitallySignedStruct, RootCertStore, SignatureScheme};
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio::net::TcpStream;
 use tokio_rustls::TlsConnector;
 use tokio_rustls::client::TlsStream;
+use utopia_async::io::{AsyncReadExt, AsyncWriteExt};
+use utopia_async::net::TcpStream;
 
 use crate::{Error, Tls, Verification};
 
@@ -68,7 +68,7 @@ enum Stream {
     Tls(Box<TlsStream<TcpStream>>),
 }
 
-/// TCP on tokio, with TLS by rustls.
+/// TCP on utopia-async, with TLS by rustls.
 ///
 /// PHP: `Utopia\SMTP\Transport\Native` and `Transport\Swoole`, which this
 /// one replaces: both are the same promise on PHP's two I/O models.
@@ -134,7 +134,7 @@ impl Transport for TcpTransport {
             let reason = format!("Cannot reach {target}: {error}");
             if started.elapsed() >= timeout { Error::Timeout(reason) } else { Error::Connection(reason) }
         };
-        let tcp = match tokio::time::timeout(timeout, TcpStream::connect((self.host.as_str(), self.port))).await {
+        let tcp = match utopia_async::timeout(timeout, TcpStream::connect((self.host.as_str(), self.port))).await {
             Ok(Ok(tcp)) => tcp,
             Ok(Err(e)) => return Err(reason(os_error(&e))),
             Err(_) => return Err(reason("Connection timed out".into())),
@@ -143,7 +143,7 @@ impl Transport for TcpTransport {
         let stream = if tls {
             let (connector, name) = self.connector()?;
             let left = timeout.saturating_sub(started.elapsed());
-            match tokio::time::timeout(left, connector.connect(name, tcp)).await {
+            match utopia_async::timeout(left, connector.connect(name, tcp)).await {
                 Ok(Ok(stream)) => Stream::Tls(Box::new(stream)),
                 Ok(Err(e)) => return Err(reason(os_error(&e))),
                 Err(_) => return Err(reason("Connection timed out".into())),
@@ -163,8 +163,8 @@ impl Transport for TcpTransport {
         let start = buffer.len();
         buffer.resize(start + length, 0);
         let read = match stream {
-            Stream::Plain(s) => tokio::time::timeout(timeout, s.read(&mut buffer[start..])).await,
-            Stream::Tls(s) => tokio::time::timeout(timeout, s.read(&mut buffer[start..])).await,
+            Stream::Plain(s) => utopia_async::timeout(timeout, s.read(&mut buffer[start..])).await,
+            Stream::Tls(s) => utopia_async::timeout(timeout, s.read(&mut buffer[start..])).await,
         };
         let n = match read {
             Ok(Ok(n)) => n,
@@ -184,9 +184,9 @@ impl Transport for TcpTransport {
     async fn write(&mut self, data: &[u8], timeout: Duration) -> Result<(), Error> {
         let stream = self.stream.as_mut().ok_or_else(Self::not_connected)?;
         let written = match stream {
-            Stream::Plain(s) => tokio::time::timeout(timeout, s.write_all(data)).await,
+            Stream::Plain(s) => utopia_async::timeout(timeout, s.write_all(data)).await,
             Stream::Tls(s) => {
-                tokio::time::timeout(timeout, async {
+                utopia_async::timeout(timeout, async {
                     s.write_all(data).await?;
                     s.flush().await
                 })
@@ -210,7 +210,7 @@ impl Transport for TcpTransport {
             None => return Err(Self::not_connected()),
         };
         let (connector, name) = self.connector()?;
-        match tokio::time::timeout(timeout, connector.connect(name, tcp)).await {
+        match utopia_async::timeout(timeout, connector.connect(name, tcp)).await {
             Ok(Ok(stream)) => {
                 self.stream = Some(Stream::Tls(Box::new(stream)));
                 Ok(())

@@ -497,7 +497,7 @@ impl Retry {
     pub(crate) async fn pause(&self) {
         // usleep() with a negative delay does not sleep.
         if self.delay_ms > 0 {
-            tokio::time::sleep(std::time::Duration::from_millis(self.delay_ms as u64)).await;
+            utopia_async::sleep(std::time::Duration::from_millis(self.delay_ms as u64)).await;
         }
     }
 }

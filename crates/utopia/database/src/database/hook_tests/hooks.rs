@@ -211,11 +211,11 @@ fn a_named_silence_is_scoped_to_its_task() {
         let audits = Recorder::named("audits");
         db.add_hook(Hook::lifecycle(audits.clone())).unwrap();
 
-        let (entered, wait_entered) = tokio::sync::oneshot::channel::<()>();
-        let (release, released) = tokio::sync::oneshot::channel::<()>();
+        let (entered, wait_entered) = utopia_async::sync::oneshot::channel::<()>();
+        let (release, released) = utopia_async::sync::oneshot::channel::<()>();
         let silenced = {
             let db = db.clone();
-            tokio::spawn(async move {
+            utopia_async::spawn(async move {
                 db.silent_hooks(&["audits"], async {
                     db.get_collection(COLLECTION).await.unwrap();
                     entered.send(()).unwrap();
@@ -226,7 +226,7 @@ fn a_named_silence_is_scoped_to_its_task() {
         };
         let other = {
             let db = db.clone();
-            tokio::spawn(async move {
+            utopia_async::spawn(async move {
                 wait_entered.await.unwrap();
                 db.list_collections(25, 0).await.unwrap();
                 release.send(()).unwrap();
@@ -594,12 +594,12 @@ type Scope =
 /// from inside it, from the parent and from a sibling task while it is
 /// open, and from the parent after it closed.
 async fn while_a_sibling_is_inside(scope: Scope, read: Arc<dyn Fn() -> bool + Send + Sync>) -> [bool; 4] {
-    let (entered, wait_entered) = tokio::sync::oneshot::channel::<()>();
-    let (release, released) = tokio::sync::oneshot::channel::<()>();
+    let (entered, wait_entered) = utopia_async::sync::oneshot::channel::<()>();
+    let (release, released) = utopia_async::sync::oneshot::channel::<()>();
     let inside = Arc::new(Mutex::new(None));
     let task = {
         let (inside, read) = (inside.clone(), read.clone());
-        tokio::spawn(scope(Box::pin(async move {
+        utopia_async::spawn(scope(Box::pin(async move {
             *inside.lock().unwrap() = Some(read());
             entered.send(()).unwrap();
             released.await.unwrap();
@@ -609,7 +609,7 @@ async fn while_a_sibling_is_inside(scope: Scope, read: Arc<dyn Fn() -> bool + Se
     let parent = read();
     let sibling = {
         let read = read.clone();
-        tokio::spawn(async move { read() }).await.unwrap()
+        utopia_async::spawn(async move { read() }).await.unwrap()
     };
     release.send(()).unwrap();
     task.await.unwrap();
@@ -686,7 +686,7 @@ fn a_snapshot_carries_the_callers_state_into_a_task_that_outlives_it() {
             db.authorization().skip(db.skip_relationships(db.silent_hooks(&["audits"], async { db.snapshot() }))).await;
         let seen = {
             let (db, hook) = (db.clone(), hook.clone());
-            tokio::spawn(async move {
+            utopia_async::spawn(async move {
                 db.with_snapshot(&snapshot, async {
                     let seen = (db.authorization().status(), hook.is_enabled());
                     db.get_collection(COLLECTION).await.unwrap();

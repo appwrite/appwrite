@@ -133,6 +133,20 @@ pub use timer::Timer;
 /// PHP: a PHPUnit test whose body runs in `Swoole\Coroutine\run()`.
 pub use utopia_async_macros::test;
 
+/// Runs an async `main` to its end on a new runtime: single-threaded, or
+/// multi-threaded with `threads = N` workers.
+///
+/// ```
+/// #[utopia_async::main]
+/// async fn main() {
+///     let task = utopia_async::spawn(async { "hello" });
+///     assert_eq!(task.await.unwrap(), "hello");
+/// }
+/// ```
+///
+/// PHP: a script whose body runs in `Swoole\Coroutine\run()`.
+pub use utopia_async_macros::main;
+
 /// Waits on several futures at once and runs the branch of the first to
 /// complete, dropping the others.
 #[doc(inline)]

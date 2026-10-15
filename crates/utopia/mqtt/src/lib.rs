@@ -14,7 +14,7 @@
 //! - **Connections.** [`Connection`] holds what CONNECT negotiated and the
 //!   delivery state of QoS 1 messages: packet ids, messages in flight, and a
 //!   per-topic cursor of the sequences acknowledged without a gap.
-//! - **The broker.** [`Server`] runs on an [`Adapter`] ([`Tokio`] on TCP, TLS
+//! - **The broker.** [`Server`] runs on an [`Adapter`] ([`Network`] on TCP, TLS
 //!   and WebSocket listeners; [`Memory`] in process, for tests) and asks a
 //!   [`Handler`] what to do with each CONNECT, AUTH, SUBSCRIBE, UNSUBSCRIBE,
 //!   PUBLISH, PUBACK and DISCONNECT, keeps the store, answers PINGREQ and
@@ -91,15 +91,15 @@
 //! | `Utopia\Mqtt\Handler` | [`Handler`] (trait; replies [`server::ConnectReply`], [`server::AuthReply`]) |
 //! | `Utopia\Mqtt\Server` (`setTelemetry()`, `onStart()`, `onWorkerStart()`, `onStop()`, `error()`, `start()`, `stop()`, `subscribers()`, `unsubscribe()`) | [`Server`] ([`Server::set_telemetry`], [`Server::on_start`], [`Server::on_worker_start`], [`Server::on_stop`], [`Server::error`], [`Server::start`] (async), [`Server::stop`], [`Server::subscribers`], [`Server::unsubscribe`]) |
 //! | `Utopia\Mqtt\Adapter` (abstract class) | [`Adapter`] (trait), with [`Outbound`] (`send()`, `close()`) |
-//! | `Utopia\Mqtt\Adapter\Swoole` | [`Tokio`] |
+//! | `Utopia\Mqtt\Adapter\Swoole` | [`Network`] |
 //! | `Adapter\Swoole\Transport`, `Tcp`, `Tls`, `WebSocket` (`getSockType()`, `getSettings()`) | [`Transport`] ([`Transport::tcp`], [`Transport::tls`], [`Transport::websocket`], [`Transport::max_packet_size`]) |
 //! | `Adapter\Swoole\Timer`, `Timers\TimingWheel`, `Timers\NoTimer` | [`Timer`] (trait), [`TimingWheel`], [`NoTimer`] |
 //! | none (the compat suite's `tests/compat/mqtt/Memory.php`) | [`Memory`] |
 //! | `Utopia\Mqtt\Client` | [`Client`] ([`client::Options`]) |
 //! | `\RuntimeException`, `\InvalidArgumentException`, `\TypeError` | [`Error::Runtime`], [`Error::InvalidArgument`], [`Error::Type`] |
 //!
-//! PHP's Swoole adapter runs a Swoole server with worker processes; [`Tokio`]
-//! serves every listener on the tokio runtime it is started on and calls the
+//! PHP's Swoole adapter runs a Swoole server with worker processes; [`Network`]
+//! serves every listener on the runtime it is started on and calls the
 //! worker start hook once per configured worker id. Swoole's settings
 //! arrays (`getSettings()`) and socket types (`getSockType()`) are the
 //! variants of [`Transport`].
@@ -107,12 +107,12 @@
 #![warn(missing_docs)]
 
 pub mod adapter;
-#[cfg(feature = "tokio")]
+#[cfg(feature = "network")]
 pub mod client;
 mod connection;
 mod error;
 pub mod memory;
-#[cfg(feature = "tokio")]
+#[cfg(feature = "network")]
 pub mod net;
 pub mod packet;
 mod property;
@@ -123,13 +123,13 @@ mod timer;
 pub mod wire;
 
 pub use adapter::{Adapter, Outbound, Timer};
-#[cfg(feature = "tokio")]
+#[cfg(feature = "network")]
 pub use client::Client;
 pub use connection::{Ack, Connection, State};
 pub use error::Error;
 pub use memory::Memory;
-#[cfg(feature = "tokio")]
-pub use net::{Tokio, Transport};
+#[cfg(feature = "network")]
+pub use net::{Network, Transport};
 pub use packet::Packet;
 pub use property::{Properties, Property, Value, WireType};
 pub use server::{Handler, Server};

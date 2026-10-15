@@ -163,7 +163,7 @@ impl Sql {
         Sql {
             state: State::default(),
             engine,
-            connection: tokio::sync::Mutex::new(pdo),
+            connection: utopia_async::sync::Mutex::new(pdo),
             float_precision: Mutex::new(17),
             timeouts: TimeoutState::default(),
             engine_state: Mutex::new(EngineState { local_timeout: Some(0), ..EngineState::default() }),
@@ -177,7 +177,7 @@ impl Sql {
     }
 
     /// The connection, for a caller that runs its own statements on it.
-    pub fn pdo(&self) -> &tokio::sync::Mutex<pdo::Pdo> {
+    pub fn pdo(&self) -> &utopia_async::sync::Mutex<pdo::Pdo> {
         &self.connection
     }
 

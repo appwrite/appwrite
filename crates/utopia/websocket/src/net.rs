@@ -11,14 +11,14 @@ use std::time::Duration;
 use bytes::{Bytes, BytesMut};
 use futures_util::future::BoxFuture;
 use futures_util::{SinkExt, StreamExt};
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio::net::{TcpListener, TcpStream};
-use tokio::sync::{Notify, mpsc, watch};
 use tokio_tungstenite::tungstenite::error::ProtocolError;
 use tokio_tungstenite::tungstenite::handshake::derive_accept_key;
 use tokio_tungstenite::tungstenite::protocol::{Role, WebSocketConfig};
 use tokio_tungstenite::tungstenite::{self, Message, Utf8Bytes};
 use tokio_tungstenite::{MaybeTlsStream, WebSocketStream};
+use utopia_async::io::{AsyncReadExt, AsyncWriteExt};
+use utopia_async::net::{TcpListener, TcpStream};
+use utopia_async::sync::{Notify, mpsc, watch};
 
 use crate::Error;
 use crate::adapter::{
@@ -39,7 +39,7 @@ const MAX_CONNECTIONS: i64 = 1_000_000;
 /// The largest HTTP request head read before a request is refused.
 const MAX_HEAD: usize = 64 * 1024;
 
-/// The configuration a [`Tokio`] server starts with.
+/// The configuration a [`Network`] server starts with.
 ///
 /// PHP: the Swoole server settings the adapter passes to `Server::set()`
 /// (`max_connection`, `send_timeout`, `package_max_length`,
@@ -58,7 +58,7 @@ pub struct Config {
     /// `permessage-deflate`, so messages are sent uncompressed either way.
     pub compression: Option<bool>,
     /// The number of workers: the worker hooks are called once per worker
-    /// id (one worker when unset). Every worker shares the tokio runtime.
+    /// id (one worker when unset). Every worker shares the runtime.
     pub workers: Option<i64>,
 }
 
@@ -78,7 +78,7 @@ struct Inner {
     addr: watch::Sender<Option<SocketAddr>>,
 }
 
-/// A WebSocket server on the network, on tokio.
+/// A WebSocket server on the network.
 ///
 /// [`start`](Adapter::start) listens on the host and port, calls the start
 /// hook and the worker start hook for each worker, then serves until
@@ -103,10 +103,10 @@ struct Inner {
 /// spec (`$code` is ignored by both PHP adapters).
 ///
 /// ```no_run
-/// use utopia_websocket::{Server, Tokio};
+/// use utopia_websocket::{Server, Network};
 ///
 /// # async fn run() -> Result<(), utopia_websocket::Error> {
-/// let adapter = Tokio::new("0.0.0.0", 8080, 5.0)?;
+/// let adapter = Network::new("0.0.0.0", 8080, 5.0)?;
 /// let server = Server::new(adapter);
 /// let replies = server.clone();
 /// server
@@ -132,13 +132,13 @@ struct Inner {
 ///
 /// PHP: `Utopia\WebSocket\Adapter\Swoole` (and `Adapter\Workerman`).
 #[derive(Clone)]
-pub struct Tokio {
+pub struct Network {
     inner: Arc<Inner>,
 }
 
-impl Tokio {
+impl Network {
     /// A server for `host` and `port` (`0` picks a free port; see
-    /// [`Tokio::local_addr`]) whose sends wait at most `send_timeout`
+    /// [`Network::local_addr`]) whose sends wait at most `send_timeout`
     /// seconds.
     ///
     /// Fails with [`Error::InvalidArgument`] when `send_timeout` is not a
@@ -214,7 +214,7 @@ impl Tokio {
     }
 }
 
-impl Adapter for Tokio {
+impl Adapter for Network {
     async fn start(&self) -> Result<(), Error> {
         let listener = TcpListener::bind((self.inner.host.as_str(), self.inner.port)).await.map_err(|e| {
             Error::Exception(format!("failed to listen server port[{}:{}]: {e}", self.inner.host, self.inner.port))
@@ -233,9 +233,9 @@ impl Adapter for Tokio {
             }
         }
         let stopped = self.inner.stop.notified();
-        tokio::pin!(stopped);
+        utopia_async::pin!(stopped);
         loop {
-            tokio::select! {
+            utopia_async::select! {
                 () = &mut stopped => break,
                 accepted = listener.accept() => {
                     let Ok((stream, _)) = accepted else { continue };
@@ -243,7 +243,7 @@ impl Adapter for Tokio {
                         continue;
                     }
                     let _ = stream.set_nodelay(true);
-                    tokio::spawn(serve(self.clone(), hooks.clone(), config, stream));
+                    utopia_async::spawn(serve(self.clone(), hooks.clone(), config, stream));
                 }
             }
         }
@@ -326,7 +326,7 @@ impl Adapter for Tokio {
 
 /// Reads the request head (and body), then serves a WebSocket connection
 /// or answers a plain HTTP request.
-async fn serve(server: Tokio, hooks: Arc<Hooks>, config: Config, mut stream: TcpStream) {
+async fn serve(server: Network, hooks: Arc<Hooks>, config: Config, mut stream: TcpStream) {
     let mut buffer = BytesMut::with_capacity(4096);
     let (request, head) = loop {
         if stream.read_buf(&mut buffer).await.unwrap_or(0) == 0 {
@@ -401,7 +401,7 @@ async fn plain(hooks: &Hooks, mut stream: TcpStream, mut request: Request, mut b
 }
 
 async fn websocket(
-    server: Tokio,
+    server: Network,
     hooks: Arc<Hooks>,
     config: Config,
     mut stream: TcpStream,
@@ -429,7 +429,7 @@ async fn websocket(
     }
     let timeout = Duration::from_secs_f64(config.send_timeout);
     loop {
-        tokio::select! {
+        utopia_async::select! {
             incoming = ws.next() => match incoming {
                 Some(Ok(Message::Text(text))) => {
                     if let Some(hook) = &hooks.message {
@@ -447,7 +447,7 @@ async fn websocket(
             command = commands.recv() => match command {
                 Some(Command::Send(data)) => {
                     let message = text(data);
-                    match tokio::time::timeout(timeout, ws.send(message)).await {
+                    match utopia_async::timeout(timeout, ws.send(message)).await {
                         Ok(Ok(())) => {}
                         Ok(Err(_)) => break,
                         Err(_) => {
@@ -461,7 +461,7 @@ async fn websocket(
                 Some(Command::Close) => {
                     // As Swoole's close($fd): the queued output is written,
                     // then the TCP connection ends without a close frame.
-                    let _ = tokio::time::timeout(timeout, ws.get_mut().shutdown()).await;
+                    let _ = utopia_async::timeout(timeout, ws.get_mut().shutdown()).await;
                     break;
                 }
                 None => break,
@@ -488,7 +488,7 @@ fn text(data: Bytes) -> Message {
 }
 
 /// The client's network transport.
-pub(crate) struct Network {
+pub(crate) struct Wire {
     ws: WebSocketStream<MaybeTlsStream<TcpStream>>,
     /// The server ended the connection: the first receive after that
     /// reports nothing, the next ones [`NO_CONNECTION`], as Swoole's client.
@@ -536,7 +536,7 @@ pub(crate) async fn connect(
     path: &str,
     headers: &[(String, String)],
     timeout: Duration,
-) -> Result<Network, TransportError> {
+) -> Result<Wire, TransportError> {
     let scheme = if port == 443 { "wss" } else { "ws" };
     let mut builder = http::Request::builder()
         .uri(format!("{scheme}://{host}:{port}{path}"))
@@ -550,7 +550,7 @@ pub(crate) async fn connect(
     }
     let request = builder.body(()).map_err(|e| TransportError::new(0, e.to_string()))?;
     let config = WebSocketConfig::default().max_frame_size(Some(32 * 1024 * 1024));
-    let addrs = match tokio::time::timeout(timeout, tokio::net::lookup_host((host, port))).await {
+    let addrs = match utopia_async::timeout(timeout, utopia_async::net::lookup_host((host, port))).await {
         Ok(Ok(addrs)) => addrs.collect::<Vec<_>>(),
         Ok(Err(_)) => return Err(TransportError::new(711, "DNS Lookup resolve failed")),
         Err(_) => return Err(TransportError::new(TIMED_OUT, "Connection timed out")),
@@ -558,27 +558,27 @@ pub(crate) async fn connect(
     let Some(addr) = addrs.first() else {
         return Err(TransportError::new(711, "DNS Lookup resolve failed"));
     };
-    let stream = match tokio::time::timeout(timeout, TcpStream::connect(addr)).await {
+    let stream = match utopia_async::timeout(timeout, TcpStream::connect(addr)).await {
         Ok(Ok(stream)) => stream,
         Ok(Err(e)) => return Err(errno(&e)),
         Err(_) => return Err(TransportError::new(TIMED_OUT, "Connection timed out")),
     };
     let _ = stream.set_nodelay(true);
     let handshake = tokio_tungstenite::client_async_tls_with_config(request, stream, Some(config), None);
-    match tokio::time::timeout(timeout, handshake).await {
-        Ok(Ok((ws, _))) => Ok(Network { ws, ended: false }),
+    match utopia_async::timeout(timeout, handshake).await {
+        Ok(Ok((ws, _))) => Ok(Wire { ws, ended: false }),
         Ok(Err(e)) => Err(failure(e)),
         Err(_) => Err(TransportError::new(TIMED_OUT, "Connection timed out")),
     }
 }
 
-impl Transport for Network {
+impl Transport for Wire {
     fn recv(&mut self, timeout: Duration) -> BoxFuture<'_, Received> {
         Box::pin(async move {
             if self.ended {
                 return Received::Failed(gone());
             }
-            match tokio::time::timeout(timeout, self.ws.next()).await {
+            match utopia_async::timeout(timeout, self.ws.next()).await {
                 Err(_) => Received::Failed(TransportError::new(TIMED_OUT, "Connection timed out")),
                 Ok(None)
                 | Ok(Some(Err(
@@ -624,7 +624,7 @@ impl Transport for Network {
 
     fn close(&mut self) -> BoxFuture<'_, ()> {
         Box::pin(async move {
-            let _ = tokio::time::timeout(Duration::from_secs(1), self.ws.close(None)).await;
+            let _ = utopia_async::timeout(Duration::from_secs(1), self.ws.close(None)).await;
         })
     }
 }

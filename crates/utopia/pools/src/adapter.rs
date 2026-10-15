@@ -7,7 +7,7 @@ use std::future::Future;
 use std::sync::{Mutex, MutexGuard};
 use std::time::Duration;
 
-use tokio::sync::Notify;
+use utopia_async::sync::Notify;
 
 use crate::Connection;
 
@@ -88,7 +88,7 @@ impl<T: Send + Sync + 'static> Adapter<T> for Stack<T> {
     async fn pop(&self, _timeout: Duration) -> Option<Connection<T>> {
         let popped = lock(&self.items).pop();
         if popped.is_none() {
-            tokio::task::yield_now().await;
+            utopia_async::yield_now().await;
         }
         popped
     }
@@ -160,7 +160,7 @@ impl<T: Send + Sync + 'static> Adapter<T> for Channel<T> {
             return self.take();
         }
         let budget = if timeout.is_zero() { POLL } else { timeout };
-        let _ = tokio::time::timeout(budget, self.signal.notified()).await;
+        let _ = utopia_async::timeout(budget, self.signal.notified()).await;
         if self.count() > 0 { self.take() } else { None }
     }
 

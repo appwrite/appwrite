@@ -221,7 +221,7 @@ fn build_envelope(message: &Message) -> String {
 ///
 /// let adapter = OpenSrs::new("key", "reseller", "secret", "horizon.opensrs.net:55443", Some(Arc::new(Recorded)));
 /// let registrar = Registrar::new(adapter);
-/// let availability = tokio::runtime::Runtime::new()?.block_on(registrar.available(&["my-app.net".to_owned()]))?;
+/// let availability = utopia_async::Runtime::new()?.block_on(registrar.available(&["my-app.net".to_owned()]))?;
 /// assert_eq!(availability["my-app.net"], true);
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```

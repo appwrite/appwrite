@@ -1,6 +1,6 @@
 [package]
 name = "utopia-websocket"
-description = "WebSocket servers behind one adapter interface (Tokio, in-memory), with hooks, fan-out sends and error stages, and a WebSocket client."
+description = "WebSocket servers behind one adapter interface (Network, in-memory), with hooks, fan-out sends and error stages, and a WebSocket client."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -9,10 +9,10 @@ repository = "https://github.com/utopia-rs/websocket"
 publish.workspace = true
 
 [features]
-default = ["tokio"]
-# The network adapter (`Tokio`) and the client's network transport
-# (`Client::connect`), on tokio and tokio-tungstenite.
-tokio = ["dep:tokio", "dep:tokio-tungstenite", "dep:httparse"]
+default = ["network"]
+# The network adapter (`Network`) and the client's network transport
+# (`Client::connect`), on utopia-async and tokio-tungstenite.
+network = ["dep:utopia-async", "dep:tokio-tungstenite", "dep:httparse"]
 
 [dependencies]
 bytes.workspace = true
@@ -22,11 +22,11 @@ indexmap.workspace = true
 php-std.workspace = true
 thiserror.workspace = true
 httparse = { workspace = true, optional = true }
-tokio = { workspace = true, optional = true, features = ["net", "rt", "sync", "time", "io-util", "macros"] }
+utopia-async = { workspace = true, optional = true }
 tokio-tungstenite = { workspace = true, optional = true }
 
 [dev-dependencies]
-tokio = { workspace = true, features = ["rt", "rt-multi-thread", "macros", "net", "time", "sync", "io-util"] }
+utopia-async.workspace = true
 
 [package.metadata.utopia]
 category = "servers"

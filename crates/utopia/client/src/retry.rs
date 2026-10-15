@@ -163,7 +163,7 @@ fn random() -> f64 {
     (u64::from_le_bytes(bytes) >> 11) as f64 / (1u64 << 53) as f64
 }
 
-/// Waits between attempts. The default sleeps on tokio's timer; give your
+/// Waits between attempts. The default sleeps on the engine's timer; give your
 /// own to record or skip waits.
 ///
 /// PHP: the `Closure(float): void $sleep` of `Retry`.
@@ -172,13 +172,13 @@ pub trait Sleep: Send + Sync {
     fn sleep(&self, seconds: f64) -> impl Future<Output = ()> + Send;
 }
 
-/// Sleeps on tokio's timer.
+/// Sleeps on the engine's timer.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Timer;
 
 impl Sleep for Timer {
     async fn sleep(&self, seconds: f64) {
-        tokio::time::sleep(Duration::from_secs_f64(seconds.max(0.0))).await;
+        utopia_async::sleep(Duration::from_secs_f64(seconds.max(0.0))).await;
     }
 }
 
@@ -219,7 +219,7 @@ pub struct Retry<A, S = Backoff, W = Timer> {
 }
 
 impl<A: Adapter, S: Strategy> Retry<A, S, Timer> {
-    /// Retries `adapter` with `strategy`, sleeping on tokio's timer.
+    /// Retries `adapter` with `strategy`, sleeping on the engine's timer.
     ///
     /// PHP: `new Retry($adapter, $strategy)`.
     pub fn new(adapter: A, strategy: S) -> Retry<A, S, Timer> {

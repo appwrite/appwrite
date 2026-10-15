@@ -42,7 +42,7 @@ impl<T: Clock + ?Sized> Clock for Arc<T> {
     }
 }
 
-/// The wall clock, in UTC. Sleeping yields to the Tokio runtime.
+/// The wall clock, in UTC. Sleeping yields to the runtime.
 ///
 /// PHP: `Utopia\Schedule\Clock\System` (with Appwrite's default timezone,
 /// UTC).
@@ -60,7 +60,7 @@ impl Clock for SystemClock {
         let micros = if seconds > 0.0 { (seconds * 1_000_000.0).round().min(u64::MAX as f64) as u64 } else { 0 };
         async move {
             if micros > 0 {
-                tokio::time::sleep(Duration::from_micros(micros)).await;
+                utopia_async::sleep(Duration::from_micros(micros)).await;
             }
         }
     }

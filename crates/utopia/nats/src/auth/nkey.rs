@@ -118,10 +118,10 @@ impl CredentialsAuth {
     ///
     /// PHP: `new CredentialsAuth($credentialsFile)`.
     pub async fn from_file(path: &str) -> Result<Self> {
-        if tokio::fs::metadata(path).await.is_err() {
+        if utopia_async::fs::metadata(path).await.is_err() {
             return Err(Error::Authentication(format!("Credentials file not found: {path}")));
         }
-        let contents = tokio::fs::read(path)
+        let contents = utopia_async::fs::read(path)
             .await
             .map_err(|_| Error::Authentication(format!("Failed to read credentials file: {path}")))?;
         Self::parse(&contents)

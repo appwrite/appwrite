@@ -5,7 +5,7 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use serde_json::{Value as Json, json};
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use utopia_async::io::{AsyncReadExt, AsyncWriteExt};
 use utopia_telemetry::{
     BoxFuture, Counter, Error, Gauge, Histogram, HttpTransport, Kind, MemoryTelemetry, NoTelemetry, Number,
     ObservableGauge, OpenTelemetry, Telemetry, Transport, UpDownCounter, Value,
@@ -390,19 +390,19 @@ pub async fn call(op: &str, args: &Json, session: &mut Session) -> OpResult {
 async fn exchange(a: &Args<'_>) -> Result<Json, Fault> {
     let script: Vec<Json> =
         a.opt("script").and_then(Json::as_array).cloned().unwrap_or_else(|| vec![json!({"status": 200, "body": ""})]);
-    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.map_err(|e| Fault::new(e.to_string()))?;
+    let listener = utopia_async::net::TcpListener::bind("127.0.0.1:0").await.map_err(|e| Fault::new(e.to_string()))?;
     let port = listener.local_addr().map_err(|e| Fault::new(e.to_string()))?.port();
     let requests: Arc<Mutex<Vec<Json>>> = Arc::default();
     let server = {
         let requests = requests.clone();
-        tokio::spawn(async move {
+        utopia_async::spawn(async move {
             while let Ok((mut socket, _)) = listener.accept().await {
                 let (requests, script) = (requests.clone(), script.clone());
-                tokio::spawn(async move {
+                utopia_async::spawn(async move {
                     let mut buffer = Vec::new();
                     let mut chunk = vec![0u8; 65536];
                     loop {
-                        let read = match tokio::time::timeout(Duration::from_secs(5), socket.read(&mut chunk)).await {
+                        let read = match utopia_async::timeout(Duration::from_secs(5), socket.read(&mut chunk)).await {
                             Ok(Ok(n)) if n > 0 => n,
                             _ => return,
                         };
@@ -415,16 +415,15 @@ async fn exchange(a: &Args<'_>) -> Result<Json, Fault> {
                             };
                             if step["reset"].as_bool().unwrap_or(false) {
                                 // A zero linger resets the connection and never blocks.
-                                #[allow(deprecated)]
-                                let _ = socket.set_linger(Some(Duration::ZERO));
+                                let _ = socket.set_zero_linger();
                                 return;
                             }
                             if let Some(ms) = step["hang_ms"].as_u64() {
-                                tokio::time::sleep(Duration::from_millis(ms)).await;
+                                utopia_async::sleep(Duration::from_millis(ms)).await;
                                 return;
                             }
                             if let Some(ms) = step["delay_ms"].as_u64() {
-                                tokio::time::sleep(Duration::from_millis(ms)).await;
+                                utopia_async::sleep(Duration::from_millis(ms)).await;
                             }
                             let body = step["body"].as_str().unwrap_or("");
                             let status = step["status"].as_u64().unwrap_or(200);

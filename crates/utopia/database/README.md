@@ -74,7 +74,7 @@ use utopia_database::adapter::postgres::Postgres;
 use utopia_database::query::Method;
 use utopia_database::{Authorization, Database, Document, Query, Value};
 
-tokio::runtime::Runtime::new()?.block_on(async {
+utopia_async::Runtime::new()?.block_on(async {
     let adapter = Postgres::connect("postgres://root:password@localhost:5432/root").await?;
     let db = Database::new(Arc::new(adapter), Arc::new(Cache::from_dyn(Arc::new(Memory::new()))), Vec::new());
     let authorization = Authorization::new();
@@ -113,7 +113,7 @@ use utopia_database::adapter::mongo::{Mongo, from_client};
 use utopia_database::{Authorization, Database, Document, Value};
 use utopia_mongo::{Client, Config};
 
-tokio::runtime::Runtime::new()?.block_on(async {
+utopia_async::Runtime::new()?.block_on(async {
     let client = Client::new(Config::new("guide", "localhost", 27017, "root", "password")).map_err(from_client)?;
     let adapter = Mongo::new(Arc::new(client)).await?;
     let db = Database::new(Arc::new(adapter), Arc::new(Cache::from_dyn(Arc::new(Memory::new()))), Vec::new());

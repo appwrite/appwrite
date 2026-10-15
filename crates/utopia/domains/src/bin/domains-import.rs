@@ -144,7 +144,7 @@ fn main() -> ExitCode {
     let dir =
         PathBuf::from(env_or("UTOPIA_DOMAINS_DATA_DIR", || concat!(env!("CARGO_MANIFEST_DIR"), "/data").to_owned()));
 
-    let runtime = match tokio::runtime::Builder::new_current_thread().enable_all().build() {
+    let runtime = match utopia_async::Builder::current_thread().build() {
         Ok(runtime) => runtime,
         Err(e) => return fail(&e.to_string()),
     };

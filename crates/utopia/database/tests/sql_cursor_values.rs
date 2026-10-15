@@ -25,7 +25,7 @@ async fn find(cursor: Value, order: OrderDirection) -> utopia_database::Error {
     adapter.find(&collection, vec![], options).await.unwrap_err()
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn a_null_or_list_cursor_value_is_a_type_error() {
     let error = find(Value::Null, OrderDirection::Asc).await;
     assert_eq!(error.kind(), Kind::TypeError);

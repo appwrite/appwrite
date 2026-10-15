@@ -1,4 +1,4 @@
-A queue hands work from the code that asks for it to workers that do it later. This library writes each piece of work as a message on a broker (Redis, a Redis Cluster or NATS JetStream), delivers it at least once to a worker, and keeps every failure recoverable: a rejected message waits on a failed list or a dead stream, and a worker that dies mid-job leaves its claim for the next one to reclaim. Brokers and workers are async, so the examples run on a Tokio runtime; the ones that need a server only compile here. This guide covers the common tasks.
+A queue hands work from the code that asks for it to workers that do it later. This library writes each piece of work as a message on a broker (Redis, a Redis Cluster or NATS JetStream), delivers it at least once to a worker, and keeps every failure recoverable: a rejected message waits on a failed list or a dead stream, and a worker that dies mid-job leaves its claim for the next one to reclaim. Brokers and workers are async, so the examples run with `utopia_async::run`; the ones that need a server only compile here. This guide covers the common tasks.
 
 ## Name a queue
 
@@ -37,7 +37,7 @@ use utopia_queue::broker::Redis;
 use utopia_queue::connection::{Locking, Redis as Connection};
 use utopia_queue::{Publisher, Queue, payload};
 
-tokio::runtime::Runtime::new()?.block_on(async {
+utopia_async::Runtime::new()?.block_on(async {
     let broker = Redis::new(
         Arc::new(Connection::new("localhost", 6379)),
         Arc::new(Locking::new(Connection::new("localhost", 6379))),
@@ -81,7 +81,7 @@ use utopia_queue::broker::Redis;
 use utopia_queue::connection::{Locking, Redis as Connection};
 use utopia_queue::{Consumer, Publisher, Queue};
 
-tokio::runtime::Runtime::new()?.block_on(async {
+utopia_async::Runtime::new()?.block_on(async {
     let broker = Redis::new(
         Arc::new(Connection::new("localhost", 6379)),
         Arc::new(Locking::new(Connection::new("localhost", 6379))),
@@ -196,7 +196,7 @@ use utopia_queue::connection::{Locking, Redis as Connection};
 use utopia_queue::{Error, Server};
 use utopia_validators::Text;
 
-tokio::runtime::Runtime::new()?.block_on(async {
+utopia_async::Runtime::new()?.block_on(async {
     let broker = Arc::new(Redis::new(
         Arc::new(Connection::new("localhost", 6379)),
         Arc::new(Locking::new(Connection::new("localhost", 6379))),
@@ -257,7 +257,7 @@ use utopia_queue::broker::Redis;
 use utopia_queue::connection::{Locking, Redis as Connection};
 use utopia_queue::Queue;
 
-tokio::runtime::Runtime::new()?.block_on(async {
+utopia_async::Runtime::new()?.block_on(async {
     let broker = Redis::new(
         Arc::new(Connection::new("localhost", 6379)),
         Arc::new(Locking::new(Connection::new("localhost", 6379))),
@@ -295,7 +295,7 @@ use utopia_queue::broker::{Background, Redis};
 use utopia_queue::connection::{Locking, Redis as Connection};
 use utopia_queue::{AsyncPublisher, Queue, payload};
 
-tokio::runtime::Runtime::new()?.block_on(async {
+utopia_async::Runtime::new()?.block_on(async {
     let redis = Arc::new(Redis::new(
         Arc::new(Connection::new("localhost", 6379)),
         Arc::new(Locking::new(Connection::new("localhost", 6379))),
@@ -344,7 +344,7 @@ The NATS broker keeps each queue as a work-queue stream with a durable pull cons
 use utopia_queue::broker::{Nats, NatsConfig};
 use utopia_queue::{Consumer, Publisher, Queue, payload};
 
-tokio::runtime::Runtime::new()?.block_on(async {
+utopia_async::Runtime::new()?.block_on(async {
     let config = NatsConfig { ack_wait: 30.0, max_deliver: 5, backoff: Some(vec![30.0, 60.0, 120.0]), max_ack_pending: Some(64), ..Default::default() };
     let broker = Nats::new("nats://localhost:4222", config)?;
     let audits = Queue::new("audits")?;

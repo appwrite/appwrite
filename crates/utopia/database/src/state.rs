@@ -9,7 +9,7 @@
 //! it ends; outside every override it changes the handle-wide value.
 //!
 //! Overrides live in a task-local stack of frames, so they follow the
-//! future, not the thread. A task spawned with `tokio::spawn` starts
+//! future, not the thread. A task spawned with `utopia_async::spawn` starts
 //! outside every override; to run it under the caller's, wrap it with
 //! [`inherit`] (PHP's child coroutines inherit their parent's scopes; Rust
 //! tasks inherit what they are given). As a PHP child coroutine does, an
@@ -53,7 +53,7 @@ enum Link {
 /// The frames a future runs under.
 type Frames = Option<Arc<Frame>>;
 
-tokio::task_local! {
+utopia_async::task_local! {
     static FRAMES: Frames;
 }
 
@@ -72,13 +72,13 @@ fn current() -> Frames {
 /// use std::sync::Arc;
 /// use utopia_database::state::{Scoped, inherit};
 ///
-/// # tokio_test_block(async {
+/// # block(async {
 /// let tenant = Arc::new(Scoped::new(1));
 /// let (seen, after) = tenant.with(2, {
 ///     let tenant = tenant.clone();
 ///     async move {
 ///         let child = tenant.clone();
-///         let seen = tokio::spawn(inherit(async move {
+///         let seen = utopia_async::spawn(inherit(async move {
 ///             let seen = child.get();
 ///             child.set(3);
 ///             seen
@@ -90,8 +90,8 @@ fn current() -> Frames {
 /// }).await;
 /// assert_eq!((seen, after), (2, 2));
 /// # });
-/// # fn tokio_test_block(f: impl std::future::Future<Output = ()>) {
-/// #     tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap().block_on(f)
+/// # fn block(f: impl std::future::Future<Output = ()>) {
+/// #     utopia_async::run(f)
 /// # }
 /// ```
 pub fn inherit<F: Future>(future: F) -> impl Future<Output = F::Output> {
@@ -328,7 +328,7 @@ mod tests {
     use super::*;
 
     fn block_on<F: Future>(f: F) -> F::Output {
-        tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap().block_on(f)
+        utopia_async::run(f)
     }
 
     #[test]
@@ -358,11 +358,11 @@ mod tests {
             let value = Scoped::new(0);
             let (a, b) = futures_util::join!(
                 value.with(1, async {
-                    tokio::task::yield_now().await;
+                    utopia_async::yield_now().await;
                     value.get()
                 }),
                 async {
-                    tokio::task::yield_now().await;
+                    utopia_async::yield_now().await;
                     value.get()
                 }
             );

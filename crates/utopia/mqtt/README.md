@@ -5,7 +5,7 @@
 
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://discord.gg/GSeTUeA)
 
-Building blocks for MQTT 5.0 and 3.1.1 brokers: the packet codec, a subscription trie, per-connection delivery state, a broker over adapters (Tokio on TCP, TLS and WebSocket; in-memory) with keep-alive timers, and a client.
+Building blocks for MQTT 5.0 and 3.1.1 brokers: the packet codec, a subscription trie, per-connection delivery state, a broker over adapters (Network on TCP, TLS and WebSocket; in-memory) with keep-alive timers, and a client.
 
 This library is maintained by the [Appwrite team](https://appwrite.io).
 
@@ -16,7 +16,7 @@ This library is maintained by the [Appwrite team](https://appwrite.io).
 utopia-mqtt = { git = "https://github.com/utopia-rs/mqtt" }
 ```
 
-An MQTT broker keeps many clients connected, authenticates them, remembers what each subscribed to, and delivers every message published on a topic to the clients whose filters match it. This library gives you the pieces to build one that speaks MQTT 5.0 and 3.1.1: a packet codec, a subscription store, per-connection delivery state, and a `Server` that runs your decisions (a `Handler`) on an adapter: `Tokio` on TCP, TLS and WebSocket listeners, or `Memory` in process for tests. A `Client` connects to any broker. This guide covers the common tasks.
+An MQTT broker keeps many clients connected, authenticates them, remembers what each subscribed to, and delivers every message published on a topic to the clients whose filters match it. This library gives you the pieces to build one that speaks MQTT 5.0 and 3.1.1: a packet codec, a subscription store, per-connection delivery state, and a `Server` that runs your decisions (a `Handler`) on an adapter: `Network` on TCP, TLS and WebSocket listeners, or `Memory` in process for tests. A `Client` connects to any broker. This guide covers the common tasks.
 
 ## Decode what a client sends
 
@@ -100,14 +100,14 @@ assert!(connection.acknowledge(1).is_none());
 
 ## Run a broker
 
-Implement `Handler` with your decisions and give it to a `Server` on the `Tokio` adapter. The server decodes every packet for the client's protocol version, keeps the store, answers PINGREQ and closes clients that stay silent past their keep-alive. Here a broker accepts everyone, grants every filter at QoS 0 and fans publishes out; a `Client` subscribes and receives its own message.
+Implement `Handler` with your decisions and give it to a `Server` on the `Network` adapter. The server decodes every packet for the client's protocol version, keeps the store, answers PINGREQ and closes clients that stay silent past their keep-alive. Here a broker accepts everyone, grants every filter at QoS 0 and fans publishes out; a `Client` subscribes and receives its own message.
 
 ```rust
 use utopia_mqtt::client::{Client, Options};
 use utopia_mqtt::packet::{Auth, Connack, Connect, Disconnect, Packet, Puback, Publish, Suback, Subscribe, Unsuback, Unsubscribe};
 use utopia_mqtt::server::{AuthReply, ConnectReply, Subscriber};
 use utopia_mqtt::spec::v3;
-use utopia_mqtt::{Connection, Error, Handler, Server, Tokio, Transport};
+use utopia_mqtt::{Connection, Error, Handler, Server, Network, Transport};
 
 struct Open;
 
@@ -142,11 +142,11 @@ impl Handler for Open {
     }
 }
 
-tokio::runtime::Runtime::new()?.block_on(async {
-    let adapter = Tokio::new(vec![Transport::tcp("127.0.0.1", 0)], 1, None)?;
+utopia_async::Runtime::new()?.block_on(async {
+    let adapter = Network::new(vec![Transport::tcp("127.0.0.1", 0)], 1, None)?;
     let server = Server::new(adapter.clone(), Open);
     let running = server.clone();
-    let task = tokio::spawn(async move { running.start().await });
+    let task = utopia_async::spawn(async move { running.start().await });
     let addr = adapter.listening().await[0];
 
     let mut client = Client::new(&format!("mqtt://{addr}"), Options { timeout: 5.0 })?;
@@ -206,7 +206,7 @@ impl Handler for Strict {
 
 let adapter = Memory::new();
 let server = Server::new(adapter.clone(), Strict);
-tokio::runtime::Builder::new_current_thread().build()?.block_on(server.start());
+utopia_async::Builder::current_thread().build()?.block_on(server.start());
 
 adapter.open(1)?;
 adapter.receive(1, &v5::connect(b"anonymous", 60, true, None)?)?;

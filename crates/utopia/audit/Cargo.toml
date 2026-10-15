@@ -29,7 +29,7 @@ utopia-validators = { workspace = true, optional = true }
 
 [dev-dependencies]
 serde_json.workspace = true
-tokio = { workspace = true, features = ["rt", "macros"] }
+utopia-async.workspace = true
 utopia-cache.workspace = true
 utopia-database = { workspace = true, features = ["memory"] }
 

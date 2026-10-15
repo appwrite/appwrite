@@ -235,9 +235,9 @@ fn feature<T: ?Sized>(methods: Option<&T>, feature: Feature) -> Result<&T> {
 /// Runs `future` to its end without awaiting: in place on a multi-threaded
 /// runtime, else only when it is ready at once.
 fn block<F: Future>(future: F) -> Option<F::Output> {
-    match tokio::runtime::Handle::try_current() {
-        Ok(handle) if handle.runtime_flavor() == tokio::runtime::RuntimeFlavor::MultiThread => {
-            Some(tokio::task::block_in_place(|| handle.block_on(future)))
+    match utopia_async::Handle::current() {
+        Some(handle) if handle.flavor() == utopia_async::Flavor::MultiThread => {
+            Some(utopia_async::block_in_place(|| handle.block_on(future)))
         }
         _ => future.now_or_never(),
     }
@@ -270,7 +270,7 @@ struct Replica<S> {
     write_hostname: Mutex<Option<String>>,
     /// Where each task's latest read was served (`Coroutine::getContext()`);
     /// `None` is a call outside a task (`$replicaRead`).
-    replica_reads: Mutex<HashMap<Option<tokio::task::Id>, bool>>,
+    replica_reads: Mutex<HashMap<Option<utopia_async::task::Id>, bool>>,
 }
 
 /// The most tasks whose last read a [`ReadWritePool`] remembers.
@@ -299,7 +299,7 @@ impl<S> Replica<S> {
         if reads.len() >= REPLICA_READS {
             reads.clear();
         }
-        reads.insert(tokio::task::try_id(), replica);
+        reads.insert(utopia_async::task::id(), replica);
     }
 }
 
@@ -1072,7 +1072,7 @@ impl<S: utopia_pools::Adapter<Pooled>> Adapter for Pool<S> {
     /// latest read went to the read pool.
     fn served_by_replica(&self) -> bool {
         match &self.replica {
-            Some(replica) => lock(&replica.replica_reads).get(&tokio::task::try_id()).copied().unwrap_or(false),
+            Some(replica) => lock(&replica.replica_reads).get(&utopia_async::task::id()).copied().unwrap_or(false),
             None => false,
         }
     }

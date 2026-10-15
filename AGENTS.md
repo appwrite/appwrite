@@ -74,6 +74,7 @@ Self-hosted Backend-as-a-Service. Hybrid monolithic-microservice architecture on
 The API is migrating to Rust service by service ([rfc/rust.md](rfc/rust.md)). Rust lives in `crates/` (Cargo workspace at the root, never in `packages/`):
 
 - `crates/utopia/<name>`: generic Utopia crates, loaded by the workspace `path` and mirrored to [`github.com/utopia-rs/<name>`](https://github.com/utopia-rs)
+- `crates/utopia/async`: the async engine behind an `Adapter` (Tokio) and `utopia-php/async`'s `Promise`, `Timer` and `Parallel`. Every other crate spawns, sleeps, connects and tests (`#[utopia_async::test]`) through it and never depends on `tokio`
 - `crates/appwrite/core`: lifecycle, auth, models and events
 - `crates/appwrite/<service>`: one module per migrated service
 - `crates/appwrite/server`: the binary

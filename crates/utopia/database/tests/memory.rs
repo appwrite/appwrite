@@ -107,7 +107,7 @@ fn pair(id: &str, a: &str, b: &str) -> Document {
     doc(json!({"$id": id, "$permissions": [], "a": a, "b": b}))
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_rollback_undoes_create_collection() {
     let adapter = schema_adapter().await;
     adapter.start_transaction().await.unwrap();
@@ -122,7 +122,7 @@ async fn test_rollback_undoes_create_collection() {
     assert!(adapter.create_collection("rolled", &[], &[]).await.unwrap());
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_delete_attribute_keeps_the_orders_of_the_remaining_index_attributes() {
     let adapter = schema_adapter().await;
     create_pairs(&adapter).await;
@@ -142,7 +142,7 @@ async fn test_delete_attribute_keeps_the_orders_of_the_remaining_index_attribute
     assert_eq!(strings(index.get_str("orders")), ["DESC", "ASC"]);
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_rollback_of_delete_attribute_restores_values_and_indexes() {
     let adapter = schema_adapter().await;
     create_pairs(&adapter).await;
@@ -165,7 +165,7 @@ async fn test_rollback_of_delete_attribute_restores_values_and_indexes() {
     assert!(error.is_a(Kind::Duplicate));
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_rollback_of_rename_attribute_restores_the_old_name() {
     let adapter = schema_adapter().await;
     create_pairs(&adapter).await;
@@ -184,7 +184,7 @@ async fn test_rollback_of_rename_attribute_restores_the_old_name() {
     assert_eq!(ids(&find(&adapter, PAIRS, vec![Query::equal("a", ["x"])]).await.unwrap()), ["first"]);
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_unvalidated_queries_follow_sql_null_and_method_rules() {
     let adapter = schema_adapter().await;
     create_pairs(&adapter).await;
@@ -205,7 +205,7 @@ async fn test_unvalidated_queries_follow_sql_null_and_method_rules() {
     assert_eq!(error.message(), "Query method not implemented in the Memory adapter: exists");
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_unordered_read_returns_rows_in_sequence_order() {
     let adapter = schema_adapter().await;
     create_pairs(&adapter).await;
@@ -273,7 +273,7 @@ fn assert_duplicate(result: utopia_database::Result<Document>, message: &str) {
     }
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_shared_tables_unique_index_over_existing_rows_is_per_tenant() {
     let adapter = shared_addresses().await;
     for tenant in [1, 2] {
@@ -300,7 +300,7 @@ async fn test_shared_tables_unique_index_over_existing_rows_is_per_tenant() {
     assert_eq!(home.get("addr"), Some(&string("x")));
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_shared_tables_unique_index_rejects_duplicates_within_one_tenant() {
     let adapter = shared_addresses().await;
     adapter.set_tenant(Value::Int(1));
@@ -315,7 +315,7 @@ async fn test_shared_tables_unique_index_rejects_duplicates_within_one_tenant() 
     assert_eq!(error.message(), "Unique index violation");
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_rolled_back_unique_index_leaves_no_hash_table() {
     let adapter = Memory::new();
     adapter.set_namespace(&format!("unique_rollback_{}", php_std::system::uniqid("", false)));
@@ -337,7 +337,7 @@ async fn test_rolled_back_unique_index_leaves_no_hash_table() {
     assert!(hashes(&adapter).is_empty());
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_shared_tables_unique_bindings_follow_their_tenant_on_update_and_delete() {
     let adapter = shared_addresses().await;
     adapter.set_tenant(Value::Int(1));
@@ -376,7 +376,7 @@ async fn test_shared_tables_unique_bindings_follow_their_tenant_on_update_and_de
 
 /// `testRollbackRestoresARenamedDocument`, on the adapter: a rename rolled
 /// back by a failed transaction leaves the document under its old id.
-#[tokio::test]
+#[utopia_async::test]
 async fn test_rollback_restores_a_renamed_document() {
     let adapter = addresses().await;
     adapter.set_authorization(disabled());
@@ -400,7 +400,7 @@ async fn test_rollback_restores_a_renamed_document() {
     assert_eq!(ids(&find(&adapter, ADDRESSES, vec![]).await.unwrap()), ["a"]);
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_rollback_undoes_an_increment() {
     let adapter = addresses().await;
     store_address(&adapter, "home", "x", Value::Int(1)).await.unwrap();
@@ -430,7 +430,7 @@ async fn test_rollback_undoes_an_increment() {
     assert_eq!(before.updated_at(), after.updated_at());
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_rollback_of_an_increment_removes_the_value_and_timestamp_it_added() {
     let adapter = addresses().await;
     adapter
@@ -465,7 +465,7 @@ async fn test_rollback_of_an_increment_removes_the_value_and_timestamp_it_added(
     assert!(after.updated_at().is_none());
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_a_division_or_modulo_by_zero_that_skipped_validation_keeps_the_value() {
     let adapter = addresses().await;
     store_address(&adapter, "home", "x", Value::Int(10)).await.unwrap();
@@ -482,7 +482,7 @@ async fn test_a_division_or_modulo_by_zero_that_skipped_validation_keeps_the_val
     }
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_a_cursor_without_an_order_pages_by_sequence() {
     let adapter = addresses().await;
     adapter.set_authorization(disabled());
@@ -507,7 +507,7 @@ async fn test_a_cursor_without_an_order_pages_by_sequence() {
     assert_eq!(ids(&before), ["first"]);
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_increment_is_a_no_op_when_the_stored_value_already_violates_the_bound() {
     let adapter = addresses().await;
     store_address(&adapter, "whole", "x", Value::Int(10)).await.unwrap();
@@ -532,7 +532,7 @@ async fn test_increment_is_a_no_op_when_the_stored_value_already_violates_the_bo
     }
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_batch_mixing_documents_with_and_without_a_sequence_is_rejected() {
     for (first, second) in [(Some("10"), None), (None, Some("10"))] {
         let adapter = addresses().await;
@@ -550,7 +550,7 @@ async fn test_batch_mixing_documents_with_and_without_a_sequence_is_rejected() {
 /// `testNullChecksAndUnsupportedMethodsOnAWholeObjectAttribute`, on the
 /// adapter: the queries carry the attribute type the database's validator
 /// gives them.
-#[tokio::test]
+#[utopia_async::test]
 async fn test_null_checks_and_unsupported_methods_on_a_whole_object_attribute() {
     let adapter = addresses().await;
     adapter.set_authorization(disabled());
@@ -754,7 +754,7 @@ fn test_memory_keeps_a_positive_index_length_and_no_document_size_cap() {
 
 // AdapterDatabaseRenameTest (Memory)
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_shared_tables_refuse_the_rename() {
     let adapter = Memory::new();
     adapter.set_shared_tables(true);
@@ -763,7 +763,7 @@ async fn test_shared_tables_refuse_the_rename() {
     assert_eq!(error.message(), "Cannot rename a database while shared tables are enabled");
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_rename_moves_the_collections_and_rolls_back() {
     let adapter = Memory::new();
     adapter.set_authorization(disabled());
@@ -844,7 +844,7 @@ async fn shared_notes() -> Memory {
     adapter
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_delete_with_another_casing_removes_the_grants() {
     let adapter = notes().await;
     adapter.create_document(&collection(NOTES), note(&["alice"])).await.unwrap();
@@ -859,7 +859,7 @@ async fn test_delete_with_another_casing_removes_the_grants() {
     assert_eq!(readable_by(&adapter, "bob").await, ["note"]);
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_revoke_under_one_tenant_keeps_another_tenants_grants() {
     let adapter = shared_notes().await;
     let revoke = |readers: &[&str]| doc(json!({"$id": "note", "$permissions": self::readers(readers)}));
@@ -894,7 +894,7 @@ async fn test_revoke_under_one_tenant_keeps_another_tenants_grants() {
     assert!(readable_under(&adapter, 1, "bob").await.is_empty());
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_delete_under_one_tenant_keeps_another_tenants_grants() {
     let adapter = shared_notes().await;
 
@@ -918,7 +918,7 @@ async fn test_delete_under_one_tenant_keeps_another_tenants_grants() {
     assert!(readable_under(&adapter, 1, "bob").await.is_empty());
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_renaming_keeps_its_unique_value() {
     let adapter = notes().await;
     adapter.set_authorization(disabled());

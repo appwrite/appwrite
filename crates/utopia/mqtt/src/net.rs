@@ -1,5 +1,4 @@
-//! The network adapter: MQTT over TCP, TLS and WebSocket listeners on
-//! tokio.
+//! The network adapter: MQTT over TCP, TLS and WebSocket listeners.
 
 use std::collections::HashMap;
 use std::net::SocketAddr;
@@ -7,14 +6,14 @@ use std::sync::atomic::{AtomicI64, Ordering};
 use std::sync::{Arc, Mutex, MutexGuard, OnceLock, RwLock, Weak};
 
 use futures_util::{SinkExt, StreamExt};
-use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
-use tokio::net::{TcpListener, TcpStream};
-use tokio::sync::{Notify, mpsc, watch};
 use tokio_rustls::TlsAcceptor;
 use tokio_tungstenite::tungstenite::Message;
 use tokio_tungstenite::tungstenite::handshake::server::{ErrorResponse, Request, Response};
 use tokio_tungstenite::tungstenite::http::HeaderValue;
 use tokio_tungstenite::tungstenite::protocol::WebSocketConfig;
+use utopia_async::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
+use utopia_async::net::{TcpListener, TcpStream};
+use utopia_async::sync::{Notify, mpsc, watch};
 
 use crate::adapter::{Adapter, ConnectionHook, Outbound, ReceiveHook, StartHook, Timer, WorkerHook};
 use crate::packet::frames;
@@ -30,7 +29,7 @@ pub const DEFAULT_MAX_PACKET_SIZE: usize = 64000;
 /// PHP: `Swoole::MAX_CONNECTIONS`.
 pub const MAX_CONNECTIONS: usize = 100_000;
 
-/// A listener the [`Tokio`] adapter serves MQTT on.
+/// A listener the [`Network`] adapter serves MQTT on.
 ///
 /// - [`Tcp`](Transport::Tcp): MQTT on a TCP port (1883 by convention).
 /// - [`Tls`](Transport::Tls): MQTT over TLS (8883), with a PEM certificate
@@ -173,7 +172,7 @@ struct Inner {
     addrs: watch::Sender<Vec<SocketAddr>>,
 }
 
-/// An MQTT adapter on the network, on tokio: one listener per
+/// An MQTT adapter on the network: one listener per
 /// [`Transport`], all feeding the same hooks.
 ///
 /// [`start`](Adapter::start) binds every listener, calls the start hook and
@@ -187,10 +186,10 @@ struct Inner {
 /// when it ticks.
 ///
 /// ```no_run
-/// use utopia_mqtt::{Tokio, Transport};
+/// use utopia_mqtt::{Network, Transport};
 ///
 /// # async fn run() -> Result<(), utopia_mqtt::Error> {
-/// let adapter = Tokio::new(
+/// let adapter = Network::new(
 ///     vec![Transport::tcp("0.0.0.0", 1883), Transport::websocket("0.0.0.0", 8083)],
 ///     1,
 ///     None,
@@ -208,14 +207,14 @@ struct Inner {
 /// ```
 ///
 /// PHP: `Utopia\Mqtt\Adapter\Swoole`, whose Swoole server runs worker
-/// processes; this adapter serves every connection on the tokio runtime it
+/// processes; this adapter serves every connection on the runtime it
 /// starts on.
 #[derive(Clone)]
-pub struct Tokio {
+pub struct Network {
     inner: Arc<Inner>,
 }
 
-impl Tokio {
+impl Network {
     /// An adapter serving `transports`, calling the worker start hook for
     /// `workers` worker ids, on `timer` (a default [`TimingWheel`] when
     /// `None`). An empty list is an [`Error::InvalidArgument`].
@@ -239,7 +238,7 @@ impl Tokio {
         let weak: Weak<Inner> = Arc::downgrade(&inner);
         inner.timer.on_tick(Arc::new(move |id| {
             if let Some(inner) = weak.upgrade() {
-                let _ = Tokio { inner }.close(id);
+                let _ = Network { inner }.close(id);
             }
         }));
         Ok(Self { inner })
@@ -285,7 +284,7 @@ impl Tokio {
         };
         let mut stopped = self.inner.stopped.subscribe();
         loop {
-            let (stream, _) = tokio::select! {
+            let (stream, _) = utopia_async::select! {
                 accepted = listener.accept() => match accepted {
                     Ok(accepted) => accepted,
                     Err(_) => continue,
@@ -299,7 +298,7 @@ impl Tokio {
             let adapter = self.clone();
             let transport = transport.clone();
             let tls = tls.clone();
-            tokio::spawn(async move {
+            utopia_async::spawn(async move {
                 match transport {
                     Transport::Tcp { max_packet_size, .. } => adapter.serve_stream(stream, max_packet_size).await,
                     Transport::Tls { max_packet_size, .. } => {
@@ -342,11 +341,11 @@ impl Tokio {
     where
         S: AsyncRead + AsyncWrite + Unpin + Send + 'static,
     {
-        let (mut reader, mut writer) = tokio::io::split(stream);
+        let (mut reader, mut writer) = utopia_async::io::split(stream);
         let (id, mut commands) = self.register();
         let done = Arc::new(Notify::new());
         let finished = done.clone();
-        let writing = tokio::spawn(async move {
+        let writing = utopia_async::spawn(async move {
             while let Some(command) = commands.recv().await {
                 match command {
                     Command::Send(bytes) => {
@@ -367,7 +366,7 @@ impl Tokio {
         let mut buffer: Vec<u8> = Vec::with_capacity(1024);
         let mut chunk = vec![0u8; 16 * 1024];
         'read: loop {
-            let read = tokio::select! {
+            let read = utopia_async::select! {
                 read = reader.read(&mut chunk) => read,
                 _ = done.notified() => break,
             };
@@ -410,7 +409,7 @@ impl Tokio {
         let (id, mut commands) = self.register();
         let done = Arc::new(Notify::new());
         let finished = done.clone();
-        let writing = tokio::spawn(async move {
+        let writing = utopia_async::spawn(async move {
             while let Some(command) = commands.recv().await {
                 match command {
                     Command::Send(bytes) => {
@@ -430,7 +429,7 @@ impl Tokio {
         }
         let mut buffer: Vec<u8> = Vec::new();
         loop {
-            let message = tokio::select! {
+            let message = utopia_async::select! {
                 message = messages.next() => message,
                 _ = done.notified() => break,
             };
@@ -521,7 +520,7 @@ fn acceptor(cert: &str, key: &str) -> Result<TlsAcceptor, Error> {
     Ok(TlsAcceptor::from(Arc::new(config)))
 }
 
-impl Outbound for Tokio {
+impl Outbound for Network {
     fn send(&self, connection: i64, message: &[u8]) -> Result<(), Error> {
         if let Some(tx) = self.connections_map().get(&connection) {
             let _ = tx.send(Command::Send(message.to_vec()));
@@ -537,7 +536,7 @@ impl Outbound for Tokio {
     }
 }
 
-impl Adapter for Tokio {
+impl Adapter for Network {
     fn on_start(&self, hook: StartHook) {
         self.inner.hooks.write().unwrap_or_else(|e| e.into_inner()).start = Some(hook);
     }
@@ -588,7 +587,7 @@ impl Adapter for Tokio {
         }
         let tasks: Vec<_> = listeners
             .into_iter()
-            .map(|(listener, transport)| tokio::spawn(self.clone().accept(listener, transport)))
+            .map(|(listener, transport)| utopia_async::spawn(self.clone().accept(listener, transport)))
             .collect();
         let mut stopped = self.inner.stopped.subscribe();
         let _ = stopped.wait_for(|s| *s).await;

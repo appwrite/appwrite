@@ -22,7 +22,7 @@ thiserror.workspace = true
 utopia-telemetry.workspace = true
 
 [dev-dependencies]
-tokio = { workspace = true, features = ["rt", "macros", "time"] }
+utopia-async.workspace = true
 
 [package.metadata.utopia]
 category = "platform"

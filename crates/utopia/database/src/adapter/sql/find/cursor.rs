@@ -644,7 +644,7 @@ mod tests {
     /// `getVectorOrderRaw()` maps the vector with `array_map()`, which keeps
     /// the keys: a map is bound as a JSON object (`Adapter/Postgres.php`
     /// line 1836), a list as a JSON array.
-    #[tokio::test]
+    #[utopia_async::test]
     async fn a_vector_order_keeps_the_vectors_keys() {
         let pdo = Pdo::connect("sqlite::memory:", None, None).await.unwrap();
         let sql = Sql::new(Engine::Postgres, pdo);

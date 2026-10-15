@@ -69,7 +69,7 @@ fn qv(value: Value) -> QValue {
     utopia_database::value::to_query(&value)
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn differential() {
     let Ok(path) = std::env::var("MONGO_DIFFERENTIAL") else { return };
     let fake = Fake::new();

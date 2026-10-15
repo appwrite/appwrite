@@ -32,7 +32,7 @@ fn json(value: &Value) -> serde_json::Value {
     value.to_json()
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn crosscheck() {
     let Ok(ns) = std::env::var("MONGO_CROSSCHECK") else { return };
     let config = Config::new("crosscheck", "localhost", 16018, "root", "password");

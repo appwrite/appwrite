@@ -135,10 +135,10 @@ pub async fn send(
             if idle >= window {
                 return;
             }
-            tokio::time::sleep(window - idle).await;
+            utopia_async::sleep(window - idle).await;
         }
     };
-    let response = tokio::select! {
+    let response = utopia_async::select! {
         response = client.stream(request, &mut sink) => response.map_err(transport)?,
         () = stalled, if stall > 0 => {
             return Err(Error::exception(

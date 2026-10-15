@@ -1,5 +1,5 @@
 //! DNS servers and clients: a message encoder and decoder, zones and zone
-//! files, resolvers, a Tokio server adapter over UDP, TCP (with the PROXY
+//! files, resolvers, a network server adapter over UDP, TCP (with the PROXY
 //! protocol) and DNS over HTTPS, a client, a recursive address lookup, and
 //! validators for record names, CAA values and served records.
 //!
@@ -28,7 +28,7 @@
 //! | `Server::error()`, `setDebug()`, `setTelemetry()`, `start()` | [`Server::error`], [`Server::set_debug`], [`Server::set_telemetry`], [`Server::start`] |
 //! | `Server::onWorkerStart()` | [`adapter::Adapter::on_worker_start`] on the adapter given to [`Server::start`] |
 //! | `Utopia\DNS\Adapter` | [`adapter::Adapter`] |
-//! | `Adapter\Native`, `Adapter\Swoole` and their `Udp`, `Tcp`, `Http` transports | [`adapter::Tokio`] with [`adapter::Udp`], [`adapter::Tcp`], [`adapter::Http`] |
+//! | `Adapter\Native`, `Adapter\Swoole` and their `Udp`, `Tcp`, `Http` transports | [`adapter::Network`] with [`adapter::Udp`], [`adapter::Tcp`], [`adapter::Http`] |
 //! | `Utopia\DNS\Client` | [`Client`] (async) |
 //! | `Utopia\DNS\ProxyProtocol` | [`ProxyProtocol`] |
 //! | `Utopia\DNS\Lookup`, `Lookup\Recursive` | [`lookup::Lookup`], [`lookup::Recursive`] |
@@ -37,7 +37,7 @@
 //! | `InvalidArgumentException`, `DecodingException`, `PartialDecodingException`, `ImportException`, `Exception`, `ValueError` | [`Error`], one variant each |
 //!
 //! PHP: the Native adapter is a blocking select loop and the Swoole one
-//! runs Swoole workers; Rust has one adapter on Tokio, whose TCP transport
+//! runs Swoole workers; Rust has one adapter on Network, whose TCP transport
 //! follows `Native\Tcp`'s limits. PHP's validators keep their state on the
 //! object (`getDescription()` after `isValid()`); Rust returns it.
 

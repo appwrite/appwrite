@@ -14,11 +14,9 @@ indexmap.workspace = true
 php-std.workspace = true
 redis.workspace = true
 thiserror.workspace = true
-tokio = { workspace = true, features = ["time"] }
+utopia-async.workspace = true
 utopia-telemetry.workspace = true
 
-[dev-dependencies]
-tokio = { workspace = true, features = ["rt", "macros", "time"] }
 
 [package.metadata.utopia]
 category = "servers"

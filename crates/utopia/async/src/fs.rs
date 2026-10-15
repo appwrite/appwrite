@@ -401,6 +401,12 @@ impl File {
         adapter::File::into_std(self.inner).await
     }
 
+    /// The standard library file, when no read or write is pending (the
+    /// file itself otherwise), without waiting.
+    pub fn try_into_std(self) -> Result<std::fs::File, File> {
+        adapter::File::try_into_std(self.inner).map_err(|inner| File { inner })
+    }
+
     /// The file's metadata.
     pub async fn metadata(&self) -> io::Result<Metadata> {
         adapter::File::metadata(&self.inner).await

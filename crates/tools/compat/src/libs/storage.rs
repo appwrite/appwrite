@@ -316,7 +316,8 @@ async fn body(a: &Args<'_>) -> Result<Body, Fault> {
         return Ok(Body::from(slice));
     }
     if let Some(file) = a.opt_str("file")? {
-        let file = tokio::fs::File::open(file).await.map_err(|e| Fault::new(format!("cannot open {file}: {e}")))?;
+        let file =
+            utopia_async::fs::File::open(file).await.map_err(|e| Fault::new(format!("cannot open {file}: {e}")))?;
         return Ok(Body::from_file(file));
     }
     if a.opt_bool("failing")? == Some(true) {
@@ -690,7 +691,7 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
                 .await;
             if op == "device.read_stream" {
                 return match read {
-                    Ok(body) => Ok(Outcome::Ok(session.handle(tokio::sync::Mutex::new(body)))),
+                    Ok(body) => Ok(Outcome::Ok(session.handle(utopia_async::sync::Mutex::new(body)))),
                     Err(e) => Ok(err(e)),
                 };
             }
@@ -704,7 +705,7 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
             return result(&a, read, |b| json!({ "size": b.len(), "md5": php_std::string::hash(b"md5", &b) }));
         }
         "stream.read" => {
-            let stream = session.get::<tokio::sync::Mutex<Body>>(a.value("stream")?)?;
+            let stream = session.get::<utopia_async::sync::Mutex<Body>>(a.value("stream")?)?;
             let chunk =
                 stream.lock().await.read(a.i64("length")? as usize).await.map_err(|e| Fault::new(e.to_string()))?;
             Outcome::Ok(bytes_value(&chunk))

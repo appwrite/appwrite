@@ -3,8 +3,8 @@
 use std::sync::Arc;
 use std::time::Duration;
 
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio::net::{TcpListener, TcpStream};
+use utopia_async::io::{AsyncReadExt, AsyncWriteExt};
+use utopia_async::net::{TcpListener, TcpStream};
 use utopia_http::{App, Cookie, Http, Param, ServerOptions, serve_listener};
 
 fn app() -> Http {
@@ -31,14 +31,14 @@ fn app() -> Http {
     let _ = http.get("/chunked").unwrap().inject("response").action(|s| {
         Box::pin(async move {
             s.response.chunk(b"Hello ", false);
-            tokio::time::sleep(Duration::from_millis(50)).await;
+            utopia_async::sleep(Duration::from_millis(50)).await;
             s.response.chunk(b"World!", true);
             Ok(())
         })
     });
     let _ = http.get("/slow").unwrap().inject("response").action(|s| {
         Box::pin(async move {
-            tokio::time::sleep(Duration::from_millis(300)).await;
+            utopia_async::sleep(Duration::from_millis(300)).await;
             s.response.send(b"slow");
             Ok(())
         })
@@ -56,13 +56,13 @@ async fn request(port: u16, raw: impl AsRef<str>) -> String {
     String::from_utf8_lossy(&out).into_owned()
 }
 
-#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+#[utopia_async::test(threads = 2)]
 async fn serves_an_application() {
     let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
     let port = listener.local_addr().unwrap().port();
     let options = ServerOptions { max_concurrency: 2, ..ServerOptions::default() };
-    let (stop, stopped) = tokio::sync::oneshot::channel::<()>();
-    let server = tokio::spawn(serve_listener(listener, Arc::new(App(Arc::new(app()))), options, async {
+    let (stop, stopped) = utopia_async::sync::oneshot::channel::<()>();
+    let server = utopia_async::spawn(serve_listener(listener, Arc::new(App(Arc::new(app()))), options, async {
         let _ = stopped.await;
     }));
 
@@ -92,9 +92,9 @@ async fn serves_an_application() {
     assert!(silent.starts_with("HTTP/1.1 200 OK\r\n"), "{silent}");
 
     // Past max_concurrency, requests get a 503.
-    let slow = tokio::spawn(request(port, get("/slow")));
-    let slow2 = tokio::spawn(request(port, get("/slow")));
-    tokio::time::sleep(Duration::from_millis(100)).await;
+    let slow = utopia_async::spawn(request(port, get("/slow")));
+    let slow2 = utopia_async::spawn(request(port, get("/slow")));
+    utopia_async::sleep(Duration::from_millis(100)).await;
     let busy = request(port, &get("/")).await;
     assert!(busy.starts_with("HTTP/1.1 503 Service Unavailable\r\n"), "{busy}");
     assert!(slow.await.unwrap().ends_with("slow"));

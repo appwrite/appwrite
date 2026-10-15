@@ -8,8 +8,8 @@
 //! failing step is passed to the callbacks registered with
 //! [`Server::error`], with the [`Stage`] that failed.
 //!
-//! Two adapters ship with the crate: [`Tokio`] serves WebSockets on the
-//! network (feature `tokio`, on by default), and [`Memory`] runs in
+//! Two adapters ship with the crate: [`Network`] serves WebSockets on the
+//! network (feature `network`, on by default), and [`Memory`] runs in
 //! process, driven by calls, for tests. [`Client`] connects to a WebSocket
 //! server, sends, receives and listens, with hooks for messages, pings,
 //! pongs, errors, opening and closing.
@@ -58,9 +58,9 @@
 //! | `Server::error(callable)`, the stage string (`'start'`, `'onMessage'`, ...) | [`Server::error`], [`Stage`] ([`Stage::as_str`]) |
 //! | `Utopia\WebSocket\Adapter` (abstract class) | [`Adapter`] (trait) |
 //! | `Adapter::setPackageMaxLength()`, `setCompressionEnabled()`, `setWorkerNumber()` | [`Adapter::set_package_max_length`], [`Adapter::set_compression_enabled`], [`Adapter::set_worker_number`] |
-//! | `Utopia\WebSocket\Adapter\Swoole` | [`Tokio`] (the network adapter; `Swoole::DEFAULT_SEND_TIMEOUT` is [`net::DEFAULT_SEND_TIMEOUT`], the settings [`net::Config`]) |
-//! | `Utopia\WebSocket\Adapter\Workerman` | [`Tokio`] (one network adapter serves both) |
-//! | `Adapter::getNative()` | none: [`Tokio::config`], [`Tokio::local_addr`] and [`Tokio::connections`] expose what callers read from the native server |
+//! | `Utopia\WebSocket\Adapter\Swoole` | [`Network`] (the network adapter; `Swoole::DEFAULT_SEND_TIMEOUT` is [`net::DEFAULT_SEND_TIMEOUT`], the settings [`net::Config`]) |
+//! | `Utopia\WebSocket\Adapter\Workerman` | [`Network`] (one network adapter serves both) |
+//! | `Adapter::getNative()` | none: [`Network::config`], [`Network::local_addr`] and [`Network::connections`] expose what callers read from the native server |
 //! | none (the compat test adapter `tests/compat/websocket/Memory.php`) | [`Memory`] |
 //! | `Utopia\WebSocket\Client` | [`Client`] |
 //! | `new Client($url, ['headers' => ..., 'timeout' => ...])` | [`Client::new`] with [`client::Options`] |
@@ -69,8 +69,8 @@
 //! | `Swoole\Coroutine\Http\Client`, `Swoole\WebSocket\Frame` | [`client::Transport`], [`client::Frame`] |
 //! | `\InvalidArgumentException`, `\RuntimeException`, `\Exception` | [`Error::InvalidArgument`], [`Error::Runtime`], [`Error::Exception`] |
 //!
-//! PHP's adapters run Swoole or Workerman worker processes; [`Tokio`] serves
-//! every connection on the tokio runtime it is started on, and calls the
+//! PHP's adapters run Swoole or Workerman worker processes; [`Network`] serves
+//! every connection on the runtime it is started on, and calls the
 //! worker hooks once per configured worker id.
 
 #![warn(missing_docs)]
@@ -79,7 +79,7 @@ pub mod adapter;
 pub mod client;
 mod error;
 pub mod memory;
-#[cfg(feature = "tokio")]
+#[cfg(feature = "network")]
 pub mod net;
 mod server;
 
@@ -87,8 +87,8 @@ pub use adapter::{Adapter, ConnectionId, Request, Response};
 pub use client::Client;
 pub use error::Error;
 pub use memory::Memory;
-#[cfg(feature = "tokio")]
-pub use net::Tokio;
+#[cfg(feature = "network")]
+pub use net::Network;
 pub use server::{Server, Stage};
 
 /// The getting started guide (`guide.md`), compiled and run with the doctests.

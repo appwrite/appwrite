@@ -211,6 +211,23 @@ impl TcpStream {
         adapter::TcpStream::set_keepalive(&self.inner, time)
     }
 
+    /// Makes closing the connection reset it (`SO_LINGER` of zero: the peer
+    /// sees a reset) instead of a graceful close.
+    pub fn set_zero_linger(&self) -> io::Result<()> {
+        adapter::TcpStream::set_zero_linger(&self.inner)
+    }
+
+    /// The pending socket error (`SO_ERROR`), clearing it.
+    pub fn take_error(&self) -> io::Result<Option<io::Error>> {
+        adapter::TcpStream::take_error(&self.inner)
+    }
+
+    /// Reads received bytes into `buf` without consuming them; waits for
+    /// some when none are there. 0 means the other end closed.
+    pub async fn peek(&self, buf: &mut [u8]) -> io::Result<usize> {
+        adapter::TcpStream::peek(&self.inner, buf).await
+    }
+
     /// Splits the connection into a reading and a writing half, to read and
     /// write from two tasks.
     pub fn into_split(self) -> (tcp::OwnedReadHalf, tcp::OwnedWriteHalf) {

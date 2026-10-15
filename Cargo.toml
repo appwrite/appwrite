@@ -149,7 +149,7 @@ http-body-util = "0.1"
 # HTTP/1 request parsing (hyper's parser), for the compat http benchmarks.
 httparse = "1"
 hyper = { version = "1", features = ["server", "http1"] }
-hyper-util = { version = "0.1", features = ["tokio"] }
+hyper-util = "0.1"
 hyper-rustls = { version = "0.27", default-features = false, features = ["http1", "ring", "tls12", "webpki-roots"] }
 # Image codecs for utopia-image, pure Rust only: JPEG (zune-jpeg), PNG, GIF,
 # WebP, and AVIF encoding (ravif/rav1e, without its nasm assembly). AVIF

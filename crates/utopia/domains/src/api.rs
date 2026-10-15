@@ -85,7 +85,7 @@ pub enum Answer {
 ///
 /// let api = Api::new("https://api.example.com", "key", "secret").with_transport(Arc::new(Echo));
 /// let params = Params::Fields(serde_json::json!({"limit": 5}));
-/// let answer = tokio::runtime::Runtime::new()?.block_on(api.call("GET", "/v1/domains", &params, &[]))?;
+/// let answer = utopia_async::Runtime::new()?.block_on(api.call("GET", "/v1/domains", &params, &[]))?;
 /// assert_eq!(answer, Answer::Json(serde_json::json!({"total": 1})));
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```

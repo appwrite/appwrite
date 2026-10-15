@@ -783,22 +783,22 @@ pub async fn call(op: &str, args: &Json, s: &mut Session) -> OpResult {
         "fs.put" => {
             let path = a.str("path")?;
             if let Some(dir) = std::path::Path::new(path).parent() {
-                let _ = tokio::fs::create_dir_all(dir).await;
+                let _ = utopia_async::fs::create_dir_all(dir).await;
             }
-            Outcome::Ok(Json::Bool(tokio::fs::write(path, a.bytes("contents")?).await.is_ok()))
+            Outcome::Ok(Json::Bool(utopia_async::fs::write(path, a.bytes("contents")?).await.is_ok()))
         }
         "fs.put_fixture" => {
             let path = a.str("path")?;
             if let Some(dir) = std::path::Path::new(path).parent() {
-                let _ = tokio::fs::create_dir_all(dir).await;
+                let _ = utopia_async::fs::create_dir_all(dir).await;
             }
-            Outcome::Ok(Json::Bool(tokio::fs::copy(fixture(a.str("fixture")?), path).await.is_ok()))
+            Outcome::Ok(Json::Bool(utopia_async::fs::copy(fixture(a.str("fixture")?), path).await.is_ok()))
         }
-        "fs.get" => match tokio::fs::read(a.str("path")?).await {
+        "fs.get" => match utopia_async::fs::read(a.str("path")?).await {
             Ok(b) => Outcome::Ok(crate::adapter::bytes_value(&b)),
             Err(_) => Outcome::Ok(Json::Null),
         },
-        "fs.exists" => Outcome::Ok(Json::Bool(tokio::fs::metadata(a.str("path")?).await.is_ok())),
+        "fs.exists" => Outcome::Ok(Json::Bool(utopia_async::fs::metadata(a.str("path")?).await.is_ok())),
 
         "json_source.new" => {
             let device: Arc<dyn Device> = Arc::new(Local::new(a.str("root")?));
@@ -903,19 +903,19 @@ pub async fn call(op: &str, args: &Json, s: &mut Session) -> OpResult {
                 return Err(Fault::new("not an export destination"));
             };
             if op == "export.local_file" {
-                match tokio::fs::read(format!("{root}/{file}")).await {
+                match utopia_async::fs::read(format!("{root}/{file}")).await {
                     Ok(b) => Outcome::Ok(crate::adapter::bytes_value(&b)),
                     Err(_) => Outcome::Ok(Json::Null),
                 }
             } else {
-                let _ = tokio::fs::remove_dir_all(&root).await;
-                Outcome::Ok(Json::Bool(tokio::fs::metadata(&root).await.is_err()))
+                let _ = utopia_async::fs::remove_dir_all(&root).await;
+                Outcome::Ok(Json::Bool(utopia_async::fs::metadata(&root).await.is_err()))
             }
         }
         "json_machine.items" => {
             let path = format!("/tmp/compat-fs/{}/json-machine.json", s.ns);
-            let _ = tokio::fs::create_dir_all(format!("/tmp/compat-fs/{}", s.ns)).await;
-            tokio::fs::write(&path, a.bytes("json")?).await.map_err(|e| Fault::new(e.to_string()))?;
+            let _ = utopia_async::fs::create_dir_all(format!("/tmp/compat-fs/{}", s.ns)).await;
+            utopia_async::fs::write(&path, a.bytes("json")?).await.map_err(|e| Fault::new(e.to_string()))?;
             let decoder = match a.opt_str("decoder")? {
                 Some("passthru") => utopia_migration::json_machine::Decoder::PassThru,
                 _ => utopia_migration::json_machine::Decoder::Ext { assoc: true },
@@ -935,7 +935,7 @@ pub async fn call(op: &str, args: &Json, s: &mut Session) -> OpResult {
                 },
                 Err(e) => err = json!({ "class": e.php_class(), "message": e.message() }),
             }
-            let _ = tokio::fs::remove_file(&path).await;
+            let _ = utopia_async::fs::remove_file(&path).await;
             Outcome::Ok(json!({ "items": out, "error": err }))
         }
         "source.props" => {

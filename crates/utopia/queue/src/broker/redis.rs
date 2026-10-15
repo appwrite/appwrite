@@ -234,7 +234,7 @@ impl Redis {
                 if let Some(cb) = &self.on_reconnect {
                     cb(queue, &e, attempt, sleep as i64);
                 }
-                tokio::time::sleep(Duration::from_millis(sleep)).await;
+                utopia_async::sleep(Duration::from_millis(sleep)).await;
                 return Ok(Vec::new());
             }
             Err(e) => return Err(e),

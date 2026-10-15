@@ -1,7 +1,7 @@
 //! Compat adapter for `dns`: maps `tests/compat/dns/spec.json` operations onto `utopia-dns`.
 //!
 //! Messages, records and zones cross as JSON objects, as in
-//! `tests/compat/dns/Adapter.php`. `server.run` starts servers on the Tokio
+//! `tests/compat/dns/Adapter.php`. `server.run` starts servers on the Network
 //! adapter on local ports, with the resolvers of
 //! `tests/compat/dns/fixtures/Fixture.php` ([`Fixture`]), and runs client
 //! steps against them.
@@ -11,8 +11,8 @@ use std::time::Duration;
 
 use php_std::random::Mt19937;
 use serde_json::{Map, Value, json};
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use utopia_dns::adapter::{Http, Tcp, Tokio, Transport, Udp};
+use utopia_async::io::{AsyncReadExt, AsyncWriteExt};
+use utopia_dns::adapter::{Http, Network, Tcp, Transport, Udp};
 use utopia_dns::lookup::{Lookup, Recursive};
 use utopia_dns::message::{Header, Message, Question, RCODE_FORMERR, RCODE_NOERROR, RCODE_NXDOMAIN, Record, domain};
 use utopia_dns::resolver::{Memory, Proxy, Resolver};
@@ -565,7 +565,7 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
             "native" | "swoole" => {
                 let count = a.opt("transports").and_then(Value::as_array).map_or(0, Vec::len);
                 let transports = (0..count).map(|_| Transport::Udp(Udp::new("127.0.0.1", 0))).collect();
-                outcome(Tokio::new(transports).map(|_| Value::Null))
+                outcome(Network::new(transports).map(|_| Value::Null))
             }
             "http" => {
                 let cert = a.opt_str("cert")?.map(std::path::PathBuf::from);
@@ -806,7 +806,7 @@ struct Running {
     host: String,
     ports: Map<String, Value>,
     log: SharedLog,
-    task: Option<tokio::task::JoinHandle<()>>,
+    task: Option<utopia_async::JoinHandle<()>>,
 }
 
 impl Drop for Running {
@@ -884,7 +884,7 @@ async fn start(spec: &Value, running: &[Running], host: &str, base: Option<u16>)
     let server = server.error(move |e| {
         lock(&errors).errors.push(json!({"class": e.php_class(), "message": bytes_value(e.message())}));
     });
-    let mut adapter = Tokio::new(transports).map_err(fault)?;
+    let mut adapter = Network::new(transports).map_err(fault)?;
     let workers = log.clone();
     utopia_dns::adapter::Adapter::on_worker_start(
         &mut adapter,
@@ -895,7 +895,7 @@ async fn start(spec: &Value, running: &[Running], host: &str, base: Option<u16>)
     for (kind, (_, address)) in kinds.iter().zip(bound.local_addrs()) {
         ports.insert(kind.clone(), json!(address.port()));
     }
-    let task = tokio::spawn(bound.serve(Arc::new(server)));
+    let task = utopia_async::spawn(bound.serve(Arc::new(server)));
     Ok(Running { host: "127.0.0.1".to_owned(), ports, log, task: Some(task) })
 }
 
@@ -1002,7 +1002,7 @@ async fn step(step: &Value, running: &[Running]) -> Result<Value, Fault> {
             Value::Array(out)
         }
         "errors" | "workers" | "telemetry" => {
-            tokio::time::sleep(Duration::from_millis(50)).await;
+            utopia_async::sleep(Duration::from_millis(50)).await;
             let server = server.ok_or_else(|| Fault::new("no such server"))?;
             let log = lock(&server.log);
             Value::Array(match kind {
@@ -1012,7 +1012,7 @@ async fn step(step: &Value, running: &[Running]) -> Result<Value, Fault> {
             })
         }
         "sleep" => {
-            tokio::time::sleep(Duration::from_millis(int(step, "ms", 0)?.max(0) as u64)).await;
+            utopia_async::sleep(Duration::from_millis(int(step, "ms", 0)?.max(0) as u64)).await;
             Value::Null
         }
         other => return Err(Fault::new(format!("unknown step `{other}`"))),
@@ -1023,7 +1023,7 @@ async fn step(step: &Value, running: &[Running]) -> Result<Value, Fault> {
 async fn endpoint(service: &str) -> Result<(String, u16), Fault> {
     let (host, port) = service.rsplit_once(':').ok_or_else(|| Fault::new(format!("not host:port: {service}")))?;
     let port: u16 = port.parse().map_err(|_| Fault::new(format!("bad port in {service}")))?;
-    let address = tokio::net::lookup_host((host, port))
+    let address = utopia_async::net::lookup_host((host, port))
         .await
         .map_err(|e| Fault::new(e.to_string()))?
         .find(std::net::SocketAddr::is_ipv4)
@@ -1033,7 +1033,7 @@ async fn endpoint(service: &str) -> Result<(String, u16), Fault> {
 
 /// A local port nothing listens on.
 async fn closed_port() -> Result<u16, Fault> {
-    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.map_err(|e| Fault::new(e.to_string()))?;
+    let listener = utopia_async::net::TcpListener::bind("127.0.0.1:0").await.map_err(|e| Fault::new(e.to_string()))?;
     let port = listener.local_addr().map_err(|e| Fault::new(e.to_string()))?.port();
     drop(listener);
     Ok(port)
@@ -1043,37 +1043,37 @@ async fn raw(step: &Value, host: &str, port: &dyn Fn(&str) -> Result<u16, Fault>
     let transport = step.get("transport").and_then(Value::as_str).unwrap_or("udp");
     let io = |e: std::io::Error| Fault::new(e.to_string());
     if transport == "udp" {
-        let socket = tokio::net::UdpSocket::bind("0.0.0.0:0").await.map_err(io)?;
+        let socket = utopia_async::net::UdpSocket::bind("0.0.0.0:0").await.map_err(io)?;
         socket.send_to(&text(step, "data")?, (host, port("udp")?)).await.map_err(io)?;
         let mut buffer = vec![0u8; 65535];
-        return Ok(match tokio::time::timeout(Duration::from_secs(3), socket.recv_from(&mut buffer)).await {
+        return Ok(match utopia_async::timeout(Duration::from_secs(3), socket.recv_from(&mut buffer)).await {
             Ok(Ok((n, _))) => bytes_value(&buffer[..n]),
             _ => Value::Null,
         });
     }
-    let mut stream = tokio::net::TcpStream::connect((host, port(transport)?)).await.map_err(io)?;
+    let mut stream = utopia_async::net::TcpStream::connect((host, port(transport)?)).await.map_err(io)?;
     let chunks: Vec<Vec<u8>> = match step.get("chunks").and_then(Value::as_array) {
         Some(list) => list.iter().map(|c| bytes(c).unwrap_or_default()).collect(),
         None => vec![text(step, "data")?],
     };
     for chunk in chunks {
         let _ = stream.write_all(&chunk).await;
-        tokio::time::sleep(Duration::from_millis(20)).await;
+        utopia_async::sleep(Duration::from_millis(20)).await;
     }
     // Until the connection closes, `frames` complete answers arrive (waiting
     // up to 5 seconds), or nothing arrives for `wait` seconds.
     let wait = step.get("wait").and_then(Value::as_f64).unwrap_or(0.5);
     let frames = step.get("frames").and_then(Value::as_u64).map(|n| n as usize);
-    let deadline = tokio::time::Instant::now() + Duration::from_secs(5);
+    let deadline = std::time::Instant::now() + Duration::from_secs(5);
     let mut data = Vec::new();
     let mut buffer = vec![0u8; 65536];
     let mut closed = false;
     while frames.is_none_or(|n| frame_count(&data) < n) {
         let limit = match frames {
-            Some(_) => deadline.saturating_duration_since(tokio::time::Instant::now()),
+            Some(_) => deadline.saturating_duration_since(std::time::Instant::now()),
             None => Duration::from_secs_f64(wait),
         };
-        match tokio::time::timeout(limit, stream.read(&mut buffer)).await {
+        match utopia_async::timeout(limit, stream.read(&mut buffer)).await {
             Ok(Ok(0)) | Ok(Err(_)) => {
                 closed = true;
                 break;
@@ -1119,10 +1119,10 @@ async fn doh(step: &Value, host: &str, port: u16) -> Result<Value, Fault> {
     }
     request.extend_from_slice(b"\r\n");
     request.extend_from_slice(&body);
-    let mut stream = tokio::net::TcpStream::connect((host, port)).await.map_err(io)?;
+    let mut stream = utopia_async::net::TcpStream::connect((host, port)).await.map_err(io)?;
     stream.write_all(&request).await.map_err(io)?;
     let mut response = Vec::new();
-    let _ = tokio::time::timeout(Duration::from_secs(5), stream.read_to_end(&mut response)).await;
+    let _ = utopia_async::timeout(Duration::from_secs(5), stream.read_to_end(&mut response)).await;
     let mut headers = [httparse::EMPTY_HEADER; 32];
     let mut parsed = httparse::Response::new(&mut headers);
     let Ok(httparse::Status::Complete(head)) = parsed.parse(&response) else {

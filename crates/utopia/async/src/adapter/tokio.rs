@@ -31,7 +31,7 @@ pub struct Tokio;
 impl super::Adapter for Tokio {
     type Runtime = ::tokio::runtime::Runtime;
     type Handle = ::tokio::runtime::Handle;
-    type JoinHandle<T: Send + 'static> = Task<T>;
+    type JoinHandle<T> = Task<T>;
     type Sleep = ::tokio::time::Sleep;
     type TcpStream = ::tokio::net::TcpStream;
     type TcpListener = ::tokio::net::TcpListener;
@@ -205,7 +205,7 @@ impl super::Handle for ::tokio::runtime::Handle {
 #[derive(Debug)]
 pub struct Task<T>(::tokio::task::JoinHandle<T>);
 
-impl<T: Send + 'static> Future for Task<T> {
+impl<T> Future for Task<T> {
     type Output = Result<T, JoinError>;
 
     #[inline]
@@ -222,7 +222,7 @@ impl<T: Send + 'static> Future for Task<T> {
     }
 }
 
-impl<T: Send + 'static> super::JoinHandle<T> for Task<T> {
+impl<T> super::JoinHandle<T> for Task<T> {
     #[inline]
     fn abort(&self) {
         self.0.abort();
@@ -296,6 +296,21 @@ impl super::TcpStream for ::tokio::net::TcpStream {
             Some(time) => socket.set_tcp_keepalive(&socket2::TcpKeepalive::new().with_time(time)),
             None => socket.set_keepalive(false),
         }
+    }
+
+    #[inline]
+    fn set_zero_linger(&self) -> io::Result<()> {
+        ::tokio::net::TcpStream::set_zero_linger(self)
+    }
+
+    #[inline]
+    fn take_error(&self) -> io::Result<Option<io::Error>> {
+        ::tokio::net::TcpStream::take_error(self)
+    }
+
+    #[inline]
+    fn peek<'a>(&'a self, buf: &'a mut [u8]) -> impl Future<Output = io::Result<usize>> + Send + 'a {
+        ::tokio::net::TcpStream::peek(self, buf)
     }
 
     #[inline]
@@ -453,6 +468,11 @@ impl super::File for ::tokio::fs::File {
     #[inline]
     fn into_std(self) -> impl Future<Output = std::fs::File> + Send {
         ::tokio::fs::File::into_std(self)
+    }
+
+    #[inline]
+    fn try_into_std(self) -> Result<std::fs::File, Self> {
+        ::tokio::fs::File::try_into_std(self)
     }
 
     #[inline]

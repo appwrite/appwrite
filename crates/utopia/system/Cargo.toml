@@ -13,7 +13,7 @@ indexmap.workspace = true
 php-std.workspace = true
 rustix.workspace = true
 thiserror.workspace = true
-tokio = { workspace = true, features = ["time"] }
+utopia-async.workspace = true
 
 [package.metadata.utopia]
 category = "platform"

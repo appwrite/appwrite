@@ -7,8 +7,8 @@ use std::time::Duration;
 
 use bytes::Bytes;
 use php_std::types::{Array, ArrayKey, Value};
-use tokio::io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufStream};
-use tokio::net::TcpStream;
+use utopia_async::io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufStream};
+use utopia_async::net::TcpStream;
 
 use crate::adapter::{Adapter, Retry, blank, coerce, empty, now};
 use crate::{Codec, Envelope, Error, Json, Result, fastlz};
@@ -103,7 +103,7 @@ pub struct MemcachedClient {
     host: String,
     port: u16,
     timeout: Duration,
-    stream: tokio::sync::Mutex<Option<BufStream<TcpStream>>>,
+    stream: utopia_async::sync::Mutex<Option<BufStream<TcpStream>>>,
 }
 
 impl MemcachedClient {
@@ -113,7 +113,7 @@ impl MemcachedClient {
             host: host.into(),
             port,
             timeout: Duration::from_secs(1),
-            stream: tokio::sync::Mutex::new(None),
+            stream: utopia_async::sync::Mutex::new(None),
         }
     }
 
@@ -126,7 +126,7 @@ impl MemcachedClient {
         let mut guard = self.stream.lock().await;
         if guard.is_none() {
             let connect = TcpStream::connect((self.host.as_str(), self.port));
-            let stream = match tokio::time::timeout(self.timeout, connect).await {
+            let stream = match utopia_async::timeout(self.timeout, connect).await {
                 Ok(Ok(stream)) => stream,
                 _ => return Err(Failure("CONNECTION FAILURE".into())),
             };
@@ -139,7 +139,7 @@ impl MemcachedClient {
             stream.flush().await?;
             read(stream, reply).await
         };
-        match tokio::time::timeout(self.timeout, exchange).await {
+        match utopia_async::timeout(self.timeout, exchange).await {
             Ok(Ok(value)) => Ok(value),
             Ok(Err(e)) => {
                 *guard = None;
@@ -295,7 +295,7 @@ macro_rules! execute {
 /// use php_std::types::Value;
 /// use utopia_cache::{Adapter, Memcached, MemcachedClient};
 ///
-/// # tokio::runtime::Runtime::new()?.block_on(async {
+/// # utopia_async::Runtime::new()?.block_on(async {
 /// let cache = Memcached::new(MemcachedClient::new("localhost", 11211));
 /// cache.save("greeting", &Value::from("hello"), "", 0).await?;
 /// assert_eq!(cache.load("greeting", 60, "").await?, Some(Value::from("hello")));
@@ -426,7 +426,7 @@ async fn stat(client: &MemcachedClient, name: &str) -> i64 {
 /// use php_std::types::Value;
 /// use utopia_cache::{Adapter, Hazelcast, MemcachedClient};
 ///
-/// # tokio::runtime::Runtime::new()?.block_on(async {
+/// # utopia_async::Runtime::new()?.block_on(async {
 /// let cache = Hazelcast::new(MemcachedClient::new("localhost", 5701));
 /// cache.save("greeting", &Value::from("hello"), "", 0).await?;
 /// assert_eq!(cache.load("greeting", 60, "").await?, Some(Value::from("hello")));

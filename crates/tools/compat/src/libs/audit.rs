@@ -1278,7 +1278,7 @@ pub async fn call(op: &str, a: &Json, session: &mut Session) -> OpResult {
         }
         "clock.sleep" => {
             let ms = int(a, "ms")?.unwrap_or(0).max(0) as u64;
-            tokio::time::sleep(std::time::Duration::from_millis(ms)).await;
+            utopia_async::sleep(std::time::Duration::from_millis(ms)).await;
             Ok(Outcome::Ok(Json::Null))
         }
         "audit.new" => {

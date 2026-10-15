@@ -26,7 +26,7 @@ hmac.workspace = true
 http-body-util = { workspace = true, optional = true }
 hyper = { workspace = true, features = ["client", "http1"], optional = true }
 hyper-rustls = { workspace = true, optional = true }
-hyper-util = { workspace = true, features = ["client-legacy", "http1", "tokio"], optional = true }
+hyper-util = { workspace = true, features = ["client-legacy", "http1"], optional = true }
 indexmap.workspace = true
 md-5.workspace = true
 php-std.workspace = true
@@ -35,15 +35,13 @@ rand = { workspace = true, optional = true }
 rustix.workspace = true
 sha2.workspace = true
 thiserror.workspace = true
-tokio = { workspace = true, features = ["fs", "io-util", "rt", "rt-multi-thread", "time"] }
+utopia-async = { workspace = true, features = ["hyper"] }
 utopia-telemetry = { workspace = true, optional = true }
 utopia-validators.workspace = true
 
 [dev-dependencies.utopia-telemetry]
 workspace = true
 
-[dev-dependencies]
-tokio = { workspace = true, features = ["rt", "rt-multi-thread", "macros", "fs", "io-util", "time"] }
 
 [package.metadata.utopia]
 category = "data"

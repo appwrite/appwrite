@@ -905,8 +905,8 @@
   },
   "waivers": {
     "Utopia\\Queue\\Internal\\*": "@internal: settlement and acknowledgement coalescing, not public API; every broker.commit/reject/release case goes through it",
-    "Utopia\\Queue\\Adapter\\Workerman::*": "Workerman process supervisor: PHP runtime plumbing with no Rust counterpart (Rust workers are tokio tasks: adapter::Runtime::Workers)",
-    "Utopia\\Queue\\Adapter\\Swoole::start": "Swoole process supervisor (forks and respawns worker processes): PHP runtime plumbing; Rust runs workers as tokio tasks (Server::start with Runtime::Workers)",
+    "Utopia\\Queue\\Adapter\\Workerman::*": "Workerman process supervisor: PHP runtime plumbing with no Rust counterpart (Rust workers are utopia-async tasks: adapter::Runtime::Workers)",
+    "Utopia\\Queue\\Adapter\\Swoole::start": "Swoole process supervisor (forks and respawns worker processes): PHP runtime plumbing; Rust runs workers as utopia-async tasks (Server::start with Runtime::Workers)",
     "Utopia\\Queue\\Adapter\\Swoole::stop": "signals the forked worker processes: PHP runtime plumbing; Rust stops through adapter::Stopper, which adapter.consume exercises",
     "Utopia\\Queue\\Adapter\\Swoole::workerStart": "registers a forked-process callback: PHP runtime plumbing; Server::worker_start hooks are covered by server.run",
     "Utopia\\Queue\\Adapter\\Swoole::workerStop": "registers a forked-process callback: PHP runtime plumbing; Server::worker_stop hooks are covered by server.run",
@@ -915,7 +915,7 @@
   "tests_waived": {
     "packages/queue/tests/E2E/KedaTest.php": "deploys the worker image to a Kubernetes cluster and lets KEDA scale Jobs from the queue depth: infrastructure, not library behaviour; the run-to-completion drain those Jobs run is ported (KubernetesJobAdapterTest.json) and the depth they scale on is ported (RedisQueueSizeTest.json, ServerTelemetryTest.json)",
     "packages/queue/tests/E2E/WorkermanTest.php": "drives the Workerman process supervisor (Adapter\\Workerman, waived as PHP runtime plumbing); the publish, events, aliases and retry assertions it shares with every worker test are ported in E2EPoolTest.json, SwooleTest.json and NatsServerTest.json",
-    "packages/queue/tests/E2E/ShutdownTest.php": "asserts the Swoole supervisor SIGKILLs a forked worker that ignores SIGTERM past shutdownTimeout: process supervision (Adapter\\Swoole::start/stop, waived); Rust workers are tokio tasks stopped through adapter::Stopper, whose draining is ported in E2EPrefetchTest.json",
+    "packages/queue/tests/E2E/ShutdownTest.php": "asserts the Swoole supervisor SIGKILLs a forked worker that ignores SIGTERM past shutdownTimeout: process supervision (Adapter\\Swoole::start/stop, waived); Rust workers are utopia-async tasks stopped through adapter::Stopper, whose draining is ported in E2EPrefetchTest.json",
     "packages/queue/tests/E2E/SwooleRestartTest.php": "asserts the Swoole supervisor re-forks worker processes that exit: process supervision (Adapter\\Swoole::start, waived); the drain-on-stop assertion is ported in E2EPrefetchTest.json (shutdown returns work that never started)"
   },
   "quirks": [],

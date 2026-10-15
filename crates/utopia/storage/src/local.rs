@@ -9,7 +9,7 @@ use async_trait::async_trait;
 use bytes::Bytes;
 use chrono::{DateTime, FixedOffset};
 use md5::{Digest, Md5};
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use utopia_async::io::{AsyncReadExt, AsyncWriteExt};
 
 use crate::device::{self, Device, DeviceType, FileInfo, FileList, Metadata, Part};
 use crate::{Body, Error, Result, mime};
@@ -30,14 +30,14 @@ const WHOLE_READ_SIZE: u64 = 1 << 20;
 /// they are joined.
 ///
 /// Reads and writes do their file I/O in one blocking call each (a whole
-/// small file at once), on the worker itself rather than through tokio's
-/// blocking pool: `block_in_place` on a multi-threaded runtime, in place on
+/// small file at once), on the worker itself rather than through the
+/// engine's blocking pool: `block_in_place` on a multi-threaded runtime, in place on
 /// a current-thread one. Larger bodies stream from the blocking pool.
 ///
 /// ```
 /// use utopia_storage::{Body, Device, Local};
 ///
-/// # tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap().block_on(async {
+/// # utopia_async::run(async {
 /// let dir = std::env::temp_dir().join("utopia-storage-doc-local");
 /// let device = Local::new(dir.to_str().unwrap());
 /// let path = device.path("hello.txt");
@@ -167,11 +167,11 @@ impl Local {
                 .await?;
             }
             drop(file);
-            tokio::fs::rename(&tmp, path).await.map_err(|_| cant_write(path))
+            utopia_async::fs::rename(&tmp, path).await.map_err(|_| cant_write(path))
         }
         .await;
         if let Err(e) = result {
-            let _ = tokio::fs::remove_file(&tmp).await;
+            let _ = utopia_async::fs::remove_file(&tmp).await;
             return Err(e);
         }
         Ok(hex::encode(hash.finalize()))
@@ -180,7 +180,7 @@ impl Local {
     async fn count_chunks(&self, tmp: &str, path: &str) -> i64 {
         let prefix = format!("{}.part.", filename(path));
         let mut count = 0;
-        let Ok(mut entries) = tokio::fs::read_dir(tmp).await else { return 0 };
+        let Ok(mut entries) = utopia_async::fs::read_dir(tmp).await else { return 0 };
         while let Ok(Some(entry)) = entries.next_entry().await {
             let name = entry.file_name();
             let name = name.to_string_lossy();
@@ -200,13 +200,13 @@ impl Local {
             blocking(move || temp_file(&dir, &prefix).map_err(|_| Error::Storage(String::new()))).await
         }
         .map_err(|_| failed())?;
-        let mut dest = tokio::fs::File::from_std(dest);
+        let mut dest = utopia_async::fs::File::from_std(dest);
         let mut parts = Vec::new();
         for i in 1..=chunks {
             let part = format!("{tmp}/{}.part.{i}", filename(path));
-            let Ok(mut src) = tokio::fs::File::open(&part).await else {
+            let Ok(mut src) = utopia_async::fs::File::open(&part).await else {
                 drop(dest);
-                let _ = tokio::fs::remove_file(&assemble).await;
+                let _ = utopia_async::fs::remove_file(&assemble).await;
                 // The chunks go once joined: a file in place means another
                 // request assembled it meanwhile, and there is nothing left to do.
                 if exists(path).await {
@@ -214,24 +214,24 @@ impl Local {
                 }
                 return Err(Error::Storage(format!("Failed to open chunk {part}")));
             };
-            if tokio::io::copy(&mut src, &mut dest).await.is_err() {
+            if utopia_async::io::copy(&mut src, &mut dest).await.is_err() {
                 drop(dest);
-                let _ = tokio::fs::remove_file(&assemble).await;
+                let _ = utopia_async::fs::remove_file(&assemble).await;
                 return Err(Error::Storage(format!("Failed to copy chunk {part}")));
             }
             parts.push(part);
         }
         let _ = dest.flush().await;
         drop(dest);
-        if tokio::fs::rename(&assemble, path).await.is_err() {
-            let _ = tokio::fs::remove_file(&assemble).await;
+        if utopia_async::fs::rename(&assemble, path).await.is_err() {
+            let _ = utopia_async::fs::remove_file(&assemble).await;
             return Err(Error::Storage(format!("Failed to finalize assembled file {path}")));
         }
         for part in parts {
             // PHP: a failure only raises a warning.
-            let _ = tokio::fs::remove_file(part).await;
+            let _ = utopia_async::fs::remove_file(part).await;
         }
-        let _ = tokio::fs::remove_dir(&tmp).await;
+        let _ = utopia_async::fs::remove_dir(&tmp).await;
         Ok(())
     }
 
@@ -255,7 +255,7 @@ impl Local {
                 let _ = self.delete(&file, true).await;
             }
         }
-        tokio::fs::remove_dir(&real).await.is_ok()
+        utopia_async::fs::remove_dir(&real).await.is_ok()
     }
 }
 
@@ -304,8 +304,9 @@ impl Device for Local {
         let part = format!("{tmp}/{}.part.{chunk}", filename(path));
         // A chunk uploaded again is not written twice.
         if !exists(&part).await {
-            let file =
-                tokio::fs::File::create(&part).await.map_err(|_| Error::Storage(format!("Can't write file {part}")))?;
+            let file = utopia_async::fs::File::create(&part)
+                .await
+                .map_err(|_| Error::Storage(format!("Can't write file {part}")))?;
             pipe(file, &part, data).await?;
         }
         let received = self.count_chunks(&tmp, path).await;
@@ -343,7 +344,7 @@ impl Device for Local {
 
     async fn abort(&self, path: &str, _upload_id: &str) -> Result<bool> {
         if exists(path).await {
-            let _ = tokio::fs::remove_file(path).await;
+            let _ = utopia_async::fs::remove_file(path).await;
         }
         let dir = php_std::path::dirname(path);
         let tmp = format!("{dir}/tmp_{}/", basename(path));
@@ -357,7 +358,7 @@ impl Device for Local {
         for file in scan_directory(&tmp).await {
             let _ = self.delete(&file, true).await;
         }
-        Ok(tokio::fs::remove_dir(&tmp).await.is_ok())
+        Ok(utopia_async::fs::remove_dir(&tmp).await.is_ok())
     }
 
     async fn read(&self, path: &str, offset: u64, length: Option<u64>, etag: Option<&str>) -> Result<Body> {
@@ -374,7 +375,7 @@ impl Device for Local {
         if !exists(&dir).await && !create_directory(&dir).await {
             return Err(Error::Storage(format!("Can't create directory {dir}")));
         }
-        let file = match tokio::fs::OpenOptions::new().write(true).create_new(true).open(path).await {
+        let file = match utopia_async::fs::OpenOptions::new().write(true).create_new(true).open(path).await {
             Ok(file) => file,
             Err(_) if exists(path).await => {
                 return Err(Error::precondition(format!("File {path} already exists")));
@@ -385,7 +386,7 @@ impl Device for Local {
         // fails must give it back, or the path can never be created again.
         let result = pipe(file, path, data).await;
         if result.is_err() {
-            let _ = tokio::fs::remove_file(path).await;
+            let _ = utopia_async::fs::remove_file(path).await;
         }
         result
     }
@@ -412,7 +413,7 @@ impl Device for Local {
         if !exists(&dir).await && !create_directory(&dir).await {
             return Err(Error::Storage(format!("Can't create directory {dir}")));
         }
-        Ok(tokio::fs::rename(source, target).await.is_ok())
+        Ok(utopia_async::fs::rename(source, target).await.is_ok())
     }
 
     async fn delete(&self, path: &str, recursive: bool) -> Result<bool> {
@@ -447,7 +448,7 @@ impl Device for Local {
         let page = array_slice(&paths, offset, max);
         let mut files = Vec::with_capacity(page.len());
         for path in page {
-            let meta = tokio::fs::metadata(path).await.ok();
+            let meta = utopia_async::fs::metadata(path).await.ok();
             files.push(FileInfo {
                 path: path.clone(),
                 size: meta.as_ref().map(|m| m.len()).unwrap_or(0),
@@ -463,7 +464,7 @@ impl Device for Local {
         if !exists(path).await {
             return Err(Error::not_found(format!("File not found: {path}")));
         }
-        let modified = tokio::fs::metadata(path).await.ok().and_then(|m| at(m.mtime()));
+        let modified = utopia_async::fs::metadata(path).await.ok().and_then(|m| at(m.mtime()));
         Ok(FileInfo {
             path: path.to_owned(),
             size: self.file_size(path).await?,
@@ -473,7 +474,7 @@ impl Device for Local {
     }
 
     async fn file_size(&self, path: &str) -> Result<u64> {
-        match tokio::fs::metadata(path).await {
+        match utopia_async::fs::metadata(path).await {
             Ok(meta) => Ok(meta.len()),
             Err(_) if exists(path).await => Err(Error::Storage(format!("Failed to get size of file {path}"))),
             Err(_) => Err(Error::not_found(format!("File not found: {path}"))),
@@ -487,7 +488,7 @@ impl Device for Local {
         if is_dir(path).await {
             return Ok("directory".to_owned());
         }
-        let mut file = tokio::fs::File::open(path)
+        let mut file = utopia_async::fs::File::open(path)
             .await
             .map_err(|_| Error::Storage(format!("Failed to get mime type of file {path}")))?;
         let mut head = Vec::with_capacity(mime::SNIFF_LENGTH);
@@ -507,7 +508,7 @@ impl Device for Local {
                 Error::not_found(format!("File not found: {path}"))
             }
         };
-        let Ok(mut file) = tokio::fs::File::open(path).await else { return Err(failed().await) };
+        let Ok(mut file) = utopia_async::fs::File::open(path).await else { return Err(failed().await) };
         match hash_file(&mut file).await {
             Ok(hash) => Ok(hash),
             Err(_) => Err(failed().await),
@@ -521,15 +522,15 @@ impl Device for Local {
 
 /// `file_exists()`: anything at the path, following symbolic links.
 async fn exists(path: &str) -> bool {
-    !path.is_empty() && tokio::fs::metadata(path).await.is_ok()
+    !path.is_empty() && utopia_async::fs::metadata(path).await.is_ok()
 }
 
 async fn is_dir(path: &str) -> bool {
-    tokio::fs::metadata(path).await.is_ok_and(|m| m.is_dir())
+    utopia_async::fs::metadata(path).await.is_ok_and(|m| m.is_dir())
 }
 
 async fn canonical(path: &str) -> Option<String> {
-    tokio::fs::canonicalize(path).await.ok().map(|p| p.to_string_lossy().into_owned())
+    utopia_async::fs::canonicalize(path).await.ok().map(|p| p.to_string_lossy().into_owned())
 }
 
 /// `createDirectory()`: `mkdir -p` with mode 0755, `true` when it exists.
@@ -552,18 +553,9 @@ fn make_directory(path: &str) -> bool {
 /// more than most local file operations: on a multi-threaded runtime the
 /// worker becomes a blocking thread for the call (`block_in_place`) and
 /// hands its other tasks to another; a current-thread runtime, which has no
-/// other worker to hand them to, runs it in place, as PHP does. Outside a
-/// runtime, or on any other flavor, it goes to the blocking pool.
+/// other worker to hand them to, runs it in place, as PHP does.
 async fn blocking<T: Send + 'static>(work: impl FnOnce() -> Result<T> + Send + 'static) -> Result<T> {
-    use tokio::runtime::{Handle, RuntimeFlavor};
-
-    match Handle::try_current().map(|handle| handle.runtime_flavor()) {
-        Ok(RuntimeFlavor::MultiThread) => tokio::task::block_in_place(work),
-        Ok(RuntimeFlavor::CurrentThread) => work(),
-        _ => tokio::task::spawn_blocking(work)
-            .await
-            .map_err(|e| Error::Storage(format!("File operation failed: {e}")))?,
-    }
+    utopia_async::block_in_place(work)
 }
 
 /// The error of a write that failed after the directory was in place.
@@ -650,7 +642,7 @@ fn random() -> u64 {
 
 /// Pipes a body into an open file and closes it. Returns the MD5 of the
 /// bytes written, the file's ETag.
-async fn pipe(mut file: tokio::fs::File, path: &str, mut data: Body) -> Result<String> {
+async fn pipe(mut file: utopia_async::fs::File, path: &str, mut data: Body) -> Result<String> {
     if data.is_seekable() {
         data.rewind().await.map_err(Error::Body)?;
     }
@@ -718,7 +710,7 @@ fn read_file(path: &str, offset: u64, length: Option<u64>, etag: Option<&str>) -
 }
 
 /// The MD5 of an open file, read from where it is.
-async fn hash_file(file: &mut tokio::fs::File) -> io::Result<String> {
+async fn hash_file(file: &mut utopia_async::fs::File) -> io::Result<String> {
     let mut hash = Md5::new();
     let mut buffer = vec![0; 1 << 16];
     loop {
@@ -744,7 +736,7 @@ async fn scan_directory(dir: &str) -> Vec<String> {
     let read = if dir.is_empty() { "/" } else { dir.as_str() };
     let mut visible = Vec::new();
     let mut hidden = Vec::new();
-    if let Ok(mut entries) = tokio::fs::read_dir(read).await {
+    if let Ok(mut entries) = utopia_async::fs::read_dir(read).await {
         while let Ok(Some(entry)) = entries.next_entry().await {
             let name = entry.file_name().to_string_lossy().into_owned();
             if !name.starts_with('.') {
@@ -761,10 +753,10 @@ async fn scan_directory(dir: &str) -> Vec<String> {
 
 /// `delete()`: a file or link, or with `recursive` a directory and all in it.
 async fn delete(path: String, recursive: bool) -> bool {
-    let meta = tokio::fs::symlink_metadata(&path).await;
+    let meta = utopia_async::fs::symlink_metadata(&path).await;
     let followed_dir = is_dir(&path).await;
     if followed_dir && recursive {
-        let Ok(mut entries) = tokio::fs::read_dir(&path).await else { return false };
+        let Ok(mut entries) = utopia_async::fs::read_dir(&path).await else { return false };
         let mut names = Vec::new();
         while let Ok(Some(entry)) = entries.next_entry().await {
             names.push(entry.file_name().to_string_lossy().into_owned());
@@ -775,18 +767,18 @@ async fn delete(path: String, recursive: bool) -> bool {
                 return false;
             }
         }
-        return tokio::fs::remove_dir(&path).await.is_ok();
+        return utopia_async::fs::remove_dir(&path).await.is_ok();
     }
     match meta {
         Ok(m) if (m.is_file() || m.file_type().is_symlink()) || (!followed_dir && Path::new(&path).is_file()) => {
-            tokio::fs::remove_file(&path).await.is_ok()
+            utopia_async::fs::remove_file(&path).await.is_ok()
         }
         _ => false,
     }
 }
 
 async fn directory_size(path: String) -> i64 {
-    let Ok(mut entries) = tokio::fs::read_dir(&path).await else { return -1 };
+    let Ok(mut entries) = utopia_async::fs::read_dir(&path).await else { return -1 };
     let mut size = 0i64;
     while let Ok(Some(entry)) = entries.next_entry().await {
         let name = entry.file_name().to_string_lossy().into_owned();
@@ -797,7 +789,7 @@ async fn directory_size(path: String) -> i64 {
         if is_dir(&full).await {
             size += Box::pin(directory_size(format!("{full}/"))).await;
         } else {
-            size += tokio::fs::metadata(&full).await.map(|m| m.len() as i64).unwrap_or(0);
+            size += utopia_async::fs::metadata(&full).await.map(|m| m.len() as i64).unwrap_or(0);
         }
     }
     size
@@ -838,12 +830,12 @@ mod tests {
         assert!(device.delete(device.root(), true).await.unwrap());
     }
 
-    #[tokio::test(flavor = "current_thread")]
+    #[utopia_async::test]
     async fn round_trip_on_current_thread() {
         round_trip("current-thread").await;
     }
 
-    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    #[utopia_async::test(threads = 2)]
     async fn round_trip_on_multi_thread() {
         round_trip("multi-thread").await;
     }

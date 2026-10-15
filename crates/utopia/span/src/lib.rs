@@ -10,7 +10,7 @@
 //! ([`Span::traceparent`], [`Span::init`] with a `traceparent` header).
 //!
 //! Where "current" lives is a [`Storage`]: [`Memory`] (one span per process),
-//! [`Task`] (one span per tokio task) or [`Auto`] (the task's span inside a
+//! [`Task`] (one span per task) or [`Auto`] (the task's span inside a
 //! task scope, the process's otherwise), chosen once with
 //! [`Span::set_storage`].
 //!

@@ -20,8 +20,8 @@ use postgres_protocol::authentication::md5_hash;
 use postgres_protocol::authentication::sasl::{ChannelBinding, SCRAM_SHA_256, ScramSha256};
 use postgres_protocol::message::backend::Message;
 use postgres_protocol::message::frontend;
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio::net::TcpStream;
+use utopia_async::io::{AsyncReadExt, AsyncWriteExt};
+use utopia_async::net::TcpStream;
 
 /// Where and as whom to connect.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -217,7 +217,7 @@ impl Wire {
     /// `ATTR_TIMEOUT`).
     pub async fn connect(config: &Config) -> io::Result<Wire> {
         let address = (config.host.as_str(), config.port);
-        let stream = tokio::time::timeout(Duration::from_secs(3), TcpStream::connect(address))
+        let stream = utopia_async::timeout(Duration::from_secs(3), TcpStream::connect(address))
             .await
             .map_err(|_| io::Error::new(io::ErrorKind::TimedOut, "timeout expired"))??;
         stream.set_nodelay(true)?;

@@ -1,7 +1,7 @@
 //! Compat adapter for `websocket`: maps `tests/compat/websocket/spec.json`
 //! operations onto `utopia-websocket`: servers on the in-process `Memory`
 //! adapter, clients on scripted connections, and E2E runs against the
-//! `Tokio` adapter serving the handlers of `tests/compat/websocket/server.php`.
+//! `Network` adapter serving the handlers of `tests/compat/websocket/server.php`.
 
 use std::collections::HashMap;
 use std::hint::black_box;
@@ -12,10 +12,10 @@ use bytes::Bytes;
 use futures_util::future::BoxFuture;
 use indexmap::IndexMap;
 use serde_json::{Value, json};
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio::net::{TcpSocket, TcpStream};
+use utopia_async::io::{AsyncReadExt, AsyncWriteExt};
+use utopia_async::net::{TcpSocket, TcpStream};
 use utopia_websocket::client::{Frame, NO_CONNECTION, Opcode, Options, Received, Transport, TransportError};
-use utopia_websocket::{Adapter, Client, Error, Memory, Request, Server, Stage, Tokio};
+use utopia_websocket::{Adapter, Client, Error, Memory, Network, Request, Server, Stage};
 
 use crate::adapter::{Args, Fault, OpResult, Outcome, Session, bytes, bytes_value, float_value};
 use crate::bench::Bench;
@@ -487,7 +487,7 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
         )),
         "swoole.config" => {
             let timeout = a.opt_f64("send_timeout")?.unwrap_or(utopia_websocket::net::DEFAULT_SEND_TIMEOUT);
-            match Tokio::new("127.0.0.1", 0, timeout) {
+            match Network::new("127.0.0.1", 0, timeout) {
                 Ok(adapter) => {
                     if let Some(v) = a.opt_i64("package_max_length")? {
                         adapter.set_package_max_length(v);
@@ -526,8 +526,8 @@ struct Fixture {
     sent: i64,
 }
 
-/// The handlers of server.php on the Tokio adapter.
-fn fixture(server: &Server<Tokio>) {
+/// The handlers of server.php on the Network adapter.
+fn fixture(server: &Server<Network>) {
     let state = Arc::new(Mutex::new(Fixture::default()));
     let (s1, s2, s3, s4) = (state.clone(), state.clone(), state.clone(), state);
     let replies = server.clone();
@@ -602,16 +602,16 @@ fn fixture(server: &Server<Tokio>) {
         });
 }
 
-/// Starts the fixture on the Tokio adapter, runs the steps against it with
+/// Starts the fixture on the Network adapter, runs the steps against it with
 /// clients, and returns what each step observed.
 async fn e2e(steps: &[Value], send_timeout: f64) -> Result<Vec<Value>, Fault> {
-    let adapter = Tokio::new("127.0.0.1", 0, send_timeout).map_err(|e| Fault::new(e.to_string()))?;
+    let adapter = Network::new("127.0.0.1", 0, send_timeout).map_err(|e| Fault::new(e.to_string()))?;
     adapter.set_worker_number(1);
     let server = Server::new(adapter.clone());
     fixture(&server);
     let running = server.clone();
-    let task = tokio::spawn(async move { running.start().await });
-    let port = tokio::time::timeout(Duration::from_secs(5), adapter.listening())
+    let task = utopia_async::spawn(async move { running.start().await });
+    let port = utopia_async::timeout(Duration::from_secs(5), adapter.listening())
         .await
         .map_err(|_| Fault::new("the fixture server did not start"))?
         .port();
@@ -630,7 +630,7 @@ async fn e2e(steps: &[Value], send_timeout: f64) -> Result<Vec<Value>, Fault> {
     }
     slow.clear();
     let _ = http(port, "/shutdown").await;
-    let _ = tokio::time::timeout(Duration::from_secs(2), task).await;
+    let _ = utopia_async::timeout(Duration::from_secs(2), task).await;
     Ok(out)
 }
 
@@ -667,7 +667,7 @@ async fn http(port: u16, path: &str) -> Result<Value, Fault> {
     let request = format!("GET {path} HTTP/1.1\r\nHost: 127.0.0.1\r\nConnection: close\r\n\r\n");
     stream.write_all(request.as_bytes()).await.map_err(|e| Fault::new(e.to_string()))?;
     let mut raw = Vec::new();
-    let _ = tokio::time::timeout(Duration::from_secs(2), stream.read_to_end(&mut raw)).await;
+    let _ = utopia_async::timeout(Duration::from_secs(2), stream.read_to_end(&mut raw)).await;
     let text = String::from_utf8_lossy(&raw);
     let status = text.split(' ').nth(1).and_then(|s| s.parse::<i64>().ok()).unwrap_or(0);
     let body = text.split_once("\r\n\r\n").map(|(_, b)| b.to_owned()).unwrap_or_default();
@@ -736,7 +736,7 @@ async fn run(
             let deadline = Instant::now() + Duration::from_secs(2);
             let mut sent;
             loop {
-                tokio::time::sleep(Duration::from_millis(10)).await;
+                utopia_async::sleep(Duration::from_millis(10)).await;
                 let info = http(port, "/info").await?;
                 let body: Value = serde_json::from_str(info["body"].as_str().unwrap_or("{}")).unwrap_or_default();
                 sent = body["batches_sent"].as_i64().unwrap_or(0);
@@ -771,7 +771,7 @@ async fn run(
             let mut head = Vec::new();
             let mut chunk = [0u8; 4096];
             while !head.windows(4).any(|w| w == b"\r\n\r\n") {
-                match tokio::time::timeout(Duration::from_secs(2), stream.read(&mut chunk)).await {
+                match utopia_async::timeout(Duration::from_secs(2), stream.read(&mut chunk)).await {
                     Ok(Ok(n)) if n > 0 => head.extend_from_slice(&chunk[..n]),
                     _ => return Ok(Ok(Value::Bool(false))),
                 }
@@ -785,8 +785,8 @@ async fn run(
             let deadline = Instant::now() + Duration::from_secs(6);
             let mut kind = None;
             loop {
-                tokio::time::sleep(Duration::from_millis(50)).await;
-                match tokio::time::timeout(Duration::from_millis(200), s.write_all(&ping)).await {
+                utopia_async::sleep(Duration::from_millis(50)).await;
+                match utopia_async::timeout(Duration::from_millis(200), s.write_all(&ping)).await {
                     Ok(Err(e)) => {
                         kind = Some(e.kind());
                         break;

@@ -75,7 +75,7 @@ pub enum Flavor {
 /// `Utopia\Database\Adapter\MySQL` (extends `MariaDB`).
 pub struct MariaDB {
     state: State,
-    pdo: tokio::sync::Mutex<pdo::Pdo>,
+    pdo: utopia_async::sync::Mutex<pdo::Pdo>,
     float_precision: SyncMutex<i64>,
     host: String,
     flavor: Flavor,
@@ -113,7 +113,7 @@ impl MariaDB {
         let host = pdo.config().host.clone();
         Ok(MariaDB {
             state: State::default(),
-            pdo: tokio::sync::Mutex::new(pdo),
+            pdo: utopia_async::sync::Mutex::new(pdo),
             float_precision: SyncMutex::new(17),
             host,
             flavor,

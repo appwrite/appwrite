@@ -1,4 +1,4 @@
-//! Adapters: the transports a server listens on, on Tokio.
+//! Adapters: the transports a server listens on, on the network.
 
 use std::convert::Infallible;
 use std::future::Future;
@@ -12,8 +12,8 @@ use bytes::Bytes;
 use http_body_util::{BodyExt, Full};
 use hyper::body::Incoming;
 use hyper::{Request, Response};
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio::net::{TcpListener, TcpStream, UdpSocket};
+use utopia_async::io::{AsyncReadExt, AsyncWriteExt};
+use utopia_async::net::{TcpListener, TcpStream, UdpSocket};
 
 use crate::Error;
 use crate::message::MAX_SIZE;
@@ -40,7 +40,7 @@ pub trait Adapter: Send + 'static {
     fn start<H: Handler>(self, handler: Arc<H>) -> impl Future<Output = Result<(), Error>> + Send;
 }
 
-/// The Tokio adapter: any number of UDP, TCP and DNS-over-HTTPS
+/// The network adapter: any number of UDP, TCP and DNS-over-HTTPS
 /// transports in one runtime. UDP and TCP transports can share a port
 /// number; each HTTP transport needs its own.
 ///
@@ -49,11 +49,11 @@ pub trait Adapter: Send + 'static {
 /// every transport is bound.
 ///
 /// ```no_run
-/// use utopia_dns::adapter::{Tcp, Tokio, Transport, Udp};
+/// use utopia_dns::adapter::{Tcp, Network, Transport, Udp};
 /// use utopia_dns::resolver::Memory;
 /// use utopia_dns::{Server, Zone};
 /// # async fn serve(zone: Zone) -> Result<(), utopia_dns::Error> {
-/// let adapter = Tokio::new(vec![
+/// let adapter = Network::new(vec![
 ///     Transport::Udp(Udp::new("0.0.0.0", 5300)),
 ///     Transport::Tcp(Tcp::new("0.0.0.0", 5300)),
 /// ])?;
@@ -73,12 +73,12 @@ pub trait Adapter: Send + 'static {
 ///
 /// PHP: `Utopia\DNS\Adapter\Native` (a blocking select loop) and
 /// `Utopia\DNS\Adapter\Swoole` (Swoole workers); TCP follows `Native\Tcp`.
-pub struct Tokio {
+pub struct Network {
     transports: Vec<Transport>,
     on_worker_start: Vec<WorkerStart>,
 }
 
-/// A transport of the [`Tokio`] adapter.
+/// A transport of the [`Network`] adapter.
 #[derive(Debug, Clone)]
 pub enum Transport {
     /// DNS over UDP.
@@ -204,17 +204,17 @@ impl Http {
     }
 }
 
-impl Tokio {
+impl Network {
     /// An adapter serving `transports`.
     ///
     /// Fails with [`Error::Exception`] when there is none.
     ///
     /// PHP: `new Native($transports)`, `new Swoole($transports)`.
-    pub fn new(transports: Vec<Transport>) -> Result<Tokio, Error> {
+    pub fn new(transports: Vec<Transport>) -> Result<Network, Error> {
         if transports.is_empty() {
             return Err(Error::exception("At least one transport is required."));
         }
-        Ok(Tokio { transports, on_worker_start: Vec::new() })
+        Ok(Network { transports, on_worker_start: Vec::new() })
     }
 
     /// Binds every transport, so their addresses are known before serving.
@@ -253,7 +253,7 @@ impl Tokio {
     }
 }
 
-impl Adapter for Tokio {
+impl Adapter for Network {
     fn on_worker_start(&mut self, callback: WorkerStart) {
         self.on_worker_start.push(callback);
     }
@@ -289,7 +289,7 @@ enum Listener {
     Http(TcpListener, Http, Option<tokio_rustls::TlsAcceptor>),
 }
 
-/// The transports of a [`Tokio`] adapter, bound.
+/// The transports of a [`Network`] adapter, bound.
 pub struct Bound {
     listeners: Vec<Listener>,
     on_worker_start: Vec<WorkerStart>,
@@ -313,7 +313,7 @@ impl Bound {
         for callback in &self.on_worker_start {
             callback(0);
         }
-        let mut tasks = tokio::task::JoinSet::new();
+        let mut tasks = utopia_async::task::JoinSet::new();
         for listener in self.listeners {
             let handler = handler.clone();
             match listener {
@@ -343,7 +343,7 @@ async fn serve_udp<H: Handler>(socket: Arc<UdpSocket>, handler: Arc<H>) {
         }
         let packet = buffer[..length].to_vec();
         let (socket, handler) = (socket.clone(), handler.clone());
-        tokio::spawn(async move {
+        utopia_async::spawn(async move {
             let ip = peer.ip().to_string();
             let answer = handler.handle(&packet, &ip, peer.port(), Protocol::Udp).await;
             if !answer.is_empty() {
@@ -366,7 +366,7 @@ async fn serve_tcp<H: Handler>(listener: TcpListener, options: Tcp, handler: Arc
         }
         clients.fetch_add(1, Ordering::SeqCst);
         let (clients, options, handler) = (clients.clone(), options.clone(), handler.clone());
-        tokio::spawn(async move {
+        utopia_async::spawn(async move {
             let _ = stream.set_nodelay(true);
             connection(stream, peer, &options, handler.as_ref()).await;
             clients.fetch_sub(1, Ordering::SeqCst);
@@ -381,7 +381,7 @@ async fn connection<H: Handler>(mut stream: TcpStream, peer: SocketAddr, options
     let mut awaiting_proxy = options.proxy_protocol;
     let mut source: Option<(String, u16)> = None;
     loop {
-        let read = match tokio::time::timeout(options.idle_timeout, stream.read(&mut chunk)).await {
+        let read = match utopia_async::timeout(options.idle_timeout, stream.read(&mut chunk)).await {
             Ok(Ok(0)) | Ok(Err(_)) | Err(_) => return,
             Ok(Ok(n)) => n,
         };
@@ -442,19 +442,19 @@ async fn serve_http<H: Handler>(
             continue;
         };
         let (options, handler, tls) = (options.clone(), handler.clone(), tls.clone());
-        tokio::spawn(async move {
+        utopia_async::spawn(async move {
             let service = hyper::service::service_fn(move |request: Request<Incoming>| {
                 let (options, handler) = (options.clone(), handler.clone());
                 async move { Ok::<_, Infallible>(doh(request, peer, &options, handler.as_ref()).await) }
             });
-            let builder = hyper_util::server::conn::auto::Builder::new(hyper_util::rt::TokioExecutor::new());
+            let builder = hyper_util::server::conn::auto::Builder::new(utopia_async::hyper::Executor);
             match tls {
                 None => {
-                    let _ = builder.serve_connection(hyper_util::rt::TokioIo::new(stream), service).await;
+                    let _ = builder.serve_connection(utopia_async::hyper::Io::new(stream), service).await;
                 }
                 Some(tls) => {
                     if let Ok(stream) = tls.accept(stream).await {
-                        let _ = builder.serve_connection(hyper_util::rt::TokioIo::new(stream), service).await;
+                        let _ = builder.serve_connection(utopia_async::hyper::Io::new(stream), service).await;
                     }
                 }
             }
@@ -527,9 +527,9 @@ async fn read_query(request: Request<Incoming>) -> Option<Vec<u8>> {
     }
 }
 
-impl std::fmt::Debug for Tokio {
+impl std::fmt::Debug for Network {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("Tokio")
+        f.debug_struct("Network")
             .field("transports", &self.transports.iter().map(Transport::kind).collect::<Vec<_>>())
             .finish_non_exhaustive()
     }

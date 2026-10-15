@@ -87,7 +87,7 @@ fn test_the_hook_handles_only_events_it_has_a_listener_or_a_dispatcher_for() {
     assert!(dispatching.selective().is_some());
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_the_listeners_of_the_event_class_receive_the_event() {
     let hook = DispatcherHook::default();
     let received = Arc::new(Mutex::new(Vec::new()));
@@ -104,7 +104,7 @@ async fn test_the_listeners_of_the_event_class_receive_the_event() {
     assert_eq!(*received.lock().unwrap(), vec![event]);
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_handle_runs_every_listener_then_rethrows_the_first_exception() {
     let hook = DispatcherHook::default();
     let calls = Arc::new(Mutex::new(Vec::new()));
@@ -127,7 +127,7 @@ async fn test_handle_runs_every_listener_then_rethrows_the_first_exception() {
     assert_eq!(*calls.lock().unwrap(), ["first", "second", "third"]);
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_a_listener_error_is_not_caught() {
     // PHP's `\Error` escapes `catch (Exception)` at once: the later listeners
     // do not run.
@@ -158,7 +158,7 @@ impl Dispatcher for Failing {
     }
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_a_dispatcher_failure_follows_the_listeners() {
     let hook = DispatcherHook::new(Some(Arc::new(Failing(Kind::Runtime))));
     let e = hook.handle(&created("x")).await.unwrap_err();

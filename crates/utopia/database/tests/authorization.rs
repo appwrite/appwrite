@@ -113,7 +113,7 @@ fn test_skip_restores_status_on_exception() {
     assert!(auth.status());
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_skip_restores_status_after_a_future() {
     let auth = Authorization::default();
     let inside: Result<bool, &str> = auth.skip(async { Err("test") }).await.map(|()| auth.status());
@@ -318,7 +318,7 @@ fn test_numeric_roles_read_back_as_integers() {
     );
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_with_roles_scopes_the_roles() {
     let auth = Authorization::default();
     let inside = auth

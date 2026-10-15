@@ -195,7 +195,7 @@ pub fn summary(samples: &mut [f64], per_sample: u64) -> Value {
 mod tests {
     use super::*;
 
-    #[tokio::test(flavor = "current_thread")]
+    #[utopia_async::test]
     async fn measures_a_closure() {
         let mut x = 0u64;
         let r = measure(Bench::sync(move || {

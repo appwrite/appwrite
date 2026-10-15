@@ -9,10 +9,10 @@ use rustls::crypto::CryptoProvider;
 use rustls::pki_types::pem::PemObject;
 use rustls::pki_types::{CertificateDer, PrivateKeyDer, ServerName, UnixTime};
 use rustls::{ClientConfig, DigitallySignedStruct, RootCertStore, SignatureScheme};
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio::net::TcpStream;
 use tokio_rustls::TlsConnector;
 use tokio_rustls::client::TlsStream;
+use utopia_async::io::{AsyncReadExt, AsyncWriteExt};
+use utopia_async::net::TcpStream;
 
 use super::TlsOptions;
 use crate::error::{Error, Result};
@@ -40,8 +40,8 @@ impl Stream {
         buf.resize(start + max.max(1), 0);
         let target = &mut buf[start..];
         let read = match self {
-            Stream::Plain(s) => tokio::time::timeout(timeout, s.read(target)).await,
-            Stream::Tls(s) => tokio::time::timeout(timeout, s.read(target)).await,
+            Stream::Plain(s) => utopia_async::timeout(timeout, s.read(target)).await,
+            Stream::Tls(s) => utopia_async::timeout(timeout, s.read(target)).await,
         };
         let outcome = match read {
             Err(_) => Err(IoFailure::Timeout),
@@ -57,14 +57,14 @@ impl Stream {
     pub(crate) async fn write_all(&mut self, data: &[u8], timeout: Duration) -> Result<(), IoFailure> {
         let written = match self {
             Stream::Plain(s) => {
-                tokio::time::timeout(timeout, async {
+                utopia_async::timeout(timeout, async {
                     s.write_all(data).await?;
                     s.flush().await
                 })
                 .await
             }
             Stream::Tls(s) => {
-                tokio::time::timeout(timeout, async {
+                utopia_async::timeout(timeout, async {
                     s.write_all(data).await?;
                     s.flush().await
                 })
@@ -114,7 +114,7 @@ fn failure(error: &std::io::Error) -> IoFailure {
 /// option does. The error is `[errno] text`, as `stream_socket_client`
 /// reports it.
 pub(crate) async fn dial(host: &str, port: u16, timeout: Duration) -> Result<TcpStream, String> {
-    match tokio::time::timeout(timeout, TcpStream::connect((host, port))).await {
+    match utopia_async::timeout(timeout, TcpStream::connect((host, port))).await {
         Err(_) => Err("[110] Connection timed out".into()),
         Ok(Err(e)) => Err(format!("[{}] {}", e.raw_os_error().unwrap_or(0), os_error(&e))),
         Ok(Ok(stream)) => {

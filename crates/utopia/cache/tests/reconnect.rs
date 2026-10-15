@@ -8,8 +8,8 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 use php_std::types::Value;
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio::net::TcpListener;
+use utopia_async::io::{AsyncReadExt, AsyncWriteExt};
+use utopia_async::net::TcpListener;
 use utopia_cache::resp::{self, Reply};
 use utopia_cache::{Adapter, Error, Redis};
 #[cfg(feature = "memcached")]
@@ -22,11 +22,11 @@ async fn server(drops: usize, answer: fn(&[u8]) -> Vec<u8>, framed: bool) -> (u1
     let port = listener.local_addr().expect("addr").port();
     let dropped = Arc::new(AtomicUsize::new(0));
     let counter = dropped.clone();
-    tokio::spawn(async move {
+    utopia_async::spawn(async move {
         loop {
             let Ok((mut socket, _)) = listener.accept().await else { return };
             let counter = counter.clone();
-            tokio::spawn(async move {
+            utopia_async::spawn(async move {
                 let mut buffer = Vec::new();
                 let mut chunk = [0u8; 4096];
                 loop {
@@ -84,7 +84,7 @@ async fn redis(port: u16, retries: i64) -> Redis {
     Redis::new(connection).with_max_retries(retries).with_retry_delay(10)
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn redis_retries_a_lost_connection() {
     let (port, dropped) = server(2, redis_answer, true).await;
     let cache = redis(port, 3).await;
@@ -93,7 +93,7 @@ async fn redis_retries_a_lost_connection() {
     assert_eq!(cache.retry().max_retries(), 3);
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn redis_without_retries_raises_the_lost_connection() {
     let (port, _) = server(1, redis_answer, true).await;
     let cache = redis(port, 0).await;
@@ -113,7 +113,7 @@ fn memcached_answer(command: &[u8]) -> Vec<u8> {
 }
 
 #[cfg(feature = "memcached")]
-#[tokio::test]
+#[utopia_async::test]
 async fn memcached_retries_a_lost_connection() {
     let (port, dropped) = server(2, memcached_answer, false).await;
     let cache = Memcached::new(MemcachedClient::new("127.0.0.1", port)).with_max_retries(3).with_retry_delay(10);
@@ -122,7 +122,7 @@ async fn memcached_retries_a_lost_connection() {
 }
 
 #[cfg(feature = "memcached")]
-#[tokio::test]
+#[utopia_async::test]
 async fn memcached_gives_up_after_its_retries() {
     let (port, _) = server(5, memcached_answer, false).await;
     let cache = Memcached::new(MemcachedClient::new("127.0.0.1", port)).with_max_retries(1).with_retry_delay(10);

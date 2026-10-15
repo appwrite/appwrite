@@ -24,7 +24,7 @@ fn adapter(probe: &Probe, ns: &str) -> Redis<Probe> {
     adapter
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_only_documents_with_a_new_id_are_returned() {
     let probe = probe_or_skip!();
     let ns = namespace("skip_duplicates");
@@ -50,7 +50,7 @@ async fn test_only_documents_with_a_new_id_are_returned() {
     assert_eq!(created[0].sequence(), Some(&s("8")));
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_a_single_skipped_document_still_carries_the_stored_sequence() {
     let probe = probe_or_skip!();
     let ns = namespace("skip_duplicates");
@@ -73,7 +73,7 @@ fn lenient_payload(id: &str) -> String {
     json!({"$id": id, "$permissions": ["read(\"any\")", 42, null, "read(\"any\")"], "title": "stored"}).to_string()
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_get_document_drops_a_stored_non_string_permission() {
     let probe = probe_or_skip!();
     let ns = namespace("lenient");
@@ -87,7 +87,7 @@ async fn test_get_document_drops_a_stored_non_string_permission() {
     assert_eq!(document.permissions().unwrap(), ["read(\"any\")"]);
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_find_drops_a_stored_non_string_permission() {
     let probe = probe_or_skip!();
     let ns = namespace("lenient");

@@ -418,7 +418,7 @@ async fn create_invitee(
 
 /// Hashes a password on the blocking pool.
 async fn hash_password(password: String) -> Result<String> {
-    let hashed = tokio::task::spawn_blocking(move || password_hash().hash(password.as_bytes()))
+    let hashed = utopia_async::spawn_blocking(move || password_hash().hash(password.as_bytes()))
         .await
         .map_err(|e| Error::internal(e.to_string()))?
         .map_err(|e| Error::internal(e.to_string()))?;

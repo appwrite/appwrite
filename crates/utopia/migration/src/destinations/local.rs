@@ -4,7 +4,7 @@ use async_trait::async_trait;
 use indexmap::IndexMap;
 use php_std::json::{Flags, encode};
 use php_std::{Array, Value};
-use tokio::io::AsyncWriteExt;
+use utopia_async::io::AsyncWriteExt;
 
 use crate::destination::{Callback, Destination};
 use crate::error::{Error, Result};
@@ -34,7 +34,7 @@ impl std::fmt::Debug for Local {
 }
 
 async fn mkdir(path: &str) {
-    let mut b = tokio::fs::DirBuilder::new();
+    let mut b = utopia_async::fs::DirBuilder::new();
     b.recursive(true);
     #[cfg(unix)]
     b.mode(0o777);
@@ -42,11 +42,11 @@ async fn mkdir(path: &str) {
 }
 
 async fn exists(path: &str) -> bool {
-    tokio::fs::metadata(path).await.is_ok()
+    utopia_async::fs::metadata(path).await.is_ok()
 }
 
 async fn append(path: &str, data: &[u8]) {
-    if let Ok(mut f) = tokio::fs::OpenOptions::new().append(true).create(true).open(path).await {
+    if let Ok(mut f) = utopia_async::fs::OpenOptions::new().append(true).create(true).open(path).await {
         let _ = f.write_all(data).await;
     }
 }
@@ -81,7 +81,7 @@ impl Local {
                 Exception::CODE_VALIDATION,
             )
         })?;
-        let _ = tokio::fs::write(format!("{}/backup.json", self.path), json).await;
+        let _ = utopia_async::fs::write(format!("{}/backup.json", self.path), json).await;
         Ok(())
     }
 
@@ -140,7 +140,7 @@ impl Destination for Local {
     /// first import, which creates it).
     async fn report(&mut self, _resources: &[String], _resource_ids: &ResourceIds) -> Result<Report> {
         let file = format!("{}/backup.json", self.path);
-        let writable = match tokio::fs::metadata(&file).await {
+        let writable = match utopia_async::fs::metadata(&file).await {
             Ok(m) => !m.permissions().readonly(),
             Err(_) => false,
         };
@@ -181,7 +181,7 @@ impl Destination for Local {
                         (c.start, c.data.clone())
                     };
                     if start == 0 && exists(&target).await {
-                        let _ = tokio::fs::remove_file(&target).await;
+                        let _ = utopia_async::fs::remove_file(&target).await;
                     }
                     append(&target, &data).await;
                     f.chunk_mut().data = bytes::Bytes::new();

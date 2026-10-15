@@ -52,7 +52,7 @@ fn key_index(key: &str, attributes: &[&str]) -> Index {
     Index::key(key, attributes.iter().copied(), vec![], vec![]).unwrap()
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_unique_index_over_existing_duplicates_is_refused_by_the_adapter() {
     let probe = probe_or_skip!();
     let adapter = adapter(&probe, DATABASE, &namespace("paths_unique")).await;
@@ -78,7 +78,7 @@ async fn test_unique_index_over_existing_duplicates_is_refused_by_the_adapter() 
     assert_eq!(e.message(), "Collection not found");
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_no_roles_see_no_documents_in_a_document_security_collection() {
     let probe = probe_or_skip!();
     let adapter = adapter(&probe, DATABASE, &namespace("paths_roles")).await;
@@ -114,7 +114,7 @@ async fn test_no_roles_see_no_documents_in_a_document_security_collection() {
     assert_eq!(adapter.count(&collection(NOTES), vec![], None).await.unwrap(), 0);
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_rollback_restores_a_renamed_document() {
     let probe = probe_or_skip!();
     let adapter = adapter(&probe, DATABASE, &namespace("paths_rollback")).await;
@@ -144,7 +144,7 @@ async fn test_rollback_restores_a_renamed_document() {
     assert_eq!(ids(&adapter.find(&collection(NOTES), vec![], Find::default()).await.unwrap()), ["a"]);
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_rollback_refuses_an_unknown_journal_entry() {
     let probe = probe_or_skip!();
     let adapter = Redis::new(probe.clone());
@@ -158,7 +158,7 @@ async fn test_rollback_refuses_an_unknown_journal_entry() {
     assert!(!adapter.in_transaction(), "A failed rollback resets the depth");
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_renaming_a_many_to_many_key_of_a_tenantless_definition() {
     let probe = probe_or_skip!();
     let adapter = adapter(&probe, DATABASE, &namespace("paths_junction")).await;
@@ -211,7 +211,7 @@ async fn test_renaming_a_many_to_many_key_of_a_tenantless_definition() {
     assert_eq!(link.get("authors"), None);
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_null_checks_and_unsupported_methods_on_a_whole_object_attribute() {
     let probe = probe_or_skip!();
     let adapter = adapter(&probe, DATABASE, &namespace("paths_object")).await;
@@ -246,7 +246,7 @@ async fn test_null_checks_and_unsupported_methods_on_a_whole_object_attribute() 
     assert_eq!(e.message(), "Query method lessThan not supported for object attributes");
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_schema_changes_on_a_collection_without_storage() {
     let probe = probe_or_skip!();
     probe.recorder.no_memory.store(true, std::sync::atomic::Ordering::SeqCst);
@@ -264,7 +264,7 @@ async fn test_schema_changes_on_a_collection_without_storage() {
     assert_eq!(e.message(), "Collection not found");
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_renaming_an_index_the_collection_does_not_record_writes_nothing_and_reports_nothing_renamed() {
     let probe = probe_or_skip!();
     let adapter = adapter(&probe, DATABASE, &namespace("paths_rename_index")).await;
@@ -279,7 +279,7 @@ async fn test_renaming_an_index_the_collection_does_not_record_writes_nothing_an
     assert_eq!(probe.take_hash_writes().len(), 1);
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_renaming_an_index_the_collection_already_renamed_reports_it_renamed() {
     let probe = probe_or_skip!();
     let adapter = adapter(&probe, DATABASE, &namespace("paths_renamed_index")).await;
@@ -291,7 +291,7 @@ async fn test_renaming_an_index_the_collection_already_renamed_reports_it_rename
     assert!(probe.take_hash_writes().is_empty());
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_get_sequences_back_fills_only_the_documents_that_lack_one() {
     let probe = probe_or_skip!();
     let adapter = adapter(&probe, DATABASE, &namespace("paths_sequences")).await;
@@ -323,7 +323,7 @@ async fn test_get_sequences_back_fills_only_the_documents_that_lack_one() {
     assert_eq!(complete[0].sequence(), Some(&s("99")));
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_get_sequences_reports_a_failing_pipeline() {
     let probe = probe_or_skip!();
     probe.fault("GET", "", Fault::Lost("connection lost"));
@@ -334,7 +334,7 @@ async fn test_get_sequences_reports_a_failing_pipeline() {
     assert_eq!(e.message(), "Failed to load sequences: connection lost");
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_increment_guards_of_the_adapter() {
     let probe = probe_or_skip!();
     let adapter = adapter(&probe, DATABASE, &namespace("paths_increment")).await;
@@ -398,7 +398,7 @@ async fn test_increment_guards_of_the_adapter() {
     assert_eq!(e.message(), "Document not found");
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_renaming_an_attribute_on_an_empty_collection_or_to_its_own_name() {
     let probe = probe_or_skip!();
     let adapter = adapter(&probe, DATABASE, &namespace("paths_rename_attribute")).await;
@@ -415,7 +415,7 @@ async fn test_renaming_an_attribute_on_an_empty_collection_or_to_its_own_name() 
     assert_eq!(first.get("heading"), Some(&s("kept")));
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_unvalidated_null_candidate_and_unsupported_method() {
     let probe = probe_or_skip!();
     let adapter = adapter(&probe, DATABASE, &namespace("paths_null_candidate")).await;
@@ -439,7 +439,7 @@ async fn test_unvalidated_null_candidate_and_unsupported_method() {
     assert_eq!(e.message(), "Query method not supported by Redis adapter: exists");
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_unique_index_compares_array_values_by_content() {
     let probe = probe_or_skip!();
     let adapter = adapter(&probe, DATABASE, &namespace("paths_array_unique")).await;
@@ -461,7 +461,7 @@ async fn test_unique_index_compares_array_values_by_content() {
     assert!(e.is_a(Kind::Duplicate));
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_a_cursor_without_an_order_pages_by_sequence() {
     let probe = probe_or_skip!();
     let adapter = adapter(&probe, DATABASE, &namespace("paths_cursor")).await;
@@ -482,7 +482,7 @@ async fn test_a_cursor_without_an_order_pages_by_sequence() {
     assert_eq!(ids(&adapter.find(&collection(NOTES), vec![], before).await.unwrap()), ["first"]);
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_renaming_a_many_to_many_key_between_collections_without_definitions_renames_nothing() {
     let probe = probe_or_skip!();
     let ns = namespace("paths_no_definitions");

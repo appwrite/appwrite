@@ -18,13 +18,7 @@ use compat::runner::spec;
 fn recorded_php_results_hold_in_rust() {
     std::thread::Builder::new()
         .stack_size(64 * 1024 * 1024)
-        .spawn(|| {
-            tokio::runtime::Builder::new_current_thread()
-                .enable_all()
-                .build()
-                .expect("a runtime")
-                .block_on(replay_every_library())
-        })
+        .spawn(|| utopia_async::Builder::current_thread().build().expect("a runtime").block_on(replay_every_library()))
         .expect("a thread")
         .join()
         .unwrap_or_else(|e| std::panic::resume_unwind(e));

@@ -5,7 +5,7 @@ use std::sync::Arc;
 use async_trait::async_trait;
 use php_std::json::{Flags, encode};
 use php_std::{Array, Value};
-use tokio::io::AsyncWriteExt;
+use utopia_async::io::AsyncWriteExt;
 use utopia_storage::{Device, Local};
 
 use super::json::{row_fields, sanitize_filename, temp_local};
@@ -232,9 +232,10 @@ impl Destination for Csv {
             }
         }
         if !lines.is_empty() {
-            let mut f = tokio::fs::OpenOptions::new().append(true).create(true).open(&log).await.map_err(|_| {
-                Error::exception(format!("Failed to open file for writing: {log}"), Exception::CODE_INTERNAL)
-            })?;
+            let mut f =
+                utopia_async::fs::OpenOptions::new().append(true).create(true).open(&log).await.map_err(|_| {
+                    Error::exception(format!("Failed to open file for writing: {log}"), Exception::CODE_INTERNAL)
+                })?;
             f.write_all(&lines).await.map_err(|_| {
                 Error::exception(format!("Failed to write CSV line to file: {log}"), Exception::CODE_INTERNAL)
             })?;

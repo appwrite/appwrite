@@ -1,4 +1,4 @@
-A cache keeps the results of expensive work (a database read, a rendered page, a remote call) under a key, so the next request can reuse them. This library gives every backend the same small API: `save` a value, `load` it back while it is younger than a TTL, `touch` it to make it fresh again, and `purge` it when the source changes. Backends are adapters: memory, files, Redis (plain, multiplexed, cluster), Memcached and Hazelcast, and adapters that combine others. The cache is async, so the examples run it on a Tokio runtime. This guide covers the common tasks.
+A cache keeps the results of expensive work (a database read, a rendered page, a remote call) under a key, so the next request can reuse them. This library gives every backend the same small API: `save` a value, `load` it back while it is younger than a TTL, `touch` it to make it fresh again, and `purge` it when the source changes. Backends are adapters: memory, files, Redis (plain, multiplexed, cluster), Memcached and Hazelcast, and adapters that combine others. The cache is async, so the examples run it with `utopia_async::run`. This guide covers the common tasks.
 
 ## Cache a value for a while
 
@@ -10,7 +10,7 @@ use utopia_cache::{Cache, Memory};
 
 let cache = Cache::new(Memory::new());
 
-tokio::runtime::Runtime::new()?.block_on(async {
+utopia_async::Runtime::new()?.block_on(async {
     assert!(cache.save("greeting", &Value::from("hello"), "", 0).await?);
     assert_eq!(cache.load("greeting", 60, "").await?, Some(Value::from("hello")));
 
@@ -41,7 +41,7 @@ use utopia_cache::{Cache, Memory};
 
 let cache = Cache::new(Memory::new());
 
-tokio::runtime::Runtime::new()?.block_on(async {
+utopia_async::Runtime::new()?.block_on(async {
     cache.save("User:1", &Value::from("Ada"), "", 0).await?;
     assert!(cache.purge("user:1", "").await?);
     assert_eq!(cache.load("User:1", 60, "").await?, None);
@@ -79,7 +79,7 @@ use utopia_cache::{Cache, Filesystem};
 let dir = std::env::temp_dir().join(format!("utopia-cache-guide-{}", std::process::id()));
 let cache = Cache::new(Filesystem::new(&dir));
 
-tokio::runtime::Runtime::new()?.block_on(async {
+utopia_async::Runtime::new()?.block_on(async {
     cache.save("pages/home", &Value::from("<h1>Home</h1>"), "", 0).await?;
     assert_eq!(cache.load("pages/home", 3600, "").await?, Some(Value::from("<h1>Home</h1>")));
     assert_eq!(cache.size().await?, 13);
@@ -109,7 +109,7 @@ The Redis adapter stores each entry as a field of a Redis hash, encoded exactly 
 use php_std::types::Value;
 use utopia_cache::{Cache, Redis};
 
-tokio::runtime::Runtime::new()?.block_on(async {
+utopia_async::Runtime::new()?.block_on(async {
     let client = redis::Client::open("redis://localhost:6379")?;
     let cache = Cache::new(Redis::new(client.get_connection_manager().await?));
 
@@ -151,7 +151,7 @@ struct Events {
 
 let cache = Cache::new(Memory::new());
 
-tokio::runtime::Runtime::new()?.block_on(async {
+utopia_async::Runtime::new()?.block_on(async {
     let events = Events { names: vec!["users.*.create".into()] };
     let generation = cache.generation("project:1").await?;
     assert!(cache.save_native_with_lease("project:1", &events, "rust:events:v1", &generation).await?);
@@ -169,7 +169,7 @@ Hash-based adapters keep many fields under one key. `save_many` writes them in o
 use php_std::types::Value;
 use utopia_cache::{Cache, Fields, Redis};
 
-tokio::runtime::Runtime::new()?.block_on(async {
+utopia_async::Runtime::new()?.block_on(async {
     let client = redis::Client::open("redis://localhost:6379")?;
     let cache = Cache::new(Redis::new(client.get_connection_manager().await?));
 
@@ -207,7 +207,7 @@ A reader that loads from the database while a writer purges the cache could put 
 use php_std::types::Value;
 use utopia_cache::{Cache, Redis};
 
-tokio::runtime::Runtime::new()?.block_on(async {
+utopia_async::Runtime::new()?.block_on(async {
     let client = redis::Client::open("redis://localhost:6379")?;
     let cache = Cache::new(Redis::new(client.get_connection_manager().await?));
 
@@ -244,7 +244,7 @@ use utopia_cache::{Cache, Memory, Sharding};
 
 let cache = Cache::new(Sharding::new(vec![Memory::new(), Memory::new()])?);
 
-tokio::runtime::Runtime::new()?.block_on(async {
+utopia_async::Runtime::new()?.block_on(async {
     for key in ["a", "b", "c"] {
         cache.save(key, &Value::from(key), "", 0).await?;
     }
@@ -278,7 +278,7 @@ use utopia_circuit_breaker::{CircuitBreaker as Breaker, Options};
 let breaker = Breaker::new(Options { minimum_throughput: 5, ..Options::default() })?;
 let cache = Cache::new(CircuitBreaker::new(Memory::new(), breaker));
 
-tokio::runtime::Runtime::new()?.block_on(async {
+utopia_async::Runtime::new()?.block_on(async {
     cache.save("key", &Value::from("value"), "", 0).await?;
     assert_eq!(cache.load("key", 60, "").await?, Some(Value::from("value")));
     Ok::<_, utopia_cache::Error>(())

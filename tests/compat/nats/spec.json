@@ -4406,7 +4406,7 @@
     }
   },
   "waivers": {
-    "Utopia\\NATS\\Transport\\SwooleTransport::*": "PHP runtime plumbing: the transport on Swoole's coroutine client, for PHP processes that disable Swoole's stream hooks. Every Rust transport is async on tokio, so TcpTransport and TlsTransport (whose behaviour transport.round_trip and every connection case cover) are what it is in Rust.",
+    "Utopia\\NATS\\Transport\\SwooleTransport::*": "PHP runtime plumbing: the transport on Swoole's coroutine client, for PHP processes that disable Swoole's stream hooks. Every Rust transport is async (on utopia-async), so TcpTransport and TlsTransport (whose behaviour transport.round_trip and every connection case cover) are what it is in Rust.",
     "Utopia\\NATS\\Internal\\CallbackException::__construct": "PHP runtime plumbing: an @internal wrapper marking exceptions raised by callbacks while a request batch collects, so the batch rethrows them instead of reporting them as request outcomes. Rust carries the same distinction in Error::Callback; the behaviour is covered by the RequestsTest cases.",
     "Utopia\\NATS\\Subscription::setConnection": "Accessor subsumed by Rust types: PHP links a Subscription back to its Connection after constructing it; a Rust subscription belongs to the connection that created it (Connection::subscribe), and the methods that need the connection are Connection methods."
   },

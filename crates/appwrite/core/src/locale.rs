@@ -22,7 +22,7 @@ impl Translations {
     pub async fn load(dir: &Path) -> Self {
         let mut languages = Languages::new();
         languages.set_exceptions(false);
-        let mut entries = match tokio::fs::read_dir(dir).await {
+        let mut entries = match utopia_async::fs::read_dir(dir).await {
             Ok(entries) => entries,
             Err(e) => {
                 tracing::warn!(dir = %dir.display(), error = %e, "translations unavailable");
@@ -35,7 +35,7 @@ impl Translations {
                 continue;
             }
             let Some(code) = path.file_stem().and_then(|s| s.to_str()).map(str::to_owned) else { continue };
-            let Ok(content) = tokio::fs::read(&path).await else { continue };
+            let Ok(content) = utopia_async::fs::read(&path).await else { continue };
             // Unlike PHP, a file that is not a JSON object of strings is
             // skipped rather than registered as a language lookups fail on.
             let mut parsed = Languages::new();
@@ -108,7 +108,7 @@ mod tests {
         assert_eq!(t.text("fr", "countries.us", None), "United States");
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn loads_the_shipped_translations() {
         let dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../app/config/locale/translations");
         let t = Translations::load(&dir).await;

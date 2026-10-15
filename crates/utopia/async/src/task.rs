@@ -117,11 +117,11 @@ impl fmt::Display for Id {
 
 /// A spawned task. Await it for the task's output, or a [`JoinError`] when
 /// the task panicked or was cancelled. Dropping it detaches the task.
-pub struct JoinHandle<T: Send + 'static> {
+pub struct JoinHandle<T> {
     inner: <Engine as Adapter>::JoinHandle<T>,
 }
 
-impl<T: Send + 'static> JoinHandle<T> {
+impl<T> JoinHandle<T> {
     #[inline]
     pub(crate) fn new(inner: <Engine as Adapter>::JoinHandle<T>) -> Self {
         JoinHandle { inner }
@@ -148,7 +148,7 @@ impl<T: Send + 'static> JoinHandle<T> {
     }
 }
 
-impl<T: Send + 'static> Future for JoinHandle<T> {
+impl<T> Future for JoinHandle<T> {
     type Output = Result<T, JoinError>;
 
     #[inline]
@@ -157,7 +157,7 @@ impl<T: Send + 'static> Future for JoinHandle<T> {
     }
 }
 
-impl<T: Send + 'static> fmt::Debug for JoinHandle<T> {
+impl<T> fmt::Debug for JoinHandle<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("JoinHandle").field("id", &self.id()).finish()
     }
@@ -166,7 +166,22 @@ impl<T: Send + 'static> fmt::Debug for JoinHandle<T> {
 /// Why a task has no output: it panicked or was cancelled.
 pub struct JoinError {
     id: Id,
-    panic: Option<Box<dyn Any + Send + 'static>>,
+    panic: Option<Panic>,
+}
+
+/// A panic's payload, shared only as the `Sync` types it can be read as, so
+/// a [`JoinError`] can be shared between threads (and be an error any error
+/// type can box).
+struct Panic(Box<dyn Any + Send + 'static>);
+
+// SAFETY: a shared `Panic` only hands out `&T` for `T: Sync`
+// (`Panic::downcast_ref`); the payload itself is only reached by value.
+unsafe impl Sync for Panic {}
+
+impl Panic {
+    fn downcast_ref<T: Any + Sync>(&self) -> Option<&T> {
+        self.0.downcast_ref::<T>()
+    }
 }
 
 impl JoinError {
@@ -177,7 +192,7 @@ impl JoinError {
 
     /// The task `id` panicked with `payload`. For adapters.
     pub fn panicked(id: u64, payload: Box<dyn Any + Send + 'static>) -> JoinError {
-        JoinError { id: Id(id), panic: Some(payload) }
+        JoinError { id: Id(id), panic: Some(Panic(payload)) }
     }
 
     /// Whether the task was cancelled.
@@ -207,7 +222,7 @@ impl JoinError {
     /// The panic's payload; the error itself when the task was cancelled.
     pub fn try_into_panic(self) -> Result<Box<dyn Any + Send + 'static>, JoinError> {
         match self.panic {
-            Some(payload) => Ok(payload),
+            Some(Panic(payload)) => Ok(payload),
             None => Err(self),
         }
     }

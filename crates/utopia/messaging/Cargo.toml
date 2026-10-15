@@ -16,7 +16,6 @@ hmac.workspace = true
 http.workspace = true
 http-body-util.workspace = true
 hyper = { workspace = true, features = ["client", "http2"] }
-hyper-util = { workspace = true, features = ["tokio"] }
 indexmap.workspace = true
 openssl.workspace = true
 php-std.workspace = true
@@ -24,7 +23,7 @@ rustls.workspace = true
 serde_json.workspace = true
 sha2.workspace = true
 thiserror.workspace = true
-tokio = { workspace = true, features = ["net", "time", "sync", "fs"] }
+utopia-async = { workspace = true, features = ["hyper"] }
 tokio-rustls.workspace = true
 utopia-client.workspace = true
 utopia-smtp.workspace = true
@@ -33,7 +32,6 @@ webpki-roots.workspace = true
 
 [dev-dependencies]
 hyper = { workspace = true, features = ["client", "server", "http2"] }
-tokio = { workspace = true, features = ["rt-multi-thread", "macros", "net", "time", "io-util"] }
 
 [package.metadata.utopia]
 category = "integrations"

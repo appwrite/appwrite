@@ -14,19 +14,16 @@ futures-util.workspace = true
 http.workspace = true
 http-body-util.workspace = true
 hyper.workspace = true
-hyper-util.workspace = true
 indexmap.workspace = true
 php-std.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true
-tokio.workspace = true
+utopia-async = { workspace = true, features = ["hyper"] }
 tracing.workspace = true
 utopia-compression.workspace = true
 utopia-system.workspace = true
 utopia-validators.workspace = true
 
-[dev-dependencies]
-tokio = { workspace = true, features = ["rt", "macros", "io-util"] }
 
 [package.metadata.utopia]
 category = "servers"

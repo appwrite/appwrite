@@ -66,7 +66,7 @@ pub struct Rule {
 /// ```
 /// use utopia_abuse::{SlidingWindow, sliding_window};
 ///
-/// # tokio::runtime::Builder::new_current_thread().build()?.block_on(async {
+/// # utopia_async::Builder::current_thread().build()?.block_on(async {
 /// let limit = SlidingWindow::new("ip:{ip}", 100, 60, sliding_window::None)?;
 /// let verdict = limit.check_at(1_700_000_000).await?;
 /// assert_eq!((verdict.limit, verdict.reset), (100, 1_700_000_040));

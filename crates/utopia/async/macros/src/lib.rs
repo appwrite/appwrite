@@ -1,5 +1,6 @@
-//! The attribute of `utopia-async`: `#[utopia_async::test]`. Use it through
-//! `utopia_async`, which re-exports it; the expansion names `::utopia_async`.
+//! The attributes of `utopia-async`: `#[utopia_async::main]` and
+//! `#[utopia_async::test]`. Use them through `utopia_async`, which
+//! re-exports them; the expansions name `::utopia_async`.
 
 use proc_macro::TokenStream;
 use quote::quote;
@@ -11,13 +12,27 @@ use syn::{Expr, ExprLit, ItemFn, Lit, MetaNameValue, Token};
 /// by default, multi-threaded with `threads = N` workers.
 #[proc_macro_attribute]
 pub fn test(args: TokenStream, item: TokenStream) -> TokenStream {
-    match expand(args.into(), item.into()) {
+    match expand(args.into(), item.into(), true) {
         Ok(tokens) => tokens.into(),
         Err(error) => error.to_compile_error().into(),
     }
 }
 
-fn expand(args: proc_macro2::TokenStream, item: proc_macro2::TokenStream) -> syn::Result<proc_macro2::TokenStream> {
+/// Runs an async `main` to its end on a new runtime: single-threaded by
+/// default, multi-threaded with `threads = N` workers.
+#[proc_macro_attribute]
+pub fn main(args: TokenStream, item: TokenStream) -> TokenStream {
+    match expand(args.into(), item.into(), false) {
+        Ok(tokens) => tokens.into(),
+        Err(error) => error.to_compile_error().into(),
+    }
+}
+
+fn expand(
+    args: proc_macro2::TokenStream,
+    item: proc_macro2::TokenStream,
+    test: bool,
+) -> syn::Result<proc_macro2::TokenStream> {
     let mut function: ItemFn = syn::parse2(item)?;
     let mut threads: Option<usize> = None;
     for option in Punctuated::<MetaNameValue, Token![,]>::parse_terminated.parse2(args)? {
@@ -34,10 +49,10 @@ fn expand(args: proc_macro2::TokenStream, item: proc_macro2::TokenStream) -> syn
         threads = Some(count);
     }
     if function.sig.asyncness.take().is_none() {
-        return Err(syn::Error::new_spanned(function.sig.fn_token, "the test function must be `async`"));
+        return Err(syn::Error::new_spanned(function.sig.fn_token, "the function must be `async`"));
     }
     if !function.sig.inputs.is_empty() {
-        return Err(syn::Error::new_spanned(&function.sig.inputs, "a test function takes no arguments"));
+        return Err(syn::Error::new_spanned(&function.sig.inputs, "the function takes no arguments"));
     }
     let builder = match threads {
         Some(threads) => quote!(::utopia_async::Builder::multi_thread().threads(#threads)),
@@ -47,11 +62,12 @@ fn expand(args: proc_macro2::TokenStream, item: proc_macro2::TokenStream) -> syn
     let attrs = &function.attrs;
     let vis = &function.vis;
     let sig = &function.sig;
+    let marker = test.then(|| quote!(#[::core::prelude::v1::test]));
     Ok(quote! {
-        #[::core::prelude::v1::test]
+        #marker
         #(#attrs)*
         #vis #sig {
-            #builder.build().expect("utopia-async: the test runtime cannot start").block_on(async #body)
+            #builder.build().expect("utopia-async: the runtime cannot start").block_on(async #body)
         }
     })
 }

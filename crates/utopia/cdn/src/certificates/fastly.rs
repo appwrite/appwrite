@@ -304,7 +304,7 @@ impl<C: Client> Fastly<C> {
                 return Ok(());
             }
             if attempt < self.poll_attempts && self.poll_interval > 0 {
-                tokio::time::sleep(Duration::from_millis(self.poll_interval as u64)).await;
+                utopia_async::sleep(Duration::from_millis(self.poll_interval as u64)).await;
             }
         }
         Err(Error::Runtime(format!("Fastly service version was not deployed after {} attempts.", self.poll_attempts)))
