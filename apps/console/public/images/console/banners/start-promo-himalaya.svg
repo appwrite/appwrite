@@ -1,0 +1,12 @@
+<svg width="482" height="340" viewBox="0 0 482 340" fill="none" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<linearGradient id="himalayaGrad" x1="241" y1="40" x2="241" y2="320" gradientUnits="userSpaceOnUse">
+<stop stop-color="#19191C"/>
+<stop offset="0.35" stop-color="#531A2C"/>
+<stop offset="0.65" stop-color="#FD366E"/>
+<stop offset="1" stop-color="#EDEDF0"/>
+</linearGradient>
+</defs>
+<path d="M0 296 L120 140 L200 220 L280 100 L360 200 L420 160 L482 296 Z" fill="url(#himalayaGrad)" opacity="0.95"/>
+<path d="M80 296 L180 180 L240 240 L320 120 L400 210 L482 296 Z" fill="#FD366E" opacity="0.25"/>
+</svg>

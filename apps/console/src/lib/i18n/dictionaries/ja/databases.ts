@@ -13,6 +13,15 @@ export const jaDatabasesDictionary: Record<string, string> = {
     'Appwrite Start。インドの開発者向けに設計されたプラン。',
   'Dismiss banner': 'バナーを閉じる',
   'Namaste India': 'Namaste India',
+  'Namaste Nepal': 'Namaste Nepal',
+  'Welcome Nigeria': 'Welcome Nigeria',
+  'Welcome Pakistan': 'Welcome Pakistan',
+  'Appwrite Start, a plan built for Nepali developers.':
+    'Appwrite Start。ネパールの開発者向けに設計されたプラン。',
+  'Appwrite Start, a plan built for Nigerian developers.':
+    'Appwrite Start。ナイジェリアの開発者向けに設計されたプラン。',
+  'Appwrite Start, a plan built for Pakistani developers.':
+    'Appwrite Start。パキスタンの開発者向けに設計されたプラン。',
   'New': '新規',
   'PostgreSQL announcement banner': 'PostgreSQL お知らせバナー',
   'Read more': '詳しく見る',

@@ -1,0 +1,14 @@
+<svg width="482" height="340" viewBox="0 0 482 340" fill="none" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<linearGradient id="pakistanGrad" x1="241" y1="40" x2="241" y2="310" gradientUnits="userSpaceOnUse">
+<stop stop-color="#19191C"/>
+<stop offset="0.35" stop-color="#531A2C"/>
+<stop offset="0.7" stop-color="#FD366E"/>
+<stop offset="1" stop-color="#EDEDF0"/>
+</linearGradient>
+</defs>
+<path d="M241 70 L270 296 H212 Z" fill="url(#pakistanGrad)"/>
+<path d="M228 120 H254 V160 H228 Z" fill="#FD366E" opacity="0.85"/>
+<path d="M200 296 H282 V310 H200 Z" fill="#2F1820"/>
+<path d="M170 296 H312 V276 H170 Z" fill="#FD366E" opacity="0.35"/>
+</svg>
