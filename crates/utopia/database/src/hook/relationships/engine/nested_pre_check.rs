@@ -20,10 +20,10 @@ const NEXT: &str = "next";
 const BACK: &str = "back";
 const MARKER: &str = "marker";
 
-const TYPES: [RelationshipType; 4] =
+pub(super) const TYPES: [RelationshipType; 4] =
     [RelationshipType::OneToOne, RelationshipType::OneToMany, RelationshipType::ManyToOne, RelationshipType::ManyToMany];
 
-type Log = Arc<Mutex<Vec<(String, String)>>>;
+pub(super) type Log = Arc<Mutex<Vec<(String, String)>>>;
 
 struct Fixture {
     db: Database,
@@ -119,7 +119,7 @@ async fn chain(kind: RelationshipType, permissions: Vec<String>) -> Fixture {
 }
 
 /// A nested hook recording what it prepares and giving the marker a new id.
-struct Marker(Log);
+pub(super) struct Marker(pub(super) Log);
 
 #[async_trait]
 impl Nested for Marker {
@@ -133,7 +133,7 @@ impl Nested for Marker {
 }
 
 /// A nested hook giving the marker the id `self.0`.
-struct Assigning(String);
+pub(super) struct Assigning(pub(super) String);
 
 #[async_trait]
 impl Nested for Assigning {
@@ -194,7 +194,7 @@ fn many(kind: RelationshipType) -> bool {
 }
 
 /// `value()`: a list for the many side.
-fn related_value(kind: RelationshipType, related: Document) -> Value {
+pub(super) fn related_value(kind: RelationshipType, related: Document) -> Value {
     if many(kind) { docs(vec![related]) } else { Value::from(related) }
 }
 
@@ -217,7 +217,7 @@ fn parent(kind: RelationshipType, related: Document) -> Document {
 }
 
 /// The ids a relationship value holds (`ids()`).
-fn ids_in(value: Option<&Value>) -> Vec<String> {
+pub(super) fn ids_in(value: Option<&Value>) -> Vec<String> {
     let items: Vec<Value> = match value {
         Some(Value::Array(a)) => a.values().cloned().collect(),
         Some(v) => vec![v.clone()],

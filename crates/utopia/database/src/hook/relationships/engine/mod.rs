@@ -5,10 +5,12 @@
 //! cases of PHP's data providers that need an SQL engine stay with the SQL
 //! adapters' ports.
 
+mod authorize_grants;
 mod create_returns_stored;
 mod delete_action;
 mod hook;
 mod nested_pre_check;
+mod nested_preparation;
 
 use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
