@@ -108,6 +108,25 @@ class Key
     }
 
     /**
+     * @param array<Document> $keys
+     */
+    public static function find(array $keys, string $secret): ?Document
+    {
+        if ($secret === '') {
+            return null;
+        }
+
+        return \array_find(
+            $keys,
+            static function (Document $candidate) use ($secret): bool {
+                $stored = $candidate->getAttribute('secret');
+
+                return \is_string($stored) && \hash_equals($stored, $secret);
+            },
+        );
+    }
+
+    /**
      * Decode the given secret key into a Key object, containing the project ID, type, role, scopes, and name.
      * Can be a stored API key or an ephemeral key (JWT).
      * Invalid, expired-JWT, unknown-prefix, or project-mismatched secrets are refused.
@@ -182,11 +201,7 @@ class Key
                     $runtimeEphemeral
                 );
             case API_KEY_STANDARD:
-                $key = $project->find(
-                    key: 'secret',
-                    find: $key,
-                    subject: 'keys'
-                );
+                $key = self::find($project->getAttribute('keys', []), $key);
 
                 if (!$key) {
                     throw new Exception(Exception::USER_UNAUTHORIZED);
@@ -211,11 +226,7 @@ class Key
                     $expired
                 );
             case API_KEY_ACCOUNT:
-                $key = $user->find(
-                    key: 'secret',
-                    find: $key,
-                    subject: 'keys'
-                );
+                $key = self::find($user->getAttribute('keys', []), $key);
 
                 // Invalid key
                 if (!$key) {
@@ -247,11 +258,7 @@ class Key
 
                 return $key;
             case API_KEY_ORGANIZATION:
-                $key = $team->find(
-                    key: 'secret',
-                    find: $key,
-                    subject: 'keys'
-                );
+                $key = self::find($team->getAttribute('keys', []), $key);
 
                 // Invalid key
                 if (!$key) {

@@ -12,7 +12,6 @@ use Appwrite\Event\Publisher\Audit;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime;
-use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Functions\EventProcessor;
@@ -34,7 +33,8 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\PermissionType;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\Roles;
@@ -160,7 +160,7 @@ Http::init()
                 // Disable authorization checks for project API keys
                 // Dynamic supported for backwards compatibility
                 if (($apiKey->getType() === API_KEY_STANDARD || $apiKey->getType() === API_KEY_EPHEMERAL || $apiKey->getType() === 'dynamic') && $apiKey->getProjectId() === $project->getId()) {
-                    $authorization->setDefaultStatus(false);
+                    $authorization->setStatus(false);
                 }
 
                 $user = new User([
@@ -179,26 +179,15 @@ Http::init()
             if (\in_array($apiKey->getType(), [API_KEY_STANDARD, API_KEY_ORGANIZATION, API_KEY_ACCOUNT])) {
                 $dbKey = null;
                 $keyOwnerInternalId = '';
+                $secret = $request->getHeaderLine('x-appwrite-key', '');
                 if (! empty($apiKey->getProjectId())) {
-                    $dbKey = $project->find(
-                        key: 'secret',
-                        find: $request->getHeaderLine('x-appwrite-key', ''),
-                        subject: 'keys'
-                    );
+                    $dbKey = Key::find($project->getAttribute('keys', []), $secret);
                     $keyOwnerInternalId = (string) ($project->getSequence() ?: $project->getId());
                 } elseif (! empty($apiKey->getUserId())) {
-                    $dbKey = $user->find(
-                        key: 'secret',
-                        find: $request->getHeaderLine('x-appwrite-key', ''),
-                        subject: 'keys'
-                    );
+                    $dbKey = Key::find($user->getAttribute('keys', []), $secret);
                     $keyOwnerInternalId = (string) ($user->getSequence() ?: $user->getId());
                 } elseif (! empty($apiKey->getTeamId())) {
-                    $dbKey = $team->find(
-                        key: 'secret',
-                        find: $request->getHeaderLine('x-appwrite-key', ''),
-                        subject: 'keys'
-                    );
+                    $dbKey = Key::find($team->getAttribute('keys', []), $secret);
                     $keyOwnerInternalId = (string) ($team->getSequence() ?: $team->getId());
                 }
 
@@ -339,10 +328,10 @@ Http::init()
              * Enabling authorization restricts admin user to the projects they have access to.
              */
             if ($project->getId() === 'console' && ($route->getPath() === '/v1/projects' || $route->getPath() === '/v1/projects/:projectId')) {
-                $authorization->setDefaultStatus(true);
+                $authorization->setStatus(true);
             } else {
                 // Otherwise, disable authorization checks.
-                $authorization->setDefaultStatus(false);
+                $authorization->setStatus(false);
             }
         }
 
@@ -384,7 +373,7 @@ Http::init()
             && $apiKey->getRole() === User::ROLE_OWNER;
 
         if ($isAdminProjectRequest && $isOAuthAdminKey) {
-            $authorization->setDefaultStatus(false);
+            $authorization->setStatus(false);
         }
 
         if (!$impersonatorUser->isEmpty() && !$targetUser->isEmpty()) {
@@ -397,8 +386,8 @@ Http::init()
          * But, for actions on resources (sites, functions, etc.) in a non-console project, we explicitly check
          * whether the admin user has necessary permission on the project (sites, functions, etc. don't have permissions associated to them).
          */
-        if ($isAdminProjectRequest && empty($apiKey)) {
-            $input = new Input(Database::PERMISSION_READ, $project->getPermissionsByType(Database::PERMISSION_READ));
+        if (empty($apiKey) && ! $user->isEmpty() && $project->getId() !== 'console' && $mode === APP_MODE_ADMIN) {
+            $input = new Input(PermissionType::Read, $project->getPermissionsByType(PermissionType::Read));
             $initialStatus = $authorization->getStatus();
             $authorization->enable();
             if (! $authorization->isValid($input)) {
@@ -750,7 +739,7 @@ Http::init()
                     }
 
                     $fileSecurity = $bucket->getAttribute('fileSecurity', false);
-                    $valid = $authorization->isValid(new Input(Database::PERMISSION_READ, $bucket->getRead()));
+                    $valid = $authorization->isValid(new Input(PermissionType::Read, $bucket->getPermissionsByType(PermissionType::Read)));
                     if (! $fileSecurity && ! $valid && ! $isToken) {
                         throw new Exception(Exception::USER_UNAUTHORIZED);
                     }

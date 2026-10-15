@@ -330,6 +330,19 @@ final class KeyTest extends TestCase
             new Document(),
             'not-a-real-key',
         ];
+        yield 'empty key against an empty stored secret' => [
+            new Document(['$id' => $projectId, 'keys' => [
+                new Document([
+                    'secret' => '',
+                    'expire' => null,
+                    'name' => 'Empty key',
+                    'scopes' => ['custom.write'],
+                ]),
+            ]]),
+            new Document(),
+            new Document(),
+            '',
+        ];
         yield 'invalid account key' => [
             new Document(['$id' => $projectId]),
             new Document(),
@@ -359,6 +372,38 @@ final class KeyTest extends TestCase
         } catch (Exception $error) {
             $this->assertSame(Exception::USER_UNAUTHORIZED, $error->getType());
         }
+    }
+
+    public function testFindReturnsTheFirstKeyWithTheSecret(): void
+    {
+        $first = new Document(['$id' => 'first', 'secret' => 'standard_abcd1234']);
+        $second = new Document(['$id' => 'second', 'secret' => 'standard_abcd1234']);
+        $other = new Document(['$id' => 'other', 'secret' => 'standard_efgh5678']);
+
+        $this->assertSame($first, Key::find([$other, $first, $second], 'standard_abcd1234'));
+        $this->assertSame($other, Key::find([$other, $first, $second], 'standard_efgh5678'));
+    }
+
+    public function testFindReturnsNullWhenNoSecretMatches(): void
+    {
+        $keys = [new Document(['secret' => 'standard_abcd1234'])];
+
+        $this->assertNull(Key::find($keys, 'standard_abcd'));
+        $this->assertNull(Key::find($keys, 'standard_abcd12345'));
+        $this->assertNull(Key::find($keys, 'STANDARD_ABCD1234'));
+        $this->assertNull(Key::find([], 'standard_abcd1234'));
+    }
+
+    public function testFindNeverMatchesAnEmptySecret(): void
+    {
+        $this->assertNull(Key::find([new Document(['secret' => ''])], ''));
+    }
+
+    public function testFindSkipsKeysWithoutAStringSecret(): void
+    {
+        $valid = new Document(['$id' => 'valid', 'secret' => '1234']);
+
+        $this->assertSame($valid, Key::find([new Document(), new Document(['secret' => 1234]), $valid], '1234'));
     }
 
     private static function generateKey(

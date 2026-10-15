@@ -9,7 +9,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\System\System;
 
@@ -29,7 +29,7 @@ final class VariablesCustomServerTest extends Scope
 
         // 1. Create a project variable
         $variable = $this->createVariable(
-            ID::unique(),
+            Id::unique(),
             'GLOBAL_VARIABLE',
             'Project Variable Value',
             false
@@ -44,7 +44,7 @@ final class VariablesCustomServerTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $apiKey,
         ], [
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Project Variable Test',
             'runtime' => 'node-22',
             'entrypoint' => 'index.js',
@@ -143,7 +143,7 @@ final class VariablesCustomServerTest extends Scope
 
         // 1. Create a project variable
         $variable = $this->createVariable(
-            ID::unique(),
+            Id::unique(),
             'name',
             'ProjectVarTest',
         );
@@ -157,7 +157,7 @@ final class VariablesCustomServerTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $apiKey,
         ], [
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'name' => 'Project Variable Astro Site',
             'framework' => 'astro',
             'adapter' => 'ssr',
@@ -177,7 +177,7 @@ final class VariablesCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
-            'domain' => ID::unique() . '.' . $sitesDomain,
+            'domain' => Id::unique() . '.' . $sitesDomain,
             'siteId' => $siteId,
         ]);
 
