@@ -450,24 +450,6 @@ return [
                 'filter' => ''
             ],
             [
-                'name' => '_APP_LIMIT_REALTIME_SUBSCRIPTIONS',
-                'description' => 'Maximum number of subscriptions a single Realtime connection can hold. A subscribe that would go past it is rejected and the connection is closed. Every subscription is kept in the Realtime worker\'s memory, so raising it lets one connection use more of it. Default value is: 100.',
-                'introduction' => '2.4.1',
-                'default' => '100',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ],
-            [
-                'name' => '_APP_LIMIT_REALTIME_CHANNELS',
-                'description' => 'Maximum number of distinct channels a single Realtime connection can subscribe to, across all of its subscriptions. A subscribe that would go past it is rejected and the connection is closed. Raising it lets one connection use more of the Realtime worker\'s memory. Default value is: 100.',
-                'introduction' => '2.4.1',
-                'default' => '100',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ],
-            [
                 'name' => '_APP_CONSOLE_SESSION_ALERTS',
                 'description' => 'This option allows you configure if a new login in the Appwrite Console should send an alert email to the user. It\'s disabled by default with value "disabled", and to enable it, pass value "enabled".',
                 'introduction' => '1.6.0',

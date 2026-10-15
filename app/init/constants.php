@@ -93,8 +93,6 @@ const APP_LIMIT_LIST_DEFAULT = 25; // Default maximum number of items to return 
 // for their own hardware; on Cloud the plan's databasesBatchSize takes precedence.
 \define('APP_LIMIT_DATABASE_BATCH', \max(1, (int) System::getEnv('_APP_LIMIT_DATABASE_BATCH', 100)));
 const APP_LIMIT_DATABASE_TRANSACTION = 100; // Default maximum operations per transaction
-\define('APP_LIMIT_REALTIME_SUBSCRIPTIONS', \max(1, (int) System::getEnv('_APP_LIMIT_REALTIME_SUBSCRIPTIONS', 100)));
-\define('APP_LIMIT_REALTIME_CHANNELS', \max(1, (int) System::getEnv('_APP_LIMIT_REALTIME_CHANNELS', 100)));
 const APP_KEY_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_USER_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_PROJECT_ACCESS = 24 * 60 * 60; // 24 hours
@@ -385,6 +383,8 @@ const API_KEY_OAUTH2 = 'oauth2';
 
 // Realtime
 const CONSOLE_TAIL_CHANNEL_PREFIX = 'console.tail';
+const APP_LIMIT_REALTIME_SUBSCRIPTIONS = 100; // Maximum subscriptions one connection can hold
+const APP_LIMIT_REALTIME_CHANNELS = 100; // Maximum distinct channels one connection can subscribe to
 
 // Usage metrics
 const METRIC_TEAMS = 'teams';
