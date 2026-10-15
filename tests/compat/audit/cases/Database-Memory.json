@@ -1854,11 +1854,11 @@
               "test": "getById"
             },
             "time": "<now>",
+            "$sequence": "5",
             "$id": "<uniqid>",
             "$createdAt": "<now>",
             "$updatedAt": "<now>",
             "$permissions": [],
-            "$sequence": "5",
             "$collection": "audit"
           }
         },

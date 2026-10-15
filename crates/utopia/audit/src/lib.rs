@@ -16,12 +16,11 @@
 //! use utopia_audit::{Audit, Page, Range, adapter};
 //! use utopia_cache::{Cache, None as NoCache};
 //! use utopia_database::adapter::memory::Memory;
-//! use utopia_database::{Authorization, Database};
+//! use utopia_database::Database;
 //!
 //! tokio::runtime::Builder::new_current_thread().build()?.block_on(async {
-//!     let db = Database::new(Arc::new(Memory::new()), Arc::new(Cache::from_dyn(Arc::new(NoCache))), Vec::new());
-//!     db.set_authorization(Arc::new(Authorization::new()));
-//!     db.set_database("audit")?;
+//!     let db = Database::new(Arc::new(Memory::new()), Arc::new(Cache::from_dyn(Arc::new(NoCache))));
+//!     db.set_database("audit");
 //!     db.create(None).await?;
 //!
 //!     let audit = Audit::new(adapter::Database::new(db));
