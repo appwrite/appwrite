@@ -36,13 +36,11 @@ class State
         return 'presence:connections:' . $projectId . ':' . $userId;
     }
 
-    // Counts a connection as a holder of the user's presence.
     public function incrementConnections(\Redis $redis, string $projectId, string $userId): void
     {
         $redis->incr(self::getConnectionCounterKey($projectId, $userId));
     }
 
-    // Drops a holder and returns how many remain; clears the key once it reaches zero.
     public function decrementConnections(\Redis $redis, string $projectId, string $userId): int
     {
         $key = self::getConnectionCounterKey($projectId, $userId);

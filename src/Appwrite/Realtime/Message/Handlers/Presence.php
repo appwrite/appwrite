@@ -111,8 +111,7 @@ class Presence extends Action
             fn () => $presenceState->triggerUsage($publisherForUsage, $project, 1),
         );
 
-        // The lock keeps counting a new holder from racing a close that deletes the row, and
-        // keeps two concurrent messages on this connection from counting the same hold twice.
+        // Serialize this upsert against a close that may delete the row, and against a second message on this connection.
         $presence = $pools->get('lock')->use(function (\Redis $redis) use ($upsert, $lockKey, $presenceState, $projectId, $userId, $realtime, $connectionId): Document {
             $lock = new Distributed($redis, $lockKey, ttl: self::LOCK_TTL);
 
@@ -129,8 +128,7 @@ class Presence extends Action
                     return $presence;
                 }, timeout: self::LOCK_TIMEOUT);
             } catch (Contention) {
-                // Could not coordinate: still upsert so the user is present, but leave the
-                // counter and the hold untouched so no unsynchronised count is left behind.
+                // On contention, upsert anyway but skip the count and hold so they stay balanced.
                 return $upsert();
             }
         });

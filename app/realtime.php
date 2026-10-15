@@ -1496,8 +1496,6 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register, $
 
                         $lockKey = 'presence:' . $projectId . ':' . ((string) $userId);
 
-                        // Drop this connection's hold; delete the presence only when the last
-                        // holder leaves. The lock keeps this decrement from racing an upsert.
                         /** @var array<string, Document> $deletedPresences */
                         $deletedPresences = [];
                         $pools->get('lock')->use(function (\Redis $redis) use ($dbForProject, $presenceIds, $lockKey, $presenceState, $projectId, $userId, &$deletedPresences): void {
@@ -1505,17 +1503,12 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register, $
 
                             try {
                                 $lock->withLock(function () use ($lock, $dbForProject, $presenceIds, $presenceState, $redis, $projectId, $userId, &$deletedPresences): void {
-                                    // Delete only on an exact zero. A negative count means Redis lost
-                                    // the key while holders were open, so keep the row for expiresAt.
+                                    // Exact zero only; a negative count means Redis lost the key, so keep the row for expiresAt.
                                     if ($presenceState->decrementConnections($redis, $projectId, (string) $userId) !== 0) {
                                         return;
                                     }
 
-                                    // Fence before the destructive delete: refresh() proves we still
-                                    // hold the lease. If it fails the lock lapsed (our work outran the
-                                    // TTL, or the key was evicted) and another operation may already
-                                    // own this user -- a concurrent upsert could have re-created the
-                                    // row -- so leave it to expiresAt rather than wipe a live presence.
+                                    // Fence: refresh() proves we still hold the lease. If lost, another op may own the row, so leave it to expiresAt.
                                     if (!$lock->refresh()) {
                                         return;
                                     }
@@ -1531,8 +1524,7 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register, $
                                     }
                                 }, timeout: PresenceHandler::LOCK_TIMEOUT);
                             } catch (Contention) {
-                                // Could not coordinate: leave the row to its expiresAt rather than
-                                // decrement and delete outside the lock.
+                                // On contention, leave the row to expiresAt rather than decrement outside the lock.
                             }
                         });
 
