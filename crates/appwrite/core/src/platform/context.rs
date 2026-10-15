@@ -3,10 +3,14 @@
 use std::sync::{Arc, Mutex, OnceLock};
 use std::time::Instant;
 
+use async_trait::async_trait;
 use bytes::Bytes;
 use http::StatusCode;
 use serde::Serialize;
 use serde_json::Value;
+use utopia_database::database::Hook;
+use utopia_database::event::{Domain, Event};
+use utopia_database::hook::{Lifecycle, Selective};
 use utopia_database::{Authorization, Database, Query};
 use utopia_http::{Request, Response};
 use utopia_validators::{Validator, php};
@@ -157,7 +161,7 @@ impl Context {
             role: roles::GUESTS.to_owned(),
             roles: vec!["any".to_owned()],
             scopes: Vec::new(),
-            authorization: Arc::new(Authorization::new()),
+            authorization: Arc::new(Authorization::new(true)),
             ip,
             hostname,
             events: EventState::default(),
@@ -182,12 +186,12 @@ impl Context {
                 10,
             );
             if timeout != 0 {
-                db.set_timeout(timeout, Database::EVENT_ALL)?;
+                db.set_timeout(timeout, Event::All)?;
             }
         }
         // The console's database is the platform's, without listeners.
         if !self.project.is_console() && !self.project.id.is_empty() {
-            listen(&db, &self.listened);
+            listen(&db, &self.listened)?;
         }
         self.db = Some(db.clone());
         Ok(db)
@@ -286,7 +290,7 @@ impl Context {
         items
             .values()
             .map(|q| {
-                Query::parse(utopia_database::value::to_text(q))
+                Query::parse(&utopia_database::value::to_text(q), false)
                     .map_err(|e| Error::with_message(crate::ErrorType::GeneralQueryInvalid, e.message().to_owned()))
             })
             .collect()
@@ -441,75 +445,127 @@ pub struct Listened {
     pub functions: bool,
 }
 
-/// Registers PHP's listeners on a project database.
-fn listen(db: &Database, listened: &Arc<Mutex<Listened>>) {
-    let usage_events = [
-        Database::EVENT_DOCUMENT_CREATE,
-        Database::EVENT_DOCUMENT_DELETE,
-        Database::EVENT_DOCUMENTS_CREATE,
-        Database::EVENT_DOCUMENTS_DELETE,
-        Database::EVENT_DOCUMENTS_UPSERT,
-    ];
-    for event in usage_events {
-        let listened = listened.clone();
-        db.on(
-            event,
-            "calculate-usage",
-            Some(Arc::new(move |event: &str, value: &utopia_database::Value| {
-                usage(&listened, event, value);
-                Ok(())
-            })),
-        );
-    }
-    let created = listened.clone();
-    db.on(
-        Database::EVENT_DOCUMENT_CREATE,
-        "create-trigger-events",
-        Some(Arc::new(move |_: &str, value: &utopia_database::Value| {
-            if let Some(document) = utopia_database::value::as_document(value)
-                && document.collection() == "users"
-            {
-                created.lock().unwrap_or_else(|e| e.into_inner()).users.push(document.clone());
+/// Registers PHP's hooks on a project database (the `dbForProject`
+/// resource): `Usage`, `UserEvents` and `FunctionCache`, in that order.
+fn listen(db: &Database, listened: &Arc<Mutex<Listened>>) -> Result<()> {
+    db.add_hook(Hook::lifecycle(Arc::new(Usage(listened.clone()))))?;
+    db.add_hook(Hook::lifecycle(Arc::new(UserEvents(listened.clone()))))?;
+    db.add_hook(Hook::lifecycle(Arc::new(FunctionCache(listened.clone()))))?;
+    Ok(())
+}
+
+fn lock(listened: &Mutex<Listened>) -> std::sync::MutexGuard<'_, Listened> {
+    listened.lock().unwrap_or_else(|e| e.into_inner())
+}
+
+/// `Appwrite\Utopia\Database\Hook\Usage`: sessions and deployments counted
+/// as they are created and deleted.
+struct Usage(Arc<Mutex<Listened>>);
+
+impl Usage {
+    fn track_document(&self, collection: &str, document: &utopia_database::Document, value: i64) {
+        let mut listened = lock(&self.0);
+        match collection {
+            "sessions" => listened.metrics.push(("sessions".to_owned(), value)),
+            "deployments" => {
+                let kind = document.get("resourceType").map(utopia_database::value::to_text).unwrap_or_default();
+                let size = document.get("size").map(utopia_database::value::to_long).unwrap_or(0);
+                listened.metrics.push((format!("{kind}.deployments"), value));
+                listened.metrics.push((format!("{kind}.deployments.storage"), size * value));
             }
-            Ok(())
-        })),
-    );
-    for event in [Database::EVENT_DOCUMENT_CREATE, Database::EVENT_DOCUMENT_UPDATE, Database::EVENT_DOCUMENT_DELETE] {
-        let listened = listened.clone();
-        db.on(
-            event,
-            "purge-function-events-cache",
-            Some(Arc::new(move |_: &str, value: &utopia_database::Value| {
-                if utopia_database::value::as_document(value).is_some_and(|d| d.collection() == "functions") {
-                    listened.lock().unwrap_or_else(|e| e.into_inner()).functions = true;
-                }
-                Ok(())
-            })),
-        );
+            _ => {}
+        }
+    }
+
+    fn track_batch(&self, collection: &str, value: i64) {
+        if collection == "sessions" {
+            lock(&self.0).metrics.push(("sessions".to_owned(), value));
+        }
     }
 }
 
-/// `calculate-usage`: sessions and deployments counted as they are
-/// created and deleted.
-fn usage(listened: &Mutex<Listened>, event: &str, value: &utopia_database::Value) {
-    let Some(document) = utopia_database::value::as_document(value) else { return };
-    let count = |key: &str| document.get(key).map(utopia_database::value::to_long).unwrap_or(0);
-    let value = match event {
-        Database::EVENT_DOCUMENT_DELETE => -1,
-        Database::EVENT_DOCUMENTS_DELETE => -count("modified"),
-        Database::EVENT_DOCUMENTS_CREATE => count("modified"),
-        Database::EVENT_DOCUMENTS_UPSERT => count("created"),
-        _ => 1,
-    };
-    let mut listened = listened.lock().unwrap_or_else(|e| e.into_inner());
-    match document.collection() {
-        "sessions" => listened.metrics.push(("sessions".to_owned(), value)),
-        "deployments" => {
-            let kind = document.get("resourceType").and_then(utopia_database::value::as_str).unwrap_or("").to_owned();
-            let size = count("size");
-            listened.metrics.push((format!("{kind}.deployments"), value));
-            listened.metrics.push((format!("{kind}.deployments.storage"), size * value));
+#[async_trait]
+impl Lifecycle for Usage {
+    async fn handle(&self, event: &Domain) -> utopia_database::Result<()> {
+        match event {
+            Domain::DocumentCreated { collection, document } => self.track_document(collection, document, 1),
+            Domain::DocumentDeleted { collection, document } => self.track_document(collection, document, -1),
+            Domain::DocumentBatchCreated { collection, count } => self.track_batch(collection, *count),
+            Domain::DocumentBatchDeleted { collection, count } => self.track_batch(collection, -count),
+            Domain::DocumentBatchUpserted { collection, created, .. } => self.track_batch(collection, *created),
+            _ => {}
         }
-        _ => {}
+        Ok(())
+    }
+
+    fn selective(&self) -> Option<&dyn Selective> {
+        Some(self)
+    }
+}
+
+impl Selective for Usage {
+    fn handles(&self, event: Event) -> bool {
+        matches!(
+            event,
+            Event::DocumentCreate
+                | Event::DocumentDelete
+                | Event::DocumentsCreate
+                | Event::DocumentsDelete
+                | Event::DocumentsUpsert
+        )
+    }
+}
+
+/// `Appwrite\Utopia\Database\Hook\UserEvents`: each user created, for the
+/// `users.[userId].create` events the shutdown triggers.
+struct UserEvents(Arc<Mutex<Listened>>);
+
+#[async_trait]
+impl Lifecycle for UserEvents {
+    async fn handle(&self, event: &Domain) -> utopia_database::Result<()> {
+        if let Domain::DocumentCreated { collection, document } = event
+            && collection == "users"
+        {
+            lock(&self.0).users.push(document.clone());
+        }
+        Ok(())
+    }
+
+    fn selective(&self) -> Option<&dyn Selective> {
+        Some(self)
+    }
+}
+
+impl Selective for UserEvents {
+    fn handles(&self, event: Event) -> bool {
+        event == Event::DocumentCreate
+    }
+}
+
+/// `Appwrite\Utopia\Database\Hook\FunctionCache`: a function created,
+/// updated or deleted, for the shutdown to purge the function events cache.
+struct FunctionCache(Arc<Mutex<Listened>>);
+
+#[async_trait]
+impl Lifecycle for FunctionCache {
+    async fn handle(&self, event: &Domain) -> utopia_database::Result<()> {
+        if let Domain::DocumentCreated { collection, .. }
+        | Domain::DocumentUpdated { collection, .. }
+        | Domain::DocumentDeleted { collection, .. } = event
+            && collection == "functions"
+        {
+            lock(&self.0).functions = true;
+        }
+        Ok(())
+    }
+
+    fn selective(&self) -> Option<&dyn Selective> {
+        Some(self)
+    }
+}
+
+impl Selective for FunctionCache {
+    fn handles(&self, event: Event) -> bool {
+        matches!(event, Event::DocumentCreate | Event::DocumentUpdate | Event::DocumentDelete)
     }
 }

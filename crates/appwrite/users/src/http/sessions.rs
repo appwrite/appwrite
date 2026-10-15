@@ -38,32 +38,32 @@ pub async fn create(ctx: &mut Context) -> Result<Response> {
     let expire = datetime::add_seconds(datetime::now(), duration);
     let country = ctx.state.geo.country_code(&ctx.ip).await.to_lowercase();
     let mut session = Document::default();
-    session.set("$id", DbValue::from(appwrite_core::database::unique_id().as_str()));
-    session.set("userId", DbValue::from(user.id.as_str()));
-    session.set("userInternalId", documents::internal_id(user.sequence));
-    session.set("provider", DbValue::from("server"));
-    session.set("secret", DbValue::from(base::token_hash(&secret)?.as_str()));
-    session.set("userAgent", DbValue::from(user_agent.as_str()));
-    session.set("factors", documents::strings(&["server".to_owned()]));
-    session.set("ip", DbValue::from(ctx.ip.as_str()));
-    session.set("countryCode", DbValue::from(country.as_str()));
-    session.set("expire", datetime::value(&expire));
-    session.set("osCode", DbValue::from(detected.os_code.as_str()));
-    session.set("osName", DbValue::from(detected.os_name.as_str()));
-    session.set("osVersion", DbValue::from(detected.os_version.as_str()));
-    session.set("clientType", DbValue::from(detected.client_type.as_str()));
-    session.set("clientCode", DbValue::from(detected.client_code.as_str()));
-    session.set("clientName", DbValue::from(detected.client_name.as_str()));
-    session.set("clientVersion", DbValue::from(detected.client_version.as_str()));
-    session.set("clientEngine", DbValue::from(detected.client_engine.as_str()));
-    session.set("clientEngineVersion", DbValue::from(detected.client_engine_version.as_str()));
-    session.set("deviceName", text(detected.device_name.as_deref()));
-    session.set("deviceBrand", text(detected.device_brand.as_deref()));
-    session.set("deviceModel", text(detected.device_model.as_deref()));
-    session.set("$permissions", base::owner_permissions(&user.id));
+    session.put("$id", DbValue::from(appwrite_core::database::unique_id().as_str()));
+    session.put("userId", DbValue::from(user.id.as_str()));
+    session.put("userInternalId", documents::internal_id(user.sequence));
+    session.put("provider", DbValue::from("server"));
+    session.put("secret", DbValue::from(base::token_hash(&secret)?.as_str()));
+    session.put("userAgent", DbValue::from(user_agent.as_str()));
+    session.put("factors", documents::strings(&["server".to_owned()]));
+    session.put("ip", DbValue::from(ctx.ip.as_str()));
+    session.put("countryCode", DbValue::from(country.as_str()));
+    session.put("expire", datetime::value(&expire));
+    session.put("osCode", DbValue::from(detected.os_code.as_str()));
+    session.put("osName", DbValue::from(detected.os_name.as_str()));
+    session.put("osVersion", DbValue::from(detected.os_version.as_str()));
+    session.put("clientType", DbValue::from(detected.client_type.as_str()));
+    session.put("clientCode", DbValue::from(detected.client_code.as_str()));
+    session.put("clientName", DbValue::from(detected.client_name.as_str()));
+    session.put("clientVersion", DbValue::from(detected.client_version.as_str()));
+    session.put("clientEngine", DbValue::from(detected.client_engine.as_str()));
+    session.put("clientEngineVersion", DbValue::from(detected.client_engine_version.as_str()));
+    session.put("deviceName", text(detected.device_name.as_deref()));
+    session.put("deviceBrand", text(detected.device_brand.as_deref()));
+    session.put("deviceModel", text(detected.device_model.as_deref()));
+    session.set("$permissions", base::owner_permissions(&user.id))?;
     let db = ctx.db()?;
     let session = Session::from(&db.create_document("sessions", session).await?);
-    db.purge_cached_document("users", Some(&user.id)).await?;
+    db.purge_cached_document("users", &user.id).await?;
 
     let encoded = base::session_store(&user.id, &secret)?;
     let country_name = country_name(ctx, &country);
@@ -110,7 +110,7 @@ pub async fn delete(ctx: &mut Context) -> Result<Response> {
         _ => return Err(Error::new(ErrorType::UserSessionNotFound)),
     };
     db.delete_document("sessions", &session.id).await?;
-    db.purge_cached_document("users", Some(&user.id)).await?;
+    db.purge_cached_document("users", &user.id).await?;
     let country = country_name(ctx, session.country_code.as_deref().unwrap_or(""));
     let model =
         SessionModel { session: &session, country_name: &country, current: false, secret: None, render: ctx.render() };
@@ -129,7 +129,7 @@ pub async fn delete_all(ctx: &mut Context) -> Result<Response> {
     for session in &user.sessions {
         db.delete_document("sessions", &session.id).await?;
     }
-    db.purge_cached_document("users", Some(&user.id)).await?;
+    db.purge_cached_document("users", &user.id).await?;
     ctx.event_param("userId", user.id.clone());
     let payload = base::user_payload(ctx, &user);
     ctx.events.payload = Some(payload);
@@ -148,18 +148,18 @@ pub async fn token(ctx: &mut Context) -> Result<Response> {
     let secret = utopia_auth::proofs::Token::new(length as i64).map_err(|e| Error::internal(e.to_string()))?.token();
     let expire_at = datetime::add_seconds(datetime::now(), expire);
     let mut token = Document::default();
-    token.set("$id", DbValue::from(appwrite_core::database::unique_id().as_str()));
-    token.set("userId", DbValue::from(user.id.as_str()));
-    token.set("userInternalId", documents::internal_id(user.sequence));
+    token.put("$id", DbValue::from(appwrite_core::database::unique_id().as_str()));
+    token.put("userId", DbValue::from(user.id.as_str()));
+    token.put("userInternalId", documents::internal_id(user.sequence));
     // `TOKEN_TYPE_GENERIC`.
-    token.set("type", DbValue::Int(8));
-    token.set("secret", DbValue::from(base::token_hash(&secret)?.as_str()));
-    token.set("expire", datetime::value(&expire_at));
-    token.set("userAgent", DbValue::from(ctx.user_agent("UNKNOWN").as_str()));
-    token.set("ip", DbValue::from(ctx.ip.as_str()));
+    token.put("type", DbValue::Int(8));
+    token.put("secret", DbValue::from(base::token_hash(&secret)?.as_str()));
+    token.put("expire", datetime::value(&expire_at));
+    token.put("userAgent", DbValue::from(ctx.user_agent("UNKNOWN").as_str()));
+    token.put("ip", DbValue::from(ctx.ip.as_str()));
     let db = ctx.db()?;
     let token = Token::from(&db.create_document("tokens", token).await?);
-    db.purge_cached_document("users", Some(&user.id)).await?;
+    db.purge_cached_document("users", &user.id).await?;
     let model = TokenModel { token: &token, secret: Some(&secret), phrase: "", reveal: false, render: ctx.render() };
     ctx.event_param("userId", user.id.clone());
     ctx.event_param("tokenId", token.id.clone());

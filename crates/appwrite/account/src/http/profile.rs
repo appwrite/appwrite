@@ -7,7 +7,7 @@ use utopia_emails::EmailValidator;
 use utopia_http::{Cookie, Response};
 use utopia_validators::{AllOf, Assoc, Text, Validator};
 
-use appwrite_core::database::documents::{self, User};
+use appwrite_core::database::documents::User;
 use appwrite_core::platform::{Context, Route};
 use appwrite_core::response::{UserModel, prefs_value};
 use appwrite_core::validators::{Password, PasswordDictionary, PasswordStrength, Phone};
@@ -119,35 +119,32 @@ pub async fn delete(ctx: &mut Context) -> Result<Response> {
     let authorization = db.authorization();
     let skipped = base::skipped(&[]);
     authorization
-        .skip(|| {
-            db.with_transaction(|| {
-                let db = db.clone();
-                let id = user.id.clone();
-                let skipped = skipped.clone();
-                let sequence = user.sequence;
-                async move {
-                    db.skip_filters(|| db.delete_document("users", &id), Some(&skipped)).await?;
-                    to_db(base::delete_user_identities(&db, sequence).await)?;
-                    to_db(base::delete_user_targets(&db, sequence).await)?;
-                    db.delete_documents(
-                        "sessions",
-                        vec![Query::equal("userInternalId", [documents::internal_id(sequence)])],
-                        Database::DELETE_BATCH_SIZE,
-                        None,
-                        None,
-                    )
-                    .await?;
-                    Ok(())
-                }
-            })
-        })
+        .skip(db.with_transaction(|| {
+            let db = db.clone();
+            let id = user.id.clone();
+            let skipped = skipped.clone();
+            let sequence = user.sequence;
+            async move {
+                db.skip_filters(Some(skipped.as_slice()), db.delete_document("users", &id)).await?;
+                to_db(base::delete_user_identities(&db, sequence).await)?;
+                to_db(base::delete_user_targets(&db, sequence).await)?;
+                db.delete_documents(
+                    "sessions",
+                    vec![Query::equal("userInternalId", [sequence.to_string()])],
+                    utopia_database::database::BATCH_SIZE,
+                    None,
+                )
+                .await?;
+                Ok(())
+            }
+        }))
         .await?;
     // The delete's own purge ran inside the transaction.
-    db.purge_cached_document("users", Some(&user.id)).await?;
+    db.purge_cached_document("users", &user.id).await?;
 
     base::mqtt_revoke(ctx, &user.id).await;
 
-    let payload = Value::Array(document.array_copy(&[], &[])).to_json();
+    let payload = Value::Array(document.array_copy()).to_json();
     let message = appwrite_core::event::delete_message(&ctx.project.message_payload(), "document", payload);
     ctx.events.deletes.push(message);
     ctx.event_param("userId", user.id.clone());
@@ -171,7 +168,7 @@ pub async fn status(ctx: &mut Context) -> Result<Response> {
     let user = base::session_user(ctx)?;
     let db = ctx.db()?;
     let mut updates = Document::default();
-    updates.set("status", Value::Bool(false));
+    updates.put("status", Value::Bool(false));
     let user = base::update_user(&db, &user.id, updates, &[base::TARGETS]).await?;
 
     base::mqtt_revoke(ctx, &user.id).await;
@@ -221,7 +218,7 @@ pub async fn name(ctx: &mut Context) -> Result<Response> {
     let user = base::session_user(ctx)?;
     let db = ctx.db()?;
     let mut updates = Document::default();
-    updates.set("name", Value::from(name.as_str()));
+    updates.put("name", Value::from(name.as_str()));
     let user = base::update_user(&db, &user.id, updates, &[base::TARGETS]).await?;
     ctx.event_param("userId", user.id.clone());
     Ok(base::account(ctx, &user))
@@ -361,9 +358,9 @@ async fn move_target(db: &Database, user: &mut User, old: Option<&str>, new: &st
     let Some(old) = old else { return Ok(()) };
     if let Some(target) = user.targets.iter_mut().find(|t| t.identifier == old) {
         let mut updates = Document::default();
-        updates.set("identifier", Value::from(new));
+        updates.put("identifier", Value::from(new));
         let authorization = db.authorization();
-        authorization.skip(|| db.update_document("targets", &target.id, updates)).await?;
+        authorization.skip(db.update_document("targets", &target.id, updates)).await?;
         target.identifier = new.to_owned();
     }
     Ok(())
@@ -373,7 +370,7 @@ async fn move_target(db: &Database, user: &mut User, old: Option<&str>, new: &st
 /// authorization.
 async fn target_exists(db: &Database, identifier: &str) -> Result<bool> {
     let authorization = db.authorization();
-    let target = authorization.skip(|| db.find_one("targets", vec![Query::equal("identifier", [identifier])])).await?;
+    let target = authorization.skip(db.find_one("targets", vec![Query::equal("identifier", [identifier])])).await?;
     Ok(!target.is_empty())
 }
 
@@ -394,7 +391,7 @@ pub async fn email(ctx: &mut Context) -> Result<Response> {
             "identities",
             vec![
                 Query::equal("providerEmail", [email.as_str()]),
-                Query::not_equal("userInternalId", documents::internal_id(user.sequence)),
+                Query::not_equal("userInternalId", user.sequence.to_string()),
             ],
         )
         .await?;
@@ -406,8 +403,8 @@ pub async fn email(ctx: &mut Context) -> Result<Response> {
     base::check_email_policy(ctx, &meta)?;
 
     let mut updates = Document::default();
-    updates.set("email", Value::from(email.as_str()));
-    updates.set("emailVerification", Value::Bool(false));
+    updates.put("email", Value::from(email.as_str()));
+    updates.put("emailVerification", Value::Bool(false));
     meta.apply(&mut updates);
     if user.password_update.is_none() {
         set_first_password(ctx, &mut updates, &password, pwned).await?;
@@ -420,7 +417,7 @@ pub async fn email(ctx: &mut Context) -> Result<Response> {
     let result = async {
         let mut updated = base::update_user(&db, &user.id, updates, &[base::TARGETS]).await?;
         move_target(&db, &mut updated, old_email.as_deref(), &email).await?;
-        db.purge_cached_document("users", Some(&updated.id)).await?;
+        db.purge_cached_document("users", &updated.id).await?;
         Ok::<User, Error>(updated)
     }
     .await;
@@ -443,8 +440,8 @@ pub async fn phone(ctx: &mut Context) -> Result<Response> {
     let old_phone = user.phone.clone();
 
     let mut updates = Document::default();
-    updates.set("phone", Value::from(phone.as_str()));
-    updates.set("phoneVerification", Value::Bool(false));
+    updates.put("phone", Value::from(phone.as_str()));
+    updates.put("phoneVerification", Value::Bool(false));
     if user.password_update.is_none() {
         set_first_password(ctx, &mut updates, &password, pwned).await?;
     }
@@ -452,7 +449,7 @@ pub async fn phone(ctx: &mut Context) -> Result<Response> {
     let result = async {
         let mut updated = base::update_user(&db, &user.id, updates, &[base::TARGETS]).await?;
         move_target(&db, &mut updated, old_phone.as_deref(), &phone).await?;
-        db.purge_cached_document("users", Some(&updated.id)).await?;
+        db.purge_cached_document("users", &updated.id).await?;
         Ok::<User, Error>(updated)
     }
     .await;
@@ -479,7 +476,7 @@ pub async fn update_prefs(ctx: &mut Context) -> Result<Response> {
     let db = ctx.db()?;
     let mut updates = Document::default();
     // The request's value: the `json` filter encodes it as PHP does.
-    updates.set("prefs", Value::from_json(&prefs));
+    updates.put("prefs", Value::from_json(&prefs));
     let user = base::update_user(&db, &user.id, updates, &[base::TARGETS]).await?;
     ctx.event_param("userId", user.id.clone());
     Ok(base::account(ctx, &user))

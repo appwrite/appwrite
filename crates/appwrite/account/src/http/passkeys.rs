@@ -3,8 +3,9 @@
 
 use serde_json::{Map, Value as Json, json};
 use utopia_auth::passkeys::{Ceremony, RelyingParty, TIMEOUT};
-use utopia_database::query::Grouped;
-use utopia_database::{Database, Document, Query, Value};
+use utopia_database::PermissionType;
+use utopia_database::query::ParsedQuery;
+use utopia_database::{Document, Query, Value};
 use utopia_http::Response;
 use utopia_validators::{Assoc, Text};
 
@@ -218,14 +219,14 @@ async fn issue(
     passkey.insert("binding".into(), if binding.is_empty() { json!([]) } else { Json::Object(binding) });
     passkey.insert("state".into(), Json::String(state.to_owned()));
     let mut challenge = Document::default();
-    challenge.set("$id", Value::from(id));
-    challenge.set("userId", documents::text(user.map(|u| u.id.as_str())));
-    challenge.set("userInternalId", user.map(|u| documents::internal_id(u.sequence)).unwrap_or(Value::Null));
-    challenge.set("type", Value::from(kind));
-    challenge.set("expire", datetime::value(&datetime::add_seconds(datetime::now(), TIMEOUT)));
-    challenge.set("passkey", Value::from_json(&Json::Object(passkey)));
+    challenge.put("$id", Value::from(id));
+    challenge.put("userId", documents::text(user.map(|u| u.id.as_str())));
+    challenge.put("userInternalId", user.map(|u| documents::internal_id(u.sequence)).unwrap_or(Value::Null));
+    challenge.put("type", Value::from(kind));
+    challenge.put("expire", datetime::value(&datetime::add_seconds(datetime::now(), TIMEOUT)));
+    challenge.put("passkey", Value::from_json(&Json::Object(passkey)));
     let db = ctx.db()?;
-    Ok(db.authorization().skip(|| db.create_document("challenges", challenge)).await?)
+    Ok(db.authorization().skip(db.create_document("challenges", challenge)).await?)
 }
 
 /// `Challenges::consume()`: the state of a challenge issued for this
@@ -239,7 +240,7 @@ async fn consume(
     binding: &[(&str, &str)],
 ) -> Result<String> {
     let db = ctx.db()?;
-    let challenge = db.authorization().skip(|| db.get_document("challenges", id, Vec::new(), false)).await?;
+    let challenge = db.authorization().skip(db.get_document("challenges", id, Vec::new(), false)).await?;
     let passkey = challenge.json("passkey").unwrap_or(Json::Null);
     let expected_binding: Map<String, Json> =
         binding.iter().map(|(k, v)| ((*k).to_owned(), Json::String((*v).to_owned()))).collect();
@@ -259,7 +260,7 @@ async fn consume(
     if !valid {
         return Err(Error::new(ErrorType::UserInvalidToken));
     }
-    if !db.authorization().skip(|| db.delete_document("challenges", id)).await? {
+    if !db.authorization().skip(db.delete_document("challenges", id)).await? {
         return Err(Error::new(ErrorType::UserInvalidToken));
     }
     Ok(passkey.get("state").and_then(Json::as_str).unwrap_or("").to_owned())
@@ -291,11 +292,11 @@ async fn passkeys_of(ctx: &mut Context, user: &User) -> Result<Vec<Document>> {
         .find(
             "authenticators",
             vec![
-                Query::equal("userInternalId", [documents::internal_id(user.sequence)]),
+                Query::equal("userInternalId", [user.sequence.to_string()]),
                 Query::equal("type", [PASSKEY]),
                 Query::limit(filters::LIMIT_SUBQUERY),
             ],
-            Database::PERMISSION_READ,
+            PermissionType::Read,
         )
         .await?;
     let abandoned = datetime::add_seconds(datetime::now(), -TIMEOUT);
@@ -369,14 +370,14 @@ pub async fn create(ctx: &mut Context) -> Result<Response> {
     let challenge_id = appwrite_core::database::unique_id();
 
     let mut passkey = Document::default();
-    passkey.set("$id", Value::from(passkey_id.as_str()));
-    passkey.set("$permissions", base::owner_permissions(&user.id));
-    passkey.set("userId", Value::from(user.id.as_str()));
-    passkey.set("userInternalId", documents::internal_id(user.sequence));
-    passkey.set("type", Value::from(PASSKEY));
-    passkey.set("verified", Value::Bool(false));
-    passkey.set("name", Value::from(name.as_str()));
-    passkey.set("data", Value::from_json(&json!({"challengeId": challenge_id})));
+    passkey.put("$id", Value::from(passkey_id.as_str()));
+    passkey.set("$permissions", base::owner_permissions(&user.id))?;
+    passkey.put("userId", Value::from(user.id.as_str()));
+    passkey.put("userInternalId", documents::internal_id(user.sequence));
+    passkey.put("type", Value::from(PASSKEY));
+    passkey.put("verified", Value::Bool(false));
+    passkey.put("name", Value::from(name.as_str()));
+    passkey.put("data", Value::from_json(&json!({"challengeId": challenge_id})));
     let db = ctx.db()?;
     let passkey = match db.create_document("authenticators", passkey).await {
         Ok(p) => p,
@@ -402,7 +403,7 @@ pub async fn create(ctx: &mut Context) -> Result<Response> {
         &[("passkeyId", passkey.id()), ("sessionId", &session)],
     )
     .await?;
-    db.purge_cached_document("users", Some(&user.id)).await?;
+    db.purge_cached_document("users", &user.id).await?;
     let options = options_json(&challenge.options);
     Ok(ctx.created(&PasskeyChallengeModel {
         id: stored.id(),
@@ -458,9 +459,9 @@ pub async fn verify(ctx: &mut Context) -> Result<Response> {
                     return Err(utopia_database::Error::new(utopia_database::Kind::NotFound, "passkey not pending"));
                 }
                 let mut updates = Document::default();
-                updates.set("verified", Value::Bool(true));
-                updates.set("identifier", Value::from(identifier.as_str()));
-                updates.set("data", Value::from_json(&json!({"record": record})));
+                updates.put("verified", Value::Bool(true));
+                updates.put("identifier", Value::from(identifier.as_str()));
+                updates.put("data", Value::from_json(&json!({"record": record})));
                 db.update_document("authenticators", &passkey_id, updates).await
             }
         })
@@ -473,7 +474,7 @@ pub async fn verify(ctx: &mut Context) -> Result<Response> {
         }
         Err(e) => return Err(e.into()),
     };
-    db.purge_cached_document("users", Some(&user.id)).await?;
+    db.purge_cached_document("users", &user.id).await?;
     Ok(ctx.ok(&PasskeyModel { passkey: &Authenticator::from(&updated) }))
 }
 
@@ -484,18 +485,22 @@ pub async fn list(ctx: &mut Context) -> Result<Response> {
     let mut queries = ctx.queries(&collections::PASSKEYS)?;
     let include_total = ctx.optional_bool("total", true)?;
     let user = caller(ctx)?;
-    queries.push(Query::equal("userInternalId", [documents::internal_id(user.sequence)]));
+    queries.push(Query::equal("userInternalId", [user.sequence.to_string()]));
     queries.push(Query::equal("type", [PASSKEY]));
     queries.push(Query::equal("verified", [true]));
     let db = ctx.db()?;
-    if let Some(cursor) = queries.iter().find(|q| {
-        matches!(q.method(), utopia_database::query::Method::CursorAfter | utopia_database::query::Method::CursorBefore)
-    }) {
+    if let Some(cursor) = queries
+        .iter()
+        .find(|q| matches!(q.method(), utopia_query::Method::CursorAfter | utopia_query::Method::CursorBefore))
+    {
         let validator = utopia_database::validator::query::cursor::Cursor::default();
         if !validator.check(cursor) {
             return Err(Error::with_message(ErrorType::GeneralQueryInvalid, validator.description()));
         }
-        let id = cursor.value().map(utopia_database::value::to_text).unwrap_or_default();
+        let id = cursor
+            .value()
+            .map(|v| utopia_database::value::to_text(&utopia_database::value::from_query(v)))
+            .unwrap_or_default();
         let document = db.get_document("authenticators", &id, Vec::new(), false).await?;
         let owned = !document.is_empty()
             && document.string("type").as_deref() == Some(PASSKEY)
@@ -506,17 +511,15 @@ pub async fn list(ctx: &mut Context) -> Result<Response> {
                 format!("Passkey '{id}' for the 'cursor' value not found."),
             ));
         }
-        if let Some(cursor) = queries.iter_mut().find(|q| {
-            matches!(
-                q.method(),
-                utopia_database::query::Method::CursorAfter | utopia_database::query::Method::CursorBefore
-            )
-        }) {
-            cursor.set_value(Value::from(document));
+        if let Some(cursor) = queries
+            .iter_mut()
+            .find(|q| matches!(q.method(), utopia_query::Method::CursorAfter | utopia_query::Method::CursorBefore))
+        {
+            cursor.set_value(utopia_database::value::to_query(&Value::from(document)));
         }
     }
-    let Grouped { filters, .. } = Query::group_by_type(&queries);
-    let passkeys = db.find("authenticators", queries, Database::PERMISSION_READ).await?;
+    let ParsedQuery { filters, .. } = Query::group_by_type(&queries)?;
+    let passkeys = db.find("authenticators", queries, PermissionType::Read).await?;
     let total = if include_total { db.count("authenticators", filters, Some(LIMIT_COUNT)).await? } else { 0 };
     let passkeys: Vec<Authenticator> = documents::all(&passkeys);
     Ok(ctx.ok(&PasskeyListModel { total, passkeys: &passkeys }))
@@ -553,9 +556,9 @@ pub async fn update(ctx: &mut Context) -> Result<Response> {
     owned(ctx, &user, &passkey_id, true).await?;
     let db = ctx.db()?;
     let mut updates = Document::default();
-    updates.set("name", Value::from(name.as_str()));
+    updates.put("name", Value::from(name.as_str()));
     let updated = db.update_document("authenticators", &passkey_id, updates).await?;
-    db.purge_cached_document("users", Some(&user.id)).await?;
+    db.purge_cached_document("users", &user.id).await?;
     Ok(ctx.ok(&PasskeyModel { passkey: &Authenticator::from(&updated) }))
 }
 
@@ -566,7 +569,7 @@ pub async fn delete(ctx: &mut Context) -> Result<Response> {
     owned(ctx, &user, &passkey_id, false).await?;
     let db = ctx.db()?;
     db.delete_document("authenticators", &passkey_id).await?;
-    db.purge_cached_document("users", Some(&user.id)).await?;
+    db.purge_cached_document("users", &user.id).await?;
     Ok(ctx.no_content())
 }
 
@@ -612,22 +615,20 @@ pub async fn update_token(ctx: &mut Context) -> Result<Response> {
     let db = ctx.db()?;
     let passkey = db
         .authorization()
-        .skip(|| {
-            db.find_one(
-                "authenticators",
-                vec![
-                    Query::equal("identifier", [identifier.as_str()]),
-                    Query::equal("type", [PASSKEY]),
-                    Query::equal("verified", [true]),
-                ],
-            )
-        })
+        .skip(db.find_one(
+            "authenticators",
+            vec![
+                Query::equal("identifier", [identifier.as_str()]),
+                Query::equal("type", [PASSKEY]),
+                Query::equal("verified", [true]),
+            ],
+        ))
         .await?;
     if passkey.is_empty() {
         return Err(Error::new(ErrorType::UserPasskeyInvalid));
     }
     let owner = passkey.string_or_empty("userId");
-    let user = db.authorization().skip(|| documents::load_user(&db, &owner)).await?;
+    let user = db.authorization().skip(documents::load_user(&db, &owner)).await?;
     let Some(user) = user.filter(|u| u.sequence.to_string() == passkey.string_or_empty("userInternalId")) else {
         return Err(Error::new(ErrorType::UserPasskeyInvalid));
     };
@@ -640,8 +641,7 @@ pub async fn update_token(ctx: &mut Context) -> Result<Response> {
             let credential = credential.clone();
             let id = passkey.id().to_owned();
             async move {
-                let current =
-                    db.authorization().skip(|| db.get_document("authenticators", &id, Vec::new(), true)).await?;
+                let current = db.authorization().skip(db.get_document("authenticators", &id, Vec::new(), true)).await?;
                 if current.is_empty() || current.boolean("verified") != Some(true) {
                     return Ok(Err(Error::new(ErrorType::UserPasskeyInvalid)));
                 }
@@ -657,9 +657,9 @@ pub async fn update_token(ctx: &mut Context) -> Result<Response> {
                     data = json!({"record": php_std::Value::Array(verified.record).to_json()});
                 }
                 let mut updates = Document::default();
-                updates.set("data", Value::from_json(&data));
-                updates.set("accessedAt", datetime::value(&datetime::now()));
-                db.authorization().skip(|| db.update_document("authenticators", &id, updates)).await?;
+                updates.put("data", Value::from_json(&data));
+                updates.put("accessedAt", datetime::value(&datetime::now()));
+                db.authorization().skip(db.update_document("authenticators", &id, updates)).await?;
                 Ok(Ok(()))
             }
         })
@@ -671,17 +671,17 @@ pub async fn update_token(ctx: &mut Context) -> Result<Response> {
 
     let secret = base::token_secret(256)?;
     let mut token = Document::default();
-    token.set("$id", Value::from(appwrite_core::database::unique_id().as_str()));
-    token.set("$permissions", base::owner_permissions(&user.id));
-    token.set("userId", Value::from(user.id.as_str()));
-    token.set("userInternalId", documents::internal_id(user.sequence));
-    token.set("type", Value::Int(token_type::PASSKEY));
-    token.set("secret", Value::from(base::token_hash(&secret)?.as_str()));
-    token.set("expire", datetime::value(&datetime::add_seconds(datetime::now(), TOKEN_DURATION)));
-    token.set("userAgent", Value::from(ctx.user_agent("UNKNOWN").as_str()));
-    token.set("ip", Value::from(ctx.ip.as_str()));
-    let token = Token::from(&db.authorization().skip(|| db.create_document("tokens", token)).await?);
-    db.purge_cached_document("users", Some(&user.id)).await?;
+    token.put("$id", Value::from(appwrite_core::database::unique_id().as_str()));
+    token.set("$permissions", base::owner_permissions(&user.id))?;
+    token.put("userId", Value::from(user.id.as_str()));
+    token.put("userInternalId", documents::internal_id(user.sequence));
+    token.put("type", Value::Int(token_type::PASSKEY));
+    token.put("secret", Value::from(base::token_hash(&secret)?.as_str()));
+    token.put("expire", datetime::value(&datetime::add_seconds(datetime::now(), TOKEN_DURATION)));
+    token.put("userAgent", Value::from(ctx.user_agent("UNKNOWN").as_str()));
+    token.put("ip", Value::from(ctx.ip.as_str()));
+    let token = Token::from(&db.authorization().skip(db.create_document("tokens", token)).await?);
+    db.purge_cached_document("users", &user.id).await?;
     Ok(ctx.created(&TokenModel {
         token: &token,
         secret: Some(&secret),

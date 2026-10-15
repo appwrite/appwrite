@@ -4,14 +4,14 @@ use async_trait::async_trait;
 use bytes::Bytes;
 use utopia_auth::Hash;
 use utopia_auth::hashes::{Argon2, Sha};
+use utopia_database::Permission;
+use utopia_database::Role;
 use utopia_database::database::Callback;
-use utopia_database::helpers::permission::Permission;
-use utopia_database::helpers::role::Role;
-use utopia_database::query::Method;
 use utopia_database::validator::query::cursor::Cursor as CursorValidator;
 use utopia_database::value::{from_plain, list, to_text};
 use utopia_database::{Database, Document, Kind, Query, Value};
 use utopia_emails::Email;
+use utopia_query::Method;
 
 use appwrite_core::database::documents::{self, Attributes, Target, User, text};
 use appwrite_core::database::filters;
@@ -81,7 +81,7 @@ fn skipped(keep: &[&str]) -> Vec<String> {
 pub async fn user_or_404(ctx: &mut Context, id: &str, keep: &[&str]) -> Result<User> {
     let db = ctx.db()?;
     let skipped = skipped(keep);
-    let user = db.skip_filters(|| documents::load_user(&db, id), Some(&skipped)).await?;
+    let user = db.skip_filters(Some(skipped.as_slice()), documents::load_user(&db, id)).await?;
     user.ok_or_else(|| Error::new(ErrorType::UserNotFound))
 }
 
@@ -94,14 +94,14 @@ pub fn cursor_id(queries: &[Query]) -> Result<Option<String>> {
     if !validator.check(cursor) {
         return Err(Error::with_message(ErrorType::GeneralQueryInvalid, validator.description()));
     }
-    Ok(Some(cursor.value().map(to_text).unwrap_or_default()))
+    Ok(Some(cursor.value().map(|v| to_text(&utopia_database::value::from_query(v))).unwrap_or_default()))
 }
 
 /// `$cursor->setValue($cursorDocument)` on the first cursor query.
 pub fn set_cursor(queries: &mut [Query], document: Document) {
     if let Some(cursor) = queries.iter_mut().find(|q| matches!(q.method(), Method::CursorAfter | Method::CursorBefore))
     {
-        cursor.set_value(Value::from(document));
+        cursor.set_value(utopia_database::value::to_query(&Value::from(document)));
     }
 }
 
@@ -137,13 +137,13 @@ pub fn user_payload(ctx: &Context, user: &User) -> Bytes {
 pub async fn update_user(ctx: &mut Context, id: &str, updates: Document, keep: &[&str]) -> Result<User> {
     let db = ctx.db()?;
     let skipped = skipped(&[]);
-    let mut updated = db.skip_filters(|| db.update_document("users", id, updates), Some(&skipped)).await?;
+    let mut updated = db.skip_filters(Some(skipped.as_slice()), db.update_document("users", id, updates)).await?;
     if updated.is_empty() {
         return Err(Error::new(ErrorType::UserNotFound));
     }
     for filter in keep {
         let value = filters::sub_query(&db, filter, &updated).await?;
-        updated.set(sub_query_attribute(filter), value);
+        updated.put(sub_query_attribute(filter), value);
     }
     Ok(User::from(&updated))
 }
@@ -188,11 +188,11 @@ impl Metadata {
     /// Sets the `emailCanonical` and `emailIs*` attributes.
     pub fn apply(&self, document: &mut Document) {
         let flag = |b: Option<bool>| b.map(Value::Bool).unwrap_or(Value::Null);
-        document.set("emailCanonical", text(self.canonical.as_deref()));
-        document.set("emailIsCanonical", flag(self.is_canonical));
-        document.set("emailIsCorporate", flag(self.is_corporate));
-        document.set("emailIsDisposable", flag(self.is_disposable));
-        document.set("emailIsFree", flag(self.is_free));
+        document.put("emailCanonical", text(self.canonical.as_deref()));
+        document.put("emailIsCanonical", flag(self.is_canonical));
+        document.put("emailIsCorporate", flag(self.is_corporate));
+        document.put("emailIsDisposable", flag(self.is_disposable));
+        document.put("emailIsFree", flag(self.is_free));
     }
 }
 
@@ -238,11 +238,11 @@ pub fn owner_permissions(user_id: &str) -> Value {
 /// The target document `createUser` and the email/phone updates create.
 pub fn new_target(user: &User, provider_type: &str, identifier: &str) -> Document {
     let mut target = Document::default();
-    target.set("$permissions", owner_permissions(&user.id));
-    target.set("userId", Value::from(user.id.as_str()));
-    target.set("userInternalId", documents::internal_id(user.sequence));
-    target.set("providerType", Value::from(provider_type));
-    target.set("identifier", Value::from(identifier));
+    target.put("$permissions", owner_permissions(&user.id));
+    target.put("userId", Value::from(user.id.as_str()));
+    target.put("userInternalId", documents::internal_id(user.sequence));
+    target.put("providerType", Value::from(provider_type));
+    target.put("identifier", Value::from(identifier));
     target
 }
 
@@ -272,7 +272,7 @@ pub async fn target_by_identifier(db: &Database, identifier: &str) -> Result<Opt
 pub async fn identity_email_taken(db: &Database, email: &str, exclude_user_sequence: Option<i64>) -> Result<bool> {
     let mut queries = vec![Query::equal("providerEmail", [email])];
     if let Some(sequence) = exclude_user_sequence {
-        queries.push(Query::not_equal("userInternalId", documents::internal_id(sequence)));
+        queries.push(Query::not_equal("userInternalId", sequence.to_string()));
     }
     Ok(!db.find_one("identities", queries).await?.is_empty())
 }
@@ -339,42 +339,42 @@ pub async fn create_user(ctx: &mut Context, input: NewUser) -> Result<User> {
         .map(|v| v.unwrap_or(""))
         .join(" ");
     let mut user = Document::default();
-    user.set("$id", Value::from(user_id.as_str()));
+    user.put("$id", Value::from(user_id.as_str()));
     let any = Role::any();
     let owner = Role::user(&user_id, "");
-    user.set(
+    user.put(
         "$permissions",
         list(
             [Permission::read(&any), Permission::update(&owner), Permission::delete(&owner)]
                 .map(|p| Value::from(p.as_str())),
         ),
     );
-    user.set("email", text(email.as_deref()));
-    user.set("emailVerification", Value::Bool(false));
-    user.set("phone", text(input.phone.as_deref()));
-    user.set("phoneVerification", Value::Bool(false));
-    user.set("status", Value::Bool(true));
-    user.set("labels", list([]));
-    user.set("password", text(hashed.as_deref()));
-    user.set("passwordHistory", documents::strings(&history));
-    user.set("passwordUpdate", if hashed.is_some() { now.clone() } else { Value::Null });
-    user.set("hash", Value::from(hash.name()));
-    user.set("hashOptions", hash_options(hash.as_ref()));
-    user.set("registration", now);
-    user.set("reset", Value::Bool(false));
-    user.set("name", Value::from(name.as_str()));
-    user.set("prefs", Value::Object(Default::default()));
-    user.set("sessions", Value::Null);
-    user.set("tokens", Value::Null);
-    user.set("memberships", Value::Null);
-    user.set("search", Value::from(search.as_str()));
+    user.put("email", text(email.as_deref()));
+    user.put("emailVerification", Value::Bool(false));
+    user.put("phone", text(input.phone.as_deref()));
+    user.put("phoneVerification", Value::Bool(false));
+    user.put("status", Value::Bool(true));
+    user.put("labels", list([]));
+    user.put("password", text(hashed.as_deref()));
+    user.put("passwordHistory", documents::strings(&history));
+    user.put("passwordUpdate", if hashed.is_some() { now.clone() } else { Value::Null });
+    user.put("hash", Value::from(hash.name()));
+    user.put("hashOptions", hash_options(hash.as_ref()));
+    user.put("registration", now);
+    user.put("reset", Value::Bool(false));
+    user.put("name", Value::from(name.as_str()));
+    user.put("prefs", Value::Object(Default::default()));
+    user.put("sessions", Value::Null);
+    user.put("tokens", Value::Null);
+    user.put("memberships", Value::Null);
+    user.put("search", Value::from(search.as_str()));
     meta.apply(&mut user);
-    user.set("passwordPwned", input.password_pwned.map(Value::Bool).unwrap_or(Value::Null));
+    user.put("passwordPwned", input.password_pwned.map(Value::Bool).unwrap_or(Value::Null));
 
     // A new user has no sessions, targets, ... yet: its sub-queries would
     // find nothing (its targets are created below).
     let skipped = skipped(&[]);
-    let created = match db.skip_filters(|| db.create_document("users", user), Some(&skipped)).await {
+    let created = match db.skip_filters(Some(skipped.as_slice()), db.create_document("users", user)).await {
         Ok(created) => created,
         Err(e) if e.is_a(Kind::Duplicate) => return Err(Error::new(ErrorType::UserAlreadyExists)),
         Err(e) => return Err(e.into()),
@@ -391,7 +391,7 @@ pub async fn create_user(ctx: &mut Context, input: NewUser) -> Result<User> {
     {
         user.targets.push(t);
     }
-    db.purge_cached_document("users", Some(&user.id)).await?;
+    db.purge_cached_document("users", &user.id).await?;
     Ok(user)
 }
 
@@ -400,10 +400,9 @@ pub async fn create_user(ctx: &mut Context, input: NewUser) -> Result<User> {
 pub async fn delete_user_targets(db: &Database, user_sequence: i64) -> Result<()> {
     db.delete_documents(
         "targets",
-        vec![Query::equal("userInternalId", [documents::internal_id(user_sequence)]), Query::order_asc("")],
-        Database::DELETE_BATCH_SIZE,
+        vec![Query::equal("userInternalId", [user_sequence.to_string()]), Query::order_asc("", None)],
+        utopia_database::database::BATCH_SIZE,
         Some(&mut DeleteSubscribers { db }),
-        None,
     )
     .await?;
     Ok(())
@@ -415,19 +414,18 @@ struct DeleteSubscribers<'a> {
 }
 
 #[async_trait]
-impl Callback<(Document, Document)> for DeleteSubscribers<'_> {
-    async fn call(&mut self, (target, _): (Document, Document)) -> utopia_database::Result<()> {
+impl Callback<Document> for DeleteSubscribers<'_> {
+    async fn call(&mut self, target: Document) -> utopia_database::Result<()> {
         let mut topics = DecreaseTopic { db: self.db, provider_type: target.string_or_empty("providerType") };
         self.db
             .delete_documents(
                 "subscribers",
                 vec![
-                    Query::equal("targetInternalId", [target.sequence().cloned().unwrap_or(Value::Null)]),
-                    Query::order_asc(""),
+                    Query::equal("targetInternalId", [documents::query_value(target.sequence())]),
+                    Query::order_asc("", None),
                 ],
-                Database::DELETE_BATCH_SIZE,
+                utopia_database::database::BATCH_SIZE,
                 Some(&mut topics),
-                None,
             )
             .await?;
         Ok(())
@@ -441,21 +439,19 @@ struct DecreaseTopic<'a> {
 }
 
 #[async_trait]
-impl Callback<(Document, Document)> for DecreaseTopic<'_> {
-    async fn call(&mut self, (subscriber, _): (Document, Document)) -> utopia_database::Result<()> {
+impl Callback<Document> for DecreaseTopic<'_> {
+    async fn call(&mut self, subscriber: Document) -> utopia_database::Result<()> {
         let db = self.db;
         let topic_id = subscriber.string_or_empty("topicId");
-        let topic_internal_id = subscriber.get("topicInternalId").cloned().unwrap_or(Value::Null);
+        let topic_internal_id = documents::query_value(subscriber.get("topicInternalId"));
         let skipped = filters::names(filters::TOPICS_SUBQUERIES);
         let topic = db
             .skip_filters(
-                || {
-                    db.find_one(
-                        "topics",
-                        vec![Query::select(["$id", "$sequence"]), Query::equal("$sequence", [topic_internal_id])],
-                    )
-                },
-                Some(&skipped),
+                Some(skipped.as_slice()),
+                db.find_one(
+                    "topics",
+                    vec![Query::select(["$id", "$sequence"]), Query::equal("$sequence", [topic_internal_id])],
+                ),
             )
             .await?;
         if topic.is_empty() {
@@ -469,8 +465,8 @@ impl Callback<(Document, Document)> for DecreaseTopic<'_> {
         };
         let decreased = db
             .skip_filters(
-                || db.decrease_document_attribute("topics", &topic_id, total, Value::Int(1), Some(Value::Int(0))),
-                Some(&skipped),
+                Some(skipped.as_slice()),
+                db.decrease_document_attribute("topics", &topic_id, total, Value::Int(1), Some(Value::Int(0))),
             )
             .await;
         match decreased {
@@ -487,9 +483,8 @@ impl Callback<(Document, Document)> for DecreaseTopic<'_> {
 pub async fn delete_user_identities(db: &Database, user_sequence: i64) -> Result<()> {
     db.delete_documents(
         "identities",
-        vec![Query::equal("userInternalId", [documents::internal_id(user_sequence)]), Query::order_asc("")],
-        Database::DELETE_BATCH_SIZE,
-        None,
+        vec![Query::equal("userInternalId", [user_sequence.to_string()]), Query::order_asc("", None)],
+        utopia_database::database::BATCH_SIZE,
         None,
     )
     .await?;

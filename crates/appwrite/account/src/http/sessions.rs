@@ -321,8 +321,8 @@ pub async fn get(ctx: &mut Context) -> Result<Response> {
 async fn session_documents(ctx: &mut Context, user: &User) -> Result<Vec<Document>> {
     let db = ctx.db()?;
     let mut document = Document::default();
-    document.set("$id", Value::from(user.id.as_str()));
-    document.set("$sequence", Value::from(user.sequence.to_string().as_str()));
+    document.put("$id", Value::from(user.id.as_str()));
+    document.put("$sequence", Value::from(user.sequence.to_string().as_str()));
     Ok(match filters::sub_query(&db, "subQuerySessions", &document).await? {
         Value::Array(items) => items.values().filter_map(utopia_database::value::as_document).cloned().collect(),
         _ => Vec::new(),
@@ -336,8 +336,8 @@ fn document_json(document: &Document) -> Json {
 
 /// `DELETE_TYPE_SESSION_TARGETS`: the targets of a deleted session.
 fn delete_targets(ctx: &mut Context, mut session: Document, current: bool, country: &str) {
-    session.set("current", Value::Bool(current));
-    session.set("countryName", Value::from(country));
+    session.put("current", Value::Bool(current));
+    session.put("countryName", Value::from(country));
     let message = appwrite_core::event::delete_message(
         &ctx.project.message_payload(),
         "session_targets",
@@ -379,7 +379,7 @@ pub async fn delete_all(ctx: &mut Context) -> Result<Response> {
             current_session = Some(session);
         }
     }
-    db.purge_cached_document("users", Some(&user.id)).await?;
+    db.purge_cached_document("users", &user.id).await?;
     match current_session {
         Some(session) => {
             ctx.event_param("userId", user.id.clone());
@@ -416,14 +416,14 @@ pub async fn delete(ctx: &mut Context) -> Result<Response> {
         }
         base::clear_session_cookies(ctx, &mut response);
     }
-    db.purge_cached_document("users", Some(&user.id)).await?;
+    db.purge_cached_document("users", &user.id).await?;
     ctx.event_param("userId", user.id.clone());
     ctx.event_param("sessionId", session.id.clone());
     ctx.events.payload = Some(base::session_payload(ctx, &session, is_current, &country, None));
     let mut document = document;
-    document.set("current", Value::Bool(is_current));
+    document.put("current", Value::Bool(is_current));
     if is_current {
-        document.set("countryName", Value::from(country.as_str()));
+        document.put("countryName", Value::from(country.as_str()));
     }
     let message = appwrite_core::event::delete_message(
         &ctx.project.message_payload(),
@@ -445,7 +445,7 @@ pub async fn update(ctx: &mut Context) -> Result<Response> {
     let expire = datetime::add_seconds(datetime::now(), base::duration(ctx));
     session.expire = Some(expire);
     let mut updates = Document::default();
-    updates.set("expire", datetime::value(&expire));
+    updates.put("expire", datetime::value(&expire));
 
     let provider = session.provider.clone().unwrap_or_default();
     let refresh = session.provider_refresh_token.clone().unwrap_or_default();
@@ -455,9 +455,9 @@ pub async fn update(ctx: &mut Context) -> Result<Response> {
         session.provider_access_token = Some(tokens.access_token.clone());
         session.provider_refresh_token = Some(tokens.refresh_token.clone());
         session.provider_access_token_expiry = Some(expiry);
-        updates.set("providerAccessToken", Value::from(tokens.access_token.as_str()));
-        updates.set("providerRefreshToken", Value::from(tokens.refresh_token.as_str()));
-        updates.set("providerAccessTokenExpiry", datetime::value(&expiry));
+        updates.put("providerAccessToken", Value::from(tokens.access_token.as_str()));
+        updates.put("providerRefreshToken", Value::from(tokens.refresh_token.as_str()));
+        updates.put("providerAccessTokenExpiry", datetime::value(&expiry));
         // The photo refresh is best-effort.
         let db = ctx.db()?;
         if let Ok(identity) = db
@@ -472,14 +472,14 @@ pub async fn update(ctx: &mut Context) -> Result<Response> {
             && !identity.is_empty()
         {
             let mut photo = Document::default();
-            photo.set("photo", Value::from(tokens.photo.as_str()));
+            photo.put("photo", Value::from(tokens.photo.as_str()));
             let _ = db.update_document("identities", identity.id(), photo).await;
         }
     }
 
     let db = ctx.db()?;
     db.update_document("sessions", &session.id, updates).await?;
-    db.purge_cached_document("users", Some(&user.id)).await?;
+    db.purge_cached_document("users", &user.id).await?;
     ctx.event_param("userId", user.id.clone());
     ctx.event_param("sessionId", session.id.clone());
     ctx.events.payload = Some(base::session_payload(ctx, &session, false, "", None));
@@ -539,7 +539,7 @@ pub async fn email(ctx: &mut Context) -> Result<Response> {
     let secret = base::token_secret(256)?;
     let expire = datetime::add_seconds(datetime::now(), duration);
     let mut session = base::new_session(ctx, &user, "email", &secret, &["password"], &expire).await?;
-    session.set("providerUid", Value::from(email.as_str()));
+    session.put("providerUid", Value::from(email.as_str()));
     ctx.authorization.add_role(&format!("user:{}", user.id));
 
     let policy = ctx.project.auth("passwordPwned").cloned().unwrap_or(Json::Null);
@@ -548,7 +548,7 @@ pub async fn email(ctx: &mut Context) -> Result<Response> {
         if Some(pwned) != user.password_pwned {
             user.password_pwned = Some(pwned);
             let mut updates = Document::default();
-            updates.set("passwordPwned", Value::Bool(pwned));
+            updates.put("passwordPwned", Value::Bool(pwned));
             db.update_document("users", &user.id, updates).await?;
         }
         if pwned && policy.get("sessions").is_some_and(php::truthy) {
@@ -563,14 +563,14 @@ pub async fn email(ctx: &mut Context) -> Result<Response> {
         let hash = base::proof();
         let hashed = base::hash_password(password.clone()).await?;
         let mut updates = Document::default();
-        updates.set("password", Value::from(hashed.as_str()));
-        updates.set("hash", Value::from(hash.name()));
-        updates.set("hashOptions", base::hash_options(hash.as_ref()));
+        updates.put("password", Value::from(hashed.as_str()));
+        updates.put("hash", Value::from(hash.name()));
+        updates.put("hashOptions", base::hash_options(hash.as_ref()));
         db.update_document("users", &user.id, updates).await?;
     }
 
     let session = Session::from(&db.create_document("sessions", session).await?);
-    db.purge_cached_document("users", Some(&user.id)).await?;
+    db.purge_cached_document("users", &user.id).await?;
     let encoded = base::encode_store(&user.id, &secret)?;
     // The response keeps the stored expiry; only the cookies use this one.
     let cookie_expire = datetime::add_seconds(datetime::now(), duration);
@@ -641,12 +641,12 @@ pub async fn anonymous(ctx: &mut Context) -> Result<Response> {
     base::check_user_limit(ctx, false).await?;
     let user_id = appwrite_core::database::unique_id();
     let mut user = base::new_user(&user_id);
-    user.set("email", Value::Null);
+    user.put("email", Value::Null);
     base::set_default_hash(&mut user);
-    user.set("name", Value::Null);
-    user.set("mfa", Value::Bool(false));
-    user.set("authenticators", Value::Null);
-    user.set("search", Value::from(user_id.as_str()));
+    user.put("name", Value::Null);
+    user.put("mfa", Value::Bool(false));
+    user.put("authenticators", Value::Null);
+    user.put("search", Value::from(user_id.as_str()));
     let user = base::create_user(ctx, user).await?;
     base::act_as(ctx, &user);
 
@@ -657,7 +657,7 @@ pub async fn anonymous(ctx: &mut Context) -> Result<Response> {
     ctx.authorization.add_role(&format!("user:{}", user.id));
     let db = ctx.db()?;
     let session = Session::from(&db.create_document("sessions", session).await?);
-    db.purge_cached_document("users", Some(&user.id)).await?;
+    db.purge_cached_document("users", &user.id).await?;
     ctx.event_param("userId", user.id.clone());
     ctx.event_param("sessionId", session.id.clone());
     let encoded = base::encode_store(&user.id, &secret)?;
@@ -737,27 +737,25 @@ async fn exchange(ctx: &mut Context, secret_length: i64) -> Result<Response> {
         let provider = oauth_provider.clone().unwrap_or_default();
         let identity = db
             .authorization()
-            .skip(|| {
-                db.find_one(
-                    "identities",
-                    vec![
-                        Query::equal("provider", [provider.as_str()]),
-                        Query::equal("userInternalId", [documents::internal_id(user.sequence)]),
-                    ],
-                )
-            })
+            .skip(db.find_one(
+                "identities",
+                vec![
+                    Query::equal("provider", [provider.as_str()]),
+                    Query::equal("userInternalId", [user.sequence.to_string()]),
+                ],
+            ))
             .await?;
         if identity.is_empty() {
             return Err(Error::new(ErrorType::UserInvalidToken));
         }
         for key in ["providerUid", "providerRefreshToken", "providerAccessToken", "providerAccessTokenExpiry"] {
-            session.set(key, identity.get(key).cloned().unwrap_or(Value::Null));
+            session.put(key, identity.get(key).cloned().unwrap_or(Value::Null));
         }
-        session.set("factors", documents::strings(&[factor.to_owned(), "oauth2".to_owned()]));
+        session.put("factors", documents::strings(&[factor.to_owned(), "oauth2".to_owned()]));
     }
     if kind == token_type::PASSKEY {
-        session.set("factors", documents::strings(&["passkey".to_owned(), "userVerification".to_owned()]));
-        session.set("mfaUpdatedAt", datetime::value(&datetime::now()));
+        session.put("factors", documents::strings(&["passkey".to_owned(), "userVerification".to_owned()]));
+        session.put("mfaUpdatedAt", datetime::value(&datetime::now()));
     }
     ctx.authorization.add_role(&format!("user:{}", user.id));
 
@@ -769,7 +767,7 @@ async fn exchange(ctx: &mut Context, secret_length: i64) -> Result<Response> {
             let session = session.clone();
             let token_id = token_id.clone();
             async move {
-                let deleted = db.authorization().skip(|| db.delete_document("tokens", &token_id)).await?;
+                let deleted = db.authorization().skip(db.delete_document("tokens", &token_id)).await?;
                 if !deleted {
                     return Err(utopia_database::Error::new(utopia_database::Kind::NotFound, "token claimed"));
                 }
@@ -782,7 +780,7 @@ async fn exchange(ctx: &mut Context, secret_length: i64) -> Result<Response> {
         Err(e) if e.is_a(utopia_database::Kind::NotFound) => return Err(Error::new(ErrorType::UserInvalidToken)),
         Err(e) => return Err(e.into()),
     };
-    db.purge_cached_document("users", Some(&user.id)).await?;
+    db.purge_cached_document("users", &user.id).await?;
 
     if matches!(kind, token_type::MAGIC_URL | token_type::EMAIL) {
         user.email_verification = Some(true);
@@ -791,8 +789,8 @@ async fn exchange(ctx: &mut Context, secret_length: i64) -> Result<Response> {
         user.phone_verification = Some(true);
     }
     let mut updates = Document::default();
-    updates.set("emailVerification", user.email_verification.map(Value::Bool).unwrap_or(Value::Null));
-    updates.set("phoneVerification", user.phone_verification.map(Value::Bool).unwrap_or(Value::Null));
+    updates.put("emailVerification", user.email_verification.map(Value::Bool).unwrap_or(Value::Null));
+    updates.put("phoneVerification", user.phone_verification.map(Value::Bool).unwrap_or(Value::Null));
     if db.update_document("users", &user.id, updates).await.is_err() {
         return Err(Error::with_message(ErrorType::GeneralServerError, "Failed saving user to DB"));
     }

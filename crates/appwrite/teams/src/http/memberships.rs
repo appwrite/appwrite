@@ -4,7 +4,8 @@
 use serde_json::{Map, Value as Json, json};
 use utopia_auth::Hash;
 use utopia_auth::hashes::{Argon2, Sha};
-use utopia_database::helpers::role::Role;
+use utopia_database::PermissionType;
+use utopia_database::Role;
 use utopia_database::value::from_plain;
 use utopia_database::{Database, Document, Kind, Query, Value};
 use utopia_emails::{Email, EmailValidator};
@@ -170,8 +171,8 @@ pub async fn create(ctx: &mut Context) -> Result<Response> {
         .find_one(
             "memberships",
             vec![
-                Query::equal("userInternalId", [documents::internal_id(invitee.sequence)]),
-                Query::equal("teamInternalId", [documents::internal_id(team.sequence)]),
+                Query::equal("userInternalId", [invitee.sequence.to_string()]),
+                Query::equal("teamInternalId", [team.sequence.to_string()]),
             ],
         )
         .await?;
@@ -184,8 +185,8 @@ pub async fn create(ctx: &mut Context) -> Result<Response> {
             if membership_id.is_empty() || membership_id == "unique()" { unique_id() } else { membership_id };
         let now = datetime::value(&datetime::now());
         let mut membership = Document::default();
-        membership.set("$id", Value::from(membership_id.as_str()));
-        membership.set(
+        membership.put("$id", Value::from(membership_id.as_str()));
+        membership.put(
             "$permissions",
             base::permissions(&[
                 ("read", Role::any()),
@@ -195,22 +196,22 @@ pub async fn create(ctx: &mut Context) -> Result<Response> {
                 ("delete", Role::team(&team.id, "owner")),
             ]),
         );
-        membership.set("userId", Value::from(invitee.id.as_str()));
-        membership.set("userInternalId", documents::internal_id(invitee.sequence));
-        membership.set("teamId", Value::from(team.id.as_str()));
-        membership.set("teamInternalId", documents::internal_id(team.sequence));
-        membership.set("roles", documents::strings(&roles));
-        membership.set("invited", now.clone());
-        membership.set("joined", if server { now } else { Value::Null });
-        membership.set("confirm", Value::Bool(server));
-        membership.set("secret", Value::from(secret_hash.as_str()));
-        membership.set("search", Value::from(format!("{membership_id} {}", invitee.id).as_str()));
+        membership.put("userId", Value::from(invitee.id.as_str()));
+        membership.put("userInternalId", documents::internal_id(invitee.sequence));
+        membership.put("teamId", Value::from(team.id.as_str()));
+        membership.put("teamInternalId", documents::internal_id(team.sequence));
+        membership.put("roles", documents::strings(&roles));
+        membership.put("invited", now.clone());
+        membership.put("joined", if server { now } else { Value::Null });
+        membership.put("confirm", Value::Bool(server));
+        membership.put("secret", Value::from(secret_hash.as_str()));
+        membership.put("search", Value::from(format!("{membership_id} {}", invitee.id).as_str()));
 
         let created = if server {
             db.with_transaction(|| async {
-                let created = authorization.skip(|| db.create_document("memberships", membership.clone())).await?;
+                let created = authorization.skip(db.create_document("memberships", membership.clone())).await?;
                 authorization
-                    .skip(|| db.increase_document_attribute("teams", &team.id, "total", Value::Int(1), None))
+                    .skip(db.increase_document_attribute("teams", &team.id, "total", Value::Int(1), None))
                     .await?;
                 Ok(created)
             })
@@ -223,16 +224,14 @@ pub async fn create(ctx: &mut Context) -> Result<Response> {
             Err(e) if e.is_a(Kind::Duplicate) => {
                 if invitee_created {
                     let count = authorization
-                        .skip(|| {
-                            db.count(
-                                "memberships",
-                                vec![Query::equal("userInternalId", [documents::internal_id(invitee.sequence)])],
-                                Some(1),
-                            )
-                        })
+                        .skip(db.count(
+                            "memberships",
+                            vec![Query::equal("userInternalId", [invitee.sequence.to_string()])],
+                            Some(1),
+                        ))
                         .await?;
                     if count == 0 {
-                        authorization.skip(|| db.delete_document("users", &invitee.id)).await?;
+                        authorization.skip(db.delete_document("users", &invitee.id)).await?;
                     }
                 }
                 return Err(Error::new(ErrorType::MembershipAlreadyExists));
@@ -246,18 +245,18 @@ pub async fn create(ctx: &mut Context) -> Result<Response> {
             let confirmed = db
                 .with_transaction(|| async {
                     // Re-read under a lock: a concurrent invite must not count the same member twice.
-                    let current = authorization.skip(|| db.get_document("memberships", &id, Vec::new(), true)).await?;
+                    let current = authorization.skip(db.get_document("memberships", &id, Vec::new(), true)).await?;
                     if current.get("confirm") == Some(&Value::Bool(true)) {
                         return Ok(Document::default());
                     }
                     let mut updates = Document::default();
-                    updates.set("secret", Value::from(secret_hash.as_str()));
-                    updates.set("invited", invited.clone());
-                    updates.set("joined", datetime::value(&datetime::now()));
-                    updates.set("confirm", Value::Bool(true));
-                    let confirmed = authorization.skip(|| db.update_document("memberships", &id, updates)).await?;
+                    updates.put("secret", Value::from(secret_hash.as_str()));
+                    updates.put("invited", invited.clone());
+                    updates.put("joined", datetime::value(&datetime::now()));
+                    updates.put("confirm", Value::Bool(true));
+                    let confirmed = authorization.skip(db.update_document("memberships", &id, updates)).await?;
                     authorization
-                        .skip(|| db.increase_document_attribute("teams", &team.id, "total", Value::Int(1), None))
+                        .skip(db.increase_document_attribute("teams", &team.id, "total", Value::Int(1), None))
                         .await?;
                     Ok(confirmed)
                 })
@@ -268,8 +267,8 @@ pub async fn create(ctx: &mut Context) -> Result<Response> {
             confirmed
         } else {
             let mut updates = Document::default();
-            updates.set("secret", Value::from(secret_hash.as_str()));
-            updates.set("invited", invited);
+            updates.put("secret", Value::from(secret_hash.as_str()));
+            updates.put("invited", invited);
             db.update_document("memberships", existing.id(), updates).await?
         }
     } else {
@@ -278,7 +277,7 @@ pub async fn create(ctx: &mut Context) -> Result<Response> {
     let membership = Membership::from(&membership);
 
     if server {
-        db.purge_cached_document("users", Some(&invitee.id)).await?;
+        db.purge_cached_document("users", &invitee.id).await?;
     } else {
         let link = template::with_query(
             &url,
@@ -376,8 +375,8 @@ async fn create_invitee(
     let user_id = unique_id();
     let flag = |b: Option<bool>| b.map(Value::Bool).unwrap_or(Value::Null);
     let mut user = Document::default();
-    user.set("$id", Value::from(user_id.as_str()));
-    user.set(
+    user.put("$id", Value::from(user_id.as_str()));
+    user.put(
         "$permissions",
         base::permissions(&[
             ("read", Role::any()),
@@ -386,31 +385,31 @@ async fn create_invitee(
             ("delete", Role::user(&user_id, "")),
         ]),
     );
-    user.set("email", text(Some(email).filter(|e| !e.is_empty())));
-    user.set("phone", text(Some(phone).filter(|p| !p.is_empty())));
-    user.set("emailVerification", Value::Bool(false));
-    user.set("status", Value::Bool(true));
-    user.set("password", Value::from(hashed.as_str()));
-    user.set("hash", Value::from(hash.name()));
-    user.set("hashOptions", from_plain(php_std::Value::Array(hash.options().as_array().clone())));
+    user.put("email", text(Some(email).filter(|e| !e.is_empty())));
+    user.put("phone", text(Some(phone).filter(|p| !p.is_empty())));
+    user.put("emailVerification", Value::Bool(false));
+    user.put("status", Value::Bool(true));
+    user.put("password", Value::from(hashed.as_str()));
+    user.put("hash", Value::from(hash.name()));
+    user.put("hashOptions", from_plain(php_std::Value::Array(hash.options().as_array().clone())));
     // No password update time: a user invited (or signed in with OAuth)
     // may set a password without the old one.
-    user.set("passwordUpdate", Value::Null);
-    user.set("registration", datetime::value(&datetime::now()));
-    user.set("reset", Value::Bool(false));
-    user.set("name", Value::from(name));
-    user.set("prefs", Value::Object(Default::default()));
-    user.set("sessions", Value::Null);
-    user.set("tokens", Value::Null);
-    user.set("memberships", Value::Null);
-    user.set("search", Value::from(format!("{user_id} {email} {name}").as_str()));
-    user.set("emailCanonical", text(canonical.as_deref().filter(|_| metadata.is_some())));
-    user.set("emailIsCanonical", flag(is_canonical));
-    user.set("emailIsCorporate", flag(is_corporate));
-    user.set("emailIsDisposable", flag(is_disposable));
-    user.set("emailIsFree", flag(is_free));
+    user.put("passwordUpdate", Value::Null);
+    user.put("registration", datetime::value(&datetime::now()));
+    user.put("reset", Value::Bool(false));
+    user.put("name", Value::from(name));
+    user.put("prefs", Value::Object(Default::default()));
+    user.put("sessions", Value::Null);
+    user.put("tokens", Value::Null);
+    user.put("memberships", Value::Null);
+    user.put("search", Value::from(format!("{user_id} {email} {name}").as_str()));
+    user.put("emailCanonical", text(canonical.as_deref().filter(|_| metadata.is_some())));
+    user.put("emailIsCanonical", flag(is_canonical));
+    user.put("emailIsCorporate", flag(is_corporate));
+    user.put("emailIsDisposable", flag(is_disposable));
+    user.put("emailIsFree", flag(is_free));
 
-    match db.authorization().skip(|| db.create_document("users", user)).await {
+    match db.authorization().skip(db.create_document("users", user)).await {
         Ok(created) => Ok(User::from(&created)),
         Err(e) if e.is_a(Kind::Duplicate) => Err(Error::new(ErrorType::UserAlreadyExists)),
         Err(e) => Err(e.into()),
@@ -615,11 +614,10 @@ pub async fn list(ctx: &mut Context) -> Result<Response> {
     if !search.is_empty() {
         queries.push(Query::search("search", &search));
     }
-    queries.push(Query::equal("teamInternalId", [documents::internal_id(team.sequence)]));
+    queries.push(Query::equal("teamInternalId", [team.sequence.to_string()]));
     base::resolve_cursor(&db, "memberships", &mut queries, "Membership").await?;
-    let filters = Query::group_by_type(&queries).filters;
-    let memberships: Vec<Membership> =
-        documents::all(&db.find("memberships", queries, Database::PERMISSION_READ).await?);
+    let filters = Query::group_by_type(&queries)?.filters;
+    let memberships: Vec<Membership> = documents::all(&db.find("memberships", queries, PermissionType::Read).await?);
     let total = if include_total { db.count("memberships", filters, Some(LIMIT_COUNT)).await? } else { 0 };
     let memberships: Vec<Membership> = memberships.into_iter().filter(|m| !m.user_id.is_empty()).collect();
 
@@ -684,10 +682,7 @@ pub async fn update(ctx: &mut Context) -> Result<Response> {
         let owners = db
             .count(
                 "memberships",
-                vec![
-                    Query::contains("roles", ["owner"]),
-                    Query::equal("teamInternalId", [documents::internal_id(team.sequence)]),
-                ],
+                vec![Query::contains("roles", ["owner"]), Query::equal("teamInternalId", [team.sequence.to_string()])],
                 Some(2),
             )
             .await?;
@@ -707,9 +702,9 @@ pub async fn update(ctx: &mut Context) -> Result<Response> {
     }
 
     let mut updates = Document::default();
-    updates.set("roles", documents::strings(&roles));
+    updates.put("roles", documents::strings(&roles));
     let membership = Membership::from(&db.update_document("memberships", &membership.id, updates).await?);
-    db.purge_cached_document("users", Some(&profile.id)).await?;
+    db.purge_cached_document("users", &profile.id).await?;
 
     ctx.event_param("userId", profile.id.clone());
     ctx.event_param("teamId", team.id.clone());
@@ -741,10 +736,7 @@ pub async fn delete(ctx: &mut Context) -> Result<Response> {
         let owners = db
             .count(
                 "memberships",
-                vec![
-                    Query::contains("roles", ["owner"]),
-                    Query::equal("teamInternalId", [documents::internal_id(team.sequence)]),
-                ],
+                vec![Query::contains("roles", ["owner"]), Query::equal("teamInternalId", [team.sequence.to_string()])],
                 Some(2),
             )
             .await?;
@@ -764,23 +756,20 @@ pub async fn delete(ctx: &mut Context) -> Result<Response> {
         Err(e) if e.is_a(Kind::Authorization) => return Err(Error::new(ErrorType::UserUnauthorized)),
         Err(e) => return Err(e.into()),
     }
-    db.purge_cached_document("users", Some(&profile.id)).await?;
+    db.purge_cached_document("users", &profile.id).await?;
 
     // The team's primary member moves to the next confirmed member.
     if team.user_internal_id.as_deref().is_some_and(|id| id == membership.user_internal_id) {
         let successor = db
             .find_one(
                 "memberships",
-                vec![
-                    Query::equal("teamInternalId", [documents::internal_id(team.sequence)]),
-                    Query::equal("confirm", [true]),
-                ],
+                vec![Query::equal("teamInternalId", [team.sequence.to_string()]), Query::equal("confirm", [true])],
             )
             .await?;
         if !successor.is_empty() {
             let mut updates = Document::default();
-            updates.set("userId", successor.get("userId").cloned().unwrap_or(Value::Null));
-            updates.set("userInternalId", successor.get("userInternalId").cloned().unwrap_or(Value::Null));
+            updates.put("userId", successor.get("userId").cloned().unwrap_or(Value::Null));
+            updates.put("userInternalId", successor.get("userInternalId").cloned().unwrap_or(Value::Null));
             db.update_document("teams", &team.id, updates).await?;
         }
     }
@@ -789,7 +778,7 @@ pub async fn delete(ctx: &mut Context) -> Result<Response> {
     if membership.confirm == Some(true) {
         let authorization = db.authorization();
         authorization
-            .skip(|| db.decrease_document_attribute("teams", &team.id, "total", Value::Int(1), Some(Value::Int(0))))
+            .skip(db.decrease_document_attribute("teams", &team.id, "total", Value::Int(1), Some(Value::Int(0))))
             .await?;
     }
 

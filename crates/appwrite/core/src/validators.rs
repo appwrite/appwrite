@@ -353,7 +353,7 @@ mod tests {
         assert!(KeywordId("recent()").is_valid(&json!("recent()")));
         assert_eq!(
             KeywordId("recent()").description(),
-            "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore. Can also be the keyword recent()"
+            "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a leading period, hyphen, or underscore. Can also be the keyword recent()"
         );
     }
 

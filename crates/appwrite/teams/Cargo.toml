@@ -17,6 +17,7 @@ tracing.workspace = true
 php-std.workspace = true
 utopia-auth.workspace = true
 utopia-database.workspace = true
+utopia-query.workspace = true
 utopia-domains.workspace = true
 utopia-emails.workspace = true
 utopia-http.workspace = true

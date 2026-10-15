@@ -2,8 +2,9 @@
 
 use async_trait::async_trait;
 use serde_json::{Value as Json, json};
+use utopia_database::PermissionType;
+use utopia_database::Role;
 use utopia_database::database::Callback;
-use utopia_database::helpers::role::Role;
 use utopia_database::{Database, Document, Kind, Query, Value};
 use utopia_http::Response;
 use utopia_validators::Text;
@@ -45,14 +46,14 @@ pub async fn create(ctx: &mut Context) -> Result<Response> {
         // The seeded total only holds if the owner membership lands with the team.
         db.with_transaction(|| async {
             if limited {
-                let organization = db.authorization().skip(|| db.find_one("teams", Vec::new())).await?;
+                let organization = db.authorization().skip(db.find_one("teams", Vec::new())).await?;
                 if !organization.is_empty() {
                     return Ok(None);
                 }
             }
             let mut team = Document::default();
-            team.set("$id", Value::from(team_id.as_str()));
-            team.set(
+            team.put("$id", Value::from(team_id.as_str()));
+            team.put(
                 "$permissions",
                 base::permissions(&[
                     ("read", Role::team(&team_id, "")),
@@ -60,19 +61,19 @@ pub async fn create(ctx: &mut Context) -> Result<Response> {
                     ("delete", Role::team(&team_id, "owner")),
                 ]),
             );
-            team.set("labels", utopia_database::value::list([]));
-            team.set("name", Value::from(name.as_str()));
-            team.set("total", Value::Int(if member.is_some() { 1 } else { 0 }));
-            team.set("prefs", Value::Object(Default::default()));
-            team.set("search", Value::from(format!("{team_id} {name}").as_str()));
-            let team = db.authorization().skip(|| db.create_document("teams", team)).await?;
+            team.put("labels", utopia_database::value::list([]));
+            team.put("name", Value::from(name.as_str()));
+            team.put("total", Value::Int(if member.is_some() { 1 } else { 0 }));
+            team.put("prefs", Value::Object(Default::default()));
+            team.put("search", Value::from(format!("{team_id} {name}").as_str()));
+            let team = db.authorization().skip(db.create_document("teams", team)).await?;
 
             if let Some(user) = &member {
                 let membership_id = unique_id();
                 let team_role = |dimension: &str| Role::team(team.id(), dimension);
                 let mut membership = Document::default();
-                membership.set("$id", Value::from(membership_id.as_str()));
-                membership.set(
+                membership.put("$id", Value::from(membership_id.as_str()));
+                membership.put(
                     "$permissions",
                     base::permissions(&[
                         ("read", Role::user(&user.id, "")),
@@ -83,19 +84,19 @@ pub async fn create(ctx: &mut Context) -> Result<Response> {
                         ("delete", team_role("owner")),
                     ]),
                 );
-                membership.set("userId", Value::from(user.id.as_str()));
-                membership.set("userInternalId", documents::internal_id(user.sequence));
-                membership.set("teamId", Value::from(team.id()));
-                membership.set("teamInternalId", team.sequence().cloned().unwrap_or(Value::Null));
-                membership.set("roles", documents::strings(&roles));
+                membership.put("userId", Value::from(user.id.as_str()));
+                membership.put("userInternalId", documents::internal_id(user.sequence));
+                membership.put("teamId", Value::from(team.id()));
+                membership.put("teamInternalId", team.sequence().cloned().unwrap_or(Value::Null));
+                membership.put("roles", documents::strings(&roles));
                 let now = datetime::value(&datetime::now());
-                membership.set("invited", now.clone());
-                membership.set("joined", now);
-                membership.set("confirm", Value::Bool(true));
-                membership.set("secret", Value::from(""));
-                membership.set("search", Value::from(format!("{membership_id} {}", user.id).as_str()));
+                membership.put("invited", now.clone());
+                membership.put("joined", now);
+                membership.put("confirm", Value::Bool(true));
+                membership.put("secret", Value::from(""));
+                membership.put("search", Value::from(format!("{membership_id} {}", user.id).as_str()));
                 db.create_document("memberships", membership).await?;
-                db.purge_cached_document("users", Some(&user.id)).await?;
+                db.purge_cached_document("users", &user.id).await?;
             }
             Ok(Some(team))
         })
@@ -141,8 +142,8 @@ pub async fn list(ctx: &mut Context) -> Result<Response> {
     }
     let db = ctx.db()?;
     base::resolve_cursor(&db, "teams", &mut queries, "Team").await?;
-    let filters = Query::group_by_type(&queries).filters;
-    let teams: Vec<Team> = documents::all(&db.find("teams", queries, Database::PERMISSION_READ).await?);
+    let filters = Query::group_by_type(&queries)?.filters;
+    let teams: Vec<Team> = documents::all(&db.find("teams", queries, PermissionType::Read).await?);
     let total = if include_total { db.count("teams", filters, Some(LIMIT_COUNT)).await? } else { 0 };
     Ok(ctx.ok(&TeamListModel { total, teams: &teams }))
 }
@@ -162,8 +163,8 @@ pub async fn name(ctx: &mut Context) -> Result<Response> {
     let db = ctx.db()?;
     let (document, _) = base::team_or_404(&db, &team_id).await?;
     let mut updates = Document::default();
-    updates.set("name", Value::from(name.as_str()));
-    updates.set("search", Value::from(format!("{team_id} {name}").as_str()));
+    updates.put("name", Value::from(name.as_str()));
+    updates.put("search", Value::from(format!("{team_id} {name}").as_str()));
     let team = Team::from(&db.update_document("teams", document.id(), updates).await?);
     ctx.event_param("teamId", team.id.clone());
     Ok(ctx.ok(&TeamModel { team: &team }))
@@ -182,10 +183,9 @@ pub async fn delete(ctx: &mut Context) -> Result<Response> {
     let deleted = db
         .delete_documents(
             "memberships",
-            vec![Query::equal("teamInternalId", [documents::internal_id(team.sequence)]), Query::order_asc("")],
-            Database::DELETE_BATCH_SIZE,
+            vec![Query::equal("teamInternalId", [team.sequence.to_string()]), Query::order_asc("", None)],
+            utopia_database::database::BATCH_SIZE,
             Some(&mut PurgeMember { db: &db }),
-            None,
         )
         .await;
     if let Err(e) = deleted {
@@ -214,10 +214,10 @@ struct PurgeMember<'a> {
 }
 
 #[async_trait]
-impl Callback<(Document, Document)> for PurgeMember<'_> {
-    async fn call(&mut self, (membership, _): (Document, Document)) -> utopia_database::Result<()> {
+impl Callback<Document> for PurgeMember<'_> {
+    async fn call(&mut self, membership: Document) -> utopia_database::Result<()> {
         let user_id = membership.get("userId").map(utopia_database::value::to_text).unwrap_or_default();
-        self.db.purge_cached_document("users", Some(&user_id)).await?;
+        self.db.purge_cached_document("users", &user_id).await?;
         Ok(())
     }
 }
