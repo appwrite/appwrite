@@ -317,7 +317,7 @@ impl Mongo {
     /// indexes, then the declared ones; `false` when one is not created.
     async fn create_collection_indexes(&self, id: &str, attributes: &[Attribute], indexes: &[Index]) -> Result<bool> {
         let asc = || Value::Int(1);
-        let mut internal = vec![
+        let mut internal = [
             map([
                 ("key", assoc([(storage::UID, asc())])),
                 ("name", text(storage::UID)),

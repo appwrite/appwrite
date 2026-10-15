@@ -676,7 +676,7 @@ impl Mongo {
                 (CursorDirection::Before, _) => OrderDirection::Asc,
                 (_, order) => order,
             };
-            sort.insert(attribute.clone(), Self::order(direction)?);
+            sort.insert(attribute.clone(), utopia_mongo::client::int(Self::order(direction)?));
             fields.insert("sort", sort.clone());
             let method = match (options.cursor_direction, order) {
                 (CursorDirection::After, OrderDirection::Desc) => Method::LessThan,

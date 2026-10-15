@@ -1,8 +1,16 @@
 //! The adapter against a MongoDB server, on the official driver: the
-//! operations PHP's adapter runs in the compat cross-check, their results
+//! operations `oracle/mongo_ops.php` runs with PHP's adapter, their results
 //! printed as JSON. Runs only when `MONGO_CROSSCHECK` names the namespace
-//! to write (the compat replica set on `localhost:16018`, database
-//! `crosscheck`).
+//! to write (the compat replica set of `tests/compat/database/services.sh`,
+//! on `localhost:16018`, database `crosscheck`); `MONGO_CROSSCHECK_SHARED`
+//! turns shared tables on, with tenant 7.
+//!
+//! ```text
+//! docker cp tests/mongo/oracle/mongo_ops.php appwrite:/tmp/ && docker cp tests/mongo/oracle/mongo_dump.php appwrite:/tmp/
+//! docker exec appwrite php -d error_reporting=0 /tmp/mongo_ops.php php [shared]
+//! MONGO_CROSSCHECK=rust [MONGO_CROSSCHECK_SHARED=1] cargo test -p utopia-database --features mongo --test mongo live -- --nocapture
+//! docker exec appwrite php /tmp/mongo_dump.php   # IDENTICAL: both namespaces store the same documents and indexes
+//! ```
 
 use std::sync::Arc;
 

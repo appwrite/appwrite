@@ -31,6 +31,8 @@ mod fake;
 
 #[path = "mongo/casting.rs"]
 mod casting;
+#[path = "mongo/differential.rs"]
+mod differential;
 #[path = "mongo/filters.rs"]
 mod filters;
 #[path = "mongo/live.rs"]
