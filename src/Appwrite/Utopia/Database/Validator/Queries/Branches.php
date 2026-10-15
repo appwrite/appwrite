@@ -7,8 +7,10 @@ use Utopia\Database\Validator\Queries;
 use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 
-class Branches extends Queries
+class Branches extends Queries implements Restricted
 {
+    use RestrictsQueries;
+
     public function __construct()
     {
         parent::__construct([

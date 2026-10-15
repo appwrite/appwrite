@@ -11,8 +11,10 @@ use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\Query\Order;
 
-class Executions extends Queries
+class Executions extends Queries implements Restricted
 {
+    use RestrictsQueries;
+
     protected const ATTRIBUTE_TYPES = [
         'trigger' => Database::VAR_STRING,
         'status' => Database::VAR_STRING,
@@ -71,6 +73,8 @@ class Executions extends Queries
                 'array' => false,
             ]),
         ];
+
+        $this->allowedAttributes = \array_map(fn (Document $attribute) => $attribute->getAttribute('key'), $attributes);
 
         parent::__construct([
             new Limit(),

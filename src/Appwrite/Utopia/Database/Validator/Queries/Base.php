@@ -13,8 +13,10 @@ use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\Query\Order;
 use Utopia\Database\Validator\Query\Select;
 
-class Base extends Queries
+class Base extends Queries implements Restricted
 {
+    use RestrictsQueries;
+
     /**
      * Expression constructor
      *
@@ -101,6 +103,8 @@ class Base extends Queries
         if ($this->isSelectQueryAllowed()) {
             $validators[] = new Select($allAttributes);
         }
+
+        $this->allowedAttributes = \array_map(fn (Document $attribute) => $attribute->getAttribute('key'), $attributes);
 
         parent::__construct($validators);
     }
