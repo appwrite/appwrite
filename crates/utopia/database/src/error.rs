@@ -504,6 +504,22 @@ impl From<php_std::EngineError> for Error {
     }
 }
 
+impl From<utopia_cache::Error> for Error {
+    /// A cache failure, which PHP lets through as the cache's exception.
+    fn from(e: utopia_cache::Error) -> Self {
+        let kind = match e.php_class() {
+            "RedisException" => Kind::Redis,
+            "RuntimeException" => Kind::Runtime,
+            "InvalidArgumentException" => Kind::InvalidArgument,
+            "JsonException" => Kind::Json,
+            "Error" => Kind::Error,
+            "TypeError" => Kind::TypeError,
+            _ => Kind::Exception,
+        };
+        Error::new(kind, e.to_string())
+    }
+}
+
 /// `Result` with [`Error`].
 pub type Result<T, E = Error> = std::result::Result<T, E>;
 

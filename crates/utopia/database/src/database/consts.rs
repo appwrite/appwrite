@@ -55,6 +55,19 @@ pub const BATCH_SIZE: i64 = 1_000;
 /// The default batch of `cursor()` (`Database::CURSOR_BATCH_SIZE`).
 pub const CURSOR_BATCH_SIZE: i64 = 100;
 
+/// Set on the collection handed to the adapter for a join read when the
+/// caller holds the collection-level permission (`Database::COLLECTION_GRANTED`).
+pub const COLLECTION_GRANTED: &str = "collectionGranted";
+/// Maps each joined table to whether the adapter filters its rows per
+/// document (`Database::JOIN_DOCUMENT_SECURITY`).
+pub const JOIN_DOCUMENT_SECURITY: &str = "joinDocumentSecurity";
+/// Maps each joined collection to the attributes a join without a select
+/// returns (`Database::JOIN_ATTRIBUTES`).
+pub const JOIN_ATTRIBUTES: &str = "joinAttributes";
+/// Under shared tables, maps each joined collection to the attributes its
+/// lookup indexes lead with (`Database::JOIN_INDEXED`).
+pub const JOIN_INDEXED: &str = "joinIndexed";
+
 /// The built-in filters (`Database::DEFAULT_FILTERS`).
 pub const DEFAULT_FILTERS: [&str; 7] = ["json", "datetime", "point", "linestring", "polygon", "vector", "object"];
 

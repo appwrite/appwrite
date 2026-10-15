@@ -6,6 +6,7 @@ use super::Database;
 use crate::collection::{Collection, Update};
 use crate::document::Document;
 use crate::error::Result;
+use crate::event::{Domain, Event};
 
 impl Database {
     /// Creates a collection: its storage, then its definition in the
@@ -31,14 +32,44 @@ impl Database {
     /// Fails ([`crate::Kind::NotFound`]) for a missing collection
     /// (`Collection not found`).
     pub async fn get_collection(&self, collection: &str) -> Result<Collection> {
-        let _ = collection;
-        todo!("schema area: getCollection")
+        match self.find_collection(collection).await? {
+            Some(c) => Ok(c),
+            None => Err(crate::Error::not_found("Collection not found")),
+        }
     }
 
-    /// The collection's definition, `None` when missing (`findCollection()`).
+    /// The collection's definition, `None` when it does not exist or
+    /// belongs to another tenant under shared tables (`findCollection()`).
     pub async fn find_collection(&self, collection: &str) -> Result<Option<Collection>> {
-        let _ = collection;
-        todo!("schema area: findCollection")
+        if collection == super::METADATA {
+            let definition = super::collection_definition();
+            self.trigger(Event::CollectionRead, || Domain::CollectionRead {
+                collection: definition.id().to_owned(),
+                definition: definition.clone(),
+            })
+            .await?;
+            return Ok(Some(definition));
+        }
+        let (stored, epoch) =
+            self.silent(self.get_document_with_epoch(super::METADATA, collection, Vec::new(), false)).await?;
+        if stored.id().is_empty() {
+            return Ok(None);
+        }
+        let adapter = &self.inner.adapter;
+        if adapter.shared_tables()
+            && let Some(tenant) = stored.tenant()
+            && !tenant.strict_eq(&adapter.tenant())
+        {
+            return Ok(None);
+        }
+        let mut definition = self.to_collection(stored)?;
+        definition.set_cache_epoch(epoch);
+        self.trigger(Event::CollectionRead, || Domain::CollectionRead {
+            collection: definition.id().to_owned(),
+            definition: definition.clone(),
+        })
+        .await?;
+        Ok(Some(definition))
     }
 
     /// The collections' definitions (`listCollections()`).
@@ -74,7 +105,6 @@ impl Database {
 
     /// A metadata document as a [`Collection`] (`toCollection()`).
     pub(crate) fn to_collection(&self, definition: Document) -> Result<Collection> {
-        let _ = definition;
-        todo!("schema area: toCollection")
+        Collection::from_array(definition.into_array())
     }
 }

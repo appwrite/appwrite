@@ -15,14 +15,13 @@
 //! | `delete.rs` | `deleteDocument()`, `deleteDocuments()` |
 
 mod cache;
+pub(crate) mod cached;
 mod create;
 mod cursors;
 mod delete;
 mod find;
+pub(crate) mod joins;
 mod numeric;
 mod read;
 mod update;
 mod upsert;
-
-#[allow(unused_imports)]
-pub(crate) use cache::{CachedDefinition, Validity};

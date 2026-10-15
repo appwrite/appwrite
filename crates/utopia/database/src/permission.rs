@@ -28,6 +28,12 @@ pub enum PermissionType {
     Write,
 }
 
+impl AsRef<str> for PermissionType {
+    fn as_ref(&self) -> &str {
+        self.as_str()
+    }
+}
+
 impl PermissionType {
     /// `Database::PERMISSIONS`: the individual actions, in PHP's order.
     pub const ALL: [PermissionType; 4] =
