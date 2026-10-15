@@ -997,6 +997,19 @@ trait UsersBase
         $this->assertSame('general_query_invalid', $response['body']['type']);
     }
 
+    public function testListUsersRejectsADottedPathOnAPlainAttribute(): void
+    {
+        $response = $this->client->call(Client::METHOD_GET, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => ['{"method":"equal","attribute":"name.x","values":["a"]}'],
+        ]);
+
+        $this->assertSame(400, $response['headers']['status-code'], $response['body']['message'] ?? '');
+        $this->assertSame('general_query_invalid', $response['body']['type']);
+    }
+
     public function testListUsersDefaultOrderIsCreationOrder(): void
     {
         $created = [];

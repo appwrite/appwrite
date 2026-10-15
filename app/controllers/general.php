@@ -8,6 +8,7 @@ use Appwrite\Auth\Key;
 use Appwrite\Bus\Events\ExecutionCompleted;
 use Appwrite\Bus\Events\RequestCompleted;
 use Appwrite\Bus\Events\RuleCreated;
+use Appwrite\Databases\Rejection;
 use Appwrite\Deployment\Deployments;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Delete as DeleteMessage;
@@ -1302,6 +1303,11 @@ Http::error()
             case Utopia\Database\Exception\Structure::class:
                 $error = new AppwriteException(AppwriteException::GENERAL_ARGUMENT_INVALID, $message, previous: $error);
                 break;
+            default:
+                $rejection = Rejection::fromThrowable($error);
+                if ($rejection !== null) {
+                    $error = new AppwriteException($rejection->getType(), $rejection->getMessage(), previous: $error);
+                }
         }
 
         $code = $error->getCode();

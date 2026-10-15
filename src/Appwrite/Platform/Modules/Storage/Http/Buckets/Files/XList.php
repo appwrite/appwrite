@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Storage\Http\Buckets\Files;
 
+use Appwrite\Databases\Rejection;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -139,7 +140,11 @@ class XList extends Action
                 $files = $authorization->skip(fn () => $dbForProject->find('bucket_' . $bucket->getSequence(), $queries));
                 $total = $includeTotal ? $authorization->skip(fn () => $dbForProject->count('bucket_' . $bucket->getSequence(), $filterQueries, APP_LIMIT_COUNT)) : 0;
             }
-        } catch (NotFoundException) {
+        } catch (NotFoundException $e) {
+            $rejection = Rejection::fromThrowable($e);
+            if ($rejection !== null) {
+                throw new Exception($rejection->getType(), $rejection->getMessage(), previous: $e);
+            }
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
         } catch (OrderException $e) {
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");

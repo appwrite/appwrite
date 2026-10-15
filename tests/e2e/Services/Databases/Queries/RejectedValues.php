@@ -86,6 +86,35 @@ trait RejectedValues
         }
     }
 
+    public function testDottedPathOnAPlainAttributeIsAnInvalidQuery(): void
+    {
+        if (!$this->getSupportForAttributes()) {
+            $this->markTestSkipped('Attributes are not supported by this database adapter');
+        }
+
+        $databaseId = $this->setupDatabase()['databaseId'];
+        $collectionId = $this->createRejectedValuesCollection($databaseId, 'dottedPath');
+
+        $created = $this->createAttribute($databaseId, $collectionId, 'string', [
+            'key' => 's',
+            'size' => 64,
+            'required' => true,
+        ]);
+        $this->assertSame(202, $created['headers']['status-code'], $created['body']['message'] ?? '');
+        $this->waitForAttribute($databaseId, $collectionId, 's');
+
+        $this->createRejectedValuesRecord($databaseId, $collectionId, ['s' => 'a']);
+
+        $response = $this->listRejectedValues($databaseId, $collectionId, ['{"method":"equal","attribute":"s.x","values":["a"]}']);
+
+        $this->assertSame(400, $response['headers']['status-code'], $response['body']['message'] ?? '');
+        $this->assertSame(Exception::GENERAL_QUERY_INVALID, $response['body']['type']);
+
+        $listed = $this->listRejectedValues($databaseId, $collectionId, [Query::equal('s', ['a'])->toString()]);
+        $this->assertSame(200, $listed['headers']['status-code'], 'The table behind the rejected query still exists');
+        $this->assertSame(1, $listed['body']['total']);
+    }
+
     private function createRejectedValuesCollection(string $databaseId, string $name): string
     {
         $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $this->getRejectedValuesKeyHeaders(), [
