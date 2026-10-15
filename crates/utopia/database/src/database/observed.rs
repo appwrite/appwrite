@@ -437,7 +437,13 @@ impl Adapter for Observed {
         self.observe(Op::Count { collection: collection.id().to_owned() }).await?;
         Ok(count)
     }
-    async fn sum(&self, collection: &Collection, attribute: &str, queries: Vec<Query>, max: Option<i64>) -> Result<Value> {
+    async fn sum(
+        &self,
+        collection: &Collection,
+        attribute: &str,
+        queries: Vec<Query>,
+        max: Option<i64>,
+    ) -> Result<Value> {
         self.inner.sum(collection, attribute, queries, max).await
     }
     async fn get_sequences(&self, collection: &Collection, documents: Vec<Document>) -> Result<Vec<Document>> {

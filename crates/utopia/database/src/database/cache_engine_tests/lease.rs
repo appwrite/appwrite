@@ -1,8 +1,8 @@
 //! PHP: `WithCacheLeaseTest` and `Cache\QueryMetadataTest` (its Memory
 //! case).
 
-use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 use futures_util::future::BoxFuture;
 
@@ -11,9 +11,9 @@ use crate::adapter::Adapter;
 use crate::adapter::memory::Memory;
 use crate::cache::testing::{Leasable, over};
 use crate::database::Database;
+use crate::database::fixtures::run;
 use crate::database::fixtures::{collection, doc, string, strings, unique};
 use crate::database::observed::{Observed, Op};
-use crate::database::fixtures::run;
 use crate::permission::Permission;
 use crate::query::Query;
 use crate::role::Role;
@@ -51,7 +51,13 @@ async fn stale(database: &Database, value: &str) {
 }
 
 async fn name(database: &Database, queries: Vec<Query>) -> Value {
-    database.get_document("projects", "project", queries, false).await.unwrap().get("name").cloned().unwrap_or(Value::Null)
+    database
+        .get_document("projects", "project", queries, false)
+        .await
+        .unwrap()
+        .get("name")
+        .cloned()
+        .unwrap_or(Value::Null)
 }
 
 #[test]

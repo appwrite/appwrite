@@ -1,7 +1,7 @@
 //! PHP: `Documents\TransactionCacheReadTest` (its Memory cases).
 
-use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 use crate::cache::testing::{Leasable, over};
 use crate::collection::Update;
@@ -19,7 +19,9 @@ use crate::value::Value;
 /// `createDatabase()`.
 async fn create(adapter: Arc<Observed>, cache: &Arc<Leasable>, namespace: Option<&str>) -> Database {
     let database = Database::new(adapter, over(cache));
-    database.set_database("utopiaTests").set_namespace(&namespace.map_or_else(|| unique("transaction_cache_"), str::to_owned));
+    database
+        .set_database("utopiaTests")
+        .set_namespace(&namespace.map_or_else(|| unique("transaction_cache_"), str::to_owned));
     database.authorization().add_role(&Role::any().to_string());
     database.create(None).await.unwrap();
     database
@@ -80,9 +82,18 @@ fn writes_read_their_collection_definition_from_the_cache() {
             get(&database, "hook").await;
             adapter.reset();
             let result: Result<()> = match write {
-                0 => database.update_document("webhooks", "hook", doc(vec![("name", Value::from("renamed"))])).await.map(|_| ()),
-                1 => database.increase_document_attribute("webhooks", "hook", "count", Value::Int(1), None).await.map(|_| ()),
-                2 => database.decrease_document_attribute("webhooks", "hook", "count", Value::Int(1), None).await.map(|_| ()),
+                0 => database
+                    .update_document("webhooks", "hook", doc(vec![("name", Value::from("renamed"))]))
+                    .await
+                    .map(|_| ()),
+                1 => database
+                    .increase_document_attribute("webhooks", "hook", "count", Value::Int(1), None)
+                    .await
+                    .map(|_| ()),
+                2 => database
+                    .decrease_document_attribute("webhooks", "hook", "count", Value::Int(1), None)
+                    .await
+                    .map(|_| ()),
                 _ => database.delete_document("webhooks", "hook").await.map(|_| ()),
             };
             result.unwrap();
@@ -153,7 +164,9 @@ fn a_transaction_reads_the_documents_its_batch_write_changed() {
         let (writer, reader) = shared().await;
         let read = writer
             .with_transaction(|| async {
-                writer.update_documents("webhooks", doc(vec![("name", Value::from("renamed"))]), vec![], 100, None).await?;
+                writer
+                    .update_documents("webhooks", doc(vec![("name", Value::from("renamed"))]), vec![], 100, None)
+                    .await?;
                 assert_eq!(get(&reader, "hook").await.get("name"), Some(&Value::from("hook")));
                 writer.get_document("webhooks", "hook", vec![], false).await
             })
@@ -247,12 +260,21 @@ fn a_nested_relationship_create_reads_no_collection_definition() {
         database.add_hook(Hook::Relationships(Arc::new(Relationships::default()))).unwrap();
         let any = Role::any();
         let permissions = || Some(vec![Permission::read(&any), Permission::create(&any), Permission::update(&any)]);
-        database.create_collection(collection("libraries", vec![string("name")], vec![], permissions(), true)).await.unwrap();
-        database.create_collection(collection("books", vec![string("title")], vec![], permissions(), true)).await.unwrap();
+        database
+            .create_collection(collection("libraries", vec![string("name")], vec![], permissions(), true))
+            .await
+            .unwrap();
+        database
+            .create_collection(collection("books", vec![string("title")], vec![], permissions(), true))
+            .await
+            .unwrap();
         database
             .create_relationship(
                 "libraries",
-                Relationship::new("books", RelationshipType::OneToMany).two_way(true).key("books").two_way_key("library"),
+                Relationship::new("books", RelationshipType::OneToMany)
+                    .two_way(true)
+                    .key("books")
+                    .two_way_key("library"),
             )
             .await
             .unwrap();
@@ -285,7 +307,13 @@ fn create_collection_checks_its_id_with_one_metadata_read() {
         let database = create(adapter.clone(), &Leasable::new(), None).await;
         adapter.reset();
         database
-            .create_collection(collection("logs", vec![string("message")], vec![], Some(vec![Permission::read(&Role::any())]), true))
+            .create_collection(collection(
+                "logs",
+                vec![string("message")],
+                vec![],
+                Some(vec![Permission::read(&Role::any())]),
+                true,
+            ))
             .await
             .unwrap();
         assert_eq!(metadata_reads(&adapter), 1);
@@ -307,6 +335,10 @@ fn create_collection_after_a_probe_reads_no_definition() {
             .create_collection(collection("logs", vec![], vec![], Some(vec![Permission::read(&Role::any())]), true))
             .await
             .unwrap();
-        assert_eq!(metadata_reads(&adapter), 0, "a cached miss for the new id survives other definitions being written");
+        assert_eq!(
+            metadata_reads(&adapter),
+            0,
+            "a cached miss for the new id survives other definitions being written"
+        );
     });
 }

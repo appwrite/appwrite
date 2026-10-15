@@ -1,8 +1,8 @@
 //! PHP: `Documents\TransactionDefinitionReadTest` (its Memory cases).
 
 use std::future::Future;
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 use async_trait::async_trait;
 
@@ -40,7 +40,10 @@ async fn create_accounts(database: &Database) {
         ))
         .await
         .unwrap();
-    database.create_document(COLLECTION, doc(vec![("$id", Value::from("ada")), ("balance", Value::Int(1))])).await.unwrap();
+    database
+        .create_document(COLLECTION, doc(vec![("$id", Value::from("ada")), ("balance", Value::Int(1))]))
+        .await
+        .unwrap();
 }
 
 /// `createLedgers()`.
@@ -69,7 +72,13 @@ async fn database(adapter: Arc<Observed>, cache: Option<Arc<utopia_cache::Cache>
 }
 
 async fn balance(database: &Database) -> Value {
-    database.get_document(COLLECTION, "ada", vec![], false).await.unwrap().get("balance").cloned().unwrap_or(Value::Null)
+    database
+        .get_document(COLLECTION, "ada", vec![], false)
+        .await
+        .unwrap()
+        .get("balance")
+        .cloned()
+        .unwrap_or(Value::Null)
 }
 
 async fn update(database: &Database, balance: i64) -> Result<Document> {
@@ -216,7 +225,11 @@ fn a_fill_refused_in_its_grace_window_leaves_transactions_filling_other_definiti
         purge(&database, LEDGERS).await;
         cache.expire_tombstones();
         let read = || database.get_collection(LEDGERS);
-        assert_eq!(reads_of(&adapter, database.with_transaction(read)).await, 2, "the refused fill stopped the refills");
+        assert_eq!(
+            reads_of(&adapter, database.with_transaction(read)).await,
+            2,
+            "the refused fill stopped the refills"
+        );
         assert_eq!(reads_of(&adapter, database.with_transaction(read)).await, 0);
     });
 }
@@ -233,7 +246,9 @@ fn a_refill_refused_by_the_commits_own_purge_leaves_later_transactions_filling_t
         purge(&database, LEDGERS).await;
         cache.expire_tombstones();
         database
-            .with_transaction(|| database.update_documents(COLLECTION, doc(vec![("balance", Value::Int(2))]), vec![], 100, None))
+            .with_transaction(|| {
+                database.update_documents(COLLECTION, doc(vec![("balance", Value::Int(2))]), vec![], 100, None)
+            })
             .await
             .unwrap();
         cache.expire_tombstones();
@@ -350,7 +365,10 @@ fn a_definition_changed_while_it_is_cached_after_commit_is_not_cached_stale() {
         let cache = over(&Leasable::new());
         let database = database(adapter.clone(), Some(cache.clone())).await;
         let writer = Database::new(adapter.clone(), cache);
-        writer.set_authorization(database.authorization()).set_database(&database.database()).set_namespace(&database.namespace());
+        writer
+            .set_authorization(database.authorization())
+            .set_database(&database.database())
+            .set_namespace(&database.namespace());
         purge(&database, COLLECTION).await;
         database
             .with_transaction(|| async {
@@ -401,7 +419,10 @@ fn a_schema_change_inside_the_transaction_is_read() {
                 database
                     .update_collection(
                         COLLECTION,
-                        Update { permissions: Some(vec![Permission::read(&Role::users(""))]), document_security: Some(true) },
+                        Update {
+                            permissions: Some(vec![Permission::read(&Role::users(""))]),
+                            document_security: Some(true),
+                        },
                     )
                     .await?;
                 Ok((before, database.get_collection(COLLECTION).await?))
@@ -486,7 +507,9 @@ fn a_filtered_definition_read_in_a_transaction_leaves_later_raw_reads_raw() {
         let database = database(Observed::memory(), None).await;
         purge(&database, COLLECTION).await;
         let (collection, raw) = database
-            .with_transaction(|| async { Ok((database.get_collection(COLLECTION).await?, raw_definition(&database).await?)) })
+            .with_transaction(|| async {
+                Ok((database.get_collection(COLLECTION).await?, raw_definition(&database).await?))
+            })
             .await
             .unwrap();
         assert_eq!(collection.attributes().unwrap()[0].key, "balance");

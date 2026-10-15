@@ -26,7 +26,10 @@ async fn create() -> (Database, Arc<Observed>, Arc<Leasable>) {
     database.set_database("utopiaTests").set_namespace(&unique("round_trips_"));
     database.authorization().add_role(&Role::any().to_string());
     database.create(None).await.unwrap();
-    database.create_collection(collection("webhooks", attributes(), vec![], Some(any_permissions()), true)).await.unwrap();
+    database
+        .create_collection(collection("webhooks", attributes(), vec![], Some(any_permissions()), true))
+        .await
+        .unwrap();
     (database, adapter, cache)
 }
 
@@ -173,13 +176,26 @@ fn single_document_writes_stay_within_seven_three_round_trips() {
                     )
                     .await
                     .map(|_| ()),
-                1 => database.update_document("webhooks", "hook", doc(vec![("name", Value::from("renamed"))])).await.map(|_| ()),
-                2 => database.increase_document_attribute("webhooks", "hook", "count", Value::Int(1), None).await.map(|_| ()),
-                3 => database.decrease_document_attribute("webhooks", "hook", "count", Value::Int(1), None).await.map(|_| ()),
+                1 => database
+                    .update_document("webhooks", "hook", doc(vec![("name", Value::from("renamed"))]))
+                    .await
+                    .map(|_| ()),
+                2 => database
+                    .increase_document_attribute("webhooks", "hook", "count", Value::Int(1), None)
+                    .await
+                    .map(|_| ()),
+                3 => database
+                    .decrease_document_attribute("webhooks", "hook", "count", Value::Int(1), None)
+                    .await
+                    .map(|_| ()),
                 _ => database.delete_document("webhooks", "hook").await.map(|_| ()),
             };
             result.unwrap();
-            assert!(cache.operations() <= baseline, "write {write}: {} operations, 7.3.12: {baseline}", cache.operations());
+            assert!(
+                cache.operations() <= baseline,
+                "write {write}: {} operations, 7.3.12: {baseline}",
+                cache.operations()
+            );
         });
     }
 }
@@ -216,7 +232,10 @@ fn an_update_and_a_read_of_it_stay_within_seven_three_round_trips() {
         reset(&adapter, &cache);
         for round in 1..=10 {
             let renamed = format!("round {round}");
-            database.update_document("webhooks", "hook", doc(vec![("name", Value::from(renamed.as_str()))])).await.unwrap();
+            database
+                .update_document("webhooks", "hook", doc(vec![("name", Value::from(renamed.as_str()))]))
+                .await
+                .unwrap();
             assert_eq!(name(&database, "hook").await, Value::from(renamed.as_str()));
         }
         assert!(cache.operations() <= 110, "{} operations", cache.operations());
@@ -258,11 +277,18 @@ fn a_tenant_never_serves_under_another_tenants_epoch_of_a_global_definition() {
         assert_eq!(name(&database, "hook").await, Value::from("hook"));
         database.set_tenant(Value::Int(1));
         assert_eq!(name(&database, "hook").await, Value::from("hook"));
-        database.update_documents("webhooks", doc(vec![("name", Value::from("renamed"))]), vec![], 100, None).await.unwrap();
+        database
+            .update_documents("webhooks", doc(vec![("name", Value::from("renamed"))]), vec![], 100, None)
+            .await
+            .unwrap();
         database.set_tenant(Value::Int(2));
         assert_eq!(name(&database, "hook").await, Value::from("hook"));
         database.set_tenant(Value::Int(1));
-        assert_eq!(name(&database, "hook").await, Value::from("renamed"), "the epoch a global definition carries is each tenant's own");
+        assert_eq!(
+            name(&database, "hook").await,
+            Value::from("renamed"),
+            "the epoch a global definition carries is each tenant's own"
+        );
     });
 }
 

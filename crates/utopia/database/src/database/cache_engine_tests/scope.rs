@@ -6,9 +6,9 @@ use super::{finds, none_cache, on_commit};
 use crate::cache::Query as QueryCache;
 use crate::cache::testing::{Leasable, over};
 use crate::database::Database;
+use crate::database::fixtures::run;
 use crate::database::fixtures::{ids, open_collection, unique, with_id};
 use crate::database::observed::Observed;
-use crate::database::fixtures::run;
 use crate::permission::PermissionType;
 use crate::query::Query;
 use crate::role::Role;
@@ -144,7 +144,10 @@ fn a_transaction_refreshes_every_tenant_it_wrote_under() {
             .with_transaction(|| async {
                 for tenant in [1, 2] {
                     database
-                        .with_tenant(Value::Int(tenant), database.create_document("posts", with_id(&format!("written-{tenant}"))))
+                        .with_tenant(
+                            Value::Int(tenant),
+                            database.create_document("posts", with_id(&format!("written-{tenant}"))),
+                        )
                         .await?;
                 }
                 Ok(())

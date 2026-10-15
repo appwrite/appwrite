@@ -1,14 +1,14 @@
 //! PHP: `WithCacheTest` (the cases on `Adapter\Memory` that the stub could
 //! not run) and `Documents\WithCacheTest`.
 
-use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 use crate::adapter::memory::Memory;
 use crate::cache::testing::{Leasable, over};
 use crate::database::Database;
-use crate::database::fixtures::{collection, database_over, doc, ids, setup, string, strings, unavailable, with_id};
 use crate::database::fixtures::run;
+use crate::database::fixtures::{collection, database_over, doc, ids, setup, string, strings, unavailable, with_id};
 use crate::document::Document;
 use crate::error::{Kind, Result};
 use crate::filter::{Callback, Codec};
@@ -124,7 +124,13 @@ fn with_cache_caches_static_query_values() {
     run(|| async {
         let database = database_over(Arc::new(Memory::new()), over(&Leasable::hash_memory())).await;
         database
-            .create_collection(collection("wafRules", vec![], vec![], Some(vec![Permission::read(&Role::any())]), false))
+            .create_collection(collection(
+                "wafRules",
+                vec![],
+                vec![],
+                Some(vec![Permission::read(&Role::any())]),
+                false,
+            ))
             .await
             .unwrap();
         let definition = database.get_collection("wafRules").await.unwrap();
@@ -151,7 +157,10 @@ fn the_query_cache_is_used_until_purged() {
         waf_rules(&database, &["rule-a"]).await;
         assert_eq!(ids(&find_with_cache(&database, "wafRules", project_queries(), "_39").await), ["rule-a"]);
         database
-            .create_document("wafRules", doc(vec![("$id", Value::from("rule-b")), ("projectId", Value::from("project-a"))]))
+            .create_document(
+                "wafRules",
+                doc(vec![("$id", Value::from("rule-b")), ("projectId", Value::from("project-a"))]),
+            )
             .await
             .unwrap();
         assert_eq!(ids(&find_with_cache(&database, "wafRules", project_queries(), "_39").await), ["rule-a"]);
@@ -167,7 +176,10 @@ fn the_query_cache_separates_entries_by_authorization_context() {
         waf_rules(&database, &["rule-a"]).await;
         find_with_cache(&database, "wafRules", project_queries(), "_39").await;
         database
-            .create_document("wafRules", doc(vec![("$id", Value::from("rule-b")), ("projectId", Value::from("project-a"))]))
+            .create_document(
+                "wafRules",
+                doc(vec![("$id", Value::from("rule-b")), ("projectId", Value::from("project-a"))]),
+            )
             .await
             .unwrap();
         assert_eq!(find_with_cache(&database, "wafRules", project_queries(), "_39").await.len(), 1);
@@ -181,7 +193,13 @@ fn the_query_cache_recasts_cache_hits() {
     run(|| async {
         let database = database_over(Arc::new(Memory::new()), over(&Leasable::json_hash_memory())).await;
         database
-            .create_collection(collection("metrics", vec![crate::Attribute::double("value")], vec![], Some(read_create()), false))
+            .create_collection(collection(
+                "metrics",
+                vec![crate::Attribute::double("value")],
+                vec![],
+                Some(read_create()),
+                false,
+            ))
             .await
             .unwrap();
         database
@@ -247,7 +265,10 @@ fn the_query_cache_is_bypassed_for_a_random_order() {
         let queries = || vec![Query::equal("projectId", ["project-a"]), Query::order_random(), Query::limit(25)];
         assert_eq!(find_with_cache(&database, "wafRules", queries(), "_39").await.len(), 1);
         database
-            .create_document("wafRules", doc(vec![("$id", Value::from("rule-b")), ("projectId", Value::from("project-a"))]))
+            .create_document(
+                "wafRules",
+                doc(vec![("$id", Value::from("rule-b")), ("projectId", Value::from("project-a"))]),
+            )
             .await
             .unwrap();
         assert_eq!(find_with_cache(&database, "wafRules", queries(), "_39").await.len(), 2);
@@ -394,14 +415,19 @@ fn the_query_cache_refreshes_an_invalid_payload() {
             let database = database_over(Arc::new(Memory::new()), over(&cache)).await;
             waf_rules(&database, if case == 0 { &["rule-a"] } else { &["rule-a", "rule-b"] }).await;
             let definition = database.get_collection("wafRules").await.unwrap();
-            let hash =
-                database.query_cache_field(Some(&definition), &project_queries(), "", PermissionType::Read).unwrap().unwrap();
+            let hash = database
+                .query_cache_field(Some(&definition), &project_queries(), "", PermissionType::Read)
+                .unwrap()
+                .unwrap();
             let key = database.query_cache_key(definition.id(), Some("_39")).await.unwrap();
             let value = if case == 0 {
                 php_std::Value::from("invalid")
             } else {
                 list(vec![
-                    assoc(vec![("$id", php_std::Value::from("rule-a")), ("projectId", php_std::Value::from("project-a"))]),
+                    assoc(vec![
+                        ("$id", php_std::Value::from("rule-a")),
+                        ("projectId", php_std::Value::from("project-a")),
+                    ]),
                     php_std::Value::from("invalid"),
                 ])
             };
@@ -443,8 +469,8 @@ async fn reports(
     database.set_database("with_cache").set_namespace(&crate::database::fixtures::unique("with_cache_"));
     database.create(None).await.unwrap();
     let any = Role::any();
-    let permissions = permissions
-        .unwrap_or_else(|| vec![Permission::create(&any), Permission::read(&any), Permission::delete(&any)]);
+    let permissions =
+        permissions.unwrap_or_else(|| vec![Permission::create(&any), Permission::read(&any), Permission::delete(&any)]);
     database
         .authorization()
         .skip(database.create_collection(collection(
@@ -499,7 +525,10 @@ fn a_cached_value_is_refused_to_a_caller_who_cannot_read_the_collection() {
         )
         .await;
         authorization
-            .skip(database.create_document(COLLECTION, doc(vec![("$id", Value::from("q3")), ("title", Value::from("Q3"))])))
+            .skip(
+                database
+                    .create_document(COLLECTION, doc(vec![("$id", Value::from("q3")), ("title", Value::from("Q3"))])),
+            )
             .await
             .unwrap();
         let calls = AtomicUsize::new(0);
@@ -548,11 +577,16 @@ fn a_cached_document_the_caller_cannot_read_is_recomputed() {
 fn a_cached_value_of_a_deleted_collection_is_recomputed() {
     run(|| async {
         let database = reports(Arc::new(Memory::new()), memory_cache(), None, None, false).await;
-        database.create_document(COLLECTION, doc(vec![("$id", Value::from("q3")), ("title", Value::from("Q3"))])).await.unwrap();
-        let calls = AtomicUsize::new(0);
-        cached(&database, &calls, async { Ok(documents(database.find(COLLECTION, vec![], PermissionType::Read).await?)) })
+        database
+            .create_document(COLLECTION, doc(vec![("$id", Value::from("q3")), ("title", Value::from("Q3"))]))
             .await
             .unwrap();
+        let calls = AtomicUsize::new(0);
+        cached(&database, &calls, async {
+            Ok(documents(database.find(COLLECTION, vec![], PermissionType::Read).await?))
+        })
+        .await
+        .unwrap();
         database.delete_collection(COLLECTION).await.unwrap();
         let recomputed = cached(&database, &calls, async { Ok(Value::from("recomputed")) }).await.unwrap();
         assert_eq!(recomputed, Value::from("recomputed"));
@@ -578,9 +612,9 @@ fn a_cache_failure_falls_back_to_the_callback() {
             }
             match failure {
                 "loadEpoch" => cache.on_load(|key, _| (key == format!("{KEY}#epoch")).then(unavailable)),
-                "loadValue" => cache.on_load(|key, _| {
-                    (key.starts_with(KEY) && !key.ends_with("#epoch")).then(unavailable)
-                }),
+                "loadValue" => {
+                    cache.on_load(|key, _| (key.starts_with(KEY) && !key.ends_with("#epoch")).then(unavailable))
+                }
                 "saveEpoch" => cache.on_save(|key, _, _| (key == format!("{KEY}#epoch")).then_some(Ok(false))),
                 "purge" => cache.on_purge(|key, _| key.starts_with(&format!("{KEY}#")).then(unavailable)),
                 "getGeneration" => cache.on_generation(|key| key.starts_with(&format!("{KEY}#")).then(unavailable)),

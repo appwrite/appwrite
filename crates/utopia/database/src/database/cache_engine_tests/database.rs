@@ -11,12 +11,12 @@ use crate::cache::testing::{Leasable, over};
 use crate::cache::{Query as QueryCache, Scope};
 use crate::collection::Update as CollectionUpdate;
 use crate::database::Database;
+use crate::database::fixtures::run;
 use crate::database::fixtures::{
     any_permissions, collection, database_over, doc, ids, open_collection, string, strings, unavailable, unique,
     with_id,
 };
 use crate::database::observed::{Observed, Op};
-use crate::database::fixtures::run;
 use crate::document::Document;
 use crate::error::{Error, Kind};
 use crate::index::Index;
@@ -226,7 +226,8 @@ fn schema_and_collection_mutations_invalidate_queries() {
             assert_mutation_retires_queries(&database, async {
                 match mutation {
                     0 => {
-                        let update = CollectionUpdate { permissions: Some(any_permissions()), document_security: Some(false) };
+                        let update =
+                            CollectionUpdate { permissions: Some(any_permissions()), document_security: Some(false) };
                         database.update_collection("users", update).await.map(|_| ())
                     }
                     1 => database.create_attribute("users", string("email")).await.map(|_| ()),
@@ -356,7 +357,13 @@ fn a_memory_cache_separates_point_selection_variants() {
     run(|| async {
         let database = create(None, false, Some(Leasable::plain())).await;
         database
-            .create_collection(collection("users", vec![string("name"), string("email")], vec![], Some(any_permissions()), false))
+            .create_collection(collection(
+                "users",
+                vec![string("name"), string("email")],
+                vec![],
+                Some(any_permissions()),
+                false,
+            ))
             .await
             .unwrap();
         database
@@ -391,7 +398,10 @@ fn permission_revocation_is_fresh_across_database_instances() {
         let writer = Database::new(adapter.clone(), none());
         let reader = Database::new(adapter, none());
         for database in [&writer, &reader] {
-            database.set_authorization(authorization.clone()).set_database("cache-tests").set_namespace("shared_metadata");
+            database
+                .set_authorization(authorization.clone())
+                .set_database("cache-tests")
+                .set_namespace("shared_metadata");
         }
         writer.create(None).await.unwrap();
         writer
@@ -430,12 +440,21 @@ fn a_silent_permission_revocation_still_invalidates_the_query_cache() {
         authorization
             .skip(async {
                 database
-                    .create_collection(collection("private", vec![], vec![], Some(vec![Permission::create(&Role::any())]), true))
+                    .create_collection(collection(
+                        "private",
+                        vec![],
+                        vec![],
+                        Some(vec![Permission::create(&Role::any())]),
+                        true,
+                    ))
                     .await
                     .unwrap();
                 let permissions = strings([Permission::read(&user1), Permission::update(&user1)]);
                 database
-                    .create_document("private", doc(vec![("$id", Value::from("secret")), ("$permissions", permissions)]))
+                    .create_document(
+                        "private",
+                        doc(vec![("$id", Value::from("secret")), ("$permissions", permissions)]),
+                    )
                     .await
                     .unwrap();
             })
@@ -473,7 +492,13 @@ async fn assert_rolls_back_on_invalidation_failure(mutation: usize) {
     database.create(None).await.unwrap();
     database.authorization().add_role(&Role::any().to_string());
     database
-        .create_collection(collection("users", vec![string("name").required(true)], vec![], Some(any_permissions()), false))
+        .create_collection(collection(
+            "users",
+            vec![string("name").required(true)],
+            vec![],
+            Some(any_permissions()),
+            false,
+        ))
         .await
         .unwrap();
     database
@@ -493,7 +518,9 @@ async fn assert_rolls_back_on_invalidation_failure(mutation: usize) {
             .create_documents("users", vec![named("first", "first"), named("second", "second")], 100, None)
             .await
             .map(|_| ()),
-        2 => database.update_document("users", "existing", doc(vec![("name", Value::from("updated"))])).await.map(|_| ()),
+        2 => {
+            database.update_document("users", "existing", doc(vec![("name", Value::from("updated"))])).await.map(|_| ())
+        }
         _ => database.delete_document("users", "existing").await.map(|_| ()),
     };
     let error = result.expect_err("the invalidation failure is propagated");

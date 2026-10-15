@@ -31,6 +31,9 @@ struct State {
 /// the store.
 type Intercept<T> = Box<dyn Fn(&str, &str, &Value) -> Option<Result<T>> + Send + Sync>;
 
+/// Which save (key, data) a `before_next_*` hook waits for.
+type SaveMatcher = Box<dyn Fn(&str, &Value) -> bool + Send + Sync>;
+
 #[derive(Default)]
 struct Intercepts {
     load: Option<Intercept<Option<Value>>>,
@@ -58,7 +61,7 @@ pub(crate) struct Leasable {
     leased: bool,
     json: bool,
     intercepts: RwLock<Intercepts>,
-    before_save: Mutex<Option<(String, BoxFuture<'static, ()>)>>,
+    before_save: Mutex<Option<(SaveMatcher, BoxFuture<'static, ()>)>>,
 }
 
 fn now() -> i64 {
@@ -118,7 +121,20 @@ impl Leasable {
     /// Runs `future` before the next save of a key containing `fragment`
     /// lands (PHP's `beforeNextSave()`).
     pub(crate) fn before_next_save(&self, fragment: &str, future: impl Future<Output = ()> + Send + 'static) {
-        *self.before_save.lock().unwrap() = Some((fragment.to_owned(), Box::pin(future)));
+        let fragment = fragment.to_owned();
+        *self.before_save.lock().unwrap() =
+            Some((Box::new(move |key: &str, _: &Value| key.contains(&fragment)), Box::pin(future)));
+    }
+
+    /// Runs `future` before the next active epoch is saved (PHP's
+    /// `OwnershipCache::pauseNextActivation()`).
+    pub(crate) fn before_next_activation(&self, future: impl Future<Output = ()> + Send + 'static) {
+        *self.before_save.lock().unwrap() = Some((
+            Box::new(|key: &str, data: &Value| {
+                key.ends_with("#epoch") && matches!(data, Value::Str(s) if s.as_bytes().starts_with(b"active:"))
+            }),
+            Box::pin(future),
+        ));
     }
 
     /// Whether purges advance generations.
@@ -182,7 +198,9 @@ impl Leasable {
         let data = if !hash.is_empty() && state.corrupting_field_writes {
             Value::from("corrupted")
         } else if self.json {
-            Value::Str(php_std::Str::from(php_std::json::encode(data, php_std::json::Flags::NONE, 512).unwrap_or_default()))
+            Value::Str(php_std::Str::from(
+                php_std::json::encode(data, php_std::json::Flags::NONE, 512).unwrap_or_default(),
+            ))
         } else {
             data.clone()
         };
@@ -204,7 +222,10 @@ impl Leasable {
 
     /// Answers `save()` calls (leased or not) with `intercept` when it
     /// returns `Some`.
-    pub(crate) fn on_save(&self, intercept: impl Fn(&str, &str, &Value) -> Option<Result<bool>> + Send + Sync + 'static) {
+    pub(crate) fn on_save(
+        &self,
+        intercept: impl Fn(&str, &str, &Value) -> Option<Result<bool>> + Send + Sync + 'static,
+    ) {
         self.intercepts.write().unwrap().save = Some(Box::new(intercept));
     }
 
@@ -356,7 +377,7 @@ impl Adapter for Leasable {
         let before = {
             let mut hook = self.before_save.lock().unwrap();
             match hook.as_ref() {
-                Some((fragment, _)) if key.contains(fragment.as_str()) => hook.take().map(|(_, f)| f),
+                Some((matches, _)) if matches(key, data) => hook.take().map(|(_, f)| f),
                 _ => None,
             }
         };
@@ -435,8 +456,7 @@ impl Adapter for Leasable {
 
     fn generation(&self, key: &str) -> impl Future<Output = Result<String>> + Send {
         self.count();
-        if let Some(answer) =
-            self.intercepts.read().unwrap().generation.as_ref().and_then(|i| i(key, "", &Value::Null))
+        if let Some(answer) = self.intercepts.read().unwrap().generation.as_ref().and_then(|i| i(key, "", &Value::Null))
         {
             return std::future::ready(answer);
         }

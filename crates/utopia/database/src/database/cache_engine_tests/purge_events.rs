@@ -77,7 +77,12 @@ async fn fixture(adapter: Arc<Observed>) -> Database {
             COLLECTION,
             vec![crate::Attribute::string("title", 64), crate::Attribute::integer("views")],
             vec![],
-            Some(vec![Permission::create(&any), Permission::read(&any), Permission::update(&any), Permission::delete(&any)]),
+            Some(vec![
+                Permission::create(&any),
+                Permission::read(&any),
+                Permission::update(&any),
+                Permission::delete(&any),
+            ]),
             true,
         ))
         .await
@@ -92,7 +97,11 @@ async fn seeded(adapter: Arc<Observed>, ids: &[&str]) -> (Database, Arc<Recorder
         database
             .create_document(
                 COLLECTION,
-                doc(vec![("$id", Value::from(*id)), ("title", Value::from(*id)), ("views", Value::Int(index as i64 + 1))]),
+                doc(vec![
+                    ("$id", Value::from(*id)),
+                    ("title", Value::from(*id)),
+                    ("views", Value::Int(index as i64 + 1)),
+                ]),
             )
             .await
             .unwrap();
@@ -131,7 +140,13 @@ fn update_documents_purges_every_updated_document() {
     run(|| async {
         let (database, recorder) = seeded(Observed::memory(), &["first", "second", "third"]).await;
         database
-            .update_documents(COLLECTION, doc(vec![("views", Value::Int(10))]), vec![Query::not_equal("title", "third")], 100, None)
+            .update_documents(
+                COLLECTION,
+                doc(vec![("views", Value::Int(10))]),
+                vec![Query::not_equal("title", "third")],
+                100,
+                None,
+            )
             .await
             .unwrap();
         assert_eq!(recorder.events(), [Event::DocumentPurge, Event::DocumentPurge, Event::DocumentsUpdate]);
@@ -183,9 +198,21 @@ fn batch_writes_purge_every_batch() {
         use Event::*;
         assert_eq!(
             recorder.events(),
-            [DocumentPurge, DocumentPurge, DocumentPurge, DocumentsUpdate, DocumentPurge, DocumentPurge, DocumentPurge, DocumentsDelete]
+            [
+                DocumentPurge,
+                DocumentPurge,
+                DocumentPurge,
+                DocumentsUpdate,
+                DocumentPurge,
+                DocumentPurge,
+                DocumentPurge,
+                DocumentsDelete
+            ]
         );
-        assert_eq!(recorder.purged(), ["posts/first", "posts/second", "posts/third", "posts/first", "posts/second", "posts/third"]);
+        assert_eq!(
+            recorder.purged(),
+            ["posts/first", "posts/second", "posts/third", "posts/first", "posts/second", "posts/third"]
+        );
     });
 }
 
@@ -196,7 +223,13 @@ fn writes_that_change_nothing_purge_nothing() {
         let _ = database.update_document(COLLECTION, "missing", titled("renamed")).await;
         let _ = database.delete_document(COLLECTION, "missing").await;
         database
-            .update_documents(COLLECTION, doc(vec![("views", Value::Int(10))]), vec![Query::equal("title", ["missing"])], 100, None)
+            .update_documents(
+                COLLECTION,
+                doc(vec![("views", Value::Int(10))]),
+                vec![Query::equal("title", ["missing"])],
+                100,
+                None,
+            )
             .await
             .unwrap();
         database.delete_documents(COLLECTION, vec![Query::equal("title", ["missing"])], 100, None).await.unwrap();
@@ -336,7 +369,11 @@ fn queued_purge_events_keep_their_tenant() {
             database
                 .create_document(
                     COLLECTION,
-                    doc(vec![("$id", Value::from("first")), ("$tenant", Value::Int(tenant)), ("title", Value::from("first"))]),
+                    doc(vec![
+                        ("$id", Value::from("first")),
+                        ("$tenant", Value::Int(tenant)),
+                        ("title", Value::from("first")),
+                    ]),
                 )
                 .await
                 .unwrap();
@@ -346,11 +383,19 @@ fn queued_purge_events_keep_their_tenant() {
         database.add_hook(Hook::lifecycle(recorder.clone())).unwrap();
         database
             .with_transaction(|| async {
-                database.with_tenant(Value::Int(7), database.update_document(COLLECTION, "first", titled("renamed"))).await?;
+                database
+                    .with_tenant(Value::Int(7), database.update_document(COLLECTION, "first", titled("renamed")))
+                    .await?;
                 database
                     .with_tenant(
                         Value::Int(8),
-                        database.update_documents(COLLECTION, titled("renamed"), vec![Query::equal("$id", ["first"])], 100, None),
+                        database.update_documents(
+                            COLLECTION,
+                            titled("renamed"),
+                            vec![Query::equal("$id", ["first"])],
+                            100,
+                            None,
+                        ),
                     )
                     .await?;
                 Ok(())

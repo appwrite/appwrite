@@ -1,7 +1,7 @@
 //! PHP: `Documents\DocumentCacheInvalidationTest` (its Memory cases).
 
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 use crate::cache::testing::{Leasable, over};
 use crate::collection::Update;
@@ -72,7 +72,10 @@ fn repeated_writes_and_reads_keep_the_key_count_bounded() {
             let name = format!("round {round}");
             for index in 0..5 {
                 let id = format!("hook{index}");
-                database.update_document("webhooks", &id, doc(vec![("name", Value::from(name.as_str()))])).await.unwrap();
+                database
+                    .update_document("webhooks", &id, doc(vec![("name", Value::from(name.as_str()))]))
+                    .await
+                    .unwrap();
                 assert_eq!(get(&database, &id).await.get("name"), Some(&Value::from(name.as_str())));
             }
             if round == 1 {
@@ -90,7 +93,8 @@ fn a_cache_without_fields_serves_each_selection_its_own_copy() {
         database.create_document("webhooks", hook("hook")).await.unwrap();
         for _ in 0..2 {
             assert_eq!(get(&database, "hook").await.get("description"), Some(&Value::from("description")));
-            let projected = database.get_document("webhooks", "hook", vec![Query::select(["name"])], false).await.unwrap();
+            let projected =
+                database.get_document("webhooks", "hook", vec![Query::select(["name"])], false).await.unwrap();
             assert_eq!(projected.get("name"), Some(&Value::from("hook")));
             assert!(!projected.has("description"), "a projected read gets only what it selected");
         }
@@ -135,9 +139,18 @@ fn single_document_writes_do_not_block_the_collection() {
                     )
                     .await
                     .map(|_| ()),
-                1 => database.update_document("webhooks", "hook", doc(vec![("name", Value::from("renamed"))])).await.map(|_| ()),
-                2 => database.increase_document_attribute("webhooks", "hook", "count", Value::Int(1), None).await.map(|_| ()),
-                3 => database.decrease_document_attribute("webhooks", "hook", "count", Value::Int(1), None).await.map(|_| ()),
+                1 => database
+                    .update_document("webhooks", "hook", doc(vec![("name", Value::from("renamed"))]))
+                    .await
+                    .map(|_| ()),
+                2 => database
+                    .increase_document_attribute("webhooks", "hook", "count", Value::Int(1), None)
+                    .await
+                    .map(|_| ()),
+                3 => database
+                    .decrease_document_attribute("webhooks", "hook", "count", Value::Int(1), None)
+                    .await
+                    .map(|_| ()),
                 _ => database.delete_document("webhooks", "hook").await.map(|_| ()),
             };
             result.unwrap();

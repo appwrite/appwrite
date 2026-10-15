@@ -7,9 +7,9 @@ use std::sync::{Arc, Mutex, Weak};
 use crate::adapter::Adapter;
 use crate::cache::Query as QueryCache;
 use crate::cache::testing::{Leasable, over};
+use crate::database::fixtures::run;
 use crate::database::fixtures::{collection, doc, string, uncached_twin, unique, with_id};
 use crate::database::observed::{Observed, Op};
-use crate::database::fixtures::run;
 use crate::database::{Database, METADATA, TTL};
 use crate::error::Result;
 use crate::permission::Permission;
@@ -45,7 +45,10 @@ async fn counted(cache: &Arc<Leasable>) -> (Database, Arc<Observed>) {
 }
 
 async fn create_hook(database: &Database) {
-    database.create_document("webhooks", doc(vec![("$id", Value::from("hook")), ("name", Value::from("original"))])).await.unwrap();
+    database
+        .create_document("webhooks", doc(vec![("$id", Value::from("hook")), ("name", Value::from("original"))]))
+        .await
+        .unwrap();
     assert_eq!(name(database, "webhooks", "hook").await, Value::from("original"));
 }
 
@@ -56,7 +59,13 @@ async fn name(database: &Database, collection: &str, id: &str) -> Value {
 /// `renameDocument()`: a batch update of one document.
 async fn rename(database: &Database, collection: &str, id: &str, name: &str) -> Result<i64> {
     database
-        .update_documents(collection, doc(vec![("name", Value::from(name))]), vec![Query::equal("$id", [id])], 100, None)
+        .update_documents(
+            collection,
+            doc(vec![("name", Value::from(name))]),
+            vec![Query::equal("$id", [id])],
+            100,
+            None,
+        )
         .await
 }
 
@@ -142,9 +151,15 @@ fn an_activation_failure_does_not_strand_other_collection_epochs() {
         let (cache, fails) = fail_epochs();
         let adapter = Observed::memory();
         let database = with_cache(&cache, None, Some(adapter.clone())).await;
-        database.create_collection(collection("logs", vec![string("name")], vec![], Some(permissions()), true)).await.unwrap();
+        database
+            .create_collection(collection("logs", vec![string("name")], vec![], Some(permissions()), true))
+            .await
+            .unwrap();
         create_hook(&database).await;
-        database.create_document("logs", doc(vec![("$id", Value::from("log")), ("name", Value::from("original"))])).await.unwrap();
+        database
+            .create_document("logs", doc(vec![("$id", Value::from("log")), ("name", Value::from("original"))]))
+            .await
+            .unwrap();
         assert_eq!(name(&database, "logs", "log").await, Value::from("original"));
         *fails.activations.lock().unwrap() = Some("collection:webhooks#epoch".into());
         let error = database
@@ -218,7 +233,10 @@ fn an_activation_purge_failure_still_propagates() {
     run(|| async {
         let cache = flush_during_activation();
         let database = with_cache(&cache, None, None).await;
-        database.create_document("webhooks", doc(vec![("$id", Value::from("hook")), ("name", Value::from("original"))])).await.unwrap();
+        database
+            .create_document("webhooks", doc(vec![("$id", Value::from("hook")), ("name", Value::from("original"))]))
+            .await
+            .unwrap();
         cache.flush_now();
         cache.on_purge(|key, _| key.ends_with("#finished").then_some(Ok(false)));
         let error = rename(&database, "webhooks", "hook", "updated").await.unwrap_err();
@@ -237,14 +255,23 @@ fn writes_do_not_add_keys_to_a_cache_that_keeps_purged_keys() {
             database
                 .create_document(
                     "webhooks",
-                    doc(vec![("$id", Value::from(format!("hook{index}").as_str())), ("name", Value::from(format!("hook {index}").as_str()))]),
+                    doc(vec![
+                        ("$id", Value::from(format!("hook{index}").as_str())),
+                        ("name", Value::from(format!("hook {index}").as_str())),
+                    ]),
                 )
                 .await
                 .unwrap();
         }
         let read_every_hook = || async {
             for index in 0..=20 {
-                assert!(!database.get_document("webhooks", &format!("hook{index}"), vec![], false).await.unwrap().is_empty());
+                assert!(
+                    !database
+                        .get_document("webhooks", &format!("hook{index}"), vec![], false)
+                        .await
+                        .unwrap()
+                        .is_empty()
+                );
             }
         };
         read_every_hook().await;
@@ -253,8 +280,12 @@ fn writes_do_not_add_keys_to_a_cache_that_keeps_purged_keys() {
             let updated = format!("updated {round}");
             database
                 .with_transaction(|| async {
-                    database.update_document("webhooks", "hook1", doc(vec![("name", Value::from(updated.as_str()))])).await?;
-                    database.update_document("webhooks", "hook2", doc(vec![("name", Value::from(updated.as_str()))])).await?;
+                    database
+                        .update_document("webhooks", "hook1", doc(vec![("name", Value::from(updated.as_str()))]))
+                        .await?;
+                    database
+                        .update_document("webhooks", "hook2", doc(vec![("name", Value::from(updated.as_str()))]))
+                        .await?;
                     Ok(())
                 })
                 .await
@@ -277,7 +308,10 @@ fn overlapping_writes_succeed_on_a_cache_without_fields() {
         let writer = with_cache(&cache, None, None).await;
         let other = with_cache(&cache, Some(&writer.namespace()), None).await;
         for database in [&writer, &other] {
-            database.create_document("webhooks", doc(vec![("$id", Value::from("hook")), ("name", Value::from("original"))])).await.unwrap();
+            database
+                .create_document("webhooks", doc(vec![("$id", Value::from("hook")), ("name", Value::from("original"))]))
+                .await
+                .unwrap();
         }
         writer
             .with_transaction(|| async {
@@ -299,7 +333,10 @@ fn activation_rejects_a_corrupted_owner_registration() {
     run(|| async {
         let cache = Leasable::new();
         let database = with_cache(&cache, None, None).await;
-        database.create_document("webhooks", doc(vec![("$id", Value::from("hook")), ("name", Value::from("original"))])).await.unwrap();
+        database
+            .create_document("webhooks", doc(vec![("$id", Value::from("hook")), ("name", Value::from("original"))]))
+            .await
+            .unwrap();
         cache.corrupt_field_writes(true);
         let error = rename(&database, "webhooks", "hook", "updated").await.unwrap_err();
         assert!(error.message().contains("Invalid document cache owner"), "{}", error.message());
@@ -315,7 +352,10 @@ fn activation_propagates_an_owner_release_failure() {
     run(|| async {
         let cache = Leasable::new();
         let database = with_cache(&cache, None, None).await;
-        database.create_document("webhooks", doc(vec![("$id", Value::from("hook")), ("name", Value::from("original"))])).await.unwrap();
+        database
+            .create_document("webhooks", doc(vec![("$id", Value::from("hook")), ("name", Value::from("original"))]))
+            .await
+            .unwrap();
         cache.fail_field_purges();
         let error = rename(&database, "webhooks", "hook", "updated").await.unwrap_err();
         assert!(error.message().contains("Failed to release document cache owner"), "{}", error.message());
@@ -448,10 +488,19 @@ async fn activation_database(adapter: Arc<Observed>, cache: Arc<utopia_cache::Ca
     database.create(None).await.unwrap();
     database.authorization().add_role(&Role::any().to_string());
     database
-        .create_collection(collection("webhooks", vec![crate::Attribute::string("name", 32)], vec![], Some(permissions()), true))
+        .create_collection(collection(
+            "webhooks",
+            vec![crate::Attribute::string("name", 32)],
+            vec![],
+            Some(permissions()),
+            true,
+        ))
         .await
         .unwrap();
-    database.create_document("webhooks", doc(vec![("$id", Value::from("hook")), ("name", Value::from("original"))])).await.unwrap();
+    database
+        .create_document("webhooks", doc(vec![("$id", Value::from("hook")), ("name", Value::from("original"))]))
+        .await
+        .unwrap();
     database
 }
 
@@ -473,13 +522,25 @@ fn a_writer_activating_while_another_is_in_flight_leaves_its_barrier_in_place() 
                     first
                         .with_transaction(|| async {
                             first
-                                .update_documents("webhooks", doc(vec![("name", Value::from("first"))]), vec![], 100, None)
+                                .update_documents(
+                                    "webhooks",
+                                    doc(vec![("name", Value::from("first"))]),
+                                    vec![],
+                                    100,
+                                    None,
+                                )
                                 .await?;
                             if flush {
                                 cache.flush().await?;
                             }
                             second
-                                .update_documents("webhooks", doc(vec![("name", Value::from("second"))]), vec![], 100, None)
+                                .update_documents(
+                                    "webhooks",
+                                    doc(vec![("name", Value::from("second"))]),
+                                    vec![],
+                                    100,
+                                    None,
+                                )
                                 .await?;
                             Ok(())
                         })
@@ -488,7 +549,11 @@ fn a_writer_activating_while_another_is_in_flight_leaves_its_barrier_in_place() 
                     uncached_twin(&first)
                         .update_document("webhooks", "hook", doc(vec![("name", Value::from("changed"))]))
                         .await?;
-                    assert_eq!(name(&first, "webhooks", "hook").await, Value::from("changed"), "no read is cached meanwhile");
+                    assert_eq!(
+                        name(&first, "webhooks", "hook").await,
+                        Value::from("changed"),
+                        "no read is cached meanwhile"
+                    );
                     Ok(())
                 })
                 .await
@@ -497,7 +562,11 @@ fn a_writer_activating_while_another_is_in_flight_leaves_its_barrier_in_place() 
             assert_eq!(name(&first, "webhooks", "hook").await, Value::from("changed"));
             first_adapter.reset();
             assert_eq!(name(&first, "webhooks", "hook").await, Value::from("changed"));
-            assert_eq!(document_reads(&first_adapter), 0, "caching resumes once no writer is in flight (flush: {flush})");
+            assert_eq!(
+                document_reads(&first_adapter),
+                0,
+                "caching resumes once no writer is in flight (flush: {flush})"
+            );
         });
     }
 }
