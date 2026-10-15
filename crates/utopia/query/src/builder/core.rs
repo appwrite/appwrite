@@ -1491,8 +1491,18 @@ impl<D: Dialect> Builder<D> {
         Ok(format!("{} {operator} ?", self.quote("_cursor")?))
     }
 
-    /// PHP's `compileAggregate()`.
+    /// PHP's `compileAggregate()`, as the builder's [`Flavor`] compiles it.
+    ///
+    /// [`Flavor`]: crate::builder::Flavor
     pub(crate) fn compile_aggregate_query(&mut self, query: &Query) -> Result<String> {
+        match self.flavored_aggregate(query) {
+            Some(compiled) => compiled,
+            None => self.base_compile_aggregate(query),
+        }
+    }
+
+    /// The base builder's `compileAggregate()`.
+    pub(crate) fn base_compile_aggregate(&mut self, query: &Query) -> Result<String> {
         let method = query.method();
         let attribute = query.attribute();
         if method == Method::CountDistinct {

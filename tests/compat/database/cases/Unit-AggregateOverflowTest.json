@@ -1,0 +1,4894 @@
+{
+    "source": [
+        "vendor/utopia-php/database/tests/unit/AggregateOverflowTest.php"
+    ],
+    "cases": [
+        {
+            "name": "AggregateOverflowTest::testAnAggregateThatOverflowsIsRefused#sum native",
+            "state": [],
+            "steps": [
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Query",
+                        "method": "sum",
+                        "args": {
+                            "attribute": "reading",
+                            "alias": "total"
+                        },
+                        "as": "o149"
+                    },
+                    "bind": "s303"
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Adapter\\SQLite",
+                        "args": {
+                            "pdo": {
+                                "$pdo": {
+                                    "dsn": "sqlite::memory:",
+                                    "options": {
+                                        "17": false
+                                    }
+                                }
+                            }
+                        },
+                        "as": "o155"
+                    },
+                    "bind": "s309"
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Database",
+                        "args": {
+                            "adapter": {
+                                "$obj": "o155"
+                            },
+                            "cache": "none"
+                        },
+                        "as": "o156"
+                    },
+                    "bind": "s310"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o156"
+                        },
+                        "method": "setDatabase",
+                        "args": {
+                            "name": "aggregate_overflow"
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o156"
+                        },
+                        "method": "setNamespace",
+                        "args": {
+                            "namespace": "aggregate_overflow_u000000000005"
+                        }
+                    }
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Validator\\Authorization",
+                        "args": {},
+                        "as": "o157"
+                    },
+                    "bind": "s313"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o156"
+                        },
+                        "method": "setAuthorization",
+                        "args": {
+                            "authorization": {
+                                "$obj": "o157"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Hook\\Permissions",
+                        "args": {},
+                        "as": "o158"
+                    },
+                    "bind": "s315"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o156"
+                        },
+                        "method": "addHook",
+                        "args": {
+                            "hook": {
+                                "$obj": "o158"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o156"
+                        },
+                        "method": "create",
+                        "args": {}
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Attribute",
+                        "method": "double",
+                        "args": {
+                            "key": "reading",
+                            "required": true
+                        },
+                        "as": "o159"
+                    },
+                    "bind": "s318"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Role",
+                        "method": "any",
+                        "args": {},
+                        "as": "o160"
+                    },
+                    "bind": "s319"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Permission",
+                        "method": "create",
+                        "args": {
+                            "role": {
+                                "$obj": "o160"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Role",
+                        "method": "any",
+                        "args": {},
+                        "as": "o161"
+                    },
+                    "bind": "s321"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Permission",
+                        "method": "read",
+                        "args": {
+                            "role": {
+                                "$obj": "o161"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Collection",
+                        "method": "create",
+                        "args": {
+                            "id": "readings",
+                            "attributes": [
+                                {
+                                    "$obj": "o159"
+                                }
+                            ],
+                            "permissions": [
+                                "create(\"any\")",
+                                "read(\"any\")"
+                            ]
+                        },
+                        "as": "o162"
+                    },
+                    "bind": "s323"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o156"
+                        },
+                        "method": "createCollection",
+                        "args": {
+                            "collection": {
+                                "$obj": "o162"
+                            }
+                        },
+                        "as": "o163"
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Role",
+                        "method": "any",
+                        "args": {},
+                        "as": "o164"
+                    },
+                    "bind": "s325"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Permission",
+                        "method": "read",
+                        "args": {
+                            "role": {
+                                "$obj": "o164"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Document",
+                        "args": {
+                            "input": {
+                                "reading": 1.0e+308,
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        },
+                        "as": "o165"
+                    },
+                    "bind": "s327"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o156"
+                        },
+                        "method": "createDocument",
+                        "args": {
+                            "collection": "readings",
+                            "document": {
+                                "$obj": "o165"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Role",
+                        "method": "any",
+                        "args": {},
+                        "as": "o166"
+                    },
+                    "bind": "s329"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Permission",
+                        "method": "read",
+                        "args": {
+                            "role": {
+                                "$obj": "o166"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Document",
+                        "args": {
+                            "input": {
+                                "reading": 1.0e+308,
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        },
+                        "as": "o167"
+                    },
+                    "bind": "s331"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o156"
+                        },
+                        "method": "createDocument",
+                        "args": {
+                            "collection": "readings",
+                            "document": {
+                                "$obj": "o167"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o156"
+                        },
+                        "method": "aggregate",
+                        "args": {
+                            "collection": "readings",
+                            "queries": [
+                                {
+                                    "$obj": "o149"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "AggregateOverflowTest::testAnAggregateThatOverflowsIsRefused#avg native",
+            "state": [],
+            "steps": [
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Query",
+                        "method": "avg",
+                        "args": {
+                            "attribute": "reading",
+                            "alias": "total"
+                        },
+                        "as": "o150"
+                    },
+                    "bind": "s304"
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Adapter\\SQLite",
+                        "args": {
+                            "pdo": {
+                                "$pdo": {
+                                    "dsn": "sqlite::memory:",
+                                    "options": {
+                                        "17": false
+                                    }
+                                }
+                            }
+                        },
+                        "as": "o168"
+                    },
+                    "bind": "s334"
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Database",
+                        "args": {
+                            "adapter": {
+                                "$obj": "o168"
+                            },
+                            "cache": "none"
+                        },
+                        "as": "o169"
+                    },
+                    "bind": "s335"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o169"
+                        },
+                        "method": "setDatabase",
+                        "args": {
+                            "name": "aggregate_overflow"
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o169"
+                        },
+                        "method": "setNamespace",
+                        "args": {
+                            "namespace": "aggregate_overflow_u000000000006"
+                        }
+                    }
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Validator\\Authorization",
+                        "args": {},
+                        "as": "o170"
+                    },
+                    "bind": "s338"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o169"
+                        },
+                        "method": "setAuthorization",
+                        "args": {
+                            "authorization": {
+                                "$obj": "o170"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Hook\\Permissions",
+                        "args": {},
+                        "as": "o171"
+                    },
+                    "bind": "s340"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o169"
+                        },
+                        "method": "addHook",
+                        "args": {
+                            "hook": {
+                                "$obj": "o171"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o169"
+                        },
+                        "method": "create",
+                        "args": {}
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Attribute",
+                        "method": "double",
+                        "args": {
+                            "key": "reading",
+                            "required": true
+                        },
+                        "as": "o172"
+                    },
+                    "bind": "s343"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Role",
+                        "method": "any",
+                        "args": {},
+                        "as": "o173"
+                    },
+                    "bind": "s344"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Permission",
+                        "method": "create",
+                        "args": {
+                            "role": {
+                                "$obj": "o173"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Role",
+                        "method": "any",
+                        "args": {},
+                        "as": "o174"
+                    },
+                    "bind": "s346"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Permission",
+                        "method": "read",
+                        "args": {
+                            "role": {
+                                "$obj": "o174"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Collection",
+                        "method": "create",
+                        "args": {
+                            "id": "readings",
+                            "attributes": [
+                                {
+                                    "$obj": "o172"
+                                }
+                            ],
+                            "permissions": [
+                                "create(\"any\")",
+                                "read(\"any\")"
+                            ]
+                        },
+                        "as": "o175"
+                    },
+                    "bind": "s348"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o169"
+                        },
+                        "method": "createCollection",
+                        "args": {
+                            "collection": {
+                                "$obj": "o175"
+                            }
+                        },
+                        "as": "o176"
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Role",
+                        "method": "any",
+                        "args": {},
+                        "as": "o177"
+                    },
+                    "bind": "s350"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Permission",
+                        "method": "read",
+                        "args": {
+                            "role": {
+                                "$obj": "o177"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Document",
+                        "args": {
+                            "input": {
+                                "reading": 1.0e+308,
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        },
+                        "as": "o178"
+                    },
+                    "bind": "s352"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o169"
+                        },
+                        "method": "createDocument",
+                        "args": {
+                            "collection": "readings",
+                            "document": {
+                                "$obj": "o178"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Role",
+                        "method": "any",
+                        "args": {},
+                        "as": "o179"
+                    },
+                    "bind": "s354"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Permission",
+                        "method": "read",
+                        "args": {
+                            "role": {
+                                "$obj": "o179"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Document",
+                        "args": {
+                            "input": {
+                                "reading": 1.0e+308,
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        },
+                        "as": "o180"
+                    },
+                    "bind": "s356"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o169"
+                        },
+                        "method": "createDocument",
+                        "args": {
+                            "collection": "readings",
+                            "document": {
+                                "$obj": "o180"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o169"
+                        },
+                        "method": "aggregate",
+                        "args": {
+                            "collection": "readings",
+                            "queries": [
+                                {
+                                    "$obj": "o150"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "AggregateOverflowTest::testAnAggregateThatOverflowsIsRefused#default alias native",
+            "state": [],
+            "steps": [
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Query",
+                        "method": "sum",
+                        "args": {
+                            "attribute": "reading"
+                        },
+                        "as": "o151"
+                    },
+                    "bind": "s305"
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Adapter\\SQLite",
+                        "args": {
+                            "pdo": {
+                                "$pdo": {
+                                    "dsn": "sqlite::memory:",
+                                    "options": {
+                                        "17": false
+                                    }
+                                }
+                            }
+                        },
+                        "as": "o181"
+                    },
+                    "bind": "s359"
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Database",
+                        "args": {
+                            "adapter": {
+                                "$obj": "o181"
+                            },
+                            "cache": "none"
+                        },
+                        "as": "o182"
+                    },
+                    "bind": "s360"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o182"
+                        },
+                        "method": "setDatabase",
+                        "args": {
+                            "name": "aggregate_overflow"
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o182"
+                        },
+                        "method": "setNamespace",
+                        "args": {
+                            "namespace": "aggregate_overflow_u000000000007"
+                        }
+                    }
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Validator\\Authorization",
+                        "args": {},
+                        "as": "o183"
+                    },
+                    "bind": "s363"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o182"
+                        },
+                        "method": "setAuthorization",
+                        "args": {
+                            "authorization": {
+                                "$obj": "o183"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Hook\\Permissions",
+                        "args": {},
+                        "as": "o184"
+                    },
+                    "bind": "s365"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o182"
+                        },
+                        "method": "addHook",
+                        "args": {
+                            "hook": {
+                                "$obj": "o184"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o182"
+                        },
+                        "method": "create",
+                        "args": {}
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Attribute",
+                        "method": "double",
+                        "args": {
+                            "key": "reading",
+                            "required": true
+                        },
+                        "as": "o185"
+                    },
+                    "bind": "s368"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Role",
+                        "method": "any",
+                        "args": {},
+                        "as": "o186"
+                    },
+                    "bind": "s369"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Permission",
+                        "method": "create",
+                        "args": {
+                            "role": {
+                                "$obj": "o186"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Role",
+                        "method": "any",
+                        "args": {},
+                        "as": "o187"
+                    },
+                    "bind": "s371"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Permission",
+                        "method": "read",
+                        "args": {
+                            "role": {
+                                "$obj": "o187"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Collection",
+                        "method": "create",
+                        "args": {
+                            "id": "readings",
+                            "attributes": [
+                                {
+                                    "$obj": "o185"
+                                }
+                            ],
+                            "permissions": [
+                                "create(\"any\")",
+                                "read(\"any\")"
+                            ]
+                        },
+                        "as": "o188"
+                    },
+                    "bind": "s373"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o182"
+                        },
+                        "method": "createCollection",
+                        "args": {
+                            "collection": {
+                                "$obj": "o188"
+                            }
+                        },
+                        "as": "o189"
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Role",
+                        "method": "any",
+                        "args": {},
+                        "as": "o190"
+                    },
+                    "bind": "s375"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Permission",
+                        "method": "read",
+                        "args": {
+                            "role": {
+                                "$obj": "o190"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Document",
+                        "args": {
+                            "input": {
+                                "reading": 1.0e+308,
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        },
+                        "as": "o191"
+                    },
+                    "bind": "s377"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o182"
+                        },
+                        "method": "createDocument",
+                        "args": {
+                            "collection": "readings",
+                            "document": {
+                                "$obj": "o191"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Role",
+                        "method": "any",
+                        "args": {},
+                        "as": "o192"
+                    },
+                    "bind": "s379"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Permission",
+                        "method": "read",
+                        "args": {
+                            "role": {
+                                "$obj": "o192"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Document",
+                        "args": {
+                            "input": {
+                                "reading": 1.0e+308,
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        },
+                        "as": "o193"
+                    },
+                    "bind": "s381"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o182"
+                        },
+                        "method": "createDocument",
+                        "args": {
+                            "collection": "readings",
+                            "document": {
+                                "$obj": "o193"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o182"
+                        },
+                        "method": "aggregate",
+                        "args": {
+                            "collection": "readings",
+                            "queries": [
+                                {
+                                    "$obj": "o151"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "AggregateOverflowTest::testAnAggregateThatOverflowsIsRefused#sum stringified",
+            "state": [],
+            "steps": [
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Query",
+                        "method": "sum",
+                        "args": {
+                            "attribute": "reading",
+                            "alias": "total"
+                        },
+                        "as": "o152"
+                    },
+                    "bind": "s306"
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Adapter\\SQLite",
+                        "args": {
+                            "pdo": {
+                                "$pdo": {
+                                    "dsn": "sqlite::memory:",
+                                    "options": {
+                                        "17": true
+                                    }
+                                }
+                            }
+                        },
+                        "as": "o194"
+                    },
+                    "bind": "s384"
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Database",
+                        "args": {
+                            "adapter": {
+                                "$obj": "o194"
+                            },
+                            "cache": "none"
+                        },
+                        "as": "o195"
+                    },
+                    "bind": "s385"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o195"
+                        },
+                        "method": "setDatabase",
+                        "args": {
+                            "name": "aggregate_overflow"
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o195"
+                        },
+                        "method": "setNamespace",
+                        "args": {
+                            "namespace": "aggregate_overflow_u000000000008"
+                        }
+                    }
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Validator\\Authorization",
+                        "args": {},
+                        "as": "o196"
+                    },
+                    "bind": "s388"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o195"
+                        },
+                        "method": "setAuthorization",
+                        "args": {
+                            "authorization": {
+                                "$obj": "o196"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Hook\\Permissions",
+                        "args": {},
+                        "as": "o197"
+                    },
+                    "bind": "s390"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o195"
+                        },
+                        "method": "addHook",
+                        "args": {
+                            "hook": {
+                                "$obj": "o197"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o195"
+                        },
+                        "method": "create",
+                        "args": {}
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Attribute",
+                        "method": "double",
+                        "args": {
+                            "key": "reading",
+                            "required": true
+                        },
+                        "as": "o198"
+                    },
+                    "bind": "s393"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Role",
+                        "method": "any",
+                        "args": {},
+                        "as": "o199"
+                    },
+                    "bind": "s394"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Permission",
+                        "method": "create",
+                        "args": {
+                            "role": {
+                                "$obj": "o199"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Role",
+                        "method": "any",
+                        "args": {},
+                        "as": "o200"
+                    },
+                    "bind": "s396"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Permission",
+                        "method": "read",
+                        "args": {
+                            "role": {
+                                "$obj": "o200"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Collection",
+                        "method": "create",
+                        "args": {
+                            "id": "readings",
+                            "attributes": [
+                                {
+                                    "$obj": "o198"
+                                }
+                            ],
+                            "permissions": [
+                                "create(\"any\")",
+                                "read(\"any\")"
+                            ]
+                        },
+                        "as": "o201"
+                    },
+                    "bind": "s398"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o195"
+                        },
+                        "method": "createCollection",
+                        "args": {
+                            "collection": {
+                                "$obj": "o201"
+                            }
+                        },
+                        "as": "o202"
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Role",
+                        "method": "any",
+                        "args": {},
+                        "as": "o203"
+                    },
+                    "bind": "s400"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Permission",
+                        "method": "read",
+                        "args": {
+                            "role": {
+                                "$obj": "o203"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Document",
+                        "args": {
+                            "input": {
+                                "reading": 1.0e+308,
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        },
+                        "as": "o204"
+                    },
+                    "bind": "s402"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o195"
+                        },
+                        "method": "createDocument",
+                        "args": {
+                            "collection": "readings",
+                            "document": {
+                                "$obj": "o204"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Role",
+                        "method": "any",
+                        "args": {},
+                        "as": "o205"
+                    },
+                    "bind": "s404"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Permission",
+                        "method": "read",
+                        "args": {
+                            "role": {
+                                "$obj": "o205"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Document",
+                        "args": {
+                            "input": {
+                                "reading": 1.0e+308,
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        },
+                        "as": "o206"
+                    },
+                    "bind": "s406"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o195"
+                        },
+                        "method": "createDocument",
+                        "args": {
+                            "collection": "readings",
+                            "document": {
+                                "$obj": "o206"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o195"
+                        },
+                        "method": "aggregate",
+                        "args": {
+                            "collection": "readings",
+                            "queries": [
+                                {
+                                    "$obj": "o152"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "AggregateOverflowTest::testAnAggregateThatOverflowsIsRefused#avg stringified",
+            "state": [],
+            "steps": [
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Query",
+                        "method": "avg",
+                        "args": {
+                            "attribute": "reading",
+                            "alias": "total"
+                        },
+                        "as": "o153"
+                    },
+                    "bind": "s307"
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Adapter\\SQLite",
+                        "args": {
+                            "pdo": {
+                                "$pdo": {
+                                    "dsn": "sqlite::memory:",
+                                    "options": {
+                                        "17": true
+                                    }
+                                }
+                            }
+                        },
+                        "as": "o207"
+                    },
+                    "bind": "s409"
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Database",
+                        "args": {
+                            "adapter": {
+                                "$obj": "o207"
+                            },
+                            "cache": "none"
+                        },
+                        "as": "o208"
+                    },
+                    "bind": "s410"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o208"
+                        },
+                        "method": "setDatabase",
+                        "args": {
+                            "name": "aggregate_overflow"
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o208"
+                        },
+                        "method": "setNamespace",
+                        "args": {
+                            "namespace": "aggregate_overflow_u000000000009"
+                        }
+                    }
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Validator\\Authorization",
+                        "args": {},
+                        "as": "o209"
+                    },
+                    "bind": "s413"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o208"
+                        },
+                        "method": "setAuthorization",
+                        "args": {
+                            "authorization": {
+                                "$obj": "o209"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Hook\\Permissions",
+                        "args": {},
+                        "as": "o210"
+                    },
+                    "bind": "s415"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o208"
+                        },
+                        "method": "addHook",
+                        "args": {
+                            "hook": {
+                                "$obj": "o210"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o208"
+                        },
+                        "method": "create",
+                        "args": {}
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Attribute",
+                        "method": "double",
+                        "args": {
+                            "key": "reading",
+                            "required": true
+                        },
+                        "as": "o211"
+                    },
+                    "bind": "s418"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Role",
+                        "method": "any",
+                        "args": {},
+                        "as": "o212"
+                    },
+                    "bind": "s419"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Permission",
+                        "method": "create",
+                        "args": {
+                            "role": {
+                                "$obj": "o212"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Role",
+                        "method": "any",
+                        "args": {},
+                        "as": "o213"
+                    },
+                    "bind": "s421"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Permission",
+                        "method": "read",
+                        "args": {
+                            "role": {
+                                "$obj": "o213"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Collection",
+                        "method": "create",
+                        "args": {
+                            "id": "readings",
+                            "attributes": [
+                                {
+                                    "$obj": "o211"
+                                }
+                            ],
+                            "permissions": [
+                                "create(\"any\")",
+                                "read(\"any\")"
+                            ]
+                        },
+                        "as": "o214"
+                    },
+                    "bind": "s423"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o208"
+                        },
+                        "method": "createCollection",
+                        "args": {
+                            "collection": {
+                                "$obj": "o214"
+                            }
+                        },
+                        "as": "o215"
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Role",
+                        "method": "any",
+                        "args": {},
+                        "as": "o216"
+                    },
+                    "bind": "s425"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Permission",
+                        "method": "read",
+                        "args": {
+                            "role": {
+                                "$obj": "o216"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Document",
+                        "args": {
+                            "input": {
+                                "reading": 1.0e+308,
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        },
+                        "as": "o217"
+                    },
+                    "bind": "s427"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o208"
+                        },
+                        "method": "createDocument",
+                        "args": {
+                            "collection": "readings",
+                            "document": {
+                                "$obj": "o217"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Role",
+                        "method": "any",
+                        "args": {},
+                        "as": "o218"
+                    },
+                    "bind": "s429"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Permission",
+                        "method": "read",
+                        "args": {
+                            "role": {
+                                "$obj": "o218"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Document",
+                        "args": {
+                            "input": {
+                                "reading": 1.0e+308,
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        },
+                        "as": "o219"
+                    },
+                    "bind": "s431"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o208"
+                        },
+                        "method": "createDocument",
+                        "args": {
+                            "collection": "readings",
+                            "document": {
+                                "$obj": "o219"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o208"
+                        },
+                        "method": "aggregate",
+                        "args": {
+                            "collection": "readings",
+                            "queries": [
+                                {
+                                    "$obj": "o153"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "AggregateOverflowTest::testAnAggregateThatOverflowsIsRefused#default alias stringified",
+            "state": [],
+            "steps": [
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Query",
+                        "method": "sum",
+                        "args": {
+                            "attribute": "reading"
+                        },
+                        "as": "o154"
+                    },
+                    "bind": "s308"
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Adapter\\SQLite",
+                        "args": {
+                            "pdo": {
+                                "$pdo": {
+                                    "dsn": "sqlite::memory:",
+                                    "options": {
+                                        "17": true
+                                    }
+                                }
+                            }
+                        },
+                        "as": "o220"
+                    },
+                    "bind": "s434"
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Database",
+                        "args": {
+                            "adapter": {
+                                "$obj": "o220"
+                            },
+                            "cache": "none"
+                        },
+                        "as": "o221"
+                    },
+                    "bind": "s435"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o221"
+                        },
+                        "method": "setDatabase",
+                        "args": {
+                            "name": "aggregate_overflow"
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o221"
+                        },
+                        "method": "setNamespace",
+                        "args": {
+                            "namespace": "aggregate_overflow_u000000000010"
+                        }
+                    }
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Validator\\Authorization",
+                        "args": {},
+                        "as": "o222"
+                    },
+                    "bind": "s438"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o221"
+                        },
+                        "method": "setAuthorization",
+                        "args": {
+                            "authorization": {
+                                "$obj": "o222"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Hook\\Permissions",
+                        "args": {},
+                        "as": "o223"
+                    },
+                    "bind": "s440"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o221"
+                        },
+                        "method": "addHook",
+                        "args": {
+                            "hook": {
+                                "$obj": "o223"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o221"
+                        },
+                        "method": "create",
+                        "args": {}
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Attribute",
+                        "method": "double",
+                        "args": {
+                            "key": "reading",
+                            "required": true
+                        },
+                        "as": "o224"
+                    },
+                    "bind": "s443"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Role",
+                        "method": "any",
+                        "args": {},
+                        "as": "o225"
+                    },
+                    "bind": "s444"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Permission",
+                        "method": "create",
+                        "args": {
+                            "role": {
+                                "$obj": "o225"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Role",
+                        "method": "any",
+                        "args": {},
+                        "as": "o226"
+                    },
+                    "bind": "s446"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Permission",
+                        "method": "read",
+                        "args": {
+                            "role": {
+                                "$obj": "o226"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Collection",
+                        "method": "create",
+                        "args": {
+                            "id": "readings",
+                            "attributes": [
+                                {
+                                    "$obj": "o224"
+                                }
+                            ],
+                            "permissions": [
+                                "create(\"any\")",
+                                "read(\"any\")"
+                            ]
+                        },
+                        "as": "o227"
+                    },
+                    "bind": "s448"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o221"
+                        },
+                        "method": "createCollection",
+                        "args": {
+                            "collection": {
+                                "$obj": "o227"
+                            }
+                        },
+                        "as": "o228"
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Role",
+                        "method": "any",
+                        "args": {},
+                        "as": "o229"
+                    },
+                    "bind": "s450"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Permission",
+                        "method": "read",
+                        "args": {
+                            "role": {
+                                "$obj": "o229"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Document",
+                        "args": {
+                            "input": {
+                                "reading": 1.0e+308,
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        },
+                        "as": "o230"
+                    },
+                    "bind": "s452"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o221"
+                        },
+                        "method": "createDocument",
+                        "args": {
+                            "collection": "readings",
+                            "document": {
+                                "$obj": "o230"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Role",
+                        "method": "any",
+                        "args": {},
+                        "as": "o231"
+                    },
+                    "bind": "s454"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Permission",
+                        "method": "read",
+                        "args": {
+                            "role": {
+                                "$obj": "o231"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Document",
+                        "args": {
+                            "input": {
+                                "reading": 1.0e+308,
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        },
+                        "as": "o232"
+                    },
+                    "bind": "s456"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o221"
+                        },
+                        "method": "createDocument",
+                        "args": {
+                            "collection": "readings",
+                            "document": {
+                                "$obj": "o232"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o221"
+                        },
+                        "method": "aggregate",
+                        "args": {
+                            "collection": "readings",
+                            "queries": [
+                                {
+                                    "$obj": "o154"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "AggregateOverflowTest::testAnAggregateThatOverflowsBelowTheRangeIsRefused#sum native",
+            "state": [],
+            "steps": [
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Query",
+                        "method": "sum",
+                        "args": {
+                            "attribute": "reading",
+                            "alias": "total"
+                        },
+                        "as": "o233"
+                    },
+                    "bind": "s459"
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Adapter\\SQLite",
+                        "args": {
+                            "pdo": {
+                                "$pdo": {
+                                    "dsn": "sqlite::memory:",
+                                    "options": {
+                                        "17": false
+                                    }
+                                }
+                            }
+                        },
+                        "as": "o239"
+                    },
+                    "bind": "s465"
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Database",
+                        "args": {
+                            "adapter": {
+                                "$obj": "o239"
+                            },
+                            "cache": "none"
+                        },
+                        "as": "o240"
+                    },
+                    "bind": "s466"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o240"
+                        },
+                        "method": "setDatabase",
+                        "args": {
+                            "name": "aggregate_overflow"
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o240"
+                        },
+                        "method": "setNamespace",
+                        "args": {
+                            "namespace": "aggregate_overflow_u000000000011"
+                        }
+                    }
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Validator\\Authorization",
+                        "args": {},
+                        "as": "o241"
+                    },
+                    "bind": "s469"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o240"
+                        },
+                        "method": "setAuthorization",
+                        "args": {
+                            "authorization": {
+                                "$obj": "o241"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Hook\\Permissions",
+                        "args": {},
+                        "as": "o242"
+                    },
+                    "bind": "s471"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o240"
+                        },
+                        "method": "addHook",
+                        "args": {
+                            "hook": {
+                                "$obj": "o242"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o240"
+                        },
+                        "method": "create",
+                        "args": {}
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Attribute",
+                        "method": "double",
+                        "args": {
+                            "key": "reading",
+                            "required": true
+                        },
+                        "as": "o243"
+                    },
+                    "bind": "s474"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Role",
+                        "method": "any",
+                        "args": {},
+                        "as": "o244"
+                    },
+                    "bind": "s475"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Permission",
+                        "method": "create",
+                        "args": {
+                            "role": {
+                                "$obj": "o244"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Role",
+                        "method": "any",
+                        "args": {},
+                        "as": "o245"
+                    },
+                    "bind": "s477"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Permission",
+                        "method": "read",
+                        "args": {
+                            "role": {
+                                "$obj": "o245"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Collection",
+                        "method": "create",
+                        "args": {
+                            "id": "readings",
+                            "attributes": [
+                                {
+                                    "$obj": "o243"
+                                }
+                            ],
+                            "permissions": [
+                                "create(\"any\")",
+                                "read(\"any\")"
+                            ]
+                        },
+                        "as": "o246"
+                    },
+                    "bind": "s479"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o240"
+                        },
+                        "method": "createCollection",
+                        "args": {
+                            "collection": {
+                                "$obj": "o246"
+                            }
+                        },
+                        "as": "o247"
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Role",
+                        "method": "any",
+                        "args": {},
+                        "as": "o248"
+                    },
+                    "bind": "s481"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Permission",
+                        "method": "read",
+                        "args": {
+                            "role": {
+                                "$obj": "o248"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Document",
+                        "args": {
+                            "input": {
+                                "reading": -1.0e+308,
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        },
+                        "as": "o249"
+                    },
+                    "bind": "s483"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o240"
+                        },
+                        "method": "createDocument",
+                        "args": {
+                            "collection": "readings",
+                            "document": {
+                                "$obj": "o249"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Role",
+                        "method": "any",
+                        "args": {},
+                        "as": "o250"
+                    },
+                    "bind": "s485"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Permission",
+                        "method": "read",
+                        "args": {
+                            "role": {
+                                "$obj": "o250"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Document",
+                        "args": {
+                            "input": {
+                                "reading": -1.0e+308,
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        },
+                        "as": "o251"
+                    },
+                    "bind": "s487"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o240"
+                        },
+                        "method": "createDocument",
+                        "args": {
+                            "collection": "readings",
+                            "document": {
+                                "$obj": "o251"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o240"
+                        },
+                        "method": "aggregate",
+                        "args": {
+                            "collection": "readings",
+                            "queries": [
+                                {
+                                    "$obj": "o233"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "AggregateOverflowTest::testAnAggregateThatOverflowsBelowTheRangeIsRefused#avg native",
+            "state": [],
+            "steps": [
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Query",
+                        "method": "avg",
+                        "args": {
+                            "attribute": "reading",
+                            "alias": "total"
+                        },
+                        "as": "o234"
+                    },
+                    "bind": "s460"
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Adapter\\SQLite",
+                        "args": {
+                            "pdo": {
+                                "$pdo": {
+                                    "dsn": "sqlite::memory:",
+                                    "options": {
+                                        "17": false
+                                    }
+                                }
+                            }
+                        },
+                        "as": "o252"
+                    },
+                    "bind": "s490"
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Database",
+                        "args": {
+                            "adapter": {
+                                "$obj": "o252"
+                            },
+                            "cache": "none"
+                        },
+                        "as": "o253"
+                    },
+                    "bind": "s491"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o253"
+                        },
+                        "method": "setDatabase",
+                        "args": {
+                            "name": "aggregate_overflow"
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o253"
+                        },
+                        "method": "setNamespace",
+                        "args": {
+                            "namespace": "aggregate_overflow_u000000000012"
+                        }
+                    }
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Validator\\Authorization",
+                        "args": {},
+                        "as": "o254"
+                    },
+                    "bind": "s494"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o253"
+                        },
+                        "method": "setAuthorization",
+                        "args": {
+                            "authorization": {
+                                "$obj": "o254"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Hook\\Permissions",
+                        "args": {},
+                        "as": "o255"
+                    },
+                    "bind": "s496"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o253"
+                        },
+                        "method": "addHook",
+                        "args": {
+                            "hook": {
+                                "$obj": "o255"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o253"
+                        },
+                        "method": "create",
+                        "args": {}
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Attribute",
+                        "method": "double",
+                        "args": {
+                            "key": "reading",
+                            "required": true
+                        },
+                        "as": "o256"
+                    },
+                    "bind": "s499"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Role",
+                        "method": "any",
+                        "args": {},
+                        "as": "o257"
+                    },
+                    "bind": "s500"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Permission",
+                        "method": "create",
+                        "args": {
+                            "role": {
+                                "$obj": "o257"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Role",
+                        "method": "any",
+                        "args": {},
+                        "as": "o258"
+                    },
+                    "bind": "s502"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Permission",
+                        "method": "read",
+                        "args": {
+                            "role": {
+                                "$obj": "o258"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Collection",
+                        "method": "create",
+                        "args": {
+                            "id": "readings",
+                            "attributes": [
+                                {
+                                    "$obj": "o256"
+                                }
+                            ],
+                            "permissions": [
+                                "create(\"any\")",
+                                "read(\"any\")"
+                            ]
+                        },
+                        "as": "o259"
+                    },
+                    "bind": "s504"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o253"
+                        },
+                        "method": "createCollection",
+                        "args": {
+                            "collection": {
+                                "$obj": "o259"
+                            }
+                        },
+                        "as": "o260"
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Role",
+                        "method": "any",
+                        "args": {},
+                        "as": "o261"
+                    },
+                    "bind": "s506"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Permission",
+                        "method": "read",
+                        "args": {
+                            "role": {
+                                "$obj": "o261"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Document",
+                        "args": {
+                            "input": {
+                                "reading": -1.0e+308,
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        },
+                        "as": "o262"
+                    },
+                    "bind": "s508"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o253"
+                        },
+                        "method": "createDocument",
+                        "args": {
+                            "collection": "readings",
+                            "document": {
+                                "$obj": "o262"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Role",
+                        "method": "any",
+                        "args": {},
+                        "as": "o263"
+                    },
+                    "bind": "s510"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Permission",
+                        "method": "read",
+                        "args": {
+                            "role": {
+                                "$obj": "o263"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Document",
+                        "args": {
+                            "input": {
+                                "reading": -1.0e+308,
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        },
+                        "as": "o264"
+                    },
+                    "bind": "s512"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o253"
+                        },
+                        "method": "createDocument",
+                        "args": {
+                            "collection": "readings",
+                            "document": {
+                                "$obj": "o264"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o253"
+                        },
+                        "method": "aggregate",
+                        "args": {
+                            "collection": "readings",
+                            "queries": [
+                                {
+                                    "$obj": "o234"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "AggregateOverflowTest::testAnAggregateThatOverflowsBelowTheRangeIsRefused#default alias native",
+            "state": [],
+            "steps": [
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Query",
+                        "method": "sum",
+                        "args": {
+                            "attribute": "reading"
+                        },
+                        "as": "o235"
+                    },
+                    "bind": "s461"
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Adapter\\SQLite",
+                        "args": {
+                            "pdo": {
+                                "$pdo": {
+                                    "dsn": "sqlite::memory:",
+                                    "options": {
+                                        "17": false
+                                    }
+                                }
+                            }
+                        },
+                        "as": "o265"
+                    },
+                    "bind": "s515"
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Database",
+                        "args": {
+                            "adapter": {
+                                "$obj": "o265"
+                            },
+                            "cache": "none"
+                        },
+                        "as": "o266"
+                    },
+                    "bind": "s516"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o266"
+                        },
+                        "method": "setDatabase",
+                        "args": {
+                            "name": "aggregate_overflow"
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o266"
+                        },
+                        "method": "setNamespace",
+                        "args": {
+                            "namespace": "aggregate_overflow_u000000000013"
+                        }
+                    }
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Validator\\Authorization",
+                        "args": {},
+                        "as": "o267"
+                    },
+                    "bind": "s519"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o266"
+                        },
+                        "method": "setAuthorization",
+                        "args": {
+                            "authorization": {
+                                "$obj": "o267"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Hook\\Permissions",
+                        "args": {},
+                        "as": "o268"
+                    },
+                    "bind": "s521"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o266"
+                        },
+                        "method": "addHook",
+                        "args": {
+                            "hook": {
+                                "$obj": "o268"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o266"
+                        },
+                        "method": "create",
+                        "args": {}
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Attribute",
+                        "method": "double",
+                        "args": {
+                            "key": "reading",
+                            "required": true
+                        },
+                        "as": "o269"
+                    },
+                    "bind": "s524"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Role",
+                        "method": "any",
+                        "args": {},
+                        "as": "o270"
+                    },
+                    "bind": "s525"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Permission",
+                        "method": "create",
+                        "args": {
+                            "role": {
+                                "$obj": "o270"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Role",
+                        "method": "any",
+                        "args": {},
+                        "as": "o271"
+                    },
+                    "bind": "s527"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Permission",
+                        "method": "read",
+                        "args": {
+                            "role": {
+                                "$obj": "o271"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Collection",
+                        "method": "create",
+                        "args": {
+                            "id": "readings",
+                            "attributes": [
+                                {
+                                    "$obj": "o269"
+                                }
+                            ],
+                            "permissions": [
+                                "create(\"any\")",
+                                "read(\"any\")"
+                            ]
+                        },
+                        "as": "o272"
+                    },
+                    "bind": "s529"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o266"
+                        },
+                        "method": "createCollection",
+                        "args": {
+                            "collection": {
+                                "$obj": "o272"
+                            }
+                        },
+                        "as": "o273"
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Role",
+                        "method": "any",
+                        "args": {},
+                        "as": "o274"
+                    },
+                    "bind": "s531"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Permission",
+                        "method": "read",
+                        "args": {
+                            "role": {
+                                "$obj": "o274"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Document",
+                        "args": {
+                            "input": {
+                                "reading": -1.0e+308,
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        },
+                        "as": "o275"
+                    },
+                    "bind": "s533"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o266"
+                        },
+                        "method": "createDocument",
+                        "args": {
+                            "collection": "readings",
+                            "document": {
+                                "$obj": "o275"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Role",
+                        "method": "any",
+                        "args": {},
+                        "as": "o276"
+                    },
+                    "bind": "s535"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Permission",
+                        "method": "read",
+                        "args": {
+                            "role": {
+                                "$obj": "o276"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Document",
+                        "args": {
+                            "input": {
+                                "reading": -1.0e+308,
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        },
+                        "as": "o277"
+                    },
+                    "bind": "s537"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o266"
+                        },
+                        "method": "createDocument",
+                        "args": {
+                            "collection": "readings",
+                            "document": {
+                                "$obj": "o277"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o266"
+                        },
+                        "method": "aggregate",
+                        "args": {
+                            "collection": "readings",
+                            "queries": [
+                                {
+                                    "$obj": "o235"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "AggregateOverflowTest::testAnAggregateThatOverflowsBelowTheRangeIsRefused#sum stringified",
+            "state": [],
+            "steps": [
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Query",
+                        "method": "sum",
+                        "args": {
+                            "attribute": "reading",
+                            "alias": "total"
+                        },
+                        "as": "o236"
+                    },
+                    "bind": "s462"
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Adapter\\SQLite",
+                        "args": {
+                            "pdo": {
+                                "$pdo": {
+                                    "dsn": "sqlite::memory:",
+                                    "options": {
+                                        "17": true
+                                    }
+                                }
+                            }
+                        },
+                        "as": "o278"
+                    },
+                    "bind": "s540"
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Database",
+                        "args": {
+                            "adapter": {
+                                "$obj": "o278"
+                            },
+                            "cache": "none"
+                        },
+                        "as": "o279"
+                    },
+                    "bind": "s541"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o279"
+                        },
+                        "method": "setDatabase",
+                        "args": {
+                            "name": "aggregate_overflow"
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o279"
+                        },
+                        "method": "setNamespace",
+                        "args": {
+                            "namespace": "aggregate_overflow_u000000000014"
+                        }
+                    }
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Validator\\Authorization",
+                        "args": {},
+                        "as": "o280"
+                    },
+                    "bind": "s544"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o279"
+                        },
+                        "method": "setAuthorization",
+                        "args": {
+                            "authorization": {
+                                "$obj": "o280"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Hook\\Permissions",
+                        "args": {},
+                        "as": "o281"
+                    },
+                    "bind": "s546"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o279"
+                        },
+                        "method": "addHook",
+                        "args": {
+                            "hook": {
+                                "$obj": "o281"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o279"
+                        },
+                        "method": "create",
+                        "args": {}
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Attribute",
+                        "method": "double",
+                        "args": {
+                            "key": "reading",
+                            "required": true
+                        },
+                        "as": "o282"
+                    },
+                    "bind": "s549"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Role",
+                        "method": "any",
+                        "args": {},
+                        "as": "o283"
+                    },
+                    "bind": "s550"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Permission",
+                        "method": "create",
+                        "args": {
+                            "role": {
+                                "$obj": "o283"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Role",
+                        "method": "any",
+                        "args": {},
+                        "as": "o284"
+                    },
+                    "bind": "s552"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Permission",
+                        "method": "read",
+                        "args": {
+                            "role": {
+                                "$obj": "o284"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Collection",
+                        "method": "create",
+                        "args": {
+                            "id": "readings",
+                            "attributes": [
+                                {
+                                    "$obj": "o282"
+                                }
+                            ],
+                            "permissions": [
+                                "create(\"any\")",
+                                "read(\"any\")"
+                            ]
+                        },
+                        "as": "o285"
+                    },
+                    "bind": "s554"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o279"
+                        },
+                        "method": "createCollection",
+                        "args": {
+                            "collection": {
+                                "$obj": "o285"
+                            }
+                        },
+                        "as": "o286"
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Role",
+                        "method": "any",
+                        "args": {},
+                        "as": "o287"
+                    },
+                    "bind": "s556"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Permission",
+                        "method": "read",
+                        "args": {
+                            "role": {
+                                "$obj": "o287"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Document",
+                        "args": {
+                            "input": {
+                                "reading": -1.0e+308,
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        },
+                        "as": "o288"
+                    },
+                    "bind": "s558"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o279"
+                        },
+                        "method": "createDocument",
+                        "args": {
+                            "collection": "readings",
+                            "document": {
+                                "$obj": "o288"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Role",
+                        "method": "any",
+                        "args": {},
+                        "as": "o289"
+                    },
+                    "bind": "s560"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Permission",
+                        "method": "read",
+                        "args": {
+                            "role": {
+                                "$obj": "o289"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Document",
+                        "args": {
+                            "input": {
+                                "reading": -1.0e+308,
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        },
+                        "as": "o290"
+                    },
+                    "bind": "s562"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o279"
+                        },
+                        "method": "createDocument",
+                        "args": {
+                            "collection": "readings",
+                            "document": {
+                                "$obj": "o290"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o279"
+                        },
+                        "method": "aggregate",
+                        "args": {
+                            "collection": "readings",
+                            "queries": [
+                                {
+                                    "$obj": "o236"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "AggregateOverflowTest::testAnAggregateThatOverflowsBelowTheRangeIsRefused#avg stringified",
+            "state": [],
+            "steps": [
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Query",
+                        "method": "avg",
+                        "args": {
+                            "attribute": "reading",
+                            "alias": "total"
+                        },
+                        "as": "o237"
+                    },
+                    "bind": "s463"
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Adapter\\SQLite",
+                        "args": {
+                            "pdo": {
+                                "$pdo": {
+                                    "dsn": "sqlite::memory:",
+                                    "options": {
+                                        "17": true
+                                    }
+                                }
+                            }
+                        },
+                        "as": "o291"
+                    },
+                    "bind": "s565"
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Database",
+                        "args": {
+                            "adapter": {
+                                "$obj": "o291"
+                            },
+                            "cache": "none"
+                        },
+                        "as": "o292"
+                    },
+                    "bind": "s566"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o292"
+                        },
+                        "method": "setDatabase",
+                        "args": {
+                            "name": "aggregate_overflow"
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o292"
+                        },
+                        "method": "setNamespace",
+                        "args": {
+                            "namespace": "aggregate_overflow_u000000000015"
+                        }
+                    }
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Validator\\Authorization",
+                        "args": {},
+                        "as": "o293"
+                    },
+                    "bind": "s569"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o292"
+                        },
+                        "method": "setAuthorization",
+                        "args": {
+                            "authorization": {
+                                "$obj": "o293"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Hook\\Permissions",
+                        "args": {},
+                        "as": "o294"
+                    },
+                    "bind": "s571"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o292"
+                        },
+                        "method": "addHook",
+                        "args": {
+                            "hook": {
+                                "$obj": "o294"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o292"
+                        },
+                        "method": "create",
+                        "args": {}
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Attribute",
+                        "method": "double",
+                        "args": {
+                            "key": "reading",
+                            "required": true
+                        },
+                        "as": "o295"
+                    },
+                    "bind": "s574"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Role",
+                        "method": "any",
+                        "args": {},
+                        "as": "o296"
+                    },
+                    "bind": "s575"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Permission",
+                        "method": "create",
+                        "args": {
+                            "role": {
+                                "$obj": "o296"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Role",
+                        "method": "any",
+                        "args": {},
+                        "as": "o297"
+                    },
+                    "bind": "s577"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Permission",
+                        "method": "read",
+                        "args": {
+                            "role": {
+                                "$obj": "o297"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Collection",
+                        "method": "create",
+                        "args": {
+                            "id": "readings",
+                            "attributes": [
+                                {
+                                    "$obj": "o295"
+                                }
+                            ],
+                            "permissions": [
+                                "create(\"any\")",
+                                "read(\"any\")"
+                            ]
+                        },
+                        "as": "o298"
+                    },
+                    "bind": "s579"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o292"
+                        },
+                        "method": "createCollection",
+                        "args": {
+                            "collection": {
+                                "$obj": "o298"
+                            }
+                        },
+                        "as": "o299"
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Role",
+                        "method": "any",
+                        "args": {},
+                        "as": "o300"
+                    },
+                    "bind": "s581"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Permission",
+                        "method": "read",
+                        "args": {
+                            "role": {
+                                "$obj": "o300"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Document",
+                        "args": {
+                            "input": {
+                                "reading": -1.0e+308,
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        },
+                        "as": "o301"
+                    },
+                    "bind": "s583"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o292"
+                        },
+                        "method": "createDocument",
+                        "args": {
+                            "collection": "readings",
+                            "document": {
+                                "$obj": "o301"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Role",
+                        "method": "any",
+                        "args": {},
+                        "as": "o302"
+                    },
+                    "bind": "s585"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Permission",
+                        "method": "read",
+                        "args": {
+                            "role": {
+                                "$obj": "o302"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Document",
+                        "args": {
+                            "input": {
+                                "reading": -1.0e+308,
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        },
+                        "as": "o303"
+                    },
+                    "bind": "s587"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o292"
+                        },
+                        "method": "createDocument",
+                        "args": {
+                            "collection": "readings",
+                            "document": {
+                                "$obj": "o303"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o292"
+                        },
+                        "method": "aggregate",
+                        "args": {
+                            "collection": "readings",
+                            "queries": [
+                                {
+                                    "$obj": "o237"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "AggregateOverflowTest::testAnAggregateThatOverflowsBelowTheRangeIsRefused#default alias stringified",
+            "state": [],
+            "steps": [
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Query",
+                        "method": "sum",
+                        "args": {
+                            "attribute": "reading"
+                        },
+                        "as": "o238"
+                    },
+                    "bind": "s464"
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Adapter\\SQLite",
+                        "args": {
+                            "pdo": {
+                                "$pdo": {
+                                    "dsn": "sqlite::memory:",
+                                    "options": {
+                                        "17": true
+                                    }
+                                }
+                            }
+                        },
+                        "as": "o304"
+                    },
+                    "bind": "s590"
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Database",
+                        "args": {
+                            "adapter": {
+                                "$obj": "o304"
+                            },
+                            "cache": "none"
+                        },
+                        "as": "o305"
+                    },
+                    "bind": "s591"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o305"
+                        },
+                        "method": "setDatabase",
+                        "args": {
+                            "name": "aggregate_overflow"
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o305"
+                        },
+                        "method": "setNamespace",
+                        "args": {
+                            "namespace": "aggregate_overflow_u000000000016"
+                        }
+                    }
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Validator\\Authorization",
+                        "args": {},
+                        "as": "o306"
+                    },
+                    "bind": "s594"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o305"
+                        },
+                        "method": "setAuthorization",
+                        "args": {
+                            "authorization": {
+                                "$obj": "o306"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Hook\\Permissions",
+                        "args": {},
+                        "as": "o307"
+                    },
+                    "bind": "s596"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o305"
+                        },
+                        "method": "addHook",
+                        "args": {
+                            "hook": {
+                                "$obj": "o307"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o305"
+                        },
+                        "method": "create",
+                        "args": {}
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Attribute",
+                        "method": "double",
+                        "args": {
+                            "key": "reading",
+                            "required": true
+                        },
+                        "as": "o308"
+                    },
+                    "bind": "s599"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Role",
+                        "method": "any",
+                        "args": {},
+                        "as": "o309"
+                    },
+                    "bind": "s600"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Permission",
+                        "method": "create",
+                        "args": {
+                            "role": {
+                                "$obj": "o309"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Role",
+                        "method": "any",
+                        "args": {},
+                        "as": "o310"
+                    },
+                    "bind": "s602"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Permission",
+                        "method": "read",
+                        "args": {
+                            "role": {
+                                "$obj": "o310"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Collection",
+                        "method": "create",
+                        "args": {
+                            "id": "readings",
+                            "attributes": [
+                                {
+                                    "$obj": "o308"
+                                }
+                            ],
+                            "permissions": [
+                                "create(\"any\")",
+                                "read(\"any\")"
+                            ]
+                        },
+                        "as": "o311"
+                    },
+                    "bind": "s604"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o305"
+                        },
+                        "method": "createCollection",
+                        "args": {
+                            "collection": {
+                                "$obj": "o311"
+                            }
+                        },
+                        "as": "o312"
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Role",
+                        "method": "any",
+                        "args": {},
+                        "as": "o313"
+                    },
+                    "bind": "s606"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Permission",
+                        "method": "read",
+                        "args": {
+                            "role": {
+                                "$obj": "o313"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Document",
+                        "args": {
+                            "input": {
+                                "reading": -1.0e+308,
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        },
+                        "as": "o314"
+                    },
+                    "bind": "s608"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o305"
+                        },
+                        "method": "createDocument",
+                        "args": {
+                            "collection": "readings",
+                            "document": {
+                                "$obj": "o314"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Role",
+                        "method": "any",
+                        "args": {},
+                        "as": "o315"
+                    },
+                    "bind": "s610"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Permission",
+                        "method": "read",
+                        "args": {
+                            "role": {
+                                "$obj": "o315"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Document",
+                        "args": {
+                            "input": {
+                                "reading": -1.0e+308,
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        },
+                        "as": "o316"
+                    },
+                    "bind": "s612"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o305"
+                        },
+                        "method": "createDocument",
+                        "args": {
+                            "collection": "readings",
+                            "document": {
+                                "$obj": "o316"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o305"
+                        },
+                        "method": "aggregate",
+                        "args": {
+                            "collection": "readings",
+                            "queries": [
+                                {
+                                    "$obj": "o238"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "AggregateOverflowTest::testAnAggregateThatOverflowsInOneGroupIsRefused",
+            "state": [],
+            "steps": [
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Adapter\\SQLite",
+                        "args": {
+                            "pdo": {
+                                "$pdo": {
+                                    "dsn": "sqlite::memory:",
+                                    "options": {
+                                        "17": false
+                                    }
+                                }
+                            }
+                        },
+                        "as": "o317"
+                    },
+                    "bind": "s615"
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Database",
+                        "args": {
+                            "adapter": {
+                                "$obj": "o317"
+                            },
+                            "cache": "none"
+                        },
+                        "as": "o318"
+                    },
+                    "bind": "s616"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o318"
+                        },
+                        "method": "setDatabase",
+                        "args": {
+                            "name": "aggregate_overflow"
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o318"
+                        },
+                        "method": "setNamespace",
+                        "args": {
+                            "namespace": "aggregate_overflow_u000000000017"
+                        }
+                    }
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Validator\\Authorization",
+                        "args": {},
+                        "as": "o319"
+                    },
+                    "bind": "s619"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o318"
+                        },
+                        "method": "setAuthorization",
+                        "args": {
+                            "authorization": {
+                                "$obj": "o319"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Hook\\Permissions",
+                        "args": {},
+                        "as": "o320"
+                    },
+                    "bind": "s621"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o318"
+                        },
+                        "method": "addHook",
+                        "args": {
+                            "hook": {
+                                "$obj": "o320"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o318"
+                        },
+                        "method": "create",
+                        "args": {}
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Attribute",
+                        "method": "double",
+                        "args": {
+                            "key": "reading",
+                            "required": true
+                        },
+                        "as": "o321"
+                    },
+                    "bind": "s624"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Role",
+                        "method": "any",
+                        "args": {},
+                        "as": "o322"
+                    },
+                    "bind": "s625"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Permission",
+                        "method": "create",
+                        "args": {
+                            "role": {
+                                "$obj": "o322"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Role",
+                        "method": "any",
+                        "args": {},
+                        "as": "o323"
+                    },
+                    "bind": "s627"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Permission",
+                        "method": "read",
+                        "args": {
+                            "role": {
+                                "$obj": "o323"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Collection",
+                        "method": "create",
+                        "args": {
+                            "id": "readings",
+                            "attributes": [
+                                {
+                                    "$obj": "o321"
+                                }
+                            ],
+                            "permissions": [
+                                "create(\"any\")",
+                                "read(\"any\")"
+                            ]
+                        },
+                        "as": "o324"
+                    },
+                    "bind": "s629"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o318"
+                        },
+                        "method": "createCollection",
+                        "args": {
+                            "collection": {
+                                "$obj": "o324"
+                            }
+                        },
+                        "as": "o325"
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Role",
+                        "method": "any",
+                        "args": {},
+                        "as": "o326"
+                    },
+                    "bind": "s631"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Permission",
+                        "method": "read",
+                        "args": {
+                            "role": {
+                                "$obj": "o326"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Document",
+                        "args": {
+                            "input": {
+                                "reading": 1.0e+308,
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        },
+                        "as": "o327"
+                    },
+                    "bind": "s633"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o318"
+                        },
+                        "method": "createDocument",
+                        "args": {
+                            "collection": "readings",
+                            "document": {
+                                "$obj": "o327"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Role",
+                        "method": "any",
+                        "args": {},
+                        "as": "o328"
+                    },
+                    "bind": "s635"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Permission",
+                        "method": "read",
+                        "args": {
+                            "role": {
+                                "$obj": "o328"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Document",
+                        "args": {
+                            "input": {
+                                "reading": 1.0e+308,
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        },
+                        "as": "o329"
+                    },
+                    "bind": "s637"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o318"
+                        },
+                        "method": "createDocument",
+                        "args": {
+                            "collection": "readings",
+                            "document": {
+                                "$obj": "o329"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Role",
+                        "method": "any",
+                        "args": {},
+                        "as": "o330"
+                    },
+                    "bind": "s639"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Permission",
+                        "method": "read",
+                        "args": {
+                            "role": {
+                                "$obj": "o330"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Document",
+                        "args": {
+                            "input": {
+                                "reading": 1.0,
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        },
+                        "as": "o331"
+                    },
+                    "bind": "s641"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o318"
+                        },
+                        "method": "createDocument",
+                        "args": {
+                            "collection": "readings",
+                            "document": {
+                                "$obj": "o331"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Query",
+                        "method": "sum",
+                        "args": {
+                            "attribute": "reading",
+                            "alias": "total"
+                        },
+                        "as": "o332"
+                    },
+                    "bind": "s643"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Query",
+                        "method": "groupBy",
+                        "args": {
+                            "attributes": [
+                                "reading"
+                            ]
+                        },
+                        "as": "o333"
+                    },
+                    "bind": "s644"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o318"
+                        },
+                        "method": "aggregate",
+                        "args": {
+                            "collection": "readings",
+                            "queries": [
+                                {
+                                    "$obj": "o332"
+                                },
+                                {
+                                    "$obj": "o333"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "AggregateOverflowTest::testTheLargestFiniteSumIsStillAnswered",
+            "state": [],
+            "steps": [
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Adapter\\SQLite",
+                        "args": {
+                            "pdo": {
+                                "$pdo": {
+                                    "dsn": "sqlite::memory:",
+                                    "options": {
+                                        "17": false
+                                    }
+                                }
+                            }
+                        },
+                        "as": "o334"
+                    },
+                    "bind": "s646"
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Database",
+                        "args": {
+                            "adapter": {
+                                "$obj": "o334"
+                            },
+                            "cache": "none"
+                        },
+                        "as": "o335"
+                    },
+                    "bind": "s647"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o335"
+                        },
+                        "method": "setDatabase",
+                        "args": {
+                            "name": "aggregate_overflow"
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o335"
+                        },
+                        "method": "setNamespace",
+                        "args": {
+                            "namespace": "aggregate_overflow_u000000000018"
+                        }
+                    }
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Validator\\Authorization",
+                        "args": {},
+                        "as": "o336"
+                    },
+                    "bind": "s650"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o335"
+                        },
+                        "method": "setAuthorization",
+                        "args": {
+                            "authorization": {
+                                "$obj": "o336"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Hook\\Permissions",
+                        "args": {},
+                        "as": "o337"
+                    },
+                    "bind": "s652"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o335"
+                        },
+                        "method": "addHook",
+                        "args": {
+                            "hook": {
+                                "$obj": "o337"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o335"
+                        },
+                        "method": "create",
+                        "args": {}
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Attribute",
+                        "method": "double",
+                        "args": {
+                            "key": "reading",
+                            "required": true
+                        },
+                        "as": "o338"
+                    },
+                    "bind": "s655"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Role",
+                        "method": "any",
+                        "args": {},
+                        "as": "o339"
+                    },
+                    "bind": "s656"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Permission",
+                        "method": "create",
+                        "args": {
+                            "role": {
+                                "$obj": "o339"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Role",
+                        "method": "any",
+                        "args": {},
+                        "as": "o340"
+                    },
+                    "bind": "s658"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Permission",
+                        "method": "read",
+                        "args": {
+                            "role": {
+                                "$obj": "o340"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Collection",
+                        "method": "create",
+                        "args": {
+                            "id": "readings",
+                            "attributes": [
+                                {
+                                    "$obj": "o338"
+                                }
+                            ],
+                            "permissions": [
+                                "create(\"any\")",
+                                "read(\"any\")"
+                            ]
+                        },
+                        "as": "o341"
+                    },
+                    "bind": "s660"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o335"
+                        },
+                        "method": "createCollection",
+                        "args": {
+                            "collection": {
+                                "$obj": "o341"
+                            }
+                        },
+                        "as": "o342"
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Role",
+                        "method": "any",
+                        "args": {},
+                        "as": "o343"
+                    },
+                    "bind": "s662"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Permission",
+                        "method": "read",
+                        "args": {
+                            "role": {
+                                "$obj": "o343"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Document",
+                        "args": {
+                            "input": {
+                                "reading": 1.0e+308,
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        },
+                        "as": "o344"
+                    },
+                    "bind": "s664"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o335"
+                        },
+                        "method": "createDocument",
+                        "args": {
+                            "collection": "readings",
+                            "document": {
+                                "$obj": "o344"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Query",
+                        "method": "sum",
+                        "args": {
+                            "attribute": "reading",
+                            "alias": "total"
+                        },
+                        "as": "o345"
+                    },
+                    "bind": "s666"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Query",
+                        "method": "avg",
+                        "args": {
+                            "attribute": "reading",
+                            "alias": "mean"
+                        },
+                        "as": "o346"
+                    },
+                    "bind": "s667"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o335"
+                        },
+                        "method": "aggregate",
+                        "args": {
+                            "collection": "readings",
+                            "queries": [
+                                {
+                                    "$obj": "o345"
+                                },
+                                {
+                                    "$obj": "o346"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        }
+    ]
+}

@@ -565,13 +565,27 @@ impl Mongo {
     }
 
     /// `deleteDocuments($collection, $sequences)`: the documents of the
-    /// given sequences.
-    pub(crate) async fn delete_documents_impl(&self, collection: &Collection, sequences: Vec<Value>) -> Result<i64> {
+    /// given sequences that match every one of `queries`
+    /// (`deletionFilters()`), whose attributes are named as `find()` names
+    /// them.
+    pub(crate) async fn delete_documents_impl(
+        &self,
+        collection: &Collection,
+        sequences: Vec<Value>,
+        mut queries: Vec<Query>,
+    ) -> Result<i64> {
         let name = self.name(collection.id());
         let values = crate::value::to_query_array(&Array::from_list(sequences));
         let query = Query::new(Method::Equal, storage::SEQUENCE, values, "");
         let filters = self.build_filters(&[query], "$and")?;
-        let filters = self.apply_tenant_filter(filters, collection.id());
+        let mut filters = self.apply_tenant_filter(filters, collection.id());
+
+        Self::escape_query_attributes(collection, &mut queries)?;
+        let matching = self.build_filters(&queries, "$and")?;
+        if !matching.is_empty() {
+            filters = map([("$and", Value::Array(Array::from_list(vec![Value::Array(filters), Value::Array(matching)])))]);
+        }
+
         let filters = replace_internal_ids_keys(&filters);
         self.driver
             .delete(&name, bson::document(&filters)?, 0, BsonDocument::new(), self.options(BsonDocument::new()))

@@ -12,7 +12,8 @@
 //! | `update.rs` | `updateDocument()`, `updateDocuments()` |
 //! | `upsert.rs` | `upsertDocument()`, `upsertDocuments()` |
 //! | `numeric.rs` | `increaseDocumentAttribute()`, `decreaseDocumentAttribute()` |
-//! | `delete.rs` | `deleteDocument()`, `deleteDocuments()` |
+//! | `delete.rs` | `deleteDocument()`, `deleteDocuments()`, `deleteBatch()`, `stillMatching()`, `withoutStored()` |
+//! | `relationship_queries.rs` | `validateRelationshipSelects()`, `withoutRelationshipQueries()` |
 
 mod cache;
 pub(crate) mod cached;
@@ -29,6 +30,9 @@ mod numeric;
 #[cfg(test)]
 mod queries_hook_tests;
 mod read;
+mod relationship_queries;
+#[cfg(all(test, feature = "sqlite", feature = "memory"))]
+mod rows_tests;
 #[cfg(test)]
 mod read_memory_tests;
 #[cfg(test)]

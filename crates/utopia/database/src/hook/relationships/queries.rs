@@ -56,15 +56,58 @@ fn add_references(ids: &mut Vec<String>, value: Option<&Value>, lists: bool) {
     }
 }
 
+/// Adds a query to the queries of the relationship `key`, kept in the
+/// order the relationships are first named (`$nestedSelections[$key][] =`).
+fn push_select(nested: &mut Selects, key: &str, query: Query) {
+    match nested.iter_mut().find(|(k, _)| k == key) {
+        Some((_, queries)) => queries.push(query),
+        None => nested.push((key.to_owned(), vec![query])),
+    }
+}
+
+/// A filter on a related attribute passed down to the related documents,
+/// so they are filtered as the documents holding them are:
+/// `comments.approved` keeps only the approved comments of each document
+/// read (`constrainRelated()`). Pagination, orders and `containsAll`
+/// (which matches across different related documents, so no single one
+/// has to match it) are not passed down.
+fn constrain_related(relationships: &[Attribute], query: &Query, constraints: &mut Selects) {
+    let method = query.method();
+    let attribute = query.attribute();
+    if !attribute.contains('.')
+        || matches!(
+            method,
+            Method::Limit
+                | Method::Offset
+                | Method::CursorAfter
+                | Method::CursorBefore
+                | Method::OrderAsc
+                | Method::OrderDesc
+                | Method::OrderRandom
+                | Method::ContainsAll
+        )
+    {
+        return;
+    }
+    let (key, rest) = split_path(attribute);
+    if by_key(relationships, key).is_none() {
+        return;
+    }
+    push_select(constraints, key, Query::new(method, rest, query.values().clone(), ""));
+}
+
 /// The ids of documents.
 fn ids_of(documents: &[Document]) -> Vec<String> {
     documents.iter().map(|d| d.id().to_owned()).collect()
 }
 
 impl Relationships {
-    /// The nested selections of the select queries naming relationship
-    /// paths (`processQueries()`), which it rewrites to select the
-    /// relationship keys the populate needs.
+    /// The queries for each relationship's related documents
+    /// (`processQueries()`): the selects that reach into it, which it
+    /// rewrites to select the relationship keys the populate needs, the
+    /// queries of a relationship query on it, and the filters on its
+    /// attributes when the queries populate it without them, so a filter
+    /// never populates a relationship the queries do not select.
     ///
     /// Fails ([`crate::Kind::Query`]) for a select value that is not a string.
     pub(crate) fn process_queries(&self, relationships: &[Attribute], queries: &mut [Query]) -> Result<Selects> {
@@ -76,10 +119,30 @@ impl Relationships {
             return Ok(nested);
         }
 
+        let mut selects = false;
+        let mut constraints: Selects = Vec::new();
+
         for query in queries.iter_mut() {
-            if query.method() != Method::Select {
+            let method = query.method();
+
+            if method == Method::Relationship {
+                let key = query.attribute();
+                if by_key(relationships, key).is_some() {
+                    for inner in query.values().values() {
+                        if let QValue::Ext(utopia_query::Object::Query(inner)) = inner {
+                            push_select(&mut nested, key, Query::from((**inner).clone()));
+                        }
+                    }
+                }
                 continue;
             }
+
+            if method != Method::Select {
+                constrain_related(relationships, query, &mut constraints);
+                continue;
+            }
+
+            selects = true;
 
             let mut values: Vec<Option<QValue>> = query.values().values().cloned().map(Some).collect();
             for slot in values.iter_mut() {
@@ -96,10 +159,7 @@ impl Relationships {
                 let Some(relationship) = &attribute.relationship else { continue };
 
                 let select = if empty(path) { Query::select(["*"]) } else { Query::select([path]) };
-                match nested.iter_mut().find(|(k, _)| k == selected) {
-                    Some((_, selects)) => selects.push(select),
-                    None => nested.push((selected.to_owned(), vec![select])),
-                }
+                push_select(&mut nested, selected, select);
 
                 let keep = match relationship.kind {
                     RelationshipType::ManyToMany => false,
@@ -115,6 +175,15 @@ impl Relationships {
                 finals.push(QValue::Str("*".into()));
             }
             query.set_values(QArray::from_list(finals));
+        }
+
+        for (key, filters) in constraints {
+            let held = nested.iter().any(|(k, _)| *k == key);
+            if !selects || held {
+                for filter in filters {
+                    push_select(&mut nested, &key, filter);
+                }
+            }
         }
 
         Ok(nested)

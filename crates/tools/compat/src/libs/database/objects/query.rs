@@ -57,6 +57,7 @@ fn encode_parsed(p: &ParsedQuery) -> Json {
             })).collect()),
             "orderAttributes": p.order_attributes,
             "orderTypes": Json::Array(p.order_types.iter().map(|t| enums::encode(*t)).collect()),
+            "relationships": queries(&p.relationships),
         }
     })
 }

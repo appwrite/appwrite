@@ -187,7 +187,10 @@ impl Sql {
                 other => other,
             };
             match value {
-                Value::Float(f) if event == Some(Event::DocumentFind) => {
+                // A bulk delete binds them as a find() does, so its filters
+                // match the rows the find() of the documents it deletes
+                // matched.
+                Value::Float(f) if matches!(event, Some(Event::DocumentFind | Event::DocumentsDelete)) => {
                     let text = self.float_precision(f)?;
                     prepared.bind_value(i + 1, Value::Str(text.as_str().into()), ParamType::Str)?;
                 }

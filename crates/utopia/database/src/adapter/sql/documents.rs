@@ -195,13 +195,15 @@ impl Sql {
             let result = builder.insert().map_err(crate::query::query_error)?;
             let mut statement = self.execute_result(&result, Some(Event::DocumentCreate), "").await?;
             self.execute(&mut statement).await?;
-            let last = self.connection.lock().await.last_insert_id().await?;
-
             if self.engine == Engine::Postgres {
-                if document.get(document::SEQUENCE).is_none() {
+                // Only a document created without a sequence reads the one
+                // the insert drew: the session may never have drawn one.
+                if document.get(document::SEQUENCE).is_none_or(empty_value) {
+                    let last = self.connection.lock().await.last_insert_id().await?;
                     document.set(document::SEQUENCE, Value::Str(last))?;
                 }
             } else {
+                let last = self.connection.lock().await.last_insert_id().await?;
                 document.set(document::SEQUENCE, Value::Str(last))?;
                 if document.get(document::SEQUENCE).is_none_or(empty_value) {
                     return Err(Error::database(format!("Error creating document empty \"{}\"", document::SEQUENCE)));
@@ -799,12 +801,15 @@ impl Sql {
         Ok(deleted > 0)
     }
 
-    /// `deleteDocuments()`: one delete of the sequences.
+    /// `deleteDocuments()`: one delete of the sequences, of the rows that
+    /// match every one of `queries` (`deletionFilters()`), and of the
+    /// permissions of `permission_ids` but those of a row still stored.
     pub(crate) async fn delete_documents(
         &self,
         collection: &Collection,
         sequences: Vec<Value>,
         permission_ids: Vec<String>,
+        queries: Vec<Query>,
     ) -> Result<i64> {
         if sequences.is_empty() {
             return Ok(0);
@@ -812,20 +817,65 @@ impl Sql {
         self.sync_write_hooks();
         let run = async {
             let name = self.filter(collection.id());
+            let filters: Vec<Query> = self
+                .main_row_queries(queries, collection)?
+                .into_iter()
+                .filter(|q| !q.method().is_vector())
+                .collect();
+
             let mut builder = self.simple_builder(&name, "")?;
             builder.filter(vec![utopia_query::Query::equal(storage::SEQUENCE, query_values(&sequences))]);
+            if !filters.is_empty() {
+                self.apply_filters(&mut builder, &filters, &name, &self.unqualified_table(&name)).await?;
+            }
             let result = builder.delete().map_err(crate::query::query_error)?;
             let mut statement = self.execute_result(&result, Some(Event::DocumentsDelete), "").await?;
             if !self.execute(&mut statement).await? {
                 return Err(Error::database("Failed to delete documents"));
             }
+
+            let deleted = statement.statement.row_count();
+            let mut permission_ids = permission_ids;
+            if !filters.is_empty() && deleted < sequences.len() as i64 {
+                permission_ids = self.without_stored_documents(&name, permission_ids).await?;
+            }
+
             let context = self.write_context(&[]);
             for hook in self.write_hooks() {
                 hook.after_document_delete(&name, &permission_ids, &context).await?;
             }
-            Ok::<_, Error>(statement.statement.row_count())
+            Ok::<_, Error>(deleted)
         };
         run.await.map_err(wrap)
+    }
+
+    /// The name a statement on the collection's table refers to its columns
+    /// by when it gives the table no alias (`unqualifiedTable()`).
+    fn unqualified_table(&self, name: &str) -> String {
+        let table = self.table_raw(name);
+        match table.rfind('.') {
+            Some(dot) => table[dot + 1..].to_owned(),
+            None => table,
+        }
+    }
+
+    /// The ids of documents no longer stored (`withoutStoredDocuments()`).
+    async fn without_stored_documents(&self, name: &str, document_ids: Vec<String>) -> Result<Vec<String>> {
+        if document_ids.is_empty() {
+            return Ok(Vec::new());
+        }
+        let mut builder = self.simple_builder(name, "")?;
+        builder.select(vec![storage::UID.to_owned()]);
+        let ids: Vec<Value> = document_ids.iter().map(|id| Value::Str(Str::from(id.as_str()))).collect();
+        builder.filter(vec![utopia_query::Query::equal(storage::UID, query_values(&ids))]);
+
+        let mut stored: Vec<String> = Vec::new();
+        for row in self.execute_select(&mut builder, Event::DocumentFind, name).await? {
+            if let Some(Value::Str(id)) = row.get_str(storage::UID) {
+                stored.push(String::from_utf8_lossy(id.as_bytes()).into_owned());
+            }
+        }
+        Ok(document_ids.into_iter().filter(|id| !stored.contains(id)).collect())
     }
 
     /// `getSequences()`: the stored sequences of the documents without one.

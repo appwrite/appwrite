@@ -268,6 +268,7 @@ pub(crate) fn method_type(method: Method) -> Option<MethodType> {
         | Method::CrossJoin
         | Method::FullOuterJoin
         | Method::NaturalJoin => MethodType::Join,
+        Method::Relationship => MethodType::Relationship,
         _ => return None,
     })
 }

@@ -1,6 +1,6 @@
 //! Validators of one query by kind (`Validator\Query\*`): filters, cursors,
 //! limits, offsets, orders, selections, joins, aggregates, groupings,
-//! `having` and `distinct`; and the joined collections they resolve
+//! `having`, `distinct` and relationship queries; and the joined collections they resolve
 //! attributes against ([`joined`]).
 //!
 //! Each validates a query (`check`, PHP's `isValid($query)`), and through
@@ -20,4 +20,5 @@ pub mod joined;
 pub mod limit;
 pub mod offset;
 pub mod order;
+pub mod relationship;
 pub mod select;

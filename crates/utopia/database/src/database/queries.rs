@@ -25,15 +25,18 @@ impl Database {
     /// casts them). With the collections a query set's joins read
     /// (`joined`, by alias), a filter on `alias.attribute` is converted by
     /// that collection's attribute, and the conditions of each join and of
-    /// each `having()` are converted too. Aggregates and selects are left as
-    /// they are.
+    /// each `having()` are converted too. Aggregates, selects and
+    /// relationship queries are left as they are; a relationship query
+    /// nested in a logical query or a `having()` is dropped, as it shapes
+    /// related documents and matches no row, and so is a logical query it
+    /// leaves empty (only an unvalidated read gets here with one).
     ///
     /// Fails ([`crate::Kind::Query`]) with the message of a datetime that
     /// does not parse.
     pub fn convert_queries(
         &self,
         collection: &Collection,
-        mut queries: Vec<Query>,
+        queries: Vec<Query>,
         joined: &[(String, Collection)],
     ) -> Result<Vec<Query>> {
         let map = self.attribute_map(collection, joined)?;
@@ -41,25 +44,31 @@ impl Database {
         let mut having_map: Option<AttributeMap> = None;
         let snapshot: Vec<(Method, String, String)> =
             queries.iter().map(|q| (q.method(), q.attribute().to_owned(), q.alias().to_owned())).collect();
-        for query in queries.iter_mut() {
+        let mut converted = Vec::with_capacity(queries.len());
+        for mut query in queries {
             let method = query.method();
-            if method.is_aggregate() || method == Method::Select {
+            if method.is_aggregate() || method == Method::Select || method == Method::Relationship {
+                converted.push(query);
                 continue;
             }
             if method.is_join() {
-                let values = convert_values(self, query.values().clone(), &map, nested)?;
+                let values = convert_values(self, query.values().clone(), &map, nested, false)?;
                 query.set_values(values);
+                converted.push(query);
                 continue;
             }
             if method == Method::Having {
                 let map = having_map.get_or_insert_with(|| with_aggregate_aliases(map.clone(), &snapshot));
-                let values = convert_values(self, query.values().clone(), map, nested)?;
+                let values = convert_values(self, query.values().clone(), map, nested, true)?;
                 query.set_values(values);
+                converted.push(query);
                 continue;
             }
-            convert_base(self, query, &map, nested)?;
+            if convert_base(self, &mut query, &map, nested)? {
+                converted.push(query);
+            }
         }
-        Ok(queries)
+        Ok(converted)
     }
 
     /// One query converted by the collection's attributes (`convertQuery()`).
@@ -128,34 +137,53 @@ fn with_aggregate_aliases(mut map: AttributeMap, queries: &[(Method, String, Str
 }
 
 /// The nested queries among `values` converted (`convertQueriesWithMap()` on
-/// the queries a value list holds).
+/// the queries a value list holds). With `drop`, a relationship query and a
+/// logical query left empty are dropped and the values are listed again, as
+/// PHP sets the list it returns; without, as for a join's conditions, whose
+/// list PHP converts in place, every value keeps its place.
 fn convert_values(
     db: &Database,
     values: utopia_query::Array,
     map: &AttributeMap,
     nested: bool,
+    drop: bool,
 ) -> Result<utopia_query::Array> {
     let mut out = utopia_query::Array::with_capacity(values.len());
     for (k, v) in values {
         let v = match v {
             QValue::Ext(Object::Query(mut q)) => {
-                convert_base(db, &mut q, map, nested)?;
+                if drop && q.method() == Method::Relationship {
+                    continue;
+                }
+                if !convert_base(db, &mut q, map, nested)? && drop {
+                    continue;
+                }
                 QValue::Ext(Object::Query(q))
             }
             other => other,
         };
-        out.set(k, v);
+        if drop {
+            let _ = out.push(v);
+        } else {
+            out.set(k, v);
+        }
     }
     Ok(out)
 }
 
-/// A query and, for a nested one, its children converted.
-fn convert_base(db: &Database, query: &mut BaseQuery, map: &AttributeMap, nested: bool) -> Result<()> {
+/// A query and, for a nested one, its children converted; `false` for a
+/// nested query whose children were all dropped, which is dropped too.
+fn convert_base(db: &Database, query: &mut BaseQuery, map: &AttributeMap, nested: bool) -> Result<bool> {
     if query.is_nested() {
-        let values = convert_values(db, query.values().clone(), map, nested)?;
+        let had_children = !query.values().is_empty();
+        let values = convert_values(db, query.values().clone(), map, nested, true)?;
+        if had_children && values.is_empty() {
+            return Ok(false);
+        }
         query.set_values(values);
     }
-    convert_query_with_map(db, query, map, nested)
+    convert_query_with_map(db, query, map, nested)?;
+    Ok(true)
 }
 
 /// `convertQueryWithMap()`.

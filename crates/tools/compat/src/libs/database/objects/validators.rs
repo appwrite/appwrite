@@ -45,6 +45,7 @@ use utopia_database::validator::query::aggregate::Aggregate;
 use utopia_database::validator::query::base::QueryValidator;
 use utopia_database::validator::query::cursor::Cursor;
 use utopia_database::validator::query::distinct::Distinct;
+use utopia_database::validator::query::relationship::Relationship as RelationshipValidator;
 use utopia_database::validator::query::filter::{Filter, FilterOptions};
 use utopia_database::validator::query::group_by::GroupBy;
 use utopia_database::validator::query::having::Having;
@@ -144,6 +145,8 @@ pub enum V {
     Having(Arc<Having>),
     /// `Validator\Query\Distinct`
     Distinct(Arc<Distinct>),
+    /// `Validator\Query\Relationship`
+    Relationship(Arc<RelationshipValidator>),
 }
 
 /// The same expression for every validator (`$x` is the `&Arc<T>`).
@@ -185,6 +188,7 @@ macro_rules! each {
             V::GroupBy($x) => $body,
             V::Having($x) => $body,
             V::Distinct($x) => $body,
+            V::Relationship($x) => $body,
         }
     };
 }
@@ -228,6 +232,7 @@ impl V {
             V::GroupBy(_) => "Validator\\Query\\GroupBy",
             V::Having(_) => "Validator\\Query\\Having",
             V::Distinct(_) => "Validator\\Query\\Distinct",
+            V::Relationship(_) => "Validator\\Query\\Relationship",
         }
     }
 
@@ -246,6 +251,7 @@ impl V {
             V::GroupBy(v) => v.clone(),
             V::Having(v) => v.clone(),
             V::Distinct(v) => v.clone(),
+            V::Relationship(v) => v.clone(),
             _ => return None,
         })
     }
@@ -631,6 +637,11 @@ pub async fn construct(class: &str, a: &Args) -> R<Option<Obj>> {
         ))),
         "Query\\Having" => V::Having(Arc::new(Having::default())),
         "Query\\Distinct" => V::Distinct(Arc::new(Distinct::default())),
+        "Query\\Relationship" => V::Relationship(Arc::new(RelationshipValidator::new(
+            &attributes(a, "attributes")?,
+            a.opt_int("maxUIDLength")?.unwrap_or(utopia_database::database::MAX_UID_DEFAULT_LENGTH),
+            a.bool_or("supportForAttributes", true)?,
+        ))),
         _ => return Ok(None),
     };
     Ok(Some(obj(v)))

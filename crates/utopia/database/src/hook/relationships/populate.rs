@@ -10,7 +10,7 @@
 
 use std::ops::Range;
 
-use utopia_query::Method;
+use utopia_query::{Method, OrderDirection};
 
 use super::{Relationships, attributes, junction, relationships, unique};
 use crate::collection::Collection;
@@ -19,6 +19,7 @@ use crate::document::{self, Document};
 use crate::error::Result;
 use crate::permission::PermissionType;
 use crate::query::Query;
+use crate::relationship::page::Page;
 use crate::relationship::{Relationship, RelationshipSide, RelationshipType};
 use crate::value::{self, Ext, Value};
 
@@ -129,6 +130,72 @@ fn group(groups: &mut Vec<(String, Vec<usize>)>, key: String, node: usize) {
     }
 }
 
+/// Sets each document's relationship `key` to its page of the related
+/// documents grouped under its id, and returns the related documents some
+/// page holds, which are the ones the next level populates
+/// (`assignPages()`).
+fn assign_pages(
+    tree: &mut Tree,
+    docs: &[usize],
+    key: &str,
+    related_by_document: &[(String, Vec<usize>)],
+    page: Option<&Page>,
+) -> Vec<usize> {
+    let mut assigned: Vec<usize> = Vec::new();
+    for &node in docs {
+        let id = tree.docs[node].id().to_owned();
+        let mut held =
+            related_by_document.iter().find(|(d, _)| *d == id).map(|(_, held)| held.clone()).unwrap_or_default();
+        if let Some(page) = page {
+            let ids: Vec<&str> = held.iter().map(|&h| tree.docs[h].id()).collect();
+            let window = page.window(&ids);
+            held = held[window].to_vec();
+        }
+        for &h in &held {
+            let held_id = tree.docs[h].id();
+            match assigned.iter().position(|&a| tree.docs[a].id() == held_id) {
+                Some(position) => assigned[position] = h,
+                None => assigned.push(h),
+            }
+        }
+        tree.link(node, key, Link::Many(held));
+    }
+    assigned
+}
+
+/// The orders with the tie break `find()` adds, so documents read in
+/// chunks sort as one read would return them (`withTieBreak()`).
+fn with_tie_break(
+    mut attributes: Vec<String>,
+    mut directions: Vec<OrderDirection>,
+) -> (Vec<String>, Vec<OrderDirection>) {
+    if attributes.iter().any(|a| a == document::ID || a == document::SEQUENCE) {
+        return (attributes, directions);
+    }
+    let leading_on_time =
+        attributes.first().is_some_and(|a| a == document::CREATED_AT || a == document::UPDATED_AT);
+    attributes.push(document::SEQUENCE.to_owned());
+    directions.push(if leading_on_time { directions[0] } else { OrderDirection::Asc });
+    (attributes, directions)
+}
+
+/// The nodes sorted by the attributes of their documents, as PHP's
+/// `usort()` with `<=>` sorts them (stable) (`sortDocuments()`).
+fn sort_documents(docs: &[Document], nodes: &mut [usize], attributes: &[String], directions: &[OrderDirection]) {
+    nodes.sort_by(|&left, &right| {
+        for (attribute, direction) in attributes.iter().zip(directions) {
+            let null = Value::Null;
+            let l = docs[left].get(attribute).unwrap_or(&null);
+            let r = docs[right].get(attribute).unwrap_or(&null);
+            let comparison = l.cmp_php(r);
+            if comparison != std::cmp::Ordering::Equal {
+                return if *direction == OrderDirection::Desc { comparison.reverse() } else { comparison };
+            }
+        }
+        std::cmp::Ordering::Equal
+    });
+}
+
 impl Relationships {
     /// The documents with their related documents populated, from
     /// `fetch_depth` down to [`RELATION_MAX_DEPTH`], as `selects` select
@@ -140,11 +207,27 @@ impl Relationships {
         fetch_depth: i64,
         selects: Selects,
     ) -> BoxFuture<'a, Result<Vec<Document>>> {
+        self.populate_selected(documents, collection, fetch_depth, selects, None)
+    }
+
+    /// [`Relationships::populate_documents`] with the queries for each
+    /// relationship's related documents (`selects`), and whether the read
+    /// selects attributes (`explicit`), so a relationship it does not
+    /// select is left unpopulated; `None` when `selects` holds only
+    /// selects (`populateDocuments()`'s `$hasExplicitSelects`).
+    pub(crate) fn populate_selected<'a>(
+        &'a self,
+        documents: Vec<Document>,
+        collection: &'a Collection,
+        fetch_depth: i64,
+        selects: Selects,
+        explicit: Option<bool>,
+    ) -> BoxFuture<'a, Result<Vec<Document>>> {
         Box::pin(self.in_batch_population.with(true, async move {
             let db = self.database()?;
             let count = documents.len();
             let mut tree = Tree::new(documents);
-            let explicit = !selects.is_empty();
+            let explicit = explicit.unwrap_or(!selects.is_empty());
             let mut queue = vec![Level {
                 docs: (0..count).collect(),
                 collection: collection.clone(),
@@ -205,12 +288,13 @@ impl Relationships {
                                 let mut relationship_queries = if nested { queries.clone() } else { Vec::new() };
                                 let next_selects = self
                                     .process_queries(&relationships(&related_collection)?, &mut relationship_queries)?;
+                                let selects = relationship_queries.iter().any(|q| q.method() == Method::Select);
                                 next.push(Level {
                                     docs: related.clone(),
                                     collection: related_collection,
                                     selects: next_selects,
                                     skip_key: two_way.then(|| two_way_key.clone()),
-                                    explicit: level.explicit,
+                                    explicit: level.explicit || selects,
                                 });
                             }
                         }
@@ -394,6 +478,7 @@ impl Relationships {
         }
 
         let (select_queries, other_queries) = split_selects(queries);
+        let (page, other_queries) = Page::from(other_queries);
         let found = self.read_related(db, related_collection.id(), &two_way_key, &ids, &other_queries).await?;
         let range = tree.add(found);
 
@@ -407,13 +492,7 @@ impl Relationships {
         let selects = self.selects_of_related(&related_collection, &select_queries)?;
         db.apply_select_filters_to_documents(&mut tree.docs[range.clone()], &selects);
 
-        for &node in docs {
-            let id = tree.docs[node].id().to_owned();
-            let held = by_holder.iter().find(|(k, _)| *k == id).map(|(_, h)| h.clone()).unwrap_or_default();
-            tree.link(node, key, Link::Many(held));
-        }
-
-        Ok(range.collect())
+        Ok(assign_pages(tree, docs, key, &by_holder, page.as_ref()))
     }
 
     /// Many-to-many population, through the junction collection
@@ -470,14 +549,14 @@ impl Relationships {
         }
 
         let (select_queries, other_queries) = split_selects(queries);
+        let (page, other_queries) = Page::from(other_queries);
 
         let mut related: Vec<(String, Vec<usize>)> = Vec::new();
-        let mut range = 0..0;
         if !related_ids.is_empty() {
             let found = self
                 .read_related(db, related_collection.id(), document::ID, &unique(related_ids), &other_queries)
                 .await?;
-            range = tree.add(found);
+            let range = tree.add(found);
 
             let mut by_id: Vec<(String, usize)> = Vec::new();
             for node in range.clone() {
@@ -491,9 +570,23 @@ impl Relationships {
             let selects = self.selects_of_related(&related_collection, &select_queries)?;
             db.apply_select_filters_to_documents(&mut tree.docs[range.clone()], &selects);
 
+            // Chunks are read and ordered one by one, so an order the queries
+            // ask for is applied again over all of them, with find()'s tie
+            // break; without one, each document keeps its junction order.
+            let orders = Query::group_by_type(&other_queries)?;
+            let ordered = !orders.order_types.is_empty();
+            let mut found: Vec<usize> = range.collect();
+            if ordered && !orders.order_types.contains(&OrderDirection::Random) {
+                let (attributes, directions) = with_tie_break(orders.order_attributes, orders.order_types);
+                sort_documents(&tree.docs, &mut found, &attributes, &directions);
+            }
+
             for (document_id, ids) in by_document {
-                let held =
-                    ids.iter().filter_map(|id| by_id.iter().find(|(i, _)| i == id).map(|&(_, node)| node)).collect();
+                let held: Vec<usize> = if ordered {
+                    found.iter().copied().filter(|&node| ids.iter().any(|id| id == tree.docs[node].id())).collect()
+                } else {
+                    ids.iter().filter_map(|id| by_id.iter().find(|(i, _)| i == id).map(|&(_, node)| node)).collect()
+                };
                 match related.iter_mut().find(|(d, _)| *d == document_id) {
                     Some((_, h)) => *h = held,
                     None => related.push((document_id, held)),
@@ -501,12 +594,6 @@ impl Relationships {
             }
         }
 
-        for &node in docs {
-            let id = tree.docs[node].id().to_owned();
-            let held = related.iter().find(|(d, _)| *d == id).map(|(_, h)| h.clone()).unwrap_or_default();
-            tree.link(node, key, Link::Many(held));
-        }
-
-        Ok(range.collect())
+        Ok(assign_pages(tree, docs, key, &related, page.as_ref()))
     }
 }
