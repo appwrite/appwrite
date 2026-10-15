@@ -64,6 +64,34 @@ export function getFunctionIntervalMinimum(
   return toPlanLimitNumber(plan?.functionsIntervalMinimum)
 }
 
+/**
+ * Whether the plan allows cron schedules. Free and Education only allow
+ * intervals; plans that predate `functionsAllowCron` allow cron. A plan that
+ * has not loaded yet allows nothing new, and neither does the self-hosted plan
+ * on a console with billing, where it is the fallback for a failed plan request.
+ */
+export function isCronAllowed(
+  plan: object | null | undefined,
+  billing: boolean,
+): boolean {
+  if (!plan) return false
+  if (billing && '$id' in plan && plan.$id === 'self-hosted') return false
+  return !('functionsAllowCron' in plan && plan.functionsAllowCron === false)
+}
+
+/**
+ * Whether a cron schedule can be saved. A function whose plan no longer allows
+ * cron may keep resending its stored expression until it moves to an interval.
+ */
+export function isCronScheduleAllowed(
+  schedule: string,
+  allowed: boolean,
+  saved: string,
+): boolean {
+  if (schedule.trim() === '') return false
+  return allowed || schedule === saved
+}
+
 export function isIntervalBelowMinimum(
   minutes: number,
   minimum: number,

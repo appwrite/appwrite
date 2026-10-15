@@ -706,6 +706,16 @@ export const heFunctionsDictionary: Record<string, string> = {
   'Your plan supports intervals of {minutes} minutes or longer.':
     'התוכנית שלכם תומכת במרווחים של {minutes} דקות או יותר.',
   'Upgrade to unlock': 'שדרגו כדי לפתוח',
+  'Cron schedules are available on paid plans.':
+    'תזמוני Cron זמינים בתוכניות בתשלום.',
+  'to use cron.': 'כדי להשתמש ב-Cron.',
+  'Cron schedules are not available on your plan':
+    'תזמוני Cron אינם זמינים בתוכנית שלכם',
+  'This function keeps running on its current cron until you switch it to an interval.':
+    'הפונקציה ממשיכה לרוץ לפי ה-Cron הנוכחי שלה עד שתעבירו אותה למרווח.',
+  'to edit cron schedules.': 'כדי לערוך תזמוני Cron.',
+  'Appwrite picks a fixed time within each interval for this function to spread load.':
+    'Appwrite בוחרת זמן קבוע בתוך כל מרווח להרצת הפונקציה הזו כדי לפזר את העומס.',
   'Interval length': 'אורך המרווח',
   'Interval unit': 'יחידת המרווח',
   'Appwrite picks a fixed time within each interval for this function to spread load. Use cron if you need exact times.':
