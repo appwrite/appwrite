@@ -1962,5 +1962,1568 @@
         ],
         "result": 1,
         "error": null
+    },
+    {
+        "step": "upsertop_increment",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO `ns_docs` (`_createdAt`, `_permissions`, `_uid`, `_updatedAt`, `active`, `count`, `note`, `price`, `tags`, `title`)\n            VALUES (:key_0, :key_1, :key_2, :key_3, :key_4, :key_5, :key_6, :key_7, :key_8, :key_9)\n            ON CONFLICT (_uid) DO UPDATE\n                SET `_permissions` = excluded.`_permissions`, `_updatedAt` = excluded.`_updatedAt`, `active` = excluded.`active`, `count` = COALESCE(`count`, 0) + :op_0, `note` = excluded.`note`, `price` = excluded.`price`, `tags` = excluded.`tags`, `title` = excluded.`title`",
+                "b": []
+            }
+        ],
+        "result": [
+            {
+                "$id": "doc2",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "doc2",
+                "count": {},
+                "price": 2.5,
+                "active": true,
+                "tags": [
+                    "u"
+                ],
+                "note": "n"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertnew_increment",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO `ns_docs` (`_createdAt`, `_permissions`, `_uid`, `_updatedAt`, `active`, `count`, `date`, `note`, `price`, `tags`, `title`)\n            VALUES (:key_0, :key_1, :key_2, :key_3, :key_4, :key_5, :key_6, :key_7, :key_8, :key_9, :key_10)\n            ON CONFLICT (_uid) DO UPDATE\n                SET `_permissions` = excluded.`_permissions`, `_updatedAt` = excluded.`_updatedAt`, `active` = excluded.`active`, `count` = COALESCE(`count`, 0) + :op_0, `date` = excluded.`date`, `note` = excluded.`note`, `price` = excluded.`price`, `tags` = excluded.`tags`, `title` = excluded.`title`",
+                "b": []
+            }
+        ],
+        "result": [
+            {
+                "$id": "new_increment",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "new_increment",
+                "count": {},
+                "price": 2.5,
+                "active": true,
+                "tags": [
+                    "p",
+                    "q",
+                    "p"
+                ],
+                "note": "n",
+                "date": "2024-06-01 00:00:00.000"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertop_incrementMax",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO `ns_docs` (`_createdAt`, `_permissions`, `_uid`, `_updatedAt`, `active`, `count`, `note`, `price`, `tags`, `title`)\n            VALUES (:key_0, :key_1, :key_2, :key_3, :key_4, :key_5, :key_6, :key_7, :key_8, :key_9)\n            ON CONFLICT (_uid) DO UPDATE\n                SET `_permissions` = excluded.`_permissions`, `_updatedAt` = excluded.`_updatedAt`, `active` = excluded.`active`, `count` = CASE\n                        WHEN COALESCE(`count`, 0) > :op_1 - :op_0 THEN COALESCE(`count`, 0)\n                        ELSE COALESCE(`count`, 0) + :op_0\n                    END, `note` = excluded.`note`, `price` = excluded.`price`, `tags` = excluded.`tags`, `title` = excluded.`title`",
+                "b": []
+            }
+        ],
+        "result": [
+            {
+                "$id": "doc2",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "doc2",
+                "count": {},
+                "price": 2.5,
+                "active": true,
+                "tags": [
+                    "u"
+                ],
+                "note": "n"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertnew_incrementMax",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO `ns_docs` (`_createdAt`, `_permissions`, `_uid`, `_updatedAt`, `active`, `count`, `date`, `note`, `price`, `tags`, `title`)\n            VALUES (:key_0, :key_1, :key_2, :key_3, :key_4, :key_5, :key_6, :key_7, :key_8, :key_9, :key_10)\n            ON CONFLICT (_uid) DO UPDATE\n                SET `_permissions` = excluded.`_permissions`, `_updatedAt` = excluded.`_updatedAt`, `active` = excluded.`active`, `count` = CASE\n                        WHEN COALESCE(`count`, 0) > :op_1 - :op_0 THEN COALESCE(`count`, 0)\n                        ELSE COALESCE(`count`, 0) + :op_0\n                    END, `date` = excluded.`date`, `note` = excluded.`note`, `price` = excluded.`price`, `tags` = excluded.`tags`, `title` = excluded.`title`",
+                "b": []
+            }
+        ],
+        "result": [
+            {
+                "$id": "new_incrementMax",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "new_incrementMax",
+                "count": {},
+                "price": 2.5,
+                "active": true,
+                "tags": [
+                    "p",
+                    "q",
+                    "p"
+                ],
+                "note": "n",
+                "date": "2024-06-01 00:00:00.000"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertop_decrement",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO `ns_docs` (`_createdAt`, `_permissions`, `_uid`, `_updatedAt`, `active`, `count`, `note`, `price`, `tags`, `title`)\n            VALUES (:key_0, :key_1, :key_2, :key_3, :key_4, :key_5, :key_6, :key_7, :key_8, :key_9)\n            ON CONFLICT (_uid) DO UPDATE\n                SET `_permissions` = excluded.`_permissions`, `_updatedAt` = excluded.`_updatedAt`, `active` = excluded.`active`, `count` = COALESCE(`count`, 0) - :op_0, `note` = excluded.`note`, `price` = excluded.`price`, `tags` = excluded.`tags`, `title` = excluded.`title`",
+                "b": []
+            }
+        ],
+        "result": [
+            {
+                "$id": "doc2",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "doc2",
+                "count": {},
+                "price": 2.5,
+                "active": true,
+                "tags": [
+                    "u"
+                ],
+                "note": "n"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertnew_decrement",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO `ns_docs` (`_createdAt`, `_permissions`, `_uid`, `_updatedAt`, `active`, `count`, `date`, `note`, `price`, `tags`, `title`)\n            VALUES (:key_0, :key_1, :key_2, :key_3, :key_4, :key_5, :key_6, :key_7, :key_8, :key_9, :key_10)\n            ON CONFLICT (_uid) DO UPDATE\n                SET `_permissions` = excluded.`_permissions`, `_updatedAt` = excluded.`_updatedAt`, `active` = excluded.`active`, `count` = COALESCE(`count`, 0) - :op_0, `date` = excluded.`date`, `note` = excluded.`note`, `price` = excluded.`price`, `tags` = excluded.`tags`, `title` = excluded.`title`",
+                "b": []
+            }
+        ],
+        "result": [
+            {
+                "$id": "new_decrement",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "new_decrement",
+                "count": {},
+                "price": 2.5,
+                "active": true,
+                "tags": [
+                    "p",
+                    "q",
+                    "p"
+                ],
+                "note": "n",
+                "date": "2024-06-01 00:00:00.000"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertop_decrementMin",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO `ns_docs` (`_createdAt`, `_permissions`, `_uid`, `_updatedAt`, `active`, `count`, `note`, `price`, `tags`, `title`)\n            VALUES (:key_0, :key_1, :key_2, :key_3, :key_4, :key_5, :key_6, :key_7, :key_8, :key_9)\n            ON CONFLICT (_uid) DO UPDATE\n                SET `_permissions` = excluded.`_permissions`, `_updatedAt` = excluded.`_updatedAt`, `active` = excluded.`active`, `count` = CASE\n                        WHEN COALESCE(`count`, 0) < :op_1 + :op_0 THEN COALESCE(`count`, 0)\n                        ELSE COALESCE(`count`, 0) - :op_0\n                    END, `note` = excluded.`note`, `price` = excluded.`price`, `tags` = excluded.`tags`, `title` = excluded.`title`",
+                "b": []
+            }
+        ],
+        "result": [
+            {
+                "$id": "doc2",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "doc2",
+                "count": {},
+                "price": 2.5,
+                "active": true,
+                "tags": [
+                    "u"
+                ],
+                "note": "n"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertnew_decrementMin",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO `ns_docs` (`_createdAt`, `_permissions`, `_uid`, `_updatedAt`, `active`, `count`, `date`, `note`, `price`, `tags`, `title`)\n            VALUES (:key_0, :key_1, :key_2, :key_3, :key_4, :key_5, :key_6, :key_7, :key_8, :key_9, :key_10)\n            ON CONFLICT (_uid) DO UPDATE\n                SET `_permissions` = excluded.`_permissions`, `_updatedAt` = excluded.`_updatedAt`, `active` = excluded.`active`, `count` = CASE\n                        WHEN COALESCE(`count`, 0) < :op_1 + :op_0 THEN COALESCE(`count`, 0)\n                        ELSE COALESCE(`count`, 0) - :op_0\n                    END, `date` = excluded.`date`, `note` = excluded.`note`, `price` = excluded.`price`, `tags` = excluded.`tags`, `title` = excluded.`title`",
+                "b": []
+            }
+        ],
+        "result": [
+            {
+                "$id": "new_decrementMin",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "new_decrementMin",
+                "count": {},
+                "price": 2.5,
+                "active": true,
+                "tags": [
+                    "p",
+                    "q",
+                    "p"
+                ],
+                "note": "n",
+                "date": "2024-06-01 00:00:00.000"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertop_multiply",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO `ns_docs` (`_createdAt`, `_permissions`, `_uid`, `_updatedAt`, `active`, `count`, `note`, `price`, `tags`, `title`)\n            VALUES (:key_0, :key_1, :key_2, :key_3, :key_4, :key_5, :key_6, :key_7, :key_8, :key_9)\n            ON CONFLICT (_uid) DO UPDATE\n                SET `_permissions` = excluded.`_permissions`, `_updatedAt` = excluded.`_updatedAt`, `active` = excluded.`active`, `count` = excluded.`count`, `note` = excluded.`note`, `price` = COALESCE(`price`, 0) * :op_0, `tags` = excluded.`tags`, `title` = excluded.`title`",
+                "b": []
+            }
+        ],
+        "result": [
+            {
+                "$id": "doc2",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "doc2",
+                "count": 4,
+                "price": {},
+                "active": true,
+                "tags": [
+                    "u"
+                ],
+                "note": "n"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertnew_multiply",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO `ns_docs` (`_createdAt`, `_permissions`, `_uid`, `_updatedAt`, `active`, `count`, `date`, `note`, `price`, `tags`, `title`)\n            VALUES (:key_0, :key_1, :key_2, :key_3, :key_4, :key_5, :key_6, :key_7, :key_8, :key_9, :key_10)\n            ON CONFLICT (_uid) DO UPDATE\n                SET `_permissions` = excluded.`_permissions`, `_updatedAt` = excluded.`_updatedAt`, `active` = excluded.`active`, `count` = excluded.`count`, `date` = excluded.`date`, `note` = excluded.`note`, `price` = COALESCE(`price`, 0) * :op_0, `tags` = excluded.`tags`, `title` = excluded.`title`",
+                "b": []
+            }
+        ],
+        "result": [
+            {
+                "$id": "new_multiply",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "new_multiply",
+                "count": 4,
+                "price": {},
+                "active": true,
+                "tags": [
+                    "p",
+                    "q",
+                    "p"
+                ],
+                "note": "n",
+                "date": "2024-06-01 00:00:00.000"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertop_multiplyMax",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO `ns_docs` (`_createdAt`, `_permissions`, `_uid`, `_updatedAt`, `active`, `count`, `note`, `price`, `tags`, `title`)\n            VALUES (:key_0, :key_1, :key_2, :key_3, :key_4, :key_5, :key_6, :key_7, :key_8, :key_9)\n            ON CONFLICT (_uid) DO UPDATE\n                SET `_permissions` = excluded.`_permissions`, `_updatedAt` = excluded.`_updatedAt`, `active` = excluded.`active`, `count` = excluded.`count`, `note` = excluded.`note`, `price` = CASE\n                        WHEN :op_0 > 0 AND COALESCE(`price`, 0) > :op_1 / :op_0 THEN COALESCE(`price`, 0)\n                        WHEN :op_0 < 0 AND COALESCE(`price`, 0) < :op_1 / :op_0 THEN COALESCE(`price`, 0)\n                        ELSE COALESCE(`price`, 0) * :op_0\n                    END, `tags` = excluded.`tags`, `title` = excluded.`title`",
+                "b": []
+            }
+        ],
+        "result": [
+            {
+                "$id": "doc2",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "doc2",
+                "count": 4,
+                "price": {},
+                "active": true,
+                "tags": [
+                    "u"
+                ],
+                "note": "n"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertnew_multiplyMax",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO `ns_docs` (`_createdAt`, `_permissions`, `_uid`, `_updatedAt`, `active`, `count`, `date`, `note`, `price`, `tags`, `title`)\n            VALUES (:key_0, :key_1, :key_2, :key_3, :key_4, :key_5, :key_6, :key_7, :key_8, :key_9, :key_10)\n            ON CONFLICT (_uid) DO UPDATE\n                SET `_permissions` = excluded.`_permissions`, `_updatedAt` = excluded.`_updatedAt`, `active` = excluded.`active`, `count` = excluded.`count`, `date` = excluded.`date`, `note` = excluded.`note`, `price` = CASE\n                        WHEN :op_0 > 0 AND COALESCE(`price`, 0) > :op_1 / :op_0 THEN COALESCE(`price`, 0)\n                        WHEN :op_0 < 0 AND COALESCE(`price`, 0) < :op_1 / :op_0 THEN COALESCE(`price`, 0)\n                        ELSE COALESCE(`price`, 0) * :op_0\n                    END, `tags` = excluded.`tags`, `title` = excluded.`title`",
+                "b": []
+            }
+        ],
+        "result": [
+            {
+                "$id": "new_multiplyMax",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "new_multiplyMax",
+                "count": 4,
+                "price": {},
+                "active": true,
+                "tags": [
+                    "p",
+                    "q",
+                    "p"
+                ],
+                "note": "n",
+                "date": "2024-06-01 00:00:00.000"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertop_divide",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO `ns_docs` (`_createdAt`, `_permissions`, `_uid`, `_updatedAt`, `active`, `count`, `note`, `price`, `tags`, `title`)\n            VALUES (:key_0, :key_1, :key_2, :key_3, :key_4, :key_5, :key_6, :key_7, :key_8, :key_9)\n            ON CONFLICT (_uid) DO UPDATE\n                SET `_permissions` = excluded.`_permissions`, `_updatedAt` = excluded.`_updatedAt`, `active` = excluded.`active`, `count` = excluded.`count`, `note` = excluded.`note`, `price` = COALESCE(`price`, 0) / :op_0, `tags` = excluded.`tags`, `title` = excluded.`title`",
+                "b": []
+            }
+        ],
+        "result": [
+            {
+                "$id": "doc2",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "doc2",
+                "count": 4,
+                "price": {},
+                "active": true,
+                "tags": [
+                    "u"
+                ],
+                "note": "n"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertnew_divide",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO `ns_docs` (`_createdAt`, `_permissions`, `_uid`, `_updatedAt`, `active`, `count`, `date`, `note`, `price`, `tags`, `title`)\n            VALUES (:key_0, :key_1, :key_2, :key_3, :key_4, :key_5, :key_6, :key_7, :key_8, :key_9, :key_10)\n            ON CONFLICT (_uid) DO UPDATE\n                SET `_permissions` = excluded.`_permissions`, `_updatedAt` = excluded.`_updatedAt`, `active` = excluded.`active`, `count` = excluded.`count`, `date` = excluded.`date`, `note` = excluded.`note`, `price` = COALESCE(`price`, 0) / :op_0, `tags` = excluded.`tags`, `title` = excluded.`title`",
+                "b": []
+            }
+        ],
+        "result": [
+            {
+                "$id": "new_divide",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "new_divide",
+                "count": 4,
+                "price": {},
+                "active": true,
+                "tags": [
+                    "p",
+                    "q",
+                    "p"
+                ],
+                "note": "n",
+                "date": "2024-06-01 00:00:00.000"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertop_divideMin",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO `ns_docs` (`_createdAt`, `_permissions`, `_uid`, `_updatedAt`, `active`, `count`, `note`, `price`, `tags`, `title`)\n            VALUES (:key_0, :key_1, :key_2, :key_3, :key_4, :key_5, :key_6, :key_7, :key_8, :key_9)\n            ON CONFLICT (_uid) DO UPDATE\n                SET `_permissions` = excluded.`_permissions`, `_updatedAt` = excluded.`_updatedAt`, `active` = excluded.`active`, `count` = excluded.`count`, `note` = excluded.`note`, `price` = CASE\n                        WHEN :op_0 != 0 AND COALESCE(`price`, 0) / :op_0 < :op_1 THEN COALESCE(`price`, 0)\n                        ELSE COALESCE(`price`, 0) / :op_0\n                    END, `tags` = excluded.`tags`, `title` = excluded.`title`",
+                "b": []
+            }
+        ],
+        "result": [
+            {
+                "$id": "doc2",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "doc2",
+                "count": 4,
+                "price": {},
+                "active": true,
+                "tags": [
+                    "u"
+                ],
+                "note": "n"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertnew_divideMin",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO `ns_docs` (`_createdAt`, `_permissions`, `_uid`, `_updatedAt`, `active`, `count`, `date`, `note`, `price`, `tags`, `title`)\n            VALUES (:key_0, :key_1, :key_2, :key_3, :key_4, :key_5, :key_6, :key_7, :key_8, :key_9, :key_10)\n            ON CONFLICT (_uid) DO UPDATE\n                SET `_permissions` = excluded.`_permissions`, `_updatedAt` = excluded.`_updatedAt`, `active` = excluded.`active`, `count` = excluded.`count`, `date` = excluded.`date`, `note` = excluded.`note`, `price` = CASE\n                        WHEN :op_0 != 0 AND COALESCE(`price`, 0) / :op_0 < :op_1 THEN COALESCE(`price`, 0)\n                        ELSE COALESCE(`price`, 0) / :op_0\n                    END, `tags` = excluded.`tags`, `title` = excluded.`title`",
+                "b": []
+            }
+        ],
+        "result": [
+            {
+                "$id": "new_divideMin",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "new_divideMin",
+                "count": 4,
+                "price": {},
+                "active": true,
+                "tags": [
+                    "p",
+                    "q",
+                    "p"
+                ],
+                "note": "n",
+                "date": "2024-06-01 00:00:00.000"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertop_modulo",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO `ns_docs` (`_createdAt`, `_permissions`, `_uid`, `_updatedAt`, `active`, `count`, `note`, `price`, `tags`, `title`)\n            VALUES (:key_0, :key_1, :key_2, :key_3, :key_4, :key_5, :key_6, :key_7, :key_8, :key_9)\n            ON CONFLICT (_uid) DO UPDATE\n                SET `_permissions` = excluded.`_permissions`, `_updatedAt` = excluded.`_updatedAt`, `active` = excluded.`active`, `count` = COALESCE(`count`, 0) % :op_0, `note` = excluded.`note`, `price` = excluded.`price`, `tags` = excluded.`tags`, `title` = excluded.`title`",
+                "b": []
+            }
+        ],
+        "result": [
+            {
+                "$id": "doc2",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "doc2",
+                "count": {},
+                "price": 2.5,
+                "active": true,
+                "tags": [
+                    "u"
+                ],
+                "note": "n"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertnew_modulo",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO `ns_docs` (`_createdAt`, `_permissions`, `_uid`, `_updatedAt`, `active`, `count`, `date`, `note`, `price`, `tags`, `title`)\n            VALUES (:key_0, :key_1, :key_2, :key_3, :key_4, :key_5, :key_6, :key_7, :key_8, :key_9, :key_10)\n            ON CONFLICT (_uid) DO UPDATE\n                SET `_permissions` = excluded.`_permissions`, `_updatedAt` = excluded.`_updatedAt`, `active` = excluded.`active`, `count` = COALESCE(`count`, 0) % :op_0, `date` = excluded.`date`, `note` = excluded.`note`, `price` = excluded.`price`, `tags` = excluded.`tags`, `title` = excluded.`title`",
+                "b": []
+            }
+        ],
+        "result": [
+            {
+                "$id": "new_modulo",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "new_modulo",
+                "count": {},
+                "price": 2.5,
+                "active": true,
+                "tags": [
+                    "p",
+                    "q",
+                    "p"
+                ],
+                "note": "n",
+                "date": "2024-06-01 00:00:00.000"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertop_power",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO `ns_docs` (`_createdAt`, `_permissions`, `_uid`, `_updatedAt`, `active`, `count`, `note`, `price`, `tags`, `title`)\n            VALUES (:key_0, :key_1, :key_2, :key_3, :key_4, :key_5, :key_6, :key_7, :key_8, :key_9)\n            ON CONFLICT (_uid) DO UPDATE\n                SET `_permissions` = excluded.`_permissions`, `_updatedAt` = excluded.`_updatedAt`, `active` = excluded.`active`, `count` = POWER(COALESCE(`count`, 0), :op_0), `note` = excluded.`note`, `price` = excluded.`price`, `tags` = excluded.`tags`, `title` = excluded.`title`",
+                "b": []
+            }
+        ],
+        "result": [
+            {
+                "$id": "doc2",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "doc2",
+                "count": {},
+                "price": 2.5,
+                "active": true,
+                "tags": [
+                    "u"
+                ],
+                "note": "n"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertnew_power",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO `ns_docs` (`_createdAt`, `_permissions`, `_uid`, `_updatedAt`, `active`, `count`, `date`, `note`, `price`, `tags`, `title`)\n            VALUES (:key_0, :key_1, :key_2, :key_3, :key_4, :key_5, :key_6, :key_7, :key_8, :key_9, :key_10)\n            ON CONFLICT (_uid) DO UPDATE\n                SET `_permissions` = excluded.`_permissions`, `_updatedAt` = excluded.`_updatedAt`, `active` = excluded.`active`, `count` = POWER(COALESCE(`count`, 0), :op_0), `date` = excluded.`date`, `note` = excluded.`note`, `price` = excluded.`price`, `tags` = excluded.`tags`, `title` = excluded.`title`",
+                "b": []
+            }
+        ],
+        "result": [
+            {
+                "$id": "new_power",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "new_power",
+                "count": {},
+                "price": 2.5,
+                "active": true,
+                "tags": [
+                    "p",
+                    "q",
+                    "p"
+                ],
+                "note": "n",
+                "date": "2024-06-01 00:00:00.000"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertop_powerMax",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO `ns_docs` (`_createdAt`, `_permissions`, `_uid`, `_updatedAt`, `active`, `count`, `note`, `price`, `tags`, `title`)\n            VALUES (:key_0, :key_1, :key_2, :key_3, :key_4, :key_5, :key_6, :key_7, :key_8, :key_9)\n            ON CONFLICT (_uid) DO UPDATE\n                SET `_permissions` = excluded.`_permissions`, `_updatedAt` = excluded.`_updatedAt`, `active` = excluded.`active`, `count` = CASE WHEN COALESCE(`count`, 0) <> 0 AND :op_0 * LN(ABS(COALESCE(`count`, 0))) > LN(:op_1) THEN COALESCE(`count`, 0) ELSE POWER(COALESCE(`count`, 0), :op_0) END, `note` = excluded.`note`, `price` = excluded.`price`, `tags` = excluded.`tags`, `title` = excluded.`title`",
+                "b": []
+            }
+        ],
+        "result": [
+            {
+                "$id": "doc2",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "doc2",
+                "count": {},
+                "price": 2.5,
+                "active": true,
+                "tags": [
+                    "u"
+                ],
+                "note": "n"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertnew_powerMax",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO `ns_docs` (`_createdAt`, `_permissions`, `_uid`, `_updatedAt`, `active`, `count`, `date`, `note`, `price`, `tags`, `title`)\n            VALUES (:key_0, :key_1, :key_2, :key_3, :key_4, :key_5, :key_6, :key_7, :key_8, :key_9, :key_10)\n            ON CONFLICT (_uid) DO UPDATE\n                SET `_permissions` = excluded.`_permissions`, `_updatedAt` = excluded.`_updatedAt`, `active` = excluded.`active`, `count` = CASE WHEN COALESCE(`count`, 0) <> 0 AND :op_0 * LN(ABS(COALESCE(`count`, 0))) > LN(:op_1) THEN COALESCE(`count`, 0) ELSE POWER(COALESCE(`count`, 0), :op_0) END, `date` = excluded.`date`, `note` = excluded.`note`, `price` = excluded.`price`, `tags` = excluded.`tags`, `title` = excluded.`title`",
+                "b": []
+            }
+        ],
+        "result": [
+            {
+                "$id": "new_powerMax",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "new_powerMax",
+                "count": {},
+                "price": 2.5,
+                "active": true,
+                "tags": [
+                    "p",
+                    "q",
+                    "p"
+                ],
+                "note": "n",
+                "date": "2024-06-01 00:00:00.000"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertop_powerOddMax",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO `ns_docs` (`_createdAt`, `_permissions`, `_uid`, `_updatedAt`, `active`, `count`, `note`, `price`, `tags`, `title`)\n            VALUES (:key_0, :key_1, :key_2, :key_3, :key_4, :key_5, :key_6, :key_7, :key_8, :key_9)\n            ON CONFLICT (_uid) DO UPDATE\n                SET `_permissions` = excluded.`_permissions`, `_updatedAt` = excluded.`_updatedAt`, `active` = excluded.`active`, `count` = CASE WHEN COALESCE(`count`, 0) > 0 AND :op_0 * LN(COALESCE(`count`, 0)) > LN(:op_1) THEN COALESCE(`count`, 0) ELSE POWER(COALESCE(`count`, 0), :op_0) END, `note` = excluded.`note`, `price` = excluded.`price`, `tags` = excluded.`tags`, `title` = excluded.`title`",
+                "b": []
+            }
+        ],
+        "result": [
+            {
+                "$id": "doc2",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "doc2",
+                "count": {},
+                "price": 2.5,
+                "active": true,
+                "tags": [
+                    "u"
+                ],
+                "note": "n"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertnew_powerOddMax",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO `ns_docs` (`_createdAt`, `_permissions`, `_uid`, `_updatedAt`, `active`, `count`, `date`, `note`, `price`, `tags`, `title`)\n            VALUES (:key_0, :key_1, :key_2, :key_3, :key_4, :key_5, :key_6, :key_7, :key_8, :key_9, :key_10)\n            ON CONFLICT (_uid) DO UPDATE\n                SET `_permissions` = excluded.`_permissions`, `_updatedAt` = excluded.`_updatedAt`, `active` = excluded.`active`, `count` = CASE WHEN COALESCE(`count`, 0) > 0 AND :op_0 * LN(COALESCE(`count`, 0)) > LN(:op_1) THEN COALESCE(`count`, 0) ELSE POWER(COALESCE(`count`, 0), :op_0) END, `date` = excluded.`date`, `note` = excluded.`note`, `price` = excluded.`price`, `tags` = excluded.`tags`, `title` = excluded.`title`",
+                "b": []
+            }
+        ],
+        "result": [
+            {
+                "$id": "new_powerOddMax",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "new_powerOddMax",
+                "count": {},
+                "price": 2.5,
+                "active": true,
+                "tags": [
+                    "p",
+                    "q",
+                    "p"
+                ],
+                "note": "n",
+                "date": "2024-06-01 00:00:00.000"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertop_stringConcat",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO `ns_docs` (`_createdAt`, `_permissions`, `_uid`, `_updatedAt`, `active`, `count`, `note`, `price`, `tags`, `title`)\n            VALUES (:key_0, :key_1, :key_2, :key_3, :key_4, :key_5, :key_6, :key_7, :key_8, :key_9)\n            ON CONFLICT (_uid) DO UPDATE\n                SET `_permissions` = excluded.`_permissions`, `_updatedAt` = excluded.`_updatedAt`, `active` = excluded.`active`, `count` = excluded.`count`, `note` = excluded.`note`, `price` = excluded.`price`, `tags` = excluded.`tags`, `title` = IFNULL(`title`, '') || :op_0",
+                "b": []
+            }
+        ],
+        "result": [
+            {
+                "$id": "doc2",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": {},
+                "count": 4,
+                "price": 2.5,
+                "active": true,
+                "tags": [
+                    "u"
+                ],
+                "note": "n"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertnew_stringConcat",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO `ns_docs` (`_createdAt`, `_permissions`, `_uid`, `_updatedAt`, `active`, `count`, `date`, `note`, `price`, `tags`, `title`)\n            VALUES (:key_0, :key_1, :key_2, :key_3, :key_4, :key_5, :key_6, :key_7, :key_8, :key_9, :key_10)\n            ON CONFLICT (_uid) DO UPDATE\n                SET `_permissions` = excluded.`_permissions`, `_updatedAt` = excluded.`_updatedAt`, `active` = excluded.`active`, `count` = excluded.`count`, `date` = excluded.`date`, `note` = excluded.`note`, `price` = excluded.`price`, `tags` = excluded.`tags`, `title` = IFNULL(`title`, '') || :op_0",
+                "b": []
+            }
+        ],
+        "result": [
+            {
+                "$id": "new_stringConcat",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": {},
+                "count": 4,
+                "price": 2.5,
+                "active": true,
+                "tags": [
+                    "p",
+                    "q",
+                    "p"
+                ],
+                "note": "n",
+                "date": "2024-06-01 00:00:00.000"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertop_stringReplace",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO `ns_docs` (`_createdAt`, `_permissions`, `_uid`, `_updatedAt`, `active`, `count`, `note`, `price`, `tags`, `title`)\n            VALUES (:key_0, :key_1, :key_2, :key_3, :key_4, :key_5, :key_6, :key_7, :key_8, :key_9)\n            ON CONFLICT (_uid) DO UPDATE\n                SET `_permissions` = excluded.`_permissions`, `_updatedAt` = excluded.`_updatedAt`, `active` = excluded.`active`, `count` = excluded.`count`, `note` = excluded.`note`, `price` = excluded.`price`, `tags` = excluded.`tags`, `title` = REPLACE(`title`, :op_0, :op_1)",
+                "b": []
+            }
+        ],
+        "result": [
+            {
+                "$id": "doc2",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": {},
+                "count": 4,
+                "price": 2.5,
+                "active": true,
+                "tags": [
+                    "u"
+                ],
+                "note": "n"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertnew_stringReplace",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO `ns_docs` (`_createdAt`, `_permissions`, `_uid`, `_updatedAt`, `active`, `count`, `date`, `note`, `price`, `tags`, `title`)\n            VALUES (:key_0, :key_1, :key_2, :key_3, :key_4, :key_5, :key_6, :key_7, :key_8, :key_9, :key_10)\n            ON CONFLICT (_uid) DO UPDATE\n                SET `_permissions` = excluded.`_permissions`, `_updatedAt` = excluded.`_updatedAt`, `active` = excluded.`active`, `count` = excluded.`count`, `date` = excluded.`date`, `note` = excluded.`note`, `price` = excluded.`price`, `tags` = excluded.`tags`, `title` = REPLACE(`title`, :op_0, :op_1)",
+                "b": []
+            }
+        ],
+        "result": [
+            {
+                "$id": "new_stringReplace",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": {},
+                "count": 4,
+                "price": 2.5,
+                "active": true,
+                "tags": [
+                    "p",
+                    "q",
+                    "p"
+                ],
+                "note": "n",
+                "date": "2024-06-01 00:00:00.000"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertop_toggle",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO `ns_docs` (`_createdAt`, `_permissions`, `_uid`, `_updatedAt`, `active`, `count`, `note`, `price`, `tags`, `title`)\n            VALUES (:key_0, :key_1, :key_2, :key_3, :key_4, :key_5, :key_6, :key_7, :key_8, :key_9)\n            ON CONFLICT (_uid) DO UPDATE\n                SET `_permissions` = excluded.`_permissions`, `_updatedAt` = excluded.`_updatedAt`, `active` = CASE WHEN COALESCE(`active`, 0) = 0 THEN 1 ELSE 0 END, `count` = excluded.`count`, `note` = excluded.`note`, `price` = excluded.`price`, `tags` = excluded.`tags`, `title` = excluded.`title`",
+                "b": []
+            }
+        ],
+        "result": [
+            {
+                "$id": "doc2",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "doc2",
+                "count": 4,
+                "price": 2.5,
+                "active": {},
+                "tags": [
+                    "u"
+                ],
+                "note": "n"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertnew_toggle",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO `ns_docs` (`_createdAt`, `_permissions`, `_uid`, `_updatedAt`, `active`, `count`, `date`, `note`, `price`, `tags`, `title`)\n            VALUES (:key_0, :key_1, :key_2, :key_3, :key_4, :key_5, :key_6, :key_7, :key_8, :key_9, :key_10)\n            ON CONFLICT (_uid) DO UPDATE\n                SET `_permissions` = excluded.`_permissions`, `_updatedAt` = excluded.`_updatedAt`, `active` = CASE WHEN COALESCE(`active`, 0) = 0 THEN 1 ELSE 0 END, `count` = excluded.`count`, `date` = excluded.`date`, `note` = excluded.`note`, `price` = excluded.`price`, `tags` = excluded.`tags`, `title` = excluded.`title`",
+                "b": []
+            }
+        ],
+        "result": [
+            {
+                "$id": "new_toggle",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "new_toggle",
+                "count": 4,
+                "price": 2.5,
+                "active": {},
+                "tags": [
+                    "p",
+                    "q",
+                    "p"
+                ],
+                "note": "n",
+                "date": "2024-06-01 00:00:00.000"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertop_arrayAppend",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO `ns_docs` (`_createdAt`, `_permissions`, `_uid`, `_updatedAt`, `active`, `count`, `note`, `price`, `tags`, `title`)\n            VALUES (:key_0, :key_1, :key_2, :key_3, :key_4, :key_5, :key_6, :key_7, :key_8, :key_9)\n            ON CONFLICT (_uid) DO UPDATE\n                SET `_permissions` = excluded.`_permissions`, `_updatedAt` = excluded.`_updatedAt`, `active` = excluded.`active`, `count` = excluded.`count`, `note` = excluded.`note`, `price` = excluded.`price`, `tags` = (\n                    SELECT json_group_array(value)\n                    FROM (\n                        SELECT value FROM json_each(IFNULL(`tags`, '[]'))\n                        UNION ALL\n                        SELECT value FROM json_each(:op_0)\n                    )\n                ), `title` = excluded.`title`",
+                "b": []
+            }
+        ],
+        "result": [
+            {
+                "$id": "doc2",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "doc2",
+                "count": 4,
+                "price": 2.5,
+                "active": true,
+                "tags": {},
+                "note": "n"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertnew_arrayAppend",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO `ns_docs` (`_createdAt`, `_permissions`, `_uid`, `_updatedAt`, `active`, `count`, `date`, `note`, `price`, `tags`, `title`)\n            VALUES (:key_0, :key_1, :key_2, :key_3, :key_4, :key_5, :key_6, :key_7, :key_8, :key_9, :key_10)\n            ON CONFLICT (_uid) DO UPDATE\n                SET `_permissions` = excluded.`_permissions`, `_updatedAt` = excluded.`_updatedAt`, `active` = excluded.`active`, `count` = excluded.`count`, `date` = excluded.`date`, `note` = excluded.`note`, `price` = excluded.`price`, `tags` = (\n                    SELECT json_group_array(value)\n                    FROM (\n                        SELECT value FROM json_each(IFNULL(`tags`, '[]'))\n                        UNION ALL\n                        SELECT value FROM json_each(:op_0)\n                    )\n                ), `title` = excluded.`title`",
+                "b": []
+            }
+        ],
+        "result": [
+            {
+                "$id": "new_arrayAppend",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "new_arrayAppend",
+                "count": 4,
+                "price": 2.5,
+                "active": true,
+                "tags": {},
+                "note": "n",
+                "date": "2024-06-01 00:00:00.000"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertop_arrayPrepend",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO `ns_docs` (`_createdAt`, `_permissions`, `_uid`, `_updatedAt`, `active`, `count`, `note`, `price`, `tags`, `title`)\n            VALUES (:key_0, :key_1, :key_2, :key_3, :key_4, :key_5, :key_6, :key_7, :key_8, :key_9)\n            ON CONFLICT (_uid) DO UPDATE\n                SET `_permissions` = excluded.`_permissions`, `_updatedAt` = excluded.`_updatedAt`, `active` = excluded.`active`, `count` = excluded.`count`, `note` = excluded.`note`, `price` = excluded.`price`, `tags` = (\n                    SELECT json_group_array(value)\n                    FROM (\n                        SELECT value FROM json_each(:op_0)\n                        UNION ALL\n                        SELECT value FROM json_each(IFNULL(`tags`, '[]'))\n                    )\n                ), `title` = excluded.`title`",
+                "b": []
+            }
+        ],
+        "result": [
+            {
+                "$id": "doc2",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "doc2",
+                "count": 4,
+                "price": 2.5,
+                "active": true,
+                "tags": {},
+                "note": "n"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertnew_arrayPrepend",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO `ns_docs` (`_createdAt`, `_permissions`, `_uid`, `_updatedAt`, `active`, `count`, `date`, `note`, `price`, `tags`, `title`)\n            VALUES (:key_0, :key_1, :key_2, :key_3, :key_4, :key_5, :key_6, :key_7, :key_8, :key_9, :key_10)\n            ON CONFLICT (_uid) DO UPDATE\n                SET `_permissions` = excluded.`_permissions`, `_updatedAt` = excluded.`_updatedAt`, `active` = excluded.`active`, `count` = excluded.`count`, `date` = excluded.`date`, `note` = excluded.`note`, `price` = excluded.`price`, `tags` = (\n                    SELECT json_group_array(value)\n                    FROM (\n                        SELECT value FROM json_each(:op_0)\n                        UNION ALL\n                        SELECT value FROM json_each(IFNULL(`tags`, '[]'))\n                    )\n                ), `title` = excluded.`title`",
+                "b": []
+            }
+        ],
+        "result": [
+            {
+                "$id": "new_arrayPrepend",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "new_arrayPrepend",
+                "count": 4,
+                "price": 2.5,
+                "active": true,
+                "tags": {},
+                "note": "n",
+                "date": "2024-06-01 00:00:00.000"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertop_arrayInsert",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO `ns_docs` (`_createdAt`, `_permissions`, `_uid`, `_updatedAt`, `active`, `count`, `note`, `price`, `tags`, `title`)\n            VALUES (:key_0, :key_1, :key_2, :key_3, :key_4, :key_5, :key_6, :key_7, :key_8, :key_9)\n            ON CONFLICT (_uid) DO UPDATE\n                SET `_permissions` = excluded.`_permissions`, `_updatedAt` = excluded.`_updatedAt`, `active` = excluded.`active`, `count` = excluded.`count`, `note` = excluded.`note`, `price` = excluded.`price`, `tags` = (\n                    SELECT json_group_array(value)\n                    FROM (\n                        SELECT value, rownum\n                        FROM (\n                            SELECT value, (ROW_NUMBER() OVER ()) - 1 as rownum\n                            FROM json_each(IFNULL(`tags`, '[]'))\n                        )\n                        WHERE rownum < :op_0\n                        UNION ALL\n                        SELECT value, :op_0 as rownum\n                        FROM json_each(json_array(json(:op_1)))\n                        UNION ALL\n                        SELECT value, rownum + 1 as rownum\n                        FROM (\n                            SELECT value, (ROW_NUMBER() OVER ()) - 1 as rownum\n                            FROM json_each(IFNULL(`tags`, '[]'))\n                        )\n                        WHERE rownum >= :op_0\n                        ORDER BY rownum\n                    )\n                ), `title` = excluded.`title`",
+                "b": []
+            }
+        ],
+        "result": [
+            {
+                "$id": "doc2",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "doc2",
+                "count": 4,
+                "price": 2.5,
+                "active": true,
+                "tags": {},
+                "note": "n"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertnew_arrayInsert",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO `ns_docs` (`_createdAt`, `_permissions`, `_uid`, `_updatedAt`, `active`, `count`, `date`, `note`, `price`, `tags`, `title`)\n            VALUES (:key_0, :key_1, :key_2, :key_3, :key_4, :key_5, :key_6, :key_7, :key_8, :key_9, :key_10)\n            ON CONFLICT (_uid) DO UPDATE\n                SET `_permissions` = excluded.`_permissions`, `_updatedAt` = excluded.`_updatedAt`, `active` = excluded.`active`, `count` = excluded.`count`, `date` = excluded.`date`, `note` = excluded.`note`, `price` = excluded.`price`, `tags` = (\n                    SELECT json_group_array(value)\n                    FROM (\n                        SELECT value, rownum\n                        FROM (\n                            SELECT value, (ROW_NUMBER() OVER ()) - 1 as rownum\n                            FROM json_each(IFNULL(`tags`, '[]'))\n                        )\n                        WHERE rownum < :op_0\n                        UNION ALL\n                        SELECT value, :op_0 as rownum\n                        FROM json_each(json_array(json(:op_1)))\n                        UNION ALL\n                        SELECT value, rownum + 1 as rownum\n                        FROM (\n                            SELECT value, (ROW_NUMBER() OVER ()) - 1 as rownum\n                            FROM json_each(IFNULL(`tags`, '[]'))\n                        )\n                        WHERE rownum >= :op_0\n                        ORDER BY rownum\n                    )\n                ), `title` = excluded.`title`",
+                "b": []
+            }
+        ],
+        "result": [
+            {
+                "$id": "new_arrayInsert",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "new_arrayInsert",
+                "count": 4,
+                "price": 2.5,
+                "active": true,
+                "tags": {},
+                "note": "n",
+                "date": "2024-06-01 00:00:00.000"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertop_arrayRemove",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO `ns_docs` (`_createdAt`, `_permissions`, `_uid`, `_updatedAt`, `active`, `count`, `note`, `price`, `tags`, `title`)\n            VALUES (:key_0, :key_1, :key_2, :key_3, :key_4, :key_5, :key_6, :key_7, :key_8, :key_9)\n            ON CONFLICT (_uid) DO UPDATE\n                SET `_permissions` = excluded.`_permissions`, `_updatedAt` = excluded.`_updatedAt`, `active` = excluded.`active`, `count` = excluded.`count`, `note` = excluded.`note`, `price` = excluded.`price`, `tags` = (\n                    SELECT json_group_array(value)\n                    FROM json_each(IFNULL(`tags`, '[]'))\n                    WHERE value != :op_0\n                ), `title` = excluded.`title`",
+                "b": []
+            }
+        ],
+        "result": [
+            {
+                "$id": "doc2",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "doc2",
+                "count": 4,
+                "price": 2.5,
+                "active": true,
+                "tags": {},
+                "note": "n"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertnew_arrayRemove",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO `ns_docs` (`_createdAt`, `_permissions`, `_uid`, `_updatedAt`, `active`, `count`, `date`, `note`, `price`, `tags`, `title`)\n            VALUES (:key_0, :key_1, :key_2, :key_3, :key_4, :key_5, :key_6, :key_7, :key_8, :key_9, :key_10)\n            ON CONFLICT (_uid) DO UPDATE\n                SET `_permissions` = excluded.`_permissions`, `_updatedAt` = excluded.`_updatedAt`, `active` = excluded.`active`, `count` = excluded.`count`, `date` = excluded.`date`, `note` = excluded.`note`, `price` = excluded.`price`, `tags` = (\n                    SELECT json_group_array(value)\n                    FROM json_each(IFNULL(`tags`, '[]'))\n                    WHERE value != :op_0\n                ), `title` = excluded.`title`",
+                "b": []
+            }
+        ],
+        "result": [
+            {
+                "$id": "new_arrayRemove",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "new_arrayRemove",
+                "count": 4,
+                "price": 2.5,
+                "active": true,
+                "tags": {},
+                "note": "n",
+                "date": "2024-06-01 00:00:00.000"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertop_arrayUnique",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO `ns_docs` (`_createdAt`, `_permissions`, `_uid`, `_updatedAt`, `active`, `count`, `note`, `price`, `tags`, `title`)\n            VALUES (:key_0, :key_1, :key_2, :key_3, :key_4, :key_5, :key_6, :key_7, :key_8, :key_9)\n            ON CONFLICT (_uid) DO UPDATE\n                SET `_permissions` = excluded.`_permissions`, `_updatedAt` = excluded.`_updatedAt`, `active` = excluded.`active`, `count` = excluded.`count`, `note` = excluded.`note`, `price` = excluded.`price`, `tags` = (\n                    SELECT json_group_array(DISTINCT value)\n                    FROM json_each(IFNULL(`tags`, '[]'))\n                ), `title` = excluded.`title`",
+                "b": []
+            }
+        ],
+        "result": [
+            {
+                "$id": "doc2",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "doc2",
+                "count": 4,
+                "price": 2.5,
+                "active": true,
+                "tags": {},
+                "note": "n"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertnew_arrayUnique",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO `ns_docs` (`_createdAt`, `_permissions`, `_uid`, `_updatedAt`, `active`, `count`, `date`, `note`, `price`, `tags`, `title`)\n            VALUES (:key_0, :key_1, :key_2, :key_3, :key_4, :key_5, :key_6, :key_7, :key_8, :key_9, :key_10)\n            ON CONFLICT (_uid) DO UPDATE\n                SET `_permissions` = excluded.`_permissions`, `_updatedAt` = excluded.`_updatedAt`, `active` = excluded.`active`, `count` = excluded.`count`, `date` = excluded.`date`, `note` = excluded.`note`, `price` = excluded.`price`, `tags` = (\n                    SELECT json_group_array(DISTINCT value)\n                    FROM json_each(IFNULL(`tags`, '[]'))\n                ), `title` = excluded.`title`",
+                "b": []
+            }
+        ],
+        "result": [
+            {
+                "$id": "new_arrayUnique",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "new_arrayUnique",
+                "count": 4,
+                "price": 2.5,
+                "active": true,
+                "tags": {},
+                "note": "n",
+                "date": "2024-06-01 00:00:00.000"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertop_arrayIntersect",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO `ns_docs` (`_createdAt`, `_permissions`, `_uid`, `_updatedAt`, `active`, `count`, `note`, `price`, `tags`, `title`)\n            VALUES (:key_0, :key_1, :key_2, :key_3, :key_4, :key_5, :key_6, :key_7, :key_8, :key_9)\n            ON CONFLICT (_uid) DO UPDATE\n                SET `_permissions` = excluded.`_permissions`, `_updatedAt` = excluded.`_updatedAt`, `active` = excluded.`active`, `count` = excluded.`count`, `note` = excluded.`note`, `price` = excluded.`price`, `tags` = (\n                    SELECT json_group_array(value)\n                    FROM json_each(IFNULL(`tags`, '[]'))\n                    WHERE value IN (SELECT value FROM json_each(:op_0))\n                ), `title` = excluded.`title`",
+                "b": []
+            }
+        ],
+        "result": [
+            {
+                "$id": "doc2",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "doc2",
+                "count": 4,
+                "price": 2.5,
+                "active": true,
+                "tags": {},
+                "note": "n"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertnew_arrayIntersect",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO `ns_docs` (`_createdAt`, `_permissions`, `_uid`, `_updatedAt`, `active`, `count`, `date`, `note`, `price`, `tags`, `title`)\n            VALUES (:key_0, :key_1, :key_2, :key_3, :key_4, :key_5, :key_6, :key_7, :key_8, :key_9, :key_10)\n            ON CONFLICT (_uid) DO UPDATE\n                SET `_permissions` = excluded.`_permissions`, `_updatedAt` = excluded.`_updatedAt`, `active` = excluded.`active`, `count` = excluded.`count`, `date` = excluded.`date`, `note` = excluded.`note`, `price` = excluded.`price`, `tags` = (\n                    SELECT json_group_array(value)\n                    FROM json_each(IFNULL(`tags`, '[]'))\n                    WHERE value IN (SELECT value FROM json_each(:op_0))\n                ), `title` = excluded.`title`",
+                "b": []
+            }
+        ],
+        "result": [
+            {
+                "$id": "new_arrayIntersect",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "new_arrayIntersect",
+                "count": 4,
+                "price": 2.5,
+                "active": true,
+                "tags": {},
+                "note": "n",
+                "date": "2024-06-01 00:00:00.000"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertop_arrayDiff",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO `ns_docs` (`_createdAt`, `_permissions`, `_uid`, `_updatedAt`, `active`, `count`, `note`, `price`, `tags`, `title`)\n            VALUES (:key_0, :key_1, :key_2, :key_3, :key_4, :key_5, :key_6, :key_7, :key_8, :key_9)\n            ON CONFLICT (_uid) DO UPDATE\n                SET `_permissions` = excluded.`_permissions`, `_updatedAt` = excluded.`_updatedAt`, `active` = excluded.`active`, `count` = excluded.`count`, `note` = excluded.`note`, `price` = excluded.`price`, `tags` = (\n                    SELECT json_group_array(value)\n                    FROM json_each(IFNULL(`tags`, '[]'))\n                    WHERE value NOT IN (SELECT value FROM json_each(:op_0))\n                ), `title` = excluded.`title`",
+                "b": []
+            }
+        ],
+        "result": [
+            {
+                "$id": "doc2",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "doc2",
+                "count": 4,
+                "price": 2.5,
+                "active": true,
+                "tags": {},
+                "note": "n"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertnew_arrayDiff",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO `ns_docs` (`_createdAt`, `_permissions`, `_uid`, `_updatedAt`, `active`, `count`, `date`, `note`, `price`, `tags`, `title`)\n            VALUES (:key_0, :key_1, :key_2, :key_3, :key_4, :key_5, :key_6, :key_7, :key_8, :key_9, :key_10)\n            ON CONFLICT (_uid) DO UPDATE\n                SET `_permissions` = excluded.`_permissions`, `_updatedAt` = excluded.`_updatedAt`, `active` = excluded.`active`, `count` = excluded.`count`, `date` = excluded.`date`, `note` = excluded.`note`, `price` = excluded.`price`, `tags` = (\n                    SELECT json_group_array(value)\n                    FROM json_each(IFNULL(`tags`, '[]'))\n                    WHERE value NOT IN (SELECT value FROM json_each(:op_0))\n                ), `title` = excluded.`title`",
+                "b": []
+            }
+        ],
+        "result": [
+            {
+                "$id": "new_arrayDiff",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "new_arrayDiff",
+                "count": 4,
+                "price": 2.5,
+                "active": true,
+                "tags": {},
+                "note": "n",
+                "date": "2024-06-01 00:00:00.000"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertop_arrayFilter",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO `ns_docs` (`_createdAt`, `_permissions`, `_uid`, `_updatedAt`, `active`, `count`, `note`, `price`, `tags`, `title`)\n            VALUES (:key_0, :key_1, :key_2, :key_3, :key_4, :key_5, :key_6, :key_7, :key_8, :key_9)\n            ON CONFLICT (_uid) DO UPDATE\n                SET `_permissions` = excluded.`_permissions`, `_updatedAt` = excluded.`_updatedAt`, `active` = excluded.`active`, `count` = excluded.`count`, `note` = excluded.`note`, `price` = excluded.`price`, `tags` = (\n                                SELECT json_group_array(value)\n                                FROM json_each(IFNULL(`tags`, '[]'))\n                                WHERE value != :op_0\n                            ), `title` = excluded.`title`",
+                "b": []
+            }
+        ],
+        "result": [
+            {
+                "$id": "doc2",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "doc2",
+                "count": 4,
+                "price": 2.5,
+                "active": true,
+                "tags": {},
+                "note": "n"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertnew_arrayFilter",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO `ns_docs` (`_createdAt`, `_permissions`, `_uid`, `_updatedAt`, `active`, `count`, `date`, `note`, `price`, `tags`, `title`)\n            VALUES (:key_0, :key_1, :key_2, :key_3, :key_4, :key_5, :key_6, :key_7, :key_8, :key_9, :key_10)\n            ON CONFLICT (_uid) DO UPDATE\n                SET `_permissions` = excluded.`_permissions`, `_updatedAt` = excluded.`_updatedAt`, `active` = excluded.`active`, `count` = excluded.`count`, `date` = excluded.`date`, `note` = excluded.`note`, `price` = excluded.`price`, `tags` = (\n                                SELECT json_group_array(value)\n                                FROM json_each(IFNULL(`tags`, '[]'))\n                                WHERE value != :op_0\n                            ), `title` = excluded.`title`",
+                "b": []
+            }
+        ],
+        "result": [
+            {
+                "$id": "new_arrayFilter",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "new_arrayFilter",
+                "count": 4,
+                "price": 2.5,
+                "active": true,
+                "tags": {},
+                "note": "n",
+                "date": "2024-06-01 00:00:00.000"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertop_arrayFilterNull",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO `ns_docs` (`_createdAt`, `_permissions`, `_uid`, `_updatedAt`, `active`, `count`, `note`, `price`, `tags`, `title`)\n            VALUES (:key_0, :key_1, :key_2, :key_3, :key_4, :key_5, :key_6, :key_7, :key_8, :key_9)\n            ON CONFLICT (_uid) DO UPDATE\n                SET `_permissions` = excluded.`_permissions`, `_updatedAt` = excluded.`_updatedAt`, `active` = excluded.`active`, `count` = excluded.`count`, `note` = excluded.`note`, `price` = excluded.`price`, `tags` = (\n                            SELECT json_group_array(value)\n                            FROM json_each(IFNULL(`tags`, '[]'))\n                            WHERE value IS NOT NULL\n                        ), `title` = excluded.`title`",
+                "b": []
+            }
+        ],
+        "result": [
+            {
+                "$id": "doc2",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "doc2",
+                "count": 4,
+                "price": 2.5,
+                "active": true,
+                "tags": {},
+                "note": "n"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertnew_arrayFilterNull",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO `ns_docs` (`_createdAt`, `_permissions`, `_uid`, `_updatedAt`, `active`, `count`, `date`, `note`, `price`, `tags`, `title`)\n            VALUES (:key_0, :key_1, :key_2, :key_3, :key_4, :key_5, :key_6, :key_7, :key_8, :key_9, :key_10)\n            ON CONFLICT (_uid) DO UPDATE\n                SET `_permissions` = excluded.`_permissions`, `_updatedAt` = excluded.`_updatedAt`, `active` = excluded.`active`, `count` = excluded.`count`, `date` = excluded.`date`, `note` = excluded.`note`, `price` = excluded.`price`, `tags` = (\n                            SELECT json_group_array(value)\n                            FROM json_each(IFNULL(`tags`, '[]'))\n                            WHERE value IS NOT NULL\n                        ), `title` = excluded.`title`",
+                "b": []
+            }
+        ],
+        "result": [
+            {
+                "$id": "new_arrayFilterNull",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "new_arrayFilterNull",
+                "count": 4,
+                "price": 2.5,
+                "active": true,
+                "tags": {},
+                "note": "n",
+                "date": "2024-06-01 00:00:00.000"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertop_dateAddDays",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO `ns_docs` (`_createdAt`, `_permissions`, `_uid`, `_updatedAt`, `active`, `count`, `date`, `note`, `price`, `tags`, `title`)\n            VALUES (:key_0, :key_1, :key_2, :key_3, :key_4, :key_5, :key_6, :key_7, :key_8, :key_9, :key_10)\n            ON CONFLICT (_uid) DO UPDATE\n                SET `_permissions` = excluded.`_permissions`, `_updatedAt` = excluded.`_updatedAt`, `active` = excluded.`active`, `count` = excluded.`count`, `date` = datetime(`date`, :op_0 || ' days'), `note` = excluded.`note`, `price` = excluded.`price`, `tags` = excluded.`tags`, `title` = excluded.`title`",
+                "b": []
+            }
+        ],
+        "result": [
+            {
+                "$id": "doc2",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "doc2",
+                "count": 4,
+                "price": 2.5,
+                "active": true,
+                "tags": [
+                    "u"
+                ],
+                "note": "n",
+                "date": {}
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertnew_dateAddDays",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO `ns_docs` (`_createdAt`, `_permissions`, `_uid`, `_updatedAt`, `active`, `count`, `date`, `note`, `price`, `tags`, `title`)\n            VALUES (:key_0, :key_1, :key_2, :key_3, :key_4, :key_5, :key_6, :key_7, :key_8, :key_9, :key_10)\n            ON CONFLICT (_uid) DO UPDATE\n                SET `_permissions` = excluded.`_permissions`, `_updatedAt` = excluded.`_updatedAt`, `active` = excluded.`active`, `count` = excluded.`count`, `date` = datetime(`date`, :op_0 || ' days'), `note` = excluded.`note`, `price` = excluded.`price`, `tags` = excluded.`tags`, `title` = excluded.`title`",
+                "b": []
+            }
+        ],
+        "result": [
+            {
+                "$id": "new_dateAddDays",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "new_dateAddDays",
+                "count": 4,
+                "price": 2.5,
+                "active": true,
+                "tags": [
+                    "p",
+                    "q",
+                    "p"
+                ],
+                "note": "n",
+                "date": {}
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertop_dateSubDays",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO `ns_docs` (`_createdAt`, `_permissions`, `_uid`, `_updatedAt`, `active`, `count`, `date`, `note`, `price`, `tags`, `title`)\n            VALUES (:key_0, :key_1, :key_2, :key_3, :key_4, :key_5, :key_6, :key_7, :key_8, :key_9, :key_10)\n            ON CONFLICT (_uid) DO UPDATE\n                SET `_permissions` = excluded.`_permissions`, `_updatedAt` = excluded.`_updatedAt`, `active` = excluded.`active`, `count` = excluded.`count`, `date` = datetime(`date`, '-' || abs(:op_0) || ' days'), `note` = excluded.`note`, `price` = excluded.`price`, `tags` = excluded.`tags`, `title` = excluded.`title`",
+                "b": []
+            }
+        ],
+        "result": [
+            {
+                "$id": "doc2",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "doc2",
+                "count": 4,
+                "price": 2.5,
+                "active": true,
+                "tags": [
+                    "u"
+                ],
+                "note": "n",
+                "date": {}
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertnew_dateSubDays",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO `ns_docs` (`_createdAt`, `_permissions`, `_uid`, `_updatedAt`, `active`, `count`, `date`, `note`, `price`, `tags`, `title`)\n            VALUES (:key_0, :key_1, :key_2, :key_3, :key_4, :key_5, :key_6, :key_7, :key_8, :key_9, :key_10)\n            ON CONFLICT (_uid) DO UPDATE\n                SET `_permissions` = excluded.`_permissions`, `_updatedAt` = excluded.`_updatedAt`, `active` = excluded.`active`, `count` = excluded.`count`, `date` = datetime(`date`, '-' || abs(:op_0) || ' days'), `note` = excluded.`note`, `price` = excluded.`price`, `tags` = excluded.`tags`, `title` = excluded.`title`",
+                "b": []
+            }
+        ],
+        "result": [
+            {
+                "$id": "new_dateSubDays",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "new_dateSubDays",
+                "count": 4,
+                "price": 2.5,
+                "active": true,
+                "tags": [
+                    "p",
+                    "q",
+                    "p"
+                ],
+                "note": "n",
+                "date": {}
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "afterUpsertOps",
+        "statements": [
+            {
+                "op": "document_read",
+                "q": "SELECT * FROM `ns_docs` AS `table_main` WHERE `_uid` COLLATE NOCASE = :_uid",
+                "b": {
+                    ":_uid": "doc2"
+                }
+            }
+        ],
+        "result": {
+            "title": "doc2",
+            "count": "4",
+            "price": "2.5",
+            "active": "1",
+            "tags": "[\"u\"]",
+            "note": "n",
+            "date": null,
+            "$id": "doc2",
+            "$sequence": "2",
+            "$createdAt": "2024-01-02 03:04:05.678",
+            "$updatedAt": "2024-05-05 05:05:05.000",
+            "$permissions": [
+                "read(\"any\")"
+            ]
+        },
+        "error": null
     }
 ]

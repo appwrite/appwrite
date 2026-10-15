@@ -2255,5 +2255,2329 @@
         ],
         "result": 1,
         "error": null
+    },
+    {
+        "step": "upsertop_increment",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO \"bdocs_postgres_shared\".\"ns_docs\" AS \"target\" (\"_createdAt\", \"_permissions\", \"_tenant\", \"_uid\", \"_updatedAt\", \"active\", \"count\", \"note\", \"price\", \"tags\", \"title\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"_uid\", \"_tenant\") DO UPDATE SET \"_permissions\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_permissions\" ELSE target.\"_permissions\" END, \"_updatedAt\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_updatedAt\" ELSE target.\"_updatedAt\" END, \"active\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"active\" ELSE target.\"active\" END, \"count\" = COALESCE(target.\"count\", 0) + ?, \"note\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"note\" ELSE target.\"note\" END, \"price\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"price\" ELSE target.\"price\" END, \"tags\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"tags\" ELSE target.\"tags\" END, \"title\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"title\" ELSE target.\"title\" END",
+                "b": [
+                    "2024-05-05 05:05:05.000",
+                    "[\"read(\\\"any\\\")\"]",
+                    7,
+                    "doc2",
+                    "2024-05-05 05:05:05.000",
+                    true,
+                    null,
+                    "n",
+                    2.5,
+                    "[\"u\"]",
+                    "doc2",
+                    2
+                ]
+            }
+        ],
+        "result": [
+            {
+                "$id": "doc2",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "doc2",
+                "count": {},
+                "price": 2.5,
+                "active": true,
+                "tags": [
+                    "u"
+                ],
+                "note": "n"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertnew_increment",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO \"bdocs_postgres_shared\".\"ns_docs\" AS \"target\" (\"_createdAt\", \"_permissions\", \"_tenant\", \"_uid\", \"_updatedAt\", \"active\", \"count\", \"date\", \"note\", \"price\", \"tags\", \"title\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"_uid\", \"_tenant\") DO UPDATE SET \"_permissions\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_permissions\" ELSE target.\"_permissions\" END, \"_updatedAt\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_updatedAt\" ELSE target.\"_updatedAt\" END, \"active\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"active\" ELSE target.\"active\" END, \"count\" = COALESCE(target.\"count\", 0) + ?, \"date\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"date\" ELSE target.\"date\" END, \"note\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"note\" ELSE target.\"note\" END, \"price\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"price\" ELSE target.\"price\" END, \"tags\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"tags\" ELSE target.\"tags\" END, \"title\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"title\" ELSE target.\"title\" END",
+                "b": [
+                    "2024-05-05 05:05:05.000",
+                    "[\"read(\\\"any\\\")\"]",
+                    7,
+                    "new_increment",
+                    "2024-05-05 05:05:05.000",
+                    true,
+                    2,
+                    "2024-06-01 00:00:00.000",
+                    "n",
+                    2.5,
+                    "[\"p\",\"q\",\"p\"]",
+                    "new_increment",
+                    2
+                ]
+            }
+        ],
+        "result": [
+            {
+                "$id": "new_increment",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "new_increment",
+                "count": {},
+                "price": 2.5,
+                "active": true,
+                "tags": [
+                    "p",
+                    "q",
+                    "p"
+                ],
+                "note": "n",
+                "date": "2024-06-01 00:00:00.000"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertop_incrementMax",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO \"bdocs_postgres_shared\".\"ns_docs\" AS \"target\" (\"_createdAt\", \"_permissions\", \"_tenant\", \"_uid\", \"_updatedAt\", \"active\", \"count\", \"note\", \"price\", \"tags\", \"title\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"_uid\", \"_tenant\") DO UPDATE SET \"_permissions\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_permissions\" ELSE target.\"_permissions\" END, \"_updatedAt\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_updatedAt\" ELSE target.\"_updatedAt\" END, \"active\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"active\" ELSE target.\"active\" END, \"count\" = CASE\n                        WHEN COALESCE(target.\"count\", 0) + CAST(? AS NUMERIC) > CAST(? AS NUMERIC) THEN COALESCE(target.\"count\", 0)\n                        ELSE COALESCE(target.\"count\", 0) + CAST(? AS NUMERIC)\n                    END, \"note\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"note\" ELSE target.\"note\" END, \"price\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"price\" ELSE target.\"price\" END, \"tags\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"tags\" ELSE target.\"tags\" END, \"title\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"title\" ELSE target.\"title\" END",
+                "b": [
+                    "2024-05-05 05:05:05.000",
+                    "[\"read(\\\"any\\\")\"]",
+                    7,
+                    "doc2",
+                    "2024-05-05 05:05:05.000",
+                    true,
+                    null,
+                    "n",
+                    2.5,
+                    "[\"u\"]",
+                    "doc2",
+                    2,
+                    100,
+                    2
+                ]
+            }
+        ],
+        "result": [
+            {
+                "$id": "doc2",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "doc2",
+                "count": {},
+                "price": 2.5,
+                "active": true,
+                "tags": [
+                    "u"
+                ],
+                "note": "n"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertnew_incrementMax",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO \"bdocs_postgres_shared\".\"ns_docs\" AS \"target\" (\"_createdAt\", \"_permissions\", \"_tenant\", \"_uid\", \"_updatedAt\", \"active\", \"count\", \"date\", \"note\", \"price\", \"tags\", \"title\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"_uid\", \"_tenant\") DO UPDATE SET \"_permissions\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_permissions\" ELSE target.\"_permissions\" END, \"_updatedAt\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_updatedAt\" ELSE target.\"_updatedAt\" END, \"active\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"active\" ELSE target.\"active\" END, \"count\" = CASE\n                        WHEN COALESCE(target.\"count\", 0) + CAST(? AS NUMERIC) > CAST(? AS NUMERIC) THEN COALESCE(target.\"count\", 0)\n                        ELSE COALESCE(target.\"count\", 0) + CAST(? AS NUMERIC)\n                    END, \"date\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"date\" ELSE target.\"date\" END, \"note\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"note\" ELSE target.\"note\" END, \"price\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"price\" ELSE target.\"price\" END, \"tags\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"tags\" ELSE target.\"tags\" END, \"title\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"title\" ELSE target.\"title\" END",
+                "b": [
+                    "2024-05-05 05:05:05.000",
+                    "[\"read(\\\"any\\\")\"]",
+                    7,
+                    "new_incrementMax",
+                    "2024-05-05 05:05:05.000",
+                    true,
+                    2,
+                    "2024-06-01 00:00:00.000",
+                    "n",
+                    2.5,
+                    "[\"p\",\"q\",\"p\"]",
+                    "new_incrementMax",
+                    2,
+                    100,
+                    2
+                ]
+            }
+        ],
+        "result": [
+            {
+                "$id": "new_incrementMax",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "new_incrementMax",
+                "count": {},
+                "price": 2.5,
+                "active": true,
+                "tags": [
+                    "p",
+                    "q",
+                    "p"
+                ],
+                "note": "n",
+                "date": "2024-06-01 00:00:00.000"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertop_decrement",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO \"bdocs_postgres_shared\".\"ns_docs\" AS \"target\" (\"_createdAt\", \"_permissions\", \"_tenant\", \"_uid\", \"_updatedAt\", \"active\", \"count\", \"note\", \"price\", \"tags\", \"title\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"_uid\", \"_tenant\") DO UPDATE SET \"_permissions\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_permissions\" ELSE target.\"_permissions\" END, \"_updatedAt\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_updatedAt\" ELSE target.\"_updatedAt\" END, \"active\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"active\" ELSE target.\"active\" END, \"count\" = COALESCE(target.\"count\", 0) - ?, \"note\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"note\" ELSE target.\"note\" END, \"price\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"price\" ELSE target.\"price\" END, \"tags\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"tags\" ELSE target.\"tags\" END, \"title\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"title\" ELSE target.\"title\" END",
+                "b": [
+                    "2024-05-05 05:05:05.000",
+                    "[\"read(\\\"any\\\")\"]",
+                    7,
+                    "doc2",
+                    "2024-05-05 05:05:05.000",
+                    true,
+                    null,
+                    "n",
+                    2.5,
+                    "[\"u\"]",
+                    "doc2",
+                    1
+                ]
+            }
+        ],
+        "result": [
+            {
+                "$id": "doc2",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "doc2",
+                "count": {},
+                "price": 2.5,
+                "active": true,
+                "tags": [
+                    "u"
+                ],
+                "note": "n"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertnew_decrement",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO \"bdocs_postgres_shared\".\"ns_docs\" AS \"target\" (\"_createdAt\", \"_permissions\", \"_tenant\", \"_uid\", \"_updatedAt\", \"active\", \"count\", \"date\", \"note\", \"price\", \"tags\", \"title\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"_uid\", \"_tenant\") DO UPDATE SET \"_permissions\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_permissions\" ELSE target.\"_permissions\" END, \"_updatedAt\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_updatedAt\" ELSE target.\"_updatedAt\" END, \"active\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"active\" ELSE target.\"active\" END, \"count\" = COALESCE(target.\"count\", 0) - ?, \"date\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"date\" ELSE target.\"date\" END, \"note\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"note\" ELSE target.\"note\" END, \"price\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"price\" ELSE target.\"price\" END, \"tags\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"tags\" ELSE target.\"tags\" END, \"title\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"title\" ELSE target.\"title\" END",
+                "b": [
+                    "2024-05-05 05:05:05.000",
+                    "[\"read(\\\"any\\\")\"]",
+                    7,
+                    "new_decrement",
+                    "2024-05-05 05:05:05.000",
+                    true,
+                    -1,
+                    "2024-06-01 00:00:00.000",
+                    "n",
+                    2.5,
+                    "[\"p\",\"q\",\"p\"]",
+                    "new_decrement",
+                    1
+                ]
+            }
+        ],
+        "result": [
+            {
+                "$id": "new_decrement",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "new_decrement",
+                "count": {},
+                "price": 2.5,
+                "active": true,
+                "tags": [
+                    "p",
+                    "q",
+                    "p"
+                ],
+                "note": "n",
+                "date": "2024-06-01 00:00:00.000"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertop_decrementMin",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO \"bdocs_postgres_shared\".\"ns_docs\" AS \"target\" (\"_createdAt\", \"_permissions\", \"_tenant\", \"_uid\", \"_updatedAt\", \"active\", \"count\", \"note\", \"price\", \"tags\", \"title\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"_uid\", \"_tenant\") DO UPDATE SET \"_permissions\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_permissions\" ELSE target.\"_permissions\" END, \"_updatedAt\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_updatedAt\" ELSE target.\"_updatedAt\" END, \"active\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"active\" ELSE target.\"active\" END, \"count\" = CASE\n                        WHEN COALESCE(target.\"count\", 0) - CAST(? AS NUMERIC) < CAST(? AS NUMERIC) THEN COALESCE(target.\"count\", 0)\n                        ELSE COALESCE(target.\"count\", 0) - CAST(? AS NUMERIC)\n                    END, \"note\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"note\" ELSE target.\"note\" END, \"price\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"price\" ELSE target.\"price\" END, \"tags\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"tags\" ELSE target.\"tags\" END, \"title\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"title\" ELSE target.\"title\" END",
+                "b": [
+                    "2024-05-05 05:05:05.000",
+                    "[\"read(\\\"any\\\")\"]",
+                    7,
+                    "doc2",
+                    "2024-05-05 05:05:05.000",
+                    true,
+                    null,
+                    "n",
+                    2.5,
+                    "[\"u\"]",
+                    "doc2",
+                    1,
+                    0,
+                    1
+                ]
+            }
+        ],
+        "result": [
+            {
+                "$id": "doc2",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "doc2",
+                "count": {},
+                "price": 2.5,
+                "active": true,
+                "tags": [
+                    "u"
+                ],
+                "note": "n"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertnew_decrementMin",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO \"bdocs_postgres_shared\".\"ns_docs\" AS \"target\" (\"_createdAt\", \"_permissions\", \"_tenant\", \"_uid\", \"_updatedAt\", \"active\", \"count\", \"date\", \"note\", \"price\", \"tags\", \"title\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"_uid\", \"_tenant\") DO UPDATE SET \"_permissions\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_permissions\" ELSE target.\"_permissions\" END, \"_updatedAt\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_updatedAt\" ELSE target.\"_updatedAt\" END, \"active\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"active\" ELSE target.\"active\" END, \"count\" = CASE\n                        WHEN COALESCE(target.\"count\", 0) - CAST(? AS NUMERIC) < CAST(? AS NUMERIC) THEN COALESCE(target.\"count\", 0)\n                        ELSE COALESCE(target.\"count\", 0) - CAST(? AS NUMERIC)\n                    END, \"date\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"date\" ELSE target.\"date\" END, \"note\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"note\" ELSE target.\"note\" END, \"price\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"price\" ELSE target.\"price\" END, \"tags\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"tags\" ELSE target.\"tags\" END, \"title\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"title\" ELSE target.\"title\" END",
+                "b": [
+                    "2024-05-05 05:05:05.000",
+                    "[\"read(\\\"any\\\")\"]",
+                    7,
+                    "new_decrementMin",
+                    "2024-05-05 05:05:05.000",
+                    true,
+                    0,
+                    "2024-06-01 00:00:00.000",
+                    "n",
+                    2.5,
+                    "[\"p\",\"q\",\"p\"]",
+                    "new_decrementMin",
+                    1,
+                    0,
+                    1
+                ]
+            }
+        ],
+        "result": [
+            {
+                "$id": "new_decrementMin",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "new_decrementMin",
+                "count": {},
+                "price": 2.5,
+                "active": true,
+                "tags": [
+                    "p",
+                    "q",
+                    "p"
+                ],
+                "note": "n",
+                "date": "2024-06-01 00:00:00.000"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertop_multiply",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO \"bdocs_postgres_shared\".\"ns_docs\" AS \"target\" (\"_createdAt\", \"_permissions\", \"_tenant\", \"_uid\", \"_updatedAt\", \"active\", \"count\", \"note\", \"price\", \"tags\", \"title\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"_uid\", \"_tenant\") DO UPDATE SET \"_permissions\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_permissions\" ELSE target.\"_permissions\" END, \"_updatedAt\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_updatedAt\" ELSE target.\"_updatedAt\" END, \"active\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"active\" ELSE target.\"active\" END, \"count\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"count\" ELSE target.\"count\" END, \"note\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"note\" ELSE target.\"note\" END, \"price\" = COALESCE(target.\"price\", 0) * ?, \"tags\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"tags\" ELSE target.\"tags\" END, \"title\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"title\" ELSE target.\"title\" END",
+                "b": [
+                    "2024-05-05 05:05:05.000",
+                    "[\"read(\\\"any\\\")\"]",
+                    7,
+                    "doc2",
+                    "2024-05-05 05:05:05.000",
+                    true,
+                    4,
+                    "n",
+                    null,
+                    "[\"u\"]",
+                    "doc2",
+                    2
+                ]
+            }
+        ],
+        "result": [
+            {
+                "$id": "doc2",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "doc2",
+                "count": 4,
+                "price": {},
+                "active": true,
+                "tags": [
+                    "u"
+                ],
+                "note": "n"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertnew_multiply",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO \"bdocs_postgres_shared\".\"ns_docs\" AS \"target\" (\"_createdAt\", \"_permissions\", \"_tenant\", \"_uid\", \"_updatedAt\", \"active\", \"count\", \"date\", \"note\", \"price\", \"tags\", \"title\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"_uid\", \"_tenant\") DO UPDATE SET \"_permissions\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_permissions\" ELSE target.\"_permissions\" END, \"_updatedAt\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_updatedAt\" ELSE target.\"_updatedAt\" END, \"active\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"active\" ELSE target.\"active\" END, \"count\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"count\" ELSE target.\"count\" END, \"date\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"date\" ELSE target.\"date\" END, \"note\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"note\" ELSE target.\"note\" END, \"price\" = COALESCE(target.\"price\", 0) * ?, \"tags\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"tags\" ELSE target.\"tags\" END, \"title\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"title\" ELSE target.\"title\" END",
+                "b": [
+                    "2024-05-05 05:05:05.000",
+                    "[\"read(\\\"any\\\")\"]",
+                    7,
+                    "new_multiply",
+                    "2024-05-05 05:05:05.000",
+                    true,
+                    4,
+                    "2024-06-01 00:00:00.000",
+                    "n",
+                    0,
+                    "[\"p\",\"q\",\"p\"]",
+                    "new_multiply",
+                    2
+                ]
+            }
+        ],
+        "result": [
+            {
+                "$id": "new_multiply",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "new_multiply",
+                "count": 4,
+                "price": {},
+                "active": true,
+                "tags": [
+                    "p",
+                    "q",
+                    "p"
+                ],
+                "note": "n",
+                "date": "2024-06-01 00:00:00.000"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertop_multiplyMax",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO \"bdocs_postgres_shared\".\"ns_docs\" AS \"target\" (\"_createdAt\", \"_permissions\", \"_tenant\", \"_uid\", \"_updatedAt\", \"active\", \"count\", \"note\", \"price\", \"tags\", \"title\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"_uid\", \"_tenant\") DO UPDATE SET \"_permissions\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_permissions\" ELSE target.\"_permissions\" END, \"_updatedAt\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_updatedAt\" ELSE target.\"_updatedAt\" END, \"active\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"active\" ELSE target.\"active\" END, \"count\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"count\" ELSE target.\"count\" END, \"note\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"note\" ELSE target.\"note\" END, \"price\" = CASE\n                        WHEN COALESCE(target.\"price\", 0) * CAST(? AS NUMERIC) > CAST(? AS NUMERIC) THEN COALESCE(target.\"price\", 0)\n                        ELSE COALESCE(target.\"price\", 0) * CAST(? AS NUMERIC)\n                    END, \"tags\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"tags\" ELSE target.\"tags\" END, \"title\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"title\" ELSE target.\"title\" END",
+                "b": [
+                    "2024-05-05 05:05:05.000",
+                    "[\"read(\\\"any\\\")\"]",
+                    7,
+                    "doc2",
+                    "2024-05-05 05:05:05.000",
+                    true,
+                    4,
+                    "n",
+                    null,
+                    "[\"u\"]",
+                    "doc2",
+                    2,
+                    1000.5,
+                    2
+                ]
+            }
+        ],
+        "result": [
+            {
+                "$id": "doc2",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "doc2",
+                "count": 4,
+                "price": {},
+                "active": true,
+                "tags": [
+                    "u"
+                ],
+                "note": "n"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertnew_multiplyMax",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO \"bdocs_postgres_shared\".\"ns_docs\" AS \"target\" (\"_createdAt\", \"_permissions\", \"_tenant\", \"_uid\", \"_updatedAt\", \"active\", \"count\", \"date\", \"note\", \"price\", \"tags\", \"title\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"_uid\", \"_tenant\") DO UPDATE SET \"_permissions\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_permissions\" ELSE target.\"_permissions\" END, \"_updatedAt\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_updatedAt\" ELSE target.\"_updatedAt\" END, \"active\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"active\" ELSE target.\"active\" END, \"count\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"count\" ELSE target.\"count\" END, \"date\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"date\" ELSE target.\"date\" END, \"note\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"note\" ELSE target.\"note\" END, \"price\" = CASE\n                        WHEN COALESCE(target.\"price\", 0) * CAST(? AS NUMERIC) > CAST(? AS NUMERIC) THEN COALESCE(target.\"price\", 0)\n                        ELSE COALESCE(target.\"price\", 0) * CAST(? AS NUMERIC)\n                    END, \"tags\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"tags\" ELSE target.\"tags\" END, \"title\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"title\" ELSE target.\"title\" END",
+                "b": [
+                    "2024-05-05 05:05:05.000",
+                    "[\"read(\\\"any\\\")\"]",
+                    7,
+                    "new_multiplyMax",
+                    "2024-05-05 05:05:05.000",
+                    true,
+                    4,
+                    "2024-06-01 00:00:00.000",
+                    "n",
+                    0,
+                    "[\"p\",\"q\",\"p\"]",
+                    "new_multiplyMax",
+                    2,
+                    1000.5,
+                    2
+                ]
+            }
+        ],
+        "result": [
+            {
+                "$id": "new_multiplyMax",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "new_multiplyMax",
+                "count": 4,
+                "price": {},
+                "active": true,
+                "tags": [
+                    "p",
+                    "q",
+                    "p"
+                ],
+                "note": "n",
+                "date": "2024-06-01 00:00:00.000"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertop_divide",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO \"bdocs_postgres_shared\".\"ns_docs\" AS \"target\" (\"_createdAt\", \"_permissions\", \"_tenant\", \"_uid\", \"_updatedAt\", \"active\", \"count\", \"note\", \"price\", \"tags\", \"title\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"_uid\", \"_tenant\") DO UPDATE SET \"_permissions\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_permissions\" ELSE target.\"_permissions\" END, \"_updatedAt\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_updatedAt\" ELSE target.\"_updatedAt\" END, \"active\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"active\" ELSE target.\"active\" END, \"count\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"count\" ELSE target.\"count\" END, \"note\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"note\" ELSE target.\"note\" END, \"price\" = COALESCE(target.\"price\", 0) / ?, \"tags\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"tags\" ELSE target.\"tags\" END, \"title\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"title\" ELSE target.\"title\" END",
+                "b": [
+                    "2024-05-05 05:05:05.000",
+                    "[\"read(\\\"any\\\")\"]",
+                    7,
+                    "doc2",
+                    "2024-05-05 05:05:05.000",
+                    true,
+                    4,
+                    "n",
+                    null,
+                    "[\"u\"]",
+                    "doc2",
+                    2
+                ]
+            }
+        ],
+        "result": [
+            {
+                "$id": "doc2",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "doc2",
+                "count": 4,
+                "price": {},
+                "active": true,
+                "tags": [
+                    "u"
+                ],
+                "note": "n"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertnew_divide",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO \"bdocs_postgres_shared\".\"ns_docs\" AS \"target\" (\"_createdAt\", \"_permissions\", \"_tenant\", \"_uid\", \"_updatedAt\", \"active\", \"count\", \"date\", \"note\", \"price\", \"tags\", \"title\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"_uid\", \"_tenant\") DO UPDATE SET \"_permissions\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_permissions\" ELSE target.\"_permissions\" END, \"_updatedAt\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_updatedAt\" ELSE target.\"_updatedAt\" END, \"active\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"active\" ELSE target.\"active\" END, \"count\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"count\" ELSE target.\"count\" END, \"date\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"date\" ELSE target.\"date\" END, \"note\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"note\" ELSE target.\"note\" END, \"price\" = COALESCE(target.\"price\", 0) / ?, \"tags\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"tags\" ELSE target.\"tags\" END, \"title\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"title\" ELSE target.\"title\" END",
+                "b": [
+                    "2024-05-05 05:05:05.000",
+                    "[\"read(\\\"any\\\")\"]",
+                    7,
+                    "new_divide",
+                    "2024-05-05 05:05:05.000",
+                    true,
+                    4,
+                    "2024-06-01 00:00:00.000",
+                    "n",
+                    0,
+                    "[\"p\",\"q\",\"p\"]",
+                    "new_divide",
+                    2
+                ]
+            }
+        ],
+        "result": [
+            {
+                "$id": "new_divide",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "new_divide",
+                "count": 4,
+                "price": {},
+                "active": true,
+                "tags": [
+                    "p",
+                    "q",
+                    "p"
+                ],
+                "note": "n",
+                "date": "2024-06-01 00:00:00.000"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertop_divideMin",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO \"bdocs_postgres_shared\".\"ns_docs\" AS \"target\" (\"_createdAt\", \"_permissions\", \"_tenant\", \"_uid\", \"_updatedAt\", \"active\", \"count\", \"note\", \"price\", \"tags\", \"title\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"_uid\", \"_tenant\") DO UPDATE SET \"_permissions\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_permissions\" ELSE target.\"_permissions\" END, \"_updatedAt\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_updatedAt\" ELSE target.\"_updatedAt\" END, \"active\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"active\" ELSE target.\"active\" END, \"count\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"count\" ELSE target.\"count\" END, \"note\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"note\" ELSE target.\"note\" END, \"price\" = CASE\n                        WHEN CAST(? AS NUMERIC) != 0 AND COALESCE(target.\"price\", 0) / CAST(? AS NUMERIC) < CAST(? AS NUMERIC) THEN COALESCE(target.\"price\", 0)\n                        ELSE COALESCE(target.\"price\", 0) / CAST(? AS NUMERIC)\n                    END, \"tags\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"tags\" ELSE target.\"tags\" END, \"title\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"title\" ELSE target.\"title\" END",
+                "b": [
+                    "2024-05-05 05:05:05.000",
+                    "[\"read(\\\"any\\\")\"]",
+                    7,
+                    "doc2",
+                    "2024-05-05 05:05:05.000",
+                    true,
+                    4,
+                    "n",
+                    null,
+                    "[\"u\"]",
+                    "doc2",
+                    2,
+                    2,
+                    0.1,
+                    2
+                ]
+            }
+        ],
+        "result": [
+            {
+                "$id": "doc2",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "doc2",
+                "count": 4,
+                "price": {},
+                "active": true,
+                "tags": [
+                    "u"
+                ],
+                "note": "n"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertnew_divideMin",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO \"bdocs_postgres_shared\".\"ns_docs\" AS \"target\" (\"_createdAt\", \"_permissions\", \"_tenant\", \"_uid\", \"_updatedAt\", \"active\", \"count\", \"date\", \"note\", \"price\", \"tags\", \"title\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"_uid\", \"_tenant\") DO UPDATE SET \"_permissions\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_permissions\" ELSE target.\"_permissions\" END, \"_updatedAt\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_updatedAt\" ELSE target.\"_updatedAt\" END, \"active\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"active\" ELSE target.\"active\" END, \"count\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"count\" ELSE target.\"count\" END, \"date\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"date\" ELSE target.\"date\" END, \"note\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"note\" ELSE target.\"note\" END, \"price\" = CASE\n                        WHEN CAST(? AS NUMERIC) != 0 AND COALESCE(target.\"price\", 0) / CAST(? AS NUMERIC) < CAST(? AS NUMERIC) THEN COALESCE(target.\"price\", 0)\n                        ELSE COALESCE(target.\"price\", 0) / CAST(? AS NUMERIC)\n                    END, \"tags\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"tags\" ELSE target.\"tags\" END, \"title\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"title\" ELSE target.\"title\" END",
+                "b": [
+                    "2024-05-05 05:05:05.000",
+                    "[\"read(\\\"any\\\")\"]",
+                    7,
+                    "new_divideMin",
+                    "2024-05-05 05:05:05.000",
+                    true,
+                    4,
+                    "2024-06-01 00:00:00.000",
+                    "n",
+                    0,
+                    "[\"p\",\"q\",\"p\"]",
+                    "new_divideMin",
+                    2,
+                    2,
+                    0.1,
+                    2
+                ]
+            }
+        ],
+        "result": [
+            {
+                "$id": "new_divideMin",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "new_divideMin",
+                "count": 4,
+                "price": {},
+                "active": true,
+                "tags": [
+                    "p",
+                    "q",
+                    "p"
+                ],
+                "note": "n",
+                "date": "2024-06-01 00:00:00.000"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertop_modulo",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO \"bdocs_postgres_shared\".\"ns_docs\" AS \"target\" (\"_createdAt\", \"_permissions\", \"_tenant\", \"_uid\", \"_updatedAt\", \"active\", \"count\", \"note\", \"price\", \"tags\", \"title\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"_uid\", \"_tenant\") DO UPDATE SET \"_permissions\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_permissions\" ELSE target.\"_permissions\" END, \"_updatedAt\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_updatedAt\" ELSE target.\"_updatedAt\" END, \"active\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"active\" ELSE target.\"active\" END, \"count\" = MOD(COALESCE(target.\"count\"::numeric, 0), ?::numeric), \"note\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"note\" ELSE target.\"note\" END, \"price\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"price\" ELSE target.\"price\" END, \"tags\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"tags\" ELSE target.\"tags\" END, \"title\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"title\" ELSE target.\"title\" END",
+                "b": [
+                    "2024-05-05 05:05:05.000",
+                    "[\"read(\\\"any\\\")\"]",
+                    7,
+                    "doc2",
+                    "2024-05-05 05:05:05.000",
+                    true,
+                    null,
+                    "n",
+                    2.5,
+                    "[\"u\"]",
+                    "doc2",
+                    3
+                ]
+            }
+        ],
+        "result": [
+            {
+                "$id": "doc2",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "doc2",
+                "count": {},
+                "price": 2.5,
+                "active": true,
+                "tags": [
+                    "u"
+                ],
+                "note": "n"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertnew_modulo",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO \"bdocs_postgres_shared\".\"ns_docs\" AS \"target\" (\"_createdAt\", \"_permissions\", \"_tenant\", \"_uid\", \"_updatedAt\", \"active\", \"count\", \"date\", \"note\", \"price\", \"tags\", \"title\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"_uid\", \"_tenant\") DO UPDATE SET \"_permissions\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_permissions\" ELSE target.\"_permissions\" END, \"_updatedAt\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_updatedAt\" ELSE target.\"_updatedAt\" END, \"active\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"active\" ELSE target.\"active\" END, \"count\" = MOD(COALESCE(target.\"count\"::numeric, 0), ?::numeric), \"date\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"date\" ELSE target.\"date\" END, \"note\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"note\" ELSE target.\"note\" END, \"price\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"price\" ELSE target.\"price\" END, \"tags\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"tags\" ELSE target.\"tags\" END, \"title\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"title\" ELSE target.\"title\" END",
+                "b": [
+                    "2024-05-05 05:05:05.000",
+                    "[\"read(\\\"any\\\")\"]",
+                    7,
+                    "new_modulo",
+                    "2024-05-05 05:05:05.000",
+                    true,
+                    0,
+                    "2024-06-01 00:00:00.000",
+                    "n",
+                    2.5,
+                    "[\"p\",\"q\",\"p\"]",
+                    "new_modulo",
+                    3
+                ]
+            }
+        ],
+        "result": [
+            {
+                "$id": "new_modulo",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "new_modulo",
+                "count": {},
+                "price": 2.5,
+                "active": true,
+                "tags": [
+                    "p",
+                    "q",
+                    "p"
+                ],
+                "note": "n",
+                "date": "2024-06-01 00:00:00.000"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertop_power",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO \"bdocs_postgres_shared\".\"ns_docs\" AS \"target\" (\"_createdAt\", \"_permissions\", \"_tenant\", \"_uid\", \"_updatedAt\", \"active\", \"count\", \"note\", \"price\", \"tags\", \"title\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"_uid\", \"_tenant\") DO UPDATE SET \"_permissions\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_permissions\" ELSE target.\"_permissions\" END, \"_updatedAt\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_updatedAt\" ELSE target.\"_updatedAt\" END, \"active\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"active\" ELSE target.\"active\" END, \"count\" = POWER(COALESCE(target.\"count\", 0), ?), \"note\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"note\" ELSE target.\"note\" END, \"price\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"price\" ELSE target.\"price\" END, \"tags\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"tags\" ELSE target.\"tags\" END, \"title\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"title\" ELSE target.\"title\" END",
+                "b": [
+                    "2024-05-05 05:05:05.000",
+                    "[\"read(\\\"any\\\")\"]",
+                    7,
+                    "doc2",
+                    "2024-05-05 05:05:05.000",
+                    true,
+                    null,
+                    "n",
+                    2.5,
+                    "[\"u\"]",
+                    "doc2",
+                    2
+                ]
+            }
+        ],
+        "result": [
+            {
+                "$id": "doc2",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "doc2",
+                "count": {},
+                "price": 2.5,
+                "active": true,
+                "tags": [
+                    "u"
+                ],
+                "note": "n"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertnew_power",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO \"bdocs_postgres_shared\".\"ns_docs\" AS \"target\" (\"_createdAt\", \"_permissions\", \"_tenant\", \"_uid\", \"_updatedAt\", \"active\", \"count\", \"date\", \"note\", \"price\", \"tags\", \"title\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"_uid\", \"_tenant\") DO UPDATE SET \"_permissions\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_permissions\" ELSE target.\"_permissions\" END, \"_updatedAt\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_updatedAt\" ELSE target.\"_updatedAt\" END, \"active\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"active\" ELSE target.\"active\" END, \"count\" = POWER(COALESCE(target.\"count\", 0), ?), \"date\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"date\" ELSE target.\"date\" END, \"note\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"note\" ELSE target.\"note\" END, \"price\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"price\" ELSE target.\"price\" END, \"tags\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"tags\" ELSE target.\"tags\" END, \"title\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"title\" ELSE target.\"title\" END",
+                "b": [
+                    "2024-05-05 05:05:05.000",
+                    "[\"read(\\\"any\\\")\"]",
+                    7,
+                    "new_power",
+                    "2024-05-05 05:05:05.000",
+                    true,
+                    0,
+                    "2024-06-01 00:00:00.000",
+                    "n",
+                    2.5,
+                    "[\"p\",\"q\",\"p\"]",
+                    "new_power",
+                    2
+                ]
+            }
+        ],
+        "result": [
+            {
+                "$id": "new_power",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "new_power",
+                "count": {},
+                "price": 2.5,
+                "active": true,
+                "tags": [
+                    "p",
+                    "q",
+                    "p"
+                ],
+                "note": "n",
+                "date": "2024-06-01 00:00:00.000"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertop_powerMax",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO \"bdocs_postgres_shared\".\"ns_docs\" AS \"target\" (\"_createdAt\", \"_permissions\", \"_tenant\", \"_uid\", \"_updatedAt\", \"active\", \"count\", \"note\", \"price\", \"tags\", \"title\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"_uid\", \"_tenant\") DO UPDATE SET \"_permissions\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_permissions\" ELSE target.\"_permissions\" END, \"_updatedAt\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_updatedAt\" ELSE target.\"_updatedAt\" END, \"active\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"active\" ELSE target.\"active\" END, \"count\" = CASE WHEN COALESCE(target.\"count\", 0) <> 0 AND ? * LN(ABS(COALESCE(target.\"count\", 0))) > LN(?) THEN COALESCE(target.\"count\", 0) ELSE POWER(COALESCE(target.\"count\", 0), ?) END, \"note\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"note\" ELSE target.\"note\" END, \"price\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"price\" ELSE target.\"price\" END, \"tags\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"tags\" ELSE target.\"tags\" END, \"title\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"title\" ELSE target.\"title\" END",
+                "b": [
+                    "2024-05-05 05:05:05.000",
+                    "[\"read(\\\"any\\\")\"]",
+                    7,
+                    "doc2",
+                    "2024-05-05 05:05:05.000",
+                    true,
+                    null,
+                    "n",
+                    2.5,
+                    "[\"u\"]",
+                    "doc2",
+                    2,
+                    1000,
+                    2
+                ]
+            }
+        ],
+        "result": [
+            {
+                "$id": "doc2",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "doc2",
+                "count": {},
+                "price": 2.5,
+                "active": true,
+                "tags": [
+                    "u"
+                ],
+                "note": "n"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertnew_powerMax",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO \"bdocs_postgres_shared\".\"ns_docs\" AS \"target\" (\"_createdAt\", \"_permissions\", \"_tenant\", \"_uid\", \"_updatedAt\", \"active\", \"count\", \"date\", \"note\", \"price\", \"tags\", \"title\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"_uid\", \"_tenant\") DO UPDATE SET \"_permissions\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_permissions\" ELSE target.\"_permissions\" END, \"_updatedAt\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_updatedAt\" ELSE target.\"_updatedAt\" END, \"active\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"active\" ELSE target.\"active\" END, \"count\" = CASE WHEN COALESCE(target.\"count\", 0) <> 0 AND ? * LN(ABS(COALESCE(target.\"count\", 0))) > LN(?) THEN COALESCE(target.\"count\", 0) ELSE POWER(COALESCE(target.\"count\", 0), ?) END, \"date\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"date\" ELSE target.\"date\" END, \"note\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"note\" ELSE target.\"note\" END, \"price\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"price\" ELSE target.\"price\" END, \"tags\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"tags\" ELSE target.\"tags\" END, \"title\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"title\" ELSE target.\"title\" END",
+                "b": [
+                    "2024-05-05 05:05:05.000",
+                    "[\"read(\\\"any\\\")\"]",
+                    7,
+                    "new_powerMax",
+                    "2024-05-05 05:05:05.000",
+                    true,
+                    0,
+                    "2024-06-01 00:00:00.000",
+                    "n",
+                    2.5,
+                    "[\"p\",\"q\",\"p\"]",
+                    "new_powerMax",
+                    2,
+                    1000,
+                    2
+                ]
+            }
+        ],
+        "result": [
+            {
+                "$id": "new_powerMax",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "new_powerMax",
+                "count": {},
+                "price": 2.5,
+                "active": true,
+                "tags": [
+                    "p",
+                    "q",
+                    "p"
+                ],
+                "note": "n",
+                "date": "2024-06-01 00:00:00.000"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertop_powerOddMax",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO \"bdocs_postgres_shared\".\"ns_docs\" AS \"target\" (\"_createdAt\", \"_permissions\", \"_tenant\", \"_uid\", \"_updatedAt\", \"active\", \"count\", \"note\", \"price\", \"tags\", \"title\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"_uid\", \"_tenant\") DO UPDATE SET \"_permissions\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_permissions\" ELSE target.\"_permissions\" END, \"_updatedAt\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_updatedAt\" ELSE target.\"_updatedAt\" END, \"active\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"active\" ELSE target.\"active\" END, \"count\" = CASE WHEN COALESCE(target.\"count\", 0) > 0 AND ? * LN(COALESCE(target.\"count\", 0)) > LN(?) THEN COALESCE(target.\"count\", 0) ELSE POWER(COALESCE(target.\"count\", 0), ?) END, \"note\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"note\" ELSE target.\"note\" END, \"price\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"price\" ELSE target.\"price\" END, \"tags\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"tags\" ELSE target.\"tags\" END, \"title\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"title\" ELSE target.\"title\" END",
+                "b": [
+                    "2024-05-05 05:05:05.000",
+                    "[\"read(\\\"any\\\")\"]",
+                    7,
+                    "doc2",
+                    "2024-05-05 05:05:05.000",
+                    true,
+                    null,
+                    "n",
+                    2.5,
+                    "[\"u\"]",
+                    "doc2",
+                    3,
+                    1000,
+                    3
+                ]
+            }
+        ],
+        "result": [
+            {
+                "$id": "doc2",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "doc2",
+                "count": {},
+                "price": 2.5,
+                "active": true,
+                "tags": [
+                    "u"
+                ],
+                "note": "n"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertnew_powerOddMax",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO \"bdocs_postgres_shared\".\"ns_docs\" AS \"target\" (\"_createdAt\", \"_permissions\", \"_tenant\", \"_uid\", \"_updatedAt\", \"active\", \"count\", \"date\", \"note\", \"price\", \"tags\", \"title\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"_uid\", \"_tenant\") DO UPDATE SET \"_permissions\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_permissions\" ELSE target.\"_permissions\" END, \"_updatedAt\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_updatedAt\" ELSE target.\"_updatedAt\" END, \"active\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"active\" ELSE target.\"active\" END, \"count\" = CASE WHEN COALESCE(target.\"count\", 0) > 0 AND ? * LN(COALESCE(target.\"count\", 0)) > LN(?) THEN COALESCE(target.\"count\", 0) ELSE POWER(COALESCE(target.\"count\", 0), ?) END, \"date\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"date\" ELSE target.\"date\" END, \"note\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"note\" ELSE target.\"note\" END, \"price\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"price\" ELSE target.\"price\" END, \"tags\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"tags\" ELSE target.\"tags\" END, \"title\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"title\" ELSE target.\"title\" END",
+                "b": [
+                    "2024-05-05 05:05:05.000",
+                    "[\"read(\\\"any\\\")\"]",
+                    7,
+                    "new_powerOddMax",
+                    "2024-05-05 05:05:05.000",
+                    true,
+                    0,
+                    "2024-06-01 00:00:00.000",
+                    "n",
+                    2.5,
+                    "[\"p\",\"q\",\"p\"]",
+                    "new_powerOddMax",
+                    3,
+                    1000,
+                    3
+                ]
+            }
+        ],
+        "result": [
+            {
+                "$id": "new_powerOddMax",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "new_powerOddMax",
+                "count": {},
+                "price": 2.5,
+                "active": true,
+                "tags": [
+                    "p",
+                    "q",
+                    "p"
+                ],
+                "note": "n",
+                "date": "2024-06-01 00:00:00.000"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertop_stringConcat",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO \"bdocs_postgres_shared\".\"ns_docs\" AS \"target\" (\"_createdAt\", \"_permissions\", \"_tenant\", \"_uid\", \"_updatedAt\", \"active\", \"count\", \"note\", \"price\", \"tags\", \"title\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"_uid\", \"_tenant\") DO UPDATE SET \"_permissions\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_permissions\" ELSE target.\"_permissions\" END, \"_updatedAt\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_updatedAt\" ELSE target.\"_updatedAt\" END, \"active\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"active\" ELSE target.\"active\" END, \"count\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"count\" ELSE target.\"count\" END, \"note\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"note\" ELSE target.\"note\" END, \"price\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"price\" ELSE target.\"price\" END, \"tags\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"tags\" ELSE target.\"tags\" END, \"title\" = CONCAT(COALESCE(target.\"title\", ''), ?)",
+                "b": [
+                    "2024-05-05 05:05:05.000",
+                    "[\"read(\\\"any\\\")\"]",
+                    7,
+                    "doc2",
+                    "2024-05-05 05:05:05.000",
+                    true,
+                    4,
+                    "n",
+                    2.5,
+                    "[\"u\"]",
+                    null,
+                    "!"
+                ]
+            }
+        ],
+        "result": [
+            {
+                "$id": "doc2",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": {},
+                "count": 4,
+                "price": 2.5,
+                "active": true,
+                "tags": [
+                    "u"
+                ],
+                "note": "n"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertnew_stringConcat",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO \"bdocs_postgres_shared\".\"ns_docs\" AS \"target\" (\"_createdAt\", \"_permissions\", \"_tenant\", \"_uid\", \"_updatedAt\", \"active\", \"count\", \"date\", \"note\", \"price\", \"tags\", \"title\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"_uid\", \"_tenant\") DO UPDATE SET \"_permissions\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_permissions\" ELSE target.\"_permissions\" END, \"_updatedAt\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_updatedAt\" ELSE target.\"_updatedAt\" END, \"active\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"active\" ELSE target.\"active\" END, \"count\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"count\" ELSE target.\"count\" END, \"date\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"date\" ELSE target.\"date\" END, \"note\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"note\" ELSE target.\"note\" END, \"price\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"price\" ELSE target.\"price\" END, \"tags\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"tags\" ELSE target.\"tags\" END, \"title\" = CONCAT(COALESCE(target.\"title\", ''), ?)",
+                "b": [
+                    "2024-05-05 05:05:05.000",
+                    "[\"read(\\\"any\\\")\"]",
+                    7,
+                    "new_stringConcat",
+                    "2024-05-05 05:05:05.000",
+                    true,
+                    4,
+                    "2024-06-01 00:00:00.000",
+                    "n",
+                    2.5,
+                    "[\"p\",\"q\",\"p\"]",
+                    "!",
+                    "!"
+                ]
+            }
+        ],
+        "result": [
+            {
+                "$id": "new_stringConcat",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": {},
+                "count": 4,
+                "price": 2.5,
+                "active": true,
+                "tags": [
+                    "p",
+                    "q",
+                    "p"
+                ],
+                "note": "n",
+                "date": "2024-06-01 00:00:00.000"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertop_stringReplace",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO \"bdocs_postgres_shared\".\"ns_docs\" AS \"target\" (\"_createdAt\", \"_permissions\", \"_tenant\", \"_uid\", \"_updatedAt\", \"active\", \"count\", \"note\", \"price\", \"tags\", \"title\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"_uid\", \"_tenant\") DO UPDATE SET \"_permissions\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_permissions\" ELSE target.\"_permissions\" END, \"_updatedAt\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_updatedAt\" ELSE target.\"_updatedAt\" END, \"active\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"active\" ELSE target.\"active\" END, \"count\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"count\" ELSE target.\"count\" END, \"note\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"note\" ELSE target.\"note\" END, \"price\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"price\" ELSE target.\"price\" END, \"tags\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"tags\" ELSE target.\"tags\" END, \"title\" = REPLACE(COALESCE(target.\"title\", ''), ?, ?)",
+                "b": [
+                    "2024-05-05 05:05:05.000",
+                    "[\"read(\\\"any\\\")\"]",
+                    7,
+                    "doc2",
+                    "2024-05-05 05:05:05.000",
+                    true,
+                    4,
+                    "n",
+                    2.5,
+                    "[\"u\"]",
+                    null,
+                    "R",
+                    "r"
+                ]
+            }
+        ],
+        "result": [
+            {
+                "$id": "doc2",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": {},
+                "count": 4,
+                "price": 2.5,
+                "active": true,
+                "tags": [
+                    "u"
+                ],
+                "note": "n"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertnew_stringReplace",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO \"bdocs_postgres_shared\".\"ns_docs\" AS \"target\" (\"_createdAt\", \"_permissions\", \"_tenant\", \"_uid\", \"_updatedAt\", \"active\", \"count\", \"date\", \"note\", \"price\", \"tags\", \"title\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"_uid\", \"_tenant\") DO UPDATE SET \"_permissions\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_permissions\" ELSE target.\"_permissions\" END, \"_updatedAt\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_updatedAt\" ELSE target.\"_updatedAt\" END, \"active\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"active\" ELSE target.\"active\" END, \"count\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"count\" ELSE target.\"count\" END, \"date\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"date\" ELSE target.\"date\" END, \"note\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"note\" ELSE target.\"note\" END, \"price\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"price\" ELSE target.\"price\" END, \"tags\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"tags\" ELSE target.\"tags\" END, \"title\" = REPLACE(COALESCE(target.\"title\", ''), ?, ?)",
+                "b": [
+                    "2024-05-05 05:05:05.000",
+                    "[\"read(\\\"any\\\")\"]",
+                    7,
+                    "new_stringReplace",
+                    "2024-05-05 05:05:05.000",
+                    true,
+                    4,
+                    "2024-06-01 00:00:00.000",
+                    "n",
+                    2.5,
+                    "[\"p\",\"q\",\"p\"]",
+                    "",
+                    "R",
+                    "r"
+                ]
+            }
+        ],
+        "result": [
+            {
+                "$id": "new_stringReplace",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": {},
+                "count": 4,
+                "price": 2.5,
+                "active": true,
+                "tags": [
+                    "p",
+                    "q",
+                    "p"
+                ],
+                "note": "n",
+                "date": "2024-06-01 00:00:00.000"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertop_toggle",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO \"bdocs_postgres_shared\".\"ns_docs\" AS \"target\" (\"_createdAt\", \"_permissions\", \"_tenant\", \"_uid\", \"_updatedAt\", \"active\", \"count\", \"note\", \"price\", \"tags\", \"title\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"_uid\", \"_tenant\") DO UPDATE SET \"_permissions\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_permissions\" ELSE target.\"_permissions\" END, \"_updatedAt\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_updatedAt\" ELSE target.\"_updatedAt\" END, \"active\" = NOT COALESCE(target.\"active\", FALSE), \"count\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"count\" ELSE target.\"count\" END, \"note\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"note\" ELSE target.\"note\" END, \"price\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"price\" ELSE target.\"price\" END, \"tags\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"tags\" ELSE target.\"tags\" END, \"title\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"title\" ELSE target.\"title\" END",
+                "b": [
+                    "2024-05-05 05:05:05.000",
+                    "[\"read(\\\"any\\\")\"]",
+                    7,
+                    "doc2",
+                    "2024-05-05 05:05:05.000",
+                    null,
+                    4,
+                    "n",
+                    2.5,
+                    "[\"u\"]",
+                    "doc2"
+                ]
+            }
+        ],
+        "result": [
+            {
+                "$id": "doc2",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "doc2",
+                "count": 4,
+                "price": 2.5,
+                "active": {},
+                "tags": [
+                    "u"
+                ],
+                "note": "n"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertnew_toggle",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO \"bdocs_postgres_shared\".\"ns_docs\" AS \"target\" (\"_createdAt\", \"_permissions\", \"_tenant\", \"_uid\", \"_updatedAt\", \"active\", \"count\", \"date\", \"note\", \"price\", \"tags\", \"title\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"_uid\", \"_tenant\") DO UPDATE SET \"_permissions\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_permissions\" ELSE target.\"_permissions\" END, \"_updatedAt\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_updatedAt\" ELSE target.\"_updatedAt\" END, \"active\" = NOT COALESCE(target.\"active\", FALSE), \"count\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"count\" ELSE target.\"count\" END, \"date\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"date\" ELSE target.\"date\" END, \"note\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"note\" ELSE target.\"note\" END, \"price\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"price\" ELSE target.\"price\" END, \"tags\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"tags\" ELSE target.\"tags\" END, \"title\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"title\" ELSE target.\"title\" END",
+                "b": [
+                    "2024-05-05 05:05:05.000",
+                    "[\"read(\\\"any\\\")\"]",
+                    7,
+                    "new_toggle",
+                    "2024-05-05 05:05:05.000",
+                    true,
+                    4,
+                    "2024-06-01 00:00:00.000",
+                    "n",
+                    2.5,
+                    "[\"p\",\"q\",\"p\"]",
+                    "new_toggle"
+                ]
+            }
+        ],
+        "result": [
+            {
+                "$id": "new_toggle",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "new_toggle",
+                "count": 4,
+                "price": 2.5,
+                "active": {},
+                "tags": [
+                    "p",
+                    "q",
+                    "p"
+                ],
+                "note": "n",
+                "date": "2024-06-01 00:00:00.000"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertop_arrayAppend",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO \"bdocs_postgres_shared\".\"ns_docs\" AS \"target\" (\"_createdAt\", \"_permissions\", \"_tenant\", \"_uid\", \"_updatedAt\", \"active\", \"count\", \"note\", \"price\", \"tags\", \"title\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"_uid\", \"_tenant\") DO UPDATE SET \"_permissions\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_permissions\" ELSE target.\"_permissions\" END, \"_updatedAt\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_updatedAt\" ELSE target.\"_updatedAt\" END, \"active\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"active\" ELSE target.\"active\" END, \"count\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"count\" ELSE target.\"count\" END, \"note\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"note\" ELSE target.\"note\" END, \"price\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"price\" ELSE target.\"price\" END, \"tags\" = COALESCE(target.\"tags\", '[]'::jsonb) || ?::jsonb, \"title\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"title\" ELSE target.\"title\" END",
+                "b": [
+                    "2024-05-05 05:05:05.000",
+                    "[\"read(\\\"any\\\")\"]",
+                    7,
+                    "doc2",
+                    "2024-05-05 05:05:05.000",
+                    true,
+                    4,
+                    "n",
+                    2.5,
+                    null,
+                    "doc2",
+                    "[\"x\",\"y\"]"
+                ]
+            }
+        ],
+        "result": [
+            {
+                "$id": "doc2",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "doc2",
+                "count": 4,
+                "price": 2.5,
+                "active": true,
+                "tags": {},
+                "note": "n"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertnew_arrayAppend",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO \"bdocs_postgres_shared\".\"ns_docs\" AS \"target\" (\"_createdAt\", \"_permissions\", \"_tenant\", \"_uid\", \"_updatedAt\", \"active\", \"count\", \"date\", \"note\", \"price\", \"tags\", \"title\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"_uid\", \"_tenant\") DO UPDATE SET \"_permissions\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_permissions\" ELSE target.\"_permissions\" END, \"_updatedAt\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_updatedAt\" ELSE target.\"_updatedAt\" END, \"active\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"active\" ELSE target.\"active\" END, \"count\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"count\" ELSE target.\"count\" END, \"date\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"date\" ELSE target.\"date\" END, \"note\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"note\" ELSE target.\"note\" END, \"price\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"price\" ELSE target.\"price\" END, \"tags\" = COALESCE(target.\"tags\", '[]'::jsonb) || ?::jsonb, \"title\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"title\" ELSE target.\"title\" END",
+                "b": [
+                    "2024-05-05 05:05:05.000",
+                    "[\"read(\\\"any\\\")\"]",
+                    7,
+                    "new_arrayAppend",
+                    "2024-05-05 05:05:05.000",
+                    true,
+                    4,
+                    "2024-06-01 00:00:00.000",
+                    "n",
+                    2.5,
+                    "[\"x\",\"y\"]",
+                    "new_arrayAppend",
+                    "[\"x\",\"y\"]"
+                ]
+            }
+        ],
+        "result": [
+            {
+                "$id": "new_arrayAppend",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "new_arrayAppend",
+                "count": 4,
+                "price": 2.5,
+                "active": true,
+                "tags": {},
+                "note": "n",
+                "date": "2024-06-01 00:00:00.000"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertop_arrayPrepend",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO \"bdocs_postgres_shared\".\"ns_docs\" AS \"target\" (\"_createdAt\", \"_permissions\", \"_tenant\", \"_uid\", \"_updatedAt\", \"active\", \"count\", \"note\", \"price\", \"tags\", \"title\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"_uid\", \"_tenant\") DO UPDATE SET \"_permissions\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_permissions\" ELSE target.\"_permissions\" END, \"_updatedAt\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_updatedAt\" ELSE target.\"_updatedAt\" END, \"active\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"active\" ELSE target.\"active\" END, \"count\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"count\" ELSE target.\"count\" END, \"note\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"note\" ELSE target.\"note\" END, \"price\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"price\" ELSE target.\"price\" END, \"tags\" = ?::jsonb || COALESCE(target.\"tags\", '[]'::jsonb), \"title\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"title\" ELSE target.\"title\" END",
+                "b": [
+                    "2024-05-05 05:05:05.000",
+                    "[\"read(\\\"any\\\")\"]",
+                    7,
+                    "doc2",
+                    "2024-05-05 05:05:05.000",
+                    true,
+                    4,
+                    "n",
+                    2.5,
+                    null,
+                    "doc2",
+                    "[\"w\"]"
+                ]
+            }
+        ],
+        "result": [
+            {
+                "$id": "doc2",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "doc2",
+                "count": 4,
+                "price": 2.5,
+                "active": true,
+                "tags": {},
+                "note": "n"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertnew_arrayPrepend",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO \"bdocs_postgres_shared\".\"ns_docs\" AS \"target\" (\"_createdAt\", \"_permissions\", \"_tenant\", \"_uid\", \"_updatedAt\", \"active\", \"count\", \"date\", \"note\", \"price\", \"tags\", \"title\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"_uid\", \"_tenant\") DO UPDATE SET \"_permissions\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_permissions\" ELSE target.\"_permissions\" END, \"_updatedAt\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_updatedAt\" ELSE target.\"_updatedAt\" END, \"active\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"active\" ELSE target.\"active\" END, \"count\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"count\" ELSE target.\"count\" END, \"date\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"date\" ELSE target.\"date\" END, \"note\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"note\" ELSE target.\"note\" END, \"price\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"price\" ELSE target.\"price\" END, \"tags\" = ?::jsonb || COALESCE(target.\"tags\", '[]'::jsonb), \"title\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"title\" ELSE target.\"title\" END",
+                "b": [
+                    "2024-05-05 05:05:05.000",
+                    "[\"read(\\\"any\\\")\"]",
+                    7,
+                    "new_arrayPrepend",
+                    "2024-05-05 05:05:05.000",
+                    true,
+                    4,
+                    "2024-06-01 00:00:00.000",
+                    "n",
+                    2.5,
+                    "[\"w\"]",
+                    "new_arrayPrepend",
+                    "[\"w\"]"
+                ]
+            }
+        ],
+        "result": [
+            {
+                "$id": "new_arrayPrepend",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "new_arrayPrepend",
+                "count": 4,
+                "price": 2.5,
+                "active": true,
+                "tags": {},
+                "note": "n",
+                "date": "2024-06-01 00:00:00.000"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertop_arrayInsert",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO \"bdocs_postgres_shared\".\"ns_docs\" AS \"target\" (\"_createdAt\", \"_permissions\", \"_tenant\", \"_uid\", \"_updatedAt\", \"active\", \"count\", \"note\", \"price\", \"tags\", \"title\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"_uid\", \"_tenant\") DO UPDATE SET \"_permissions\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_permissions\" ELSE target.\"_permissions\" END, \"_updatedAt\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_updatedAt\" ELSE target.\"_updatedAt\" END, \"active\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"active\" ELSE target.\"active\" END, \"count\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"count\" ELSE target.\"count\" END, \"note\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"note\" ELSE target.\"note\" END, \"price\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"price\" ELSE target.\"price\" END, \"tags\" = (\n                    SELECT jsonb_agg(value ORDER BY idx)\n                    FROM (\n                        SELECT value, idx\n                        FROM jsonb_array_elements(target.\"tags\") WITH ORDINALITY AS t(value, idx)\n                        WHERE idx - 1 < ?\n                        UNION ALL\n                        SELECT ?::jsonb AS value, ? + 1 AS idx\n                        UNION ALL\n                        SELECT value, idx + 1\n                        FROM jsonb_array_elements(target.\"tags\") WITH ORDINALITY AS t(value, idx)\n                        WHERE idx - 1 >= ?\n                    ) AS combined\n                ), \"title\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"title\" ELSE target.\"title\" END",
+                "b": [
+                    "2024-05-05 05:05:05.000",
+                    "[\"read(\\\"any\\\")\"]",
+                    7,
+                    "doc2",
+                    "2024-05-05 05:05:05.000",
+                    true,
+                    4,
+                    "n",
+                    2.5,
+                    null,
+                    "doc2",
+                    1,
+                    "\"i\"",
+                    1,
+                    1
+                ]
+            }
+        ],
+        "result": [
+            {
+                "$id": "doc2",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "doc2",
+                "count": 4,
+                "price": 2.5,
+                "active": true,
+                "tags": {},
+                "note": "n"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertnew_arrayInsert",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO \"bdocs_postgres_shared\".\"ns_docs\" AS \"target\" (\"_createdAt\", \"_permissions\", \"_tenant\", \"_uid\", \"_updatedAt\", \"active\", \"count\", \"date\", \"note\", \"price\", \"tags\", \"title\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"_uid\", \"_tenant\") DO UPDATE SET \"_permissions\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_permissions\" ELSE target.\"_permissions\" END, \"_updatedAt\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_updatedAt\" ELSE target.\"_updatedAt\" END, \"active\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"active\" ELSE target.\"active\" END, \"count\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"count\" ELSE target.\"count\" END, \"date\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"date\" ELSE target.\"date\" END, \"note\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"note\" ELSE target.\"note\" END, \"price\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"price\" ELSE target.\"price\" END, \"tags\" = (\n                    SELECT jsonb_agg(value ORDER BY idx)\n                    FROM (\n                        SELECT value, idx\n                        FROM jsonb_array_elements(target.\"tags\") WITH ORDINALITY AS t(value, idx)\n                        WHERE idx - 1 < ?\n                        UNION ALL\n                        SELECT ?::jsonb AS value, ? + 1 AS idx\n                        UNION ALL\n                        SELECT value, idx + 1\n                        FROM jsonb_array_elements(target.\"tags\") WITH ORDINALITY AS t(value, idx)\n                        WHERE idx - 1 >= ?\n                    ) AS combined\n                ), \"title\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"title\" ELSE target.\"title\" END",
+                "b": [
+                    "2024-05-05 05:05:05.000",
+                    "[\"read(\\\"any\\\")\"]",
+                    7,
+                    "new_arrayInsert",
+                    "2024-05-05 05:05:05.000",
+                    true,
+                    4,
+                    "2024-06-01 00:00:00.000",
+                    "n",
+                    2.5,
+                    "[\"i\"]",
+                    "new_arrayInsert",
+                    1,
+                    "\"i\"",
+                    1,
+                    1
+                ]
+            }
+        ],
+        "result": [
+            {
+                "$id": "new_arrayInsert",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "new_arrayInsert",
+                "count": 4,
+                "price": 2.5,
+                "active": true,
+                "tags": {},
+                "note": "n",
+                "date": "2024-06-01 00:00:00.000"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertop_arrayRemove",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO \"bdocs_postgres_shared\".\"ns_docs\" AS \"target\" (\"_createdAt\", \"_permissions\", \"_tenant\", \"_uid\", \"_updatedAt\", \"active\", \"count\", \"note\", \"price\", \"tags\", \"title\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"_uid\", \"_tenant\") DO UPDATE SET \"_permissions\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_permissions\" ELSE target.\"_permissions\" END, \"_updatedAt\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_updatedAt\" ELSE target.\"_updatedAt\" END, \"active\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"active\" ELSE target.\"active\" END, \"count\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"count\" ELSE target.\"count\" END, \"note\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"note\" ELSE target.\"note\" END, \"price\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"price\" ELSE target.\"price\" END, \"tags\" = COALESCE((\n                    SELECT jsonb_agg(value)\n                    FROM jsonb_array_elements(target.\"tags\") AS value\n                    WHERE value != ?::jsonb\n                ), '[]'::jsonb), \"title\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"title\" ELSE target.\"title\" END",
+                "b": [
+                    "2024-05-05 05:05:05.000",
+                    "[\"read(\\\"any\\\")\"]",
+                    7,
+                    "doc2",
+                    "2024-05-05 05:05:05.000",
+                    true,
+                    4,
+                    "n",
+                    2.5,
+                    null,
+                    "doc2",
+                    "\"x\""
+                ]
+            }
+        ],
+        "result": [
+            {
+                "$id": "doc2",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "doc2",
+                "count": 4,
+                "price": 2.5,
+                "active": true,
+                "tags": {},
+                "note": "n"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertnew_arrayRemove",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO \"bdocs_postgres_shared\".\"ns_docs\" AS \"target\" (\"_createdAt\", \"_permissions\", \"_tenant\", \"_uid\", \"_updatedAt\", \"active\", \"count\", \"date\", \"note\", \"price\", \"tags\", \"title\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"_uid\", \"_tenant\") DO UPDATE SET \"_permissions\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_permissions\" ELSE target.\"_permissions\" END, \"_updatedAt\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_updatedAt\" ELSE target.\"_updatedAt\" END, \"active\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"active\" ELSE target.\"active\" END, \"count\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"count\" ELSE target.\"count\" END, \"date\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"date\" ELSE target.\"date\" END, \"note\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"note\" ELSE target.\"note\" END, \"price\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"price\" ELSE target.\"price\" END, \"tags\" = COALESCE((\n                    SELECT jsonb_agg(value)\n                    FROM jsonb_array_elements(target.\"tags\") AS value\n                    WHERE value != ?::jsonb\n                ), '[]'::jsonb), \"title\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"title\" ELSE target.\"title\" END",
+                "b": [
+                    "2024-05-05 05:05:05.000",
+                    "[\"read(\\\"any\\\")\"]",
+                    7,
+                    "new_arrayRemove",
+                    "2024-05-05 05:05:05.000",
+                    true,
+                    4,
+                    "2024-06-01 00:00:00.000",
+                    "n",
+                    2.5,
+                    "[]",
+                    "new_arrayRemove",
+                    "\"x\""
+                ]
+            }
+        ],
+        "result": [
+            {
+                "$id": "new_arrayRemove",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "new_arrayRemove",
+                "count": 4,
+                "price": 2.5,
+                "active": true,
+                "tags": {},
+                "note": "n",
+                "date": "2024-06-01 00:00:00.000"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertop_arrayUnique",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO \"bdocs_postgres_shared\".\"ns_docs\" AS \"target\" (\"_createdAt\", \"_permissions\", \"_tenant\", \"_uid\", \"_updatedAt\", \"active\", \"count\", \"note\", \"price\", \"tags\", \"title\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"_uid\", \"_tenant\") DO UPDATE SET \"_permissions\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_permissions\" ELSE target.\"_permissions\" END, \"_updatedAt\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_updatedAt\" ELSE target.\"_updatedAt\" END, \"active\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"active\" ELSE target.\"active\" END, \"count\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"count\" ELSE target.\"count\" END, \"note\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"note\" ELSE target.\"note\" END, \"price\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"price\" ELSE target.\"price\" END, \"tags\" = COALESCE((\n                    SELECT jsonb_agg(DISTINCT value)\n                    FROM jsonb_array_elements(target.\"tags\") AS value\n                ), '[]'::jsonb), \"title\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"title\" ELSE target.\"title\" END",
+                "b": [
+                    "2024-05-05 05:05:05.000",
+                    "[\"read(\\\"any\\\")\"]",
+                    7,
+                    "doc2",
+                    "2024-05-05 05:05:05.000",
+                    true,
+                    4,
+                    "n",
+                    2.5,
+                    null,
+                    "doc2"
+                ]
+            }
+        ],
+        "result": [
+            {
+                "$id": "doc2",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "doc2",
+                "count": 4,
+                "price": 2.5,
+                "active": true,
+                "tags": {},
+                "note": "n"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertnew_arrayUnique",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO \"bdocs_postgres_shared\".\"ns_docs\" AS \"target\" (\"_createdAt\", \"_permissions\", \"_tenant\", \"_uid\", \"_updatedAt\", \"active\", \"count\", \"date\", \"note\", \"price\", \"tags\", \"title\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"_uid\", \"_tenant\") DO UPDATE SET \"_permissions\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_permissions\" ELSE target.\"_permissions\" END, \"_updatedAt\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_updatedAt\" ELSE target.\"_updatedAt\" END, \"active\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"active\" ELSE target.\"active\" END, \"count\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"count\" ELSE target.\"count\" END, \"date\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"date\" ELSE target.\"date\" END, \"note\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"note\" ELSE target.\"note\" END, \"price\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"price\" ELSE target.\"price\" END, \"tags\" = COALESCE((\n                    SELECT jsonb_agg(DISTINCT value)\n                    FROM jsonb_array_elements(target.\"tags\") AS value\n                ), '[]'::jsonb), \"title\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"title\" ELSE target.\"title\" END",
+                "b": [
+                    "2024-05-05 05:05:05.000",
+                    "[\"read(\\\"any\\\")\"]",
+                    7,
+                    "new_arrayUnique",
+                    "2024-05-05 05:05:05.000",
+                    true,
+                    4,
+                    "2024-06-01 00:00:00.000",
+                    "n",
+                    2.5,
+                    "[]",
+                    "new_arrayUnique"
+                ]
+            }
+        ],
+        "result": [
+            {
+                "$id": "new_arrayUnique",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "new_arrayUnique",
+                "count": 4,
+                "price": 2.5,
+                "active": true,
+                "tags": {},
+                "note": "n",
+                "date": "2024-06-01 00:00:00.000"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertop_arrayIntersect",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO \"bdocs_postgres_shared\".\"ns_docs\" AS \"target\" (\"_createdAt\", \"_permissions\", \"_tenant\", \"_uid\", \"_updatedAt\", \"active\", \"count\", \"note\", \"price\", \"tags\", \"title\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"_uid\", \"_tenant\") DO UPDATE SET \"_permissions\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_permissions\" ELSE target.\"_permissions\" END, \"_updatedAt\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_updatedAt\" ELSE target.\"_updatedAt\" END, \"active\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"active\" ELSE target.\"active\" END, \"count\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"count\" ELSE target.\"count\" END, \"note\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"note\" ELSE target.\"note\" END, \"price\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"price\" ELSE target.\"price\" END, \"tags\" = COALESCE((\n                    SELECT jsonb_agg(value)\n                    FROM jsonb_array_elements(target.\"tags\") AS value\n                    WHERE value IN (SELECT jsonb_array_elements(?::jsonb))\n                ), '[]'::jsonb), \"title\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"title\" ELSE target.\"title\" END",
+                "b": [
+                    "2024-05-05 05:05:05.000",
+                    "[\"read(\\\"any\\\")\"]",
+                    7,
+                    "doc2",
+                    "2024-05-05 05:05:05.000",
+                    true,
+                    4,
+                    "n",
+                    2.5,
+                    null,
+                    "doc2",
+                    "[\"w\",\"i\",\"y\"]"
+                ]
+            }
+        ],
+        "result": [
+            {
+                "$id": "doc2",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "doc2",
+                "count": 4,
+                "price": 2.5,
+                "active": true,
+                "tags": {},
+                "note": "n"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertnew_arrayIntersect",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO \"bdocs_postgres_shared\".\"ns_docs\" AS \"target\" (\"_createdAt\", \"_permissions\", \"_tenant\", \"_uid\", \"_updatedAt\", \"active\", \"count\", \"date\", \"note\", \"price\", \"tags\", \"title\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"_uid\", \"_tenant\") DO UPDATE SET \"_permissions\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_permissions\" ELSE target.\"_permissions\" END, \"_updatedAt\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_updatedAt\" ELSE target.\"_updatedAt\" END, \"active\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"active\" ELSE target.\"active\" END, \"count\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"count\" ELSE target.\"count\" END, \"date\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"date\" ELSE target.\"date\" END, \"note\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"note\" ELSE target.\"note\" END, \"price\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"price\" ELSE target.\"price\" END, \"tags\" = COALESCE((\n                    SELECT jsonb_agg(value)\n                    FROM jsonb_array_elements(target.\"tags\") AS value\n                    WHERE value IN (SELECT jsonb_array_elements(?::jsonb))\n                ), '[]'::jsonb), \"title\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"title\" ELSE target.\"title\" END",
+                "b": [
+                    "2024-05-05 05:05:05.000",
+                    "[\"read(\\\"any\\\")\"]",
+                    7,
+                    "new_arrayIntersect",
+                    "2024-05-05 05:05:05.000",
+                    true,
+                    4,
+                    "2024-06-01 00:00:00.000",
+                    "n",
+                    2.5,
+                    "[]",
+                    "new_arrayIntersect",
+                    "[\"w\",\"i\",\"y\"]"
+                ]
+            }
+        ],
+        "result": [
+            {
+                "$id": "new_arrayIntersect",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "new_arrayIntersect",
+                "count": 4,
+                "price": 2.5,
+                "active": true,
+                "tags": {},
+                "note": "n",
+                "date": "2024-06-01 00:00:00.000"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertop_arrayDiff",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO \"bdocs_postgres_shared\".\"ns_docs\" AS \"target\" (\"_createdAt\", \"_permissions\", \"_tenant\", \"_uid\", \"_updatedAt\", \"active\", \"count\", \"note\", \"price\", \"tags\", \"title\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"_uid\", \"_tenant\") DO UPDATE SET \"_permissions\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_permissions\" ELSE target.\"_permissions\" END, \"_updatedAt\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_updatedAt\" ELSE target.\"_updatedAt\" END, \"active\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"active\" ELSE target.\"active\" END, \"count\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"count\" ELSE target.\"count\" END, \"note\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"note\" ELSE target.\"note\" END, \"price\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"price\" ELSE target.\"price\" END, \"tags\" = COALESCE((\n                    SELECT jsonb_agg(value)\n                    FROM jsonb_array_elements(target.\"tags\") AS value\n                    WHERE value NOT IN (SELECT jsonb_array_elements(?::jsonb))\n                ), '[]'::jsonb), \"title\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"title\" ELSE target.\"title\" END",
+                "b": [
+                    "2024-05-05 05:05:05.000",
+                    "[\"read(\\\"any\\\")\"]",
+                    7,
+                    "doc2",
+                    "2024-05-05 05:05:05.000",
+                    true,
+                    4,
+                    "n",
+                    2.5,
+                    null,
+                    "doc2",
+                    "[\"w\"]"
+                ]
+            }
+        ],
+        "result": [
+            {
+                "$id": "doc2",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "doc2",
+                "count": 4,
+                "price": 2.5,
+                "active": true,
+                "tags": {},
+                "note": "n"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertnew_arrayDiff",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO \"bdocs_postgres_shared\".\"ns_docs\" AS \"target\" (\"_createdAt\", \"_permissions\", \"_tenant\", \"_uid\", \"_updatedAt\", \"active\", \"count\", \"date\", \"note\", \"price\", \"tags\", \"title\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"_uid\", \"_tenant\") DO UPDATE SET \"_permissions\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_permissions\" ELSE target.\"_permissions\" END, \"_updatedAt\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_updatedAt\" ELSE target.\"_updatedAt\" END, \"active\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"active\" ELSE target.\"active\" END, \"count\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"count\" ELSE target.\"count\" END, \"date\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"date\" ELSE target.\"date\" END, \"note\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"note\" ELSE target.\"note\" END, \"price\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"price\" ELSE target.\"price\" END, \"tags\" = COALESCE((\n                    SELECT jsonb_agg(value)\n                    FROM jsonb_array_elements(target.\"tags\") AS value\n                    WHERE value NOT IN (SELECT jsonb_array_elements(?::jsonb))\n                ), '[]'::jsonb), \"title\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"title\" ELSE target.\"title\" END",
+                "b": [
+                    "2024-05-05 05:05:05.000",
+                    "[\"read(\\\"any\\\")\"]",
+                    7,
+                    "new_arrayDiff",
+                    "2024-05-05 05:05:05.000",
+                    true,
+                    4,
+                    "2024-06-01 00:00:00.000",
+                    "n",
+                    2.5,
+                    "[]",
+                    "new_arrayDiff",
+                    "[\"w\"]"
+                ]
+            }
+        ],
+        "result": [
+            {
+                "$id": "new_arrayDiff",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "new_arrayDiff",
+                "count": 4,
+                "price": 2.5,
+                "active": true,
+                "tags": {},
+                "note": "n",
+                "date": "2024-06-01 00:00:00.000"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertop_arrayFilter",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO \"bdocs_postgres_shared\".\"ns_docs\" AS \"target\" (\"_createdAt\", \"_permissions\", \"_tenant\", \"_uid\", \"_updatedAt\", \"active\", \"count\", \"note\", \"price\", \"tags\", \"title\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"_uid\", \"_tenant\") DO UPDATE SET \"_permissions\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_permissions\" ELSE target.\"_permissions\" END, \"_updatedAt\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_updatedAt\" ELSE target.\"_updatedAt\" END, \"active\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"active\" ELSE target.\"active\" END, \"count\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"count\" ELSE target.\"count\" END, \"note\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"note\" ELSE target.\"note\" END, \"price\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"price\" ELSE target.\"price\" END, \"tags\" = COALESCE((\n                    SELECT jsonb_agg(value)\n                    FROM jsonb_array_elements(target.\"tags\") AS value\n                    WHERE CASE ?\n                        WHEN 'equal' THEN value = ?::jsonb\n                        WHEN 'notEqual' THEN value != ?::jsonb\n                        WHEN 'greaterThan' THEN (value::text)::numeric > trim(both '\"' from ?::text)::numeric\n                        WHEN 'greaterThanEqual' THEN (value::text)::numeric >= trim(both '\"' from ?::text)::numeric\n                        WHEN 'lessThan' THEN (value::text)::numeric < trim(both '\"' from ?::text)::numeric\n                        WHEN 'lessThanEqual' THEN (value::text)::numeric <= trim(both '\"' from ?::text)::numeric\n                        WHEN 'isNull' THEN value = 'null'::jsonb\n                        WHEN 'isNotNull' THEN value != 'null'::jsonb\n                        ELSE TRUE\n                    END\n                ), '[]'::jsonb), \"title\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"title\" ELSE target.\"title\" END",
+                "b": [
+                    "2024-05-05 05:05:05.000",
+                    "[\"read(\\\"any\\\")\"]",
+                    7,
+                    "doc2",
+                    "2024-05-05 05:05:05.000",
+                    true,
+                    4,
+                    "n",
+                    2.5,
+                    null,
+                    "doc2",
+                    "notEqual",
+                    "\"q\"",
+                    "\"q\"",
+                    "\"q\"",
+                    "\"q\"",
+                    "\"q\"",
+                    "\"q\""
+                ]
+            }
+        ],
+        "result": [
+            {
+                "$id": "doc2",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "doc2",
+                "count": 4,
+                "price": 2.5,
+                "active": true,
+                "tags": {},
+                "note": "n"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertnew_arrayFilter",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO \"bdocs_postgres_shared\".\"ns_docs\" AS \"target\" (\"_createdAt\", \"_permissions\", \"_tenant\", \"_uid\", \"_updatedAt\", \"active\", \"count\", \"date\", \"note\", \"price\", \"tags\", \"title\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"_uid\", \"_tenant\") DO UPDATE SET \"_permissions\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_permissions\" ELSE target.\"_permissions\" END, \"_updatedAt\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_updatedAt\" ELSE target.\"_updatedAt\" END, \"active\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"active\" ELSE target.\"active\" END, \"count\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"count\" ELSE target.\"count\" END, \"date\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"date\" ELSE target.\"date\" END, \"note\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"note\" ELSE target.\"note\" END, \"price\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"price\" ELSE target.\"price\" END, \"tags\" = COALESCE((\n                    SELECT jsonb_agg(value)\n                    FROM jsonb_array_elements(target.\"tags\") AS value\n                    WHERE CASE ?\n                        WHEN 'equal' THEN value = ?::jsonb\n                        WHEN 'notEqual' THEN value != ?::jsonb\n                        WHEN 'greaterThan' THEN (value::text)::numeric > trim(both '\"' from ?::text)::numeric\n                        WHEN 'greaterThanEqual' THEN (value::text)::numeric >= trim(both '\"' from ?::text)::numeric\n                        WHEN 'lessThan' THEN (value::text)::numeric < trim(both '\"' from ?::text)::numeric\n                        WHEN 'lessThanEqual' THEN (value::text)::numeric <= trim(both '\"' from ?::text)::numeric\n                        WHEN 'isNull' THEN value = 'null'::jsonb\n                        WHEN 'isNotNull' THEN value != 'null'::jsonb\n                        ELSE TRUE\n                    END\n                ), '[]'::jsonb), \"title\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"title\" ELSE target.\"title\" END",
+                "b": [
+                    "2024-05-05 05:05:05.000",
+                    "[\"read(\\\"any\\\")\"]",
+                    7,
+                    "new_arrayFilter",
+                    "2024-05-05 05:05:05.000",
+                    true,
+                    4,
+                    "2024-06-01 00:00:00.000",
+                    "n",
+                    2.5,
+                    "[]",
+                    "new_arrayFilter",
+                    "notEqual",
+                    "\"q\"",
+                    "\"q\"",
+                    "\"q\"",
+                    "\"q\"",
+                    "\"q\"",
+                    "\"q\""
+                ]
+            }
+        ],
+        "result": [
+            {
+                "$id": "new_arrayFilter",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "new_arrayFilter",
+                "count": 4,
+                "price": 2.5,
+                "active": true,
+                "tags": {},
+                "note": "n",
+                "date": "2024-06-01 00:00:00.000"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertop_arrayFilterNull",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO \"bdocs_postgres_shared\".\"ns_docs\" AS \"target\" (\"_createdAt\", \"_permissions\", \"_tenant\", \"_uid\", \"_updatedAt\", \"active\", \"count\", \"note\", \"price\", \"tags\", \"title\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"_uid\", \"_tenant\") DO UPDATE SET \"_permissions\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_permissions\" ELSE target.\"_permissions\" END, \"_updatedAt\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_updatedAt\" ELSE target.\"_updatedAt\" END, \"active\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"active\" ELSE target.\"active\" END, \"count\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"count\" ELSE target.\"count\" END, \"note\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"note\" ELSE target.\"note\" END, \"price\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"price\" ELSE target.\"price\" END, \"tags\" = COALESCE((\n                    SELECT jsonb_agg(value)\n                    FROM jsonb_array_elements(target.\"tags\") AS value\n                    WHERE CASE ?\n                        WHEN 'equal' THEN value = ?::jsonb\n                        WHEN 'notEqual' THEN value != ?::jsonb\n                        WHEN 'greaterThan' THEN (value::text)::numeric > trim(both '\"' from ?::text)::numeric\n                        WHEN 'greaterThanEqual' THEN (value::text)::numeric >= trim(both '\"' from ?::text)::numeric\n                        WHEN 'lessThan' THEN (value::text)::numeric < trim(both '\"' from ?::text)::numeric\n                        WHEN 'lessThanEqual' THEN (value::text)::numeric <= trim(both '\"' from ?::text)::numeric\n                        WHEN 'isNull' THEN value = 'null'::jsonb\n                        WHEN 'isNotNull' THEN value != 'null'::jsonb\n                        ELSE TRUE\n                    END\n                ), '[]'::jsonb), \"title\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"title\" ELSE target.\"title\" END",
+                "b": [
+                    "2024-05-05 05:05:05.000",
+                    "[\"read(\\\"any\\\")\"]",
+                    7,
+                    "doc2",
+                    "2024-05-05 05:05:05.000",
+                    true,
+                    4,
+                    "n",
+                    2.5,
+                    null,
+                    "doc2",
+                    "isNotNull",
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null
+                ]
+            }
+        ],
+        "result": [
+            {
+                "$id": "doc2",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "doc2",
+                "count": 4,
+                "price": 2.5,
+                "active": true,
+                "tags": {},
+                "note": "n"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertnew_arrayFilterNull",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO \"bdocs_postgres_shared\".\"ns_docs\" AS \"target\" (\"_createdAt\", \"_permissions\", \"_tenant\", \"_uid\", \"_updatedAt\", \"active\", \"count\", \"date\", \"note\", \"price\", \"tags\", \"title\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"_uid\", \"_tenant\") DO UPDATE SET \"_permissions\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_permissions\" ELSE target.\"_permissions\" END, \"_updatedAt\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_updatedAt\" ELSE target.\"_updatedAt\" END, \"active\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"active\" ELSE target.\"active\" END, \"count\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"count\" ELSE target.\"count\" END, \"date\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"date\" ELSE target.\"date\" END, \"note\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"note\" ELSE target.\"note\" END, \"price\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"price\" ELSE target.\"price\" END, \"tags\" = COALESCE((\n                    SELECT jsonb_agg(value)\n                    FROM jsonb_array_elements(target.\"tags\") AS value\n                    WHERE CASE ?\n                        WHEN 'equal' THEN value = ?::jsonb\n                        WHEN 'notEqual' THEN value != ?::jsonb\n                        WHEN 'greaterThan' THEN (value::text)::numeric > trim(both '\"' from ?::text)::numeric\n                        WHEN 'greaterThanEqual' THEN (value::text)::numeric >= trim(both '\"' from ?::text)::numeric\n                        WHEN 'lessThan' THEN (value::text)::numeric < trim(both '\"' from ?::text)::numeric\n                        WHEN 'lessThanEqual' THEN (value::text)::numeric <= trim(both '\"' from ?::text)::numeric\n                        WHEN 'isNull' THEN value = 'null'::jsonb\n                        WHEN 'isNotNull' THEN value != 'null'::jsonb\n                        ELSE TRUE\n                    END\n                ), '[]'::jsonb), \"title\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"title\" ELSE target.\"title\" END",
+                "b": [
+                    "2024-05-05 05:05:05.000",
+                    "[\"read(\\\"any\\\")\"]",
+                    7,
+                    "new_arrayFilterNull",
+                    "2024-05-05 05:05:05.000",
+                    true,
+                    4,
+                    "2024-06-01 00:00:00.000",
+                    "n",
+                    2.5,
+                    "[]",
+                    "new_arrayFilterNull",
+                    "isNotNull",
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null
+                ]
+            }
+        ],
+        "result": [
+            {
+                "$id": "new_arrayFilterNull",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "new_arrayFilterNull",
+                "count": 4,
+                "price": 2.5,
+                "active": true,
+                "tags": {},
+                "note": "n",
+                "date": "2024-06-01 00:00:00.000"
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertop_dateAddDays",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO \"bdocs_postgres_shared\".\"ns_docs\" AS \"target\" (\"_createdAt\", \"_permissions\", \"_tenant\", \"_uid\", \"_updatedAt\", \"active\", \"count\", \"date\", \"note\", \"price\", \"tags\", \"title\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"_uid\", \"_tenant\") DO UPDATE SET \"_permissions\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_permissions\" ELSE target.\"_permissions\" END, \"_updatedAt\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_updatedAt\" ELSE target.\"_updatedAt\" END, \"active\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"active\" ELSE target.\"active\" END, \"count\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"count\" ELSE target.\"count\" END, \"date\" = target.\"date\" + (? || ' days')::INTERVAL, \"note\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"note\" ELSE target.\"note\" END, \"price\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"price\" ELSE target.\"price\" END, \"tags\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"tags\" ELSE target.\"tags\" END, \"title\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"title\" ELSE target.\"title\" END",
+                "b": [
+                    "2024-05-05 05:05:05.000",
+                    "[\"read(\\\"any\\\")\"]",
+                    7,
+                    "doc2",
+                    "2024-05-05 05:05:05.000",
+                    true,
+                    4,
+                    null,
+                    "n",
+                    2.5,
+                    "[\"u\"]",
+                    "doc2",
+                    3
+                ]
+            }
+        ],
+        "result": [
+            {
+                "$id": "doc2",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "doc2",
+                "count": 4,
+                "price": 2.5,
+                "active": true,
+                "tags": [
+                    "u"
+                ],
+                "note": "n",
+                "date": {}
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertnew_dateAddDays",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO \"bdocs_postgres_shared\".\"ns_docs\" AS \"target\" (\"_createdAt\", \"_permissions\", \"_tenant\", \"_uid\", \"_updatedAt\", \"active\", \"count\", \"date\", \"note\", \"price\", \"tags\", \"title\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"_uid\", \"_tenant\") DO UPDATE SET \"_permissions\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_permissions\" ELSE target.\"_permissions\" END, \"_updatedAt\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_updatedAt\" ELSE target.\"_updatedAt\" END, \"active\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"active\" ELSE target.\"active\" END, \"count\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"count\" ELSE target.\"count\" END, \"date\" = target.\"date\" + (? || ' days')::INTERVAL, \"note\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"note\" ELSE target.\"note\" END, \"price\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"price\" ELSE target.\"price\" END, \"tags\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"tags\" ELSE target.\"tags\" END, \"title\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"title\" ELSE target.\"title\" END",
+                "b": [
+                    "2024-05-05 05:05:05.000",
+                    "[\"read(\\\"any\\\")\"]",
+                    7,
+                    "new_dateAddDays",
+                    "2024-05-05 05:05:05.000",
+                    true,
+                    4,
+                    null,
+                    "n",
+                    2.5,
+                    "[\"p\",\"q\",\"p\"]",
+                    "new_dateAddDays",
+                    3
+                ]
+            }
+        ],
+        "result": [
+            {
+                "$id": "new_dateAddDays",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "new_dateAddDays",
+                "count": 4,
+                "price": 2.5,
+                "active": true,
+                "tags": [
+                    "p",
+                    "q",
+                    "p"
+                ],
+                "note": "n",
+                "date": {}
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertop_dateSubDays",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO \"bdocs_postgres_shared\".\"ns_docs\" AS \"target\" (\"_createdAt\", \"_permissions\", \"_tenant\", \"_uid\", \"_updatedAt\", \"active\", \"count\", \"date\", \"note\", \"price\", \"tags\", \"title\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"_uid\", \"_tenant\") DO UPDATE SET \"_permissions\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_permissions\" ELSE target.\"_permissions\" END, \"_updatedAt\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_updatedAt\" ELSE target.\"_updatedAt\" END, \"active\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"active\" ELSE target.\"active\" END, \"count\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"count\" ELSE target.\"count\" END, \"date\" = target.\"date\" - (? || ' days')::INTERVAL, \"note\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"note\" ELSE target.\"note\" END, \"price\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"price\" ELSE target.\"price\" END, \"tags\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"tags\" ELSE target.\"tags\" END, \"title\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"title\" ELSE target.\"title\" END",
+                "b": [
+                    "2024-05-05 05:05:05.000",
+                    "[\"read(\\\"any\\\")\"]",
+                    7,
+                    "doc2",
+                    "2024-05-05 05:05:05.000",
+                    true,
+                    4,
+                    null,
+                    "n",
+                    2.5,
+                    "[\"u\"]",
+                    "doc2",
+                    1
+                ]
+            }
+        ],
+        "result": [
+            {
+                "$id": "doc2",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "doc2",
+                "count": 4,
+                "price": 2.5,
+                "active": true,
+                "tags": [
+                    "u"
+                ],
+                "note": "n",
+                "date": {}
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "upsertnew_dateSubDays",
+        "statements": [
+            {
+                "op": "documents_upsert",
+                "q": "INSERT INTO \"bdocs_postgres_shared\".\"ns_docs\" AS \"target\" (\"_createdAt\", \"_permissions\", \"_tenant\", \"_uid\", \"_updatedAt\", \"active\", \"count\", \"date\", \"note\", \"price\", \"tags\", \"title\") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (\"_uid\", \"_tenant\") DO UPDATE SET \"_permissions\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_permissions\" ELSE target.\"_permissions\" END, \"_updatedAt\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"_updatedAt\" ELSE target.\"_updatedAt\" END, \"active\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"active\" ELSE target.\"active\" END, \"count\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"count\" ELSE target.\"count\" END, \"date\" = target.\"date\" - (? || ' days')::INTERVAL, \"note\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"note\" ELSE target.\"note\" END, \"price\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"price\" ELSE target.\"price\" END, \"tags\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"tags\" ELSE target.\"tags\" END, \"title\" = CASE WHEN target._tenant = EXCLUDED._tenant THEN EXCLUDED.\"title\" ELSE target.\"title\" END",
+                "b": [
+                    "2024-05-05 05:05:05.000",
+                    "[\"read(\\\"any\\\")\"]",
+                    7,
+                    "new_dateSubDays",
+                    "2024-05-05 05:05:05.000",
+                    true,
+                    4,
+                    null,
+                    "n",
+                    2.5,
+                    "[\"p\",\"q\",\"p\"]",
+                    "new_dateSubDays",
+                    1
+                ]
+            }
+        ],
+        "result": [
+            {
+                "$id": "new_dateSubDays",
+                "$permissions": [
+                    "read(\"any\")"
+                ],
+                "$createdAt": "2024-05-05 05:05:05.000",
+                "$updatedAt": "2024-05-05 05:05:05.000",
+                "title": "new_dateSubDays",
+                "count": 4,
+                "price": 2.5,
+                "active": true,
+                "tags": [
+                    "p",
+                    "q",
+                    "p"
+                ],
+                "note": "n",
+                "date": {}
+            }
+        ],
+        "error": null
+    },
+    {
+        "step": "afterUpsertOps",
+        "statements": [
+            {
+                "op": "document_read",
+                "q": "SELECT * FROM \"bdocs_postgres_shared\".\"ns_docs\" AS \"table_main\" WHERE \"_uid\" = :_uid AND \"table_main\"._tenant IN (:_tenant)",
+                "b": {
+                    ":_uid": "doc2",
+                    ":_tenant": 7
+                }
+            }
+        ],
+        "result": {
+            "title": "doc2",
+            "count": "4",
+            "price": "2.5",
+            "active": "1",
+            "tags": "[\"u\"]",
+            "note": "n",
+            "date": null,
+            "loc": null,
+            "$id": "doc2",
+            "$sequence": "2",
+            "$tenant": "7",
+            "$createdAt": "2024-01-02 03:04:05.678",
+            "$updatedAt": "2024-05-05 05:05:05",
+            "$permissions": [
+                "read(\"any\")"
+            ]
+        },
+        "error": null
     }
 ]

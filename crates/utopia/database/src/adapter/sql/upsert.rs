@@ -54,9 +54,9 @@ impl Sql {
         let quoted = self.quote(&self.filter(column));
         let tenant = storage::TENANT;
         match self.engine {
-            Engine::Postgres => format!(
-                "CASE WHEN target.{tenant} = EXCLUDED.{tenant} THEN EXCLUDED.{quoted} ELSE target.{quoted} END"
-            ),
+            Engine::Postgres => {
+                format!("CASE WHEN target.{tenant} = EXCLUDED.{tenant} THEN EXCLUDED.{quoted} ELSE target.{quoted} END")
+            }
             Engine::Sqlite => {
                 format!("CASE WHEN {tenant} = excluded.{tenant} THEN excluded.{quoted} ELSE {quoted} END")
             }
@@ -85,9 +85,9 @@ impl Sql {
             Engine::Postgres => format!(
                 "CASE WHEN target.{tenant} = EXCLUDED.{tenant} THEN target.{quoted} + EXCLUDED.{quoted} ELSE target.{quoted} END"
             ),
-            Engine::Sqlite => format!(
-                "CASE WHEN {tenant} = excluded.{tenant} THEN {quoted} + excluded.{quoted} ELSE {quoted} END"
-            ),
+            Engine::Sqlite => {
+                format!("CASE WHEN {tenant} = excluded.{tenant} THEN {quoted} + excluded.{quoted} ELSE {quoted} END")
+            }
             Engine::MariaDb | Engine::MySql => {
                 format!("IF({tenant} = VALUES({tenant}), {quoted} + VALUES({quoted}), {quoted})")
             }
@@ -124,8 +124,16 @@ impl Sql {
             let has_operators = changes.iter().any(|change| !extract(change.new.attributes()).1.is_empty());
 
             if !has_operators {
-                self.execute_upsert_batch(&name, &changes, &spatial, increase.unwrap_or(""), &Vec::new(), &defaults, false)
-                    .await?;
+                self.execute_upsert_batch(
+                    &name,
+                    &changes,
+                    &spatial,
+                    increase.unwrap_or(""),
+                    &Vec::new(),
+                    &defaults,
+                    false,
+                )
+                .await?;
             } else {
                 let mut groups: Vec<(String, Vec<Change>, Operators)> = Vec::new();
                 for change in &changes {
@@ -142,9 +150,8 @@ impl Sql {
                                 operation.method().as_str()
                             ))));
                         }
-                        php_std::sort::sort(&mut parts, php_std::sort::SortFlags::Regular).map_err(|e| {
-                            Error::new(crate::Kind::Error, e.to_string())
-                        })?;
+                        php_std::sort::sort(&mut parts, php_std::sort::SortFlags::Regular)
+                            .map_err(|e| Error::new(crate::Kind::Error, e.to_string()))?;
                         parts.values().map(crate::value::to_text).collect::<Vec<_>>().join("|")
                     };
                     match groups.iter_mut().find(|(s, _, _)| *s == signature) {
@@ -262,7 +269,9 @@ impl Sql {
         has_operators: bool,
     ) -> Result<()> {
         if self.engine == Engine::Sqlite {
-            return self.sqlite_execute_upsert_batch(name, changes, spatial, attribute, operators, defaults, has_operators).await;
+            return self
+                .sqlite_execute_upsert_batch(name, changes, spatial, attribute, operators, defaults, has_operators)
+                .await;
         }
         let mut builder = self.dialect_builder();
         SqlBuilder::into(&mut builder, &self.table_raw(name));

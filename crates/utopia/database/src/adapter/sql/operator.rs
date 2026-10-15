@@ -888,8 +888,11 @@ impl Sql {
             ),
             OperatorType::ArrayRemove => {
                 let k = next(bind_index);
-                let removed =
-                    if matches!(at(&values, 0), Some(Value::Float(_))) { format!("CAST(:{k} AS REAL)") } else { format!(":{k}") };
+                let removed = if matches!(at(&values, 0), Some(Value::Float(_))) {
+                    format!("CAST(:{k} AS REAL)")
+                } else {
+                    format!(":{k}")
+                };
                 format!(
                     "{q} = (
                     SELECT json_group_array(value)
@@ -1045,7 +1048,8 @@ impl Sql {
                 if values.len() >= 2 {
                     let filter_type = values.get(&ArrayKey::Int(0)).cloned().unwrap_or(Value::Null);
                     let filter_value = values.get(&ArrayKey::Int(1)).cloned().unwrap_or(Value::Null);
-                    let comparisons = ["equal", "notEqual", "greaterThan", "greaterThanEqual", "lessThan", "lessThanEqual"];
+                    let comparisons =
+                        ["equal", "notEqual", "greaterThan", "greaterThanEqual", "lessThan", "lessThanEqual"];
                     if comparisons.iter().any(|c| filter_type.loose_eq(&Value::Str(Str::from_static(c)))) {
                         let key = next(bind_index);
                         let value = match filter_value {
@@ -1116,7 +1120,8 @@ impl Sql {
                 bind(statement, or(&values, 0, Value::Int(0)), Some(ParamType::Int))?;
                 bind(statement, json_encode(&or(&values, 1, Value::Null)), Some(ParamType::Str))?;
             }
-            OperatorType::Toggle | OperatorType::DateSetNow | OperatorType::ArrayUnique | OperatorType::ArrayFilter => {}
+            OperatorType::Toggle | OperatorType::DateSetNow | OperatorType::ArrayUnique | OperatorType::ArrayFilter => {
+            }
         }
         Ok(())
     }
@@ -1259,7 +1264,11 @@ pub(crate) fn apply_operator_to_value(operator: &Operator, value: Value) -> Resu
                 Some(raw) => numeric(raw).map_or(0, to_int),
                 None => 0,
             };
-            let item = if values.len() > 1 { values.get(&ArrayKey::Int(1)).cloned().unwrap_or(Value::Null) } else { Value::Null };
+            let item = if values.len() > 1 {
+                values.get(&ArrayKey::Int(1)).cloned().unwrap_or(Value::Null)
+            } else {
+                Value::Null
+            };
             Value::Array(array_insert(&arr_val, index, item))
         }
         OperatorType::ArrayRemove => {

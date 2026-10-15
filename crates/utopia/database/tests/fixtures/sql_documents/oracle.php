@@ -155,4 +155,12 @@ $step('deleteDocuments', fn () => $adapter->deleteDocuments($collection, $seqs, 
 $step('rawQuery', fn () => $adapter->rawQuery('SELECT 1 AS one, ? AS two', ['x']));
 $step('rawMutation', fn () => $adapter->rawMutation('DELETE FROM '.($engine === 'postgres' ? '"'.$db.'"."ns_docs"' : ($engine === 'sqlite' ? '`ns_docs`' : '`'.$db.'`.`ns_docs`')).' WHERE _uid = ?', ['doc7']));
 
+foreach ($ops as $label => [$attribute, $operator]) {
+    $current = $adapter->getDocument($collection, 'doc2');
+    $seen = count($profiler->getLogs());
+    $step('upsertop_'.$label, fn () => $adapter->upsertDocuments($collection, [new Change($current, $up('doc2', [$attribute => clone $operator]))]));
+    $step('upsertnew_'.$label, fn () => $adapter->upsertDocuments($collection, [new Change(new Document(), $up('new_'.$label, [$attribute => clone $operator, 'tags' => $attribute === 'tags' ? clone $operator : ['p', 'q', 'p'], 'date' => $attribute === 'date' ? clone $operator : '2024-06-01 00:00:00.000']))]));
+}
+$step('afterUpsertOps', fn () => $adapter->getDocument($collection, 'doc2'));
+
 echo json_encode($out, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_PRESERVE_ZERO_FRACTION), "\n";

@@ -196,7 +196,13 @@ impl Sql {
 
     /// `buildDocumentRow()`: the row a document writes in a batch insert,
     /// over `keys`.
-    fn build_document_row(&self, document: &Document, keys: &[String], spatial: &[String], int_bools: bool) -> Result<Array> {
+    fn build_document_row(
+        &self,
+        document: &Document,
+        keys: &[String],
+        spatial: &[String],
+        int_bools: bool,
+    ) -> Result<Array> {
         let attributes = document.attributes();
         let mut row = Array::new();
         row.set(key(storage::UID), Value::Str(Str::from(document.id())));
@@ -242,8 +248,7 @@ impl Sql {
     pub(crate) async fn create_document(&self, collection: &Collection, mut document: Document) -> Result<Document> {
         let run = async {
             self.sync_write_hooks();
-            let spatial =
-                if self.engine == Engine::Sqlite { Vec::new() } else { self.spatial_attributes(collection)? };
+            let spatial = if self.engine == Engine::Sqlite { Vec::new() } else { self.spatial_attributes(collection)? };
             let attributes = Self::write_attributes(&document)?;
             let name = self.filter(collection.id());
 
@@ -288,10 +293,7 @@ impl Sql {
             } else {
                 document.set(document::SEQUENCE, Value::Str(last))?;
                 if document.get(document::SEQUENCE).is_none_or(empty_value) {
-                    return Err(Error::database(format!(
-                        "Error creating document empty \"{}\"",
-                        document::SEQUENCE
-                    )));
+                    return Err(Error::database(format!("Error creating document empty \"{}\"", document::SEQUENCE)));
                 }
             }
 
@@ -470,7 +472,10 @@ impl Sql {
         } else {
             let insert = self.insert_or_ignore(&mut builder)?;
             let quoted: Vec<String> = columns.iter().map(|c| self.quote(c)).collect();
-            utopia_query::builder::Statement::new(format!("{} RETURNING {}", insert.query, quoted.join(", ")), insert.bindings)
+            utopia_query::builder::Statement::new(
+                format!("{} RETURNING {}", insert.query, quoted.join(", ")),
+                insert.bindings,
+            )
         };
         let mut statement = self.execute_result(&insert, Some(Event::DocumentsCreate), "").await?;
         self.execute(&mut statement).await?;
@@ -591,8 +596,10 @@ impl Sql {
         for_update: bool,
     ) -> Result<Document> {
         let name = self.filter(collection.id());
-        let selections: Vec<String> =
-            crate::adapter::attribute_selections(&queries).iter().map(|v| crate::value::to_text(&crate::value::from_query(v))).collect();
+        let selections: Vec<String> = crate::adapter::attribute_selections(&queries)
+            .iter()
+            .map(|v| crate::value::to_text(&crate::value::from_query(v)))
+            .collect();
         let alias = DEFAULT_ALIAS;
         let joins = queries_have_joins(&queries);
 
@@ -671,7 +678,12 @@ impl Sql {
     /// `read_joined_document()`: the rows `executeSelect()` reads for the
     /// joined builder, before `remapRow()`.
     #[allow(clippy::unused_async)]
-    async fn read_joined_document_stub(&self, collection: &Collection, id: &str, queries: Vec<Query>) -> Result<Vec<Array>> {
+    async fn read_joined_document_stub(
+        &self,
+        collection: &Collection,
+        id: &str,
+        queries: Vec<Query>,
+    ) -> Result<Vec<Array>> {
         let _ = (collection, id, queries);
         todo!("rewired to `read_joined_document()` of the find port")
     }
@@ -679,7 +691,8 @@ impl Sql {
     /// `mapSelectionsToColumns($selections, joinAliases: [])`: the selected
     /// columns, every internal column after them.
     fn selection_columns(&self, selections: &[String]) -> Vec<String> {
-        let internal = [document::ID, document::SEQUENCE, document::PERMISSIONS, document::CREATED_AT, document::UPDATED_AT];
+        let internal =
+            [document::ID, document::SEQUENCE, document::PERMISSIONS, document::CREATED_AT, document::UPDATED_AT];
         let mut columns: Vec<String> = selections
             .iter()
             .filter(|s| !internal.contains(&s.as_str()) && s.as_str() != document::COLLECTION)
@@ -848,7 +861,12 @@ impl Sql {
         let name = self.filter(collection.id());
         let attribute = self.filter(attribute);
         let mut builder = self.simple_builder(&name, "")?;
-        set_raw(&mut builder, &attribute, &format!("COALESCE({}, 0) + ?", self.quote(&attribute)), std::slice::from_ref(&value));
+        set_raw(
+            &mut builder,
+            &attribute,
+            &format!("COALESCE({}, 0) + ?", self.quote(&attribute)),
+            std::slice::from_ref(&value),
+        );
         let mut row = utopia_query::Array::new();
         row.set(ArrayKey::normalize(Str::from(storage::UPDATED_AT)), utopia_query::Value::Str(Str::from(updated_at)));
         builder.set(row).map_err(crate::query::query_error)?;
@@ -1049,7 +1067,9 @@ fn batch_has_sequence(documents: &[Document]) -> Result<bool> {
         let present = document.get(document::SEQUENCE).is_some_and(|s| !empty_value(s));
         match has {
             None => has = Some(present),
-            Some(h) if h != present => return Err(Error::database("All documents must have an sequence if one is set")),
+            Some(h) if h != present => {
+                return Err(Error::database("All documents must have an sequence if one is set"));
+            }
             Some(_) => {}
         }
     }
