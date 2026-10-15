@@ -71,7 +71,7 @@ class Update extends Action
                     ]
                 )
             ])
-            ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'User ID.', false, ['dbForProject'])
+            ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'User ID.', false, ['dbForProject'])
             ->param('mfa', null, new Boolean(), 'Enable or disable MFA.')
             ->inject('response')
             ->inject('dbForProject')

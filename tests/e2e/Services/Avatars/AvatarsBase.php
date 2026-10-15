@@ -4,7 +4,7 @@ namespace Tests\E2E\Services\Avatars;
 
 use Appwrite\Extend\Exception;
 use Tests\E2E\Client;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 
 trait AvatarsBase
 {
@@ -1863,7 +1863,7 @@ trait AvatarsBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => 'password',
             'name' => 'User Name',

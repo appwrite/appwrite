@@ -625,7 +625,7 @@ jobs:
   e2e_service:
     name: Tests / E2E / ${{ matrix.database }} (${{ matrix.mode }}) / ${{ matrix.service.name }}
     runs-on: gcrunner=${{ github.run_id }}/runner=${{ matrix.service.runner }}
-    timeout-minutes: 20
+    timeout-minutes: 35
     needs: [build, changes]
     if: needs.changes.outputs.services != '[]'
     permissions:
@@ -749,7 +749,7 @@ jobs:
             appwrite test tests/e2e/Services/Teams/TeamsConsoleClientTest.php --filter=testCreateOrganization
 
       - name: Run tests
-        timeout-minutes: 15
+        timeout-minutes: 25
         env:
           _TESTS_OAUTH2_GITHUB_CLIENT_ID: ${{ secrets.TESTS_OAUTH2_GITHUB_CLIENT_ID }}
           _TESTS_OAUTH2_GITHUB_CLIENT_SECRET: ${{ secrets.TESTS_OAUTH2_GITHUB_CLIENT_SECRET }}
@@ -863,7 +863,21 @@ jobs:
               $host = getenv("_APP_STORAGE_ANTIVIRUS_HOST") ?: "clamav";
               $port = (int) (getenv("_APP_STORAGE_ANTIVIRUS_PORT") ?: 3310);
               $av = new Appwrite\ClamAV\Network($host, $port);
-              exit(@$av->ping() ? 0 : 1);
+              // ping() answers PONG from a daemon that cannot classify anything
+              // yet, so scan something known-clean and require a clean verdict.
+              // fileScanInStream() is true only for an OK reply, so a daemon
+              // that refuses or errors keeps this waiting instead of releasing
+              // the suite against a scanner that rejects every upload.
+              $probe = tempnam(sys_get_temp_dir(), "clamav-ready");
+              file_put_contents($probe, str_repeat("appwrite readiness probe\n", 64));
+              try {
+                  exit($av->fileScanInStream($probe) ? 0 : 1);
+              } catch (Throwable $e) {
+                  // Not up yet, or up and unable to answer. Either way, wait.
+                  exit(1);
+              } finally {
+                  @unlink($probe);
+              }
             '; then
               echo "ClamAV is ready"
               exit 0

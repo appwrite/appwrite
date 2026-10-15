@@ -6,6 +6,7 @@ use Appwrite\Event\Event;
 use Appwrite\Event\Message\Migration as MigrationMessage;
 use Appwrite\Event\Publisher\Migration as MigrationPublisher;
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Modules\Migrations\Http\Migrations\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -13,25 +14,20 @@ use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Query as QueryException;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Database\Validator\Queries\Documents;
 use Utopia\Database\Validator\UID;
 use Utopia\Migration\Resource;
 use Utopia\Migration\Sources\Appwrite as AppwriteSource;
 use Utopia\Migration\Sources\JSON as JSONSource;
 use Utopia\Migration\Transfer;
-use Utopia\Platform\Action;
-use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 
 class Create extends Action
 {
-    use HTTP;
-
     public static function getName(): string
     {
         return 'createJSONExport';
@@ -118,15 +114,7 @@ class Create extends Action
 
         $databaseType = $database->getAttribute('type');
 
-        // Schemaless databases (DocumentsDB, VectorsDB) allow queries on dynamic fields
-        $isSchemaless = \in_array($databaseType, [DATABASE_TYPE_DOCUMENTSDB, DATABASE_TYPE_VECTORSDB]);
-
-        $validator = new Documents(
-            attributes: $collection->getAttribute('attributes', []),
-            indexes: $collection->getAttribute('indexes', []),
-            idAttributeType: $dbForProject->getAdapter()->getIdAttributeType(),
-            supportForAttributes: !$isSchemaless,
-        );
+        $validator = $this->exportQueriesValidator($dbForProject, $collection, $databaseType);
 
         if (!$validator->isValid($parsedQueries)) {
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
@@ -136,7 +124,7 @@ class Create extends Action
         $parentResourceType = self::resourceTypeForDatabaseType($databaseType);
 
         $migration = $dbForProject->createDocument('migrations', new Document([
-            '$id' => ID::unique(),
+            '$id' => Id::unique(),
             'status' => 'pending',
             'stage' => 'init',
             'source' => AppwriteSource::getName(),
@@ -172,25 +160,5 @@ class Create extends Action
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
             ->dynamic($migration, Response::MODEL_MIGRATION);
-    }
-
-    private static function transferGroupForDatabaseType(string $databaseType): string
-    {
-        return match ($databaseType) {
-            DATABASE_TYPE_LEGACY,
-            DATABASE_TYPE_TABLESDB => Transfer::GROUP_DATABASES_TABLES_DB,
-            DATABASE_TYPE_VECTORSDB => Transfer::GROUP_DATABASES_VECTOR_DB,
-            DATABASE_TYPE_DOCUMENTSDB => Transfer::GROUP_DATABASES_DOCUMENTS_DB,
-            default => throw new \LogicException('Unknown database type: ' . $databaseType),
-        };
-    }
-
-    private static function resourceTypeForDatabaseType(string $databaseType): string
-    {
-        return match ($databaseType) {
-            DATABASE_TYPE_VECTORSDB => Resource::TYPE_DATABASE_VECTORSDB,
-            DATABASE_TYPE_DOCUMENTSDB => Resource::TYPE_DATABASE_DOCUMENTSDB,
-            default => Resource::TYPE_DATABASE,
-        };
     }
 }

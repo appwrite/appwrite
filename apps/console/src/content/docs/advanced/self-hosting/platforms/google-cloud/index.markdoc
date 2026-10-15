@@ -14,6 +14,8 @@ Google Cloud Compute Engine provides virtual machines where you can deploy Appwr
 
 For manual installations on Compute Engine VMs or other Google Cloud services, follow the [general installation guide](/docs/advanced/self-hosting/installation) which covers Docker setup and configuration for any Linux server.
 
+To run Appwrite on Google Kubernetes Engine, use the [Helm chart](/docs/advanced/self-hosting/platforms/kubernetes). Its [`gcp.yaml`](https://github.com/appwrite/helm-chart/blob/main/examples/gcp.yaml) example connects Appwrite to Cloud SQL, Memorystore, Cloud Storage, and Filestore.
+
 # Production considerations {% #production %}
 
 For production deployments, optimization, and advanced configuration, see the [production deployment guide](/docs/advanced/self-hosting/production).

@@ -6,8 +6,8 @@ import { pageTitle } from '@/lib/utils/page-title'
 export const MARKETING_HOMEPAGE_TITLE =
   'Appwrite · The open-source cloud for developers and agents'
 
-/** Homepage social card from `Logotype · dark@2x` (2400×1260, 2× Open Graph). */
-export const MARKETING_HOME_OG_IMAGE_PATH = '/assets/logotype/dark@2x.avif'
+/** Homepage social card (2400×1260, 2× Open Graph). Avoid `@` in the path — crawlers fetch `%40` and static hosts 404. */
+export const MARKETING_HOME_OG_IMAGE_PATH = '/assets/logotype/dark-2x.avif'
 export const MARKETING_HOME_OG_IMAGE_WIDTH = 2400
 export const MARKETING_HOME_OG_IMAGE_HEIGHT = 1260
 

@@ -13,7 +13,7 @@ import {
   ToggleRight,
   Trash2,
 } from 'lucide-react'
-import type { Models } from '@appwrite.io/console'
+import type { FirewallRule } from '@/lib/firewall/types'
 import { toast } from 'sonner'
 import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
 import {
@@ -56,10 +56,7 @@ import {
   useUpdateFirewallRule,
 } from '@/lib/react-query/hooks'
 import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
-import {
-  getRuleRateLimit,
-  getRuleRedirect,
-} from '@/lib/firewall/actions'
+import { getRuleRateLimit, getRuleRedirect } from '@/lib/firewall/actions'
 import {
   formatConditionSummary,
   parseFirewallConditions,
@@ -137,8 +134,8 @@ export function RulesList({
     return (rule.resourceId?.trim() || '') === (resourceId || '')
   })
   const updateMutation = useUpdateFirewallRule(projectId)
-  const [editingRule, setEditingRule] = useState<Models.WafRule | null>(null)
-  const [deletingRule, setDeletingRule] = useState<Models.WafRule | null>(null)
+  const [editingRule, setEditingRule] = useState<FirewallRule | null>(null)
+  const [deletingRule, setDeletingRule] = useState<FirewallRule | null>(null)
   const [togglingRuleId, setTogglingRuleId] = useState<string | null>(null)
   const noWritePermissionTooltip = !canWrite
     ? t("You don't have permission to update firewall rules.")
@@ -152,7 +149,7 @@ export function RulesList({
   const showsFirstRunEmptyState =
     !searchValue && !isLoading && scopedRules.length === 0
 
-  const handleToggleEnabled = async (rule: Models.WafRule) => {
+  const handleToggleEnabled = async (rule: FirewallRule) => {
     const nextEnabled = !rule.enabled
     const rateLimit = getRuleRateLimit(rule)
     const redirect = getRuleRedirect(rule)
@@ -248,46 +245,45 @@ export function RulesList({
           onValueChange={onResourceSelectionChange}
         />
         {!showsFirstRunEmptyState && (
-        <div className="relative min-w-0 w-full max-w-xs flex-1 shrink sm:w-64 sm:max-w-none sm:flex-none sm:shrink-0">
-          <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder={t('Search rules...')}
-            value={searchValue}
-            onChange={(e) => setSearchValue(e.target.value)}
-            className="h-9 border-border bg-accent/50 ps-10 text-[13px] text-foreground placeholder:text-muted-foreground"
-          />
-        </div>
+          <div className="relative min-w-0 w-full max-w-xs flex-1 shrink sm:w-64 sm:max-w-none sm:flex-none sm:shrink-0">
+            <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder={t('Search rules...')}
+              value={searchValue}
+              onChange={(e) => setSearchValue(e.target.value)}
+              className="h-9 border-border bg-accent/50 ps-10 text-[13px] text-foreground placeholder:text-muted-foreground"
+            />
+          </div>
         )}
       </div>
       {!showsFirstRunEmptyState && (
-      <div className="flex shrink-0 items-center gap-2">
-        <AttackModeButton
-          projectId={projectId}
-          resourceSelection={resourceSelection}
-          canWrite={canWrite}
-          createDisabled={resolvedCreateDisabled}
-          createDisabledTooltip={resolvedCreateDisabledTooltip}
-        />
-        <AddFirewallPresets
-          projectId={projectId}
-          resourceSelection={resourceSelection}
-          canWrite={canWrite}
-          createDisabled={createDisabled}
-          createDisabledTooltip={resolvedCreateDisabledTooltip}
-        />
-        {createButton}
-      </div>
+        <div className="flex shrink-0 items-center gap-2">
+          <AttackModeButton
+            projectId={projectId}
+            resourceSelection={resourceSelection}
+            canWrite={canWrite}
+            createDisabled={resolvedCreateDisabled}
+            createDisabledTooltip={resolvedCreateDisabledTooltip}
+          />
+          <AddFirewallPresets
+            projectId={projectId}
+            resourceSelection={resourceSelection}
+            canWrite={canWrite}
+            createDisabled={createDisabled}
+            createDisabledTooltip={resolvedCreateDisabledTooltip}
+          />
+          {createButton}
+        </div>
       )}
     </div>
   )
 
-  const renderRuleRow = (rule: Models.WafRule) => {
+  const renderRuleRow = (rule: FirewallRule) => {
     const conditions = parseFirewallConditions(rule.conditions)
     const rateLimit = getRuleRateLimit(rule)
     const redirect = getRuleRedirect(rule)
     const isToggling = togglingRuleId === rule.$id
-    const toggleDisabled =
-      !canWrite || isToggling || updateMutation.isPending
+    const toggleDisabled = !canWrite || isToggling || updateMutation.isPending
 
     const statusSwitch = (
       <Switch
@@ -417,7 +413,9 @@ export function RulesList({
                       openDialogAfterOverlayCloses(() => setEditingRule(rule))
                     }
                   >
-                    <MenuItemContent icon={Pencil}>{t('Update')}</MenuItemContent>
+                    <MenuItemContent icon={Pencil}>
+                      {t('Update')}
+                    </MenuItemContent>
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     disabled={!canWrite || isToggling}
@@ -444,9 +442,7 @@ export function RulesList({
                         </MenuItemContent>
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        onClick={() =>
-                          void copyToClipboard('Name', rule.name)
-                        }
+                        onClick={() => void copyToClipboard('Name', rule.name)}
                       >
                         <MenuItemContent icon={Copy}>
                           {t('Copy name')}
@@ -476,9 +472,7 @@ export function RulesList({
                     </DropdownMenuSubContent>
                   </DropdownMenuSub>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={() => openInNewTab(firewallHref)}
-                  >
+                  <DropdownMenuItem onClick={() => openInNewTab(firewallHref)}>
                     <MenuItemContent icon={ExternalLink}>
                       {t('Open in new tab')}
                     </MenuItemContent>

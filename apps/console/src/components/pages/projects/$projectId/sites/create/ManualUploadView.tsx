@@ -191,6 +191,7 @@ export function ManualUploadView() {
 
     setIsDeploying(true)
 
+    let createdSiteId: string | null = null
     try {
       // 1. Create the site
       const defaults = getFrameworkDefaults(framework)
@@ -207,6 +208,7 @@ export function ManualUploadView() {
         fallbackFile:
           defaults.adapter === 'static' ? fallbackFile || undefined : undefined,
       })
+      createdSiteId = site.$id
 
       // 2. Create domain rule
       if (domain) {
@@ -264,6 +266,18 @@ export function ManualUploadView() {
       })
     } catch (error: unknown) {
       toast.error(error.message || t('Failed to create site'))
+      // The site exists by now. Leaving the owner on this form would make
+      // the next attempt create a second one, so open the site instead.
+      if (createdSiteId) {
+        await queryClient.refetchQueries({
+          queryKey: ['sites', 'project', projectId],
+        })
+        navigate({
+          to: '/projects/$projectId/sites/$siteId',
+          params: { projectId, siteId: createdSiteId },
+        })
+        return
+      }
       setIsDeploying(false)
     }
   }

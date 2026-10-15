@@ -704,6 +704,16 @@ export const jaFunctionsDictionary: Record<string, string> = {
   'Your plan supports intervals of {minutes} minutes or longer.':
     'ご利用のプランでは {minutes} 分以上の間隔を設定できます。',
   'Upgrade to unlock': 'アップグレードで利用可能',
+  'Cron schedules are available on paid plans.':
+    'Cron スケジュールは有料プランで利用できます。',
+  'to use cron.': 'すると、Cron を使用できます。',
+  'Cron schedules are not available on your plan':
+    'ご利用のプランでは Cron スケジュールを利用できません',
+  'This function keeps running on its current cron until you switch it to an interval.':
+    'この関数は、間隔に切り替えるまで現在の Cron で引き続き実行されます。',
+  'to edit cron schedules.': 'すると、Cron スケジュールを編集できます。',
+  'Appwrite picks a fixed time within each interval for this function to spread load.':
+    '負荷を分散するため、Appwrite が各間隔内でこの関数の固定の実行時刻を決めます。',
   'Interval length': '間隔の長さ',
   'Interval unit': '間隔の単位',
   'Appwrite picks a fixed time within each interval for this function to spread load. Use cron if you need exact times.':

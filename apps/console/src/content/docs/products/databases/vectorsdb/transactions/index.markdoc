@@ -72,7 +72,7 @@ $client = (new Client())
 $vectorsDB = new VectorsDB($client);
 
 $tx = $vectorsDB->createTransaction();
-// $tx['$id'] is your transactionId
+// $tx->id is your transactionId
 ```
 ```python
 from appwrite.client import Client
@@ -86,7 +86,7 @@ client.set_key('<YOUR_API_KEY>') # Your secret API key
 vectors_db = VectorsDB(client)
 
 tx = vectors_db.create_transaction()
-# tx['$id'] is your transactionId
+# tx.id is your transactionId
 ```
 ```ruby
 require 'appwrite'
@@ -101,7 +101,7 @@ client = Client.new
 vectors_db = VectorsDB.new(client)
 
 tx = vectors_db.create_transaction
-# tx['$id'] is your transactionId
+# tx.id is your transactionId
 ```
 ```csharp
 using Appwrite;
@@ -109,7 +109,7 @@ using Appwrite.Models;
 using Appwrite.Services;
 
 Client client = new Client()
-    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
     .SetProject("<YOUR_PROJECT_ID>") // Your project ID
     .SetKey("<YOUR_API_KEY>"); // Your secret API key
 
@@ -257,7 +257,7 @@ $vectorsDB->updateDocument(
     collectionId: '<COLLECTION_ID>',
     documentId: '<DOCUMENT_ID>',
     data: ['metadata' => ['title' => 'Hamlet', 'year' => 1602]],
-    transactionId: $tx['$id']
+    transactionId: $tx->id
 );
 
 // Delete inside a transaction
@@ -265,7 +265,7 @@ $vectorsDB->deleteDocument(
     databaseId: '<DATABASE_ID>',
     collectionId: '<COLLECTION_ID>',
     documentId: '<DOCUMENT_ID>',
-    transactionId: $tx['$id']
+    transactionId: $tx->id
 );
 ```
 ```python
@@ -293,7 +293,7 @@ vectors_db.update_document(
     collection_id: '<COLLECTION_ID>',
     document_id: '<DOCUMENT_ID>',
     data: { "metadata" => { "title" => "Hamlet", "year" => 1602 } },
-    transaction_id: tx['$id']
+    transaction_id: tx.id
 )
 
 # Delete inside a transaction
@@ -301,7 +301,7 @@ vectors_db.delete_document(
     database_id: '<DATABASE_ID>',
     collection_id: '<COLLECTION_ID>',
     document_id: '<DOCUMENT_ID>',
-    transaction_id: tx['$id']
+    transaction_id: tx.id
 )
 ```
 ```csharp
@@ -471,7 +471,7 @@ $staged = $vectorsDB->getDocument(
     databaseId: '<DATABASE_ID>',
     collectionId: '<COLLECTION_ID>',
     documentId: '<DOCUMENT_ID>',
-    transactionId: $tx['$id']
+    transactionId: $tx->id
 );
 ```
 ```python
@@ -489,7 +489,7 @@ staged = vectors_db.get_document(
     database_id: '<DATABASE_ID>',
     collection_id: '<COLLECTION_ID>',
     document_id: '<DOCUMENT_ID>',
-    transaction_id: tx['$id']
+    transaction_id: tx.id
 )
 ```
 ```csharp
@@ -663,7 +663,7 @@ await vectorsDB.createOperations({
 ```
 ```php
 $vectorsDB->createOperations(
-    transactionId: $tx['$id'],
+    transactionId: $tx->id,
     operations: [
         [
             'action' => 'update',
@@ -703,7 +703,7 @@ vectors_db.create_operations(
 ```
 ```ruby
 vectors_db.create_operations(
-    transaction_id: tx['$id'],
+    transaction_id: tx.id,
     operations: [
         {
             'action' => 'update',
@@ -912,13 +912,13 @@ await vectorsDB.updateTransaction({
 ```php
 // Commit
 $vectorsDB->updateTransaction(
-    transactionId: $tx['$id'],
+    transactionId: $tx->id,
     commit: true
 );
 
 // Or roll back
 $vectorsDB->updateTransaction(
-    transactionId: $tx['$id'],
+    transactionId: $tx->id,
     rollback: true
 );
 ```
@@ -938,13 +938,13 @@ vectors_db.update_transaction(
 ```ruby
 # Commit
 vectors_db.update_transaction(
-    transaction_id: tx['$id'],
+    transaction_id: tx.id,
     commit: true
 )
 
 # Or roll back
 vectors_db.update_transaction(
-    transaction_id: tx['$id'],
+    transaction_id: tx.id,
     rollback: true
 )
 ```
