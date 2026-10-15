@@ -4,8 +4,11 @@ namespace Appwrite\Utopia\Database;
 
 use Appwrite\Utopia\Database\Documents\Aggregate;
 use Utopia\Database\Attribute;
+use Utopia\Database\Collection;
+use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Exception as DatabaseException;
 use Utopia\Database\Exception\Schema;
 use Utopia\Database\Filter;
 use Utopia\Database\Query;
@@ -16,8 +19,8 @@ use Utopia\Query\Schema\ColumnType;
 
 /**
  * Database::aggregate() returns each row as the engine reads it: values as the driver fetches them, and groups under
- * their storage column, a joined one unqualified unless another group shares its name. This names and types each
- * row as a read of the same attributes returns them.
+ * their storage column, a joined one unqualified unless another group shares its name. This names, types and decodes
+ * each row as a read of the same attributes returns them.
  */
 final readonly class Aggregation
 {
@@ -70,30 +73,40 @@ final readonly class Aggregation
      * @param array<string, Attribute> $operands The attribute each aggregate reads, keyed by the name a row returns it under
      * @param array<string, string> $groups The name a read returns each group under, keyed as the queries name it
      * @param array<string, Attribute> $attributes The attribute of each group, keyed by the name a read returns it under
+     * @param array<string, string> $sources The join alias each group is read from, '' for the collection read, keyed by the name a read returns it under
+     * @param array<string, true> $internal The keys of the attributes every document carries
      */
     private function __construct(
+        private Database $database,
         private array $aggregates,
         private array $operands,
         private array $groups,
         private array $attributes,
+        private array $sources,
+        private array $internal,
     ) {
     }
 
     /**
-     * @param list<Attribute> $internal The attributes every document carries
+     * @param Database $database The database the rows were aggregated by, whose filters decode them
      * @param Document $collection The collection read, with its attribute documents
      * @param array<string, Document> $joined The collection each join reads, keyed by join alias
      * @param array<Query> $queries The queries the rows were aggregated by
      */
-    public static function from(array $internal, Document $collection, array $joined, array $queries): self
+    public static function from(Database $database, Document $collection, array $joined, array $queries): self
     {
+        $internal = $database->internalAttributes();
+
         $schema = [];
+        $origins = [];
         foreach ([...$internal, ...self::attributes($collection)] as $attribute) {
             $schema[$attribute->key] = $attribute;
+            $origins[$attribute->key] = '';
         }
         foreach ($joined as $alias => $definition) {
             foreach ([...$internal, ...self::attributes($definition)] as $attribute) {
                 $schema[$alias . '.' . $attribute->key] = $attribute;
+                $origins[$alias . '.' . $attribute->key] = $alias;
             }
         }
 
@@ -101,6 +114,7 @@ final readonly class Aggregation
         $operands = [];
         $groups = [];
         $attributes = [];
+        $sources = [];
         foreach ($queries as $query) {
             $method = $query->getMethod();
             if ($method->isAggregate()) {
@@ -126,21 +140,30 @@ final readonly class Aggregation
                 $groups[$group] = $name;
                 if (isset($schema[$name])) {
                     $attributes[$name] = $schema[$name];
+                    $sources[$name] = $origins[$name];
                 }
             }
         }
 
-        return new self($aggregates, $operands, $groups, $attributes);
+        $keys = [];
+        foreach ($internal as $attribute) {
+            $keys[$attribute->key] = true;
+        }
+
+        return new self($database, $aggregates, $operands, $groups, $attributes, $sources, $keys);
     }
 
     /**
      * @param array<string, mixed> $row A row as Database::aggregate() returns it
+     *
+     * @throws DatabaseException When a group's filter cannot decode it
      */
     public function decode(array $row): Aggregate
     {
         $names = $this->names(\array_keys($row));
 
         $document = new Aggregate();
+        $filtered = [];
         foreach ($row as $column => $value) {
             $method = $this->aggregates[$column] ?? null;
             if ($method !== null) {
@@ -150,10 +173,65 @@ final readonly class Aggregation
 
             $name = $names[$column] ?? $column;
             $attribute = $this->attributes[$name] ?? null;
-            $document->setAttribute($name, $attribute === null ? $value : self::cast($attribute, $value));
+            if ($attribute === null) {
+                $document->setAttribute($name, $value);
+                continue;
+            }
+
+            $value = self::cast($attribute, $value);
+            $document->setAttribute($name, $value);
+            if ($value !== null && $attribute->filters !== []) {
+                $filtered[$this->sources[$name]][$name] = $value;
+            }
+        }
+
+        foreach ($filtered as $alias => $values) {
+            foreach ($this->filter($alias, $values) as $name => $value) {
+                $document->setAttribute($name, $value);
+            }
         }
 
         return $document;
+    }
+
+    /**
+     * Passes groups read from one collection through the filters their attributes declare, as a read of that
+     * collection decodes them.
+     *
+     * @param string $alias The join alias the groups are read from, '' for the collection read
+     * @param array<string, mixed> $values The cast value of each group, keyed by the name a read returns it under
+     * @return array<string, mixed>
+     *
+     * @throws DatabaseException
+     */
+    private function filter(string $alias, array $values): array
+    {
+        $prefix = $alias === '' ? '' : $alias . '.';
+
+        $keys = [];
+        $definitions = [];
+        $stored = new Document();
+        foreach ($values as $name => $value) {
+            $key = \substr($name, \strlen($prefix));
+            $keys[$name] = $key;
+            $stored->setAttribute($key, $value);
+            if (!isset($this->internal[$key])) {
+                $definitions[] = $this->attributes[$name]->toDocument();
+            }
+        }
+
+        $decoded = $this->database->decode(
+            new Document([Document::ID => $alias, Collection::ATTRIBUTES => $definitions]),
+            $stored,
+            \array_values($keys),
+        );
+
+        $filtered = [];
+        foreach ($keys as $name => $key) {
+            $filtered[$name] = $decoded->getAttribute($key);
+        }
+
+        return $filtered;
     }
 
     /**

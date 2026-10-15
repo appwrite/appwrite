@@ -159,7 +159,7 @@ class XList extends Action
                 $parsed->isAggregation() => function () use ($dbForDatabases, $dbForProject, $database, $collection, $collectionTableId, $queries, $parsed, $authorization): array {
                     $rows = $dbForDatabases->aggregate($collectionTableId, $queries);
                     $aggregation = Aggregation::from(
-                        $dbForDatabases->internalAttributes(),
+                        $dbForDatabases,
                         $collection,
                         $this->getJoinedCollections($dbForProject, $database, $parsed->joins, $authorization),
                         $queries,
