@@ -356,7 +356,16 @@ impl Database {
         let mut state = context.state();
         match state.definition_refills.iter_mut().find(|(k, f, _)| k == definition_key && f == field) {
             Some(entry) => entry.2 = refill,
-            None => state.definition_refills.push((definition_key.to_owned(), field.to_owned(), refill)),
+            // PHP nests fields under their definition key: a new field of a
+            // known key runs after that key's other fields.
+            None => {
+                let at = state
+                    .definition_refills
+                    .iter()
+                    .rposition(|(k, _, _)| k == definition_key)
+                    .map_or(state.definition_refills.len(), |i| i + 1);
+                state.definition_refills.insert(at, (definition_key.to_owned(), field.to_owned(), refill));
+            }
         }
     }
 
