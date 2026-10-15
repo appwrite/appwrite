@@ -177,18 +177,6 @@ mod parity {
         Collection::create("docs", "", attributes, vec![], None, true, Array::new()).unwrap()
     }
 
-    /// The tables PHP's `createCollection()` made, made with its statements.
-    async fn create_tables(adapter: &Sql, expected: &serde_json::Value) {
-        for statement in expected[0]["statements"].as_array().unwrap() {
-            let query = statement["q"].as_str().unwrap();
-            let trimmed = query.trim_start();
-            if trimmed.starts_with("SELECT") {
-                continue;
-            }
-            adapter.pdo().lock().await.exec(query).await.unwrap();
-        }
-    }
-
     fn base(id: &str, extra: Vec<(&str, Value)>) -> Document {
         let mut pairs = vec![
             ("$id", s(id)),
@@ -278,13 +266,15 @@ mod parity {
             let _ = adapter.delete(&db).await;
             adapter.create(&db).await.unwrap();
         }
-        create_tables(&adapter, &expected).await;
         let spatial = engine != Engine::Sqlite;
         let collection = collection(spatial);
         let profiler = Arc::new(Profiler::new());
         profiler.enable();
         adapter.set_profiler(Some(profiler.clone()));
-        let mut run = Run { profiler, seen: 0, steps: vec![expected[0].clone()] };
+        let mut run = Run { profiler, seen: 0, steps: Vec::new() };
+        let r =
+            adapter.create_collection("docs", collection.attributes().unwrap(), &[]).await.map(serde_json::Value::from);
+        run.record("createCollection", r);
         let one = |d: Document| array_json(d.as_array());
 
         let mut doc1 = doc(vec![
@@ -661,37 +651,20 @@ mod support {
     }
 
     impl Col {
-        fn sql(self, engine: Engine) -> &'static str {
-            match (engine, self) {
-                (Engine::Sqlite, Col::Str) => "VARCHAR(255)",
-                (Engine::Sqlite, Col::Int | Col::BigInt | Col::UnsignedBigInt | Col::Bool) => "INTEGER",
-                (Engine::Sqlite, Col::Double) => "REAL",
-                (Engine::Sqlite, Col::Json | Col::Point | Col::Line | Col::Polygon) => "TEXT",
-                (Engine::Sqlite, Col::Datetime) => "DATETIME(3)",
-                (Engine::Postgres, Col::Str) => "VARCHAR(255)",
-                (Engine::Postgres, Col::Int) => "INTEGER",
-                (Engine::Postgres, Col::BigInt | Col::UnsignedBigInt) => "BIGINT",
-                (Engine::Postgres, Col::Double) => "DOUBLE PRECISION",
-                (Engine::Postgres, Col::Bool) => "BOOLEAN",
-                (Engine::Postgres, Col::Json) => "JSONB",
-                (Engine::Postgres, Col::Datetime) => "TIMESTAMP(3)",
-                (Engine::Postgres, Col::Point) => "GEOMETRY(POINT,4326)",
-                (Engine::Postgres, Col::Line) => "GEOMETRY(LINESTRING,4326)",
-                (Engine::Postgres, Col::Polygon) => "GEOMETRY(POLYGON,4326)",
-                (_, Col::Str) => "VARCHAR(255)",
-                (_, Col::Int) => "INT",
-                (_, Col::BigInt) => "BIGINT",
-                (_, Col::UnsignedBigInt) => "BIGINT UNSIGNED",
-                (_, Col::Double) => "DOUBLE",
-                (_, Col::Bool) => "TINYINT(1)",
-                (_, Col::Json) => "JSON",
-                (_, Col::Datetime) => "DATETIME(3)",
-                (Engine::MySql, Col::Point) => "POINT SRID 4326",
-                (Engine::MySql, Col::Line) => "LINESTRING SRID 4326",
-                (Engine::MySql, Col::Polygon) => "POLYGON SRID 4326",
-                (_, Col::Point) => "POINT",
-                (_, Col::Line) => "LINESTRING",
-                (_, Col::Polygon) => "POLYGON",
+        /// The attribute PHP's `createCollection()` makes this column for.
+        fn attribute(self, key: &str) -> Attribute {
+            match self {
+                Col::Str => Attribute::string(key, 255),
+                Col::Int => Attribute::integer(key),
+                Col::BigInt => Attribute::big_integer(key),
+                Col::UnsignedBigInt => Attribute::big_integer(key).signed(false),
+                Col::Double => Attribute::double(key),
+                Col::Bool => Attribute::boolean(key),
+                Col::Json => Attribute::string(key, 255).array(true),
+                Col::Datetime => Attribute::datetime(key),
+                Col::Point => Attribute::point(key),
+                Col::Line => Attribute::line_string(key),
+                Col::Polygon => Attribute::polygon(key),
             }
         }
     }
@@ -739,71 +712,12 @@ mod support {
             }
         }
 
-        /// The tables of collection `name` with `columns`: the document key
-        /// unique, the permissions table beside it.
+        /// The tables of collection `name` with `columns`, as
+        /// `createCollection()` makes them.
         pub async fn create_table(&self, name: &str, columns: &[(&str, Col)]) {
-            let shared = self.adapter.shared_tables();
-            let (id, tenant) = match self.engine {
-                Engine::Sqlite => ("INTEGER PRIMARY KEY AUTOINCREMENT", "INTEGER"),
-                Engine::Postgres => ("BIGSERIAL PRIMARY KEY", "INTEGER"),
-                _ => ("BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY", "INT"),
-            };
-            let datetime = Col::Datetime.sql(self.engine);
-            let text = if self.engine == Engine::Postgres { "TEXT" } else { "MEDIUMTEXT" };
-            let mut definitions = vec![
-                format!("{} {id}", self.q("_id")),
-                format!("{} VARCHAR(255) NOT NULL", self.q("_uid")),
-                format!("{} {tenant} NULL", self.q("_tenant")),
-                format!("{} {datetime} NULL", self.q("_createdAt")),
-                format!("{} {datetime} NULL", self.q("_updatedAt")),
-                format!("{} {text} NULL", self.q("_permissions")),
-            ];
-            for (column, kind) in columns {
-                definitions.push(format!("{} {}", self.q(column), kind.sql(self.engine)));
-            }
-            let key = if shared {
-                if self.engine == Engine::Postgres {
-                    format!("{}, {}", self.q("_uid"), self.q("_tenant"))
-                } else {
-                    format!("{}, {}", self.q("_tenant"), self.q("_uid"))
-                }
-            } else {
-                self.q("_uid")
-            };
-            let perms = self.table(&format!("{name}_perms"));
-            let mut statements = vec![format!("CREATE TABLE {} ({})", self.table(name), definitions.join(", "))];
-            statements.push(format!(
-                "CREATE TABLE {perms} ({} {id}, {} {tenant} NULL, {} VARCHAR(12) NOT NULL, {} VARCHAR(255) NOT NULL, {} VARCHAR(255) NOT NULL)",
-                self.q("_id"),
-                self.q("_tenant"),
-                self.q("_type"),
-                self.q("_permission"),
-                self.q("_document"),
-            ));
-            match self.engine {
-                Engine::Sqlite => {
-                    statements.push(format!("CREATE UNIQUE INDEX `ns_{name}_uid` ON `ns_{name}` ({key})"));
-                    statements.push(format!(
-                        "CREATE UNIQUE INDEX `ns_{name}_index1` ON `ns_{name}_perms` (`_document`, `_type`, `_permission`)"
-                    ));
-                }
-                Engine::Postgres => {
-                    statements.push(format!("CREATE UNIQUE INDEX \"ns_{name}_uid\" ON {} ({key})", self.table(name)));
-                    statements.push(format!(
-                        "CREATE UNIQUE INDEX \"ns_{name}_index1\" ON {perms} (\"_document\", \"_type\", \"_permission\")"
-                    ));
-                }
-                _ => {
-                    statements.push(format!("CREATE UNIQUE INDEX `_uid` ON {} ({key})", self.table(name)));
-                    statements.push(format!(
-                        "CREATE UNIQUE INDEX `_index1` ON {perms} (`_document`, `_type`, `_permission`)"
-                    ));
-                }
-            }
-            let mut pdo = self.adapter.pdo().lock().await;
-            for statement in statements {
-                pdo.exec(&statement).await.unwrap();
-            }
+            let attributes: Vec<Attribute> = columns.iter().map(|(key, kind)| kind.attribute(key)).collect();
+            self.adapter.create_collection(name, &attributes, &[]).await.unwrap();
+            self.profiler.reset();
         }
 
         /// The statements recorded since the last call, with their bindings.
@@ -2842,5 +2756,188 @@ mod sqlite_user_functions {
         assert_regexp(&adapter).await;
         utopia_database::adapter::Connection::reconnect(&adapter).await.unwrap();
         assert_regexp(&adapter).await;
+    }
+}
+
+/// Reads every permission (`Authorization::disable()`).
+fn without_authorization(adapter: &Sql) {
+    let authorization = utopia_database::validator::authorization::Authorization::new(true);
+    authorization.disable();
+    adapter.set_authorization(Arc::new(authorization));
+}
+
+/// `$query` with every run of whitespace made one space.
+fn squeezed(query: &str) -> String {
+    query.split_whitespace().collect::<Vec<_>>().join(" ")
+}
+
+/// The joined reads of `Tests\Unit\SQLGetDocumentTest`.
+mod sql_get_document_joins {
+    use super::*;
+
+    fn on() -> Query {
+        Query::from(utopia_query::Query::on("$id", "customerId", "="))
+    }
+
+    async fn captured(engine: Engine, db: &str, join: Query) -> Option<String> {
+        let fx = fx(engine, db, false).await?;
+        without_authorization(&fx.adapter);
+        fx.create_table("collection", &[("title", Col::Str)]).await;
+        fx.create_table("orders", &[("customerId", Col::Str)]).await;
+        let c = collection("collection", vec![Attribute::string("title", 255)]);
+        fx.adapter.get_document(&c, "document", vec![join], false).await.unwrap();
+        let statements = fx.statements();
+        assert_eq!(statements.len(), 1);
+        Some(statements[0].0.clone())
+    }
+
+    fn assert_join_projection(sql: &str, quote: char, alias: &str) {
+        let q = |s: &str| format!("{quote}{s}{quote}");
+        assert!(sql.contains(&format!("{}.*", q("table_main"))), "{sql}");
+        assert!(sql.contains(&format!("{}.{} AS {}", q(alias), q("_uid"), q(&format!("{alias}._uid")))), "{sql}");
+        assert!(!sql.contains(&format!("{}.*", q(alias))), "{sql}");
+        let flat = squeezed(sql).to_uppercase();
+        assert!(!flat.contains("SELECT * ") && !flat.contains("SELECT *,") && !flat.ends_with("SELECT *"), "{sql}");
+        assert!(!flat.replace("( ", "(").contains("FROM (SELECT *"), "{sql}");
+    }
+
+    #[tokio::test]
+    async fn join_skips_fast_path() {
+        let join = Query::left_join("orders", "j0", vec![on()]).unwrap();
+        let Some(sql) = captured(Engine::MySql, "bdocs_join_fast", join).await else { return };
+        assert!(sql.contains("JOIN"));
+        assert!(!squeezed(&sql).ends_with("WHERE `_uid` = :_uid"));
+        assert_join_projection(&sql, '`', "j0");
+    }
+
+    #[tokio::test]
+    async fn join_without_select_leaves_joined_internals_out() {
+        let join = Query::left_join("orders", "j0", vec![on()]).unwrap();
+        let Some(sql) = captured(Engine::MySql, "bdocs_join_left", join).await else { return };
+        assert_join_projection(&sql, '`', "j0");
+        assert!(sql.contains("LEFT JOIN"));
+    }
+
+    #[tokio::test]
+    async fn join_alias_without_select_leaves_joined_internals_out() {
+        let join = Query::join("orders", "rev", vec![on()]).unwrap();
+        let Some(sql) = captured(Engine::MySql, "bdocs_join_alias", join).await else { return };
+        assert_join_projection(&sql, '`', "rev");
+    }
+
+    #[tokio::test]
+    async fn get_document_full_outer_join_uses_left_join_on_postgres() {
+        let join = Query::full_outer_join("orders", "j0", vec![on()]).unwrap();
+        let Some(sql) = captured(Engine::Postgres, "bdocs_join_full", join).await else { return };
+        assert!(sql.contains("LEFT JOIN"));
+        assert!(!sql.contains("FULL OUTER JOIN"));
+        assert!(!sql.contains("UNION ALL"));
+        assert_join_projection(&sql, '"', "j0");
+    }
+
+    #[tokio::test]
+    async fn a_join_cannot_lock_the_document() {
+        let fx = fx(Engine::Sqlite, "join_lock", false).await.unwrap();
+        let c = collection("collection", vec![]);
+        let join = Query::left_join("orders", "j0", vec![on()]).unwrap();
+        let error = fx.adapter.get_document(&c, "document", vec![join], true).await.unwrap_err();
+        assert_eq!(error.kind(), utopia_database::Kind::Query);
+        assert_eq!(error.message(), "Cannot lock a document for update when join queries are present");
+        assert!(fx.statements().is_empty());
+    }
+}
+
+/// PHP: `Tests\Unit\SQLiteRegexTest`, at the adapter (the adapter always
+/// registers `REGEXP`, so the case of a connection without it is PHP's
+/// own).
+mod sqlite_regex {
+    use super::*;
+
+    const NAMES: [&str; 6] = ["abc", "axc", "abcd", "ABC", "a.c", "xabc"];
+    const PATTERN: &str = "^a.c$";
+
+    #[tokio::test]
+    async fn regex_matches_through_the_user_function() {
+        let fx = fx(Engine::Sqlite, "regex", false).await.unwrap();
+        without_authorization(&fx.adapter);
+        fx.create_table("words", &[("name", Col::Str)]).await;
+        let c = collection("words", vec![Attribute::string("name", 32)]);
+        for (i, name) in NAMES.iter().enumerate() {
+            fx.adapter.create_document(&c, document(&format!("w{i}"), vec![("name", s(name))])).await.unwrap();
+        }
+        let queries = || vec![Query::from(utopia_query::Query::regex("name", PATTERN))];
+        let found = fx.adapter.find(&c, queries(), utopia_database::adapter::Find::default()).await.unwrap();
+        let names: Vec<Value> = found.iter().map(|d| d.get("name").cloned().unwrap()).collect();
+        assert_eq!(names, vec![s("abc"), s("axc"), s("a.c")]);
+        assert_eq!(fx.adapter.count(&c, queries(), None).await.unwrap(), 3);
+    }
+}
+
+/// The `contains` read of `Tests\Unit\Adapter\SQLArrayWritesTest`.
+mod sql_array_writes_contains {
+    use super::*;
+
+    #[tokio::test]
+    async fn created_documents_are_found_by_an_element_of_their_array() {
+        let fx = fx(Engine::Sqlite, "array_writes", false).await.unwrap();
+        without_authorization(&fx.adapter);
+        fx.create_table("items", &[("tags", Col::Json)]).await;
+        let c = collection("items", vec![Attribute::string("tags", 16).array(true)]);
+        fx.adapter
+            .create_documents(
+                &c,
+                vec![
+                    document("first", vec![("tags", strings(&["red", "blue"]))]),
+                    document("second", vec![("tags", strings(&["green"]))]),
+                ],
+            )
+            .await
+            .unwrap();
+        let found = fx
+            .adapter
+            .find(
+                &c,
+                vec![Query::from(utopia_query::Query::contains(
+                    "tags",
+                    [s("blue")].map(|v| utopia_database::value::to_query(&v)),
+                ))],
+                utopia_database::adapter::Find::default(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(found.iter().map(|d| d.id().to_owned()).collect::<Vec<_>>(), ["first"]);
+    }
+}
+
+/// The find case of `Tests\Unit\Adapter\FloatBindingTest`.
+mod float_binding_find {
+    use super::*;
+
+    #[tokio::test]
+    async fn a_find_binds_a_float_in_fixed_point() {
+        let Some(fx) = fx(Engine::MariaDb, "bdocs_float_find", false).await else { return };
+        without_authorization(&fx.adapter);
+        fx.create_table("numbers", &[("f", Col::Double)]).await;
+        let c = collection("numbers", vec![Attribute::double("f")]);
+        fx.adapter.create_document(&c, document("zero", vec![("f", Value::Float(0.0))])).await.unwrap();
+        let below = |limit: f64| {
+            let fx = &fx;
+            let c = &c;
+            async move {
+                fx.adapter
+                    .find(
+                        c,
+                        vec![Query::from(utopia_query::Query::less_than("f", limit))],
+                        utopia_database::adapter::Find::default(),
+                    )
+                    .await
+                    .unwrap()
+                    .len()
+            }
+        };
+        // The profiler keeps the value as given; what is bound shows in the
+        // rows: 1e-300 in fixed point (`0.00000000000000000`) is not above 0.
+        assert_eq!(below(0.5).await, 1);
+        assert_eq!(below(1e-300).await, 0);
     }
 }
