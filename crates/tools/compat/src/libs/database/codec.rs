@@ -2,30 +2,66 @@
 //! `tests/compat/database/Values.php` (read its docs for the tags).
 //!
 //! [`decode`] turns an argument into a [`Value`] as PHP's `Codec::decode`
-//! and `Values::decode` together do; [`encode`] turns a result back into
-//! JSON as `Values::encode` and `Codec::encode` do.
+//! and `Values::decode` together do, for the tags a plain value holds
+//! (documents, queries, operators, `stdClass`, BSON); the tags of other
+//! objects (`$value`, `$enum`, `$datetime`) are decoded by the typed
+//! arguments ([`super::args`]). [`encode`] turns a value back into JSON as
+//! `Values::encode` and `Codec::encode` do.
 
 use base64::Engine as _;
 use base64::engine::general_purpose::STANDARD as BASE64;
-use serde_json::{Map, Value as Json};
+use serde_json::{Map, Value as Json, json};
 use utopia_database::document::Document;
-use utopia_database::operator::{Operator, OperatorMethod};
-use utopia_database::query::{Method, Query};
-use utopia_database::value::{Array, ArrayKey, BsonValue, Ext, KeyRef, Str, Value};
+use utopia_database::operator::{Operator, OperatorType};
+use utopia_database::query::Query;
+use utopia_database::value::{self, Array, ArrayKey, BsonValue, Ext, KeyRef, Str, Value};
+use utopia_database::{Error, Kind};
 
 use crate::adapter::{Fault, bytes_value, float_value};
 
+/// Why a decode failed: a malformed tag (a fault), or what PHP's decode
+/// throws (`new Query()` with an unknown method, `OperatorType::from()`).
+#[derive(Debug)]
+pub enum DecodeError {
+    /// A harness problem.
+    Fault(Fault),
+    /// The library's (or the engine's) error.
+    Error(Error),
+}
+
+impl From<Fault> for DecodeError {
+    fn from(f: Fault) -> Self {
+        DecodeError::Fault(f)
+    }
+}
+
+impl From<Error> for DecodeError {
+    fn from(e: Error) -> Self {
+        DecodeError::Error(e)
+    }
+}
+
+type D<T> = Result<T, DecodeError>;
+
+fn fault<T>(message: impl Into<String>) -> D<T> {
+    Err(DecodeError::Fault(Fault::new(message)))
+}
+
 /// An argument as a value (`Codec::decode` then `Values::decode`).
-pub fn decode(json: &Json) -> Result<Value, Fault> {
+pub fn decode(json: &Json) -> D<Value> {
     Ok(match json {
         Json::Null => Value::Null,
         Json::Bool(b) => Value::Bool(*b),
         Json::Number(n) => match n.as_i64() {
             Some(i) => Value::Int(i),
-            None => Value::Float(n.as_f64().unwrap_or(0.0)),
+            None => match n.as_u64() {
+                // Beyond i64: PHP's json_decode makes it a float.
+                Some(u) => Value::Float(u as f64),
+                None => Value::Float(n.as_f64().unwrap_or(0.0)),
+            },
         },
         Json::String(s) => Value::Str(Str::from(s.as_str())),
-        Json::Array(items) => Value::Array(items.iter().map(decode).collect::<Result<Array, Fault>>()?),
+        Json::Array(items) => Value::Array(items.iter().map(decode).collect::<D<Array>>()?),
         Json::Object(o) if o.is_empty() => Value::Object(Array::new()),
         Json::Object(o) => {
             if o.len() == 1 {
@@ -38,29 +74,27 @@ pub fn decode(json: &Json) -> Result<Value, Fault> {
                         "INF" => f64::INFINITY,
                         "-INF" => f64::NEG_INFINITY,
                         "NAN" => f64::NAN,
-                        _ => return Err(Fault::new("invalid $float")),
+                        _ => return fault("invalid $float"),
                     }));
                 }
             }
             let document_tag = o.len() == 1 || (o.len() == 2 && o.contains_key("$class"));
             if document_tag && let Some(attrs) = o.get("$document") {
-                return Ok(Value::from(match attrs {
+                let document = match attrs {
                     Json::Object(m) if m.is_empty() => Document::empty(),
-                    other => document_of(decode_array(other)?)?,
+                    other => Document::new(decode_array(other)?)?,
+                };
+                return Ok(Value::from(match o.get("$class").and_then(Json::as_str) {
+                    Some(class) => document.with_class(full_class(class)),
+                    None => document,
                 }));
             }
             if o.len() == 1 {
                 if let Some(q) = o.get("$query") {
-                    let (method, attribute, values) = fields(q)?;
-                    return Ok(Value::from(Query::from_array(Method::from_name(&method), attribute, values)));
+                    return Ok(Value::from(query_tag(q)?));
                 }
                 if let Some(op) = o.get("$operator") {
-                    let (method, attribute, values) = fields(op)?;
-                    return Ok(Value::from(Operator::from_array(
-                        OperatorMethod::from_name(&method),
-                        attribute,
-                        values,
-                    )));
+                    return Ok(Value::from(operator_tag(op)?));
                 }
                 if let Some(obj) = o.get("$object") {
                     return Ok(Value::Object(decode_array(obj)?));
@@ -70,84 +104,83 @@ pub fn decode(json: &Json) -> Result<Value, Fault> {
                 }
             }
             Value::Array(
-                o.iter().map(|(k, v)| Ok((ArrayKey::normalize(Str::from(k.as_str())), decode(v)?))).collect::<Result<
-                    Array,
-                    Fault,
-                >>(
-                )?,
+                o.iter()
+                    .map(|(k, v)| Ok((ArrayKey::normalize(Str::from(k.as_str())), decode(v)?)))
+                    .collect::<D<Array>>()?,
             )
         }
     })
 }
 
-/// An argument that must be an array (`Values::decodeArray`): `{}` is empty.
-pub fn decode_array(json: &Json) -> Result<Array, Fault> {
-    match decode(json)? {
-        Value::Array(a) => Ok(a),
-        Value::Object(a) if a.is_empty() => Ok(Array::new()),
-        other => Err(Fault::new(format!("expected an array, got {}", other.type_name()))),
+/// The class a tag names, as PHP's `::class` spells it (`Values::className`):
+/// relative to `Utopia\Database`, or to `Utopia` with a `Query\` prefix; a
+/// class outside the library (`Tests\E2E\...`) as it is.
+pub fn full_class(name: &str) -> String {
+    if name.starts_with("Tests\\") || name.starts_with("Utopia\\") {
+        name.to_owned()
+    } else if name.starts_with("Query\\") {
+        format!("Utopia\\{name}")
+    } else {
+        format!("Utopia\\Database\\{name}")
     }
 }
 
-fn document_of(attrs: Array) -> Result<Document, Fault> {
-    Document::new(attrs).map_err(|e| Fault::new(format!("document: {}", e.message())))
+/// The tag name of a class (`Values::shortName`): `None` outside the library.
+pub fn short_class(class: &str) -> Option<&str> {
+    class.strip_prefix("Utopia\\Database\\").or_else(|| class.strip_prefix("Utopia\\").filter(|c| c.starts_with("Query\\")))
 }
 
-fn fields(json: &Json) -> Result<(String, String, Array), Fault> {
-    let a = decode_array(json)?;
-    let text = |k: &str| -> String {
-        match a.get_str(k) {
-            Some(Value::Str(s)) => String::from_utf8_lossy(s.as_bytes()).into_owned(),
-            Some(Value::Int(i)) => i.to_string(),
-            _ => String::new(),
-        }
-    };
-    let values = match a.get_str("values") {
+/// `new Query(method, attribute, values, alias)` from a `$query` tag.
+pub fn query_tag(json: &Json) -> D<Query> {
+    let fields = decode_array(json)?;
+    let text = |k: &str| fields.get_str(k).map(value::to_text).unwrap_or_default();
+    let values = match fields.get_str("values") {
         Some(Value::Array(v)) => v.clone(),
         _ => Array::new(),
     };
-    Ok((text("method"), text("attribute"), values))
+    Ok(Query::named(&text("method"), text("attribute"), value::to_query_array(&values), text("alias"))?)
+}
+
+/// `new Operator(OperatorType::from(method), attribute, values)` from an
+/// `$operator` tag.
+pub fn operator_tag(json: &Json) -> D<Operator> {
+    let fields = decode_array(json)?;
+    let text = |k: &str| fields.get_str(k).map(value::to_text).unwrap_or_default();
+    let values = match fields.get_str("values") {
+        Some(Value::Array(v)) => v.clone(),
+        _ => Array::new(),
+    };
+    let method = text("method");
+    let method = OperatorType::try_from_value(&method).ok_or_else(|| {
+        Error::new(
+            Kind::ValueError,
+            format!("\"{method}\" is not a valid backing value for enum Utopia\\Database\\OperatorType"),
+        )
+    })?;
+    Ok(Operator::from_array(method, text("attribute"), values))
+}
+
+/// An argument that must be an array (`Values::decodeArray`): `{}` is empty.
+pub fn decode_array(json: &Json) -> D<Array> {
+    match decode(json)? {
+        Value::Array(a) => Ok(a),
+        Value::Object(a) if a.is_empty() => Ok(Array::new()),
+        other => fault(format!("expected an array, got {}", other.type_name())),
+    }
 }
 
 /// A document argument: a `$document` tag or a plain array (`Values::document`).
-pub fn document(json: &Json) -> Result<Document, Fault> {
+pub fn document(json: &Json) -> D<Document> {
     match decode(json)? {
         Value::Ext(Ext::Document(d)) => Ok(*d),
         Value::Object(a) if a.is_empty() => Ok(Document::empty()),
-        Value::Array(a) => document_of(a),
-        other => Err(Fault::new(format!("expected a document, got {}", other.type_name()))),
+        Value::Array(a) => Ok(Document::new(a)?),
+        other => fault(format!("expected a document, got {}", other.type_name())),
     }
 }
 
-/// Documents from a list argument (`Values::documents`).
-pub fn documents(json: &Json) -> Result<Vec<Document>, Fault> {
-    list(json)?.into_iter().map(document).collect()
-}
-
-/// Queries from a list argument (`Values::queries`): `$query` tags, arrays
-/// parsed with `Query::parseQuery`, strings with `Query::parse`. A parse
-/// error is the operation's error, as in PHP.
-pub fn queries(json: &Json) -> Result<Result<Vec<Query>, utopia_database::Error>, Fault> {
-    let mut out = Vec::new();
-    for q in list(json)? {
-        let parsed = match q {
-            Json::String(s) => Query::parse(s),
-            other => match decode(other)? {
-                Value::Ext(Ext::Query(q)) => Ok(*q),
-                Value::Array(a) => Query::parse_query(&a),
-                Value::Object(a) if a.is_empty() => Query::parse_query(&Array::new()),
-                v => return Err(Fault::new(format!("expected a query, got {}", v.type_name()))),
-            },
-        };
-        match parsed {
-            Ok(q) => out.push(q),
-            Err(e) => return Ok(Err(e)),
-        }
-    }
-    Ok(Ok(out))
-}
-
-/// The items of a list argument (`null` and `{}` are empty).
+/// The items of a list argument (`Values::list`: `null` and `{}` are empty,
+/// an object's values in order).
 pub fn list(json: &Json) -> Result<Vec<&Json>, Fault> {
     match json {
         Json::Null => Ok(Vec::new()),
@@ -158,7 +191,7 @@ pub fn list(json: &Json) -> Result<Vec<&Json>, Fault> {
     }
 }
 
-/// A result as JSON (`Values::encode` then `Codec::encode`).
+/// A value as JSON (`Values::encode` then `Codec::encode`).
 pub fn encode(value: &Value) -> Json {
     match value {
         Value::Null => Json::Null,
@@ -170,40 +203,72 @@ pub fn encode(value: &Value) -> Json {
         Value::Object(a) if a.is_empty() => Json::Object(Map::new()),
         Value::Object(a) => tag("$object", encode_array(a)),
         Value::Ext(Ext::Document(d)) => encode_document(d),
-        Value::Ext(Ext::Query(q)) => tag(
-            "$query",
-            serde_json::json!({
-                "method": q.method().as_str(),
-                "attribute": q.attribute(),
-                "values": encode_array(&q.values_array()),
-            }),
-        ),
+        Value::Ext(Ext::Query(q)) => encode_query(q),
         Value::Ext(Ext::Operator(o)) => tag(
             "$operator",
-            serde_json::json!({
+            json!({
                 "method": o.method().as_str(),
                 "attribute": o.attribute(),
-                "values": encode_array(&o.values_array()),
+                "values": encode_array(o.raw_values()),
             }),
         ),
         Value::Ext(Ext::Bson(b)) => tag(
             "$bson",
             match &**b {
-                BsonValue::UtcDateTime(ms) => serde_json::json!({ "$date": { "$numberLong": ms.to_string() } }),
+                BsonValue::UtcDateTime(ms) => json!({ "$date": { "$numberLong": ms.to_string() } }),
                 BsonValue::ObjectId(bytes) => {
-                    serde_json::json!({ "$oid": bytes.iter().map(|b| format!("{b:02x}")).collect::<String>() })
+                    json!({ "$oid": bytes.iter().map(|b| format!("{b:02x}")).collect::<String>() })
                 }
                 BsonValue::Regex { pattern, flags } => {
-                    serde_json::json!({ "$regularExpression": { "pattern": pattern, "options": flags } })
+                    json!({ "$regularExpression": { "pattern": pattern, "options": flags } })
                 }
             },
         ),
     }
 }
 
+/// A query (`{"$query": {"method", "attribute", "values", "alias"?}}`).
+pub fn encode_query(q: &utopia_query::Query) -> Json {
+    let mut o = Map::new();
+    o.insert("method".into(), Json::String(q.method().as_str().to_owned()));
+    o.insert("attribute".into(), Json::String(q.attribute().to_owned()));
+    o.insert("values".into(), encode_query_array(q.values()));
+    if !q.alias().is_empty() {
+        o.insert("alias".into(), Json::String(q.alias().to_owned()));
+    }
+    tag("$query", Json::Object(o))
+}
+
+/// A query value as JSON.
+pub fn encode_query_value(v: &utopia_query::Value) -> Json {
+    match v {
+        utopia_query::Value::Ext(utopia_query::Object::Query(q)) => encode_query(q),
+        other => encode(&value::from_query(other)),
+    }
+}
+
+/// Query values as JSON (a list, or an object).
+pub fn encode_query_array(a: &utopia_query::Array) -> Json {
+    if a.is_list() {
+        return Json::Array(a.values().map(encode_query_value).collect());
+    }
+    let mut m = Map::with_capacity(a.len());
+    for (k, v) in a.iter() {
+        m.insert(key_text(k), encode_query_value(v));
+    }
+    Json::Object(m)
+}
+
+fn key_text(k: KeyRef<'_>) -> String {
+    match k {
+        KeyRef::Int(i) => i.to_string(),
+        KeyRef::Str(s) => String::from_utf8_lossy(s).into_owned(),
+    }
+}
+
 /// A `{"$bson": <canonical extended JSON>}` value: the BSON types the
 /// MongoDB adapter carries.
-fn decode_bson(json: &Json) -> Result<Value, Fault> {
+fn decode_bson(json: &Json) -> D<Value> {
     let bad = || Fault::new(format!("unsupported $bson value: {json}"));
     let o = json.as_object().ok_or_else(bad)?;
     if let Some(date) = o.get("$date") {
@@ -221,16 +286,16 @@ fn decode_bson(json: &Json) -> Result<Value, Fault> {
         let text = |k: &str| re.get(k).and_then(Json::as_str).unwrap_or("").to_owned();
         return Ok(Value::from(BsonValue::Regex { pattern: text("pattern"), flags: text("options") }));
     }
-    Err(bad())
+    Err(DecodeError::Fault(bad()))
 }
 
-/// A document result: `{"$document": {...}}` (plus `$class` for a custom type).
+/// A document: `{"$document": {...}}`, plus `$class` for a subclass.
 pub fn encode_document(d: &Document) -> Json {
     let attrs = if d.is_empty() { Json::Object(Map::new()) } else { encode_array(d.as_array()) };
     let mut o = Map::new();
     o.insert("$document".into(), attrs);
     if d.class() != utopia_database::document::CLASS {
-        o.insert("$class".into(), Json::String(d.class().to_owned()));
+        o.insert("$class".into(), Json::String(short_class(d.class()).unwrap_or(d.class()).to_owned()));
     }
     Json::Object(o)
 }
@@ -247,30 +312,19 @@ pub fn encode_array(a: &Array) -> Json {
     }
     let mut m = Map::with_capacity(a.len());
     for (k, v) in a.iter() {
-        let key = match k {
-            KeyRef::Int(i) => i.to_string(),
-            KeyRef::Str(s) => String::from_utf8_lossy(s).into_owned(),
-        };
-        m.insert(key, encode(v));
+        m.insert(key_text(k), encode(v));
     }
     Json::Object(m)
 }
 
-fn tag(name: &str, value: Json) -> Json {
+/// `{"<name>": value}`.
+pub fn tag(name: &str, value: Json) -> Json {
     let mut o = Map::new();
     o.insert(name.into(), value);
     Json::Object(o)
 }
 
-/// An error result in the driver's form.
-pub fn error(e: &utopia_database::Error) -> crate::adapter::Outcome {
-    crate::adapter::Outcome::err_bytes(e.php_class(), e.message_bytes())
-}
-
-/// A result or an error, as the driver reports them.
-pub fn outcome(r: utopia_database::Result<Value>) -> crate::adapter::Outcome {
-    match r {
-        Ok(v) => crate::adapter::Outcome::Ok(encode(&v)),
-        Err(e) => error(&e),
-    }
+/// An exception as a value (`{"$error": {"class", "message"}}`).
+pub fn error(e: &Error) -> Json {
+    json!({"$error": {"class": e.php_class(), "message": bytes_value(e.message_bytes())}})
 }
