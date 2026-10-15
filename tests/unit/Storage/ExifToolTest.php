@@ -126,6 +126,27 @@ final class ExifToolTest extends TestCase
         $this->assertTrue($this->exiftool->strip($photo));
     }
 
+    public function testFailedStartupStopsTheProcess(): void
+    {
+        $before = $this->countExifToolProcesses();
+
+        try {
+            new ExifTool(startupTimeout: 0.000001);
+            $this->fail('Expected the warm-up to time out.');
+        } catch (\Exception $e) {
+            $this->assertStringContainsString('did not respond', $e->getMessage());
+        }
+
+        $this->assertSame($before, $this->countExifToolProcesses());
+    }
+
+    private function countExifToolProcesses(): int
+    {
+        \exec('ps -eo args', $lines);
+
+        return \count(\array_filter($lines, fn (string $line) => \str_starts_with($line, 'perl ') && \str_contains($line, '-stay_open')));
+    }
+
     private function createPhoto(string $format, ?string $icc = null): string
     {
         $path = $this->dir . '/' . \uniqid() . '.' . $format;

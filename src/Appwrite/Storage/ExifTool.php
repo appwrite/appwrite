@@ -22,9 +22,13 @@ class ExifTool
     /** @var array<int, resource> */
     private array $pipes = [];
 
+    /**
+     * @param float $startupTimeout Covers loading Perl, which is slow when every worker starts at once.
+     */
     public function __construct(
         private readonly string $binary = 'exiftool',
         private readonly float $timeout = 10.0,
+        private readonly float $startupTimeout = 60.0,
     ) {
         $this->start();
     }
@@ -39,6 +43,11 @@ class ExifTool
      */
     public function strip(string $path): bool
     {
+        return $this->stripWithin($path, $this->timeout);
+    }
+
+    private function stripWithin(string $path, float $timeout): bool
+    {
         // Each argument is one stdin line, so a line break or leading dash could inject options.
         if (!\str_starts_with($path, '/') || \strpbrk($path, "\r\n") !== false) {
             throw new InvalidArgumentException('Path must be absolute and must not contain line breaks.');
@@ -52,7 +61,7 @@ class ExifTool
             '-orientation',
             '-overwrite_original',
             $path,
-        ]);
+        ], $timeout);
 
         return \str_contains($output, '1 image files updated')
             || \str_contains($output, '1 image files unchanged');
@@ -135,7 +144,13 @@ class ExifTool
         $this->pipes = $pipes;
         \stream_set_blocking($this->pipes[1], false);
 
-        $this->warmUp();
+        try {
+            $this->warmUp();
+        } catch (\Throwable $th) {
+            // PHP skips __destruct when a constructor throws, so stop the process here.
+            $this->close();
+            throw $th;
+        }
     }
 
     private function warmUp(): void
@@ -147,7 +162,7 @@ class ExifTool
 
         try {
             \file_put_contents($path, \base64_decode(self::WARM_UP_JPEG));
-            $this->strip($path);
+            $this->stripWithin($path, $this->startupTimeout);
         } finally {
             @\unlink($path);
         }
@@ -156,7 +171,7 @@ class ExifTool
     /**
      * @param array<string> $args
      */
-    private function execute(array $args): string
+    private function execute(array $args, float $timeout): string
     {
         $process = $this->process;
         if (!\is_resource($process) || !self::native(fn () => \proc_get_status($process))['running']) {
@@ -169,12 +184,12 @@ class ExifTool
         \fflush($this->pipes[0]);
 
         $output = '';
-        $deadline = \microtime(true) + $this->timeout;
+        $deadline = \microtime(true) + $timeout;
 
         while (!\str_contains($output, self::READY)) {
             $remaining = $deadline - \microtime(true);
             if ($remaining <= 0) {
-                throw new Exception('exiftool did not respond within ' . $this->timeout . ' seconds.');
+                throw new Exception('exiftool did not respond within ' . $timeout . ' seconds.');
             }
 
             $read = [$this->pipes[1]];
