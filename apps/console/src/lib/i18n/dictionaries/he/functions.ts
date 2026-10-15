@@ -739,4 +739,33 @@ export const heFunctionsDictionary: Record<string, string> = {
     'דואר נכנס לכתובת הזו יתקבל אחרי שתפעילו את טריגר האימייל.',
   'Mail is delivered when this function has an active deployment.':
     'הדואר נמסר כאשר לפונקציה יש פריסה פעילה.',
+  // Inbound email (SMTP) custom domains
+  'Enable the email trigger under Settings → Executions before adding an email domain.':
+    'הפעילו את טריגר האימייל תחת הגדרות ← הרצות לפני הוספת דומיין אימייל.',
+  'Email domain verified': 'דומיין האימייל אומת',
+  'Failed to add email domain': 'הוספת דומיין האימייל נכשלה',
+  'Verify email domain': 'אימות דומיין אימייל',
+  'Add email domain': 'הוספת דומיין אימייל',
+  'Email domain': 'דומיין אימייל',
+  'Mail sent to any address on this domain runs this function. This is separate from HTTP domains and from outbound SMTP for the project.':
+    'דואר שנשלח לכל כתובת בדומיין הזה מריץ את הפונקציה. זה נפרד מדומייני HTTP ומ-SMTP היוצא של הפרויקט.',
+  'After adding the domain, publish an MX record and a TXT ownership record, then verify.':
+    'לאחר הוספת הדומיין, פרסמו רשומת MX ורשומת TXT לאימות בעלות, ואז אמתו.',
+  'Email domains': 'דומייני אימייל',
+  'Receive mail for this function on domains you own. The default address is on the Email card under Settings → Executions.':
+    'קבלו דואר לפונקציה הזו בדומיינים בבעלותכם. כתובת ברירת המחדל מופיעה בכרטיס האימייל תחת הגדרות ← הרצות.',
+  'Enable the email trigger under Settings → Executions to add email domains.':
+    'הפעילו את טריגר האימייל תחת הגדרות ← הרצות כדי להוסיף דומייני אימייל.',
+  'No email domains yet': 'אין עדיין דומייני אימייל',
+  'Add a domain you own, publish MX and TXT records, then verify to accept inbound mail.':
+    'הוסיפו דומיין בבעלותכם, פרסמו רשומות MX ו-TXT ואז אמתו אותו כדי לקבל דואר נכנס.',
+  'Email domain has been deleted': 'דומיין האימייל נמחק',
+  'Point MX at Appwrite SMTP and prove ownership with a TXT record. No TLS certificate is issued for email domains.':
+    'הפנו את רשומת ה-MX אל Appwrite SMTP והוכיחו בעלות באמצעות רשומת TXT. לא מונפקת תעודת TLS לדומייני אימייל.',
+  'MX target unavailable': 'יעד ה-MX אינו זמין',
+  'This region does not report its mail server target yet, so the MX record cannot be shown here.':
+    'האזור הזה עדיין לא מדווח על יעד שרת הדואר שלו, ולכן לא ניתן להציג כאן את רשומת ה-MX.',
+  Propagation: 'הפצה',
+  'DNS changes can take up to 48 hours. The MX record must point straight at Appwrite on TCP port 25, not through a proxy.':
+    'שינויי DNS עשויים להימשך עד 48 שעות. רשומת ה-MX חייבת להצביע ישירות אל Appwrite בפורט TCP 25, ולא דרך פרוקסי.',
 }
