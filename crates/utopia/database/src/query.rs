@@ -897,10 +897,12 @@ impl ParsedQuery {
                 {
                     parsed.cursor = Some(*d);
                 }
-                _ => {
+                // Named as PHP's get_debug_type() names it: a nested query
+                // is a `Utopia\Database\Query`.
+                other => {
                     return Err(Error::query(format!(
                         "Invalid query: Invalid cursor: a cursor must be a document, {} given",
-                        value.debug_type()
+                        other.debug_type()
                     )));
                 }
             }
