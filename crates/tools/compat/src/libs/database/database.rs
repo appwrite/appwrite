@@ -855,13 +855,36 @@ fn section_encoding<'a>(
         let cb = |k: &str| calls.required(k, a.raw(k));
         let _ = (&s, &cb);
         Ok(Some(match method {
-            "encode" => ok(db
-                .encode(&collection_param(a, "collection")?, a.document("document")?, a.bool_or("applyDefaults", true)?)
-                .await)?,
-            "decode" => ok(db
-                .decode(&collection_param(a, "collection")?, a.document("document")?, &a.strings("selections")?)
-                .await)?,
-            "casting" => ok(db.casting(&collection_param(a, "collection")?, a.document("document")?))?,
+            "encode" => {
+                let encoded = db
+                    .encode(
+                        &collection_param(a, "collection")?,
+                        a.document("document")?,
+                        a.bool_or("applyDefaults", true)?,
+                    )
+                    .await;
+                // PHP encodes the document object in place.
+                if let (Ok(document), Some(json)) = (&encoded, a.raw("document")) {
+                    store_back(a, json, document.clone().into_obj());
+                }
+                ok(encoded)?
+            }
+            "decode" => {
+                let decoded = db
+                    .decode(&collection_param(a, "collection")?, a.document("document")?, &a.strings("selections")?)
+                    .await;
+                if let (Ok(document), Some(json)) = (&decoded, a.raw("document")) {
+                    store_back(a, json, document.clone().into_obj());
+                }
+                ok(decoded)?
+            }
+            "casting" => {
+                let cast = db.casting(&collection_param(a, "collection")?, a.document("document")?);
+                if let (Ok(document), Some(json)) = (&cast, a.raw("document")) {
+                    store_back(a, json, document.clone().into_obj());
+                }
+                ok(cast)?
+            }
             "convertQueries" => {
                 let joined = match a.raw("joinedCollections") {
                     Some(Json::Object(map)) => map
@@ -877,7 +900,7 @@ fn section_encoding<'a>(
                     && queries.len() == sent.len()
                 {
                     for (query, json) in queries.iter().zip(sent) {
-                        store_back(a, json, query);
+                        store_back(a, json, query.clone().into_obj());
                     }
                 }
                 ok(converted)?
@@ -885,7 +908,7 @@ fn section_encoding<'a>(
             "convertQuery" => {
                 let converted = db.convert_query(&collection_param(a, "collection")?, a.query("query")?);
                 if let (Ok(query), Some(json)) = (&converted, a.raw("query")) {
-                    store_back(a, json, query);
+                    store_back(a, json, query.clone().into_obj());
                 }
                 ok(converted)?
             }
@@ -895,11 +918,11 @@ fn section_encoding<'a>(
     })
 }
 
-/// A query converted in place: `{"$obj": <name>}` now names the converted
-/// query, as the PHP object the library changed.
-fn store_back(a: &Args, json: &Json, query: &Query) {
+/// An object the library changed in place: `{"$obj": <name>}` now names
+/// the changed value, as the PHP object.
+fn store_back(a: &Args, json: &Json, changed: Obj) {
     if let Some(name) = json.as_object().filter(|o| o.len() == 1).and_then(|o| o.get("$obj")).and_then(Json::as_str) {
-        a.cx.store(name, query.clone().into_obj());
+        a.cx.store(name, changed);
     }
 }
 

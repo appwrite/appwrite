@@ -504,7 +504,7 @@ async fn call_method(adapter: &Arc<dyn Adapter>, method: &str, a: &Args, calls: 
         "getColumnType" => ok(adapter.column_type(&a.req::<Attribute>("attribute")?))?,
         // ----- Indexes -----
         "createIndex" => {
-            let types = match a.raw("attributeTypes") {
+            let types = match a.raw("indexAttributeTypes").or(a.raw("attributeTypes")) {
                 Some(Json::Object(map)) => map
                     .iter()
                     .map(|(k, v)| Ok((k.clone(), super::values::enum_of::<ColumnType>(v)?)))

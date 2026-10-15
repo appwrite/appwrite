@@ -1060,7 +1060,12 @@ async fn dispatch(this: &mut Obj, method: &str, a: &Args, calls: &Calls) -> R<Op
     }
     if let Some(b) = this.downcast_ref::<BuilderObj>() {
         let b = b.clone();
-        return query_builder(&b, this, method, a, calls).await.map(Some);
+        let out = query_builder(&b, this, method, a, calls).await;
+        // PHP throws a bound builder's refusal from the call that made it.
+        if let Some(e) = lock(&b.0).take_refusal() {
+            return Err(query_fail(e));
+        }
+        return out.map(Some);
     }
     if let Some(s) = this.downcast_ref::<StatementObj>() {
         let s = s.clone();
@@ -1186,7 +1191,18 @@ fn profile(p: &Arc<Profiler>, this: &Obj, method: &str, a: &Args, calls: &Calls)
 
 async fn query_cache(q: &Arc<cache::Query>, this: &Obj, method: &str, a: &Args) -> R<Obj> {
     let scope = || a.req::<Scope>("scope");
-    let entry = || a.req::<Entry>("entry");
+    // An entry `getEntry()` did not find is `null`: PHP refuses it as the
+    // `Entry` parameter.
+    let entry = || match a.raw("entry") {
+        Some(j) if a.decode_value(j).is_ok_and(|v| matches!(v, Value::Null)) => Err(Fail::php(
+            "TypeError",
+            format!(
+                "Utopia\\Database\\Cache\\Query::{}(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 609",
+                method
+            ),
+        )),
+        _ => a.req::<Entry>("entry"),
+    };
     Ok(match method {
         "setRegion" => {
             q.set_region(&a.string("collection")?, a.req::<Region>("region")?);
@@ -1364,7 +1380,7 @@ async fn query_builder(b: &BuilderObj, this: &Obj, method: &str, a: &Args, calls
     let x = &mut *guard;
     Ok(match method {
         "from" => {
-            x.from_checked(&s("table")?, &alias()?).map_err(query_fail)?;
+            x.from(&s("table")?, &alias()?);
             fluent()
         }
         "fromNone" => {
