@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -14,16 +14,21 @@ import {
 import { useUpdatePasswordRotationPolicy } from '@/lib/react-query/hooks'
 import {
   hasPasswordRotationChanges,
+  maxAgeRangeInUnit,
   maxAgeSecondsFromValue,
   maxAgeUnitPair,
-  maxAgeValueForUnit,
   maxAgeValueInUnit,
+  PASSWORD_MAX_AGE_UNITS,
   passwordMaxAgeRangeError,
   passwordRotationUpdate,
+  type PasswordMaxAgeUnit,
   type PasswordRotationPolicy,
 } from '@/lib/password-rotation'
 import { type TimeUnit } from '@/lib/utils/time-unit-converter'
 import { useT } from '@/lib/i18n/translate'
+
+/** The dropdown reads smallest first; the constant is ordered largest first. */
+const UNIT_OPTIONS = [...PASSWORD_MAX_AGE_UNITS].reverse()
 
 export function PasswordRotationCard({
   projectId,
@@ -53,8 +58,15 @@ export function PasswordRotationCard({
     setMaxAgeSeconds(currentPolicy.maxAge)
   }, [currentPolicy, mutation.isPending])
 
-  // Max value for the current unit, so the stepper cannot pass 10 years.
-  const maxValueForUnit = useMemo(() => maxAgeValueForUnit(unit), [unit])
+  // The range the field advertises, in the unit on screen rather than seconds,
+  // so it never refuses an age the API accepts or admits one it does not.
+  const { min, max } = maxAgeRangeInUnit(unit)
+  const unitLabels: Record<PasswordMaxAgeUnit, string> = {
+    days: t('Days'),
+    weeks: t('Weeks'),
+    months: t('Months'),
+    years: t('Years'),
+  }
 
   const maxAge = maxAgeValueInUnit(maxAgeSeconds, unit)
   const rangeError = passwordMaxAgeRangeError(enabled, maxAgeSeconds)
@@ -121,8 +133,8 @@ export function PasswordRotationCard({
                 <Input
                   id="password-rotation-max-age"
                   type="number"
-                  min={1}
-                  max={maxValueForUnit}
+                  min={min}
+                  max={max}
                   value={maxAge}
                   onChange={(e) => {
                     const value = parseFloat(e.target.value)
@@ -162,10 +174,11 @@ export function PasswordRotationCard({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="days">{t('Days')}</SelectItem>
-                  <SelectItem value="weeks">{t('Weeks')}</SelectItem>
-                  <SelectItem value="months">{t('Months')}</SelectItem>
-                  <SelectItem value="years">{t('Years')}</SelectItem>
+                  {UNIT_OPTIONS.map((option) => (
+                    <SelectItem key={option} value={option}>
+                      {unitLabels[option]}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               {/* Spacer to match the height of helper text in the value field */}

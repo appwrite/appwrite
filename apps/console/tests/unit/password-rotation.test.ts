@@ -7,18 +7,18 @@
 import { describe, expect, test } from 'bun:test'
 import { createRequire } from 'node:module'
 import {
-  DEFAULT_PASSWORD_MAX_AGE_SECONDS,
   hasPasswordRotationChanges,
   MAX_PASSWORD_MAX_AGE_SECONDS,
+  maxAgeRangeInUnit,
   maxAgeSecondsFromValue,
   maxAgeUnitPair,
-  maxAgeValueForUnit,
   maxAgeValueInUnit,
   MIN_PASSWORD_MAX_AGE_SECONDS,
   PASSWORD_MAX_AGE_UNITS,
   parsePasswordRotationPolicy,
   passwordMaxAgeRangeError,
   passwordRotationUpdate,
+  type PasswordMaxAgeUnit,
 } from '@/lib/password-rotation'
 import { toSeconds } from '@/lib/utils/time-unit-converter'
 
@@ -35,24 +35,26 @@ describe('the range the API accepts', () => {
     // `Range(86400, 315360000)` in
     // src/Appwrite/Platform/Modules/Project/Http/Project/Policies/PasswordRotation/Update.php,
     // which reaches the console as the spec the SDK is generated from.
+    // The schema carries the range as prose only — no machine-readable
+    // `minimum`/`maximum` — so matching the bare numbers is as tight as this
+    // gets without breaking on a reworded sentence.
     const spec = require('@appwrite.io/console/spec.json')
     const maxAge =
       spec.paths['/project/policies/password-rotation'].patch.requestBody
         .content['application/json'].schema.properties.maxAge
-    expect(maxAge.description).toContain(
-      `${MIN_PASSWORD_MAX_AGE_SECONDS} seconds`,
-    )
-    expect(maxAge.description).toContain(
-      `${MAX_PASSWORD_MAX_AGE_SECONDS} seconds`,
-    )
-    expect(maxAge.description).toContain(
-      `${DEFAULT_PASSWORD_MAX_AGE_SECONDS} seconds`,
-    )
+    expect(maxAge.description).toContain(String(MIN_PASSWORD_MAX_AGE_SECONDS))
+    expect(maxAge.description).toContain(String(MAX_PASSWORD_MAX_AGE_SECONDS))
   })
 
   test('leaves out units that cannot reach a day', () => {
-    // 'hours' and below can only express a maximum age the API refuses.
-    expect(PASSWORD_MAX_AGE_UNITS).toEqual(['years', 'months', 'weeks', 'days'])
+    // Every offered unit can write an age the API accepts; 'hours' and below
+    // cannot, which is why the list stops at days.
+    for (const unit of PASSWORD_MAX_AGE_UNITS) {
+      expect(toSeconds(1, unit)).toBeGreaterThanOrEqual(
+        MIN_PASSWORD_MAX_AGE_SECONDS,
+      )
+    }
+    expect(toSeconds(1, 'hours')).toBeLessThan(MIN_PASSWORD_MAX_AGE_SECONDS)
   })
 })
 
@@ -67,14 +69,17 @@ describe('parsePasswordRotationPolicy', () => {
     ).toEqual({ enabled: true, maxAge: 7_776_000 })
   })
 
-  test('falls back to the stored default when maxAge is absent', () => {
+  test('reports no policy when maxAge is not a number', () => {
+    // A numeric `maxAge` is the discriminator, so a response that carries the
+    // key without one is not the rotation policy: the card is hidden rather
+    // than rendered around an age the server did not give.
     expect(
       parsePasswordRotationPolicy({
         $id: 'password-rotation',
         enabled: false,
         maxAge: undefined,
       } as never),
-    ).toEqual({ enabled: false, maxAge: DEFAULT_PASSWORD_MAX_AGE_SECONDS })
+    ).toBeNull()
   })
 
   test('reports no policy on a server that does not have one', () => {
@@ -113,22 +118,20 @@ describe('maxAgeUnitPair', () => {
   })
 })
 
-describe('maxAgeValueForUnit', () => {
-  test('is the largest whole value that stays inside 10 years', () => {
-    expect(maxAgeValueForUnit('years')).toBe(10)
-    expect(maxAgeValueForUnit('months')).toBe(121)
-    expect(maxAgeValueForUnit('weeks')).toBe(521)
-    expect(maxAgeValueForUnit('days')).toBe(3650)
+describe('maxAgeRangeInUnit', () => {
+  test('is the API range written in the chosen unit', () => {
+    expect(maxAgeRangeInUnit('years')).toEqual({ min: 0.0027, max: 10 })
+    expect(maxAgeRangeInUnit('months')).toEqual({ min: 0.033, max: 121.67 })
+    expect(maxAgeRangeInUnit('weeks')).toEqual({ min: 0.14, max: 521.43 })
+    expect(maxAgeRangeInUnit('days')).toEqual({ min: 1, max: 3650 })
   })
 
-  test('never offers a stepper value the API would refuse', () => {
+  test('never writes a minimum that reads as 0', () => {
+    // The field used to hardcode `min={1}` while two decimals wrote the stored
+    // day as `0` years, so a valid policy rendered as out of range with no
+    // error. A unit added above years must not bring that back.
     for (const unit of PASSWORD_MAX_AGE_UNITS) {
-      expect(toSeconds(maxAgeValueForUnit(unit), unit)).toBeLessThanOrEqual(
-        MAX_PASSWORD_MAX_AGE_SECONDS,
-      )
-      expect(toSeconds(maxAgeValueForUnit(unit) + 1, unit)).toBeGreaterThan(
-        MAX_PASSWORD_MAX_AGE_SECONDS,
-      )
+      expect(maxAgeRangeInUnit(unit).min).toBeGreaterThan(0)
     }
   })
 })
@@ -140,6 +143,15 @@ describe('maxAgeValueInUnit', () => {
     expect(maxAgeValueInUnit(ONE_YEAR, 'weeks')).toBe(52.14)
     expect(maxAgeValueInUnit(ONE_YEAR, 'months')).toBe(12.17)
     expect(maxAgeValueInUnit(ONE_DAY, 'days')).toBe(1)
+  })
+
+  test('writes a short age in a large unit without reading as 0', () => {
+    // 1 day is the smallest age the API takes, and the example the spec gives.
+    // Two decimals wrote it as `0` years, which the card showed with no error
+    // while Update stayed disabled.
+    expect(maxAgeValueInUnit(ONE_DAY, 'years')).toBe(0.0027)
+    expect(maxAgeValueInUnit(ONE_DAY, 'months')).toBe(0.033)
+    expect(maxAgeValueInUnit(ONE_DAY, 'weeks')).toBe(0.14)
   })
 
   test('reads a stored age that no unit divides', () => {
@@ -169,16 +181,18 @@ describe('maxAgeSecondsFromValue', () => {
     )
   })
 
-  test('round trips through the display without drifting', () => {
-    for (const unit of PASSWORD_MAX_AGE_UNITS) {
-      const seconds = maxAgeSecondsFromValue(
-        maxAgeValueInUnit(ONE_YEAR, unit),
-        unit,
-      )
-      expect(maxAgeValueInUnit(seconds, unit)).toBe(
-        maxAgeValueInUnit(ONE_YEAR, unit),
-      )
-    }
+  test('loses the age it cannot write, which is why the card keeps seconds', () => {
+    // Writing the number on screen back into seconds is a one-way loss where
+    // two decimals cannot hold the age: 1 year read back from months gains
+    // 8,640s and from weeks loses 1,728s. The card derives the display from
+    // the stored seconds, so only a typed value is ever read back this way.
+    const readBack = (unit: PasswordMaxAgeUnit) =>
+      maxAgeSecondsFromValue(maxAgeValueInUnit(ONE_YEAR, unit), unit)
+    expect(readBack('months')).toBe(ONE_YEAR + 8_640)
+    expect(readBack('weeks')).toBe(ONE_YEAR - 1_728)
+    // Days and years divide a year exactly, so only those two survive it.
+    expect(readBack('days')).toBe(ONE_YEAR)
+    expect(readBack('years')).toBe(ONE_YEAR)
   })
 })
 

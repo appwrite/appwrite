@@ -22,6 +22,9 @@ const ROTATION_POLICY_PATH = `/project/policies/${ROTATION_ID}`
 /** The API's default maximum password age: 1 year. */
 const ONE_YEAR = 31_536_000
 const THREE_MONTHS = 7_776_000
+/** Both ends of the API's `Range(86400, 315360000)` on `maxAge`. */
+const ONE_DAY = 86_400
+const TEN_YEARS = 315_360_000
 
 const OWNER_ROLES = ['owner'] satisfies Models.Roles['roles']
 const OWNER_SCOPES = [
@@ -460,6 +463,42 @@ test.describe('periodic password change policy (mocked API)', () => {
     expect(calls.patches[0].postDataJSON()).toEqual({
       enabled: true,
       maxAge: ONE_YEAR * 2,
+    })
+  })
+
+  test('writes an age a large unit can barely hold', async ({ page }) => {
+    // The ends of the range are the ones two decimals cannot write: the field
+    // used to hardcode `min={1}` and floor its `max`, so a stored day read in
+    // years showed `0` with no error, and 10 years read in months showed
+    // 121.67 against a `max` of 121. Neither is an age the user typed.
+    const calls = await mockAppwriteApi(page, {
+      rotation: { enabled: true, maxAge: ONE_DAY },
+    })
+    await openPasswordPolicies(page)
+
+    await expect(maxAgeInput(page)).toHaveValue('1')
+    await expect(unitTrigger(page)).toContainText('Days')
+
+    await openSelectAndChoose(page, unitTrigger(page), 'Years')
+    await expect(maxAgeInput(page)).toHaveValue('0.0027')
+    await expect(maxAgeInput(page)).toHaveAttribute('min', '0.0027')
+    await expect(card(page)).toContainText('Between 1 day and 10 years')
+    // Still the stored day, so there is nothing to save.
+    await expect(updateButton(page)).toBeDisabled()
+
+    // The other end, typed in years and read back in months.
+    await maxAgeInput(page).fill('10')
+    await openSelectAndChoose(page, unitTrigger(page), 'Months')
+    await expect(maxAgeInput(page)).toHaveValue('121.67')
+    await expect(maxAgeInput(page)).toHaveAttribute('max', '121.67')
+    await expect(card(page)).toContainText('Between 1 day and 10 years')
+
+    await expect(updateButton(page)).toBeEnabled()
+    await updateButton(page).click()
+    await expect.poll(() => calls.patches.length).toBe(1)
+    expect(calls.patches[0].postDataJSON()).toEqual({
+      enabled: true,
+      maxAge: TEN_YEARS,
     })
   })
 
