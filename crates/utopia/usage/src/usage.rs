@@ -53,6 +53,15 @@ impl Usage {
         self.adapter.setup().await
     }
 
+    /// Adds the tables, columns and indexes the storage lacks. A new table
+    /// gets the configured retention; an existing table's retention is left
+    /// as it is.
+    ///
+    /// PHP: `migrate()`.
+    pub async fn migrate(&self) -> Result<()> {
+        self.adapter.migrate().await
+    }
+
     /// Appends `metrics` of `kind`, at most `batch_size` per write
     /// ([`BATCH_SIZE`] by default in PHP). Each entry carries its own tenant.
     ///

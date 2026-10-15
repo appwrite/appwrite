@@ -730,6 +730,10 @@ impl<A: utopia_client::Adapter + 'static> Adapter for ClickHouse<A> {
         self.create().await
     }
 
+    async fn migrate(&self) -> Result<()> {
+        self.migrate_schema().await
+    }
+
     async fn add_batch(&self, metrics: &[Entry], kind: Kind, batch_size: i64) -> Result<bool> {
         if metrics.is_empty() {
             return Ok(true);

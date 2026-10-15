@@ -467,6 +467,19 @@ impl Nats {
     async fn pull(&self, queue: &Queue, timeout: i64, max: usize) -> Result<Vec<Message>> {
         self.ensure(queue).await?;
         let key = identity(queue);
+
+        // The fallback for the spare delivery dying too: JetStream then stops
+        // delivering and emits this advisory, which drain_dead_letters() reads
+        // to move the message to the dead stream. The queue group keeps this to
+        // one dead-letter copy, but the server hands each advisory to one
+        // member at random, so only a broker that drains it may join: it is
+        // subscribed here, on the first receive, not in provisioning, which a
+        // publisher also runs. Subscribed before this broker's first fetch, so
+        // it is in place before any delivery this broker takes can exhaust.
+        if !self.state().advisories.contains_key(&key) {
+            let advisory = self.subscribe_advisory(queue).await?;
+            self.state().advisories.entry(key.clone()).or_insert(advisory);
+        }
         self.drain_dead_letters(queue, &key).await;
         let consumer =
             self.state().consumers.get(&key).cloned().ok_or_else(|| Error::Runtime("consumer missing".into()))?;
@@ -828,10 +841,11 @@ impl Nats {
             })
             .await
             .map_err(jetstream_error)?;
-        let advisory = self.subscribe_advisory(queue).await?;
+        // The max-deliveries advisory is subscribed by pull(), not here:
+        // provisioning also runs on a publisher's first publish, and a
+        // publisher never drains it.
         let mut state = self.state();
         state.consumers.insert(key.to_owned(), consumer);
-        state.advisories.insert(key.to_owned(), advisory);
         state.spare.insert(key.to_owned(), Some(self.config.max_deliver + 1));
         state.provisioned.insert(key.to_owned());
         Ok(())
@@ -881,10 +895,8 @@ impl Nats {
                 "NATS consumer \"{CONSUMER_WORK}\" on stream \"{stream_name}\" allows no delivery past max_deliver {allowed}, so a message exhausted while no broker is subscribed is left on the work stream; reprovision it from the queue's owner."
             )));
         }
-        let advisory = self.subscribe_advisory(queue).await?;
         let mut state = self.state();
         state.consumers.insert(key.to_owned(), consumer);
-        state.advisories.insert(key.to_owned(), advisory);
         state.spare.insert(key.to_owned(), spare);
         state.provisioned.insert(key.to_owned());
         Ok(())

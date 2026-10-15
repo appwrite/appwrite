@@ -30,4 +30,4 @@ tokio = { workspace = true, features = ["rt", "macros", "io-util"] }
 
 [package.metadata.utopia]
 category = "servers"
-php-sync = "809d2819d7da00d8b2f486e3bcb4c98a5265e950"
+php-sync = "067814c060866c658b5ff41bd0e0fa8de0049c01"
