@@ -216,7 +216,6 @@ tokio::runtime::Runtime::new()?.block_on(async {
         });
     server.error().inject("error").action(|scope| async move {
         eprintln!("job failed: {:?}", scope.error());
-        Ok(())
     });
 
     Arc::new(server).start().await

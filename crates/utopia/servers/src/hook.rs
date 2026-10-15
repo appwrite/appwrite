@@ -25,13 +25,35 @@ pub type Resource = Arc<dyn Any + Send + Sync>;
 /// PHP: the callable given to `action()`.
 pub type Action = Arc<dyn Fn(Arguments) -> BoxFuture<'static, Result<(), Error>> + Send + Sync>;
 
+/// What a callback returns: nothing when it cannot fail, or a [`Result`]
+/// when it uses `?`, whose error goes to the error hooks.
+pub trait IntoResult {
+    /// The callback's outcome as a [`Result`].
+    fn into_result(self) -> Result<(), Error>;
+}
+
+impl IntoResult for () {
+    fn into_result(self) -> Result<(), Error> {
+        Ok(())
+    }
+}
+
+impl IntoResult for Result<(), Error> {
+    fn into_result(self) -> Result<(), Error> {
+        self
+    }
+}
+
 /// Wraps an async closure over the resolved [`Arguments`] into an [`Action`].
 pub fn action<F, Fut>(f: F) -> Action
 where
     F: Fn(Arguments) -> Fut + Send + Sync + 'static,
-    Fut: Future<Output = Result<(), Error>> + Send + 'static,
+    Fut: Future<Output: IntoResult> + Send + 'static,
 {
-    Arc::new(move |args| Box::pin(f(args)))
+    Arc::new(move |args| {
+        let future = f(args);
+        Box::pin(async move { future.await.into_result() })
+    })
 }
 
 /// Builds a param's default from its injections.
@@ -504,7 +526,7 @@ impl Hook {
     pub fn action<F, Fut>(&mut self, f: F) -> &mut Self
     where
         F: Fn(Arguments) -> Fut + Send + Sync + 'static,
-        Fut: Future<Output = Result<(), Error>> + Send + 'static,
+        Fut: Future<Output: IntoResult> + Send + 'static,
     {
         self.action = action(f);
         self

@@ -12,7 +12,6 @@ fn app() -> Http {
     let _ = http.get("/").unwrap().inject("response").action(async |s| {
         s.response.add_cookie(Cookie { name: "Session".into(), value: Some("a b".into()), ..Default::default() });
         s.response.text("Hello World!");
-        Ok(())
     });
     let _ = http
         .get("/value/:value")
@@ -22,18 +21,15 @@ fn app() -> Http {
         .action(async |s| {
             let v = s.param("value").and_then(|v| v.as_str()).unwrap_or("").to_owned();
             s.response.send(v.as_bytes());
-            Ok(())
         });
     let _ = http.get("/chunked").unwrap().inject("response").action(async |s| {
         s.response.chunk(b"Hello ", false);
         tokio::time::sleep(Duration::from_millis(50)).await;
         s.response.chunk(b"World!", true);
-        Ok(())
     });
     let _ = http.get("/slow").unwrap().inject("response").action(async |s| {
         tokio::time::sleep(Duration::from_millis(300)).await;
         s.response.send(b"slow");
-        Ok(())
     });
     let _ = http.get("/silent").unwrap();
     http

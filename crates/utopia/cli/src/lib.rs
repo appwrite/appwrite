@@ -39,7 +39,7 @@
 //!     .param("email", Param::new(json!(null), Text::new(0), "Valid email address"))
 //!     .action(move |args| {
 //!         *out.lock().unwrap() = args.value("email").cloned();
-//!         async { Ok(()) }
+//!         async {}
 //!     });
 //!
 //! cli.run().await?;

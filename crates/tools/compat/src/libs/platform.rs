@@ -213,7 +213,7 @@ fn callback(kind: &str, spec: &Value, ctx: &Ctx) -> Callback {
             let calls = ctx.calls.clone();
             Callback::worker(move |_scope| {
                 calls.lock().unwrap_or_else(|e| e.into_inner()).push(json!([id, []]));
-                async { Ok(()) }
+                async {}
             })
         }
         _ => {
@@ -665,7 +665,7 @@ pub async fn call(op: &str, args: &Value, _session: &mut Session) -> OpResult {
 }
 
 pub async fn bench(name: &str, _session: &mut Session) -> Result<Bench, Fault> {
-    let noop = || Callback::http(async |_| Ok(()));
+    let noop = || Callback::http(async |_| {});
     Ok(match name {
         "declare" => {
             let text: Arc<dyn utopia_validators::Validator> = Arc::new(Text::new(128));
