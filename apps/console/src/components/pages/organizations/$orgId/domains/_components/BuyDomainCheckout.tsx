@@ -178,6 +178,11 @@ export function BuyDomainPurchaseSummary({
   )
 }
 
+export type BuyDomainPurchaseResult = {
+  domainId: string
+  domain: string
+}
+
 type BuyDomainCheckoutProps = {
   orgId: string
   selection: BuyDomainSelection
@@ -185,6 +190,11 @@ type BuyDomainCheckoutProps = {
   fallbackPath: string
   /** Return to domain search (stage 1). */
   onBackToSearch: () => void
+  /**
+   * When set, checkout stays in the current wizard after payment instead of
+   * opening the organization domain detail page.
+   */
+  onPurchaseSuccess?: (result: BuyDomainPurchaseResult) => void
 }
 
 export function BuyDomainCheckout({
@@ -192,6 +202,7 @@ export function BuyDomainCheckout({
   selection,
   fallbackPath,
   onBackToSearch,
+  onPurchaseSuccess,
 }: BuyDomainCheckoutProps) {
   const t = useT()
   const navigate = useNavigate()
@@ -310,9 +321,7 @@ export function BuyDomainCheckout({
         organizationId: orgId,
       })
       if (finalized.status !== DomainPurchaseStatus.Succeeded) {
-        throw new Error(
-          t('Purchase could not be completed. Please try again.'),
-        )
+        throw new Error(t('Purchase could not be completed. Please try again.'))
       }
       return { kind: 'done' as const, domainId: finalized.domainId }
     },
@@ -321,6 +330,13 @@ export function BuyDomainCheckout({
         queryKey: ['domains', 'organization', orgId],
       })
       toast.success(`${selection.domain} ${t('registered successfully')}`)
+      if (onPurchaseSuccess) {
+        onPurchaseSuccess({
+          domainId: result.domainId,
+          domain: selection.domain,
+        })
+        return
+      }
       navigate({
         to: '/organizations/$orgId/domains/$domainId',
         params: { orgId, domainId: result.domainId },
@@ -391,7 +407,9 @@ export function BuyDomainCheckout({
             {t('Complete registration')}
           </h2>
           <p className="mt-1 text-[13px] text-muted-foreground">
-            {t('Registrant details must match your domain registry requirements.')}
+            {t(
+              'Registrant details must match your domain registry requirements.',
+            )}
           </p>
           {isDomainLimitReached ? (
             <p className="mt-2 text-[12px] text-amber-600 dark:text-amber-400">
