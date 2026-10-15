@@ -17,6 +17,20 @@ export const BLOG_POSTS: BlogPostMeta[] = [
     "hasCover": true
   },
   {
+    "slug": "announcing-verification-and-recovery-codes",
+    "href": "/blog/post/announcing-verification-and-recovery-codes",
+    "title": "Announcing 6-digit codes for email verification and password recovery",
+    "description": "Appwrite Auth can email a 6-digit code to verify an email address or reset a forgotten password, so mobile and desktop apps finish both flows without a redirect page or a deep link.",
+    "date": "2026-10-15",
+    "lastUpdated": "2026-10-15",
+    "timeToRead": 4,
+    "author": "atharva",
+    "category": "announcements",
+    "featured": false,
+    "cover": "/images/blog/announcing-verification-and-recovery-codes/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "tanstack-start-stable-appwrite-sites",
     "href": "/blog/post/tanstack-start-stable-appwrite-sites",
     "title": "TanStack Start is stable, and it runs on Appwrite Sites",
