@@ -1037,6 +1037,8 @@ final class HttpTest extends TestCase
             'string true' => ['true', true],
             'string zero' => ['0', false],
             'string one' => ['1', true],
+            'int zero' => [0, false],
+            'int one' => [1, true],
             'bool false' => [false, false],
             'bool true' => [true, true],
         ];
@@ -1076,6 +1078,20 @@ final class HttpTest extends TestCase
         $result = $this->dispatch(['name' => 'true']);
 
         $this->assertSame(\var_export(['false', 'true'], true), $result);
+    }
+
+    public function testBooleanStringStaysAStringWhenValidationIsSkipped(): void
+    {
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        $_SERVER['REQUEST_URI'] = '/items';
+
+        Http::get('/items')
+            ->param('total', true, new Boolean(true), 'total param', true, skipValidation: true)
+            ->action(function (mixed $total) {
+                echo \var_export($total, true);
+            });
+
+        $this->assertSame(\var_export('false', true), $this->dispatch(['total' => 'false']));
     }
 
     public function testOmittedBooleanParamKeepsItsDefault(): void

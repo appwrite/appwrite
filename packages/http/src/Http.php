@@ -758,11 +758,8 @@ class Http
 
                 if ($paramExists) {
                     $this->validate($key, $param, $value);
+                    $value = $this->coerce($param, $value);
                 }
-            }
-
-            if ($paramExists) {
-                $value = $this->coerce($param, $value);
             }
 
             $hook->setParamValue($key, $value);
@@ -916,8 +913,8 @@ class Http
     private function coerce(array $param, mixed $value): mixed
     {
         $boolean = match ($value) {
-            'true', '1' => true,
-            'false', '0' => false,
+            'true', '1', 1 => true,
+            'false', '0', 0 => false,
             default => null,
         };
 
