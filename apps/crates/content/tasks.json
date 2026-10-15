@@ -1,6 +1,14 @@
 {
-  "updated": "2026-10-15T21:05:00Z",
+  "updated": "2026-10-15T21:11:00Z",
   "tasks": [
+    {
+      "id": "db83",
+      "title": "Database: follow PHP from 8.1.3 to 8.3.0",
+      "area": "Database 8",
+      "status": "progress",
+      "updated": "2026-10-15T21:11:00Z",
+      "note": "main bumped utopia-php/database to 8.3.0 on 2026-10-16. Port the 8.1.3→8.3.0 changes to Rust, move the PHP harness and its recordings to 8.3.0, and update every crate that uses it."
+    },
     {
       "id": "db-lanes-ci",
       "title": "Database lanes as CI runs them",
@@ -24,6 +32,14 @@
       "status": "progress",
       "updated": "2026-10-15T19:17:00Z",
       "note": "30 from custom-domain rule origins (401 vs 403, one header fewer), 8 internal IDs in queued messages, 6 team searches. Clean in a local run, so reproducing in a CI-like stack first."
+    },
+    {
+      "id": "migration-newer",
+      "title": "Migration: synced with packages/migration on main",
+      "area": "Libraries",
+      "status": "done",
+      "note": "Project environments, SDK 30.4.0, password and passkey policies, topic QoS and expiry, messaging reply-to and channelId, redirect refusal, pinned addresses and allowed destinations. 284 cases, 0 differences; 36 of 36 PHP tests ported.",
+      "updated": "2026-10-15T21:11:00Z"
     },
     {
       "id": "lib-sync",
@@ -56,14 +72,6 @@
       "status": "todo",
       "updated": "2026-10-15T20:20:00Z",
       "note": "Implementing a Transport, Client, Consumer or other adapter still means BoxFuture return types and Box::pin bodies (agents, abuse and domains guides show it). Move them to async fn with an object-safe companion trait, as utopia-cache's Adapter and DynAdapter do."
-    },
-    {
-      "id": "migration-newer",
-      "title": "Migration: port what packages/migration added after 3.1.2",
-      "area": "Libraries",
-      "status": "progress",
-      "note": "CI now runs migration from packages/migration on main: PHP SDK 30.4.0, project environments, passkey RP ID, password options, membership IDs, topic QoS and expiry, messaging reply-to and channelId. Porting them all.",
-      "updated": "2026-10-15T19:17:00Z"
     },
     {
       "id": "php-image",
