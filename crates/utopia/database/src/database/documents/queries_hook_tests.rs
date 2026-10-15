@@ -146,8 +146,7 @@ fn every_read_uses_the_queries_the_hook_returns() {
         let db = tickets().await;
         let recorder = Recorder::adding(open());
         db.add_hook(Hook::queries(recorder.clone())).unwrap();
-        let found =
-            db.find("tickets", vec![Query::order_asc("$id", None)], PermissionType::Read).await.unwrap();
+        let found = db.find("tickets", vec![Query::order_asc("$id", None)], PermissionType::Read).await.unwrap();
         assert_eq!(ids(&found), ["k1", "k3"]);
         assert_eq!(recorder.calls(), find("tickets"));
 
@@ -311,7 +310,10 @@ fn a_select_the_hook_adds_to_get_document_leaves_the_cached_document() {
     block_on(async {
         let db = super::super::fixtures::hooks(Arc::new(Memory::new()), super::super::fixtures::memory_cache()).await;
         seed(&db, &["first"]).await;
-        assert_eq!(db.get_document(POSTS, "first", Vec::new(), false).await.unwrap().get("views"), Some(&Value::Int(1)));
+        assert_eq!(
+            db.get_document(POSTS, "first", Vec::new(), false).await.unwrap().get("views"),
+            Some(&Value::Int(1))
+        );
 
         let selecting = Hook::queries(Recorder::adding(Query::select(["title"])));
         db.add_hook(selecting.clone()).unwrap();
@@ -320,7 +322,10 @@ fn a_select_the_hook_adds_to_get_document_leaves_the_cached_document() {
 
         assert_eq!(selected.get("title"), Some(&string("first")));
         assert!(!selected.has("views"));
-        assert_eq!(db.get_document(POSTS, "first", Vec::new(), false).await.unwrap().get("views"), Some(&Value::Int(1)));
+        assert_eq!(
+            db.get_document(POSTS, "first", Vec::new(), false).await.unwrap().get("views"),
+            Some(&Value::Int(1))
+        );
     });
 }
 

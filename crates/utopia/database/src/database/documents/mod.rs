@@ -22,14 +22,14 @@ mod delete;
 mod find;
 #[cfg(test)]
 mod find_tests;
+pub(crate) mod joins;
+mod numeric;
+#[cfg(test)]
+mod queries_hook_tests;
+mod read;
 #[cfg(test)]
 mod read_memory_tests;
 #[cfg(test)]
-mod queries_hook_tests;
-#[cfg(test)]
 mod resolved_read_tests;
-pub(crate) mod joins;
-mod numeric;
-mod read;
 mod update;
 mod upsert;

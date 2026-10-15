@@ -65,9 +65,9 @@ mod core_tests;
 #[cfg(test)]
 pub(crate) mod fixtures;
 #[cfg(test)]
-pub(crate) mod spy;
-#[cfg(test)]
 mod schema_tests;
+#[cfg(test)]
+pub(crate) mod spy;
 #[cfg(test)]
 pub(crate) mod testing;
 

@@ -78,10 +78,7 @@ fn metadata_reads(spy: &Spy) -> Arc<Mutex<usize>> {
     let reads = Arc::new(Mutex::new(0usize));
     let counted = reads.clone();
     spy.intercept(move |seen| {
-        if seen.stage == Stage::Before
-            && matches!(seen.method, "getDocument" | "find")
-            && seen.name == Some(METADATA)
-        {
+        if seen.stage == Stage::Before && matches!(seen.method, "getDocument" | "find") && seen.name == Some(METADATA) {
             *counted.lock().unwrap() += 1;
         }
         Ok(())
@@ -156,14 +153,20 @@ fn writes_return_the_document_a_read_returns_after_them() {
         assert_eq!(increased.get("count"), Some(&Value::Int(6)));
         assert_eq!(increased.get("name"), Some(&string("hook")));
         assert_eq!(twin(&db).get_document(WEBHOOKS, "hook", Vec::new(), false).await.unwrap().id(), increased.id());
-        assert_eq!(db.get_document(WEBHOOKS, "hook", Vec::new(), false).await.unwrap().get("count"), Some(&Value::Int(6)));
+        assert_eq!(
+            db.get_document(WEBHOOKS, "hook", Vec::new(), false).await.unwrap().get("count"),
+            Some(&Value::Int(6))
+        );
 
         let decreased = db.decrease_document_attribute(WEBHOOKS, "hook", "count", Value::Int(2), None).await.unwrap();
         assert_eq!(decreased.get("count"), Some(&Value::Int(4)));
         assert_eq!(decreased.get("name"), Some(&string("hook")));
         let fresh = twin(&db).get_document(WEBHOOKS, "hook", Vec::new(), false).await.unwrap();
         assert_eq!(fresh.get("count"), Some(&Value::Int(4)));
-        assert_eq!(db.get_document(WEBHOOKS, "hook", Vec::new(), false).await.unwrap().get("count"), Some(&Value::Int(4)));
+        assert_eq!(
+            db.get_document(WEBHOOKS, "hook", Vec::new(), false).await.unwrap().get("count"),
+            Some(&Value::Int(4))
+        );
     });
 }
 
@@ -205,13 +208,20 @@ fn the_locked_read_uses_the_definition_the_write_resolved() {
             spy.before_next(
                 "startTransaction",
                 Box::pin(async move {
-                    other.create_attribute(WEBHOOKS, Attribute::string("label", super::super::LENGTH_KEY)).await.unwrap();
+                    other
+                        .create_attribute(WEBHOOKS, Attribute::string("label", super::super::LENGTH_KEY))
+                        .await
+                        .unwrap();
                 }),
             );
             let locked = Arc::new(Mutex::new(Vec::new()));
             let seen_locked = locked.clone();
             spy.intercept(move |seen| {
-                if seen.stage == Stage::Before && seen.method == "getDocument" && seen.for_update && seen.name == Some(WEBHOOKS) {
+                if seen.stage == Stage::Before
+                    && seen.method == "getDocument"
+                    && seen.for_update
+                    && seen.name == Some(WEBHOOKS)
+                {
                     seen_locked.lock().unwrap().push(keys(seen.collection.unwrap()));
                 }
                 Ok(())
@@ -352,7 +362,10 @@ fn a_cache_that_cannot_be_read_or_written_falls_back_to_the_database() {
         let refused = Arc::new(Mutex::new(Vec::new()));
         let seen = refused.clone();
         counting.intercept(move |operation, key| {
-            if !key.contains('#') && key.contains(":sessions:") && matches!(operation, "load" | "getGeneration" | "saveWithLease") {
+            if !key.contains('#')
+                && key.contains(":sessions:")
+                && matches!(operation, "load" | "getGeneration" | "saveWithLease")
+            {
                 seen.lock().unwrap().push(operation.to_owned());
                 return Err(format!("the cache refused {operation}"));
             }
@@ -389,7 +402,10 @@ fn a_cached_document_past_its_time_to_live_reads_as_empty() {
         )
         .await
         .unwrap();
-        assert_eq!(db.get_document("sessions", "session", Vec::new(), false).await.unwrap().get("owner"), Some(&string("ada")));
+        assert_eq!(
+            db.get_document("sessions", "session", Vec::new(), false).await.unwrap().get("owner"),
+            Some(&string("ada"))
+        );
         tokio::time::sleep(std::time::Duration::from_secs(2)).await;
         assert!(
             db.get_document("sessions", "session", Vec::new(), false).await.unwrap().is_empty(),

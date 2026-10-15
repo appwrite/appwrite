@@ -1009,7 +1009,11 @@ fn a_created_document_takes_its_collection_type() {
         let created = db
             .create_document(
                 "generic",
-                doc(vec![("$id", string("doc1")), ("$permissions", Value::Array(Array::new())), ("data", string("test"))]),
+                doc(vec![
+                    ("$id", string("doc1")),
+                    ("$permissions", Value::Array(Array::new())),
+                    ("data", string("test")),
+                ]),
             )
             .await
             .unwrap();

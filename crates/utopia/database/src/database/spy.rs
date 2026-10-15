@@ -68,7 +68,15 @@ pub(crate) struct Seen<'a> {
 
 impl<'a> Seen<'a> {
     fn of(method: &'a str) -> Self {
-        Seen { method, stage: Stage::Before, collection: None, name: None, id: None, for_update: false, for_permission: None }
+        Seen {
+            method,
+            stage: Stage::Before,
+            collection: None,
+            name: None,
+            id: None,
+            for_update: false,
+            for_permission: None,
+        }
     }
 
     fn on(mut self, collection: &'a Collection) -> Self {
@@ -458,7 +466,11 @@ impl Adapter for Spy {
     }
 
     async fn create_collection(&self, collection: &str, attributes: &[Attribute], indexes: &[Index]) -> Result<bool> {
-        call!(self, Seen::of("createCollection").named(collection), self.inner.create_collection(collection, attributes, indexes))
+        call!(
+            self,
+            Seen::of("createCollection").named(collection),
+            self.inner.create_collection(collection, attributes, indexes)
+        )
     }
 
     async fn delete_collection(&self, collection: &str) -> Result<bool> {
@@ -474,7 +486,11 @@ impl Adapter for Spy {
     }
 
     async fn size_of_collection_on_disk(&self, collection: &str) -> Result<i64> {
-        call!(self, Seen::of("getSizeOfCollectionOnDisk").named(collection), self.inner.size_of_collection_on_disk(collection))
+        call!(
+            self,
+            Seen::of("getSizeOfCollectionOnDisk").named(collection),
+            self.inner.size_of_collection_on_disk(collection)
+        )
     }
 
     fn attribute_width(&self, collection: &Collection) -> Result<i64> {
@@ -494,15 +510,27 @@ impl Adapter for Spy {
     }
 
     async fn create_attributes(&self, collection: &str, attributes: &[Attribute]) -> Result<bool> {
-        call!(self, Seen::of("createAttributes").named(collection), self.inner.create_attributes(collection, attributes))
+        call!(
+            self,
+            Seen::of("createAttributes").named(collection),
+            self.inner.create_attributes(collection, attributes)
+        )
     }
 
     async fn update_attribute(&self, collection: &str, key: &str, attribute: &Attribute) -> Result<bool> {
-        call!(self, Seen::of("updateAttribute").named(collection), self.inner.update_attribute(collection, key, attribute))
+        call!(
+            self,
+            Seen::of("updateAttribute").named(collection),
+            self.inner.update_attribute(collection, key, attribute)
+        )
     }
 
     async fn relax_attribute_required(&self, collection: &str, id: &str) -> Result<bool> {
-        call!(self, Seen::of("relaxAttributeRequired").named(collection), self.inner.relax_attribute_required(collection, id))
+        call!(
+            self,
+            Seen::of("relaxAttributeRequired").named(collection),
+            self.inner.relax_attribute_required(collection, id)
+        )
     }
 
     async fn delete_attribute(&self, collection: &str, key: &str) -> Result<bool> {
@@ -536,7 +564,11 @@ impl Adapter for Spy {
         attribute_types: &[(String, ColumnType)],
         collation: &[(String, String)],
     ) -> Result<bool> {
-        call!(self, Seen::of("createIndex").named(collection), self.inner.create_index(collection, index, attribute_types, collation))
+        call!(
+            self,
+            Seen::of("createIndex").named(collection),
+            self.inner.create_index(collection, index, attribute_types, collation)
+        )
     }
 
     async fn delete_index(&self, collection: &str, key: &str) -> Result<bool> {
@@ -562,7 +594,11 @@ impl Adapter for Spy {
         queries: Vec<Query>,
         for_update: bool,
     ) -> Result<Document> {
-        call!(self, Seen { for_update, ..Seen::of("getDocument").on(collection).id(id) }, self.inner.get_document(collection, id, queries, for_update))
+        call!(
+            self,
+            Seen { for_update, ..Seen::of("getDocument").on(collection).id(id) },
+            self.inner.get_document(collection, id, queries, for_update)
+        )
     }
 
     async fn update_document(
@@ -572,7 +608,11 @@ impl Adapter for Spy {
         document: Document,
         skip_permissions: bool,
     ) -> Result<Document> {
-        call!(self, Seen::of("updateDocument").on(collection).id(id), self.inner.update_document(collection, id, document, skip_permissions))
+        call!(
+            self,
+            Seen::of("updateDocument").on(collection).id(id),
+            self.inner.update_document(collection, id, document, skip_permissions)
+        )
     }
 
     async fn update_documents(
@@ -582,7 +622,11 @@ impl Adapter for Spy {
         documents: Vec<Document>,
         skip_permissions: &[String],
     ) -> Result<i64> {
-        call!(self, Seen::of("updateDocuments").on(collection), self.inner.update_documents(collection, updates, documents, skip_permissions))
+        call!(
+            self,
+            Seen::of("updateDocuments").on(collection),
+            self.inner.update_documents(collection, updates, documents, skip_permissions)
+        )
     }
 
     async fn increase_document_attribute(
@@ -595,7 +639,11 @@ impl Adapter for Spy {
         min: Option<Value>,
         max: Option<Value>,
     ) -> Result<bool> {
-        call!(self, Seen::of("increaseDocumentAttribute").on(collection).id(id), self.inner.increase_document_attribute(collection, id, attribute, value, updated_at, min, max))
+        call!(
+            self,
+            Seen::of("increaseDocumentAttribute").on(collection).id(id),
+            self.inner.increase_document_attribute(collection, id, attribute, value, updated_at, min, max)
+        )
     }
 
     async fn delete_document(&self, collection: &Collection, id: &str) -> Result<bool> {
@@ -608,11 +656,19 @@ impl Adapter for Spy {
         sequences: Vec<Value>,
         permission_ids: Vec<String>,
     ) -> Result<i64> {
-        call!(self, Seen::of("deleteDocuments").on(collection), self.inner.delete_documents(collection, sequences, permission_ids))
+        call!(
+            self,
+            Seen::of("deleteDocuments").on(collection),
+            self.inner.delete_documents(collection, sequences, permission_ids)
+        )
     }
 
     async fn find(&self, collection: &Collection, queries: Vec<Query>, options: Find) -> Result<Vec<Document>> {
-        call!(self, Seen { for_permission: Some(options.for_permission), ..Seen::of("find").on(collection) }, self.inner.find(collection, queries, options))
+        call!(
+            self,
+            Seen { for_permission: Some(options.for_permission), ..Seen::of("find").on(collection) },
+            self.inner.find(collection, queries, options)
+        )
     }
 
     async fn count(&self, collection: &Collection, queries: Vec<Query>, max: Option<i64>) -> Result<i64> {

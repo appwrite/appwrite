@@ -124,7 +124,9 @@ fn a_json_attribute_holding_a_scalar_decodes_to_the_scalar() {
             ("float", "1.5", Value::Float(1.5)),
         ];
         for (id, stored, _) in &scalars {
-            db.create_document("payloads", doc(vec![("$id", string(*id)), ("payload", string(*stored))])).await.unwrap();
+            db.create_document("payloads", doc(vec![("$id", string(*id)), ("payload", string(*stored))]))
+                .await
+                .unwrap();
         }
         for (id, _, decoded) in &scalars {
             let read = db.get_document("payloads", id, Vec::new(), false).await.unwrap();
@@ -471,9 +473,11 @@ fn notes(filter: &str) -> Collection {
 
 async fn create_note(db: &Database, body: &str, filters: &[&str]) {
     db.create(None).await.unwrap();
-    db.create_collection(Collection::create("notes", "notes", Vec::new(), Vec::new(), None, true, Array::new()).unwrap())
-        .await
-        .unwrap();
+    db.create_collection(
+        Collection::create("notes", "notes", Vec::new(), Vec::new(), None, true, Array::new()).unwrap(),
+    )
+    .await
+    .unwrap();
     let mut attribute = Attribute::string("body", LENGTH_KEY);
     attribute.filters = filters.iter().map(|f| (*f).to_owned()).collect();
     db.create_attribute("notes", attribute).await.unwrap();
@@ -508,13 +512,19 @@ fn a_registered_codec_encodes_and_decodes_on_its_handle() {
         registry.write().unwrap().register(Arc::new(Reversed("reversed"))).unwrap();
         create_note(&db, "hello", &["reversed"]).await;
         assert_eq!(stored_body(&adapter, &db).await, Some(string("olleh")));
-        assert_eq!(db.get_document("notes", "note", Vec::new(), false).await.unwrap().get("body"), Some(&string("hello")));
+        assert_eq!(
+            db.get_document("notes", "note", Vec::new(), false).await.unwrap().get("body"),
+            Some(&string("hello"))
+        );
 
         let adapter = Arc::new(Memory::new());
         let db = types(Some(adapter.clone()), vec![Arc::new(Reversed("reversed"))]);
         create_note(&db, "hello", &["reversed"]).await;
         assert_eq!(stored_body(&adapter, &db).await, Some(string("olleh")));
-        assert_eq!(db.get_document("notes", "note", Vec::new(), false).await.unwrap().get("body"), Some(&string("hello")));
+        assert_eq!(
+            db.get_document("notes", "note", Vec::new(), false).await.unwrap().get("body"),
+            Some(&string("hello"))
+        );
         assert!(db.filters().read().unwrap().has("reversed"));
     });
 }
@@ -523,11 +533,15 @@ fn a_registered_codec_encodes_and_decodes_on_its_handle() {
 fn handles_without_the_registry_cannot_use_its_codecs() {
     block_on(async {
         types(None, Vec::new()).set_filters(registry(Arc::new(Reversed("reversedOnly"))));
-        let err =
-            types(None, Vec::new()).encode(&notes("reversedOnly"), doc(vec![("body", string("hello"))]), true).await.unwrap_err();
+        let err = types(None, Vec::new())
+            .encode(&notes("reversedOnly"), doc(vec![("body", string("hello"))]), true)
+            .await
+            .unwrap_err();
         assert_eq!(err.kind(), Kind::NotFound);
-        let err =
-            types(None, Vec::new()).decode(&notes("reversedOnly"), doc(vec![("body", string("olleh"))]), &[]).await.unwrap_err();
+        let err = types(None, Vec::new())
+            .decode(&notes("reversedOnly"), doc(vec![("body", string("olleh"))]), &[])
+            .await
+            .unwrap_err();
         assert_eq!(err.kind(), Kind::NotFound);
     });
 }
@@ -539,11 +553,15 @@ fn a_built_in_name_is_refused_and_breaks_no_handle() {
         create_note(&types(Some(adapter.clone()), Vec::new()), "hello", &[]).await;
         let registry = Arc::new(RwLock::new(Registry::new()));
         types(None, Vec::new()).set_filters(registry.clone());
-        assert_eq!(registry.write().unwrap().register(Arc::new(Reversed("json"))).err().unwrap().kind(), Kind::Duplicate);
+        assert_eq!(
+            registry.write().unwrap().register(Arc::new(Reversed("json"))).err().unwrap().kind(),
+            Kind::Duplicate
+        );
         let read = types(Some(adapter), Vec::new()).get_document("notes", "note", Vec::new(), false).await.unwrap();
         assert_eq!(read.get("body"), Some(&string("hello")));
 
-        let err = Database::with_filters(Arc::new(Memory::new()), no_cache(), vec![Arc::new(Reversed("json"))]).unwrap_err();
+        let err =
+            Database::with_filters(Arc::new(Memory::new()), no_cache(), vec![Arc::new(Reversed("json"))]).unwrap_err();
         assert_eq!(err.kind(), Kind::Duplicate);
     });
 }
@@ -557,7 +575,13 @@ impl super::Filter for Global {
         Ok(value)
     }
 
-    async fn decode(&self, _value: Value, _document: &Document, _database: &Database, _attribute: &str) -> Result<Value> {
+    async fn decode(
+        &self,
+        _value: Value,
+        _document: &Document,
+        _database: &Database,
+        _attribute: &str,
+    ) -> Result<Value> {
         Ok(string("global"))
     }
 
@@ -603,7 +627,8 @@ fn cache_keys_follow_the_codecs_of_a_handle() {
         same.set_filters(registry(Arc::new(Reversed("text"))));
         assert_ne!(hash(&reversed).await, hash(&rot13).await);
         let field = |db: &Database| {
-            db.query_cache_field(None, &[Query::limit(1)], "documents", crate::permission::PermissionType::Read).unwrap()
+            db.query_cache_field(None, &[Query::limit(1)], "documents", crate::permission::PermissionType::Read)
+                .unwrap()
         };
         assert_ne!(field(&reversed), field(&rot13));
         assert_eq!(hash(&reversed).await, hash(&same).await);
@@ -655,7 +680,9 @@ fn logs() -> Collection {
 /// A database whose metadata writes inside their transaction fail with
 /// `failure` once armed, counting them (`metadataFailing(..., inTransaction:
 /// true)`).
-async fn metadata_failing(failure: crate::error::Error) -> (Database, Arc<std::sync::Mutex<usize>>, Arc<std::sync::atomic::AtomicBool>) {
+async fn metadata_failing(
+    failure: crate::error::Error,
+) -> (Database, Arc<std::sync::Mutex<usize>>, Arc<std::sync::atomic::AtomicBool>) {
     let spy = super::spy::Spy::memory();
     let db = configured(spy.clone()).await;
     db.create_collection(logs()).await.unwrap();
@@ -767,15 +794,21 @@ fn a_contended_metadata_write_runs_only_its_transactions_attempts() {
 fn a_contended_relationship_definition_runs_only_its_transactions_attempts() {
     block_on(async {
         let (db, begins, armed) = contended().await;
-        db.create_collection(Collection::create("profiles", "profiles", Vec::new(), Vec::new(), None, true, Array::new()).unwrap())
-            .await
-            .unwrap();
-        db.create_collection(Collection::create("accounts", "accounts", Vec::new(), Vec::new(), None, true, Array::new()).unwrap())
-            .await
-            .unwrap();
+        db.create_collection(
+            Collection::create("profiles", "profiles", Vec::new(), Vec::new(), None, true, Array::new()).unwrap(),
+        )
+        .await
+        .unwrap();
+        db.create_collection(
+            Collection::create("accounts", "accounts", Vec::new(), Vec::new(), None, true, Array::new()).unwrap(),
+        )
+        .await
+        .unwrap();
         armed.store(true, std::sync::atomic::Ordering::SeqCst);
-        let relationship =
-            crate::relationship::Relationship::one_to_one("accounts").two_way(true).key("account").two_way_key("profile");
+        let relationship = crate::relationship::Relationship::one_to_one("accounts")
+            .two_way(true)
+            .key("account")
+            .two_way_key("profile");
         let err = db.create_relationship("profiles", relationship).await.unwrap_err();
         armed.store(false, std::sync::atomic::Ordering::SeqCst);
         assert!(err.is_a(Kind::Database), "{err:?}");
@@ -792,15 +825,21 @@ fn type_mismatch_messages_say_bigint() {
     block_on(async {
         let db = configured(Arc::new(Memory::new())).await;
         db.create_collection(
-            Collection::create("logs", "logs", vec![Attribute::big_integer("total")], Vec::new(), None, true, Array::new())
-                .unwrap(),
+            Collection::create(
+                "logs",
+                "logs",
+                vec![Attribute::big_integer("total")],
+                Vec::new(),
+                None,
+                true,
+                Array::new(),
+            )
+            .unwrap(),
         )
         .await
         .unwrap();
-        let update = crate::attribute::Update {
-            default: crate::attribute::Patch::Set(string("many")),
-            ..Default::default()
-        };
+        let update =
+            crate::attribute::Update { default: crate::attribute::Patch::Set(string("many")), ..Default::default() };
         let err = db.update_attribute("logs", "total", update).await.unwrap_err();
         assert!(err.is_a(Kind::Database), "{err:?}");
         assert_eq!(err.message(), "Default value many is not a valid integer string for type bigint");
@@ -848,9 +887,15 @@ fn every_unique_violation_uses_one_message() {
             ),
             (
                 "update many into one value",
-                db.update_documents("users", doc(vec![("email", string("d@example.com"))]), Vec::new(), super::BATCH_SIZE, None)
-                    .await
-                    .unwrap_err(),
+                db.update_documents(
+                    "users",
+                    doc(vec![("email", string("d@example.com"))]),
+                    Vec::new(),
+                    super::BATCH_SIZE,
+                    None,
+                )
+                .await
+                .unwrap_err(),
             ),
             (
                 "update many into a stored value",
@@ -899,7 +944,11 @@ fn a_stored_object_value_does_not_block_an_update_of_another_attribute() {
         let mut stored = db.get_document("items", "stored", Vec::new(), false).await.unwrap();
         stored.put("title", string("again"));
         let returned = db.update_document("items", "stored", stored).await.unwrap();
-        assert_eq!(returned.get("title"), Some(&string("again")), "a stored value passed back unchanged does not block the update");
+        assert_eq!(
+            returned.get("title"),
+            Some(&string("again")),
+            "a stored value passed back unchanged does not block the update"
+        );
 
         let err = db
             .update_document("items", "stored", doc(vec![("meta", list([Value::Int(3), Value::Int(4)]))]))
@@ -928,7 +977,8 @@ fn an_associative_vector_is_rejected_naming_its_attribute() {
             .unwrap_or_default();
         assert!(filters.iter().any(|f| f == ColumnType::Vector.as_str()), "createAttribute() adds the vector filter");
 
-        let vector = Value::Array(assoc(vec![("x", Value::Float(1.0)), ("y", Value::Float(0.0)), ("z", Value::Float(0.0))]));
+        let vector =
+            Value::Array(assoc(vec![("x", Value::Float(1.0)), ("y", Value::Float(0.0)), ("z", Value::Float(0.0))]));
         let err = db.create_document("embeddings", doc(vec![("embedding", vector)])).await.unwrap_err();
         assert_eq!(err.kind(), Kind::Structure);
         assert_eq!(

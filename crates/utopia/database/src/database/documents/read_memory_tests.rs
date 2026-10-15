@@ -126,11 +126,17 @@ fn a_limit_caps_the_documents_yielded_and_an_offset_or_cursor_positions_the_firs
     block_on(async {
         let db = seeded(7).await;
         let views = || Query::order_asc("views", None);
-        assert_eq!(cursor_ids(&db, vec![views(), Query::limit(3)], 2, PermissionType::Read).await, ["doc1", "doc2", "doc3"]);
+        assert_eq!(
+            cursor_ids(&db, vec![views(), Query::limit(3)], 2, PermissionType::Read).await,
+            ["doc1", "doc2", "doc3"]
+        );
 
         let db = seeded(5).await;
         let second = db.get_document(POSTS, "doc2", Vec::new(), false).await.unwrap();
-        assert_eq!(cursor_ids(&db, vec![views(), Query::offset(2)], 2, PermissionType::Read).await, ["doc3", "doc4", "doc5"]);
+        assert_eq!(
+            cursor_ids(&db, vec![views(), Query::offset(2)], 2, PermissionType::Read).await,
+            ["doc3", "doc4", "doc5"]
+        );
         assert_eq!(
             cursor_ids(&db, vec![views(), Query::cursor_after(&second)], 2, PermissionType::Read).await,
             ["doc3", "doc4", "doc5"]
@@ -175,7 +181,11 @@ fn the_permission_the_cursor_reads_under() {
             let permissions = permissions.into_iter().map(string).collect::<Vec<_>>();
             db.create_document(
                 "notes",
-                doc(vec![("$id", string(id)), ("$permissions", crate::value::list(permissions)), ("title", string(id))]),
+                doc(vec![
+                    ("$id", string(id)),
+                    ("$permissions", crate::value::list(permissions)),
+                    ("title", string(id)),
+                ]),
             )
             .await
             .unwrap();
@@ -243,9 +253,11 @@ fn get_document_refuses_an_empty_collection_id_and_a_join_without_joins() {
 
 async fn widgets() -> Database {
     let db = created(Arc::new(Memory::new()), memory_cache(), "utopiaTests", "select", false).await;
-    db.create_collection(Collection::create("widgets", "widgets", Vec::new(), Vec::new(), None, true, Default::default()).unwrap())
-        .await
-        .unwrap();
+    db.create_collection(
+        Collection::create("widgets", "widgets", Vec::new(), Vec::new(), None, true, Default::default()).unwrap(),
+    )
+    .await
+    .unwrap();
     db.create_attribute("widgets", Attribute::string("sku", super::super::LENGTH_KEY)).await.unwrap();
     db.create_document(
         "widgets",
@@ -479,7 +491,11 @@ async fn lenient() -> Database {
     let read = Permission::read(&Role::any());
     db.create_document(
         "notes",
-        doc(vec![("$id", string("note")), ("$permissions", crate::value::list([string(read.as_str())])), ("title", string("stored"))]),
+        doc(vec![
+            ("$id", string("note")),
+            ("$permissions", crate::value::list([string(read.as_str())])),
+            ("title", string("stored")),
+        ]),
     )
     .await
     .unwrap();
@@ -522,7 +538,13 @@ fn updates_over_a_stored_non_string_permission() {
 
         let db = lenient().await;
         let count = db
-            .update_documents("notes", doc(vec![("title", string("updated"))]), Vec::new(), super::super::BATCH_SIZE, None)
+            .update_documents(
+                "notes",
+                doc(vec![("title", string("updated"))]),
+                Vec::new(),
+                super::super::BATCH_SIZE,
+                None,
+            )
             .await
             .unwrap();
         assert_eq!(count, 1);
