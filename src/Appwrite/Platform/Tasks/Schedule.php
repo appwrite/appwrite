@@ -7,6 +7,7 @@ use Appwrite\Event\Publisher\Messaging as MessagingPublisher;
 use Appwrite\Event\Publisher\StatsResources as StatsResourcesPublisher;
 use Appwrite\Usage\Connection;
 use Swoole\Coroutine as Co;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Platform\Action;
 use Utopia\Pools\Group;
@@ -115,7 +116,8 @@ class Schedule extends Action
             // A task that throws (a lost Redis connection ends a scheduler
             // loop) starts again, as its own container would be restarted.
             while (true) {
-                Span::init('schedule.combined.loop');
+                // Held by reference: the task's own spans replace the current one.
+                $span = Span::init('schedule.combined.loop');
                 $error = null;
 
                 try {
@@ -123,13 +125,14 @@ class Schedule extends Action
                 } catch (\Throwable $th) {
                     $error = $th;
                 } finally {
-                    Span::current()?->finish(error: $error);
+                    $span->finish(error: $error);
                 }
 
                 if ($error === null) {
                     return;
                 }
 
+                Console::error('Scheduler loop failed, restarting in 5s: ' . $error->getMessage());
                 sleep(5);
             }
         });
