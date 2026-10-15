@@ -102,6 +102,8 @@ for s in tests/compat/*/services.sh; do "$s" down; done
 
 A large spec can be split: `spec.d/*.json` files hold more `ops`, `generators`, `waivers`, `tests_waived`, `tasks`, `tasks_waived`, `quirks`, `deviations` and `scrub` (one file per area or owner), merged into `spec.json`; a name defined twice is an error.
 
+`flakes` (spec.json only) maps a fragment of a PHP error message to the reason it is the PHP library failing under load rather than a difference (database: a metadata transaction lost on a busy CI runner). A case whose PHP side fails with one runs once more, logged as `retry <case>: ...`, unless a step of its recording expects that failure.
+
 `scrub` replaces values a library generates nondeterministically in every result and snapshot, before comparing and recording (bound results keep the raw values, so later steps use the real ids). Each entry has a `kind` and a `reason` (`crates/tools/compat/src/runner/scrub.rs`):
 
 | Kind | Replaces | With |
