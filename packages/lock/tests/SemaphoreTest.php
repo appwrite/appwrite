@@ -67,4 +67,41 @@ final class SemaphoreTest extends TestCase
 
         $this->assertSame(1, $max);
     }
+
+
+    public function testNegativeTimeoutWaitsForReleaseInCoroutine(): void
+    {
+        $semaphore = new Semaphore(1);
+        $acquired = false;
+        $waited = 0.0;
+
+        run(function () use ($semaphore, &$acquired, &$waited): void {
+            Coroutine::create(function () use ($semaphore): void {
+                $semaphore->acquire();
+                System::sleep(0.3);
+                $semaphore->release();
+            });
+
+            System::sleep(0.05);
+
+            $start = microtime(true);
+            $acquired = $semaphore->acquire(-1.0);
+            $waited = microtime(true) - $start;
+            $semaphore->release();
+        });
+
+        $this->assertTrue($acquired, 'Negative timeout must wait until the holder releases');
+        $this->assertGreaterThanOrEqual(0.2, $waited, 'Acquire must have blocked while no permit was free');
+    }
+
+    public function testNegativeTimeoutAcquiresImmediatelyOutsideCoroutine(): void
+    {
+        $semaphore = new Semaphore(1);
+
+        $start = microtime(true);
+        $this->assertTrue($semaphore->acquire(-1.0));
+        $this->assertLessThan(0.05, microtime(true) - $start, 'Uncontended acquire must not wait');
+
+        $semaphore->release();
+    }
 }
