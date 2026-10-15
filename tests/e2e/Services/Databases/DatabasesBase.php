@@ -5,6 +5,7 @@ namespace Tests\E2E\Services\Databases;
 use Appwrite\Extend\Exception;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\SchemaPolling;
+use Tests\E2E\Services\Databases\Queries\DottedPaths;
 use Tests\E2E\Services\Databases\Queries\JoinCombos;
 use Tests\E2E\Services\Databases\Queries\JoinOperators;
 use Tests\E2E\Services\Databases\Queries\JoinPermissions;
@@ -40,6 +41,7 @@ trait DatabasesBase
     use StatisticalAggregates;
     use RejectedMethods;
     use Totals;
+    use DottedPaths;
 
     /**
      * Static caches for test data - keyed by project ID to support parallel test runs
