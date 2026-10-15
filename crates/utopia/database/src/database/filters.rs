@@ -91,6 +91,16 @@ pub(crate) fn remove_global_filter(name: &str) {
 }
 
 impl Database {
+    /// Empties the global filters as a fresh process has them: none
+    /// registered, the defaults registered again on next use (PHP: `self::$filters
+    /// = []`, `self::$defaultFiltersRegistered = false`, what a test resets
+    /// between cases that override a filter).
+    pub fn reset_filters() {
+        let mut r = REGISTRY.write().unwrap_or_else(|e| e.into_inner());
+        r.filters.clear();
+        r.defaults = false;
+    }
+
     /// Registers `filter` as `name` for every database, replacing one of the
     /// same name in its place (`addFilter()`, static). A database's own
     /// filters take precedence.
