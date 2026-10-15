@@ -12,6 +12,7 @@ mod lease;
 mod query_purge;
 mod round_trip;
 mod scope;
+mod transaction_read;
 mod with_cache;
 
 use std::future::Future;
