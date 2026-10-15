@@ -2,7 +2,6 @@
 
 namespace Appwrite\Auth\OIDC;
 
-use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
 use Appwrite\Extend\Exception;
 use Utopia\Database\Document;
