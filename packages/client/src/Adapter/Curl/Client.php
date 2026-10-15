@@ -11,6 +11,8 @@ use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamFactoryInterface;
+use Swoole\Coroutine;
+use Swoole\Coroutine\System;
 use Utopia\Client\Adapter;
 use Utopia\Client\Destinations;
 use Utopia\Client\Destinations\Anywhere;
@@ -402,6 +404,11 @@ class Client implements Adapter
         // environment configures unless the destination permits them.
         if (!$this->destinations->permitsProxy()) {
             $merged[\CURLOPT_PROXY] = '';
+
+            // Checked before connecting too, so a refused host is never contacted and the
+            // error cannot tell whether it would have answered. curl dials only the addresses
+            // checked here, so DNS cannot answer differently at connect time.
+            $merged[\CURLOPT_RESOLVE] = [$this->pin($request)];
         }
 
         if ($this->followRedirects) {
@@ -409,6 +416,56 @@ class Client implements Adapter
         }
 
         return $merged;
+    }
+
+    /**
+     * The CURLOPT_RESOLVE entry pinning this request's host to the addresses the
+     * destinations allow.
+     *
+     * @throws ClientExceptionInterface When the host does not resolve, or not to an allowed address
+     */
+    private function pin(RequestInterface $request): string
+    {
+        $uri = $request->getUri();
+        $host = \trim($uri->getHost(), '[]');
+
+        $found = [];
+        if (\filter_var($host, FILTER_VALIDATE_IP) !== false) {
+            $found[] = $host;
+        } elseif (\extension_loaded('swoole') && Coroutine::getCid() > 0) {
+            // getaddrinfo() would block every coroutine in the process. Both lookups share the
+            // connect timeout, so a slow resolver cannot outlast it.
+            $timeout = $this->options[\CURLOPT_CONNECTTIMEOUT_MS];
+            $timeout = \is_int($timeout) ? $timeout / 1000 : self::DEFAULT_CONNECT_TIMEOUT;
+            $deadline = \microtime(true) + $timeout;
+            foreach ([AF_INET, AF_INET6] as $family) {
+                $remaining = $timeout > 0 ? \max(0.001, $deadline - \microtime(true)) : -1;
+                // getaddrinfo() needs a socket type and a service; any port works for the lookup
+                $addresses = System::getaddrinfo($host, $family, SOCK_STREAM, STREAM_IPPROTO_TCP, '80', $remaining);
+                $found = [...$found, ...(\is_array($addresses) ? $addresses : [])];
+            }
+        } else {
+            foreach (\socket_addrinfo_lookup($host, null, ['ai_socktype' => SOCK_STREAM]) ?: [] as $info) {
+                $address = \socket_addrinfo_explain($info)['ai_addr'];
+                $found[] = \is_array($address) ? $address['sin_addr'] ?? $address['sin6_addr'] ?? null : null;
+            }
+        }
+
+        $found = \array_values(\array_filter($found, \is_string(...)));
+
+        if ($found === []) {
+            throw new DnsException($request, "Could not resolve host: {$host}");
+        }
+
+        $allowed = \array_filter($found, $this->destinations->allows(...));
+
+        if ($allowed === []) {
+            throw new DestinationException($request, "Connection to {$found[0]} refused: not an allowed destination.");
+        }
+
+        $port = $uri->getPort() ?? ($uri->getScheme() === 'https' ? 443 : 80);
+
+        return $uri->getHost() . ':' . $port . ':' . \implode(',', \array_map(fn (string $address): string => \str_contains($address, ':') ? "[{$address}]" : $address, $allowed));
     }
 
     private function milliseconds(float $seconds): int
