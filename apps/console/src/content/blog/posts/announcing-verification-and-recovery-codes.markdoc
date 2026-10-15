@@ -17,7 +17,7 @@ faqs:
   - question: "Should I verify emails and reset passwords with a link or a code?"
     answer: "Use a link when the user can land on a web page in your app. Use a code in mobile apps, desktop apps, and any app without a hosted page. The user types the code into your app, so you don't need a redirect URL, a reset page, or a deep link."
   - question: "What happens when someone requests a recovery code for an email address that has no account?"
-    answer: "Appwrite sends no email, but it still returns a token with a random user ID. The response looks the same as it does for a registered address, so your app can show one message, such as \"If an account exists for this email, a code is on its way\", in both cases. Confirming a code for that address fails with `user_not_found` instead of `user_invalid_token`, so show the same \"invalid code\" message for both errors."
+    answer: "Appwrite sends no email, but it still returns a token with a random user ID. The response looks the same as it does for a registered address, so your app can show one message, such as \"If an account exists for this email, a code is on its way\", in both cases. Confirming with the user ID from that token fails with `user_not_found` instead of `user_invalid_token`, so show the same \"invalid code\" message for both errors."
   - question: "How long does a verification or recovery code stay valid?"
     answer: "15 minutes, and each code works once. Sending a new code doesn't cancel earlier ones, so any code that hasn't expired still works. A wrong, expired, or used code fails with the `user_invalid_token` error."
   - question: "What is the security phrase on verification and recovery emails?"
@@ -200,7 +200,7 @@ await account.updateRecoveryOTP({
 ```
 {% /multicode %}
 
-If no active user has the email address, Appwrite sends no email but still returns a token with a random user ID. The response to that first call looks the same either way. Show the user one message in both cases, such as "If an account exists for this email, a code is on its way." Confirming a code for that address fails with `user_not_found` instead of `user_invalid_token`. Show the same "invalid code" message for both errors.
+If no active user has the email address, Appwrite sends no email but still returns a token with a random user ID. The response to that first call looks the same either way. Show the user one message in both cases, such as "If an account exists for this email, a code is on its way." Confirming with the user ID from that token fails with `user_not_found` instead of `user_invalid_token`. Show the same "invalid code" message for both errors.
 
 Appwrite rejects a new password that fails your project's [password strength](/docs/products/auth/security#password-strength), [password dictionary](/docs/products/auth/security#password-dictionary), or [password history](/docs/products/auth/security#password-history) policy. When the option to reject [breached passwords](/docs/products/auth/security#breached-passwords) is on, Appwrite also rejects a password found in a known data breach. If the new password fails a check, the code stays valid, so the user can try again with a different password. The reset doesn't sign the user in, so create a session with the new password afterwards.
 
