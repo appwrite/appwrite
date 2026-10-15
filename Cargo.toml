@@ -34,6 +34,7 @@ mirror-license = "MIT"
 [workspace.dependencies]
 # Support crates
 php-std = { path = "crates/support/php-std" }
+utopia-async = { path = "crates/support/async" }
 
 # Utopia crates
 utopia-system = { path = "crates/utopia/system" }
@@ -217,6 +218,9 @@ postcard = { version = "1", default-features = false, features = ["use-std"] }
 # PNG encoding with an explicit zlib level and filter (utopia-image maps
 # Imagick's PNG quality onto them); pure Rust, the PNG codec of the image crate.
 png = "0.18"
+# Safe pin projection for utopia-async's futures (its sleep, timeout and
+# interval wrap the engine's own); already in the tree through tokio.
+pin-project-lite = "0.2"
 proc-macro2 = { version = "1", default-features = false, features = ["span-locations"] }
 quote = { version = "1", default-features = false }
 # Streaming XML reader (utopia-storage: S3 responses, decoded as SimpleXML
@@ -240,6 +244,9 @@ rustix = { version = "1", default-features = false, features = ["std", "fs", "sy
 ryu = "1"
 scrypt = { version = "0.11", default-features = false }
 serde = { version = "1", features = ["derive"] }
+# Socket options std and tokio do not expose (TCP keepalive times, for
+# utopia-async's hyper connector); already in the tree through tokio.
+socket2 = { version = "0.6", features = ["all"] }
 serde_json = { version = "1", features = ["raw_value", "preserve_order", "float_roundtrip"] }
 sha1 = "0.10"
 sha2 = "0.10"
@@ -248,7 +255,12 @@ sha3 = "0.10"
 # and line numbers of each crate's public items.
 syn = { version = "2", default-features = false, features = ["full", "parsing", "printing"] }
 thiserror = "2"
-tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "time", "sync", "signal"] }
+# The Tokio engine behind utopia-async (crates/support/async), the only crate
+# that depends on it directly: every other crate reaches tasks, timers, sockets,
+# files and processes through utopia-async, so the engine can be switched there.
+# Each feature is enabled by utopia-async, for the engine or for the
+# engine-independent building blocks it re-exports (I/O traits, sync primitives).
+tokio = { version = "1", default-features = false }
 # The WebSocket protocol on tokio (utopia-websocket: the Tokio server adapter
 # and the client); pure Rust, TLS for wss through the workspace's rustls (ring).
 tokio-tungstenite = { version = "0.30", default-features = false, features = ["connect", "handshake", "rustls-tls-webpki-roots"] }

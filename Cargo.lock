@@ -4133,6 +4133,32 @@ dependencies = [
 ]
 
 [[package]]
+name = "utopia-async"
+version = "0.1.0"
+dependencies = [
+ "bytes",
+ "futures-util",
+ "http",
+ "http-body-util",
+ "hyper",
+ "hyper-util",
+ "pin-project-lite",
+ "socket2",
+ "tokio",
+ "tower-service",
+ "utopia-async-macros",
+]
+
+[[package]]
+name = "utopia-async-macros"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.119",
+]
+
+[[package]]
 name = "utopia-audit"
 version = "0.1.0"
 dependencies = [
