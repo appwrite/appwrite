@@ -6,6 +6,7 @@ use std::sync::Arc;
 use async_trait::async_trait;
 use php_std::{Array, ArrayKey, Value};
 use utopia_database::Database as Db;
+use utopia_database::relationship::{RelationshipSide, RelationshipType};
 use utopia_storage::{COPY_CHUNK_SIZE, Device, DeviceType, Local};
 
 use crate::error::{Error, Result};
@@ -433,7 +434,7 @@ impl Csv {
             let is_relationship = matches!(&t, Value::Str(s) if s.as_bytes() == column::RELATIONSHIP.as_bytes());
             let side = get("side");
             let side_is = |v: &str| matches!(&side, Value::Str(s) if s.as_bytes() == v.as_bytes());
-            if is_relationship && side_is(Db::RELATION_SIDE_CHILD) {
+            if is_relationship && side_is(RelationshipSide::Child.as_str()) {
                 continue;
             }
             column_types.set(key.clone(), t.clone());
@@ -442,8 +443,8 @@ impl Csv {
             }
             let relation = get("relationType");
             if is_relationship
-                && matches!(&relation, Value::Str(s) if s.as_bytes() == Db::RELATION_MANY_TO_MANY.as_bytes())
-                && side_is(Db::RELATION_SIDE_PARENT)
+                && matches!(&relation, Value::Str(s) if s.as_bytes() == RelationshipType::ManyToMany.as_str().as_bytes())
+                && side_is(RelationshipSide::Parent.as_str())
             {
                 many_to_many.set(key.clone(), Value::Bool(true));
             }

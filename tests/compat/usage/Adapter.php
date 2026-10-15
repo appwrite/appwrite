@@ -217,7 +217,7 @@ final class Adapter implements Base, Benchmarks
                 $adapter = self::adapter($a['adapter'], $s);
                 $result = $adapter->{$a['method']}(...(isset($a['type']) ? [$a['type']] : []));
 
-                return \is_array($result) ? array_map(static fn ($v) => $v instanceof \Utopia\Database\Document ? $v->getArrayCopy() : $v, $result) : $result;
+                return \is_array($result) ? array_map(static fn ($v) => $v instanceof \Utopia\Database\Attribute || $v instanceof \Utopia\Database\Index ? $v->toDocument()->getArrayCopy() : $v, $result) : $result;
             },
             'metric.new' => fn (array $a) => new Metric(self::value($a['attributes'] ?? []))->getArrayCopy(),
             'metric.call' => function (array $a) {
@@ -414,7 +414,13 @@ final class Adapter implements Base, Benchmarks
     {
         $url = parse_url($s->service('database-mariadb'));
         $dsn = 'mysql:host=' . ($url['host'] ?? '') . ';port=' . ($url['port'] ?? 3306) . ';charset=utf8mb4';
-        $pdo = new PDO($dsn, urldecode($url['user'] ?? ''), urldecode($url['pass'] ?? ''), MariaDB::getPdoAttributes());
+        $pdo = new PDO($dsn, urldecode($url['user'] ?? ''), urldecode($url['pass'] ?? ''), [
+            PDO::ATTR_TIMEOUT => 3,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_EMULATE_PREPARES => true,
+            PDO::ATTR_STRINGIFY_FETCHES => true,
+        ]);
         $database = new Database(new MariaDB($pdo), new Cache(new NoCache()));
         $database->setDatabase($a['database']);
         $database->setNamespace($a['namespace'] ?? 'utopia_usage');

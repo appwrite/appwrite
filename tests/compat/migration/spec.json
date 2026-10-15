@@ -1,6 +1,6 @@
 {
   "lib": "migration",
-  "description": "utopia-php/migration 2.1: resources (auth, databases, storage, functions, sites, messaging, integrations, settings, domains, backups), the transfer with its cache and status counters, the sources (Appwrite over the API or the database, Supabase, NHost, Firebase, CSV, JSON) and destinations (Appwrite, CSV, JSON, a local backup), and halaxa/json-machine's streaming parser the JSON source reads with.",
+  "description": "utopia-php/migration 3.1: resources (auth, databases, storage, functions, sites, messaging, integrations, settings, domains, backups), the transfer with its cache and status counters, the sources (Appwrite over the API or the database, Supabase, NHost, Firebase, CSV, JSON) and destinations (Appwrite, CSV, JSON, a local backup), and halaxa/json-machine's streaming parser the JSON source reads with.",
   "complete": true,
   "php": {
     "src": [
@@ -15,6 +15,7 @@
   },
   "services": [
     "migration-api",
+    "migration-silent",
     "migration-nhost-db",
     "migration-supabase-db"
   ],
@@ -660,6 +661,8 @@
                           "ip",
                           "enum",
                           "integer",
+                          "bigint",
+                          "biginteger",
                           "double",
                           "boolean",
                           "datetime",
@@ -1041,6 +1044,9 @@
         "Utopia\\Migration\\Destinations\\JSON::shutdown"
       ]
     },
+    "target.fetch": {
+      "doc": "TargetTimeoutTest's ShortTimeoutTarget (Target with CONNECT_TIMEOUT 1 and STALL_TIMEOUT 3) fetching a migration-api `/__timeout/<behaviour>` path, or `https://` the migration-silent port: the body or the exception's class and code, and whether the call took between `min` and `max` seconds"
+    },
     "source.batch_sizes": {
       "doc": "Every get<Group>BatchSize() of a source",
       "covers": [
@@ -1071,7 +1077,7 @@
       "doc": "$source->exportResources($resources), through run(), which installs the callback it hands batches to"
     },
     "mock.source": {
-      "doc": "The suite's MockSource (variants: plain, legacy_child, counting, status)"
+      "doc": "The suite's MockSource (variants: plain, legacy_child, counting, status, schema: columns before indexes, as TransfersColumns::transferSchema())"
     },
     "mock.push": {
       "doc": "$mockSource->pushMockResource($resource)"
@@ -1191,6 +1197,18 @@
     },
     "db.get": {
       "doc": "getDocument($collection, $id)->getArrayCopy() (glue)"
+    },
+    "db.update": {
+      "doc": "updateDocument($collection, $id, $document) of the given attributes: whether it returned a document (glue)"
+    },
+    "db.add_format": {
+      "doc": "Structure::addFormat($name, fn () => new Text(0), ColumnType::from($type)) (glue: the format AppwriteColumnOverwriteTest registers)"
+    },
+    "db.remove_format": {
+      "doc": "Structure::removeFormat($name) (glue)"
+    },
+    "source.previous_report": {
+      "doc": "$source->previousReport = $report (a public property getStatusCounters() reads)"
     },
     "db.find": {
       "doc": "find($collection, [limit]) as array copies (glue)"
@@ -1721,18 +1739,15 @@
   "tests_waived": {
     "vendor/utopia-php/migration/tests/Migration/Unit/General/TargetTest.php": "Checks that a PHP subclass declaring the legacy three-parameter run() still satisfies Target's abstract signature, a PHP inheritance rule; Rust's Source and Destination traits fix one signature, so there is no behaviour to compare",
     "vendor/utopia-php/migration/tests/Migration/Unit/Destinations/AppwriteAttributeSdkBoundaryTest.php": "Reflection over the PHP SDK's update*Column/update*Attribute methods against a private constant of the destination; the behaviour the constant drives (an Overwrite updates an attribute in place, or drops and recreates it when an immutable field changed) is in the AppwriteSchema cases",
-    "vendor/utopia-php/migration/tests/Migration/Unit/Destinations/AppwriteSdkCoverageTest.php": "Reflection over the PHP SDK's service methods and the destination's source, failing when an SDK bump adds a parameter the destination does not send; a check on the PHP code with no behaviour to compare. The parameters the destination sends are in the AppwriteDestinationApi requests, and the Rust SDK tables are regenerated from the same SDK (tests/compat/migration/tools/gen_sdk.py)"
+    "vendor/utopia-php/migration/tests/Migration/Unit/Destinations/AppwriteSdkCoverageTest.php": "Reflection over the PHP SDK's service methods and the destination's source, failing when an SDK bump adds a parameter the destination does not send; a check on the PHP code with no behaviour to compare. The parameters the destination sends are in the AppwriteDestinationApi requests, and the Rust SDK tables are regenerated from the same SDK (tests/compat/migration/tools/gen_sdk.py)",
+    "vendor/utopia-php/migration/tests/Migration/Unit/MigrationCLITest.php": "Tests bin/MigrationCLI.php, the developer harness waived under tasks_waived: its subclass replaces the harness's database, source, frame and .env loading, leaving a transfer into the Appwrite destination, which the AppwriteRunCompletionTest and AppwriteDatabaseStatusTest cases cover (databases flipped to ready, failed resources reported), and the harness's subQueryAttributes and subQueryIndexes filters, which are the db.subquery_filters glue every destination case registers",
+    "vendor/utopia-php/migration/tests/Migration/Unit/Destinations/AppwriteSpatialIndexTest.php": "Pending utopia-database 8.x: it wraps a spatial Memory adapter (one implementing Utopia\\Database\\Adapter\\Feature\\Spatial) in Utopia\\Database\\Adapter\\Pool and checks that Database::profile()->hasFeature(Spatial::class) sees through the pool, so the destination's IndexDefinition validator accepts a spatial index. The Rust database (7.x) has no adapter features, profile, Pool adapter or spatial Memory adapter to build that destination from; port it with the upgrade"
   },
   "tasks": {},
   "tasks_waived": {
-    "vendor/utopia-php/migration/bin/MigrationCLI.php": "A developer harness, not a task the library ships: it reads credentials from a .env file (vlucas/phpdotenv, a dev dependency) to run a transfer between real projects, and it no longer matches the constructors it calls (Destinations\\Appwrite takes nine arguments, it passes five); the transfers it would run are covered by the cases"
+    "vendor/utopia-php/migration/bin/MigrationCLI.php": "A developer harness, not a task the library ships: it reads credentials from a .env file (vlucas/phpdotenv, a dev dependency) and connects to MariaDB to run a transfer between real projects; the transfers it would run are covered by the cases"
   },
   "quirks": [
-    {
-      "symbol": "Utopia\\Migration\\Destinations\\Appwrite::createRecord",
-      "description": "Rows are stripped of attributes the table does not have by unsetting them while iterating the Document (an ArrayObject): the attribute right after a removed one is never visited, so an unknown attribute that follows another unknown one is written.",
-      "case": "AppwriteSchema.json#a database, two tables, every column type, a two-way relationship, indexes and rows"
-    },
     {
       "symbol": "Utopia\\Migration\\Sources\\NHost::report",
       "description": "report() starts with `if (!empty($db->errorCode()))` on the connection: PDO returns null before the first statement and \"00000\" after a successful one, so a second report on the same source fails with \"Failed to connect to database. PDO Code: 00000\".",

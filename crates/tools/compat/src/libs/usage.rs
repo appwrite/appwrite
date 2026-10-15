@@ -8,6 +8,7 @@ use php_std::datetime::{DateTime, TimeZone, TzInfo};
 use php_std::types::KeyRef;
 use php_std::{ArrayKey, Str};
 use serde_json::{Map, Value as Json, json};
+use utopia_database::value::to_query_array;
 use utopia_query::{Array, Method, Object, Query, Value};
 use utopia_usage::adapter::clickhouse::{ClickHouse, Config};
 use utopia_usage::adapter::database::{COLLECTION, Database as DatabaseAdapter};
@@ -622,17 +623,24 @@ fn config(session: &Session, a: &Json) -> Result<Config, Fault> {
 }
 
 async fn database(session: &Session, a: &Json) -> Result<Result<DatabaseAdapter, utopia_database::Error>, Fault> {
-    use utopia_database::adapter::mariadb::{Flavor, MariaDB};
-    let url = session.service("database-mariadb")?.to_owned();
+    use utopia_database::adapter::sql::{Engine, Sql};
+    let url = session.service("database-mariadb")?;
+    // `mysql://user:pass@host:port` as PDO's DSN, user and password.
+    let rest = url.strip_prefix("mysql://").unwrap_or(url).trim_end_matches('/');
+    let (auth, host) = rest.rsplit_once('@').unwrap_or(("", rest));
+    let (user, pass) = auth.split_once(':').unwrap_or((auth, ""));
+    let (host, port) = host.rsplit_once(':').unwrap_or((host, "3306"));
+    let dsn = format!("mysql:host={host};port={port};charset=utf8mb4");
+    let (user, pass) = (user.to_owned(), pass.to_owned());
     let name = string(a, "database")?;
     let namespace = a.get("namespace").and_then(Json::as_str).unwrap_or("utopia_usage").to_owned();
     let create = a.get("create").and_then(Json::as_bool).unwrap_or(true);
     Ok(async {
-        let adapter = MariaDB::connect_as(&url, Flavor::MariaDB).await?;
+        let adapter = Sql::connect(Engine::MariaDb, &dsn, Some(&user), Some(&pass)).await?;
         let cache = Arc::new(utopia_cache::Cache::from_dyn(Arc::new(utopia_cache::None)));
-        let db = utopia_database::Database::new(Arc::new(adapter), cache, Vec::new());
-        db.set_database(&name)?;
-        db.set_namespace(&namespace)?;
+        let db = utopia_database::Database::new(Arc::new(adapter), cache);
+        db.set_database(&name);
+        db.set_namespace(&namespace);
         if create {
             db.create(None).await?;
         }
@@ -1004,10 +1012,25 @@ pub async fn call(op: &str, a: &Json, session: &mut Session) -> OpResult {
                 "getCollectionName" => Outcome::ok(Json::String(COLLECTION.into())),
                 "getEventAttributes" => Outcome::ok(attributes(Kind::Event)),
                 "getGaugeAttributes" => Outcome::ok(attributes(Kind::Gauge)),
-                "getAttributes" | "getAttributeDocuments" => Outcome::ok(attributes(k)),
+                "getAttributes" => Outcome::ok(attributes(k)),
+                "getAttributeDocuments" => {
+                    let documents = tri!(utopia_usage::adapter::database::attribute_documents(k))
+                        .iter()
+                        .map(|x| x.to_document().map(|d| encode(&Value::Array(to_query_array(&d.array_copy())))))
+                        .collect::<Result<Vec<_>, _>>()
+                        .map_err(Error::from);
+                    Outcome::ok(Json::Array(tri!(documents)))
+                }
+                "getIndexDocuments" => {
+                    let documents = tri!(utopia_usage::adapter::database::index_documents(k))
+                        .iter()
+                        .map(|x| encode(&Value::Array(to_query_array(&x.to_document().array_copy()))))
+                        .collect();
+                    Outcome::ok(Json::Array(documents))
+                }
                 "getEventIndexes" => Outcome::ok(indexes(Kind::Event)),
                 "getGaugeIndexes" => Outcome::ok(indexes(Kind::Gauge)),
-                "getIndexes" | "getIndexDocuments" => Outcome::ok(indexes(k)),
+                "getIndexes" => Outcome::ok(indexes(k)),
                 other => return Err(Fault::new(format!("adapter.schema: unknown method `{other}`"))),
             }
         }

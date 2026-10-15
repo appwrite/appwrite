@@ -1509,11 +1509,11 @@
               "githubSecret": "{\"clientSecret\":\"old\",\"keep\":1}",
               "githubEnabled": true
             },
+            "$sequence": "1",
             "$id": "destination-project",
             "$createdAt": "<masked>",
             "$updatedAt": "<masked>",
             "$permissions": [],
-            "$sequence": "1",
             "labels": [
               "a",
               "b",

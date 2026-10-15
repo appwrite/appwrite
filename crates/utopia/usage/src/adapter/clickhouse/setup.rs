@@ -204,12 +204,14 @@ impl<A: utopia_client::Adapter> ClickHouse<A> {
 
         self.create_table(&self.events_table(), Kind::Event, Kind::Event.indexes()).await?;
         self.ensure_dim_columns(&self.events_table(), Kind::Event).await?;
+        self.ensure_indexes(&self.events_table(), Kind::Event.indexes()).await?;
         self.apply_retention(&self.events_table()).await?;
         self.create_daily_table().await?;
         self.apply_retention(&self.daily_table()).await?;
         self.create_daily_view().await?;
         self.create_table(&self.gauges_table(), Kind::Gauge, Kind::Gauge.indexes()).await?;
         self.ensure_dim_columns(&self.gauges_table(), Kind::Gauge).await?;
+        self.ensure_indexes(&self.gauges_table(), Kind::Gauge.indexes()).await?;
         self.create_samples_table().await?;
         self.query(
             &format!(
@@ -320,6 +322,30 @@ impl<A: utopia_client::Adapter> ClickHouse<A> {
             }
             adds.push(format!("ADD COLUMN IF NOT EXISTS {} {}", escape(column), column_type(column, kind)?));
         }
+        if adds.is_empty() {
+            return Ok(());
+        }
+        self.query(&format!("ALTER TABLE {} {}", self.reference(table), adds.join(", ")), &[]).await?;
+        Ok(())
+    }
+
+    /// Adds the skip indexes a table created before them lacks, such as the
+    /// events ordinal index. Parts written before stay unindexed until
+    /// merged.
+    ///
+    /// PHP: `ensureIndexes()` (private).
+    async fn ensure_indexes(&self, table: &str, indexes: &[Index]) -> Result<()> {
+        let adds = indexes
+            .iter()
+            .map(|index| {
+                let attributes = index.attributes.iter().map(|a| escape(a)).collect::<Vec<_>>().join(", ");
+                format!(
+                    "ADD INDEX IF NOT EXISTS {} ({attributes}) TYPE {} GRANULARITY 1",
+                    escape(&index.id),
+                    index.index_type.unwrap_or("bloom_filter")
+                )
+            })
+            .collect::<Vec<_>>();
         if adds.is_empty() {
             return Ok(());
         }

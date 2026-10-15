@@ -22,11 +22,12 @@ use Utopia\Cache\Adapter\None as NoCache;
 use Utopia\Cache\Cache;
 use Utopia\Client\Exception\ConnectionException;
 use Utopia\Database\Adapter\MariaDB;
+use Utopia\Database\Attribute;
+use Utopia\Database\Index;
 use Utopia\Database\Adapter\Memory;
 use Utopia\Database\Adapter\SQLite;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime as DatabaseDateTime;
-use Utopia\Database\Document;
 use Utopia\Psr7\Method as HttpMethod;
 use Utopia\Psr7\Request\Factory as RequestFactory;
 use Utopia\Psr7\Response;
@@ -211,7 +212,8 @@ final class Adapter implements Base, Benchmarks
             $result instanceof Log => self::log($result),
             $result === null && $method === 'getById' => null,
             $result instanceof AuditAdapter => true,
-            \is_array($result) && \in_array($method, ['getAttributeDocuments', 'getIndexDocuments'], true) => array_map(static fn (Document $d): array => $d->getArrayCopy(), $result),
+            $result instanceof Attribute, $result instanceof Index => $result->toDocument()->getArrayCopy(),
+            \is_array($result) && \in_array($method, ['getAttributes', 'getAttributeDocuments', 'getIndexes', 'getIndexDocuments'], true) => array_map(static fn (Attribute|Index $d): array => $d->toDocument()->getArrayCopy(), $result),
             \is_array($result) && $result !== [] && array_is_list($result) && $result[0] instanceof Log => self::logs($result),
             default => $result,
         };
@@ -282,7 +284,13 @@ final class Adapter implements Base, Benchmarks
                 $url = parse_url($s->service('database-mariadb'));
                 $dsn = "mysql:host={$url['host']};port={$url['port']};charset=utf8mb4";
 
-                return new MariaDB(new PDO($dsn, urldecode($url['user'] ?? ''), urldecode($url['pass'] ?? ''), MariaDB::getPDOAttributes()));
+                return new MariaDB(new PDO($dsn, urldecode($url['user'] ?? ''), urldecode($url['pass'] ?? ''), [
+                    PDO::ATTR_TIMEOUT => 3,
+                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                    PDO::ATTR_EMULATE_PREPARES => true,
+                    PDO::ATTR_STRINGIFY_FETCHES => true,
+                ]));
             })(),
             'sqlite' => (function () use ($s): SQLite {
                 $dir = '/tmp/compat-fs/' . $s->ns;
@@ -290,7 +298,11 @@ final class Adapter implements Base, Benchmarks
                     mkdir($dir, 0777, true);
                 }
 
-                return new SQLite(new PDO('sqlite:' . $dir . '/audit.sqlite', null, null, SQLite::getPDOAttributes()));
+                return new SQLite(new PDO('sqlite:' . $dir . '/audit.sqlite', null, null, [
+                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                    PDO::ATTR_STRINGIFY_FETCHES => true,
+                ]));
             })(),
             'memory' => new Memory(),
             default => throw new Fault("unknown engine {$engine}"),

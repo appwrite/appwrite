@@ -1,0 +1,88 @@
+{
+  "source": "vendor/utopia-php/migration/tests/Migration/Unit/General/TargetTimeoutTest.php",
+  "cases": [
+    {
+      "name": "testTransferOutlastingEveryTimeoutSucceedsWhileDataKeepsArriving",
+      "steps": [
+        {
+          "op": "target.fetch",
+          "args": {
+            "path": "/__timeout/streaming",
+            "min": 3,
+            "max": 30
+          },
+          "expect": {
+            "body": "xxxxxxxxxxxxxxxxxxxx",
+            "error": null,
+            "within": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "testSilentRemoteFailsOnItsTimeout (accepts and never answers)",
+      "steps": [
+        {
+          "op": "target.fetch",
+          "args": {
+            "server": "api",
+            "min": 2.9,
+            "max": 10.0,
+            "path": "/__timeout/silent"
+          },
+          "expect": {
+            "body": null,
+            "error": {
+              "class": "Exception",
+              "code": 500
+            },
+            "within": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "testSilentRemoteFailsOnItsTimeout (stops sending mid-body)",
+      "steps": [
+        {
+          "op": "target.fetch",
+          "args": {
+            "server": "api",
+            "min": 2.9,
+            "max": 10.0,
+            "path": "/__timeout/stalled"
+          },
+          "expect": {
+            "body": null,
+            "error": {
+              "class": "Exception",
+              "code": 500
+            },
+            "within": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "testSilentRemoteFailsOnItsTimeout (never completes the connection)",
+      "steps": [
+        {
+          "op": "target.fetch",
+          "args": {
+            "server": "silent",
+            "min": 0.9,
+            "max": 3.0
+          },
+          "expect": {
+            "body": null,
+            "error": {
+              "class": "Exception",
+              "code": 500
+            },
+            "within": true
+          }
+        }
+      ]
+    }
+  ]
+}

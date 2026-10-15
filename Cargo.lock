@@ -4502,6 +4502,7 @@ dependencies = [
  "tokio-postgres",
  "utopia-client",
  "utopia-database",
+ "utopia-query",
  "utopia-storage",
 ]
 

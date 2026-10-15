@@ -2,8 +2,8 @@
 //! written to the platform and project databases.
 
 use php_std::{Array, Value};
-use utopia_database::helpers::id;
-use utopia_database::{Database as Db, Document, Kind as DbKind, Query};
+use utopia_database::database::LENGTH_KEY;
+use utopia_database::{Database as Db, Document, Kind as DbKind, Permission, PermissionType, Query, Role, id};
 
 use super::Appwrite;
 use super::normalize_date_time;
@@ -36,10 +36,10 @@ fn array_attr(d: &Document, key: &str) -> Array {
 }
 
 /// A project variable key the API accepts: a C identifier of at most
-/// [`Db::LENGTH_KEY`] characters (`/^[A-Za-z_]\w*$/D`).
+/// [`LENGTH_KEY`] characters (`/^[A-Za-z_]\w*$/D`).
 fn valid_variable_key(key: &str) -> bool {
     let b = key.as_bytes();
-    if b.len() as i64 > Db::LENGTH_KEY || b.is_empty() {
+    if b.len() as i64 > LENGTH_KEY || b.is_empty() {
         return false;
     }
     (b[0].is_ascii_alphabetic() || b[0] == b'_') && b[1..].iter().all(|c| c.is_ascii_alphanumeric() || *c == b'_')
@@ -53,9 +53,9 @@ impl Appwrite {
     async fn update_project(&self, key: &str, value: DbValue, purge: bool) -> Result<()> {
         let auth = self.db_for_platform.authorization();
         let update = doc(vec![(key, value)])?;
-        auth.skip(|| self.db_for_platform.update_document("projects", &self.project_id, update)).await?;
+        auth.skip(self.db_for_platform.update_document("projects", &self.project_id, update)).await?;
         if purge {
-            self.db_for_platform.purge_cached_document("projects", Some(&self.project_id)).await?;
+            self.db_for_platform.purge_cached_document("projects", &self.project_id).await?;
         }
         Ok(())
     }
@@ -166,7 +166,7 @@ impl Appwrite {
         let existing = Self::find_one(
             &self.db_for_project,
             "variables",
-            vec![Query::equal("resourceType", [s("project")]), Query::equal("key", [s(&v.key)])],
+            vec![Query::equal("resourceType", ["project".to_owned()]), Query::equal("key", [&v.key.to_owned()])],
         )
         .await?;
         if !existing.is_empty() {
@@ -220,7 +220,10 @@ impl Appwrite {
         let existing = Self::find_one(
             &self.db_for_platform,
             "webhooks",
-            vec![Query::equal("projectInternalId", [s(&self.project_internal_id)]), Query::equal("name", [s(&w.name)])],
+            vec![
+                Query::equal("projectInternalId", [&self.project_internal_id.to_owned()]),
+                Query::equal("name", [&w.name.to_owned()]),
+            ],
         )
         .await?;
         if !existing.is_empty() {
@@ -253,7 +256,7 @@ impl Appwrite {
             }
             Err(e) => return Err(e.into()),
         }
-        self.db_for_platform.purge_cached_document("projects", Some(&self.project_id)).await?;
+        self.db_for_platform.purge_cached_document("projects", &self.project_id).await?;
         Ok(true)
     }
 
@@ -263,9 +266,9 @@ impl Appwrite {
             &self.db_for_platform,
             "platforms",
             vec![
-                Query::equal("projectId", [s(&self.project_id)]),
-                Query::equal("type", [s(&p.platform_type)]),
-                Query::equal("name", [s(&p.name)]),
+                Query::equal("projectId", [&self.project_id.to_owned()]),
+                Query::equal("type", [&p.platform_type.to_owned()]),
+                Query::equal("name", [&p.name.to_owned()]),
             ],
         )
         .await?;
@@ -296,7 +299,7 @@ impl Appwrite {
             }
             Err(e) => return Err(e.into()),
         }
-        self.db_for_platform.purge_cached_document("projects", Some(&self.project_id)).await?;
+        self.db_for_platform.purge_cached_document("projects", &self.project_id).await?;
         Ok(true)
     }
 
@@ -306,9 +309,9 @@ impl Appwrite {
             &self.db_for_platform,
             "keys",
             vec![
-                Query::equal("resourceType", [s("projects")]),
-                Query::equal("resourceInternalId", [s(&self.project_internal_id)]),
-                Query::equal("name", [s(&k.name)]),
+                Query::equal("resourceType", ["projects".to_owned()]),
+                Query::equal("resourceInternalId", [&self.project_internal_id.to_owned()]),
+                Query::equal("name", [&k.name.to_owned()]),
             ],
         )
         .await?;
@@ -342,7 +345,7 @@ impl Appwrite {
             }
             Err(e) => return Err(e.into()),
         }
-        self.db_for_platform.purge_cached_document("projects", Some(&self.project_id)).await?;
+        self.db_for_platform.purge_cached_document("projects", &self.project_id).await?;
         Ok(true)
     }
 
@@ -451,8 +454,7 @@ impl Appwrite {
             let user_doc = user.as_ref().expect("set above");
             let created_at = normalize_date_time(&get("$createdAt"), &Value::Null)?;
             let updated_at = normalize_date_time(&get("$updatedAt"), &Value::from(created_at.as_str()))?;
-            let role = utopia_database::helpers::role::Role::user(user_id, "");
-            use utopia_database::helpers::permission::Permission;
+            let role = Role::user(user_id, "");
             let document = doc(vec![
                 ("$id", db_value(&get("$id"))),
                 ("$createdAt", s(&created_at)),
@@ -482,7 +484,7 @@ impl Appwrite {
             self.db_for_project.create_document("targets", document).await?;
         }
         if user.is_some() {
-            self.db_for_project.purge_cached_document("users", Some(user_id)).await?;
+            self.db_for_project.purge_cached_document("users", user_id).await?;
         }
         Ok(())
     }
@@ -494,13 +496,13 @@ impl Appwrite {
             .db_for_project
             .find(
                 "targets",
-                vec![Query::equal("providerId", [s(provider_id)]), Query::is_null("providerInternalId")],
-                Db::PERMISSION_READ,
+                vec![Query::equal("providerId", [provider_id.to_owned()]), Query::is_null("providerInternalId")],
+                PermissionType::Read,
             )
             .await?;
         let mut users: indexmap::IndexSet<String> = indexmap::IndexSet::new();
         for mut target in targets {
-            target.set("providerInternalId", s(&super::schema::seq(&provider)));
+            target.set("providerInternalId", s(&super::schema::seq(&provider)))?;
             let id = target.id().to_owned();
             if let Some(u) = target.get("userId") {
                 users.insert(crate::resources::cast_string(&super::schema::plain_value(u)));
@@ -508,7 +510,7 @@ impl Appwrite {
             self.db_for_project.update_document("targets", &id, target).await?;
         }
         for user in users {
-            self.db_for_project.purge_cached_document("users", Some(&user)).await?;
+            self.db_for_project.purge_cached_document("users", &user).await?;
         }
         Ok(())
     }
@@ -524,8 +526,8 @@ impl Appwrite {
                     &self.db_for_project,
                     "targets",
                     vec![
-                        Query::equal("userId", [s(&sub.user_id)]),
-                        Query::equal("providerType", [s(&sub.provider_type)]),
+                        Query::equal("userId", [&sub.user_id.to_owned()]),
+                        Query::equal("providerType", [&sub.provider_type.to_owned()]),
                     ],
                 )
                 .await?
@@ -545,8 +547,7 @@ impl Appwrite {
         }
         let created_at = normalize_date_time(&Value::from(r.created_at().as_str()), &Value::Null)?;
         let updated_at = normalize_date_time(&Value::from(r.updated_at().as_str()), &Value::from(created_at.as_str()))?;
-        let role = utopia_database::helpers::role::Role::user(sub.user_id.as_str(), "");
-        use utopia_database::helpers::permission::Permission;
+        let role = Role::user(sub.user_id.as_str(), "");
         let document = doc(vec![
             ("$id", s(&r.id())),
             ("$createdAt", s(&created_at)),

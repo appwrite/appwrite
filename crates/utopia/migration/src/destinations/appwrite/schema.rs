@@ -1,13 +1,20 @@
 //! Databases, tables, columns, indexes and rows, written to the project's
 //! databases.
 
+use std::collections::HashSet;
+
 use php_std::{Array, ArrayKey, Value};
-use utopia_database::helpers::id;
-use utopia_database::helpers::permission::{Permission, PermissionType};
-use utopia_database::validator::index::{Index as IndexValidator, IndexSupport};
+use utopia_database::attribute::{Format, Patch, Update as AttributeUpdate};
+use utopia_database::database::{BATCH_SIZE, LENGTH_KEY, MAX_ARRAY_INDEX_LENGTH, METADATA};
+use utopia_database::relationship::{RelationshipDeleteAction, RelationshipSide, Update as RelationshipUpdate};
+use utopia_database::validator::index_definition::IndexDefinition;
 use utopia_database::validator::structure::formats;
 use utopia_database::validator::uid::Uid;
-use utopia_database::{Database as Db, Document, Kind as DbKind, Query};
+use utopia_database::{
+    Attribute, Capability, Collection, Database as Db, Document, Index, Kind as DbKind, Permission, PermissionType,
+    Query, Relationship, id,
+};
+use utopia_query::schema::ColumnType;
 
 use super::{Appwrite, Orphans, normalize_date_time};
 use crate::destinations::on_duplicate::{OnDuplicate, SchemaAction};
@@ -24,7 +31,8 @@ const VECTORSDB_EMBEDDINGS_KEY: &str = "embeddings";
 const DATABASE_STATUS_PROVISIONING: &str = "provisioning";
 const DATABASE_STATUS_READY: &str = "ready";
 const DATABASE_STATUS_FAILED: &str = "failed";
-const ATTRIBUTE_IMMUTABLE_FIELDS: [&str; 6] = ["type", "array", "signed", "format", "formatOptions", "filters"];
+/// The type is immutable too, but is compared through `type_matches()`.
+const ATTRIBUTE_IMMUTABLE_FIELDS: [&str; 5] = ["array", "signed", "format", "formatOptions", "filters"];
 const RELATIONSHIP_IMMUTABLE_FIELDS: [&str; 4] = ["relationType", "twoWay", "twoWayKey", "relatedCollection"];
 
 type DbValue = utopia_database::Value;
@@ -123,27 +131,151 @@ fn options_of(d: &Document) -> Array {
     }
 }
 
-/// The type a column of resource type `t` has in the database.
+/// The stored type a column of resource type `t` has in the database.
+///
+/// PHP: `schemaColumnType($resource)` (private).
 fn database_type(t: &str) -> Result<&'static str> {
-    Ok(match t {
-        column::DATETIME => Db::VAR_DATETIME,
-        column::BOOLEAN => Db::VAR_BOOLEAN,
-        column::INTEGER => Db::VAR_INTEGER,
-        column::BIG_INT => Db::VAR_BIGINT,
-        column::FLOAT => Db::VAR_FLOAT,
-        column::RELATIONSHIP => Db::VAR_RELATIONSHIP,
-        column::STRING | column::IP | column::EMAIL | column::URL | column::ENUM => Db::VAR_STRING,
-        column::POINT => Db::VAR_POINT,
-        column::LINE => Db::VAR_LINESTRING,
-        column::POLYGON => Db::VAR_POLYGON,
-        column::TEXT => Db::VAR_TEXT,
-        column::VARCHAR => Db::VAR_VARCHAR,
-        column::MEDIUMTEXT => Db::VAR_MEDIUMTEXT,
-        column::LONGTEXT => Db::VAR_LONGTEXT,
-        column::OBJECT => Db::VAR_OBJECT,
-        column::VECTOR => Db::VAR_VECTOR,
+    let kind = match t {
+        column::DATETIME => ColumnType::Datetime,
+        column::BOOLEAN => ColumnType::Boolean,
+        column::INTEGER => ColumnType::Integer,
+        column::BIG_INT => ColumnType::BigInteger,
+        column::FLOAT => ColumnType::Double,
+        column::RELATIONSHIP => ColumnType::Relationship,
+        column::STRING | column::IP | column::EMAIL | column::URL | column::ENUM => ColumnType::String,
+        column::POINT => ColumnType::Point,
+        column::LINE => ColumnType::Linestring,
+        column::POLYGON => ColumnType::Polygon,
+        column::TEXT => ColumnType::Text,
+        column::VARCHAR => ColumnType::Varchar,
+        column::MEDIUMTEXT => ColumnType::MediumText,
+        column::LONGTEXT => ColumnType::LongText,
+        column::OBJECT => ColumnType::Object,
+        column::VECTOR => ColumnType::Vector,
         _ => return Err(Error::exception(format!("Invalid resource type {t}"), Exception::CODE_VALIDATION)),
-    })
+    };
+    Ok(Attribute::stored_type(kind))
+}
+
+const RELATIONSHIP: &str = "relationship";
+const VECTOR: &str = "vector";
+
+/// `$document->getAttribute($key, $default)`: `default` when unset or
+/// `null`.
+fn attr_or(d: &Document, key: &str, default: Value) -> Value {
+    match attr(d, key) {
+        Value::Null => default,
+        v => v,
+    }
+}
+
+/// A big integer is stored under either spelling, so an unchanged type is
+/// not always an identical string.
+///
+/// PHP: `typeMatches()` (private).
+fn type_matches(existing: &Value, t: &str) -> bool {
+    let Value::Str(existing) = existing else { return false };
+    let existing = String::from_utf8_lossy(existing.as_bytes());
+    if existing == t {
+        return true;
+    }
+    match (Attribute::type_from_stored(&existing), Attribute::type_from_stored(t)) {
+        (Ok(a), Ok(b)) => a == b,
+        _ => false,
+    }
+}
+
+/// The attribute a column resource describes.
+///
+/// PHP: `resourceAttribute($resource, $type)` (private).
+fn resource_attribute(f: &crate::resources::database::Field, t: &str) -> utopia_database::Result<Attribute> {
+    let options = f.options();
+    let mut a = Array::new();
+    a.set("key".into(), Value::from(f.key.as_str()));
+    a.set("type".into(), Value::from(t));
+    a.set("size".into(), Value::Int(f.size));
+    a.set("required".into(), Value::Bool(f.required));
+    a.set("signed".into(), Value::Bool(f.signed));
+    a.set("default".into(), f.default.clone());
+    a.set("array".into(), Value::Bool(f.array));
+    a.set("format".into(), Value::from(f.format.as_str()));
+    a.set("formatOptions".into(), Value::Array(f.format_options.clone()));
+    a.set(
+        "filters".into(),
+        Value::Array(Array::from_list(f.filters.iter().map(|s| Value::from(s.as_str())).collect())),
+    );
+    a.set("options".into(), if options.is_empty() { Value::Null } else { Value::Array(options) });
+    Attribute::from_array(&db_array(&a))
+}
+
+/// The deployed attribute and the wanted one, both normalised; `None` when
+/// either is not a valid attribute.
+///
+/// PHP: `normalisedAttributes()` (private).
+fn normalised_attributes(
+    existing: &Document,
+    f: &crate::resources::database::Field,
+    t: &str,
+) -> Option<(Attribute, Attribute)> {
+    let deployed = Attribute::from_document(existing).and_then(|a| a.apply(&AttributeUpdate::default())).ok()?;
+    let wanted = resource_attribute(f, t).and_then(|a| a.apply(&AttributeUpdate::default())).ok()?;
+    Some((deployed, wanted))
+}
+
+/// The fields an in-place update cannot change; `formatOptions` raw (an
+/// integer carries its bounds there without naming a format).
+///
+/// PHP: `immutableFields()` (private).
+fn immutable_fields(attribute: &Attribute, format_options: Value) -> Array {
+    let mut a = Array::new();
+    a.set("array".into(), Value::Bool(attribute.array));
+    a.set("signed".into(), Value::Bool(attribute.signed));
+    a.set("format".into(), attribute.format.as_ref().map_or(Value::Null, |f| Value::from(f.name.as_str())));
+    a.set("formatOptions".into(), format_options);
+    a.set(
+        "filters".into(),
+        Value::Array(Array::from_list(attribute.filters.iter().map(|s| Value::from(s.as_str())).collect())),
+    );
+    a
+}
+
+/// PHP: `immutableFieldsMatch()` (private).
+fn immutable_fields_match(
+    existing: &Document,
+    deployed: &Attribute,
+    f: &crate::resources::database::Field,
+    wanted: &Attribute,
+) -> bool {
+    !arrays_differ_on_keys(
+        &immutable_fields(deployed, attr_or(existing, "formatOptions", Value::Array(Array::new()))),
+        &immutable_fields(wanted, Value::Array(f.format_options.clone())),
+        &ATTRIBUTE_IMMUTABLE_FIELDS,
+    )
+}
+
+/// Only what the index type stores, one length and order per column.
+///
+/// PHP: `indexShape()` (private).
+fn index_shape(index: &Index) -> Value {
+    let mut shape = plain_value(&DbValue::Array(index.to_document().array_copy()));
+    if let Value::Array(a) = &mut shape {
+        a.remove(&"$id".into());
+        a.remove(&"key".into());
+        let positions = index.attributes.len();
+        if a.contains_key(&"lengths".into()) {
+            let lengths = (0..positions).map(|p| Value::Int(index.lengths.get(p).copied().flatten().unwrap_or(0)));
+            a.set("lengths".into(), Value::Array(Array::from_list(lengths.collect())));
+        }
+        if a.contains_key(&"orders".into()) {
+            let orders: Vec<Value> = match a.get_str("orders") {
+                Some(Value::Array(o)) => o.values().cloned().collect(),
+                _ => Vec::new(),
+            };
+            let orders = (0..positions).map(|p| orders.get(p).cloned().unwrap_or(Value::Null));
+            a.set("orders".into(), Value::Array(Array::from_list(orders.collect())));
+        }
+    }
+    shape
 }
 
 fn database_of(r: &ResourceRef) -> Option<ResourceRef> {
@@ -187,14 +319,9 @@ impl Appwrite {
         if let Some(s) = self.database_status_supported {
             return Ok(s);
         }
-        let collection = self.db_for_project.get_collection(META_DATABASES).await?;
-        let supported = match collection.get("attributes") {
-            Some(DbValue::Array(list)) => list.values().any(|a| match a {
-                DbValue::Ext(utopia_database::value::Ext::Document(d)) => d.id() == "status",
-                DbValue::Array(a) => matches!(a.get_str("$id"), Some(DbValue::Str(s)) if s.as_bytes() == b"status"),
-                _ => false,
-            }),
-            _ => false,
+        let supported = match self.db_for_project.find_collection(META_DATABASES).await? {
+            Some(collection) => collection.attributes()?.iter().any(|a| a.key == "status"),
+            None => false,
         };
         self.database_status_supported = Some(supported);
         Ok(supported)
@@ -215,42 +342,56 @@ impl Appwrite {
     pub(super) async fn mark_provisioned_databases_ready(&mut self) {
         let ids: Vec<String> = self.provisioning_databases.keys().cloned().collect();
         for id in ids {
-            let _ = self.set_database_status(&id, DATABASE_STATUS_READY).await;
+            if let Err(e) = self.set_database_status(&id, DATABASE_STATUS_READY).await {
+                let code = e.code();
+                self.target.add_error(Exception::new(
+                    types::DATABASE,
+                    crate::transfer::group::DATABASES,
+                    Some(id.clone()),
+                    e.message(),
+                    code,
+                    Some(e),
+                ));
+            }
         }
     }
 
-    fn structure_for(&self, r: &ResourceRef) -> (Vec<Document>, Vec<Document>) {
+    /// The structure of the metadata collection of `r`'s database type, as
+    /// attribute and index models.
+    ///
+    /// PHP: `collectionStructureFor()`, `schemaAttributes()` and
+    /// `schemaIndexes()` (private).
+    fn structure_for(&self, r: &ResourceRef) -> utopia_database::Result<(Vec<Attribute>, Vec<Index>)> {
         let t = r.as_database().map(|d| d.database_type.clone()).unwrap_or_default();
         let structure = match self.collection_structures.get_str(&t) {
             Some(Value::Array(a)) => a.clone(),
             Some(Value::Null) | None => self.collection_structure.clone(),
             Some(_) => Array::new(),
         };
-        let docs = |key: &str| -> Vec<Document> {
+        let arrays = |key: &str| -> Vec<DbArray> {
             match structure.get_str(key) {
                 Some(Value::Array(list)) => list
                     .values()
-                    .filter_map(|v| match v {
-                        Value::Array(a) => Document::new(db_array(a)).ok(),
-                        _ => None,
+                    .map(|v| match v {
+                        Value::Array(a) => db_array(a),
+                        _ => DbArray::new(),
                     })
                     .collect(),
                 _ => Vec::new(),
             }
         };
-        (docs("attributes"), docs("indexes"))
+        let attributes =
+            arrays("attributes").iter().map(Attribute::from_array).collect::<utopia_database::Result<_>>()?;
+        let indexes = arrays("indexes").iter().map(Index::from_array).collect::<utopia_database::Result<_>>()?;
+        Ok((attributes, indexes))
     }
 
-    async fn create_database_collection(&mut self, r: &ResourceRef, database: &Document) -> Result<()> {
-        let (attributes, indexes) = self.structure_for(r);
-        let result = self
-            .db_for_project
-            .create_collection(&database_collection_id(database), attributes, indexes, None, true)
-            .await;
-        if let Err(e) = result {
-            self.mark_database_failed(&r.id()).await;
-            return Err(e.into());
-        }
+    /// Creates the collection of `database`'s tables.
+    async fn create_database_collection(&self, r: &ResourceRef, database: &Document) -> Result<()> {
+        let (attributes, indexes) = self.structure_for(r)?;
+        let collection =
+            Collection::create(database_collection_id(database), "", attributes, indexes, None, true, DbArray::new())?;
+        self.db_for_project.create_collection(collection).await?;
         Ok(())
     }
 
@@ -283,14 +424,17 @@ impl Appwrite {
         let original = if empty(&original) { DbValue::Null } else { s(&original) };
         let search = format!("{} {}", r.id(), d.name);
 
-        if self.on_duplicate != OnDuplicate::Fail {
-            let existing = self.db_for_project.get_document(META_DATABASES, &r.id(), Vec::new(), false).await?;
+        let existing = self.db_for_project.get_document(META_DATABASES, &r.id(), Vec::new(), false).await?;
+        let is_incomplete = !existing.is_empty() && self.support_for_database_status().await? && {
+            let status = attr(&existing, "status");
+            status.strict_eq(&Value::from(DATABASE_STATUS_FAILED))
+                || status.strict_eq(&Value::from(DATABASE_STATUS_PROVISIONING))
+        };
+
+        if self.on_duplicate != OnDuplicate::Fail || is_incomplete {
             let mut action =
                 self.on_duplicate.resolve_schema_action(!existing.is_empty(), Some(&updated_at), existing.updated_at());
-            let is_failed = !existing.is_empty()
-                && self.support_for_database_status().await?
-                && attr(&existing, "status").strict_eq(&Value::from(DATABASE_STATUS_FAILED));
-            if is_failed {
+            if is_incomplete {
                 action = SchemaAction::Overwrite;
             } else if action != SchemaAction::Create && self.database_spec_matches(&existing, r) {
                 action = SchemaAction::Skip;
@@ -299,11 +443,6 @@ impl Appwrite {
                 SchemaAction::Skip => {
                     r.set_sequence(seq(&existing));
                     r.set_status(status::SKIPPED, "Already exists on destination");
-                    if self.support_for_database_status().await?
-                        && attr(&existing, "status").strict_eq(&Value::from(DATABASE_STATUS_PROVISIONING))
-                    {
-                        self.provisioning_databases.insert(r.id(), ());
-                    }
                     return Ok(false);
                 }
                 SchemaAction::Overwrite => {
@@ -321,10 +460,12 @@ impl Appwrite {
                     }
                     self.db_for_project.update_document(META_DATABASES, existing.id(), doc(pairs)?).await?;
                     r.set_sequence(seq(&existing));
-                    if is_failed
-                        && self.db_for_project.get_collection(&database_collection_id(&existing)).await?.is_empty()
+                    if is_incomplete
+                        && self.db_for_project.find_collection(&database_collection_id(&existing)).await?.is_none()
+                        && let Err(e) = self.create_database_collection(r, &existing).await
                     {
-                        self.create_database_collection(r, &existing).await?;
+                        self.mark_database_failed(&r.id()).await;
+                        return Err(e);
                     }
                     if self.support_for_database_status().await? {
                         self.provisioning_databases.insert(r.id(), ());
@@ -350,8 +491,21 @@ impl Appwrite {
             pairs.push(("status", s(DATABASE_STATUS_PROVISIONING)));
         }
         let database = self.db_for_project.create_document(META_DATABASES, doc(pairs)?).await?;
-        r.set_sequence(seq(&database));
-        self.create_database_collection(r, &database).await?;
+        let created: Result<()> = async {
+            let database = self.db_for_project.get_document(META_DATABASES, database.id(), Vec::new(), false).await?;
+            if database.is_empty() {
+                return Err(
+                    utopia_database::Error::database(format!("Failed to reload created database {}", r.id())).into()
+                );
+            }
+            r.set_sequence(seq(&database));
+            self.create_database_collection(r, &database).await
+        }
+        .await;
+        if let Err(e) = created {
+            self.mark_database_failed(&r.id()).await;
+            return Err(e);
+        }
         if self.support_for_database_status().await? {
             self.provisioning_databases.insert(r.id(), ());
         }
@@ -406,7 +560,7 @@ impl Appwrite {
         let created_at = normalize_date_time(&Value::from(r.created_at().as_str()), &Value::Null)?;
         let updated_at = normalize_date_time(&Value::from(r.updated_at().as_str()), &Value::from(created_at.as_str()))?;
         let db = self.resolve(&database).await;
-        if !db.exists(None, Some(Db::METADATA)).await? {
+        if !db.collection_exists(METADATA, None).await? {
             db.create(None).await?;
         }
         let search = format!("{} {name}", r.id());
@@ -464,19 +618,21 @@ impl Appwrite {
         pairs.extend(self.entity_type_metadata(r));
         let table = self.db_for_project.create_document(&database_collection_id(&database), doc(pairs)?).await?;
         r.set_sequence(seq(&table));
-        db.create_collection(
-            &table_collection_id(&database, &table),
+        db.create_collection(Collection::create(
+            table_collection_id(&database, &table),
+            "",
             Vec::new(),
             Vec::new(),
             Some(r.permissions()),
             row_security,
-        )
+            DbArray::new(),
+        )?)
         .await?;
         Ok(true)
     }
 
     async fn purge_table_caches(&self, database: &Document, table: &Document, db: &Db) -> Result<()> {
-        self.db_for_project.purge_cached_document(&database_collection_id(database), Some(table.id())).await?;
+        self.db_for_project.purge_cached_document(&database_collection_id(database), table.id()).await?;
         db.purge_cached_collection(&table_collection_id(database, table)).await?;
         Ok(())
     }
@@ -508,7 +664,7 @@ impl Appwrite {
         options: &Array,
         t: &str,
     ) -> Option<String> {
-        if t != Db::VAR_RELATIONSHIP {
+        if t != RELATIONSHIP {
             return None;
         }
         if crate::resources::php_empty(&get_or_null(options, "twoWay")) {
@@ -553,7 +709,7 @@ impl Appwrite {
         t: &str,
         relationship: bool,
     ) -> bool {
-        if !attr(existing, "type").strict_eq(&Value::from(t)) {
+        if !type_matches(&attr(existing, "type"), t) {
             return false;
         }
         if relationship {
@@ -566,15 +722,11 @@ impl Appwrite {
             }
             return values_match(&get_or_null(&source, "onDelete"), &get_or_null(&dest, "onDelete"));
         }
-        attr(existing, "size").strict_eq(&Value::Int(f.size))
-            && attr(existing, "required").strict_eq(&Value::Bool(f.required))
-            && attr(existing, "default").strict_eq(&f.default)
-            && attr(existing, "array").strict_eq(&Value::Bool(f.array))
-            && attr(existing, "signed").strict_eq(&Value::Bool(f.signed))
-            && attr(existing, "format").strict_eq(&Value::from(f.format.as_str()))
-            && values_match(&attr(existing, "formatOptions"), &Value::Array(f.format_options.clone()))
-            && attr(existing, "filters")
-                .strict_eq(&Value::Array(Array::from_list(f.filters.iter().map(|s| Value::from(s.as_str())).collect())))
+        let Some((deployed, wanted)) = normalised_attributes(existing, f, t) else { return false };
+        deployed.size == wanted.size
+            && deployed.required == wanted.required
+            && plain_value(&deployed.default).strict_eq(&plain_value(&wanted.default))
+            && immutable_fields_match(existing, &deployed, f, &wanted)
     }
 
     /// PHP: `createField($resource)`.
@@ -591,14 +743,14 @@ impl Appwrite {
         if database.is_empty() {
             return self.reject(r, "Database not found");
         }
-        let mut table = self
+        let table = self
             .db_for_project
             .get_document(&database_collection_id(&database), &table_resource.id(), Vec::new(), false)
             .await?;
         if table.is_empty() {
             return self.reject(r, "Table not found");
         }
-        if !empty(&f.format) && !formats::has(&f.format, t) {
+        if !empty(&f.format) && !formats::has(&f.format, Attribute::type_from_stored(t)?) {
             return self.reject(r, format!("Format {} not available for column type {t}", f.format));
         }
         if f.required && !matches!(f.default, Value::Null) {
@@ -607,10 +759,10 @@ impl Appwrite {
         if f.array && !matches!(f.default, Value::Null) {
             return self.reject(r, "Cannot set default value for array column");
         }
-        let relationship = t == Db::VAR_RELATIONSHIP;
+        let relationship = t == RELATIONSHIP;
         let mut related_table = None;
         if relationship {
-            f.options_mut().set("side".into(), Value::from(Db::RELATION_SIDE_PARENT));
+            f.options_mut().set("side".into(), Value::from(RelationshipSide::Parent.as_str()));
             let related = cast_string(&get_or_null(&f.options(), "relatedCollection"));
             let found = self
                 .db_for_project
@@ -668,10 +820,6 @@ impl Appwrite {
             }
             if action == SchemaAction::Overwrite {
                 self.drop_attribute_for_recreate(&database, &table, r, &db, &existing).await?;
-                table = self
-                    .db_for_project
-                    .get_document(&database_collection_id(&database), table.id(), Vec::new(), false)
-                    .await?;
             }
         }
 
@@ -701,8 +849,12 @@ impl Appwrite {
         };
         let options = f.options();
         let column = column_doc(&table, &key, &options)?;
-        let checked = match self.db_for_project.check_attribute(&table, &column) {
-            Ok(_) => self.db_for_project.create_document(META_ATTRIBUTES, column).await,
+        let collection_id = table_collection_id(&database, &table);
+        let checked = match resource_attribute(f, t) {
+            Ok(attribute) => match db.check_attribute(&collection_id, &attribute).await {
+                Ok(_) => self.db_for_project.create_document(META_ATTRIBUTES, column).await,
+                Err(e) => Err(e),
+            },
             Err(e) => Err(e),
         };
         let column = match checked {
@@ -726,7 +878,7 @@ impl Appwrite {
             two_way_key = partner_key.clone();
             options.set("relatedCollection".into(), Value::from(table.id()));
             options.set("twoWayKey".into(), Value::from(key.as_str()));
-            options.set("side".into(), Value::from(Db::RELATION_SIDE_CHILD));
+            options.set("side".into(), Value::from(RelationshipSide::Child.as_str()));
             let partner_key = partner_key.unwrap_or_default();
             let partner = column_doc(&related, &partner_key, &options)?;
             match self.db_for_project.create_document(META_ATTRIBUTES, partner).await {
@@ -749,52 +901,39 @@ impl Appwrite {
             }
         }
 
-        let collection_id = table_collection_id(&database, &table);
         let created: Result<()> = async {
             if relationship {
                 let related = related_table.as_ref().expect("relationship");
-                let key_for_partner =
-                    if two_way { two_way_key.clone() } else { to_opt_string(&get_or_null(&options, "twoWayKey")) };
-                let ok = db
-                    .create_relationship(
-                        &collection_id,
-                        &table_collection_id(&database, related),
-                        &cast_string(&get_or_null(&options, "relationType")),
-                        two_way,
-                        Some(&key),
-                        key_for_partner.as_deref(),
-                        &cast_string(&get_or_null(&options, "onDelete")),
-                    )
-                    .await?;
-                if !ok {
-                    return Err(Error::migration(Exception::new(
-                        r.name(),
-                        r.group(),
-                        Some(r.id()),
-                        "Failed to create relationship",
-                        0,
-                        None,
-                    )));
-                }
+                let key_for_partner = if two_way {
+                    two_way_key.clone().unwrap_or_default()
+                } else {
+                    to_opt_string(&get_or_null(&options, "twoWayKey")).unwrap_or_default()
+                };
+                let mut definition = Array::new();
+                definition
+                    .set("relatedCollection".into(), Value::from(table_collection_id(&database, related).as_str()));
+                definition.set("relationType".into(), get_or_null(&options, "relationType"));
+                definition.set("twoWay".into(), get_or_null(&options, "twoWay"));
+                definition.set("key".into(), Value::from(key.as_str()));
+                definition.set("twoWayKey".into(), Value::from(key_for_partner.as_str()));
+                definition.set("onDelete".into(), get_or_null(&options, "onDelete"));
+                db.create_relationship(&collection_id, Relationship::from_array(&db_array(&definition))?).await?;
             } else {
-                let ok = db
-                    .create_attribute(
-                        &collection_id,
-                        &key,
-                        t,
-                        f.size,
-                        f.required,
-                        db_value(&f.default),
-                        f.signed,
-                        f.array,
-                        Some(f.format.as_str()),
-                        db_array(&f.format_options),
-                        f.filters.clone(),
-                    )
-                    .await?;
-                if !ok {
-                    return Err(Error::exception("Failed to create Column", Exception::CODE_INTERNAL));
-                }
+                let mut definition = Array::new();
+                definition.set("key".into(), Value::from(key.as_str()));
+                definition.set("type".into(), Value::from(t));
+                definition.set("size".into(), Value::Int(f.size));
+                definition.set("required".into(), Value::Bool(f.required));
+                definition.set("default".into(), f.default.clone());
+                definition.set("signed".into(), Value::Bool(f.signed));
+                definition.set("array".into(), Value::Bool(f.array));
+                definition.set("format".into(), Value::from(f.format.as_str()));
+                definition.set("formatOptions".into(), Value::Array(f.format_options.clone()));
+                definition.set(
+                    "filters".into(),
+                    Value::Array(Array::from_list(f.filters.iter().map(|s| Value::from(s.as_str())).collect())),
+                );
+                db.create_attribute(&collection_id, Attribute::from_array(&db_array(&definition))?).await?;
             }
             Ok(())
         }
@@ -808,7 +947,7 @@ impl Appwrite {
         }
         if relationship && two_way {
             let related = related_table.as_ref().expect("relationship");
-            self.db_for_project.purge_cached_document(&database_collection_id(&database), Some(related.id())).await?;
+            self.db_for_project.purge_cached_document(&database_collection_id(&database), related.id()).await?;
         }
         self.purge_table_caches(&database, &table, &db).await?;
         if let Some(p) = pair_key {
@@ -832,7 +971,7 @@ impl Appwrite {
         table: &Document,
     ) -> Result<()> {
         let Some(f) = r.as_field() else { return Ok(()) };
-        if t != Db::VAR_VECTOR
+        if t != VECTOR
             || f.key != VECTORSDB_EMBEDDINGS_KEY
             || database_type_of(&f.table) != types::DATABASE_VECTORSDB
             || matches!(self.collection_structures.get_str(types::DATABASE_VECTORSDB), None | Some(Value::Null))
@@ -891,45 +1030,27 @@ impl Appwrite {
     ) -> Result<bool> {
         let f = r.as_field().expect("a field");
         let filters = Value::Array(Array::from_list(f.filters.iter().map(|s| Value::from(s.as_str())).collect()));
-        let mut source = Array::new();
-        source.set("type".into(), Value::from(t));
-        source.set("array".into(), Value::Bool(f.array));
-        source.set("signed".into(), Value::Bool(f.signed));
-        source.set("format".into(), Value::from(f.format.as_str()));
-        source.set("formatOptions".into(), Value::Array(f.format_options.clone()));
-        source.set("filters".into(), filters.clone());
-        let mut dest = Array::new();
-        for field in ATTRIBUTE_IMMUTABLE_FIELDS {
-            dest.set(field.into(), attr(existing, field));
-        }
-        if arrays_differ_on_keys(&source, &dest, &ATTRIBUTE_IMMUTABLE_FIELDS) {
+        if !type_matches(&attr(existing, "type"), t) {
             return Ok(false);
         }
-        let existing_filters: Option<Vec<String>> = match attr(existing, "filters") {
-            Value::Array(a) => Some(a.values().map(cast_string).collect()),
-            _ => None,
+        let Some((deployed, wanted)) = normalised_attributes(existing, f, t) else { return Ok(false) };
+        if !immutable_fields_match(existing, &deployed, f, &wanted) {
+            return Ok(false);
+        }
+        let format =
+            if f.format.is_empty() { None } else { Some(Format::new(f.format.as_str(), db_array(&f.format_options))?) };
+        let update = AttributeUpdate {
+            kind: Some(Attribute::type_from_stored(t)?),
+            size: Some(f.size),
+            required: Some(f.required),
+            default: Patch::Set(db_value(&f.default)),
+            signed: Some(deployed.signed),
+            array: Some(deployed.array),
+            format: Patch::Set(format),
+            filters: Some(deployed.filters.iter().map(Into::into).collect()),
+            key: None,
         };
-        db.update_attribute(
-            &table_collection_id(database, table),
-            &f.key,
-            Some(t),
-            Some(f.size),
-            Some(f.required),
-            db_value(&f.default),
-            match attr(existing, "signed") {
-                Value::Null => None,
-                v => Some(cast_bool(&v)),
-            },
-            match attr(existing, "array") {
-                Value::Null => None,
-                v => Some(cast_bool(&v)),
-            },
-            Some(f.format.as_str()),
-            Some(db_array(&f.format_options)),
-            existing_filters,
-            None,
-        )
-        .await?;
+        db.update_attribute(&table_collection_id(database, table), &f.key, update).await?;
         self.db_for_project
             .update_document(
                 META_ATTRIBUTES,
@@ -973,22 +1094,17 @@ impl Appwrite {
         let two_way = cast_bool(&get_or_null(&dest, "twoWay"));
         let source_on_delete = get_or_null(&source, "onDelete");
         let on_delete_changed = !source_on_delete.strict_eq(&get_or_null(&dest, "onDelete"));
+        let on_delete = RelationshipDeleteAction::try_from_value(&cast_string(&source_on_delete));
         if !two_way && on_delete_changed {
             return Ok(false);
         }
         if on_delete_changed {
-            db.update_relationship(
-                &table_collection_id(database, table),
-                &f.key,
-                None,
-                None,
-                None,
-                Some(&cast_string(&source_on_delete)),
-            )
-            .await?;
+            let update = RelationshipUpdate { on_delete, ..Default::default() };
+            db.update_relationship(&table_collection_id(database, table), &f.key, update).await?;
         }
+        let on_delete_value = on_delete.map_or(Value::Null, |a| Value::from(a.as_str()));
         let mut options = dest.clone();
-        options.set("onDelete".into(), first_set(&source_on_delete, &get_or_null(&dest, "onDelete")));
+        options.set("onDelete".into(), first_set(&on_delete_value, &get_or_null(&dest, "onDelete")));
         self.db_for_project
             .update_document(
                 META_ATTRIBUTES,
@@ -1007,7 +1123,7 @@ impl Appwrite {
                 self.db_for_project.get_document(META_ATTRIBUTES, &partner_meta_id, Vec::new(), false).await?;
             if !partner.is_empty() {
                 let mut partner_options = options_of(&partner);
-                let value = first_set(&source_on_delete, &get_or_null(&partner_options, "onDelete"));
+                let value = first_set(&on_delete_value, &get_or_null(&partner_options, "onDelete"));
                 partner_options.set("onDelete".into(), value);
                 self.db_for_project
                     .update_document(
@@ -1025,22 +1141,23 @@ impl Appwrite {
         Ok(true)
     }
 
+    /// `lengths` is compared: the source's own prefix lengths drive the
+    /// destination index. The resource carries no TTL, so the deployed one
+    /// is kept.
+    ///
+    /// PHP: `indexSpecMatches()` (private).
     fn index_spec_matches(&self, existing: &Document, r: &ResourceRef) -> bool {
         let Kind::Index(i) = r.kind() else { return false };
-        attr(existing, "type").strict_eq(&Value::from(i.index_type.as_str()))
-            && attr(existing, "attributes").strict_eq(&Value::Array(i.columns.clone()))
-            && attr(existing, "orders").strict_eq(&Value::Array(i.orders.clone()))
-            && {
-                let existing_lengths: Vec<Value> = match attr(existing, "lengths") {
-                    Value::Array(a) => a.values().cloned().collect(),
-                    _ => Vec::new(),
-                };
-                let wanted: Vec<Value> = i.lengths.values().cloned().collect();
-                (0..i.columns.len()).all(|p| {
-                    cast_int(existing_lengths.get(p).unwrap_or(&Value::Int(0)))
-                        == cast_int(wanted.get(p).unwrap_or(&Value::Int(0)))
-                })
-            }
+        let Ok(deployed) = Index::from_document(existing) else { return false };
+        let mut wanted = Array::new();
+        wanted.set("key".into(), Value::from(i.key.as_str()));
+        wanted.set("type".into(), Value::from(i.index_type.as_str()));
+        wanted.set("attributes".into(), Value::Array(i.columns.clone()));
+        wanted.set("lengths".into(), Value::Array(Array::from_list(i.lengths.values().cloned().collect())));
+        wanted.set("orders".into(), Value::Array(Array::from_list(i.orders.values().cloned().collect())));
+        wanted.set("ttl".into(), deployed.ttl.map_or(Value::Null, Value::Int));
+        let Ok(wanted) = Index::from_array(&db_array(&wanted)) else { return false };
+        index_shape(&deployed).strict_eq(&index_shape(&wanted))
     }
 
     /// The prefix lengths of an index's columns, checking each column
@@ -1067,9 +1184,9 @@ impl Appwrite {
             a.set("size".into(), Value::Int(size));
             Value::Array(a)
         };
-        columns.push(internal("$id", Db::VAR_STRING, true, Db::LENGTH_KEY, None));
-        columns.push(internal("$createdAt", Db::VAR_DATETIME, false, 0, Some(false)));
-        columns.push(internal("$updatedAt", Db::VAR_DATETIME, false, 0, Some(false)));
+        columns.push(internal("$id", ColumnType::String.as_str(), true, LENGTH_KEY, None));
+        columns.push(internal("$createdAt", ColumnType::Datetime.as_str(), false, 0, Some(false)));
+        columns.push(internal("$updatedAt", ColumnType::Datetime.as_str(), false, 0, Some(false)));
         let field = |c: &Value, k: &str| match c {
             Value::Array(a) => a.get_str(k).cloned(),
             _ => None,
@@ -1083,7 +1200,7 @@ impl Appwrite {
             };
             let column =
                 &columns.iter().filter(|c| field(c, "key").is_some()).nth(found).cloned().unwrap_or(Value::Null);
-            if field(column, "type").is_some_and(|t| t.strict_eq(&Value::from(Db::VAR_RELATIONSHIP))) {
+            if field(column, "type").is_some_and(|t| t.strict_eq(&Value::from(RELATIONSHIP))) {
                 return Err(self.index_error(r, "Relationship columns are not supported in indexes".to_owned()));
             }
             if !field(column, "status").is_some_and(|s| s.strict_eq(&Value::from("available"))) {
@@ -1097,7 +1214,7 @@ impl Appwrite {
                 _ => DbValue::Null,
             };
             if field(column, "array").is_some_and(|a| a.strict_eq(&Value::Bool(true))) {
-                length = DbValue::Int(Db::MAX_ARRAY_INDEX_LENGTH);
+                length = DbValue::Int(MAX_ARRAY_INDEX_LENGTH);
             }
             lengths.set(k.to_owned(), length);
         }
@@ -1138,14 +1255,14 @@ impl Appwrite {
                 action = SchemaAction::Skip;
             }
             if action == SchemaAction::Skip {
-                self.db_for_project.purge_cached_document(&database_collection_id(&database), Some(table.id())).await?;
+                self.db_for_project.purge_cached_document(&database_collection_id(&database), table.id()).await?;
                 r.set_status(status::SKIPPED, "Already exists on destination");
                 return Ok(false);
             }
             if action == SchemaAction::Overwrite {
                 db.delete_index(&table_collection_id(&database, &table), &i.key).await?;
                 self.db_for_project.delete_document(META_INDEXES, &index_meta_id).await?;
-                self.db_for_project.purge_cached_document(&database_collection_id(&database), Some(table.id())).await?;
+                self.db_for_project.purge_cached_document(&database_collection_id(&database), table.id()).await?;
                 table = self
                     .db_for_project
                     .get_document(&database_collection_id(&database), table.id(), Vec::new(), false)
@@ -1159,8 +1276,8 @@ impl Appwrite {
             .count(
                 META_INDEXES,
                 vec![
-                    Query::equal("collectionInternalId", [s(&seq(&table))]),
-                    Query::equal("databaseInternalId", [s(&seq(&database))]),
+                    Query::equal("collectionInternalId", [seq(&table)]),
+                    Query::equal("databaseInternalId", [seq(&database)]),
                 ],
                 Some(limit),
             )
@@ -1169,7 +1286,7 @@ impl Appwrite {
             return self.reject(r, "Index limit reached for table");
         }
         let adapter = db.adapter().clone();
-        let lengths = if adapter.support_for_attributes() {
+        let lengths = if adapter.supports(Capability::DefinedAttributes) {
             self.validate_fields_for_indexes(r, &table)?
         } else {
             DbArray::new()
@@ -1189,76 +1306,30 @@ impl Appwrite {
             ("$createdAt", s(&created_at)),
             ("$updatedAt", s(&updated_at)),
         ])?;
-        let documents = |key: &str| -> Vec<Document> {
-            match table.get(key) {
-                Some(DbValue::Array(list)) => list
-                    .values()
-                    .filter_map(|v| match v {
-                        DbValue::Ext(utopia_database::value::Ext::Document(d)) => Some((**d).clone()),
-                        DbValue::Array(a) => Document::new(a.clone()).ok(),
-                        _ => None,
-                    })
-                    .collect(),
-                _ => Vec::new(),
-            }
-        };
-        let support = IndexSupport {
-            array_indexes: adapter.support_for_index_array(),
-            spatial_index_null: adapter.support_for_spatial_index_null(),
-            spatial_index_order: adapter.support_for_spatial_index_order(),
-            vector_indexes: adapter.support_for_vectors(),
-            attributes: adapter.support_for_attributes(),
-            multiple_fulltext_indexes: adapter.support_for_multiple_fulltext_indexes(),
-            identical_indexes: adapter.support_for_identical_indexes(),
-            object_indexes: adapter.support_for_object_indexes(),
-            trigram_indexes: adapter.support_for_trigram_index(),
-            spatial_indexes: adapter.support_for_spatial_attributes(),
-            key_indexes: adapter.support_for_index(),
-            unique_indexes: adapter.support_for_unique_index(),
-            fulltext_indexes: adapter.support_for_fulltext_index(),
-            ..IndexSupport::default()
-        };
-        let validator = IndexValidator::new(
-            &documents("attributes"),
-            documents("indexes"),
-            adapter.max_index_length(),
-            adapter.internal_indexes_keys().iter().map(|k| (*k).to_owned()).collect(),
-            support,
-        );
-        if !validator.check(&index) {
+        let validator = IndexDefinition::from_documents(
+            &table.documents("attributes")?,
+            &table.documents("indexes")?,
+            db.profile(),
+        )?;
+        if !validator.is_valid(&DbValue::from(index.clone()))? {
             return self.reject(r, format!("Invalid index: {}", validator.description()));
         }
         let index = self.db_for_project.create_document(META_INDEXES, index).await?;
-        let created = db
-            .create_index(
-                &table_collection_id(&database, &table),
-                &i.key,
-                &i.index_type,
-                i.columns.values().map(cast_string).collect(),
-                lengths.values().cloned().collect(),
-                i.orders.values().map(db_value).collect(),
-                1,
-            )
-            .await;
-        match created {
-            Ok(true) => {}
-            Ok(false) => {
-                self.db_for_project.delete_document(META_INDEXES, index.id()).await?;
-                return Err(Error::migration(Exception::new(
-                    r.name(),
-                    r.group(),
-                    Some(r.id()),
-                    "Failed to create index",
-                    0,
-                    None,
-                )));
-            }
-            Err(e) => {
-                self.db_for_project.delete_document(META_INDEXES, index.id()).await?;
-                return Err(e.into());
-            }
+        let mut definition = Array::new();
+        definition.set("key".into(), Value::from(i.key.as_str()));
+        definition.set("type".into(), Value::from(i.index_type.as_str()));
+        definition.set("attributes".into(), Value::Array(i.columns.clone()));
+        definition.set("lengths".into(), plain_value(&DbValue::Array(lengths)));
+        definition.set("orders".into(), Value::Array(i.orders.clone()));
+        let created = match Index::from_array(&db_array(&definition)) {
+            Ok(definition) => db.create_index(&table_collection_id(&database, &table), definition).await.map(|_| ()),
+            Err(e) => Err(e),
+        };
+        if let Err(e) = created {
+            self.db_for_project.delete_document(META_INDEXES, index.id()).await?;
+            return Err(e.into());
         }
-        self.db_for_project.purge_cached_document(&database_collection_id(&database), Some(table.id())).await?;
+        self.db_for_project.purge_cached_document(&database_collection_id(&database), table.id()).await?;
         Ok(true)
     }
 
@@ -1329,42 +1400,30 @@ impl Appwrite {
             .get_document(&database_collection_id(&database), &table_resource.id(), Vec::new(), false)
             .await?;
         let mut rows = std::mem::take(&mut self.row_buffer);
-        if db.adapter().support_for_attributes() {
-            let keys: Vec<Value> = match table.get("attributes") {
+        if db.adapter().supports(Capability::DefinedAttributes) {
+            let declared: HashSet<String> = match table.get("attributes") {
                 Some(DbValue::Array(list)) => list
                     .values()
                     .map(|a| match plain_document(a) {
-                        Value::Array(a) => a.get_str("key").cloned().unwrap_or(Value::Null),
-                        _ => Value::Null,
+                        Value::Array(a) => cast_string(&a.get_str("key").cloned().unwrap_or(Value::from(""))),
+                        _ => String::new(),
                     })
                     .collect(),
-                _ => Vec::new(),
+                _ => HashSet::new(),
             };
             for row in &mut rows {
-                // PHP removes attributes while iterating the document (an
-                // `ArrayObject`): the attribute after a removed one is not
-                // visited, so it stays.
-                let all: Vec<php_std::ArrayKey> = row.keys().map(|k| k.to_owned()).collect();
-                let mut remove: Vec<php_std::ArrayKey> = Vec::new();
-                let mut skip = false;
-                for k in all {
-                    if std::mem::take(&mut skip) {
-                        continue;
-                    }
-                    let internal = matches!(&k, php_std::ArrayKey::Str(s) if s.as_bytes().starts_with(b"$"));
-                    if internal {
-                        continue;
-                    }
-                    let key = match &k {
-                        php_std::ArrayKey::Int(i) => Value::Int(*i),
-                        php_std::ArrayKey::Str(s) => Value::Str(s.clone()),
-                    };
-                    if !keys.iter().any(|a| a.loose_eq(&key)) {
-                        remove.push(k);
-                        skip = true;
-                    }
-                }
-                for k in remove {
+                let undeclared: Vec<ArrayKey> = row
+                    .keys()
+                    .map(|k| k.to_owned())
+                    .filter(|k| match k {
+                        ArrayKey::Str(s) => {
+                            !s.as_bytes().starts_with(b"$")
+                                && !declared.contains(&*String::from_utf8_lossy(s.as_bytes()))
+                        }
+                        ArrayKey::Int(i) => !declared.contains(&i.to_string()),
+                    })
+                    .collect();
+                for k in undeclared {
                     row.as_array_mut().remove(&k);
                 }
             }
@@ -1372,24 +1431,20 @@ impl Appwrite {
         let collection_id = table_collection_id(&database, &table);
         let written = match self.on_duplicate {
             OnDuplicate::Overwrite => {
-                db.skip_relationships_exist_check(|| {
-                    db.upsert_documents(&collection_id, rows, Db::INSERT_BATCH_SIZE, None, None)
-                })
-                .await
+                db.skip_relationships_exist_check(db.upsert_documents(&collection_id, rows, BATCH_SIZE, None, None))
+                    .await
             }
             OnDuplicate::Skip => {
-                db.skip_duplicates(|| {
-                    db.skip_relationships_exist_check(|| {
-                        db.create_documents(&collection_id, rows, Db::INSERT_BATCH_SIZE, None, None)
-                    })
-                })
+                db.ignore_duplicates(db.skip_relationships_exist_check(db.create_documents(
+                    &collection_id,
+                    rows,
+                    BATCH_SIZE,
+                    None,
+                )))
                 .await
             }
             OnDuplicate::Fail => {
-                db.skip_relationships_exist_check(|| {
-                    db.create_documents(&collection_id, rows, Db::INSERT_BATCH_SIZE, None, None)
-                })
-                .await
+                db.skip_relationships_exist_check(db.create_documents(&collection_id, rows, BATCH_SIZE, None)).await
             }
         };
         match written {
@@ -1441,11 +1496,11 @@ impl Appwrite {
             .find(
                 collection,
                 vec![
-                    Query::equal("databaseInternalId", [s(&seq(database))]),
-                    Query::equal("collectionInternalId", [s(&seq(table))]),
+                    Query::equal("databaseInternalId", [seq(database)]),
+                    Query::equal("collectionInternalId", [seq(table)]),
                     Query::limit(i64::MAX),
                 ],
-                Db::PERMISSION_READ,
+                PermissionType::Read,
             )
             .await?;
         Ok(found
@@ -1468,15 +1523,15 @@ impl Appwrite {
         let t = cast_string(&attr(attribute, "type"));
         let options = options_of(attribute);
         let collection_id = table_collection_id(database, table);
-        if t == Db::VAR_RELATIONSHIP {
+        if t == RELATIONSHIP {
             let _ = db.delete_relationship(&collection_id, &key).await;
         } else {
             let _ = db.delete_attribute(&collection_id, &key).await;
         }
         let _ = self.db_for_project.delete_document(META_ATTRIBUTES, attribute.id()).await;
-        self.db_for_project.purge_cached_document(&database_collection_id(database), Some(table.id())).await?;
+        self.db_for_project.purge_cached_document(&database_collection_id(database), table.id()).await?;
         db.purge_cached_collection(&collection_id).await?;
-        if t != Db::VAR_RELATIONSHIP {
+        if t != RELATIONSHIP {
             return Ok(());
         }
         let Some((related, partner_meta_id)) = self.resolve_two_way_partner(database, &options).await? else {
@@ -1490,7 +1545,7 @@ impl Appwrite {
         let collection_id = table_collection_id(database, table);
         let _ = db.delete_index(&collection_id, key).await;
         let _ = self.db_for_project.delete_document(META_INDEXES, &meta_id(database, table, key)).await;
-        self.db_for_project.purge_cached_document(&database_collection_id(database), Some(table.id())).await?;
+        self.db_for_project.purge_cached_document(&database_collection_id(database), table.id()).await?;
         Ok(())
     }
 }
@@ -1510,7 +1565,7 @@ fn to_opt_string(v: &Value) -> Option<String> {
 /// A document (or array) value as an array (`getArrayCopy()`).
 fn plain_document(v: &DbValue) -> Value {
     match v {
-        DbValue::Ext(utopia_database::value::Ext::Document(d)) => plain_value(&DbValue::Array(d.array_copy(&[], &[]))),
+        DbValue::Ext(utopia_database::value::Ext::Document(d)) => plain_value(&DbValue::Array(d.array_copy())),
         v => plain_value(v),
     }
 }
@@ -1528,5 +1583,5 @@ fn flavor_of(r: &ResourceRef) -> Option<DatabaseFlavor> {
 
 /// `Database::PERMISSIONS`, what `Permission::aggregate()` expands to.
 fn default_permissions() -> Vec<PermissionType> {
-    Db::PERMISSIONS.iter().filter_map(|p| PermissionType::from_name(p)).collect()
+    PermissionType::ALL.to_vec()
 }

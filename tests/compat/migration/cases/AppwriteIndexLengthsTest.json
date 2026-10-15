@@ -981,11 +981,11 @@
             "enabled": true,
             "name": "Orders",
             "search": "orders Orders",
+            "$sequence": "1",
             "$id": "orders",
             "$createdAt": "<masked>",
             "$updatedAt": "<masked>",
             "$permissions": [],
-            "$sequence": "1",
             "$collection": "database_1",
             "attributes": [
               {
@@ -2035,11 +2035,11 @@
             "enabled": true,
             "name": "Orders",
             "search": "orders Orders",
+            "$sequence": "1",
             "$id": "orders",
             "$createdAt": "<masked>",
             "$updatedAt": "<masked>",
             "$permissions": [],
-            "$sequence": "1",
             "$collection": "database_1",
             "attributes": [
               {
@@ -3078,11 +3078,11 @@
             "enabled": true,
             "name": "Orders",
             "search": "orders Orders",
+            "$sequence": "1",
             "$id": "orders",
             "$createdAt": "<masked>",
             "$updatedAt": "<masked>",
             "$permissions": [],
-            "$sequence": "1",
             "$collection": "database_1",
             "attributes": [
               {
@@ -4184,11 +4184,11 @@
             "enabled": true,
             "name": "Orders",
             "search": "orders Orders",
+            "$sequence": "1",
             "$id": "orders",
             "$createdAt": "<masked>",
             "$updatedAt": "<masked>",
             "$permissions": [],
-            "$sequence": "1",
             "$collection": "database_1",
             "attributes": [],
             "indexes": [

@@ -24,6 +24,9 @@ pub struct MockSource {
     pub status: bool,
     /// Counts `run()` calls and records the selector (TransferTest).
     pub counting: bool,
+    /// Exports databases, tables, columns and indexes in that order
+    /// (TransfersColumns::transferSchema()).
+    pub schema_order: bool,
     pub run_count: i64,
     pub selector: Option<ResourceSelector>,
 }
@@ -108,12 +111,13 @@ impl MockSource {
             let batch = single(self.by_id(group, t, &child))?;
             return out.emit(batch).await;
         }
-        let Some(list) = self.mock_resources.get(group).and_then(|g| g.get(t)) else {
-            return Err(Error::TypeError(
-                "array_values(): Argument #1 ($array) must be of type array, null given".into(),
-            ));
-        };
-        let batch: Vec<ResourceRef> = list.values().cloned().collect();
+        // `array_values($this->mockResources[$group][$type] ?? [])`.
+        let batch: Vec<ResourceRef> = self
+            .mock_resources
+            .get(group)
+            .and_then(|g| g.get(t))
+            .map(|l| l.values().cloned().collect())
+            .unwrap_or_default();
         out.emit(batch).await
     }
 }
@@ -198,6 +202,22 @@ impl Source for MockSource {
             group::DOMAINS => group::DOMAINS_RESOURCES,
             _ => &[],
         };
+        if g == group::DATABASES && self.schema_order {
+            // The suite's transferSchema() source: each schema type in a
+            // pass of its own, columns before indexes.
+            for ty in [types::DATABASE, types::TABLE, types::COLUMN, types::INDEX] {
+                if !is_supported(&[ty], resources) {
+                    continue;
+                }
+                let only = [ty.to_owned()];
+                for t in list {
+                    if is_supported(&[*t], &only) {
+                        self.handle(g, t, out).await?;
+                    }
+                }
+            }
+            return Ok(());
+        }
         for t in list {
             let wanted =
                 if g == group::DATABASES { is_supported(&[*t], resources) } else { resources.iter().any(|r| r == t) };

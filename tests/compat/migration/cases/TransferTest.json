@@ -3015,12 +3015,9 @@
               "user"
             ]
           },
-          "expect": {
-            "$error": {
-              "class": "TypeError",
-              "message": "array_values(): Argument #1 ($array) must be of type array, null given"
-            }
-          }
+          "expect": [
+            []
+          ]
         },
         {
           "op": "resource.new",
@@ -3935,6 +3932,685 @@
             "$error": {
               "class": "Error",
               "message": "Call to a member function getName() on null"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testStatusCountersMergeResourcesAndRowCountsForRequestedTypesOnly",
+      "steps": [
+        {
+          "op": "mock.source",
+          "args": {
+            "variant": "plain"
+          },
+          "bind": "s1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.destination",
+          "args": {
+            "variant": "plain"
+          },
+          "bind": "md",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s1"
+            },
+            "destination": {
+              "$ref": "md"
+            }
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "database",
+              "name": "Database"
+            }
+          },
+          "bind": "db2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Table",
+            "args": {
+              "database": {
+                "$ref": "db2"
+              },
+              "name": "Table",
+              "id": "table"
+            }
+          },
+          "bind": "tb3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Row",
+            "args": {
+              "id": "first",
+              "table": {
+                "$ref": "tb3"
+              }
+            }
+          },
+          "bind": "row4",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Row",
+            "args": {
+              "id": "second",
+              "table": {
+                "$ref": "tb3"
+              }
+            }
+          },
+          "bind": "row5",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s1"
+            },
+            "resource": {
+              "$ref": "db2"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s1"
+            },
+            "resource": {
+              "$ref": "tb3"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s1"
+            },
+            "resource": {
+              "$ref": "row4"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s1"
+            },
+            "resource": {
+              "$ref": "row5"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "database",
+              "row"
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "database",
+                "id": "database",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "row",
+                "id": "first",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "row",
+                "id": "second",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Row",
+            "args": {
+              "id": "third",
+              "table": {
+                "$ref": "tb3"
+              }
+            }
+          },
+          "bind": "row6",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "row6"
+            },
+            "method": "setStatus",
+            "args": {
+              "status": "error"
+            }
+          },
+          "expect": {
+            "$self": true
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Table",
+            "args": {
+              "database": {
+                "$ref": "db2"
+              },
+              "name": "Unrequested",
+              "id": "unrequested"
+            }
+          },
+          "bind": "tb7",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "tb7"
+            },
+            "method": "setStatus",
+            "args": {
+              "status": "success"
+            }
+          },
+          "expect": {
+            "$self": true
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Document",
+            "args": {
+              "id": "document",
+              "table": {
+                "$ref": "tb3"
+              }
+            }
+          },
+          "bind": "doc8",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "doc8"
+            },
+            "method": "setStatus",
+            "args": {
+              "status": "success"
+            }
+          },
+          "expect": {
+            "$self": true
+          }
+        },
+        {
+          "op": "transfer.cache",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            }
+          },
+          "bind": "cache",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.add",
+          "args": {
+            "cache": {
+              "$ref": "cache"
+            },
+            "resource": {
+              "$ref": "row6"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "cache.add",
+          "args": {
+            "cache": {
+              "$ref": "cache"
+            },
+            "resource": {
+              "$ref": "tb7"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "cache.add",
+          "args": {
+            "cache": {
+              "$ref": "cache"
+            },
+            "resource": {
+              "$ref": "doc8"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "source.previous_report",
+          "args": {
+            "source": {
+              "$ref": "s1"
+            },
+            "report": {
+              "database": 3,
+              "row": 2,
+              "user": 4,
+              "size": 9,
+              "version": "1.0.0"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "transfer.status_counters",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "database": {
+              "pending": 2,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "row": {
+              "pending": 0,
+              "success": 2,
+              "error": 1,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testStatusCountersAreEmptyWhenRequestedTypesHaveNoActivity",
+      "steps": [
+        {
+          "op": "mock.source",
+          "args": {
+            "variant": "plain"
+          },
+          "bind": "s1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.destination",
+          "args": {
+            "variant": "plain"
+          },
+          "bind": "md",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s1"
+            },
+            "destination": {
+              "$ref": "md"
+            }
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "database",
+              "row"
+            ]
+          },
+          "expect": [
+            [],
+            []
+          ]
+        },
+        {
+          "op": "transfer.status_counters",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            }
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testStatusCountersReportRowCountsUnderUnseededStatuses",
+      "steps": [
+        {
+          "op": "mock.source",
+          "args": {
+            "variant": "plain"
+          },
+          "bind": "s1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.destination",
+          "args": {
+            "variant": "plain"
+          },
+          "bind": "md",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s1"
+            },
+            "destination": {
+              "$ref": "md"
+            }
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "database",
+              "name": "Database"
+            }
+          },
+          "bind": "db2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Table",
+            "args": {
+              "database": {
+                "$ref": "db2"
+              },
+              "name": "Table",
+              "id": "table"
+            }
+          },
+          "bind": "tb3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s1"
+            },
+            "resource": {
+              "$ref": "db2"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s1"
+            },
+            "resource": {
+              "$ref": "tb3"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            },
+            "resources": [
+              "database",
+              "row"
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "database",
+                "id": "database",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            []
+          ]
+        },
+        {
+          "op": "transfer.cache",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            }
+          },
+          "bind": "cache",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Row",
+            "args": {
+              "id": "first",
+              "table": {
+                "$ref": "tb3"
+              }
+            }
+          },
+          "bind": "row4",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "row4"
+            },
+            "method": "setStatus",
+            "args": {
+              "status": "disregarded"
+            }
+          },
+          "expect": {
+            "$self": true
+          }
+        },
+        {
+          "op": "cache.add",
+          "args": {
+            "cache": {
+              "$ref": "cache"
+            },
+            "resource": {
+              "$ref": "row4"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Row",
+            "args": {
+              "id": "second",
+              "table": {
+                "$ref": "tb3"
+              }
+            }
+          },
+          "bind": "row5",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.set",
+          "args": {
+            "resource": {
+              "$ref": "row5"
+            },
+            "method": "setStatus",
+            "args": {
+              "status": "disregarded"
+            }
+          },
+          "expect": {
+            "$self": true
+          }
+        },
+        {
+          "op": "cache.add",
+          "args": {
+            "cache": {
+              "$ref": "cache"
+            },
+            "resource": {
+              "$ref": "row5"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "transfer.status_counters",
+          "args": {
+            "transfer": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "database": {
+              "pending": 0,
+              "success": 1,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            },
+            "row": {
+              "pending": 0,
+              "success": 0,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0,
+              "disregarded": 2
             }
           }
         }
