@@ -9,17 +9,22 @@
 //!
 //! | PHP | Rust |
 //! |---|---|
+//! | `Validator\AttributeDefinition` | [`attribute_definition::AttributeDefinition`] |
 //! | `Validator\Authorization`, `Authorization\Input` | [`authorization::Authorization`], [`authorization::Input`] |
 //! | `Validator\BigInt` | [`big_int::BigInt`], [`big_int::Integer`], [`big_int::Operand`] |
 //! | `Validator\ByteLength` | [`byte_length::ByteLength`] |
 //! | `Validator\Datetime` | [`datetime::Datetime`], [`datetime::Precision`] |
+//! | `Validator\IndexDefinition` | [`index_definition::IndexDefinition`] |
+//! | `Validator\IndexDependency` | [`index_dependency::IndexDependency`] |
 //! | `Validator\Key`, `UID`, `Label` | [`key::Key`], [`uid::Uid`], [`label::Label`] |
 //! | `Validator\ObjectPath` | [`object_path::ObjectPath`] |
 //! | `Validator\ObjectValue` | [`object_value::ObjectValue`] |
 //! | `Validator\Operator` | [`operator::Operator`] |
+//! | `Validator\PartialStructure` | [`partial_structure::PartialStructure`] |
 //! | `Validator\Permissions`, `Roles` | [`permissions::Permissions`], [`roles::Roles`] |
 //! | `Validator\Sequence` | [`sequence::Sequence`] |
 //! | `Validator\Spatial` | [`spatial::Spatial`] |
+//! | `Validator\Structure` (formats: `addFormat`, `hasFormat`, `getFormat`, `removeFormat`) | [`structure::Structure`], [`structure::formats`] |
 //! | `Validator\Vector` | [`vector::Vector`] |
 //!
 //! # State
@@ -37,19 +42,24 @@ use std::sync::Mutex;
 use crate::document::Document;
 use crate::value::{ArrayKey, Str, Value};
 
+pub mod attribute_definition;
 pub mod authorization;
 pub mod big_int;
 pub mod byte_length;
 pub mod datetime;
+pub mod index_definition;
+pub mod index_dependency;
 pub mod key;
 pub mod label;
 pub mod object_path;
 pub mod object_value;
 pub mod operator;
+pub mod partial_structure;
 pub mod permissions;
 pub mod roles;
 pub mod sequence;
 pub mod spatial;
+pub mod structure;
 pub mod uid;
 pub mod vector;
 
