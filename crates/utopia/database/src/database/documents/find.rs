@@ -29,6 +29,22 @@ impl Database {
         })
     }
 
+    /// [`Database::find`] under a definition the caller already resolved,
+    /// its queries not rewritten (`fetch()`); with `aggregate`, the queries
+    /// must aggregate (`aggregate()`), else they must not.
+    pub(crate) fn fetch<'a>(
+        &'a self,
+        collection: &'a crate::collection::Collection,
+        queries: Vec<Query>,
+        for_permission: PermissionType,
+        aggregate: bool,
+    ) -> BoxFuture<'a, Result<Vec<Document>>> {
+        Box::pin(async move {
+            let _ = (collection, queries, for_permission, aggregate);
+            todo!("reads area: fetch")
+        })
+    }
+
     /// The first document matching `queries`, or an empty document
     /// (`findOne()`).
     pub async fn find_one(&self, collection: &str, queries: Vec<Query>) -> Result<Document> {
