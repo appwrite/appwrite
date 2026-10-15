@@ -73,6 +73,7 @@ class Update extends Action
             ->param('attachments', null, new Nullable(new ArrayList(new CompoundUID())), 'Array of compound ID strings of bucket IDs and file IDs to be attached to the email. They should be formatted as <BUCKET_ID>:<FILE_ID>.', true)
             ->param('replyToEmail', null, new Nullable(new Email(allowEmpty: true)), 'Email address to reply to. Pass an empty string to restore the provider or sender default.', true)
             ->param('replyToName', null, new Nullable(new Text(128, 0)), 'Name of the reply to recipient. Pass an empty string to restore the provider or sender default.', true)
+            ->param('emails', null, new Nullable(new ArrayList(new Email())), 'List of email addresses to send the message to. Use this to deliver to recipients that are not backed by an Appwrite user, target, or topic.', true)
             ->inject('queueForEvents')
             ->inject('dbForProject')
             ->inject('dbForPlatform')
@@ -82,7 +83,7 @@ class Update extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $subject, ?string $content, ?bool $draft, ?bool $html, ?array $cc, ?array $bcc, ?string $scheduledAt, ?array $attachments, ?string $replyToEmail, ?string $replyToName, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, MessagingPublisher $publisherForMessaging, Response $response)
+    public function action(string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $subject, ?string $content, ?bool $draft, ?bool $html, ?array $cc, ?array $bcc, ?string $scheduledAt, ?array $attachments, ?string $replyToEmail, ?string $replyToName, ?array $emails, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, MessagingPublisher $publisherForMessaging, Response $response)
     {
         $message = $dbForProject->getDocument('messages', $messageId);
 
@@ -107,6 +108,7 @@ class Update extends Action
             && \count($topics ?? $message->getAttribute('topics', [])) === 0
             && \count($users ?? $message->getAttribute('users', [])) === 0
             && \count($targets ?? $message->getAttribute('targets', [])) === 0
+            && \count($emails ?? $message->getAttribute('data', [])['emails'] ?? []) === 0
         ) {
             throw new Exception(Exception::MESSAGE_MISSING_TARGET);
         }
@@ -230,6 +232,10 @@ class Update extends Action
 
         if (!\is_null($bcc)) {
             $data['bcc'] = $bcc;
+        }
+
+        if (!\is_null($emails)) {
+            $data['emails'] = $emails;
         }
 
         if (!\is_null($replyToEmail)) {
