@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Modules\Functions\Workers;
 
 use Appwrite\Deployment\Deployments;
 use Appwrite\Deployment\GitAction;
+use Appwrite\Deployment\RootDirectory;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Extend\Exception as AppwriteException;
@@ -11,6 +12,7 @@ use Appwrite\Usage\Build as BuildUsage;
 use Appwrite\Usage\Context;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Exception;
+use InvalidArgumentException;
 use Utopia\Config\Config;
 use Utopia\Console\Command;
 use Utopia\Console\Console;
@@ -36,25 +38,15 @@ class Builds extends Action
     }
 
     /**
-     * Normalize a build root directory and reject path traversal.
-     *
-     * Collapses a leading "./" and surrounding slashes, then rejects any
-     * remaining ".." segment so the value cannot escape the build directory
-     * once it is interpolated into filesystem and shell paths downstream.
-     *
-     * @throws Exception when the path contains a ".." segment
+     * @throws BuildException when the path escapes the repository
      */
-    public static function normalizeRootDirectory(string $rootDirectory): string
+    private function resolveRootDirectory(string $path): string
     {
-        $rootDirectory = \rtrim($rootDirectory, '/');
-        $rootDirectory = \ltrim($rootDirectory, '.');
-        $rootDirectory = \ltrim($rootDirectory, '/');
-
-        if (\in_array('..', \explode('/', $rootDirectory), true)) {
-            throw new \Exception('Invalid root directory');
+        try {
+            return (new RootDirectory($path))->path;
+        } catch (InvalidArgumentException $exception) {
+            throw new BuildException($exception->getMessage(), previous: $exception);
         }
-
-        return $rootDirectory;
     }
 
     /**
@@ -299,7 +291,8 @@ class Builds extends Action
         try {
             // VCS and VCS+Temaplte
             $tmpDirectory = '/tmp/builds/' . $deploymentId . '/code';
-            $rootDirectory = self::normalizeRootDirectory($resource->getAttribute('providerRootDirectory', ''));
+            $providerRootDirectory = $this->resolveRootDirectory($resource->getAttribute('providerRootDirectory', ''));
+            $rootDirectory = $providerRootDirectory;
 
             $owner = $providerAdapter->getOwnerName($providerInstallationId, (int) $providerRepositoryId);
             $repositoryName = $providerAdapter->getRepositoryName($providerRepositoryId);
@@ -354,7 +347,7 @@ class Builds extends Action
             $templateReferenceType = $template->getAttribute('referenceType', '');
             $templateReferenceValue = $template->getAttribute('referenceValue', '');
 
-            $templateRootDirectory = self::normalizeRootDirectory($template->getAttribute('rootDirectory', ''));
+            $templateRootDirectory = $this->resolveRootDirectory($template->getAttribute('rootDirectory', ''));
 
             if (! empty($templateRepositoryName) && ! empty($templateOwnerName) && ! empty($templateReferenceType) && ! empty($templateReferenceValue)) {
                 // Clone template repo
@@ -435,7 +428,7 @@ class Builds extends Action
                 $cloneOwner,
                 $cloneRepository,
                 $ref,
-                $resource->getAttribute('providerRootDirectory', ''),
+                $providerRootDirectory,
             );
 
             Console::execute((new Command('rm'))->flag('-rf')->argument('/tmp/builds/' . $deploymentId), '', $stdout, $stderr);
