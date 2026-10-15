@@ -334,6 +334,12 @@ class CSV extends Source
                         continue;
                     }
 
+                    // Undo the quote CSV exports prefix to formula-like values
+                    $unquoted = \ltrim($parsedValue, "'");
+                    if ($unquoted !== $parsedValue && $unquoted !== '' && \str_contains("=+-@\t\r", $unquoted[0])) {
+                        $parsedValue = \substr($parsedValue, 1);
+                    }
+
                     /**
                      * Parsing logic for best compatibility with spec and 3rd party tools.
                      * - 'null' unquoted literal is converted to null.
