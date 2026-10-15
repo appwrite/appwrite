@@ -209,6 +209,7 @@ class Messaging extends Action
         $topicIds = $message->getAttribute('topics', []);
         $targetIds = $message->getAttribute('targets', []);
         $userIds = $message->getAttribute('users', []);
+        $emails = $message->getAttribute('data', [])['emails'] ?? [];
         $providerType = $message->getAttribute('providerType');
 
         Span::add('message.provider_type', $providerType);
@@ -272,7 +273,7 @@ class Messaging extends Action
             }
         }
 
-        foreach ($this->streamRecipients($dbForProject, $topicIds, $userIds, $targetIds, $providerType, $default) as [$page, $perUser]) {
+        foreach ($this->streamRecipients($dbForProject, $topicIds, $userIds, $targetIds, $emails, $providerType, $default) as [$page, $perUser]) {
             /**
              * @var array<callable> $tasks
              */
@@ -462,6 +463,7 @@ class Messaging extends Action
      * @param array<string> $topicIds
      * @param array<string> $userIds
      * @param array<string> $targetIds
+     * @param array<string> $emails Raw email addresses not backed by an Appwrite user, target, or topic.
      * @return \Generator<array{0: array<string, array<string, string>>, 1: bool}>
      * @throws \Exception
      */
@@ -470,6 +472,7 @@ class Messaging extends Action
         array $topicIds,
         array $userIds,
         array $targetIds,
+        array $emails,
         string $providerType,
         Document $default
     ): \Generator {
@@ -644,6 +647,11 @@ class Messaging extends Action
                 // User- or target-addressed: deliver on the reserved per-user topic (Appwrite push).
                 yield [$page, true];
             } while ($count === MESSAGE_RECIPIENTS_PAGE_SIZE);
+        }
+
+        // Raw emails have no backing target or user, so they route straight to the default provider.
+        foreach (\array_chunk(\array_values(\array_unique($emails)), MESSAGE_RECIPIENTS_PAGE_SIZE) as $chunk) {
+            yield [[$default->getId() => \array_fill_keys($chunk, '')], true];
         }
     }
 
