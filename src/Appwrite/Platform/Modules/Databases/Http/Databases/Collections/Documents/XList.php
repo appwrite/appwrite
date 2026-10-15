@@ -164,13 +164,14 @@ class XList extends Action
 
         try {
             $parsed = Query::groupByType($queries);
+            $paged = $parsed->limit === null ? [...$queries, Query::limit(APP_LIMIT_LIST_DEFAULT)] : $queries;
             $find = match (true) {
                 $parsed->isAggregation() => fn (): array => \array_map(
                     static fn (array $row): Document => new Document($row),
-                    $dbForDatabases->aggregate($collectionTableId, $queries),
+                    $dbForDatabases->aggregate($collectionTableId, $paged),
                 ),
-                $parsed->selections !== [] => fn (): array => $dbForDatabases->find($collectionTableId, $queries),
-                default => fn (): array => $dbForDatabases->skipRelationships(fn (): array => $dbForDatabases->find($collectionTableId, $queries)),
+                $parsed->selections !== [] => fn (): array => $dbForDatabases->find($collectionTableId, $paged),
+                default => fn (): array => $dbForDatabases->skipRelationships(fn (): array => $dbForDatabases->find($collectionTableId, $paged)),
             };
 
             if ($transactionId !== null) {
@@ -296,7 +297,7 @@ class XList extends Action
             return $dbForDatabases->count($collectionTableId, $queries, APP_LIMIT_COUNT);
         }
 
-        if (!$parsed->offset && $parsed->cursor === null && $parsed->limit !== null && \count($page) < $parsed->limit) {
+        if (!$parsed->offset && $parsed->cursor === null && \count($page) < ($parsed->limit ?? APP_LIMIT_LIST_DEFAULT)) {
             return \count($page);
         }
 
@@ -306,9 +307,11 @@ class XList extends Action
         ));
         $unpaged[] = Query::limit(APP_LIMIT_COUNT);
 
-        return \count($parsed->isAggregation()
-            ? $dbForDatabases->aggregate($collectionTableId, $unpaged)
-            : $dbForDatabases->skipRelationships(fn (): array => $dbForDatabases->find($collectionTableId, $unpaged)));
+        $read = $parsed->isAggregation()
+            ? fn (): array => $dbForDatabases->aggregate($collectionTableId, $unpaged)
+            : fn (): array => $dbForDatabases->skipFilters(fn (): array => $dbForDatabases->skipRelationships(fn (): array => $dbForDatabases->find($collectionTableId, $unpaged)));
+
+        return \count($dbForDatabases->silent($read));
     }
 
     /**

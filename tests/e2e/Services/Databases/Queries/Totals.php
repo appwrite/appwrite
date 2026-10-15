@@ -6,7 +6,10 @@ use Tests\E2E\Client;
 use Tests\E2E\Services\Databases\Queries\Oracle\Join;
 use Tests\E2E\Services\Databases\Queries\Oracle\Pair;
 use Tests\E2E\Services\Databases\Queries\Oracle\Summary;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
 use Utopia\Database\Query;
+use Utopia\Database\Role;
 
 trait Totals
 {
@@ -115,6 +118,46 @@ trait Totals
         $this->assertSame($this->sortedStrings($names), $this->sortedStrings(\array_column($distinct, 'name')));
     }
 
+    public function testTotalOfAnUnlimitedReadCountsPastTheDefaultPage(): void
+    {
+        if (!$this->getSupportForAggregations()) {
+            $this->markTestSkipped('Adapter does not support aggregation queries');
+        }
+
+        $databaseId = $this->setupDatabase()['databaseId'];
+        $labelsId = $this->createSeedContainer($databaseId, 'totalLabels' . Id::unique(), false, [
+            Permission::read(Role::any()),
+            Permission::create(Role::any()),
+        ]);
+
+        if ($this->getSupportForAttributes()) {
+            $created = $this->createAttribute($databaseId, $labelsId, 'string', ['key' => 'label', 'size' => 32, 'required' => true]);
+            $this->assertSame(202, $created['headers']['status-code']);
+            $this->waitForAttribute($databaseId, $labelsId, 'label');
+        }
+
+        $labels = APP_LIMIT_LIST_DEFAULT + 3;
+        $created = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $labelsId), $this->apiKeyHeaders(), [
+            $this->getRecordResource() => \array_map(
+                static fn (int $index): array => ['$id' => "label{$index}", 'label' => "label{$index}"],
+                \range(1, $labels),
+            ),
+        ]);
+        $this->assertSame(201, $created['headers']['status-code']);
+
+        $reads = [
+            'Groups by label' => [Query::groupBy(['label'])->toString(), Query::count('*', 'rowCount')->toString()],
+            'Distinct labels' => [Query::select(['label'])->toString(), Query::distinct()->toString()],
+        ];
+
+        foreach ($reads as $message => $queries) {
+            $unlimited = $this->queryRecords($databaseId, $labelsId, $queries);
+            $this->assertSame(200, $unlimited['headers']['status-code'], $message);
+            $this->assertCount(APP_LIMIT_LIST_DEFAULT, $unlimited['body'][$this->getRecordResource()], "{$message}: an unlimited read returns the default page");
+            $this->assertSame($labels, $unlimited['body']['total'], "{$message}: total of a full default page");
+        }
+    }
+
     /**
      * @param list<string> $queries
      * @return list<array<string, mixed>> The rows of the whole read
@@ -126,6 +169,11 @@ trait Totals
         $rows = $whole['body'][$this->getRecordResource()];
         $this->assertCount($expected, $rows, "{$message}: rows");
         $this->assertSame($expected, $whole['body']['total'], "{$message}: total of the whole read");
+
+        $unlimited = $this->queryRecords($databaseId, $containerId, $queries);
+        $this->assertSame(200, $unlimited['headers']['status-code'], $message);
+        $this->assertCount(\min($expected, APP_LIMIT_LIST_DEFAULT), $unlimited['body'][$this->getRecordResource()], "{$message}: rows of the unlimited read");
+        $this->assertSame($expected, $unlimited['body']['total'], "{$message}: total of the unlimited read");
 
         $paged = 0;
         for ($offset = 0; $offset < $expected + self::TOTALS_PAGE_SIZE; $offset += self::TOTALS_PAGE_SIZE) {
