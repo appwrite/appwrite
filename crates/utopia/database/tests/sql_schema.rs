@@ -610,6 +610,25 @@ mod env {
             self.adapter.pdo().lock().await.exec(sql).await.unwrap();
         }
 
+        /// Stores the definition of `collection` in the metadata collection
+        /// (created when missing), as `Database::createCollection()` stores
+        /// it: its attributes and indexes as JSON.
+        pub async fn define(&self, collection: utopia_database::Collection) {
+            use utopia_database::value::{Value, list, string};
+            let metadata = utopia_database::database::collection_definition();
+            let _ = self.adapter.create_collection(utopia_database::database::METADATA, metadata.attributes().unwrap(), &[]).await;
+            let mut document = collection.to_document();
+            for key in ["attributes", "indexes"] {
+                let value = document.get(key).cloned().unwrap_or(Value::Null);
+                let json = php_std::json::encode(&value, php_std::json::Flags::NONE, php_std::json::DEFAULT_DEPTH).unwrap();
+                document.set(key, string(json)).unwrap();
+            }
+            document.set("$permissions", list([])).unwrap();
+            let recording = std::mem::replace(&mut *self.recorder.recording.lock().unwrap(), false);
+            self.adapter.create_document(&metadata, document).await.unwrap();
+            *self.recorder.recording.lock().unwrap() = recording;
+        }
+
         pub async fn drop(self) {
             *self.recorder.recording.lock().unwrap() = false;
             self.recorder.failures.lock().unwrap().clear();
@@ -2269,9 +2288,25 @@ mod schema_introspection_test {
             .await
             .unwrap();
         e.adapter.create_index("people", &Index::fulltext("search", ["name"]), &[], &[]).await.unwrap();
-        let Some(indexes) = reading_definitions(e.adapter.schema_indexes("people")).await else { return };
+        e.define(
+            utopia_database::Collection::create(
+                "people",
+                "",
+                vec![Attribute::string("name", 64), Attribute::string("email", 64)],
+                vec![
+                    Index::key("by_name", ["name"], vec![], vec![]).unwrap(),
+                    Index::unique("by_email", ["email"], vec![], vec![]).unwrap(),
+                    Index::fulltext("search", ["name"]),
+                ],
+                None,
+                false,
+                Default::default(),
+            )
+            .unwrap(),
+        )
+        .await;
         let indexes: std::collections::HashMap<String, SchemaIndex> =
-            indexes.unwrap().into_iter().map(|i| (i.name.clone(), i)).collect();
+            e.adapter.schema_indexes("people").await.unwrap().into_iter().map(|i| (i.name.clone(), i)).collect();
         assert_eq!(
             (indexes["by_name"].kind, indexes["by_name"].columns.clone(), indexes["by_name"].lengths.clone()),
             (IndexType::Key, vec!["name".to_owned()], vec![None])
