@@ -1638,9 +1638,28 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Filter: witness not found"
+            "$document": {
+              "$id": "o1",
+              "customerId": "c1",
+              "total": 10,
+              "price": 2.5,
+              "paid": true,
+              "placedAt": "2024-05-06T07:08:09.123+00:00",
+              "tags": [
+                "a",
+                "b"
+              ],
+              "meta": {
+                "color": "red"
+              },
+              "secret": "plain-secret",
+              "profile": [],
+              "note": "handwritten",
+              "$collection": "orders",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
             }
           }
         },
@@ -1774,7 +1793,35 @@
               ]
             }
           },
-          "expect": []
+          "expect": [
+            {
+              "$document": {
+                "name": "Alice",
+                "ord.customerId": "c1",
+                "ord.total": 10,
+                "ord.price": 2.5,
+                "ord.paid": true,
+                "ord.placedAt": "2024-05-06T07:08:09.123+00:00",
+                "ord.tags": [
+                  "a",
+                  "b"
+                ],
+                "ord.meta": {
+                  "color": "red"
+                },
+                "ord.secret": "plain-secret",
+                "ord.profile": [],
+                "ord.note": "handwritten",
+                "ord.$id": "o1",
+                "$id": "c1",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$collection": "customers"
+              }
+            }
+          ]
         },
         {
           "op": "object.call",
@@ -2203,7 +2250,29 @@
           },
           "bind": "s24146",
           "expect": {
-            "$document": {}
+            "$document": {
+              "customerId": "c1",
+              "total": 10,
+              "price": 2.5,
+              "paid": true,
+              "placedAt": "2024-05-06T07:08:09.123+00:00",
+              "tags": [
+                "a",
+                "b"
+              ],
+              "meta": {
+                "color": "red"
+              },
+              "secret": "plain-secret",
+              "profile": [],
+              "note": "handwritten",
+              "$sequence": "1",
+              "$id": "o1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "orders"
+            }
           }
         },
         {
@@ -2215,7 +2284,7 @@
             "method": "isEmpty",
             "args": {}
           },
-          "expect": true
+          "expect": false
         },
         {
           "op": "object.call",
@@ -2228,7 +2297,7 @@
               "name": "$id"
             }
           },
-          "expect": null
+          "expect": "o1"
         },
         {
           "op": "object.call",
@@ -2286,7 +2355,7 @@
               "name": "customerId"
             }
           },
-          "expect": null
+          "expect": "c1"
         },
         {
           "op": "object.call",
@@ -2344,7 +2413,7 @@
               "name": "total"
             }
           },
-          "expect": null
+          "expect": 10
         },
         {
           "op": "object.call",
@@ -2402,7 +2471,7 @@
               "name": "price"
             }
           },
-          "expect": null
+          "expect": 2.5
         },
         {
           "op": "object.call",
@@ -2460,7 +2529,7 @@
               "name": "paid"
             }
           },
-          "expect": null
+          "expect": true
         },
         {
           "op": "object.call",
@@ -2518,7 +2587,7 @@
               "name": "placedAt"
             }
           },
-          "expect": null
+          "expect": "2024-05-06T07:08:09.123+00:00"
         },
         {
           "op": "object.call",
@@ -2576,7 +2645,10 @@
               "name": "tags"
             }
           },
-          "expect": null
+          "expect": [
+            "a",
+            "b"
+          ]
         },
         {
           "op": "object.call",
@@ -2637,7 +2709,9 @@
               "name": "meta"
             }
           },
-          "expect": null
+          "expect": {
+            "color": "red"
+          }
         },
         {
           "op": "object.call",
@@ -2697,7 +2771,7 @@
               "name": "secret"
             }
           },
-          "expect": null
+          "expect": "plain-secret"
         },
         {
           "op": "object.call",
@@ -2755,7 +2829,7 @@
               "name": "profile"
             }
           },
-          "expect": null
+          "expect": []
         },
         {
           "op": "object.call",
@@ -2815,7 +2889,7 @@
               "name": "note"
             }
           },
-          "expect": null
+          "expect": "handwritten"
         },
         {
           "op": "object.call",
@@ -4499,9 +4573,28 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Filter: witness not found"
+            "$document": {
+              "$id": "o1",
+              "customerId": "c1",
+              "total": 10,
+              "price": 2.5,
+              "paid": true,
+              "placedAt": "2024-05-06T07:08:09.123+00:00",
+              "tags": [
+                "a",
+                "b"
+              ],
+              "meta": {
+                "color": "red"
+              },
+              "secret": "plain-secret",
+              "profile": [],
+              "note": "handwritten",
+              "$collection": "orders",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
             }
           }
         },
@@ -4681,7 +4774,34 @@
               ]
             }
           },
-          "expect": []
+          "expect": [
+            {
+              "$document": {
+                "name": "Alice",
+                "ord.customerId": "c1",
+                "ord.total": 10,
+                "ord.price": 2.5,
+                "ord.paid": true,
+                "ord.placedAt": "2024-05-06T07:08:09.123+00:00",
+                "ord.tags": [
+                  "a",
+                  "b"
+                ],
+                "ord.meta": {
+                  "color": "red"
+                },
+                "ord.secret": "plain-secret",
+                "ord.profile": [],
+                "ord.note": "handwritten",
+                "$id": "c1",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$collection": "customers"
+              }
+            }
+          ]
         },
         {
           "op": "object.call",
@@ -5101,7 +5221,29 @@
           },
           "bind": "s24229",
           "expect": {
-            "$document": {}
+            "$document": {
+              "customerId": "c1",
+              "total": 10,
+              "price": 2.5,
+              "paid": true,
+              "placedAt": "2024-05-06T07:08:09.123+00:00",
+              "tags": [
+                "a",
+                "b"
+              ],
+              "meta": {
+                "color": "red"
+              },
+              "secret": "plain-secret",
+              "profile": [],
+              "note": "handwritten",
+              "$sequence": "1",
+              "$id": "o1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "orders"
+            }
           }
         },
         {
@@ -5113,7 +5255,7 @@
             "method": "isEmpty",
             "args": {}
           },
-          "expect": true
+          "expect": false
         },
         {
           "op": "object.call",
@@ -5126,7 +5268,7 @@
               "name": "customerId"
             }
           },
-          "expect": null
+          "expect": "c1"
         },
         {
           "op": "object.call",
@@ -5183,7 +5325,7 @@
               "name": "total"
             }
           },
-          "expect": null
+          "expect": 10
         },
         {
           "op": "object.call",
@@ -5240,7 +5382,7 @@
               "name": "price"
             }
           },
-          "expect": null
+          "expect": 2.5
         },
         {
           "op": "object.call",
@@ -5297,7 +5439,7 @@
               "name": "paid"
             }
           },
-          "expect": null
+          "expect": true
         },
         {
           "op": "object.call",
@@ -5354,7 +5496,7 @@
               "name": "placedAt"
             }
           },
-          "expect": null
+          "expect": "2024-05-06T07:08:09.123+00:00"
         },
         {
           "op": "object.call",
@@ -5411,7 +5553,10 @@
               "name": "tags"
             }
           },
-          "expect": null
+          "expect": [
+            "a",
+            "b"
+          ]
         },
         {
           "op": "object.call",
@@ -5471,7 +5616,9 @@
               "name": "meta"
             }
           },
-          "expect": null
+          "expect": {
+            "color": "red"
+          }
         },
         {
           "op": "object.call",
@@ -5530,7 +5677,7 @@
               "name": "secret"
             }
           },
-          "expect": null
+          "expect": "plain-secret"
         },
         {
           "op": "object.call",
@@ -5587,7 +5734,7 @@
               "name": "profile"
             }
           },
-          "expect": null
+          "expect": []
         },
         {
           "op": "object.call",
@@ -5646,7 +5793,7 @@
               "name": "note"
             }
           },
-          "expect": null
+          "expect": "handwritten"
         },
         {
           "op": "object.call",
@@ -7329,9 +7476,28 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Filter: witness not found"
+            "$document": {
+              "$id": "o1",
+              "customerId": "c1",
+              "total": 10,
+              "price": 2.5,
+              "paid": true,
+              "placedAt": "2024-05-06T07:08:09.123+00:00",
+              "tags": [
+                "a",
+                "b"
+              ],
+              "meta": {
+                "color": "red"
+              },
+              "secret": "plain-secret",
+              "profile": [],
+              "note": "handwritten",
+              "$collection": "orders",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
             }
           }
         },
@@ -7493,7 +7659,20 @@
               ]
             }
           },
-          "expect": []
+          "expect": [
+            {
+              "$document": {
+                "name": "Alice",
+                "ord.secret": "plain-secret",
+                "$id": "c1",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$collection": "customers"
+              }
+            }
+          ]
         },
         {
           "op": "object.call",
@@ -9201,9 +9380,28 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Filter: witness not found"
+            "$document": {
+              "$id": "o1",
+              "customerId": "c1",
+              "total": 10,
+              "price": 2.5,
+              "paid": true,
+              "placedAt": "2024-05-06T07:08:09.123+00:00",
+              "tags": [
+                "a",
+                "b"
+              ],
+              "meta": {
+                "color": "red"
+              },
+              "secret": "plain-secret",
+              "profile": [],
+              "note": "handwritten",
+              "$collection": "orders",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
             }
           }
         },
@@ -9341,7 +9539,31 @@
           },
           "bind": "s24351",
           "expect": {
-            "$document": {}
+            "$document": {
+              "name": "Alice",
+              "ord.customerId": "c1",
+              "ord.total": 10,
+              "ord.price": 2.5,
+              "ord.paid": true,
+              "ord.placedAt": "2024-05-06T07:08:09.123+00:00",
+              "ord.tags": [
+                "a",
+                "b"
+              ],
+              "ord.meta": {
+                "color": "red"
+              },
+              "ord.secret": "plain-secret",
+              "ord.profile": [],
+              "ord.note": "handwritten",
+              "ord.$id": "o1",
+              "$sequence": "1",
+              "$id": "c1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "customers"
+            }
           }
         },
         {
@@ -9355,7 +9577,7 @@
               "name": "ord.customerId"
             }
           },
-          "expect": null
+          "expect": "c1"
         },
         {
           "op": "object.call",
@@ -9368,7 +9590,7 @@
               "name": "ord.total"
             }
           },
-          "expect": null
+          "expect": 10
         },
         {
           "op": "object.call",
@@ -9381,7 +9603,7 @@
               "name": "ord.price"
             }
           },
-          "expect": null
+          "expect": 2.5
         },
         {
           "op": "object.call",
@@ -9394,7 +9616,7 @@
               "name": "ord.paid"
             }
           },
-          "expect": null
+          "expect": true
         },
         {
           "op": "object.call",
@@ -9407,7 +9629,10 @@
               "name": "ord.tags"
             }
           },
-          "expect": null
+          "expect": [
+            "a",
+            "b"
+          ]
         },
         {
           "op": "object.call",
@@ -9420,7 +9645,9 @@
               "name": "ord.meta"
             }
           },
-          "expect": null
+          "expect": {
+            "color": "red"
+          }
         },
         {
           "op": "object.call",
@@ -9433,7 +9660,7 @@
               "name": "ord.secret"
             }
           },
-          "expect": null
+          "expect": "plain-secret"
         },
         {
           "op": "object.call",
@@ -9446,7 +9673,7 @@
               "name": "ord.profile"
             }
           },
-          "expect": null
+          "expect": []
         },
         {
           "op": "object.call",
@@ -9459,7 +9686,7 @@
               "name": "ord.note"
             }
           },
-          "expect": null
+          "expect": "handwritten"
         },
         {
           "op": "object.call",
@@ -9476,7 +9703,29 @@
           },
           "bind": "s24361",
           "expect": {
-            "$document": {}
+            "$document": {
+              "customerId": "c1",
+              "total": 10,
+              "price": 2.5,
+              "paid": true,
+              "placedAt": "2024-05-06T07:08:09.123+00:00",
+              "tags": [
+                "a",
+                "b"
+              ],
+              "meta": {
+                "color": "red"
+              },
+              "secret": "plain-secret",
+              "profile": [],
+              "note": "handwritten",
+              "$sequence": "1",
+              "$id": "o1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "orders"
+            }
           }
         },
         {
@@ -9488,7 +9737,7 @@
             "method": "isEmpty",
             "args": {}
           },
-          "expect": true
+          "expect": false
         },
         {
           "op": "object.call",
@@ -9501,7 +9750,7 @@
               "name": "$id"
             }
           },
-          "expect": null
+          "expect": "o1"
         },
         {
           "op": "object.call",
@@ -9514,7 +9763,7 @@
               "name": "ord.$id"
             }
           },
-          "expect": null
+          "expect": "o1"
         },
         {
           "op": "object.call",
@@ -9527,7 +9776,7 @@
               "name": "customerId"
             }
           },
-          "expect": null
+          "expect": "c1"
         },
         {
           "op": "object.call",
@@ -9540,7 +9789,7 @@
               "name": "ord.customerId"
             }
           },
-          "expect": null
+          "expect": "c1"
         },
         {
           "op": "object.call",
@@ -9553,7 +9802,7 @@
               "name": "total"
             }
           },
-          "expect": null
+          "expect": 10
         },
         {
           "op": "object.call",
@@ -9566,7 +9815,7 @@
               "name": "ord.total"
             }
           },
-          "expect": null
+          "expect": 10
         },
         {
           "op": "object.call",
@@ -9579,7 +9828,7 @@
               "name": "price"
             }
           },
-          "expect": null
+          "expect": 2.5
         },
         {
           "op": "object.call",
@@ -9592,7 +9841,7 @@
               "name": "ord.price"
             }
           },
-          "expect": null
+          "expect": 2.5
         },
         {
           "op": "object.call",
@@ -9605,7 +9854,7 @@
               "name": "paid"
             }
           },
-          "expect": null
+          "expect": true
         },
         {
           "op": "object.call",
@@ -9618,7 +9867,7 @@
               "name": "ord.paid"
             }
           },
-          "expect": null
+          "expect": true
         },
         {
           "op": "object.call",
@@ -9631,7 +9880,7 @@
               "name": "placedAt"
             }
           },
-          "expect": null
+          "expect": "2024-05-06T07:08:09.123+00:00"
         },
         {
           "op": "object.call",
@@ -9644,7 +9893,7 @@
               "name": "ord.placedAt"
             }
           },
-          "expect": null
+          "expect": "2024-05-06T07:08:09.123+00:00"
         },
         {
           "op": "object.call",
@@ -9657,7 +9906,10 @@
               "name": "tags"
             }
           },
-          "expect": null
+          "expect": [
+            "a",
+            "b"
+          ]
         },
         {
           "op": "object.call",
@@ -9670,7 +9922,10 @@
               "name": "ord.tags"
             }
           },
-          "expect": null
+          "expect": [
+            "a",
+            "b"
+          ]
         },
         {
           "op": "object.call",
@@ -9683,7 +9938,9 @@
               "name": "meta"
             }
           },
-          "expect": null
+          "expect": {
+            "color": "red"
+          }
         },
         {
           "op": "object.call",
@@ -9696,7 +9953,9 @@
               "name": "ord.meta"
             }
           },
-          "expect": null
+          "expect": {
+            "color": "red"
+          }
         },
         {
           "op": "object.call",
@@ -9709,7 +9968,7 @@
               "name": "secret"
             }
           },
-          "expect": null
+          "expect": "plain-secret"
         },
         {
           "op": "object.call",
@@ -9722,7 +9981,7 @@
               "name": "ord.secret"
             }
           },
-          "expect": null
+          "expect": "plain-secret"
         },
         {
           "op": "object.call",
@@ -9735,7 +9994,7 @@
               "name": "profile"
             }
           },
-          "expect": null
+          "expect": []
         },
         {
           "op": "object.call",
@@ -9748,7 +10007,7 @@
               "name": "ord.profile"
             }
           },
-          "expect": null
+          "expect": []
         },
         {
           "op": "object.call",
@@ -9761,7 +10020,7 @@
               "name": "note"
             }
           },
-          "expect": null
+          "expect": "handwritten"
         },
         {
           "op": "object.call",
@@ -9774,7 +10033,7 @@
               "name": "ord.note"
             }
           },
-          "expect": null
+          "expect": "handwritten"
         },
         {
           "op": "object.call",
@@ -9842,7 +10101,30 @@
           },
           "bind": "s24386",
           "expect": {
-            "$document": {}
+            "$document": {
+              "name": "Alice",
+              "ord.customerId": "c1",
+              "ord.total": 10,
+              "ord.price": 2.5,
+              "ord.paid": true,
+              "ord.placedAt": "2024-05-06T07:08:09.123+00:00",
+              "ord.tags": [
+                "a",
+                "b"
+              ],
+              "ord.meta": {
+                "color": "red"
+              },
+              "ord.secret": "plain-secret",
+              "ord.profile": [],
+              "ord.note": "handwritten",
+              "$sequence": "1",
+              "$id": "c1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "customers"
+            }
           }
         },
         {
@@ -9856,7 +10138,7 @@
               "name": "ord.customerId"
             }
           },
-          "expect": null
+          "expect": "c1"
         },
         {
           "op": "object.call",
@@ -9869,7 +10151,7 @@
               "name": "ord.total"
             }
           },
-          "expect": null
+          "expect": 10
         },
         {
           "op": "object.call",
@@ -9882,7 +10164,7 @@
               "name": "ord.price"
             }
           },
-          "expect": null
+          "expect": 2.5
         },
         {
           "op": "object.call",
@@ -9895,7 +10177,7 @@
               "name": "ord.paid"
             }
           },
-          "expect": null
+          "expect": true
         },
         {
           "op": "object.call",
@@ -9908,7 +10190,10 @@
               "name": "ord.tags"
             }
           },
-          "expect": null
+          "expect": [
+            "a",
+            "b"
+          ]
         },
         {
           "op": "object.call",
@@ -9921,7 +10206,9 @@
               "name": "ord.meta"
             }
           },
-          "expect": null
+          "expect": {
+            "color": "red"
+          }
         },
         {
           "op": "object.call",
@@ -9934,7 +10221,7 @@
               "name": "ord.secret"
             }
           },
-          "expect": null
+          "expect": "plain-secret"
         },
         {
           "op": "object.call",
@@ -9947,7 +10234,7 @@
               "name": "ord.profile"
             }
           },
-          "expect": null
+          "expect": []
         },
         {
           "op": "object.call",
@@ -9960,7 +10247,7 @@
               "name": "ord.note"
             }
           },
-          "expect": null
+          "expect": "handwritten"
         },
         {
           "op": "object.call",
@@ -9977,7 +10264,29 @@
           },
           "bind": "s24396",
           "expect": {
-            "$document": {}
+            "$document": {
+              "customerId": "c1",
+              "total": 10,
+              "price": 2.5,
+              "paid": true,
+              "placedAt": "2024-05-06T07:08:09.123+00:00",
+              "tags": [
+                "a",
+                "b"
+              ],
+              "meta": {
+                "color": "red"
+              },
+              "secret": "plain-secret",
+              "profile": [],
+              "note": "handwritten",
+              "$sequence": "1",
+              "$id": "o1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "orders"
+            }
           }
         },
         {
@@ -9989,7 +10298,7 @@
             "method": "isEmpty",
             "args": {}
           },
-          "expect": true
+          "expect": false
         },
         {
           "op": "object.call",
@@ -10002,7 +10311,7 @@
               "name": "customerId"
             }
           },
-          "expect": null
+          "expect": "c1"
         },
         {
           "op": "object.call",
@@ -10015,7 +10324,7 @@
               "name": "ord.customerId"
             }
           },
-          "expect": null
+          "expect": "c1"
         },
         {
           "op": "object.call",
@@ -10028,7 +10337,7 @@
               "name": "total"
             }
           },
-          "expect": null
+          "expect": 10
         },
         {
           "op": "object.call",
@@ -10041,7 +10350,7 @@
               "name": "ord.total"
             }
           },
-          "expect": null
+          "expect": 10
         },
         {
           "op": "object.call",
@@ -10054,7 +10363,7 @@
               "name": "price"
             }
           },
-          "expect": null
+          "expect": 2.5
         },
         {
           "op": "object.call",
@@ -10067,7 +10376,7 @@
               "name": "ord.price"
             }
           },
-          "expect": null
+          "expect": 2.5
         },
         {
           "op": "object.call",
@@ -10080,7 +10389,7 @@
               "name": "paid"
             }
           },
-          "expect": null
+          "expect": true
         },
         {
           "op": "object.call",
@@ -10093,7 +10402,7 @@
               "name": "ord.paid"
             }
           },
-          "expect": null
+          "expect": true
         },
         {
           "op": "object.call",
@@ -10106,7 +10415,7 @@
               "name": "placedAt"
             }
           },
-          "expect": null
+          "expect": "2024-05-06T07:08:09.123+00:00"
         },
         {
           "op": "object.call",
@@ -10119,7 +10428,7 @@
               "name": "ord.placedAt"
             }
           },
-          "expect": null
+          "expect": "2024-05-06T07:08:09.123+00:00"
         },
         {
           "op": "object.call",
@@ -10132,7 +10441,10 @@
               "name": "tags"
             }
           },
-          "expect": null
+          "expect": [
+            "a",
+            "b"
+          ]
         },
         {
           "op": "object.call",
@@ -10145,7 +10457,10 @@
               "name": "ord.tags"
             }
           },
-          "expect": null
+          "expect": [
+            "a",
+            "b"
+          ]
         },
         {
           "op": "object.call",
@@ -10158,7 +10473,9 @@
               "name": "meta"
             }
           },
-          "expect": null
+          "expect": {
+            "color": "red"
+          }
         },
         {
           "op": "object.call",
@@ -10171,7 +10488,9 @@
               "name": "ord.meta"
             }
           },
-          "expect": null
+          "expect": {
+            "color": "red"
+          }
         },
         {
           "op": "object.call",
@@ -10184,7 +10503,7 @@
               "name": "secret"
             }
           },
-          "expect": null
+          "expect": "plain-secret"
         },
         {
           "op": "object.call",
@@ -10197,7 +10516,7 @@
               "name": "ord.secret"
             }
           },
-          "expect": null
+          "expect": "plain-secret"
         },
         {
           "op": "object.call",
@@ -10210,7 +10529,7 @@
               "name": "profile"
             }
           },
-          "expect": null
+          "expect": []
         },
         {
           "op": "object.call",
@@ -10223,7 +10542,7 @@
               "name": "ord.profile"
             }
           },
-          "expect": null
+          "expect": []
         },
         {
           "op": "object.call",
@@ -10236,7 +10555,7 @@
               "name": "note"
             }
           },
-          "expect": null
+          "expect": "handwritten"
         },
         {
           "op": "object.call",
@@ -10249,7 +10568,7 @@
               "name": "ord.note"
             }
           },
-          "expect": null
+          "expect": "handwritten"
         }
       ]
     },
@@ -11888,9 +12207,28 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Filter: witness not found"
+            "$document": {
+              "$id": "o1",
+              "customerId": "c1",
+              "total": 10,
+              "price": 2.5,
+              "paid": true,
+              "placedAt": "2024-05-06T07:08:09.123+00:00",
+              "tags": [
+                "a",
+                "b"
+              ],
+              "meta": {
+                "color": "red"
+              },
+              "secret": "plain-secret",
+              "profile": [],
+              "note": "handwritten",
+              "$collection": "orders",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
             }
           }
         },
@@ -12089,7 +12427,39 @@
               ]
             }
           },
-          "expect": []
+          "expect": [
+            {
+              "$document": {
+                "name": "Alice",
+                "ord.customerId": "c1",
+                "ord.total": 10,
+                "ord.price": 2.5,
+                "ord.paid": true,
+                "ord.placedAt": "2024-05-06T07:08:09.123+00:00",
+                "ord.tags": [
+                  "a",
+                  "b"
+                ],
+                "ord.meta": {
+                  "color": "red"
+                },
+                "ord.secret": "plain-secret",
+                "ord.profile": [],
+                "ord.note": "handwritten",
+                "ref.customerId": "c1",
+                "ref.total": 7.5,
+                "ref.secret": "refund-note",
+                "ord.$id": "o1",
+                "ref.$id": "r1",
+                "$id": "c1",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$collection": "customers"
+              }
+            }
+          ]
         },
         {
           "op": "object.call",
@@ -12106,7 +12476,29 @@
           },
           "bind": "s24469",
           "expect": {
-            "$document": {}
+            "$document": {
+              "customerId": "c1",
+              "total": 10,
+              "price": 2.5,
+              "paid": true,
+              "placedAt": "2024-05-06T07:08:09.123+00:00",
+              "tags": [
+                "a",
+                "b"
+              ],
+              "meta": {
+                "color": "red"
+              },
+              "secret": "plain-secret",
+              "profile": [],
+              "note": "handwritten",
+              "$sequence": "1",
+              "$id": "o1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "orders"
+            }
           }
         },
         {
@@ -12118,7 +12510,7 @@
             "method": "isEmpty",
             "args": {}
           },
-          "expect": true
+          "expect": false
         },
         {
           "op": "object.call",
@@ -12131,7 +12523,7 @@
               "name": "$id"
             }
           },
-          "expect": null
+          "expect": "o1"
         },
         {
           "op": "object.call",
@@ -12193,7 +12585,7 @@
               "name": "customerId"
             }
           },
-          "expect": null
+          "expect": "c1"
         },
         {
           "op": "object.call",
@@ -12255,7 +12647,7 @@
               "name": "total"
             }
           },
-          "expect": null
+          "expect": 10
         },
         {
           "op": "object.call",
@@ -12317,7 +12709,7 @@
               "name": "price"
             }
           },
-          "expect": null
+          "expect": 2.5
         },
         {
           "op": "object.call",
@@ -12379,7 +12771,7 @@
               "name": "paid"
             }
           },
-          "expect": null
+          "expect": true
         },
         {
           "op": "object.call",
@@ -12441,7 +12833,7 @@
               "name": "placedAt"
             }
           },
-          "expect": null
+          "expect": "2024-05-06T07:08:09.123+00:00"
         },
         {
           "op": "object.call",
@@ -12503,7 +12895,10 @@
               "name": "tags"
             }
           },
-          "expect": null
+          "expect": [
+            "a",
+            "b"
+          ]
         },
         {
           "op": "object.call",
@@ -12568,7 +12963,9 @@
               "name": "meta"
             }
           },
-          "expect": null
+          "expect": {
+            "color": "red"
+          }
         },
         {
           "op": "object.call",
@@ -12632,7 +13029,7 @@
               "name": "secret"
             }
           },
-          "expect": null
+          "expect": "plain-secret"
         },
         {
           "op": "object.call",
@@ -12694,7 +13091,7 @@
               "name": "profile"
             }
           },
-          "expect": null
+          "expect": []
         },
         {
           "op": "object.call",
@@ -12758,7 +13155,7 @@
               "name": "note"
             }
           },
-          "expect": null
+          "expect": "handwritten"
         },
         {
           "op": "object.call",
@@ -14831,9 +15228,28 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Filter: witness not found"
+            "$document": {
+              "$id": "o1",
+              "customerId": "c1",
+              "total": 10,
+              "price": 2.5,
+              "paid": true,
+              "placedAt": "2024-05-06T07:08:09.123+00:00",
+              "tags": [
+                "a",
+                "b"
+              ],
+              "meta": {
+                "color": "red"
+              },
+              "secret": "plain-secret",
+              "profile": [],
+              "note": "handwritten",
+              "$collection": "orders",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
             }
           }
         },
@@ -14967,7 +15383,35 @@
               ]
             }
           },
-          "expect": []
+          "expect": [
+            {
+              "$document": {
+                "name": "Alice",
+                "j0.customerId": "c1",
+                "j0.total": 10,
+                "j0.price": 2.5,
+                "j0.paid": true,
+                "j0.placedAt": "2024-05-06T07:08:09.123+00:00",
+                "j0.tags": [
+                  "a",
+                  "b"
+                ],
+                "j0.meta": {
+                  "color": "red"
+                },
+                "j0.secret": "plain-secret",
+                "j0.profile": [],
+                "j0.note": "handwritten",
+                "j0.$id": "o1",
+                "$id": "c1",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$collection": "customers"
+              }
+            }
+          ]
         },
         {
           "op": "object.call",
@@ -15396,7 +15840,29 @@
           },
           "bind": "s24563",
           "expect": {
-            "$document": {}
+            "$document": {
+              "customerId": "c1",
+              "total": 10,
+              "price": 2.5,
+              "paid": true,
+              "placedAt": "2024-05-06T07:08:09.123+00:00",
+              "tags": [
+                "a",
+                "b"
+              ],
+              "meta": {
+                "color": "red"
+              },
+              "secret": "plain-secret",
+              "profile": [],
+              "note": "handwritten",
+              "$sequence": "1",
+              "$id": "o1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "orders"
+            }
           }
         },
         {
@@ -15408,7 +15874,7 @@
             "method": "isEmpty",
             "args": {}
           },
-          "expect": true
+          "expect": false
         },
         {
           "op": "object.call",
@@ -15421,7 +15887,7 @@
               "name": "$id"
             }
           },
-          "expect": null
+          "expect": "o1"
         },
         {
           "op": "object.call",
@@ -15479,7 +15945,7 @@
               "name": "customerId"
             }
           },
-          "expect": null
+          "expect": "c1"
         },
         {
           "op": "object.call",
@@ -15537,7 +16003,7 @@
               "name": "total"
             }
           },
-          "expect": null
+          "expect": 10
         },
         {
           "op": "object.call",
@@ -15595,7 +16061,7 @@
               "name": "price"
             }
           },
-          "expect": null
+          "expect": 2.5
         },
         {
           "op": "object.call",
@@ -15653,7 +16119,7 @@
               "name": "paid"
             }
           },
-          "expect": null
+          "expect": true
         },
         {
           "op": "object.call",
@@ -15711,7 +16177,7 @@
               "name": "placedAt"
             }
           },
-          "expect": null
+          "expect": "2024-05-06T07:08:09.123+00:00"
         },
         {
           "op": "object.call",
@@ -15769,7 +16235,10 @@
               "name": "tags"
             }
           },
-          "expect": null
+          "expect": [
+            "a",
+            "b"
+          ]
         },
         {
           "op": "object.call",
@@ -15830,7 +16299,9 @@
               "name": "meta"
             }
           },
-          "expect": null
+          "expect": {
+            "color": "red"
+          }
         },
         {
           "op": "object.call",
@@ -15890,7 +16361,7 @@
               "name": "secret"
             }
           },
-          "expect": null
+          "expect": "plain-secret"
         },
         {
           "op": "object.call",
@@ -15948,7 +16419,7 @@
               "name": "profile"
             }
           },
-          "expect": null
+          "expect": []
         },
         {
           "op": "object.call",
@@ -16008,7 +16479,7 @@
               "name": "note"
             }
           },
-          "expect": null
+          "expect": "handwritten"
         },
         {
           "op": "object.call",
@@ -16198,7 +16669,39 @@
               ]
             }
           },
-          "expect": []
+          "expect": [
+            {
+              "$document": {
+                "name": "Alice",
+                "j1.customerId": "c1",
+                "j1.total": 10,
+                "j1.price": 2.5,
+                "j1.paid": true,
+                "j1.placedAt": "2024-05-06T07:08:09.123+00:00",
+                "j1.tags": [
+                  "a",
+                  "b"
+                ],
+                "j1.meta": {
+                  "color": "red"
+                },
+                "j1.secret": "plain-secret",
+                "j1.profile": [],
+                "j1.note": "handwritten",
+                "j0.customerId": "c1",
+                "j0.total": 7.5,
+                "j0.secret": "refund-note",
+                "j1.$id": "o1",
+                "j0.$id": "r1",
+                "$id": "c1",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$collection": "customers"
+              }
+            }
+          ]
         },
         {
           "op": "object.call",
@@ -16663,7 +17166,29 @@
           },
           "bind": "s24601",
           "expect": {
-            "$document": {}
+            "$document": {
+              "customerId": "c1",
+              "total": 10,
+              "price": 2.5,
+              "paid": true,
+              "placedAt": "2024-05-06T07:08:09.123+00:00",
+              "tags": [
+                "a",
+                "b"
+              ],
+              "meta": {
+                "color": "red"
+              },
+              "secret": "plain-secret",
+              "profile": [],
+              "note": "handwritten",
+              "$sequence": "1",
+              "$id": "o1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "orders"
+            }
           }
         },
         {
@@ -16675,7 +17200,7 @@
             "method": "isEmpty",
             "args": {}
           },
-          "expect": true
+          "expect": false
         },
         {
           "op": "object.call",
@@ -16688,7 +17213,7 @@
               "name": "$id"
             }
           },
-          "expect": null
+          "expect": "o1"
         },
         {
           "op": "object.call",
@@ -16750,7 +17275,7 @@
               "name": "customerId"
             }
           },
-          "expect": null
+          "expect": "c1"
         },
         {
           "op": "object.call",
@@ -16812,7 +17337,7 @@
               "name": "total"
             }
           },
-          "expect": null
+          "expect": 10
         },
         {
           "op": "object.call",
@@ -16874,7 +17399,7 @@
               "name": "price"
             }
           },
-          "expect": null
+          "expect": 2.5
         },
         {
           "op": "object.call",
@@ -16936,7 +17461,7 @@
               "name": "paid"
             }
           },
-          "expect": null
+          "expect": true
         },
         {
           "op": "object.call",
@@ -16998,7 +17523,7 @@
               "name": "placedAt"
             }
           },
-          "expect": null
+          "expect": "2024-05-06T07:08:09.123+00:00"
         },
         {
           "op": "object.call",
@@ -17060,7 +17585,10 @@
               "name": "tags"
             }
           },
-          "expect": null
+          "expect": [
+            "a",
+            "b"
+          ]
         },
         {
           "op": "object.call",
@@ -17125,7 +17653,9 @@
               "name": "meta"
             }
           },
-          "expect": null
+          "expect": {
+            "color": "red"
+          }
         },
         {
           "op": "object.call",
@@ -17189,7 +17719,7 @@
               "name": "secret"
             }
           },
-          "expect": null
+          "expect": "plain-secret"
         },
         {
           "op": "object.call",
@@ -17251,7 +17781,7 @@
               "name": "profile"
             }
           },
-          "expect": null
+          "expect": []
         },
         {
           "op": "object.call",
@@ -17315,7 +17845,7 @@
               "name": "note"
             }
           },
-          "expect": null
+          "expect": "handwritten"
         },
         {
           "op": "object.call",
@@ -19290,9 +19820,28 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Filter: witness not found"
+            "$document": {
+              "$id": "o1",
+              "customerId": "c1",
+              "total": 10,
+              "price": 2.5,
+              "paid": true,
+              "placedAt": "2024-05-06T07:08:09.123+00:00",
+              "tags": [
+                "a",
+                "b"
+              ],
+              "meta": {
+                "color": "red"
+              },
+              "secret": "plain-secret",
+              "profile": [],
+              "note": "handwritten",
+              "$collection": "orders",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
             }
           }
         },
@@ -19462,7 +20011,24 @@
               ]
             }
           },
-          "expect": []
+          "expect": [
+            {
+              "$document": {
+                "name": "Alice",
+                "ord.$id": "o1",
+                "ord.$sequence": "1",
+                "ord.$createdAt": "<now>",
+                "ord.$updatedAt": "<now>",
+                "ord.$permissions": [],
+                "$id": "c1",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$collection": "customers"
+              }
+            }
+          ]
         },
         {
           "op": "object.call",
@@ -19479,7 +20045,29 @@
           },
           "bind": "s24685",
           "expect": {
-            "$document": {}
+            "$document": {
+              "customerId": "c1",
+              "total": 10,
+              "price": 2.5,
+              "paid": true,
+              "placedAt": "2024-05-06T07:08:09.123+00:00",
+              "tags": [
+                "a",
+                "b"
+              ],
+              "meta": {
+                "color": "red"
+              },
+              "secret": "plain-secret",
+              "profile": [],
+              "note": "handwritten",
+              "$sequence": "1",
+              "$id": "o1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "orders"
+            }
           }
         },
         {
@@ -19491,7 +20079,7 @@
             "method": "isEmpty",
             "args": {}
           },
-          "expect": true
+          "expect": false
         },
         {
           "op": "object.call",
@@ -19504,7 +20092,7 @@
               "name": "$id"
             }
           },
-          "expect": null
+          "expect": "o1"
         },
         {
           "op": "object.call",
@@ -19555,7 +20143,7 @@
               "name": "$sequence"
             }
           },
-          "expect": null
+          "expect": "1"
         },
         {
           "op": "object.call",
@@ -19606,7 +20194,7 @@
               "name": "$createdAt"
             }
           },
-          "expect": null
+          "expect": "<now>"
         },
         {
           "op": "object.call",
@@ -19660,7 +20248,7 @@
               "name": "$updatedAt"
             }
           },
-          "expect": null
+          "expect": "<now>"
         },
         {
           "op": "object.call",
@@ -19714,7 +20302,7 @@
               "name": "$permissions"
             }
           },
-          "expect": null
+          "expect": []
         },
         {
           "op": "object.call",
@@ -21391,9 +21979,28 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Filter: witness not found"
+            "$document": {
+              "$id": "o1",
+              "customerId": "c1",
+              "total": 10,
+              "price": 2.5,
+              "paid": true,
+              "placedAt": "2024-05-06T07:08:09.123+00:00",
+              "tags": [
+                "a",
+                "b"
+              ],
+              "meta": {
+                "color": "red"
+              },
+              "secret": "plain-secret",
+              "profile": [],
+              "note": "handwritten",
+              "$collection": "orders",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
             }
           }
         },
@@ -21527,7 +22134,35 @@
               ]
             }
           },
-          "expect": []
+          "expect": [
+            {
+              "$document": {
+                "name": "Alice",
+                "ord.customerId": "c1",
+                "ord.total": 10,
+                "ord.price": 2.5,
+                "ord.paid": true,
+                "ord.placedAt": "2024-05-06T07:08:09.123+00:00",
+                "ord.tags": [
+                  "a",
+                  "b"
+                ],
+                "ord.meta": {
+                  "color": "red"
+                },
+                "ord.secret": "plain-secret",
+                "ord.profile": [],
+                "ord.note": "handwritten",
+                "ord.$id": "o1",
+                "$id": "c1",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$collection": "customers"
+              }
+            }
+          ]
         },
         {
           "op": "object.call",
@@ -21548,7 +22183,31 @@
             "as": "o12559"
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "name": "Alice",
+              "ord.customerId": "c1",
+              "ord.total": 10,
+              "ord.price": 2.5,
+              "ord.paid": true,
+              "ord.placedAt": "2024-05-06T07:08:09.123+00:00",
+              "ord.tags": [
+                "a",
+                "b"
+              ],
+              "ord.meta": {
+                "color": "red"
+              },
+              "ord.secret": "plain-secret",
+              "ord.profile": [],
+              "ord.note": "handwritten",
+              "ord.$id": "o1",
+              "$sequence": "1",
+              "$id": "c1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "customers"
+            }
           }
         },
         {
@@ -23444,9 +24103,28 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Filter: witness not found"
+            "$document": {
+              "$id": "o1",
+              "customerId": "c1",
+              "total": 10,
+              "price": 2.5,
+              "paid": true,
+              "placedAt": "2024-05-06T07:08:09.123+00:00",
+              "tags": [
+                "a",
+                "b"
+              ],
+              "meta": {
+                "color": "red"
+              },
+              "secret": "plain-secret",
+              "profile": [],
+              "note": "handwritten",
+              "$collection": "orders",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
             }
           }
         },
@@ -23606,17 +24284,22 @@
             {
               "$document": {
                 "name": "Alice",
-                "ord.customerId": null,
-                "ord.total": null,
-                "ord.price": null,
-                "ord.paid": null,
-                "ord.placedAt": null,
-                "ord.tags": null,
-                "ord.meta": null,
-                "ord.secret": null,
-                "ord.profile": null,
-                "ord.note": null,
-                "ord.$id": null,
+                "ord.customerId": "c1",
+                "ord.total": 10,
+                "ord.price": 2.5,
+                "ord.paid": true,
+                "ord.placedAt": "2024-05-06T07:08:09.123+00:00",
+                "ord.tags": [
+                  "a",
+                  "b"
+                ],
+                "ord.meta": {
+                  "color": "red"
+                },
+                "ord.secret": "plain-secret",
+                "ord.profile": [],
+                "ord.note": "handwritten",
+                "ord.$id": "o1",
                 "$id": "c1",
                 "$sequence": "1",
                 "$createdAt": "<now>",
@@ -26809,9 +27492,28 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Filter: witness not found"
+            "$document": {
+              "$id": "o1",
+              "customerId": "c1",
+              "total": 10,
+              "price": 2.5,
+              "paid": true,
+              "placedAt": "2024-05-06T07:08:09.123+00:00",
+              "tags": [
+                "a",
+                "b"
+              ],
+              "meta": {
+                "color": "red"
+              },
+              "secret": "plain-secret",
+              "profile": [],
+              "note": "handwritten",
+              "$collection": "orders",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
             }
           }
         },
@@ -26980,9 +27682,28 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Filter: witness not found"
+            "$document": {
+              "$id": "oc3",
+              "customerId": "c3",
+              "total": 10,
+              "price": 2.5,
+              "paid": true,
+              "placedAt": "2024-05-06T08:00:00.000+00:00",
+              "tags": [
+                "a",
+                "b"
+              ],
+              "meta": {
+                "color": "red"
+              },
+              "secret": "plain-secret",
+              "profile": [],
+              "note": "handwritten",
+              "$collection": "orders",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "2"
             }
           }
         },
@@ -27099,9 +27820,28 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Filter: witness not found"
+            "$document": {
+              "$id": "oc4",
+              "customerId": "c4",
+              "total": 10,
+              "price": 2.5,
+              "paid": true,
+              "placedAt": "2024-05-06T09:00:00.000+00:00",
+              "tags": [
+                "a",
+                "b"
+              ],
+              "meta": {
+                "color": "red"
+              },
+              "secret": "plain-secret",
+              "profile": [],
+              "note": "handwritten",
+              "$collection": "orders",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "3"
             }
           }
         },
@@ -27229,7 +27969,35 @@
               ]
             }
           },
-          "expect": []
+          "expect": [
+            {
+              "$document": {
+                "name": "Alice",
+                "ord.customerId": "c1",
+                "ord.total": 10,
+                "ord.price": 2.5,
+                "ord.paid": true,
+                "ord.placedAt": "2024-05-06T07:08:09.123+00:00",
+                "ord.tags": [
+                  "a",
+                  "b"
+                ],
+                "ord.meta": {
+                  "color": "red"
+                },
+                "ord.secret": "plain-secret",
+                "ord.profile": [],
+                "ord.note": "handwritten",
+                "ord.$id": "o1",
+                "$id": "c1",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$collection": "customers"
+              }
+            }
+          ]
         },
         {
           "op": "object.call",
@@ -27427,12 +28195,35 @@
               ]
             }
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Filter: witness not found"
+          "expect": [
+            {
+              "$document": {
+                "name": "c3",
+                "ord.customerId": "c3",
+                "ord.total": 10,
+                "ord.price": 2.5,
+                "ord.paid": true,
+                "ord.placedAt": "2024-05-06T08:00:00.000+00:00",
+                "ord.tags": [
+                  "a",
+                  "b"
+                ],
+                "ord.meta": {
+                  "color": "red"
+                },
+                "ord.secret": "plain-secret",
+                "ord.profile": [],
+                "ord.note": "handwritten",
+                "ord.$id": "oc3",
+                "$id": "c3",
+                "$sequence": "3",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$collection": "customers"
+              }
             }
-          }
+          ]
         },
         {
           "op": "object.call",
@@ -27675,12 +28466,35 @@
               ]
             }
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Filter: witness not found"
+          "expect": [
+            {
+              "$document": {
+                "name": "c4",
+                "ord.customerId": "c4",
+                "ord.total": 10,
+                "ord.price": 2.5,
+                "ord.paid": true,
+                "ord.placedAt": "2024-05-06T09:00:00.000+00:00",
+                "ord.tags": [
+                  "a",
+                  "b"
+                ],
+                "ord.meta": {
+                  "color": "red"
+                },
+                "ord.secret": "plain-secret",
+                "ord.profile": [],
+                "ord.note": "handwritten",
+                "ord.$id": "oc4",
+                "$id": "c4",
+                "$sequence": "4",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$collection": "customers"
+              }
             }
-          }
+          ]
         },
         {
           "op": "object.call",
@@ -27923,12 +28737,7 @@
               ]
             }
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Filter: witness not found"
-            }
-          }
+          "expect": []
         }
       ]
     }

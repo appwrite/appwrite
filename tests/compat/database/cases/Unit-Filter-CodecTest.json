@@ -1926,9 +1926,13 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Filter \"reversed\" not found for attribute \"body\""
+            "$document": {
+              "body": "global",
+              "$id": null,
+              "$sequence": null,
+              "$collection": null,
+              "$createdAt": null,
+              "$updatedAt": null
             }
           }
         },
@@ -1943,7 +1947,7 @@
               "name": "body"
             }
           },
-          "expect": "olleh"
+          "expect": "global"
         }
       ]
     },

@@ -45322,9 +45322,27 @@
             "as": "o412"
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Format (\"updateAttributeIntegerOnly\") not available for this attribute type (\"integer\")"
+            "$value": "Attribute",
+            "fields": {
+              "key": "count",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": {
+                "$value": "Format",
+                "fields": {
+                  "name": "updateAttributeIntegerOnly",
+                  "options": []
+                }
+              },
+              "filters": [],
+              "relationship": null,
+              "side": null
             }
           }
         },
@@ -47501,9 +47519,27 @@
             "as": "o432"
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Format (\"updateAttributeIntegerOnly\") not available for this attribute type (\"integer\")"
+            "$value": "Attribute",
+            "fields": {
+              "key": "count",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": {
+                "$value": "Format",
+                "fields": {
+                  "name": "updateAttributeIntegerOnly",
+                  "options": []
+                }
+              },
+              "filters": [],
+              "relationship": null,
+              "side": null
             }
           }
         },

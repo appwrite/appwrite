@@ -6284,6 +6284,9 @@
               "$enum": "Query\\Method::ElemMatch"
             },
             {
+              "$enum": "Query\\Method::Relationship"
+            },
+            {
               "$enum": "Query\\Method::Count"
             },
             {

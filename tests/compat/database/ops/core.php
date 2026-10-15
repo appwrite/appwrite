@@ -148,6 +148,7 @@ final class Core
         self::$states ??= new \WeakMap();
         if (!isset(self::$states[$s])) {
             self::fresh();
+            self::state($s);
         }
         self::$current = $s;
     }

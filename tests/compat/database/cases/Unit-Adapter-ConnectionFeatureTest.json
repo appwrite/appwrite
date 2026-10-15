@@ -188,7 +188,7 @@
             "method": "getConnectionId",
             "args": {}
           },
-          "expect": "3134"
+          "expect": "2969"
         },
         {
           "op": "object.call",
@@ -221,7 +221,7 @@
             "method": "getConnectionId",
             "args": {}
           },
-          "expect": "3134"
+          "expect": "2969"
         }
       ]
     },
