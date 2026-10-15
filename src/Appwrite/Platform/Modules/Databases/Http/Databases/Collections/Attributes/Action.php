@@ -480,7 +480,6 @@ abstract class Action extends DatabasesAction
 
         $publisherForDatabase->enqueue(new DatabaseMessage(
             project: $queueForEvents->getProject(),
-            user: $queueForEvents->getUser(),
             type: DATABASE_TYPE_CREATE_ATTRIBUTE,
             database: $db,
             collection: $this->isCollectionsAPI() ? $collection : null,

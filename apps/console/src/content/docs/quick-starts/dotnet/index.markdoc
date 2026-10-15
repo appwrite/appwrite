@@ -59,7 +59,7 @@ cd MyApp
 Install the .NET Appwrite SDK.
 
 ```sh
-dotnet add package Appwrite --version 0.13.0
+dotnet add package Appwrite --version 8.4.0
 ```
 {% /section %}
 {% section #step-4 step=4 title="Import Appwrite" %}
@@ -123,7 +123,7 @@ await tablesDB.CreateTextColumn(
     tableId: todoTable.Id,
     key: "description",
     required: false,
-    xdefault: "This is a test description"
+    @default: "This is a test description"
 );
 
 await tablesDB.CreateBooleanColumn(

@@ -147,6 +147,7 @@ class Exception extends \Exception
 
     /** Membership */
     public const string MEMBERSHIP_NOT_FOUND = 'membership_not_found';
+    public const string MEMBERSHIP_ALREADY_EXISTS = 'membership_already_exists';
     public const string MEMBERSHIP_ALREADY_CONFIRMED = 'membership_already_confirmed';
     public const string MEMBERSHIP_DELETION_PROHIBITED = 'membership_deletion_prohibited';
     public const string MEMBERSHIP_DOWNGRADE_PROHIBITED = 'membership_downgrade_prohibited';

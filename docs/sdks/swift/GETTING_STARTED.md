@@ -68,7 +68,7 @@ func main() {
 
 ### Type Safety with Models
 
-The Appwrite Swift SDK provides type safety when working with database documents through generic methods. Methods like `listDocuments`, `getDocument`, and others accept a `nestedType` parameter that allows you to specify your custom model type for full type safety.
+The Appwrite Swift SDK provides type safety when working with table rows through generic methods. Methods like `listRows`, `getRow`, and others accept a `nestedType` parameter that allows you to specify your custom model type for full type safety.
 
 ```swift
 struct Book: Codable {
@@ -80,16 +80,17 @@ struct Book: Codable {
     let isCheckedOut: Bool
 }
 
-let databases = Databases(client)
+let tablesDB = TablesDB(client)
 
 do {
-    let documents = try await databases.listDocuments(
+    let result = try await tablesDB.listRows(
         databaseId: "your-database-id",
-        collectionId: "your-collection-id",
+        tableId: "your-table-id",
         nestedType: Book.self // Pass in your custom model type
     )
     
-    for book in documents.documents {
+    for row in result.rows {
+        let book = row.data
         print("Book: \(book.name) by \(book.author)") // Now you have full type safety
     }
 } catch {

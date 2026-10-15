@@ -19,7 +19,7 @@ Do exactly these steps in order. Confirm each step succeeds before continuing. I
 - **Option B** (CDN): Add a script tag to the HTML file:
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/appwrite@17.0.0"></script>
+<script src="https://cdn.jsdelivr.net/npm/appwrite@28.3.0"></script>
 ```
 
 ## Step 3: Initialize Appwrite client (ask user for details; never assume)
