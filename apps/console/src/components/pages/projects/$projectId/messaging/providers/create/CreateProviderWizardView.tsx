@@ -518,7 +518,9 @@ const PROVIDERS: ProviderConfig[] = [
         typeof v.expiry === 'string' ? v.expiry : String(v.expiry ?? ''),
       )
       if (!expiry.ok) {
-        throw new Error('Message expiry must be a whole number of seconds.')
+        throw new Error(
+          'Message expiry must be a whole number of seconds, up to 604800.',
+        )
       }
       const qos = parseAppwritePushQos(
         typeof v.qos === 'string' ? v.qos : String(v.qos ?? ''),

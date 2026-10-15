@@ -347,7 +347,9 @@ export function View({
     if (provider.type === 'push' && provider.provider === 'appwrite') {
       const expiry = parseAppwritePushExpiry(appwriteExpiry)
       if (!expiry.ok) {
-        toast.error(t('Message expiry must be a whole number of seconds.'))
+        toast.error(
+          t('Message expiry must be a whole number of seconds, up to 604800.'),
+        )
         return
       }
       // `null` from either control sends the API's explicit reset so clearing a

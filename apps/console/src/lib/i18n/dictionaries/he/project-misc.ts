@@ -2970,8 +2970,8 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Default delivery guarantee for topics on this provider.':
     'ברירת המחדל לאחריות המסירה עבור נושאים בספק הזה.',
   'Message expiry (seconds)': 'תפוגת הודעה (שניות)',
-  'Message expiry must be a whole number of seconds.':
-    'תפוגת ההודעה חייבת להיות מספר שלם של שניות.',
+  'Message expiry must be a whole number of seconds, up to 604800.':
+    'תפוגת ההודעה חייבת להיות מספר שלם של שניות, עד 604800.',
   'How long undelivered messages are kept for offline devices. Max 7 days (604800).':
     'כמה זמן הודעות שלא נמסרו נשמרות עבור מכשירים לא מקוונים. עד 7 ימים (604800).',
   'Send transactional email through Amazon SES.':

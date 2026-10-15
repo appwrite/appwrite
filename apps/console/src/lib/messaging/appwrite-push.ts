@@ -29,18 +29,24 @@ export function parseAppwritePushQos(value: string): number | null {
   return Number.isInteger(n) ? n : null
 }
 
+/** Server cap on message expiry: 7 days, in seconds. */
+export const APPWRITE_PUSH_EXPIRY_MAX = 604800
+
 export type ParsedExpiry = { ok: true; value: number | null } | { ok: false }
 
 /**
  * Parse a message-expiry input (seconds). An empty field maps to `null` (reset
- * to the default). A supplied value must be a whole, non-negative number;
- * anything else (fractional, negative, or unparseable) is reported as invalid
+ * to the default). A supplied value must be a whole number from 0 to
+ * `APPWRITE_PUSH_EXPIRY_MAX`; anything else (fractional, negative, too large,
+ * or unparseable) is reported as invalid
  * so the caller can reject it rather than silently save a different value.
  */
 export function parseAppwritePushExpiry(raw: string): ParsedExpiry {
   const trimmed = raw.trim()
   if (trimmed === '') return { ok: true, value: null }
   const n = Number(trimmed)
-  if (!Number.isInteger(n) || n < 0) return { ok: false }
+  if (!Number.isInteger(n) || n < 0 || n > APPWRITE_PUSH_EXPIRY_MAX) {
+    return { ok: false }
+  }
   return { ok: true, value: n }
 }

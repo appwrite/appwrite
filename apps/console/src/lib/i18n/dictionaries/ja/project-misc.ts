@@ -2475,8 +2475,8 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Default delivery guarantee for topics on this provider.':
     'このプロバイダーのトピックに対するデフォルトの配信保証です。',
   'Message expiry (seconds)': 'メッセージの有効期限 (秒)',
-  'Message expiry must be a whole number of seconds.':
-    'メッセージの有効期限は秒単位の整数で指定してください。',
+  'Message expiry must be a whole number of seconds, up to 604800.':
+    'メッセージの有効期限は 604800 以下の秒単位の整数で指定してください。',
   'How long undelivered messages are kept for offline devices. Max 7 days (604800).':
     'オフラインデバイス向けに未配信メッセージを保持する期間です。最大7日 (604800)。',
   'Send transactional email through Amazon SES.':

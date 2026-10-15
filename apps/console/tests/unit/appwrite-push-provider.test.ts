@@ -48,6 +48,14 @@ describe('parseAppwritePushExpiry', () => {
     expect(parseAppwritePushExpiry('-1')).toEqual({ ok: false })
     expect(parseAppwritePushExpiry('abc')).toEqual({ ok: false })
   })
+
+  test('accepts the seven-day cap and rejects anything above it', () => {
+    expect(parseAppwritePushExpiry('604800')).toEqual({
+      ok: true,
+      value: 604800,
+    })
+    expect(parseAppwritePushExpiry('604801')).toEqual({ ok: false })
+  })
 })
 
 type AppwriteUpdateArgs = Parameters<Messaging['updateAppwriteProvider']>[0]
