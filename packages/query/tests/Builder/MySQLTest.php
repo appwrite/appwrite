@@ -5604,6 +5604,12 @@ class MySQLTest extends TestCase
         $this->expectException(UnsupportedException::class);
         new Builder()->from('t')->filter([Query::elemMatch('attr', [Query::equal('x', [1])])])->build();
     }
+
+    public function testUnsupportedFilterTypeRelationship(): void
+    {
+        $this->expectException(UnsupportedException::class);
+        new Builder()->from('t')->filter([Query::relationship('attr', [Query::equal('x', [1])])])->build();
+    }
     //  toRawSql Edge Cases
 
     public function testToRawSqlWithBoolFalse(): void

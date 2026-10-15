@@ -18,7 +18,6 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Boolean;
-use Utopia\Validator\Text;
 
 class XList extends Action
 {
@@ -39,9 +38,11 @@ class XList extends Action
             ->label('scope', 'account')
             ->label('sdk', new Method(
                 namespace: 'account',
-                group: 'memberships',
+                group: 'teams',
                 name: 'listMemberships',
-                description: '/docs/references/account/list-memberships.md',
+                description: <<<EOT
+                Get the team memberships of the currently logged in user.
+                EOT,
                 auth: [AuthType::SESSION, AuthType::JWT],
                 responses: [
                     new SDKResponse(
@@ -52,7 +53,6 @@ class XList extends Action
                 contentType: ContentType::JSON
             ))
             ->param('queries', [], new Memberships(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Memberships::ALLOWED_ATTRIBUTES), true)
-            ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
             ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
             ->inject('response')
             ->inject('user')
@@ -60,15 +60,12 @@ class XList extends Action
             ->callback($this->action(...));
     }
 
-    public function action(array $queries, string $search, bool $includeTotal, Response $response, Document $user, Database $dbForProject): void
+    public function action(array $queries, bool $includeTotal, Response $response, Document $user, Database $dbForProject): void
     {
         try {
             $queries = Query::parseQueries($queries);
         } catch (QueryException $e) {
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
-        }
-        if (!empty($search)) {
-            $queries[] = Query::search('search', $search);
         }
         $queries[] = Query::equal('userInternalId', [$user->getSequence()]);
 

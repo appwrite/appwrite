@@ -9,8 +9,9 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideConsole;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Query;
+use Utopia\Database\Role;
 use Utopia\System\System;
 
 final class VCSGiteaConsoleClientTest extends Scope
@@ -64,7 +65,7 @@ final class VCSGiteaConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Gitea VCS',
             'execute' => [Role::any()->toString()],
             'runtime' => 'node-22',
@@ -187,7 +188,7 @@ final class VCSGiteaConsoleClientTest extends Scope
         $this->gitHelper('git push origin main', $workdir);
 
         $function = $this->client->call(Client::METHOD_POST, '/functions', $headers, [
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Gitea root directory',
             'execute' => [Role::any()->toString()],
             'runtime' => 'node-22',
@@ -289,7 +290,7 @@ final class VCSGiteaConsoleClientTest extends Scope
         $providerRepositoryId = (string) $repository['body']['id'];
 
         $site = $this->client->call(Client::METHOD_POST, '/sites', $headers, [
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'name' => 'Gitea site',
             'framework' => 'other',
             'buildRuntime' => 'node-22',
@@ -331,7 +332,7 @@ final class VCSGiteaConsoleClientTest extends Scope
         $this->createGiteaUserHelper(self::GITEA_USERNAME_SECOND, self::GITEA_PASSWORD);
 
         $repository = $this->giteaApiHelper(Client::METHOD_POST, '/api/v1/user/repos', [
-            'name' => 'pull-requests-' . ID::unique(),
+            'name' => 'pull-requests-' . Id::unique(),
             'auto_init' => true,
             'default_branch' => 'main',
             'private' => false,
@@ -353,7 +354,7 @@ final class VCSGiteaConsoleClientTest extends Scope
         }, 30000, 1000);
 
         $function = $this->client->call(Client::METHOD_POST, '/functions', $headers, [
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Gitea pull requests',
             'runtime' => 'node-22',
             'entrypoint' => 'index.js',
@@ -681,6 +682,61 @@ final class VCSGiteaConsoleClientTest extends Scope
         ], $this->getHeaders()), $params, true, false);
     }
 
+    public function testListRepositoryBranchesPaginatesByCursor(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $installationId = $this->createInstallationHelper()['$id'];
+
+        $repository = $this->giteaApiHelper(Client::METHOD_POST, '/api/v1/user/repos', [
+            'name' => 'branches-' . \uniqid(),
+            'auto_init' => true,
+            'default_branch' => 'main',
+            'private' => false,
+        ]);
+        $this->assertEquals(201, $repository['headers']['status-code'], \json_encode($repository['body']));
+
+        $branchesPath = '/api/v1/repos/' . self::GITEA_USERNAME . '/' . $repository['body']['name'] . '/branches';
+        foreach (['alpha', 'beta'] as $name) {
+            $branch = $this->giteaApiHelper(Client::METHOD_POST, $branchesPath, [
+                'new_branch_name' => $name,
+                'old_branch_name' => 'main',
+            ]);
+            $this->assertEquals(201, $branch['headers']['status-code'], \json_encode($branch['body']));
+        }
+
+        $path = '/vcs/github/installations/' . $installationId . '/providerRepositories/' . $repository['body']['id'] . '/branches';
+        $headers = \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders());
+
+        $names = [];
+        $this->assertEventually(function () use ($path, $headers, &$names) {
+            $all = $this->client->call(Client::METHOD_GET, $path, $headers);
+            $this->assertEquals(200, $all['headers']['status-code'], \json_encode($all['body']));
+            $names = \array_column($all['body']['branches'], 'name');
+            $this->assertCount(3, $names);
+        }, 30000, 500);
+
+        $after = $this->client->call(Client::METHOD_GET, $path, $headers, [
+            'queries' => [
+                Query::limit(1)->toString(),
+                '{"method":"cursorAfter","values":["' . $names[0] . '"]}',
+            ],
+        ]);
+        $this->assertEquals(200, $after['headers']['status-code'], \json_encode($after['body']));
+        $this->assertSame([$names[1]], \array_column($after['body']['branches'], 'name'));
+
+        $before = $this->client->call(Client::METHOD_GET, $path, $headers, [
+            'queries' => [
+                Query::limit(1)->toString(),
+                '{"method":"cursorBefore","values":["' . $names[2] . '"]}',
+            ],
+        ]);
+        $this->assertEquals(200, $before['headers']['status-code'], \json_encode($before['body']));
+        $this->assertSame([$names[1]], \array_column($before['body']['branches'], 'name'));
+    }
+
     public function testInstallationOrganizationUrl(): void
     {
         // createInstallationHelper() reads listInstallations, so this covers both routes
@@ -824,7 +880,7 @@ final class VCSGiteaConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
         ], [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => $password,
             'name' => 'VCS Tenant',
@@ -848,7 +904,7 @@ final class VCSGiteaConsoleClientTest extends Scope
             'cookie' => 'a_session_console=' . $sessionCookie,
             'x-appwrite-project' => 'console',
         ], [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'VCS Tenant Team',
         ]);
         $this->assertEquals(200, $team['headers']['status-code']);
@@ -861,7 +917,7 @@ final class VCSGiteaConsoleClientTest extends Scope
                 'cookie' => 'a_session_console=' . $sessionCookie,
                 'x-appwrite-project' => 'console',
             ], [
-                'projectId' => ID::unique(),
+                'projectId' => Id::unique(),
                 'region' => System::getEnv('_APP_REGION', 'default'),
                 'name' => 'VCS Tenant Project',
                 'teamId' => $team['body']['$id'],

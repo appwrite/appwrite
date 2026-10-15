@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Platform\Modules\Compute;
 
+use Appwrite\Bus\Events\RuleUpdated;
 use Appwrite\Platform\Modules\Compute\Base;
 use PHPUnit\Framework\TestCase;
 use Utopia\Bus\Bus;
@@ -19,7 +20,7 @@ final class BranchPreviewRuleTest extends TestCase
             ->method('createDocument')
             ->with('rules', $this->callback(fn (Document $rule) => \str_starts_with($rule->getAttribute('domain'), 'branch-feature-login-')))
             ->willReturnArgument(1);
-        $dbForPlatform->expects($this->once())->method('foreach');
+        $dbForPlatform->expects($this->once())->method('cursor');
 
         $this->activate($dbForPlatform, 'appwrite.network');
     }
@@ -31,14 +32,41 @@ final class BranchPreviewRuleTest extends TestCase
         $dbForPlatform->expects($this->never())->method('updateDocument');
 
         // Manual rules pinned to the branch still follow the new deployment.
-        $dbForPlatform->expects($this->once())->method('foreach')->with('rules');
+        $dbForPlatform->expects($this->once())->method('cursor')->with('rules');
 
         // Deliberately not wrapped: the deployment must go ahead, so a throw
         // here is the defect this test covers.
         $this->activate($dbForPlatform, 'appwrite.network/path');
     }
 
-    private function activate(Database $dbForPlatform, string $sitesDomain): void
+    public function testManualBranchRulesFollowTheNewDeployment(): void
+    {
+        $dbForPlatform = $this->createMock(Database::class);
+        $dbForPlatform->method('cursor')->willReturnCallback(function (): \Generator {
+            yield new Document(['$id' => 'manualRule']);
+        });
+        $dbForPlatform->expects($this->once())
+            ->method('updateDocument')
+            ->with('rules', 'manualRule', $this->callback(
+                function (Document $update): bool {
+                    $this->assertSame('deployment1', $update->getAttribute('deploymentId'));
+                    $this->assertSame('3', $update->getAttribute('deploymentInternalId'));
+                    return true;
+                }
+            ))
+            ->willReturnCallback(fn (string $collection, string $id, Document $update) => new Document(['$id' => $id, ...$update->getArrayCopy()]));
+
+        $bus = $this->createMock(Bus::class);
+        $bus->expects($this->once())
+            ->method('dispatch')
+            ->willReturnCallback(function (RuleUpdated $event): void {
+                $this->assertSame('manualRule', $event->rule['$id']);
+            });
+
+        $this->activate($dbForPlatform, 'appwrite.network/path', $bus);
+    }
+
+    private function activate(Database $dbForPlatform, string $sitesDomain, ?Bus $bus = null): void
     {
         Base::activateBranchPreviewRule(
             new Document(['$id' => 'proj456', '$sequence' => '1', 'region' => 'fra']),
@@ -50,7 +78,7 @@ final class BranchPreviewRuleTest extends TestCase
                 'installationId' => 'installation1',
             ]),
             $dbForPlatform,
-            $this->createStub(Bus::class),
+            $bus ?? $this->createStub(Bus::class),
             $sitesDomain,
         );
     }

@@ -5,7 +5,7 @@ namespace Appwrite\Event\Message;
 use Appwrite\Event\Event;
 use Utopia\Config\Config;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 
 final class Func extends Base
 {
@@ -47,7 +47,7 @@ final class Func extends Base
             payload: $payload,
             events: $event !== '' ? Event::generateEvents($event, $params, $database) : [],
             platform: $platform,
-            eventId: ID::unique(),
+            eventId: Id::unique(),
         );
     }
 
