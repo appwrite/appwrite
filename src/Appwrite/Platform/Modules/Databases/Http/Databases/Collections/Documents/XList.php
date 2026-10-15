@@ -11,7 +11,6 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Usage\Context;
 use Appwrite\Usage\Operations;
-use Appwrite\Utopia\Database\Aggregation;
 use Appwrite\Utopia\Database\Documents\Aggregate;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response as UtopiaResponse;
@@ -158,7 +157,7 @@ class XList extends Action
             $parsed = Query::groupByType($queries);
             $find = match (true) {
                 $parsed->isAggregation() => fn (): array => \array_map(
-                    static fn (array $row): Document => new Document($row),
+                    static fn (array $row): Aggregate => new Aggregate($row),
                     $dbForDatabases->aggregate($collectionTableId, $queries),
                 ),
                 $parsed->selections !== [] => fn (): array => $dbForDatabases->find($collectionTableId, $queries),
