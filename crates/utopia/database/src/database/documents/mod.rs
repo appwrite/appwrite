@@ -23,6 +23,8 @@ mod find;
 #[cfg(test)]
 mod find_tests;
 pub(crate) mod joins;
+#[cfg(all(test, feature = "memory"))]
+mod memory_tests;
 mod numeric;
 mod read;
 mod update;
