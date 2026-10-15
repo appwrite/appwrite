@@ -41046,37 +41046,16 @@
                 "$collection": "t8_jgt_l"
               }
             },
-            {
-              "$document": {
-                "value": 30,
-                "j0.threshold": 15,
-                "j0.$id": "<uniqid>",
-                "$id": "<uniqid>",
-                "$sequence": "3",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "t8_jgt_l"
-              }
-            },
-            {
-              "$document": {
-                "value": 30,
-                "j0.threshold": 25,
-                "j0.$id": "<uniqid>",
-                "$id": "<uniqid>",
-                "$sequence": "3",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "t8_jgt_l"
-              }
-            }
-          ]
+            "<masked>",
+            "<masked>"
+          ],
+          "mask": {
+            "paths": [
+              "/1",
+              "/2"
+            ],
+            "reason": "rows a join leaves tied on every attribute the find orders by (its orders, then the main document's $sequence) come back in the order the server's plan picks"
+          }
         },
         {
           "op": "database.collection_exists",
@@ -73935,37 +73914,18 @@
             ]
           },
           "expect": [
-            {
-              "$document": {
-                "b.category": "p",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "foja_main",
-                "$createdAt": null,
-                "$updatedAt": null
-              }
-            },
-            {
-              "$document": {
-                "b.category": "q",
-                "$id": null,
-                "$sequence": null,
-                "$collection": "foja_main",
-                "$createdAt": null,
-                "$updatedAt": null
-              }
-            },
-            {
-              "$document": {
-                "b.category": null,
-                "$id": null,
-                "$sequence": null,
-                "$collection": "foja_main",
-                "$createdAt": null,
-                "$updatedAt": null
-              }
-            }
-          ]
+            "<masked>",
+            "<masked>",
+            "<masked>"
+          ],
+          "mask": {
+            "paths": [
+              "/0",
+              "/1",
+              "/2"
+            ],
+            "reason": "rows a join leaves tied on every attribute the find orders by (its orders, then the main document's $sequence) come back in the order the server's plan picks"
+          }
         },
         {
           "op": "database.find",
@@ -79618,35 +79578,16 @@
             ]
           },
           "expect": [
-            {
-              "$document": {
-                "name": "Customer",
-                "ord.amount": 100,
-                "$id": "customer",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jpar_all_m"
-              }
-            },
-            {
-              "$document": {
-                "name": "Customer",
-                "ord.amount": 9999,
-                "$id": "customer",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jpar_all_m"
-              }
-            }
-          ]
+            "<masked>",
+            "<masked>"
+          ],
+          "mask": {
+            "paths": [
+              "/0",
+              "/1"
+            ],
+            "reason": "rows a join leaves tied on every attribute the find orders by (its orders, then the main document's $sequence) come back in the order the server's plan picks"
+          }
         },
         {
           "op": "database.count",
@@ -83073,31 +83014,16 @@
                 "$collection": "jcvd_authors"
               }
             },
-            {
-              "$document": {
-                "name": null,
-                "book.pages": 3,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcvd_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "book.pages": 4,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcvd_authors"
-              }
-            }
-          ]
+            "<masked>",
+            "<masked>"
+          ],
+          "mask": {
+            "paths": [
+              "/1",
+              "/2"
+            ],
+            "reason": "rows a join leaves tied on every attribute the find orders by (its orders, then the main document's $sequence) come back in the order the server's plan picks"
+          }
         },
         {
           "op": "database.count",
@@ -83219,31 +83145,16 @@
                 "$collection": "jcv_authors"
               }
             },
-            {
-              "$document": {
-                "name": null,
-                "book.pages": 3,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcv_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "book.pages": 4,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcv_authors"
-              }
-            }
-          ]
+            "<masked>",
+            "<masked>"
+          ],
+          "mask": {
+            "paths": [
+              "/1",
+              "/2"
+            ],
+            "reason": "rows a join leaves tied on every attribute the find orders by (its orders, then the main document's $sequence) come back in the order the server's plan picks"
+          }
         },
         {
           "op": "database.count",
@@ -83379,31 +83290,16 @@
                 "$collection": "jcvd_authors"
               }
             },
-            {
-              "$document": {
-                "name": null,
-                "book.pages": 3,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcvd_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "book.pages": 4,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcvd_authors"
-              }
-            }
-          ]
+            "<masked>",
+            "<masked>"
+          ],
+          "mask": {
+            "paths": [
+              "/2",
+              "/3"
+            ],
+            "reason": "rows a join leaves tied on every attribute the find orders by (its orders, then the main document's $sequence) come back in the order the server's plan picks"
+          }
         },
         {
           "op": "database.count",
@@ -83539,31 +83435,16 @@
                 "$collection": "jcv_authors"
               }
             },
-            {
-              "$document": {
-                "name": null,
-                "book.pages": 3,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcv_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "book.pages": 4,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcv_authors"
-              }
-            }
-          ]
+            "<masked>",
+            "<masked>"
+          ],
+          "mask": {
+            "paths": [
+              "/2",
+              "/3"
+            ],
+            "reason": "rows a join leaves tied on every attribute the find orders by (its orders, then the main document's $sequence) come back in the order the server's plan picks"
+          }
         },
         {
           "op": "database.count",
@@ -83707,46 +83588,18 @@
                 "$collection": "jcvd_authors"
               }
             },
-            {
-              "$document": {
-                "name": null,
-                "book.pages": null,
-                "review.stars": 20,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcvd_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "book.pages": null,
-                "review.stars": 30,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcvd_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "book.pages": null,
-                "review.stars": 40,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcvd_authors"
-              }
-            }
-          ]
+            "<masked>",
+            "<masked>",
+            "<masked>"
+          ],
+          "mask": {
+            "paths": [
+              "/1",
+              "/2",
+              "/3"
+            ],
+            "reason": "rows a join leaves tied on every attribute the find orders by (its orders, then the main document's $sequence) come back in the order the server's plan picks"
+          }
         },
         {
           "op": "database.count",
@@ -83930,46 +83783,18 @@
                 "$collection": "jcv_authors"
               }
             },
-            {
-              "$document": {
-                "name": null,
-                "book.pages": null,
-                "review.stars": 20,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcv_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "book.pages": null,
-                "review.stars": 30,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcv_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "book.pages": null,
-                "review.stars": 40,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcv_authors"
-              }
-            }
-          ]
+            "<masked>",
+            "<masked>",
+            "<masked>"
+          ],
+          "mask": {
+            "paths": [
+              "/1",
+              "/2",
+              "/3"
+            ],
+            "reason": "rows a join leaves tied on every attribute the find orders by (its orders, then the main document's $sequence) come back in the order the server's plan picks"
+          }
         },
         {
           "op": "database.count",
@@ -84168,33 +83993,16 @@
                 "$collection": "jcvd_authors"
               }
             },
-            {
-              "$document": {
-                "name": null,
-                "book.pages": null,
-                "review.stars": 30,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcvd_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "book.pages": null,
-                "review.stars": 40,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcvd_authors"
-              }
-            }
-          ]
+            "<masked>",
+            "<masked>"
+          ],
+          "mask": {
+            "paths": [
+              "/2",
+              "/3"
+            ],
+            "reason": "rows a join leaves tied on every attribute the find orders by (its orders, then the main document's $sequence) come back in the order the server's plan picks"
+          }
         },
         {
           "op": "database.count",
@@ -84393,33 +84201,16 @@
                 "$collection": "jcv_authors"
               }
             },
-            {
-              "$document": {
-                "name": null,
-                "book.pages": null,
-                "review.stars": 30,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcv_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "book.pages": null,
-                "review.stars": 40,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcv_authors"
-              }
-            }
-          ]
+            "<masked>",
+            "<masked>"
+          ],
+          "mask": {
+            "paths": [
+              "/2",
+              "/3"
+            ],
+            "reason": "rows a join leaves tied on every attribute the find orders by (its orders, then the main document's $sequence) come back in the order the server's plan picks"
+          }
         },
         {
           "op": "database.count",
@@ -84576,59 +84367,20 @@
             ]
           },
           "expect": [
-            {
-              "$document": {
-                "name": null,
-                "extra.weight": null,
-                "review.stars": 10,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcvd_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "extra.weight": null,
-                "review.stars": 20,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcvd_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "extra.weight": null,
-                "review.stars": 30,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcvd_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "extra.weight": null,
-                "review.stars": 40,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcvd_authors"
-              }
-            }
-          ]
+            "<masked>",
+            "<masked>",
+            "<masked>",
+            "<masked>"
+          ],
+          "mask": {
+            "paths": [
+              "/0",
+              "/1",
+              "/2",
+              "/3"
+            ],
+            "reason": "rows a join leaves tied on every attribute the find orders by (its orders, then the main document's $sequence) come back in the order the server's plan picks"
+          }
         },
         {
           "op": "database.count",
@@ -84761,59 +84513,20 @@
             ]
           },
           "expect": [
-            {
-              "$document": {
-                "name": null,
-                "extra.weight": null,
-                "review.stars": 10,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcv_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "extra.weight": null,
-                "review.stars": 20,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcv_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "extra.weight": null,
-                "review.stars": 30,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcv_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "extra.weight": null,
-                "review.stars": 40,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcv_authors"
-              }
-            }
-          ]
+            "<masked>",
+            "<masked>",
+            "<masked>",
+            "<masked>"
+          ],
+          "mask": {
+            "paths": [
+              "/0",
+              "/1",
+              "/2",
+              "/3"
+            ],
+            "reason": "rows a join leaves tied on every attribute the find orders by (its orders, then the main document's $sequence) come back in the order the server's plan picks"
+          }
         },
         {
           "op": "database.count",
@@ -84973,46 +84686,18 @@
                 "$collection": "jcvd_authors"
               }
             },
-            {
-              "$document": {
-                "name": null,
-                "book.pages": 3,
-                "review.stars": 30,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcvd_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "book.pages": 4,
-                "review.stars": 40,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcvd_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "book.pages": null,
-                "review.stars": 20,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcvd_authors"
-              }
-            }
-          ]
+            "<masked>",
+            "<masked>",
+            "<masked>"
+          ],
+          "mask": {
+            "paths": [
+              "/1",
+              "/2",
+              "/3"
+            ],
+            "reason": "rows a join leaves tied on every attribute the find orders by (its orders, then the main document's $sequence) come back in the order the server's plan picks"
+          }
         },
         {
           "op": "database.count",
@@ -85196,46 +84881,18 @@
                 "$collection": "jcv_authors"
               }
             },
-            {
-              "$document": {
-                "name": null,
-                "book.pages": 3,
-                "review.stars": 30,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcv_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "book.pages": 4,
-                "review.stars": 40,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcv_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "book.pages": null,
-                "review.stars": 20,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcv_authors"
-              }
-            }
-          ]
+            "<masked>",
+            "<masked>",
+            "<masked>"
+          ],
+          "mask": {
+            "paths": [
+              "/1",
+              "/2",
+              "/3"
+            ],
+            "reason": "rows a join leaves tied on every attribute the find orders by (its orders, then the main document's $sequence) come back in the order the server's plan picks"
+          }
         },
         {
           "op": "database.count",
@@ -85434,33 +85091,16 @@
                 "$collection": "jcvd_authors"
               }
             },
-            {
-              "$document": {
-                "name": null,
-                "book.pages": null,
-                "review.stars": 30,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcvd_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "book.pages": null,
-                "review.stars": 40,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcvd_authors"
-              }
-            }
-          ]
+            "<masked>",
+            "<masked>"
+          ],
+          "mask": {
+            "paths": [
+              "/2",
+              "/3"
+            ],
+            "reason": "rows a join leaves tied on every attribute the find orders by (its orders, then the main document's $sequence) come back in the order the server's plan picks"
+          }
         },
         {
           "op": "database.count",
@@ -85659,33 +85299,16 @@
                 "$collection": "jcv_authors"
               }
             },
-            {
-              "$document": {
-                "name": null,
-                "book.pages": null,
-                "review.stars": 30,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcv_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "book.pages": null,
-                "review.stars": 40,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcv_authors"
-              }
-            }
-          ]
+            "<masked>",
+            "<masked>"
+          ],
+          "mask": {
+            "paths": [
+              "/2",
+              "/3"
+            ],
+            "reason": "rows a join leaves tied on every attribute the find orders by (its orders, then the main document's $sequence) come back in the order the server's plan picks"
+          }
         },
         {
           "op": "database.count",
@@ -85869,46 +85492,18 @@
                 "$collection": "jcvd_authors"
               }
             },
-            {
-              "$document": {
-                "name": null,
-                "book.pages": 3,
-                "review.stars": 30,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcvd_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "book.pages": 4,
-                "review.stars": 40,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcvd_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "book.pages": null,
-                "review.stars": 20,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcvd_authors"
-              }
-            }
-          ]
+            "<masked>",
+            "<masked>",
+            "<masked>"
+          ],
+          "mask": {
+            "paths": [
+              "/1",
+              "/2",
+              "/3"
+            ],
+            "reason": "rows a join leaves tied on every attribute the find orders by (its orders, then the main document's $sequence) come back in the order the server's plan picks"
+          }
         },
         {
           "op": "database.count",
@@ -86092,46 +85687,18 @@
                 "$collection": "jcv_authors"
               }
             },
-            {
-              "$document": {
-                "name": null,
-                "book.pages": 3,
-                "review.stars": 30,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcv_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "book.pages": 4,
-                "review.stars": 40,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcv_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "book.pages": null,
-                "review.stars": 20,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jcv_authors"
-              }
-            }
-          ]
+            "<masked>",
+            "<masked>",
+            "<masked>"
+          ],
+          "mask": {
+            "paths": [
+              "/1",
+              "/2",
+              "/3"
+            ],
+            "reason": "rows a join leaves tied on every attribute the find orders by (its orders, then the main document's $sequence) come back in the order the server's plan picks"
+          }
         },
         {
           "op": "database.count",
@@ -88255,31 +87822,16 @@
                 "$collection": "jam_authors"
               }
             },
-            {
-              "$document": {
-                "name": null,
-                "book.pages": 3,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jam_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "book.pages": 4,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jam_authors"
-              }
-            }
-          ]
+            "<masked>",
+            "<masked>"
+          ],
+          "mask": {
+            "paths": [
+              "/1",
+              "/2"
+            ],
+            "reason": "rows a join leaves tied on every attribute the find orders by (its orders, then the main document's $sequence) come back in the order the server's plan picks"
+          }
         },
         {
           "op": "database.count",
@@ -88454,31 +88006,16 @@
                 "$collection": "jam_authors"
               }
             },
-            {
-              "$document": {
-                "name": null,
-                "Book.pages": 3,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jam_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "Book.pages": 4,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jam_authors"
-              }
-            }
-          ]
+            "<masked>",
+            "<masked>"
+          ],
+          "mask": {
+            "paths": [
+              "/1",
+              "/2"
+            ],
+            "reason": "rows a join leaves tied on every attribute the find orders by (its orders, then the main document's $sequence) come back in the order the server's plan picks"
+          }
         },
         {
           "op": "database.count",
@@ -88667,31 +88204,16 @@
                 "$collection": "jam_authors"
               }
             },
-            {
-              "$document": {
-                "name": null,
-                "book.pages": 3,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jam_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "book.pages": 4,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jam_authors"
-              }
-            }
-          ]
+            "<masked>",
+            "<masked>"
+          ],
+          "mask": {
+            "paths": [
+              "/2",
+              "/3"
+            ],
+            "reason": "rows a join leaves tied on every attribute the find orders by (its orders, then the main document's $sequence) come back in the order the server's plan picks"
+          }
         },
         {
           "op": "database.count",
@@ -88880,31 +88402,16 @@
                 "$collection": "jam_authors"
               }
             },
-            {
-              "$document": {
-                "name": null,
-                "Book.pages": 3,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jam_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "Book.pages": 4,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jam_authors"
-              }
-            }
-          ]
+            "<masked>",
+            "<masked>"
+          ],
+          "mask": {
+            "paths": [
+              "/2",
+              "/3"
+            ],
+            "reason": "rows a join leaves tied on every attribute the find orders by (its orders, then the main document's $sequence) come back in the order the server's plan picks"
+          }
         },
         {
           "op": "database.count",
@@ -89053,91 +88560,24 @@
             ]
           },
           "expect": [
-            {
-              "$document": {
-                "name": "a1",
-                "book.pages": 1,
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jam_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "book.pages": 3,
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jam_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "book.pages": 4,
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jam_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a2",
-                "book.pages": 1,
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jam_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a2",
-                "book.pages": 3,
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jam_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a2",
-                "book.pages": 4,
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jam_authors"
-              }
-            }
-          ]
+            "<masked>",
+            "<masked>",
+            "<masked>",
+            "<masked>",
+            "<masked>",
+            "<masked>"
+          ],
+          "mask": {
+            "paths": [
+              "/0",
+              "/1",
+              "/2",
+              "/3",
+              "/4",
+              "/5"
+            ],
+            "reason": "rows a join leaves tied on every attribute the find orders by (its orders, then the main document's $sequence) come back in the order the server's plan picks"
+          }
         },
         {
           "op": "database.count",
@@ -89250,91 +88690,24 @@
             ]
           },
           "expect": [
-            {
-              "$document": {
-                "name": "a1",
-                "Book.pages": 1,
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jam_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "Book.pages": 3,
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jam_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "Book.pages": 4,
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jam_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a2",
-                "Book.pages": 1,
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jam_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a2",
-                "Book.pages": 3,
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jam_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a2",
-                "Book.pages": 4,
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jam_authors"
-              }
-            }
-          ]
+            "<masked>",
+            "<masked>",
+            "<masked>",
+            "<masked>",
+            "<masked>",
+            "<masked>"
+          ],
+          "mask": {
+            "paths": [
+              "/0",
+              "/1",
+              "/2",
+              "/3",
+              "/4",
+              "/5"
+            ],
+            "reason": "rows a join leaves tied on every attribute the find orders by (its orders, then the main document's $sequence) come back in the order the server's plan picks"
+          }
         },
         {
           "op": "database.count",
@@ -89495,46 +88868,18 @@
                 "$collection": "jam_authors"
               }
             },
-            {
-              "$document": {
-                "name": null,
-                "book.pages": null,
-                "review.stars": 20,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jam_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "book.pages": null,
-                "review.stars": 30,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jam_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "book.pages": null,
-                "review.stars": 40,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jam_authors"
-              }
-            }
-          ]
+            "<masked>",
+            "<masked>",
+            "<masked>"
+          ],
+          "mask": {
+            "paths": [
+              "/1",
+              "/2",
+              "/3"
+            ],
+            "reason": "rows a join leaves tied on every attribute the find orders by (its orders, then the main document's $sequence) come back in the order the server's plan picks"
+          }
         },
         {
           "op": "database.count",
@@ -89793,46 +89138,18 @@
                 "$collection": "jam_authors"
               }
             },
-            {
-              "$document": {
-                "name": null,
-                "Book.pages": null,
-                "Review.stars": 20,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jam_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "Book.pages": null,
-                "Review.stars": 30,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jam_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "Book.pages": null,
-                "Review.stars": 40,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jam_authors"
-              }
-            }
-          ]
+            "<masked>",
+            "<masked>",
+            "<masked>"
+          ],
+          "mask": {
+            "paths": [
+              "/1",
+              "/2",
+              "/3"
+            ],
+            "reason": "rows a join leaves tied on every attribute the find orders by (its orders, then the main document's $sequence) come back in the order the server's plan picks"
+          }
         },
         {
           "op": "database.count",
@@ -90064,59 +89381,20 @@
             ]
           },
           "expect": [
-            {
-              "$document": {
-                "name": null,
-                "extra.weight": null,
-                "review.stars": 10,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jam_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "extra.weight": null,
-                "review.stars": 20,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jam_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "extra.weight": null,
-                "review.stars": 30,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jam_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "extra.weight": null,
-                "review.stars": 40,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jam_authors"
-              }
-            }
-          ]
+            "<masked>",
+            "<masked>",
+            "<masked>",
+            "<masked>"
+          ],
+          "mask": {
+            "paths": [
+              "/0",
+              "/1",
+              "/2",
+              "/3"
+            ],
+            "reason": "rows a join leaves tied on every attribute the find orders by (its orders, then the main document's $sequence) come back in the order the server's plan picks"
+          }
         },
         {
           "op": "database.count",
@@ -90300,59 +89578,20 @@
             ]
           },
           "expect": [
-            {
-              "$document": {
-                "name": null,
-                "Extra.weight": null,
-                "Review.stars": 10,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jam_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "Extra.weight": null,
-                "Review.stars": 20,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jam_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "Extra.weight": null,
-                "Review.stars": 30,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jam_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "Extra.weight": null,
-                "Review.stars": 40,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jam_authors"
-              }
-            }
-          ]
+            "<masked>",
+            "<masked>",
+            "<masked>",
+            "<masked>"
+          ],
+          "mask": {
+            "paths": [
+              "/0",
+              "/1",
+              "/2",
+              "/3"
+            ],
+            "reason": "rows a join leaves tied on every attribute the find orders by (its orders, then the main document's $sequence) come back in the order the server's plan picks"
+          }
         },
         {
           "op": "database.count",
@@ -90563,46 +89802,18 @@
                 "$collection": "jam_authors"
               }
             },
-            {
-              "$document": {
-                "name": null,
-                "book.pages": 3,
-                "review.stars": 30,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jam_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "book.pages": 4,
-                "review.stars": 40,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jam_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "book.pages": null,
-                "review.stars": 20,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jam_authors"
-              }
-            }
-          ]
+            "<masked>",
+            "<masked>",
+            "<masked>"
+          ],
+          "mask": {
+            "paths": [
+              "/1",
+              "/2",
+              "/3"
+            ],
+            "reason": "rows a join leaves tied on every attribute the find orders by (its orders, then the main document's $sequence) come back in the order the server's plan picks"
+          }
         },
         {
           "op": "database.count",
@@ -90861,46 +90072,18 @@
                 "$collection": "jam_authors"
               }
             },
-            {
-              "$document": {
-                "name": null,
-                "Book.pages": 3,
-                "Review.stars": 30,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jam_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "Book.pages": 4,
-                "Review.stars": 40,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jam_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "Book.pages": null,
-                "Review.stars": 20,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jam_authors"
-              }
-            }
-          ]
+            "<masked>",
+            "<masked>",
+            "<masked>"
+          ],
+          "mask": {
+            "paths": [
+              "/1",
+              "/2",
+              "/3"
+            ],
+            "reason": "rows a join leaves tied on every attribute the find orders by (its orders, then the main document's $sequence) come back in the order the server's plan picks"
+          }
         },
         {
           "op": "database.count",
@@ -92953,31 +92136,16 @@
                 "$collection": "jar_authors"
               }
             },
-            {
-              "$document": {
-                "name": null,
-                "book.pages": 3,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jar_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "book.pages": 4,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jar_authors"
-              }
-            }
-          ]
+            "<masked>",
+            "<masked>"
+          ],
+          "mask": {
+            "paths": [
+              "/1",
+              "/2"
+            ],
+            "reason": "rows a join leaves tied on every attribute the find orders by (its orders, then the main document's $sequence) come back in the order the server's plan picks"
+          }
         },
         {
           "op": "database.count",
@@ -93152,31 +92320,16 @@
                 "$collection": "jar_authors"
               }
             },
-            {
-              "$document": {
-                "name": null,
-                "order.pages": 3,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jar_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "order.pages": 4,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jar_authors"
-              }
-            }
-          ]
+            "<masked>",
+            "<masked>"
+          ],
+          "mask": {
+            "paths": [
+              "/1",
+              "/2"
+            ],
+            "reason": "rows a join leaves tied on every attribute the find orders by (its orders, then the main document's $sequence) come back in the order the server's plan picks"
+          }
         },
         {
           "op": "database.count",
@@ -93365,31 +92518,16 @@
                 "$collection": "jar_authors"
               }
             },
-            {
-              "$document": {
-                "name": null,
-                "book.pages": 3,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jar_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "book.pages": 4,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jar_authors"
-              }
-            }
-          ]
+            "<masked>",
+            "<masked>"
+          ],
+          "mask": {
+            "paths": [
+              "/2",
+              "/3"
+            ],
+            "reason": "rows a join leaves tied on every attribute the find orders by (its orders, then the main document's $sequence) come back in the order the server's plan picks"
+          }
         },
         {
           "op": "database.count",
@@ -93578,31 +92716,16 @@
                 "$collection": "jar_authors"
               }
             },
-            {
-              "$document": {
-                "name": null,
-                "order.pages": 3,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jar_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "order.pages": 4,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jar_authors"
-              }
-            }
-          ]
+            "<masked>",
+            "<masked>"
+          ],
+          "mask": {
+            "paths": [
+              "/2",
+              "/3"
+            ],
+            "reason": "rows a join leaves tied on every attribute the find orders by (its orders, then the main document's $sequence) come back in the order the server's plan picks"
+          }
         },
         {
           "op": "database.count",
@@ -93751,91 +92874,24 @@
             ]
           },
           "expect": [
-            {
-              "$document": {
-                "name": "a1",
-                "book.pages": 1,
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jar_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "book.pages": 3,
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jar_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "book.pages": 4,
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jar_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a2",
-                "book.pages": 1,
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jar_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a2",
-                "book.pages": 3,
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jar_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a2",
-                "book.pages": 4,
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jar_authors"
-              }
-            }
-          ]
+            "<masked>",
+            "<masked>",
+            "<masked>",
+            "<masked>",
+            "<masked>",
+            "<masked>"
+          ],
+          "mask": {
+            "paths": [
+              "/0",
+              "/1",
+              "/2",
+              "/3",
+              "/4",
+              "/5"
+            ],
+            "reason": "rows a join leaves tied on every attribute the find orders by (its orders, then the main document's $sequence) come back in the order the server's plan picks"
+          }
         },
         {
           "op": "database.count",
@@ -93948,91 +93004,24 @@
             ]
           },
           "expect": [
-            {
-              "$document": {
-                "name": "a1",
-                "order.pages": 1,
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jar_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "order.pages": 3,
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jar_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a1",
-                "order.pages": 4,
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jar_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a2",
-                "order.pages": 1,
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jar_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a2",
-                "order.pages": 3,
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jar_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "a2",
-                "order.pages": 4,
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jar_authors"
-              }
-            }
-          ]
+            "<masked>",
+            "<masked>",
+            "<masked>",
+            "<masked>",
+            "<masked>",
+            "<masked>"
+          ],
+          "mask": {
+            "paths": [
+              "/0",
+              "/1",
+              "/2",
+              "/3",
+              "/4",
+              "/5"
+            ],
+            "reason": "rows a join leaves tied on every attribute the find orders by (its orders, then the main document's $sequence) come back in the order the server's plan picks"
+          }
         },
         {
           "op": "database.count",
@@ -94193,46 +93182,18 @@
                 "$collection": "jar_authors"
               }
             },
-            {
-              "$document": {
-                "name": null,
-                "book.pages": null,
-                "review.stars": 20,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jar_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "book.pages": null,
-                "review.stars": 30,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jar_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "book.pages": null,
-                "review.stars": 40,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jar_authors"
-              }
-            }
-          ]
+            "<masked>",
+            "<masked>",
+            "<masked>"
+          ],
+          "mask": {
+            "paths": [
+              "/1",
+              "/2",
+              "/3"
+            ],
+            "reason": "rows a join leaves tied on every attribute the find orders by (its orders, then the main document's $sequence) come back in the order the server's plan picks"
+          }
         },
         {
           "op": "database.count",
@@ -94491,46 +93452,18 @@
                 "$collection": "jar_authors"
               }
             },
-            {
-              "$document": {
-                "name": null,
-                "order.pages": null,
-                "group.stars": 20,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jar_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "order.pages": null,
-                "group.stars": 30,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jar_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "order.pages": null,
-                "group.stars": 40,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jar_authors"
-              }
-            }
-          ]
+            "<masked>",
+            "<masked>",
+            "<masked>"
+          ],
+          "mask": {
+            "paths": [
+              "/1",
+              "/2",
+              "/3"
+            ],
+            "reason": "rows a join leaves tied on every attribute the find orders by (its orders, then the main document's $sequence) come back in the order the server's plan picks"
+          }
         },
         {
           "op": "database.count",
@@ -94762,59 +93695,20 @@
             ]
           },
           "expect": [
-            {
-              "$document": {
-                "name": null,
-                "extra.weight": null,
-                "review.stars": 10,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jar_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "extra.weight": null,
-                "review.stars": 20,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jar_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "extra.weight": null,
-                "review.stars": 30,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jar_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "extra.weight": null,
-                "review.stars": 40,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jar_authors"
-              }
-            }
-          ]
+            "<masked>",
+            "<masked>",
+            "<masked>",
+            "<masked>"
+          ],
+          "mask": {
+            "paths": [
+              "/0",
+              "/1",
+              "/2",
+              "/3"
+            ],
+            "reason": "rows a join leaves tied on every attribute the find orders by (its orders, then the main document's $sequence) come back in the order the server's plan picks"
+          }
         },
         {
           "op": "database.count",
@@ -94998,59 +93892,20 @@
             ]
           },
           "expect": [
-            {
-              "$document": {
-                "name": null,
-                "select.weight": null,
-                "group.stars": 10,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jar_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "select.weight": null,
-                "group.stars": 20,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jar_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "select.weight": null,
-                "group.stars": 30,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jar_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "select.weight": null,
-                "group.stars": 40,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jar_authors"
-              }
-            }
-          ]
+            "<masked>",
+            "<masked>",
+            "<masked>",
+            "<masked>"
+          ],
+          "mask": {
+            "paths": [
+              "/0",
+              "/1",
+              "/2",
+              "/3"
+            ],
+            "reason": "rows a join leaves tied on every attribute the find orders by (its orders, then the main document's $sequence) come back in the order the server's plan picks"
+          }
         },
         {
           "op": "database.count",
@@ -95261,46 +94116,18 @@
                 "$collection": "jar_authors"
               }
             },
-            {
-              "$document": {
-                "name": null,
-                "book.pages": 3,
-                "review.stars": 30,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jar_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "book.pages": 4,
-                "review.stars": 40,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jar_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "book.pages": null,
-                "review.stars": 20,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jar_authors"
-              }
-            }
-          ]
+            "<masked>",
+            "<masked>",
+            "<masked>"
+          ],
+          "mask": {
+            "paths": [
+              "/1",
+              "/2",
+              "/3"
+            ],
+            "reason": "rows a join leaves tied on every attribute the find orders by (its orders, then the main document's $sequence) come back in the order the server's plan picks"
+          }
         },
         {
           "op": "database.count",
@@ -95559,46 +94386,18 @@
                 "$collection": "jar_authors"
               }
             },
-            {
-              "$document": {
-                "name": null,
-                "order.pages": 3,
-                "group.stars": 30,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jar_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "order.pages": 4,
-                "group.stars": 40,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jar_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "order.pages": null,
-                "group.stars": 20,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jar_authors"
-              }
-            }
-          ]
+            "<masked>",
+            "<masked>",
+            "<masked>"
+          ],
+          "mask": {
+            "paths": [
+              "/1",
+              "/2",
+              "/3"
+            ],
+            "reason": "rows a join leaves tied on every attribute the find orders by (its orders, then the main document's $sequence) come back in the order the server's plan picks"
+          }
         },
         {
           "op": "database.count",
@@ -279954,30 +278753,8 @@
             ]
           },
           "expect": [
-            {
-              "$document": {
-                "name": "c1",
-                "note.body": "n1",
-                "$id": "c1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [],
-                "$collection": "j47a_random_customers"
-              }
-            },
-            {
-              "$document": {
-                "name": "c1",
-                "note.body": "n2",
-                "$id": "c1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [],
-                "$collection": "j47a_random_customers"
-              }
-            },
+            "<masked>",
+            "<masked>",
             {
               "$document": {
                 "name": "c2",
@@ -280014,7 +278791,14 @@
                 "$collection": "j47a_random_customers"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/0",
+              "/1"
+            ],
+            "reason": "rows a join leaves tied on every attribute the find orders by (its orders, then the main document's $sequence) come back in the order the server's plan picks"
+          }
         },
         {
           "op": "database.find",

@@ -26427,41 +26427,16 @@
                 "$collection": "jh_m"
               }
             },
-            {
-              "$document": {
-                "name": "Main",
-                "meta.score": 10,
-                "mid.label": "b-public",
-                "tail.secret": "c-open-token",
-                "tail.score": 1,
-                "$id": "hm1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jh_m"
-              }
-            },
-            {
-              "$document": {
-                "name": "Main",
-                "meta.score": 313,
-                "mid.label": "b-public",
-                "tail.secret": "c-open-token",
-                "tail.score": 1,
-                "$id": "hm1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jh_m"
-              }
-            }
-          ]
+            "<masked>",
+            "<masked>"
+          ],
+          "mask": {
+            "paths": [
+              "/1",
+              "/2"
+            ],
+            "reason": "rows a join leaves tied on every attribute the find orders by (its orders, then the main document's $sequence) come back in the order the server's plan picks"
+          }
         },
         {
           "op": "db.authorization.clean_roles",
@@ -40137,36 +40112,8 @@
                 "$collection": "jh_m"
               }
             },
-            {
-              "$document": {
-                "name": "Main",
-                "meta.score": 10,
-                "meta.secret": "visible",
-                "$id": "hm1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jh_m"
-              }
-            },
-            {
-              "$document": {
-                "name": "Main",
-                "meta.score": 313,
-                "meta.secret": "visible-313",
-                "$id": "hm1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jh_m"
-              }
-            },
+            "<masked>",
+            "<masked>",
             {
               "$document": {
                 "name": "Second",
@@ -40197,7 +40144,14 @@
                 "$collection": "jh_m"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/1",
+              "/2"
+            ],
+            "reason": "rows a join leaves tied on every attribute the find orders by (its orders, then the main document's $sequence) come back in the order the server's plan picks"
+          }
         },
         {
           "op": "db.authorization.clean_roles",
@@ -45375,36 +45329,8 @@
             ]
           },
           "expect": [
-            {
-              "$document": {
-                "name": "Main",
-                "meta.score": 10,
-                "meta.secret": "visible",
-                "$id": "hm1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jh_m"
-              }
-            },
-            {
-              "$document": {
-                "name": "Main",
-                "meta.score": 313,
-                "meta.secret": "visible-313",
-                "$id": "hm1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jh_m"
-              }
-            },
+            "<masked>",
+            "<masked>",
             {
               "$document": {
                 "name": "Second",
@@ -45435,7 +45361,14 @@
                 "$collection": "jh_m"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/0",
+              "/1"
+            ],
+            "reason": "rows a join leaves tied on every attribute the find orders by (its orders, then the main document's $sequence) come back in the order the server's plan picks"
+          }
         },
         {
           "op": "database.count",
@@ -59023,36 +58956,8 @@
             ]
           },
           "expect": [
-            {
-              "$document": {
-                "name": "Main",
-                "meta.score": 10,
-                "meta.secret": "visible",
-                "$id": "hm1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jh_m"
-              }
-            },
-            {
-              "$document": {
-                "name": "Main",
-                "meta.score": 313,
-                "meta.secret": "visible-313",
-                "$id": "hm1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jh_m"
-              }
-            },
+            "<masked>",
+            "<masked>",
             {
               "$document": {
                 "name": "Second",
@@ -59083,7 +58988,14 @@
                 "$collection": "jh_m"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/0",
+              "/1"
+            ],
+            "reason": "rows a join leaves tied on every attribute the find orders by (its orders, then the main document's $sequence) come back in the order the server's plan picks"
+          }
         },
         {
           "op": "database.find",
@@ -59133,36 +59045,8 @@
             ]
           },
           "expect": [
-            {
-              "$document": {
-                "name": "Main",
-                "meta.score": 10,
-                "meta.secret": "visible",
-                "$id": "hm1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jh_m"
-              }
-            },
-            {
-              "$document": {
-                "name": "Main",
-                "meta.score": 313,
-                "meta.secret": "visible-313",
-                "$id": "hm1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jh_m"
-              }
-            },
+            "<masked>",
+            "<masked>",
             {
               "$document": {
                 "name": "Second",
@@ -59193,7 +59077,14 @@
                 "$collection": "jh_m"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/0",
+              "/1"
+            ],
+            "reason": "rows a join leaves tied on every attribute the find orders by (its orders, then the main document's $sequence) come back in the order the server's plan picks"
+          }
         },
         {
           "op": "database.find",
@@ -59243,36 +59134,8 @@
             ]
           },
           "expect": [
-            {
-              "$document": {
-                "name": "Main",
-                "meta.score": 10,
-                "meta.secret": "visible",
-                "$id": "hm1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jh_m"
-              }
-            },
-            {
-              "$document": {
-                "name": "Main",
-                "meta.score": 313,
-                "meta.secret": "visible-313",
-                "$id": "hm1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jh_m"
-              }
-            },
+            "<masked>",
+            "<masked>",
             {
               "$document": {
                 "name": "Second",
@@ -59303,7 +59166,14 @@
                 "$collection": "jh_m"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/0",
+              "/1"
+            ],
+            "reason": "rows a join leaves tied on every attribute the find orders by (its orders, then the main document's $sequence) come back in the order the server's plan picks"
+          }
         },
         {
           "op": "db.authorization.clean_roles",

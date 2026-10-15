@@ -247,7 +247,13 @@
         {
           "op": "database.get_connection_id",
           "args": {},
-          "expect": "<masked>"
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "each runtime's connection has its own id (SQLite's is the PDO object's id in the process)"
+          }
         },
         {
           "op": "database.ping",
