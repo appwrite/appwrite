@@ -10,8 +10,27 @@ use compat::runner::config::Config;
 use compat::runner::engine::replay;
 use compat::runner::spec;
 
-#[tokio::test(flavor = "current_thread")]
-async fn recorded_php_results_hold_in_rust() {
+/// Replays on a thread with a 64 MiB stack: unoptimized builds poll the
+/// database's document operations (writes through the relationships hook
+/// back into the database) many frames deep, as `utopia-database`'s own
+/// tests do.
+#[test]
+fn recorded_php_results_hold_in_rust() {
+    std::thread::Builder::new()
+        .stack_size(64 * 1024 * 1024)
+        .spawn(|| {
+            tokio::runtime::Builder::new_current_thread()
+                .enable_all()
+                .build()
+                .expect("a runtime")
+                .block_on(replay_every_library())
+        })
+        .expect("a thread")
+        .join()
+        .unwrap_or_else(|e| std::panic::resume_unwind(e));
+}
+
+async fn replay_every_library() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../..").canonicalize().expect("repository root");
     // The drivers run from the repository root, where cases' relative paths
     // (fixtures under packages/) resolve.
