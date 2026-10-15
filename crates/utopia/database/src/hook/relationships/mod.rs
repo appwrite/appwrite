@@ -45,6 +45,8 @@ mod queries;
 mod update;
 
 #[cfg(test)]
+mod engine;
+#[cfg(test)]
 mod tests;
 
 use std::future::Future;
