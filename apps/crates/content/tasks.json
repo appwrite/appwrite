@@ -62,8 +62,8 @@
       "title": "Callbacks as async closures, without Box::pin",
       "area": "Libraries",
       "status": "done",
-      "updated": "2026-10-15T20:20:00Z",
-      "note": "utopia-http actions take async |scope| { .. } and platform callbacks take Callback::http, ::task and ::worker, so guides read like PHP's ->action(function () { .. }). CONVERSION.md makes it the rule."
+      "updated": "2026-10-15T22:03:00Z",
+      "note": "utopia-http actions take async |scope| { .. } and platform callbacks take Callback::http, ::task and ::worker, so guides read like PHP's ->action(function () { .. }). A callback that cannot fail returns nothing; only one that uses ? ends with Ok(()). CONVERSION.md makes it the rule."
     },
     {
       "id": "query-sync",
