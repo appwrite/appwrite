@@ -52,6 +52,21 @@ export function OriginIcon({ className }: { className?: string }) {
   )
 }
 
+export function EntireIcon({ className }: { className?: string }) {
+  // A neutral three-bar "E" mark, standing in until an official Entire asset
+  // is available.
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      className={className}
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path d="M4 3h16a1 1 0 0 1 1 1v2.5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zm0 7.25h12a1 1 0 0 1 1 1v2.5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-2.5a1 1 0 0 1 1-1zM4 17.5h16a1 1 0 0 1 1 1V21a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-2.5a1 1 0 0 1 1-1z" />
+    </svg>
+  )
+}
+
 export function BitbucketIcon({ className }: { className?: string }) {
   return (
     <svg
@@ -77,7 +92,12 @@ export const vcsProviderButtonIconClassName = 'size-4'
 /** Provider-neutral Git mark for empty states and auth flows (not a host logo). */
 export { GitBranch as GitIcon } from 'lucide-react'
 
-export type VcsProviderId = 'github' | 'gitlab' | 'bitbucket' | 'origin'
+export type VcsProviderId =
+  | 'github'
+  | 'gitlab'
+  | 'bitbucket'
+  | 'origin'
+  | 'entire'
 
 export interface VcsProviderMeta {
   id: VcsProviderId
@@ -88,7 +108,7 @@ export interface VcsProviderMeta {
 }
 
 // Key order is display order: every provider list in the UI renders GitHub
-// first, Origin second, then the rest.
+// first, Origin second, then the rest, Entire last.
 export const VCS_PROVIDERS: Record<VcsProviderId, VcsProviderMeta> = {
   github: {
     id: 'github',
@@ -115,6 +135,13 @@ export const VCS_PROVIDERS: Record<VcsProviderId, VcsProviderMeta> = {
     Icon: BitbucketIcon,
     baseUrl: (organization) => `https://bitbucket.org/${organization}`,
   },
+  entire: {
+    id: 'entire',
+    label: 'Entire',
+    Icon: EntireIcon,
+    // Entire repositories belong to a project, browsed under /et/<project>
+    baseUrl: (organization) => `https://entire.io/et/${organization}`,
+  },
 }
 
 /** Fallback provider for display when a value is unknown or legacy. */
@@ -132,7 +159,7 @@ const ALWAYS_ENABLED_VCS_PROVIDERS = new Set<VcsProviderId>([
  * Existing installations of a hidden provider still render; only new OAuth
  * connect actions are filtered.
  *
- * `extraVcsOAuth` gates Origin; every other provider is always visible.
+ * `extraVcsOAuth` gates Origin and Entire; every other provider is always visible.
  */
 export function getVisibleVcsOAuthProviders(
   extraVcsOAuth: boolean,
@@ -241,6 +268,9 @@ export function getProviderPullRequestUrl(params: {
       return `https://bitbucket.org/${owner}/${repo}/pull-requests/${id}`
     case 'origin':
       return `https://cursor.com/codebase/${owner}/${repo}/pull/${id}`
+    case 'entire':
+      // Entire's pull requests are trails
+      return `https://entire.io/et/${owner}/${repo}/trails/${id}`
     default:
       return null
   }

@@ -42,7 +42,7 @@ export type ConsoleProfileFeatures = {
   /** Console account Applications page (OAuth2 consents granted on the account). */
   accountApplications: boolean
   /**
-   * Extra Git (VCS) OAuth connect providers (Origin). GitHub, GitLab, and
+   * Extra Git (VCS) OAuth connect providers (Origin, Entire). GitHub, GitLab, and
    * Bitbucket are always shown. Existing installations of a hidden provider
    * still render; only new connect actions are gated.
    */
