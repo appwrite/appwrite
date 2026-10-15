@@ -105,7 +105,11 @@ fn scalar_text(value: Option<&Value>) -> Value {
 /// `permissionBucket($tenant)`: `'__null__'` for `null`, the tenant as text
 /// otherwise.
 fn bucket_of(tenant: &Value) -> ArrayKey {
-    if matches!(tenant, Value::Null) { k("__null__") } else { key_of(&Value::Str(tenant.to_php_string().unwrap_or(Str::EMPTY))) }
+    if matches!(tenant, Value::Null) {
+        k("__null__")
+    } else {
+        key_of(&Value::Str(tenant.to_php_string().unwrap_or(Str::EMPTY)))
+    }
 }
 
 /// `mapAttribute($attribute)`: the column of an attribute, filtered.
@@ -256,7 +260,13 @@ impl Store {
     }
 
     /// `getDocument($collection, $id, $queries)`.
-    pub(crate) fn get_document(&self, ctx: &Ctx, collection: &Collection, id: &str, queries: &[Query]) -> Result<Document> {
+    pub(crate) fn get_document(
+        &self,
+        ctx: &Ctx,
+        collection: &Collection,
+        id: &str,
+        queries: &[Query],
+    ) -> Result<Document> {
         let key = Self::key(ctx, collection.id());
         if !self.has(&key) {
             return Ok(Document::empty());
@@ -275,13 +285,16 @@ impl Store {
     /// `rowToDocument($row, $selections, $storageKey)`: internal columns to
     /// their `$` attributes, the selection applied, and relationship fields
     /// the row lacks as `null`.
-    pub(crate) fn row_to_document(&self, row: &Array, selections: Option<&[Vec<u8>]>, storage: Option<&ArrayKey>) -> Array {
+    pub(crate) fn row_to_document(
+        &self,
+        row: &Array,
+        selections: Option<&[Vec<u8>]>,
+        storage: Option<&ArrayKey>,
+    ) -> Array {
         let allowed: Option<Array> = match selections {
-            Some(sel) if !sel.is_empty() && !sel.iter().any(|v| v == b"*") => Some(
-                sel.iter()
-                    .map(|v| (k(&filter(&String::from_utf8_lossy(v))), Value::Bool(true)))
-                    .collect(),
-            ),
+            Some(sel) if !sel.is_empty() && !sel.iter().any(|v| v == b"*") => {
+                Some(sel.iter().map(|v| (k(&filter(&String::from_utf8_lossy(v))), Value::Bool(true))).collect())
+            }
             _ => None,
         };
         let mut document = Array::new();
@@ -364,7 +377,12 @@ impl Store {
 
     /// `createDocument($collection, $document)`: the stored document, or
     /// the document as given when `ignoreDuplicates()` skipped it.
-    pub(crate) fn create_document(&mut self, ctx: &Ctx, collection: &Collection, document: Document) -> Result<Document> {
+    pub(crate) fn create_document(
+        &mut self,
+        ctx: &Ctx,
+        collection: &Collection,
+        document: Document,
+    ) -> Result<Document> {
         Ok(self.insert_document(ctx, collection, document)?.1)
     }
 
@@ -485,7 +503,9 @@ impl Store {
         let old_signatures = self.row_unique_signatures(ctx, &key, &existing);
         self.check_unique_signatures(&key, &new_signatures, &old_key)?;
         row.set(k(storage::SEQUENCE), existing.get_str(storage::SEQUENCE).cloned().unwrap_or(Value::Null));
-        if ctx.shared && let Some(t) = existing.get_str(storage::TENANT) {
+        if ctx.shared
+            && let Some(t) = existing.get_str(storage::TENANT)
+        {
             row.set(k(storage::TENANT), t.clone());
         }
         let new_key = if ctx.shared {
@@ -516,7 +536,8 @@ impl Store {
         }
         store::vivify(&mut self.data, &documents).set(new_array_key.clone(), Value::Array(row));
         {
-            let (existing, old_array_key, new_array_key) = (existing.clone(), old_array_key.clone(), new_array_key.clone());
+            let (existing, old_array_key, new_array_key) =
+                (existing.clone(), old_array_key.clone(), new_array_key.clone());
             let collection_key = key.clone();
             self.journal(ctx, move |s: &mut Store| {
                 if !s.has(&collection_key) {
@@ -546,13 +567,12 @@ impl Store {
                 all.push(index_id.clone());
             }
         }
-        let find = |list: &[(ArrayKey, ArrayKey)], id: &ArrayKey| list.iter().find(|(i, _)| i == id).map(|(_, h)| h.clone());
+        let find =
+            |list: &[(ArrayKey, ArrayKey)], id: &ArrayKey| list.iter().find(|(i, _)| i == id).map(|(_, h)| h.clone());
         for index_id in all {
             let old_hash = find(&old_signatures, &index_id);
             let new_hash = find(&new_signatures, &index_id);
-            if !same_key
-                && let Some(old_hash) = &old_hash
-            {
+            if !same_key && let Some(old_hash) = &old_hash {
                 let path = [key.clone(), index_id.clone(), old_hash.clone()];
                 if store::get(&self.hashes, &path).is_some_and(|v| v.strict_eq(&old_key)) {
                     store::unset(&mut self.hashes, &path);
@@ -573,7 +593,9 @@ impl Store {
                 Some(Value::Array(list)) => list
                     .values()
                     .filter_map(|e| match e {
-                        Value::Array(e) if e.get_str("document").is_some_and(|d| d.strict_eq(&s(id))) => Some(e.clone()),
+                        Value::Array(e) if e.get_str("document").is_some_and(|d| d.strict_eq(&s(id))) => {
+                            Some(e.clone())
+                        }
                         _ => None,
                     })
                     .collect(),
@@ -636,8 +658,11 @@ impl Store {
             } else {
                 let mut id = Array::new();
                 id.set(k(document::ID), s(&uid));
-                let merged =
-                    Document::from_storage(array_merge(&[&self.row_to_document(&existing, None, None), &resolved, &id]))?;
+                let merged = Document::from_storage(array_merge(&[
+                    &self.row_to_document(&existing, None, None),
+                    &resolved,
+                    &id,
+                ]))?;
                 self.document_unique_signatures(ctx, &key, &merged)
             };
             let old = self.row_unique_signatures(ctx, &key, &existing);
@@ -716,7 +741,12 @@ impl Store {
 
     /// `getSequences($collection, $documents)`: each document without a
     /// sequence given the stored one (looked up under its own tenant).
-    pub(crate) fn get_sequences(&self, ctx: &Ctx, collection: &Collection, mut documents: Vec<Document>) -> Vec<Document> {
+    pub(crate) fn get_sequences(
+        &self,
+        ctx: &Ctx,
+        collection: &Collection,
+        mut documents: Vec<Document>,
+    ) -> Vec<Document> {
         let key = Self::key(ctx, collection.id());
         if !self.has(&key) {
             return documents;
@@ -1195,7 +1225,12 @@ impl Store {
     }
 
     /// `checkUniqueSignatures($key, $newSignatures, $docKey)`.
-    fn check_unique_signatures(&self, key: &ArrayKey, signatures: &[(ArrayKey, ArrayKey)], doc_key: &Value) -> Result<()> {
+    fn check_unique_signatures(
+        &self,
+        key: &ArrayKey,
+        signatures: &[(ArrayKey, ArrayKey)],
+        doc_key: &Value,
+    ) -> Result<()> {
         for (index_id, hash) in signatures {
             if let Some(existing) = store::get(&self.hashes, &[key.clone(), index_id.clone(), hash.clone()])
                 .filter(|v| !matches!(v, Value::Null))

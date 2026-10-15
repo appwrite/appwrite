@@ -115,7 +115,10 @@ async fn test_rollback_undoes_create_collection() {
     assert!(adapter.collection_exists(DATABASE, "rolled").await.unwrap());
     adapter.rollback_transaction().await.unwrap();
 
-    assert!(!adapter.collection_exists(DATABASE, "rolled").await.unwrap(), "A rolled-back collection must leave its database");
+    assert!(
+        !adapter.collection_exists(DATABASE, "rolled").await.unwrap(),
+        "A rolled-back collection must leave its database"
+    );
     assert!(adapter.create_collection("rolled", &[], &[]).await.unwrap());
 }
 
@@ -143,7 +146,10 @@ async fn test_delete_attribute_keeps_the_orders_of_the_remaining_index_attribute
 async fn test_rollback_of_delete_attribute_restores_values_and_indexes() {
     let adapter = schema_adapter().await;
     create_pairs(&adapter).await;
-    adapter.create_index(PAIRS, &Index::unique("unique_pair", ["a", "b"], vec![], vec![]).unwrap(), &[], &[]).await.unwrap();
+    adapter
+        .create_index(PAIRS, &Index::unique("unique_pair", ["a", "b"], vec![], vec![]).unwrap(), &[], &[])
+        .await
+        .unwrap();
     adapter.create_document(&collection(PAIRS), pair("first", "x", "y")).await.unwrap();
 
     adapter.start_transaction().await.unwrap();
@@ -277,7 +283,10 @@ async fn test_shared_tables_unique_index_over_existing_rows_is_per_tenant() {
 
     adapter.set_tenant(Value::Int(1));
     assert!(
-        adapter.create_index(ADDRESSES, &Index::unique("unique_addr", ["addr"], vec![], vec![]).unwrap(), &[], &[]).await.unwrap(),
+        adapter
+            .create_index(ADDRESSES, &Index::unique("unique_addr", ["addr"], vec![], vec![]).unwrap(), &[], &[])
+            .await
+            .unwrap(),
         "Two tenants holding the same value must not block a unique index"
     );
 
@@ -318,7 +327,10 @@ async fn test_rolled_back_unique_index_leaves_no_hash_table() {
     };
 
     adapter.start_transaction().await.unwrap();
-    adapter.create_index(ADDRESSES, &Index::unique("unique_addr", ["addr"], vec![], vec![]).unwrap(), &[], &[]).await.unwrap();
+    adapter
+        .create_index(ADDRESSES, &Index::unique("unique_addr", ["addr"], vec![], vec![]).unwrap(), &[], &[])
+        .await
+        .unwrap();
     assert!(hashes(&adapter).get_str("unique_addr").is_some());
     adapter.rollback_transaction().await.unwrap();
 
@@ -329,7 +341,10 @@ async fn test_rolled_back_unique_index_leaves_no_hash_table() {
 async fn test_shared_tables_unique_bindings_follow_their_tenant_on_update_and_delete() {
     let adapter = shared_addresses().await;
     adapter.set_tenant(Value::Int(1));
-    adapter.create_index(ADDRESSES, &Index::unique("unique_addr", ["addr"], vec![], vec![]).unwrap(), &[], &[]).await.unwrap();
+    adapter
+        .create_index(ADDRESSES, &Index::unique("unique_addr", ["addr"], vec![], vec![]).unwrap(), &[], &[])
+        .await
+        .unwrap();
     for tenant in [1, 2] {
         adapter.set_tenant(Value::Int(tenant));
         store_address(&adapter, "home", "x", Value::Null).await.unwrap();
@@ -337,7 +352,12 @@ async fn test_shared_tables_unique_bindings_follow_their_tenant_on_update_and_de
 
     adapter.set_tenant(Value::Int(2));
     adapter
-        .update_document(&collection(ADDRESSES), "home", doc(json!({"$id": "home", "addr": "x", "label": "kept"})), true)
+        .update_document(
+            &collection(ADDRESSES),
+            "home",
+            doc(json!({"$id": "home", "addr": "x", "label": "kept"})),
+            true,
+        )
         .await
         .unwrap();
     assert!(adapter.delete_document(&collection(ADDRESSES), "home").await.unwrap());
@@ -360,10 +380,15 @@ async fn test_shared_tables_unique_bindings_follow_their_tenant_on_update_and_de
 async fn test_rollback_restores_a_renamed_document() {
     let adapter = addresses().await;
     adapter.set_authorization(disabled());
-    adapter.create_document(&collection(ADDRESSES), doc(json!({"$id": "a", "addr": "x", "label": "original"}))).await.unwrap();
+    adapter
+        .create_document(&collection(ADDRESSES), doc(json!({"$id": "a", "addr": "x", "label": "original"})))
+        .await
+        .unwrap();
 
     let result: utopia_database::Result<()> = utopia_database::adapter::with_transaction(&adapter, || async {
-        adapter.update_document(&collection(ADDRESSES), "a", doc(json!({"$id": "b", "label": "renamed"})), false).await?;
+        adapter
+            .update_document(&collection(ADDRESSES), "a", doc(json!({"$id": "b", "label": "renamed"})), false)
+            .await?;
         Err(utopia_database::Error::new(Kind::Runtime, "roll back"))
     })
     .await;
@@ -384,7 +409,15 @@ async fn test_rollback_undoes_an_increment() {
     adapter.start_transaction().await.unwrap();
     assert!(
         adapter
-            .increase_document_attribute(&collection(ADDRESSES), "home", "visits", Value::Int(5), UPDATED_AT, None, None)
+            .increase_document_attribute(
+                &collection(ADDRESSES),
+                "home",
+                "visits",
+                Value::Int(5),
+                UPDATED_AT,
+                None,
+                None
+            )
             .await
             .unwrap()
     );
@@ -411,7 +444,15 @@ async fn test_rollback_of_an_increment_removes_the_value_and_timestamp_it_added(
     adapter.start_transaction().await.unwrap();
     assert!(
         adapter
-            .increase_document_attribute(&collection(ADDRESSES), "home", "visits", Value::Int(5), UPDATED_AT, None, None)
+            .increase_document_attribute(
+                &collection(ADDRESSES),
+                "home",
+                "visits",
+                Value::Int(5),
+                UPDATED_AT,
+                None,
+                None
+            )
             .await
             .unwrap()
     );
@@ -430,7 +471,8 @@ async fn test_a_division_or_modulo_by_zero_that_skipped_validation_keeps_the_val
     store_address(&adapter, "home", "x", Value::Int(10)).await.unwrap();
 
     for method in ["divide", "modulo"] {
-        let operator = Operator::parse(format!(r#"{{"method":"{method}","attribute":"visits","values":[0]}}"#)).unwrap();
+        let operator =
+            Operator::parse(format!(r#"{{"method":"{method}","attribute":"visits","values":[0]}}"#)).unwrap();
         let mut update = doc(json!({"$id": "home"}));
         update.put("visits", Value::from(operator));
         adapter.update_document(&collection(ADDRESSES), "home", update, true).await.unwrap();
@@ -451,7 +493,8 @@ async fn test_a_cursor_without_an_order_pages_by_sequence() {
     let mut cursor = Array::new();
     cursor.set(ArrayKey::from("$sequence"), second.sequence().cloned().unwrap());
 
-    let after = adapter.find(&collection(ADDRESSES), vec![], Find { cursor: cursor.clone(), ..Find::default() }).await.unwrap();
+    let after =
+        adapter.find(&collection(ADDRESSES), vec![], Find { cursor: cursor.clone(), ..Find::default() }).await.unwrap();
     assert_eq!(ids(&after), ["third"]);
     let before = adapter
         .find(
@@ -472,8 +515,18 @@ async fn test_increment_is_a_no_op_when_the_stored_value_already_violates_the_bo
 
     for (id, stored) in [("whole", Value::Int(10)), ("fraction", Value::Float(10.5))] {
         let c = collection(ADDRESSES);
-        assert!(adapter.increase_document_attribute(&c, id, "visits", Value::Int(1), UPDATED_AT, None, Some(Value::Int(5))).await.unwrap());
-        assert!(adapter.increase_document_attribute(&c, id, "visits", Value::Int(-1), UPDATED_AT, Some(Value::Int(20)), None).await.unwrap());
+        assert!(
+            adapter
+                .increase_document_attribute(&c, id, "visits", Value::Int(1), UPDATED_AT, None, Some(Value::Int(5)))
+                .await
+                .unwrap()
+        );
+        assert!(
+            adapter
+                .increase_document_attribute(&c, id, "visits", Value::Int(-1), UPDATED_AT, Some(Value::Int(20)), None)
+                .await
+                .unwrap()
+        );
         let document = adapter.get_document(&c, id, vec![], false).await.unwrap();
         assert_eq!(document.get("visits"), Some(&stored), "{id}");
     }
@@ -483,10 +536,7 @@ async fn test_increment_is_a_no_op_when_the_stored_value_already_violates_the_bo
 async fn test_batch_mixing_documents_with_and_without_a_sequence_is_rejected() {
     for (first, second) in [(Some("10"), None), (None, Some("10"))] {
         let adapter = addresses().await;
-        let documents = vec![
-            address("first", "x", Value::Null, first),
-            address("second", "y", Value::Null, second),
-        ];
+        let documents = vec![address("first", "x", Value::Null, first), address("second", "y", Value::Null, second)];
 
         let error = adapter.create_documents(&collection(ADDRESSES), documents).await.unwrap_err();
         assert_eq!(error.kind(), Kind::Database);
@@ -582,24 +632,54 @@ fn test_memory_rejects_unbounded_invalid_powers() {
 #[test]
 fn test_memory_honours_a_float_bound_on_the_exact_big_integer_path() {
     let cases: Vec<(&str, Value, Operator, Value)> = vec![
-        ("increment above a float max", Value::Int(i64::MAX - 5), Operator::increment(10, Some(9.0e18.into())), Value::Int(i64::MAX - 5)),
-        ("increment above a whole float max", Value::Int(i64::MAX), Operator::increment(1, Some(100.0.into())), Value::Int(i64::MAX)),
+        (
+            "increment above a float max",
+            Value::Int(i64::MAX - 5),
+            Operator::increment(10, Some(9.0e18.into())),
+            Value::Int(i64::MAX - 5),
+        ),
+        (
+            "increment above a whole float max",
+            Value::Int(i64::MAX),
+            Operator::increment(1, Some(100.0.into())),
+            Value::Int(i64::MAX),
+        ),
         (
             "increment onto a float max",
             Value::Int(i64::MAX),
             Operator::increment(1, Some(9_223_372_036_854_775_808.0.into())),
             big("9223372036854775808"),
         ),
-        ("increment below a float max", Value::Int(i64::MAX), Operator::increment(1, Some(1.0e19.into())), big("9223372036854775808")),
+        (
+            "increment below a float max",
+            Value::Int(i64::MAX),
+            Operator::increment(1, Some(1.0e19.into())),
+            big("9223372036854775808"),
+        ),
         (
             "increment below a whole string max",
             Value::Int(i64::MAX),
             Operator::increment(1, Some("9223372036854775808.0".into())),
             big("9223372036854775808"),
         ),
-        ("decrement below a float min", Value::Int(i64::MIN), Operator::decrement(1, Some((-9.0e18).into())), Value::Int(i64::MIN)),
-        ("decrement above a float min", Value::Int(i64::MIN), Operator::decrement(1, Some((-1.0e19).into())), big("-9223372036854775809")),
-        ("multiply above a float max", Value::Int(i64::MAX), Operator::multiply(2, Some(1.5e19.into())), Value::Int(i64::MAX)),
+        (
+            "decrement below a float min",
+            Value::Int(i64::MIN),
+            Operator::decrement(1, Some((-9.0e18).into())),
+            Value::Int(i64::MIN),
+        ),
+        (
+            "decrement above a float min",
+            Value::Int(i64::MIN),
+            Operator::decrement(1, Some((-1.0e19).into())),
+            big("-9223372036854775809"),
+        ),
+        (
+            "multiply above a float max",
+            Value::Int(i64::MAX),
+            Operator::multiply(2, Some(1.5e19.into())),
+            Value::Int(i64::MAX),
+        ),
         ("unbounded increment", Value::Int(i64::MAX), Operator::increment(1, None), big("9223372036854775808")),
     ];
     for (case, current, operator, expected) in cases {
@@ -611,16 +691,25 @@ fn test_memory_honours_a_float_bound_on_the_exact_big_integer_path() {
 #[test]
 fn test_memory_refuses_a_fractional_bound_on_the_exact_big_integer_path() {
     let cases: Vec<(&str, Operator, &str)> = vec![
-        ("float max", Operator::increment(1, Some(102.4.into())), "Cannot apply increment operator: max/min limit must be a whole number, got 102.4"),
+        (
+            "float max",
+            Operator::increment(1, Some(102.4.into())),
+            "Cannot apply increment operator: max/min limit must be a whole number, got 102.4",
+        ),
         (
             "string max",
             Operator::increment(1, Some("9223372036854775808.5".into())),
             "Cannot apply increment operator: max/min limit must be a whole number, got 9223372036854775808.5",
         ),
-        ("float min", Operator::decrement(1, Some((-0.5).into())), "Cannot apply decrement operator: max/min limit must be a whole number, got -0.5"),
+        (
+            "float min",
+            Operator::decrement(1, Some((-0.5).into())),
+            "Cannot apply decrement operator: max/min limit must be a whole number, got -0.5",
+        ),
     ];
     for (case, operator, message) in cases {
-        let current = if operator.method() == OperatorType::Decrement { Value::Int(i64::MIN) } else { Value::Int(i64::MAX) };
+        let current =
+            if operator.method() == OperatorType::Decrement { Value::Int(i64::MIN) } else { Value::Int(i64::MAX) };
         let error = apply(current, operator).unwrap_err();
         assert_eq!(error.kind(), Kind::Operator, "{case}");
         assert_eq!(error.message(), message, "{case}");
@@ -640,7 +729,8 @@ fn test_memory_keeps_the_stored_value_when_a_bounded_power_overflows() {
 fn test_memory_operators_coerce_operands_and_keep_unparsable_dates() {
     assert!(apply(Value::Int(1), Operator::increment("2", None)).unwrap().strict_eq(&Value::Int(3)));
     assert!(apply(Value::Float(1.5), Operator::multiply("2.5", None)).unwrap().strict_eq(&Value::Float(3.75)));
-    let concat_list = Operator::new(OperatorType::StringConcat, "", vec![Value::Array(Array::from_list(vec![string("x")]))]);
+    let concat_list =
+        Operator::new(OperatorType::StringConcat, "", vec![Value::Array(Array::from_list(vec![string("x")]))]);
     assert_eq!(apply(string("ab"), concat_list).unwrap(), string("ab"));
     let wrapped = Value::Array(Array::from_list(vec![string("x")]));
     assert_eq!(apply(wrapped, Operator::string_concat("y")).unwrap(), string("y"));
@@ -744,7 +834,12 @@ async fn shared_notes() -> Memory {
     for tenant in [1, 2] {
         let mut document = note(&["alice", "bob"]);
         document.put("$tenant", Value::Int(tenant));
-        adapter.state().tenant().with(Value::Int(tenant), adapter.create_document(&collection(NOTES), document)).await.unwrap();
+        adapter
+            .state()
+            .tenant()
+            .with(Value::Int(tenant), adapter.create_document(&collection(NOTES), document))
+            .await
+            .unwrap();
     }
     adapter
 }
@@ -757,7 +852,10 @@ async fn test_delete_with_another_casing_removes_the_grants() {
     assert!(adapter.delete_document(&collection(NOTES), "NOTE").await.unwrap());
     adapter.create_document(&collection(NOTES), note(&["bob"])).await.unwrap();
 
-    assert!(readable_by(&adapter, "alice").await.is_empty(), "A delete under another casing must remove the deleted document's grants");
+    assert!(
+        readable_by(&adapter, "alice").await.is_empty(),
+        "A delete under another casing must remove the deleted document's grants"
+    );
     assert_eq!(readable_by(&adapter, "bob").await, ["note"]);
 }
 
@@ -766,16 +864,33 @@ async fn test_revoke_under_one_tenant_keeps_another_tenants_grants() {
     let adapter = shared_notes().await;
     let revoke = |readers: &[&str]| doc(json!({"$id": "note", "$permissions": self::readers(readers)}));
 
-    adapter.state().tenant().with(Value::Int(1), adapter.update_document(&collection(NOTES), "note", revoke(&[]), false)).await.unwrap();
+    adapter
+        .state()
+        .tenant()
+        .with(Value::Int(1), adapter.update_document(&collection(NOTES), "note", revoke(&[]), false))
+        .await
+        .unwrap();
 
     assert!(readable_under(&adapter, 1, "alice").await.is_empty());
-    assert_eq!(readable_under(&adapter, 2, "alice").await, ["note"], "A revoke under one tenant must keep another tenant's grants");
+    assert_eq!(
+        readable_under(&adapter, 2, "alice").await,
+        ["note"],
+        "A revoke under one tenant must keep another tenant's grants"
+    );
     assert_eq!(readable_under(&adapter, 2, "bob").await, ["note"]);
 
-    adapter.state().tenant().with(Value::Int(2), adapter.update_document(&collection(NOTES), "note", revoke(&["alice"]), false)).await.unwrap();
+    adapter
+        .state()
+        .tenant()
+        .with(Value::Int(2), adapter.update_document(&collection(NOTES), "note", revoke(&["alice"]), false))
+        .await
+        .unwrap();
 
     assert_eq!(readable_under(&adapter, 2, "alice").await, ["note"]);
-    assert!(readable_under(&adapter, 2, "bob").await.is_empty(), "The second tenant's own revoke must remove its grant");
+    assert!(
+        readable_under(&adapter, 2, "bob").await.is_empty(),
+        "The second tenant's own revoke must remove its grant"
+    );
     assert!(readable_under(&adapter, 1, "bob").await.is_empty());
 }
 
@@ -784,14 +899,21 @@ async fn test_delete_under_one_tenant_keeps_another_tenants_grants() {
     let adapter = shared_notes().await;
 
     adapter.state().tenant().with(Value::Int(1), adapter.delete_document(&collection(NOTES), "note")).await.unwrap();
-    assert_eq!(readable_under(&adapter, 2, "alice").await, ["note"], "A delete under one tenant must keep another tenant's grants");
+    assert_eq!(
+        readable_under(&adapter, 2, "alice").await,
+        ["note"],
+        "A delete under one tenant must keep another tenant's grants"
+    );
 
     adapter.state().tenant().with(Value::Int(2), adapter.delete_document(&collection(NOTES), "note")).await.unwrap();
     let mut bob = note(&["bob"]);
     bob.put("$tenant", Value::Int(2));
     adapter.state().tenant().with(Value::Int(2), adapter.create_document(&collection(NOTES), bob)).await.unwrap();
 
-    assert!(readable_under(&adapter, 2, "alice").await.is_empty(), "The second tenant's own delete must remove its grants");
+    assert!(
+        readable_under(&adapter, 2, "alice").await.is_empty(),
+        "The second tenant's own delete must remove its grants"
+    );
     assert_eq!(readable_under(&adapter, 2, "bob").await, ["note"]);
     assert!(readable_under(&adapter, 1, "bob").await.is_empty());
 }
@@ -809,7 +931,10 @@ async fn test_renaming_keeps_its_unique_value() {
     adapter.create_document(&users, doc(json!({"$id": "old", "email": "a@example.test"}))).await.unwrap();
     adapter.create_document(&users, doc(json!({"$id": "other", "email": "b@example.test"}))).await.unwrap();
 
-    let renamed = adapter.update_document(&users, "old", doc(json!({"$id": "new", "email": "a@example.test"})), false).await.unwrap();
+    let renamed = adapter
+        .update_document(&users, "old", doc(json!({"$id": "new", "email": "a@example.test"})), false)
+        .await
+        .unwrap();
     assert_eq!(renamed.id(), "new");
     assert!(adapter.get_document(&users, "old", vec![], false).await.unwrap().is_empty());
     let new = adapter.get_document(&users, "new", vec![], false).await.unwrap();
@@ -821,7 +946,10 @@ async fn test_renaming_keeps_its_unique_value() {
     );
 
     adapter.create_document(&users, doc(json!({"$id": "reuse", "email": "c@example.test"}))).await.unwrap();
-    adapter.update_document(&users, "reuse", doc(json!({"$id": "reused", "email": "c@example.test"})), false).await.unwrap();
+    adapter
+        .update_document(&users, "reuse", doc(json!({"$id": "reused", "email": "c@example.test"})), false)
+        .await
+        .unwrap();
     let mut emails: Vec<String> = find(&adapter, "users", vec![])
         .await
         .unwrap()

@@ -233,9 +233,7 @@ fn matches(row: &Array, query: &utopia_query::Query) -> Result<bool> {
         _ => None,
     };
     Ok(match method {
-        Method::Equal => {
-            !null && values.iter().any(|c| !matches!(c, Value::Null) && loose_equals(&value, c))
-        }
+        Method::Equal => !null && values.iter().any(|c| !matches!(c, Value::Null) && loose_equals(&value, c)),
         Method::NotEqual => {
             if null {
                 return Ok(false);
@@ -401,7 +399,13 @@ impl Store {
     }
 
     /// `find($collection, $queries, ...)`.
-    pub(crate) fn find(&self, ctx: &Ctx, collection: &Collection, queries: &[Query], options: &Find) -> Result<Vec<Document>> {
+    pub(crate) fn find(
+        &self,
+        ctx: &Ctx,
+        collection: &Collection,
+        queries: &[Query],
+        options: &Find,
+    ) -> Result<Vec<Document>> {
         let key = Self::key(ctx, collection.id());
         if !self.has(&key) {
             return Err(Error::not_found("Collection not found"));

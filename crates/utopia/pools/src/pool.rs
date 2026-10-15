@@ -194,6 +194,38 @@ impl<T, A> Clone for Pool<T, A> {
     }
 }
 
+impl<T, A> Pool<T, A> {
+    /// A token telling whether the pool (any of its clones) still exists,
+    /// without keeping it alive: what a cache keyed by pool (PHP's
+    /// `WeakMap`) checks before it reuses an entry.
+    ///
+    /// Not in PHP, where a `WeakMap` keyed by the pool object does this.
+    pub fn liveness(&self) -> Liveness<T, A> {
+        Liveness(Arc::downgrade(&self.inner))
+    }
+}
+
+/// Whether a pool still exists ([`Pool::liveness`]).
+pub struct Liveness<T, A>(Weak<Inner<T, A>>);
+
+impl<T, A> Liveness<T, A> {
+    /// Whether the pool still exists.
+    pub fn is_alive(&self) -> bool {
+        self.0.strong_count() > 0
+    }
+
+    /// Whether this is the liveness of `pool`.
+    pub fn is_of(&self, pool: &Pool<T, A>) -> bool {
+        std::ptr::eq(self.0.as_ptr(), Arc::as_ptr(&pool.inner))
+    }
+}
+
+impl<T, A> std::fmt::Debug for Liveness<T, A> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_tuple("Liveness").field(&self.is_alive()).finish()
+    }
+}
+
 impl<T, A> std::fmt::Debug for Pool<T, A> {
     /// Writes the name and size.
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

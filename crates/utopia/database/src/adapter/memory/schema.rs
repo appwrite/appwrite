@@ -616,7 +616,12 @@ impl Store {
         if !self.has(&key) {
             return;
         }
-        self.put_attribute(ctx, &key, k(&filter(field)), definition(ColumnType::Relationship.as_str(), 0, true, false, false));
+        self.put_attribute(
+            ctx,
+            &key,
+            k(&filter(field)),
+            definition(ColumnType::Relationship.as_str(), 0, true, false, false),
+        );
     }
 
     /// `renameDocumentField($collection, $oldKey, $newKey)`.
@@ -784,8 +789,7 @@ impl Store {
                     continue;
                 }
                 if ctx.shared {
-                    signature =
-                        prepend(signature, row.get_str(crate::storage::TENANT).cloned().unwrap_or(Value::Null));
+                    signature = prepend(signature, row.get_str(crate::storage::TENANT).cloned().unwrap_or(Value::Null));
                 }
                 let hash = serialize(&signature);
                 if table.contains_key(&hash) {
@@ -854,7 +858,13 @@ fn definition(kind: &str, size: i64, signed: bool, array: bool, required: bool) 
 
 /// `attributeEntry($attribute)`.
 fn attribute_entry(attribute: &Attribute) -> Value {
-    definition(attribute.kind.as_str(), attribute.size.unwrap_or(0), attribute.signed, attribute.array, attribute.required)
+    definition(
+        attribute.kind.as_str(),
+        attribute.size.unwrap_or(0),
+        attribute.signed,
+        attribute.array,
+        attribute.required,
+    )
 }
 
 /// `indexEntry($index)`: its type, attributes, lengths and orders (each

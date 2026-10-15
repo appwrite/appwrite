@@ -298,10 +298,7 @@ pub fn apply_operator(current: &Value, operator: &Operator) -> Result<Value> {
     let operand = nth(&values, 0, Value::Int(1));
     if let Some(exact) = BigInt::calculate_outside_native(method, current_or_zero, &operand) {
         let bound = nth(&values, 1, Value::Null);
-        if method == OperatorType::Modulo
-            || !is_numeric(&bound)
-            || matches!(bound, Value::Float(f) if !f.is_finite())
-        {
+        if method == OperatorType::Modulo || !is_numeric(&bound) || matches!(bound, Value::Float(f) if !f.is_finite()) {
             return Ok(exact.into());
         }
         let Some(limit) = Operand::from_value(&bound).and_then(BigInt::integral_value) else {
@@ -355,7 +352,8 @@ pub fn apply_operator(current: &Value, operator: &Operator) -> Result<Value> {
         OperatorType::Power => {
             let (by, max, base) = (by(1).unwrap_or(Value::Int(1)), bound(), base());
             let by_f = by.to_double();
-            if (base.loose_eq(&Value::Int(0)) && lt(&by, &Value::Int(0))) || (lt(&base, &Value::Int(0)) && by_f.floor() != by_f)
+            if (base.loose_eq(&Value::Int(0)) && lt(&by, &Value::Int(0)))
+                || (lt(&base, &Value::Int(0)) && by_f.floor() != by_f)
             {
                 if max.is_some() {
                     return Ok(base);
@@ -387,7 +385,9 @@ pub fn apply_operator(current: &Value, operator: &Operator) -> Result<Value> {
                 Value::Str(subject)
             } else {
                 Value::Str(Str::from(
-                    php_std::string::str_replace(search.as_bytes(), replace.as_bytes(), subject.as_bytes()).0.into_owned(),
+                    php_std::string::str_replace(search.as_bytes(), replace.as_bytes(), subject.as_bytes())
+                        .0
+                        .into_owned(),
                 ))
             }
         }

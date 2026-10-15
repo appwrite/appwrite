@@ -36,9 +36,9 @@ fn value(json: &Json) -> Value {
         Json::Object(map) if map.contains_key("$op") => {
             Value::from(Operator::parse(serde_json::to_string(&map["$op"]).unwrap()).unwrap())
         }
-        Json::Object(map) => Value::Array(
-            map.iter().map(|(k, v)| (ArrayKey::normalize(Str::from(k.as_str())), value(v))).collect(),
-        ),
+        Json::Object(map) => {
+            Value::Array(map.iter().map(|(k, v)| (ArrayKey::normalize(Str::from(k.as_str())), value(v))).collect())
+        }
         Json::Array(items) => Value::Array(Array::from_list(items.iter().map(value).collect())),
         other => utopia_database::value::from_plain(php_std::Value::from_json(other)),
     }
@@ -57,7 +57,9 @@ fn docs(json: &Json) -> Result<Vec<Document>> {
 
 fn queries(json: Option<&Json>) -> Result<Vec<Query>> {
     match json {
-        Some(Json::Array(items)) => items.iter().map(|q| Query::parse(&serde_json::to_string(q).unwrap(), false)).collect(),
+        Some(Json::Array(items)) => {
+            items.iter().map(|q| Query::parse(&serde_json::to_string(q).unwrap(), false)).collect()
+        }
         _ => Ok(Vec::new()),
     }
 }
@@ -141,23 +143,31 @@ async fn run(adapter: &Memory, authorization: &Arc<Authorization>, op: &str, a: 
         "delete" => bool_(adapter.delete(text(a)).await)?,
         "createCollection" => {
             let attributes: Vec<Attribute> = match a.get(1) {
-                Some(Json::Array(items)) => items.iter().map(|x| Attribute::from_document(&doc(x)?)).collect::<Result<_>>()?,
+                Some(Json::Array(items)) => {
+                    items.iter().map(|x| Attribute::from_document(&doc(x)?)).collect::<Result<_>>()?
+                }
                 _ => Vec::new(),
             };
             let indexes: Vec<Index> = match a.get(2) {
-                Some(Json::Array(items)) => items.iter().map(|x| Index::from_document(&doc(x)?)).collect::<Result<_>>()?,
+                Some(Json::Array(items)) => {
+                    items.iter().map(|x| Index::from_document(&doc(x)?)).collect::<Result<_>>()?
+                }
                 _ => Vec::new(),
             };
             bool_(adapter.create_collection(text(arg(0)), &attributes, &indexes).await)?
         }
         "deleteCollection" => bool_(adapter.delete_collection(text(a)).await)?,
-        "createAttribute" => bool_(adapter.create_attribute(text(arg(0)), &Attribute::from_document(&doc(arg(1))?)?).await)?,
-        "updateAttribute" => {
-            bool_(adapter.update_attribute(text(arg(0)), text(arg(1)), &Attribute::from_document(&doc(arg(2))?)?).await)?
+        "createAttribute" => {
+            bool_(adapter.create_attribute(text(arg(0)), &Attribute::from_document(&doc(arg(1))?)?).await)?
         }
+        "updateAttribute" => bool_(
+            adapter.update_attribute(text(arg(0)), text(arg(1)), &Attribute::from_document(&doc(arg(2))?)?).await,
+        )?,
         "deleteAttribute" => bool_(adapter.delete_attribute(text(arg(0)), text(arg(1))).await)?,
         "renameAttribute" => bool_(adapter.rename_attribute(text(arg(0)), text(arg(1)), text(arg(2))).await)?,
-        "createIndex" => bool_(adapter.create_index(text(arg(0)), &Index::from_document(&doc(arg(1))?)?, &[], &[]).await)?,
+        "createIndex" => {
+            bool_(adapter.create_index(text(arg(0)), &Index::from_document(&doc(arg(1))?)?, &[], &[]).await)?
+        }
         "deleteIndex" => bool_(adapter.delete_index(text(arg(0)), text(arg(1))).await)?,
         "renameIndex" => bool_(adapter.rename_index(text(arg(0)), text(arg(1)), text(arg(2))).await)?,
         "createRelationship" => bool_(adapter.create_relationship(text(arg(0)), &relationship(arg(1))).await)?,
@@ -175,14 +185,18 @@ async fn run(adapter: &Memory, authorization: &Arc<Authorization>, op: &str, a: 
             let side = RelationshipSide::from_value(text(arg(2))).unwrap();
             bool_(adapter.delete_relationship(text(arg(0)), &relationship(arg(1)), side).await)?
         }
-        "createDocument" => Value::Array(adapter.create_document(&collection(arg(0)), doc(arg(1))?).await?.array_copy()),
+        "createDocument" => {
+            Value::Array(adapter.create_document(&collection(arg(0)), doc(arg(1))?).await?.array_copy())
+        }
         "createDocuments" => export(adapter.create_documents(&collection(arg(0)), docs(arg(1))?).await?),
         "getDocument" => Value::Array(
             adapter.get_document(&collection(arg(0)), text(arg(1)), queries(a.get(2))?, false).await?.array_copy(),
         ),
         "updateDocument" => {
             let skip = a.get(3).and_then(Json::as_bool).unwrap_or(false);
-            Value::Array(adapter.update_document(&collection(arg(0)), text(arg(1)), doc(arg(2))?, skip).await?.array_copy())
+            Value::Array(
+                adapter.update_document(&collection(arg(0)), text(arg(1)), doc(arg(2))?, skip).await?.array_copy(),
+            )
         }
         "updateDocuments" => {
             Value::Int(adapter.update_documents(&collection(arg(0)), &doc(arg(1))?, docs(arg(2))?, &[]).await?)
@@ -236,8 +250,12 @@ async fn run(adapter: &Memory, authorization: &Arc<Authorization>, op: &str, a: 
             }
             export(adapter.find(&collection(arg(0)), queries(a.get(1))?, find).await?)
         }
-        "count" => Value::Int(adapter.count(&collection(arg(0)), queries(a.get(1))?, a.get(2).and_then(Json::as_i64)).await?),
-        "sum" => adapter.sum(&collection(arg(0)), text(arg(1)), queries(a.get(2))?, a.get(3).and_then(Json::as_i64)).await?,
+        "count" => {
+            Value::Int(adapter.count(&collection(arg(0)), queries(a.get(1))?, a.get(2).and_then(Json::as_i64)).await?)
+        }
+        "sum" => {
+            adapter.sum(&collection(arg(0)), text(arg(1)), queries(a.get(2))?, a.get(3).and_then(Json::as_i64)).await?
+        }
         "size" => Value::Int(adapter.size_of_collection(text(a)).await?),
         "start" => bool_(adapter.start_transaction().await)?,
         "commit" => bool_(adapter.commit_transaction().await)?,
