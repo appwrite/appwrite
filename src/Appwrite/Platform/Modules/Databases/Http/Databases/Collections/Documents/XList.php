@@ -13,6 +13,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Usage\Context;
 use Appwrite\Usage\Operations;
 use Appwrite\Utopia\Database\Documents\User;
+use Appwrite\Utopia\Database\Validator\Query\Order;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -21,6 +22,7 @@ use Utopia\Database\Exception\NotFound as NotFoundException;
 use Utopia\Database\Exception\Order as OrderException;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Exception\Timeout;
+use Utopia\Database\ParsedQuery;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Query\Cursor;
@@ -37,6 +39,16 @@ use Utopia\Validator\Text;
 
 class XList extends Action
 {
+    private const array PAGING_METHODS = [
+        QueryMethod::Limit,
+        QueryMethod::Offset,
+        QueryMethod::CursorAfter,
+        QueryMethod::CursorBefore,
+        QueryMethod::OrderAsc,
+        QueryMethod::OrderDesc,
+        QueryMethod::OrderRandom,
+    ];
+
     public static function getName(): string
     {
         return 'listDocuments';
@@ -114,6 +126,13 @@ class XList extends Action
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
+        $order = new Order($collection->getAttribute('attributes', []));
+        foreach (Query::getByType($queries, [QueryMethod::OrderAsc, QueryMethod::OrderDesc], false) as $query) {
+            if (!$order->isValid($query)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $order->getDescription());
+            }
+        }
+
         $dbForDatabases = $getDatabasesDB($database, $collection);
         $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
         $cursor = Query::getCursorQueries($queries, false);
@@ -152,13 +171,14 @@ class XList extends Action
 
         try {
             $parsed = Query::groupByType($queries);
+            $paged = $parsed->limit === null ? [...$queries, Query::limit(APP_LIMIT_LIST_DEFAULT)] : $queries;
             $find = match (true) {
                 $parsed->isAggregation() => fn (): array => \array_map(
                     static fn (array $row): Document => new Document($row),
-                    $this->assertRepresentable($dbForDatabases->aggregate($collectionTableId, $queries)),
+                    $this->assertRepresentable($dbForDatabases->aggregate($collectionTableId, $paged)),
                 ),
-                $parsed->selections !== [] => fn (): array => $dbForDatabases->find($collectionTableId, $queries),
-                default => fn (): array => $dbForDatabases->skipRelationships(fn (): array => $dbForDatabases->find($collectionTableId, $queries)),
+                $parsed->selections !== [] => fn (): array => $dbForDatabases->find($collectionTableId, $paged),
+                default => fn (): array => $dbForDatabases->skipRelationships(fn (): array => $dbForDatabases->find($collectionTableId, $paged)),
             };
 
             if ($transactionId !== null) {
@@ -216,7 +236,7 @@ class XList extends Action
                     if ($cachedTotal !== null && $cachedTotal !== false) {
                         $total = (int) $cachedTotal;
                     } else {
-                        $total = $dbForDatabases->count($collectionTableId, $queries, APP_LIMIT_COUNT);
+                        $total = $this->countRows($dbForDatabases, $collectionTableId, $queries, $parsed, $documents);
                         try {
                             $cache->save($cacheKey, (string) $total, $totalField);
                         } catch (\Throwable) {
@@ -227,7 +247,7 @@ class XList extends Action
                 $response->addHeader('X-Appwrite-Cache', $documentsCacheHit ? 'hit' : 'miss');
             } else {
                 $documents = $find();
-                $total = $includeTotal ? $dbForDatabases->count($collectionTableId, $queries, APP_LIMIT_COUNT) : 0;
+                $total = $includeTotal ? $this->countRows($dbForDatabases, $collectionTableId, $queries, $parsed, $documents) : 0;
             }
         } catch (NotFoundException $e) {
             throw $this->notFound($e, $dbForDatabases, $collectionTableId, $collectionId);
@@ -313,6 +333,33 @@ class XList extends Action
         }
 
         return $rows;
+    }
+
+    /**
+     * @param array<Query> $queries
+     * @param array<Document> $page
+     */
+    private function countRows(Database $dbForDatabases, string $collectionTableId, array $queries, ParsedQuery $parsed, array $page): int
+    {
+        if (!$parsed->isAggregation() && !$parsed->distinct) {
+            return $dbForDatabases->count($collectionTableId, $queries, APP_LIMIT_COUNT);
+        }
+
+        if (!$parsed->offset && $parsed->cursor === null && \count($page) < ($parsed->limit ?? APP_LIMIT_LIST_DEFAULT)) {
+            return \count($page);
+        }
+
+        $unpaged = \array_values(\array_filter(
+            $queries,
+            static fn (Query $query): bool => !\in_array($query->getMethod(), self::PAGING_METHODS, true),
+        ));
+        $unpaged[] = Query::limit(APP_LIMIT_COUNT);
+
+        $read = $parsed->isAggregation()
+            ? fn (): array => $dbForDatabases->aggregate($collectionTableId, $unpaged)
+            : fn (): array => $dbForDatabases->skipFilters(fn (): array => $dbForDatabases->skipRelationships(fn (): array => $dbForDatabases->find($collectionTableId, $unpaged)));
+
+        return \count($dbForDatabases->silent($read));
     }
 
     /**

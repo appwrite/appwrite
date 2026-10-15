@@ -4,6 +4,7 @@ namespace Tests\E2E\Services\Databases\Queries;
 
 use Appwrite\Extend\Exception;
 use Tests\E2E\Client;
+use Tests\E2E\Traits\InternalTableName;
 use Utopia\Database\Document;
 use Utopia\Database\Id;
 use Utopia\Database\Permission;
@@ -13,10 +14,13 @@ use Utopia\Database\Role;
 /**
  * A joined collection is read exactly as listing it directly reads it (contract C6): with its collection-level
  * read every row, otherwise with document security the rows the caller holds document-level read on, otherwise
- * not at all (401). Adding a join never hides a main row the caller can read.
+ * not at all, refused exactly as a collection that does not exist. Adding a join never hides a main row the
+ * caller can read. A join names its collection by public ID only.
  */
 trait JoinPermissions
 {
+    use InternalTableName;
+
     private static array $joinPermissionsCache = [];
     private static array $joinCursorCache = [];
 
@@ -969,8 +973,9 @@ trait JoinPermissions
 
         if ($this->getSide() === 'client') {
             foreach ([$listed, $got] as $result) {
-                $this->assertSame(401, $result['headers']['status-code']);
-                $this->assertSame(Exception::USER_UNAUTHORIZED, $result['body']['type'], 'a collection without collection-level read and without document security cannot be joined');
+                $this->assertSame(404, $result['headers']['status-code']);
+                $this->assertSame($this->joinNotFoundType(), $result['body']['type'], 'a collection without collection-level read and without document security is refused as if it did not exist');
+                $this->assertStringContainsString($data['dsOffDeniedId'], $result['body']['message']);
                 $this->assertStringNotContainsString('classified-join-data', (string) json_encode($result['body']));
             }
         } else {
@@ -1256,6 +1261,138 @@ trait JoinPermissions
         }
     }
 
+    public function testJoinByInternalTableNameIsNotFound(): void
+    {
+        if (!$this->getSupportForJoins()) {
+            $this->markTestSkipped('Adapter does not support join queries');
+        }
+
+        $data = $this->setupJoinPermissionsFixture();
+        $readable = $this->internalTableName($data['databaseId'], $data['ordersId']);
+        $unreadable = $this->internalTableName($data['databaseId'], $data['dsOffDeniedId']);
+        $unknown = $this->missingInternalTableName($readable);
+        $join = fn (string $joined): array => [
+            Query::join($joined, 'ord', [Query::on('$id', 'customerId')])->toString(),
+            Query::select(['name', 'ord.$id'])->toString(),
+        ];
+
+        foreach ($this->joinCallers() as $caller => $headers) {
+            $byPublicId = $this->joinPermissionList($data['databaseId'], $data['customersId'], $join($data['ordersId']), $headers);
+            $this->assertSame(200, $byPublicId['headers']['status-code'], "{$caller}: a join by the public ID of a readable collection succeeds");
+
+            foreach ([$readable, $unreadable, $unknown] as $joined) {
+                foreach ($this->joinReads($data['databaseId'], $data['customersId'], $data['aliceId'], $join($joined), $headers) as $read => $result) {
+                    $this->assertSame(404, $result['headers']['status-code'], "{$caller} {$read} of {$joined}: a table name is not a public ID");
+                    $this->assertSame($this->joinNotFoundType(), $result['body']['type'], "{$caller} {$read} of {$joined}");
+                    $this->assertSame($this->joinNotFoundMessage($joined), $result['body']['message'], "{$caller} {$read} of {$joined}: the refusal is the same whether or not the table exists");
+                    $this->assertStringNotContainsString('classified-join-data', (string) \json_encode($result['body']));
+                }
+            }
+        }
+    }
+
+    public function testColumnQualifiedByInternalTableNameIsInvalid(): void
+    {
+        if (!$this->getSupportForJoins()) {
+            $this->markTestSkipped('Adapter does not support join queries');
+        }
+
+        $data = $this->setupJoinPermissionsFixture();
+        $private = $this->internalTableName($data['databaseId'], $data['privateId']);
+        $join = Query::join($data['ordersId'], 'ord', [Query::on('$id', 'customerId')])->toString();
+        $attempts = [
+            'select' => [Query::select(['name', "{$private}.secret"])->toString()],
+            'filter' => [Query::equal("{$private}.secret", ['classified-join-data'])->toString()],
+            'nested filter' => [Query::or([Query::equal("{$private}.secret", ['classified-join-data']), Query::equal('name', ['Alice'])])->toString()],
+            'order' => [Query::orderAsc("{$private}.secret")->toString()],
+            'on' => [Query::join($data['ordersId'], 'ord', [Query::on("{$private}.customerId", 'customerId')])->toString()],
+            'joined select' => [$join, Query::select(['name', 'ord.amount', "{$private}.secret"])->toString()],
+        ];
+
+        foreach ($this->joinCallers() as $caller => $headers) {
+            foreach ($attempts as $attempt => $queries) {
+                $result = $this->joinPermissionList($data['databaseId'], $data['customersId'], $queries, $headers);
+
+                if ($this->getSupportForAttributes()) {
+                    $this->assertSame(400, $result['headers']['status-code'], "{$caller} {$attempt}: a column is qualified by a join alias, never by a table name");
+                }
+                $bodyWithoutEchoedRequest = \array_diff_key($result['body'], ['trace' => true]);
+                $this->assertStringNotContainsString('classified-join-data', (string) \json_encode($bodyWithoutEchoedRequest), "{$caller} {$attempt}");
+            }
+        }
+    }
+
+    public function testJoinByInternalTableNameInATransactionReadIsNotFound(): void
+    {
+        if (!$this->getSupportForJoins()) {
+            $this->markTestSkipped('Adapter does not support join queries');
+        }
+
+        $data = $this->createCustomerWithOrder();
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+        $internal = $this->internalTableName($data['databaseId'], $data['ordersId']);
+
+        $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), $headers);
+        $this->assertSame(201, $transaction['headers']['status-code']);
+
+        foreach ([$data['ordersId'] => 200, $internal => 404] as $joined => $status) {
+            $listed = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($data['databaseId'], $data['customersId']), $headers, [
+                'queries' => [
+                    Query::join($joined, 'ord', [Query::on('$id', 'customerId')])->toString(),
+                    Query::select(['name', 'ord.item'])->toString(),
+                ],
+                'transactionId' => $transaction['body']['$id'],
+            ]);
+
+            $this->assertSame($status, $listed['headers']['status-code'], "a transaction read joins {$joined} by public ID only");
+        }
+    }
+
+    public function testJoinOfAnUnreadableCollectionIsIndistinguishableFromAMissingOne(): void
+    {
+        if (!$this->getSupportForJoins()) {
+            $this->markTestSkipped('Adapter does not support join queries');
+        }
+
+        $data = $this->setupJoinPermissionsFixture();
+        $missingId = Id::unique();
+        $join = fn (string $joined): array => [
+            Query::join($joined, 'rev', [Query::on('$id', 'customerId')])->toString(),
+            Query::select(['name', 'rev.secret'])->toString(),
+        ];
+        $placeholder = fn (array $result, string $joined): array => [
+            $result['headers']['status-code'],
+            $result['body']['type'] ?? null,
+            \str_replace($joined, '{id}', (string) ($result['body']['message'] ?? '')),
+        ];
+
+        foreach ($this->joinCallers() as $caller => $headers) {
+            $unreadable = $this->joinReads($data['databaseId'], $data['dsOffSourceId'], $data['dsOffRowId'], $join($data['dsOffDeniedId']), $headers);
+            $missing = $this->joinReads($data['databaseId'], $data['dsOffSourceId'], $data['dsOffRowId'], $join($missingId), $headers);
+
+            foreach ($missing as $read => $result) {
+                $this->assertSame(404, $result['headers']['status-code'], "{$caller} {$read}: no caller can join a collection that does not exist");
+                $this->assertSame($this->joinNotFoundType(), $result['body']['type']);
+
+                if ($caller === 'key') {
+                    $this->assertSame(200, $unreadable[$read]['headers']['status-code'], "{$caller} {$read}: an API key joins every collection of its project");
+
+                    continue;
+                }
+
+                $this->assertSame(
+                    $placeholder($result, $missingId),
+                    $placeholder($unreadable[$read], $data['dsOffDeniedId']),
+                    "{$caller} {$read}: joining a collection the caller cannot read must not reveal that it exists",
+                );
+                $this->assertStringNotContainsString('classified-join-data', (string) \json_encode($unreadable[$read]['body']));
+            }
+        }
+    }
+
     public function testJoinInATransactionReadResolvesTheJoinedCollection(): void
     {
         if (!$this->getSupportForJoins()) {
@@ -1332,6 +1469,58 @@ trait JoinPermissions
             $this->assertSame(200, $listed['headers']['status-code'], 'API keys and privileged users still read a disabled collection');
             $this->assertSame(['Lamp'], $this->joinPermissionValues($listed['body'][$this->getRecordResource()], 'ord', 'item'));
         }
+    }
+
+    /**
+     * @return array<string, array<string, string>> Request headers of a guest, a signed-in user and an API key
+     */
+    private function joinCallers(): array
+    {
+        $guest = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ];
+
+        return [
+            'guest' => $guest,
+            'user' => [
+                ...$guest,
+                'origin' => 'http://localhost',
+                'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $this->getUser()['session'],
+            ],
+            'key' => [
+                ...$guest,
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ],
+        ];
+    }
+
+    /**
+     * Read through every endpoint that takes queries: list, the POST query list, and get.
+     *
+     * @param list<string> $queries
+     * @param array<string, string> $headers
+     * @return array<string, array<string, mixed>>
+     */
+    private function joinReads(string $databaseId, string $containerId, string $recordId, array $queries, array $headers): array
+    {
+        $url = $this->getRecordUrl($databaseId, $containerId);
+
+        return [
+            'list' => $this->client->call(Client::METHOD_GET, $url, $headers, ['queries' => $queries]),
+            'query' => $this->client->call(Client::METHOD_POST, $url . '/query', $headers, ['queries' => $queries]),
+            'get' => $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $containerId, $recordId), $headers, ['queries' => $queries]),
+        ];
+    }
+
+    private function joinNotFoundType(): string
+    {
+        return $this->getDatabaseType() === 'tablesdb' ? Exception::TABLE_NOT_FOUND : Exception::COLLECTION_NOT_FOUND;
+    }
+
+    private function joinNotFoundMessage(string $joined): string
+    {
+        return ($this->getDatabaseType() === 'tablesdb' ? 'Table' : 'Collection') . " with the requested ID '{$joined}' could not be found.";
     }
 
     /**
