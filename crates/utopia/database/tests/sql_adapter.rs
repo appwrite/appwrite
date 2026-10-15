@@ -41,11 +41,8 @@ async fn sqlite_transactions_nest_as_savepoints() {
     let statements = Arc::new(Mutex::new(Vec::new()));
     adapter.add_transform("rec", Arc::new(Recorder(statements.clone())));
     adapter.set_metadata("request", "abc".into());
-    let value = with_transaction(&adapter, || async {
-        with_transaction(&adapter, || async { Ok(7) }).await
-    })
-    .await
-    .unwrap();
+    let value =
+        with_transaction(&adapter, || async { with_transaction(&adapter, || async { Ok(7) }).await }).await.unwrap();
     assert_eq!(value, 7);
     assert!(!adapter.in_transaction());
     assert!(!adapter.commit_transaction().await.unwrap());
