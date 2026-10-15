@@ -23,9 +23,23 @@ describe('pricing schema', () => {
       listed.map((plan) => plan.name),
     )
     expect(offers.map((offer) => offer.name)).not.toContain('Enterprise')
+  })
+
+  test('matches each plan price, billing period, and "From" floor', () => {
+    const offers = getPricingSchema().offers
+
     for (const offer of offers) {
+      const plan = pricingPlans.find((item) => item.name === offer.name)!
+      const monthly = plan.priceSuffix === '/month'
+
+      expect(`$${offer.price}`).toBe(plan.price)
       expect(offer.priceCurrency).toBe('USD')
-      expect(Number.isNaN(Number(offer.price))).toBe(false)
+      expect(offer.priceSpecification?.unitCode).toBe(
+        monthly ? 'MON' : undefined,
+      )
+      expect(offer.priceSpecification?.minPrice).toBe(
+        plan.pricePrefix === 'From' ? offer.price : undefined,
+      )
     }
   })
 })

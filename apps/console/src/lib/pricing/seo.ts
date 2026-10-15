@@ -35,6 +35,8 @@ export function getPricingSchema() {
                   price,
                   priceCurrency: 'USD',
                   unitCode: 'MON',
+                  // "From" plans add usage charges on top of the listed price.
+                  ...(plan.pricePrefix === 'From' ? { minPrice: price } : {}),
                 },
               }
             : {}),
