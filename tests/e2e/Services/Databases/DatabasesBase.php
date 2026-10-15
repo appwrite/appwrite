@@ -5958,6 +5958,28 @@ trait DatabasesBase
         );
     }
 
+    public function testListDocumentsRejectsOrderByRelationshipWithoutColumn(): void
+    {
+        if (!$this->getSupportForRelationships()) {
+            $this->markTestSkipped('Relationships are not supported by this database adapter');
+        }
+
+        $data = $this->setupDocuments();
+
+        foreach ([Query::orderAsc('starringActors'), Query::orderDesc('starringActors')] as $order) {
+            $documents = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($data['databaseId'], $data['moviesId']), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'queries' => [$order->toString()],
+            ]);
+
+            $this->assertSame(400, $documents['headers']['status-code'], \json_encode($documents['body']));
+            $this->assertSame(Exception::GENERAL_QUERY_INVALID, $documents['body']['type']);
+            $this->assertStringContainsString('starringActors', $documents['body']['message']);
+        }
+    }
+
     public function testListDocumentsLimitAndOffset(): void
     {
         $data = $this->setupDocuments();

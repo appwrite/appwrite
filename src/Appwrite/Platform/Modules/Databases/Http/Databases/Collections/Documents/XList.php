@@ -12,6 +12,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Usage\Context;
 use Appwrite\Usage\Operations;
 use Appwrite\Utopia\Database\Documents\User;
+use Appwrite\Utopia\Database\Validator\Query\Order;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -110,6 +111,13 @@ class XList extends Action
             $queries = Query::parseQueries($queries);
         } catch (QueryException $e) {
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
+
+        $order = new Order($collection->getAttribute('attributes', []));
+        foreach (Query::getByType($queries, [QueryMethod::OrderAsc, QueryMethod::OrderDesc], false) as $query) {
+            if (!$order->isValid($query)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $order->getDescription());
+            }
         }
 
         $dbForDatabases = $getDatabasesDB($database, $collection);
