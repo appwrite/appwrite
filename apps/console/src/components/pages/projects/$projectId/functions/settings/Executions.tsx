@@ -32,11 +32,14 @@ import {
 import { DocsRouteLink } from '@/components/pages/docs/DocsRouteLink'
 import { ScopeEditor } from '@/components/global/shared/ScopeEditor'
 import { useT } from '@/lib/i18n/translate'
+import { useConsoleProfile } from '@/hooks/use-console-profile'
+import { FunctionEmailCard } from './FunctionEmailCard'
 
 export function View() {
   const t = useT()
   const { projectId, functionId } = useParams({ strict: false })
   const queryClient = useQueryClient()
+  const { features } = useConsoleProfile()
 
   const { data: func, isLoading: funcLoading } = useProjectFunction(
     projectId,
@@ -251,6 +254,27 @@ export function View() {
         </div>
       ),
     },
+    ...(features.functionEmail
+      ? [
+          {
+            id: 'email',
+            search: {
+              title: 'Email',
+              description: 'Allow inbound email to trigger this function.',
+              keywords: ['email', 'smtp', 'mail', 'inbound', 'trigger'],
+            },
+            node: (
+              <FunctionEmailCard
+                projectId={projectId}
+                functionId={functionId}
+                region={project?.region}
+                func={func}
+                disabled={executionsPending}
+              />
+            ),
+          } satisfies SettingsCardItem,
+        ]
+      : []),
     {
       id: 'events',
       search: {

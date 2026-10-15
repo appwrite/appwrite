@@ -722,4 +722,18 @@ export const jaFunctionsDictionary: Record<string, string> = {
   'Every {count} minutes': '{count} 分ごと',
   'Every {count} hours': '{count} 時間ごと',
   'Every {count} days': '{count} 日ごと',
+  // Inbound email (SMTP) trigger
+  'Email trigger enabled': 'メールトリガーを有効にしました',
+  'Email trigger disabled': 'メールトリガーを無効にしました',
+  'Failed to update email trigger': 'メールトリガーの更新に失敗しました',
+  'Allow inbound email to trigger this function. It is off by default, so no mail is accepted until you enable it.':
+    '受信メールでこの関数をトリガーできるようにします。デフォルトはオフのため、有効にするまでメールは受け付けません。',
+  'Email trigger': 'メールトリガー',
+  'Inbound mail for this function is accepted.':
+    'この関数宛ての受信メールを受け付けます。',
+  'Inbound mail for this function is rejected.':
+    'この関数宛ての受信メールは拒否されます。',
+  'Testing address': 'テスト用アドレス',
+  'Mail is delivered when this function has an active deployment.':
+    'この関数にアクティブなデプロイがある場合にメールが配信されます。',
 }
