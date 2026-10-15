@@ -443,6 +443,10 @@ pub fn resolve(definition: &Array) -> (String, String, i64) {
     };
     let mut t = text("type");
     let mut format = text("format");
+    // utopia-php/query spells the big integer type `biginteger`.
+    if t == "biginteger" {
+        t = column::BIG_INT.to_owned();
+    }
     if column::size_of(column::FORMAT_SIZES, &t).is_some() {
         format = t;
         t = column::STRING.to_owned();

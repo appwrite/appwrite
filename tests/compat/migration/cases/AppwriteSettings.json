@@ -1509,11 +1509,11 @@
               "githubSecret": "{\"clientSecret\":\"old\",\"keep\":1}",
               "githubEnabled": true
             },
+            "$sequence": "1",
             "$id": "destination-project",
             "$createdAt": "<masked>",
             "$updatedAt": "<masked>",
             "$permissions": [],
-            "$sequence": "1",
             "labels": [
               "a",
               "b",
@@ -2497,7 +2497,8 @@
             "getUpdatedAt": ""
           }
         }
-      ]
+      ],
+      "blocked": "utopia-database 8.x: Document::getArrayCopy() of a document read back puts $sequence before $id, $createdAt, $updatedAt and $permissions (the Rust 7.x port puts it after them)"
     }
   ]
 }

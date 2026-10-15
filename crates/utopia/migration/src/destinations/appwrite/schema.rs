@@ -215,7 +215,19 @@ impl Appwrite {
     pub(super) async fn mark_provisioned_databases_ready(&mut self) {
         let ids: Vec<String> = self.provisioning_databases.keys().cloned().collect();
         for id in ids {
-            let _ = self.set_database_status(&id, DATABASE_STATUS_READY).await;
+            // A failed flip is reported, and the rest still flip.
+            if let Err(e) = self.set_database_status(&id, DATABASE_STATUS_READY).await {
+                let message = e.message();
+                let code = e.code();
+                self.target.add_error(Exception::new(
+                    types::DATABASE,
+                    crate::transfer::group::DATABASES,
+                    Some(id),
+                    message,
+                    code,
+                    Some(e),
+                ));
+            }
         }
     }
 
@@ -283,14 +295,20 @@ impl Appwrite {
         let original = if empty(&original) { DbValue::Null } else { s(&original) };
         let search = format!("{} {}", r.id(), d.name);
 
-        if self.on_duplicate != OnDuplicate::Fail {
-            let existing = self.db_for_project.get_document(META_DATABASES, &r.id(), Vec::new(), false).await?;
+        let existing = self.db_for_project.get_document(META_DATABASES, &r.id(), Vec::new(), false).await?;
+        // A database a prior run left `provisioning` or `failed` is unusable
+        // (its backing collection may be missing): it is overwritten from the
+        // source, whatever the duplicate policy and the timestamps say.
+        let is_incomplete = !existing.is_empty() && self.support_for_database_status().await? && {
+            let status = attr(&existing, "status");
+            status.strict_eq(&Value::from(DATABASE_STATUS_FAILED))
+                || status.strict_eq(&Value::from(DATABASE_STATUS_PROVISIONING))
+        };
+
+        if self.on_duplicate != OnDuplicate::Fail || is_incomplete {
             let mut action =
                 self.on_duplicate.resolve_schema_action(!existing.is_empty(), Some(&updated_at), existing.updated_at());
-            let is_failed = !existing.is_empty()
-                && self.support_for_database_status().await?
-                && attr(&existing, "status").strict_eq(&Value::from(DATABASE_STATUS_FAILED));
-            if is_failed {
+            if is_incomplete {
                 action = SchemaAction::Overwrite;
             } else if action != SchemaAction::Create && self.database_spec_matches(&existing, r) {
                 action = SchemaAction::Skip;
@@ -299,11 +317,6 @@ impl Appwrite {
                 SchemaAction::Skip => {
                     r.set_sequence(seq(&existing));
                     r.set_status(status::SKIPPED, "Already exists on destination");
-                    if self.support_for_database_status().await?
-                        && attr(&existing, "status").strict_eq(&Value::from(DATABASE_STATUS_PROVISIONING))
-                    {
-                        self.provisioning_databases.insert(r.id(), ());
-                    }
                     return Ok(false);
                 }
                 SchemaAction::Overwrite => {
@@ -321,7 +334,7 @@ impl Appwrite {
                     }
                     self.db_for_project.update_document(META_DATABASES, existing.id(), doc(pairs)?).await?;
                     r.set_sequence(seq(&existing));
-                    if is_failed
+                    if is_incomplete
                         && self.db_for_project.get_collection(&database_collection_id(&existing)).await?.is_empty()
                     {
                         self.create_database_collection(r, &existing).await?;
@@ -350,6 +363,22 @@ impl Appwrite {
             pairs.push(("status", s(DATABASE_STATUS_PROVISIONING)));
         }
         let database = self.db_for_project.create_document(META_DATABASES, doc(pairs)?).await?;
+        // Reloaded, so the backing collection is named after the persisted
+        // sequence.
+        let database = match self.db_for_project.get_document(META_DATABASES, database.id(), Vec::new(), false).await {
+            Ok(d) if !d.is_empty() => d,
+            Ok(_) => {
+                self.mark_database_failed(&r.id()).await;
+                return Err(Error::Database(utopia_database::Error::database(format!(
+                    "Failed to reload created database {}",
+                    r.id()
+                ))));
+            }
+            Err(e) => {
+                self.mark_database_failed(&r.id()).await;
+                return Err(e.into());
+            }
+        };
         r.set_sequence(seq(&database));
         self.create_database_collection(r, &database).await?;
         if self.support_for_database_status().await? {
@@ -591,7 +620,7 @@ impl Appwrite {
         if database.is_empty() {
             return self.reject(r, "Database not found");
         }
-        let mut table = self
+        let table = self
             .db_for_project
             .get_document(&database_collection_id(&database), &table_resource.id(), Vec::new(), false)
             .await?;
@@ -668,10 +697,6 @@ impl Appwrite {
             }
             if action == SchemaAction::Overwrite {
                 self.drop_attribute_for_recreate(&database, &table, r, &db, &existing).await?;
-                table = self
-                    .db_for_project
-                    .get_document(&database_collection_id(&database), table.id(), Vec::new(), false)
-                    .await?;
             }
         }
 
@@ -701,8 +726,10 @@ impl Appwrite {
         };
         let options = f.options();
         let column = column_doc(&table, &key, &options)?;
-        let checked = match self.db_for_project.check_attribute(&table, &column) {
-            Ok(_) => self.db_for_project.create_document(META_ATTRIBUTES, column).await,
+        // The limits are measured on the physical table, with the column
+        // about to be created there (keyed by its key, not the metadata id).
+        let checked = match self.check_physical_attribute(&db, &table_collection_id(&database, &table), f, t).await {
+            Ok(()) => self.db_for_project.create_document(META_ATTRIBUTES, column).await,
             Err(e) => Err(e),
         };
         let column = match checked {
@@ -753,8 +780,11 @@ impl Appwrite {
         let created: Result<()> = async {
             if relationship {
                 let related = related_table.as_ref().expect("relationship");
+                // `(string) (...)`: an empty partner key is the library's
+                // default, as a missing one is.
                 let key_for_partner =
-                    if two_way { two_way_key.clone() } else { to_opt_string(&get_or_null(&options, "twoWayKey")) };
+                    if two_way { two_way_key.clone() } else { to_opt_string(&get_or_null(&options, "twoWayKey")) }
+                        .filter(|k| !k.is_empty());
                 let ok = db
                     .create_relationship(
                         &collection_id,
@@ -816,6 +846,47 @@ impl Appwrite {
         }
         self.sync_vector_dimension(r, t, &database, &table).await?;
         Ok(true)
+    }
+
+    /// `$dbForDatabases->checkAttribute($collectionId, $attribute)`: the
+    /// physical collection (a missing one is `Collection not found`) with
+    /// the column the resource describes appended, within the adapter's
+    /// limits.
+    async fn check_physical_attribute(
+        &self,
+        db: &Db,
+        collection_id: &str,
+        f: &crate::resources::database::Field,
+        t: &str,
+    ) -> utopia_database::Result<()> {
+        let collection = db.get_collection(collection_id).await?;
+        if collection.is_empty() {
+            return Err(utopia_database::Error::not_found("Collection not found"));
+        }
+        let has_format = !f.format.is_empty();
+        let mut pairs = vec![
+            ("$id", s(&f.key)),
+            ("key", s(&f.key)),
+            ("type", s(t)),
+            ("size", DbValue::Int(f.size)),
+            ("required", DbValue::Bool(f.required)),
+            ("default", db_value(&f.default)),
+            ("signed", DbValue::Bool(f.signed)),
+            ("array", DbValue::Bool(f.array)),
+            ("format", if has_format { s(&f.format) } else { DbValue::Null }),
+            ("formatOptions", DbValue::Array(if has_format { db_array(&f.format_options) } else { DbArray::new() })),
+            ("filters", strings(&f.filters)),
+        ];
+        let options = f.options();
+        if t == Db::VAR_RELATIONSHIP && !options.is_empty() {
+            pairs.push(("options", DbValue::Array(db_array(&options))));
+        }
+        let mut a = DbArray::new();
+        for (k, v) in pairs {
+            a.set(k.into(), v);
+        }
+        db.check_attribute(&collection, &Document::new(a)?)?;
+        Ok(())
     }
 
     fn reject_with(&mut self, r: &ResourceRef, message: &str, e: utopia_database::Error) -> Result<bool> {
@@ -973,6 +1044,14 @@ impl Appwrite {
         let two_way = cast_bool(&get_or_null(&dest, "twoWay"));
         let source_on_delete = get_or_null(&source, "onDelete");
         let on_delete_changed = !source_on_delete.strict_eq(&get_or_null(&dest, "onDelete"));
+        // `RelationshipDeleteAction::tryFrom()`: a missing, empty or unknown
+        // source action leaves the destination's as it is.
+        let on_delete = match cast_string(&source_on_delete).as_str() {
+            "cascade" => Some(Value::from("cascade")),
+            "restrict" => Some(Value::from("restrict")),
+            "setNull" => Some(Value::from("setNull")),
+            _ => None,
+        };
         if !two_way && on_delete_changed {
             return Ok(false);
         }
@@ -983,12 +1062,13 @@ impl Appwrite {
                 None,
                 None,
                 None,
-                Some(&cast_string(&source_on_delete)),
+                on_delete.as_ref().map(cast_string).as_deref(),
             )
             .await?;
         }
+        let on_delete = on_delete.unwrap_or(Value::Null);
         let mut options = dest.clone();
-        options.set("onDelete".into(), first_set(&source_on_delete, &get_or_null(&dest, "onDelete")));
+        options.set("onDelete".into(), first_set(&on_delete, &get_or_null(&dest, "onDelete")));
         self.db_for_project
             .update_document(
                 META_ATTRIBUTES,
@@ -1007,7 +1087,7 @@ impl Appwrite {
                 self.db_for_project.get_document(META_ATTRIBUTES, &partner_meta_id, Vec::new(), false).await?;
             if !partner.is_empty() {
                 let mut partner_options = options_of(&partner);
-                let value = first_set(&source_on_delete, &get_or_null(&partner_options, "onDelete"));
+                let value = first_set(&on_delete, &get_or_null(&partner_options, "onDelete"));
                 partner_options.set("onDelete".into(), value);
                 self.db_for_project
                     .update_document(
@@ -1329,43 +1409,26 @@ impl Appwrite {
             .get_document(&database_collection_id(&database), &table_resource.id(), Vec::new(), false)
             .await?;
         let mut rows = std::mem::take(&mut self.row_buffer);
+        // Fields the table does not declare are dropped (orphans can
+        // survive in source archives).
         if db.adapter().support_for_attributes() {
-            let keys: Vec<Value> = match table.get("attributes") {
+            let declared: std::collections::HashSet<ArrayKey> = match table.get("attributes") {
                 Some(DbValue::Array(list)) => list
                     .values()
                     .map(|a| match plain_document(a) {
-                        Value::Array(a) => a.get_str("key").cloned().unwrap_or(Value::Null),
-                        _ => Value::Null,
+                        Value::Array(a) => ArrayKey::from(cast_string(&get_or_null(&a, "key")).as_str()),
+                        _ => ArrayKey::from(""),
                     })
                     .collect(),
-                _ => Vec::new(),
+                _ => std::collections::HashSet::new(),
             };
             for row in &mut rows {
-                // PHP removes attributes while iterating the document (an
-                // `ArrayObject`): the attribute after a removed one is not
-                // visited, so it stays.
-                let all: Vec<php_std::ArrayKey> = row.keys().map(|k| k.to_owned()).collect();
-                let mut remove: Vec<php_std::ArrayKey> = Vec::new();
-                let mut skip = false;
-                for k in all {
-                    if std::mem::take(&mut skip) {
-                        continue;
+                let keys: Vec<ArrayKey> = row.keys().map(|k| k.to_owned()).collect();
+                for k in keys {
+                    let internal = matches!(&k, ArrayKey::Str(s) if s.as_bytes().starts_with(b"$"));
+                    if !internal && !declared.contains(&k) {
+                        row.as_array_mut().remove(&k);
                     }
-                    let internal = matches!(&k, php_std::ArrayKey::Str(s) if s.as_bytes().starts_with(b"$"));
-                    if internal {
-                        continue;
-                    }
-                    let key = match &k {
-                        php_std::ArrayKey::Int(i) => Value::Int(*i),
-                        php_std::ArrayKey::Str(s) => Value::Str(s.clone()),
-                    };
-                    if !keys.iter().any(|a| a.loose_eq(&key)) {
-                        remove.push(k);
-                        skip = true;
-                    }
-                }
-                for k in remove {
-                    row.as_array_mut().remove(&k);
                 }
             }
         }

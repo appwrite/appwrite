@@ -278,6 +278,25 @@
         "format": "",
         "size": 0
       }
+    },
+    {
+      "name": "testQueryLibBigIntegerAliasBecomesBigint",
+      "steps": [
+        {
+          "op": "column.resolve",
+          "args": {
+            "column": {
+              "key": "total",
+              "type": "biginteger"
+            }
+          },
+          "expect": {
+            "type": "bigint",
+            "format": "",
+            "size": 0
+          }
+        }
+      ]
     }
   ]
 }

@@ -1878,11 +1878,11 @@
           "expect": {
             "name": "P1",
             "n": 1,
+            "$sequence": "2",
             "$id": "p1",
             "$createdAt": "<masked>",
             "$updatedAt": "<masked>",
             "$permissions": [],
-            "$sequence": "2",
             "$collection": "database_1_collection_1"
           }
         },
@@ -1943,7 +1943,8 @@
           },
           "expect": false
         }
-      ]
+      ],
+      "blocked": "utopia-database 8.x: Document::getArrayCopy() of a document read back puts $sequence before $id, $createdAt, $updatedAt and $permissions (the Rust 7.x port puts it after them)"
     },
     {
       "name": "attribute support",

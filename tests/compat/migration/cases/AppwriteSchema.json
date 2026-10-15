@@ -2641,7 +2641,6 @@
               "$updatedAt": "<masked>",
               "$permissions": [],
               "$sequence": "1",
-              "orders": [],
               "$collection": "database_1_collection_2"
             }
           ]
@@ -4389,7 +4388,8 @@
             "getUpdatedAt": ""
           }
         }
-      ]
+      ],
+      "blocked": "utopia-database 8.x: find() leaves out the two-way relationship key of a row no related document points at (7.x populates it as an empty list, \"orders\": [])"
     },
     {
       "name": "running the schema twice fails on duplicates",
@@ -7606,7 +7606,6 @@
               "$updatedAt": "<masked>",
               "$permissions": [],
               "$sequence": "1",
-              "orders": [],
               "$collection": "database_1_collection_2"
             }
           ]
@@ -9354,7 +9353,8 @@
             "getUpdatedAt": ""
           }
         }
-      ]
+      ],
+      "blocked": "utopia-database 8.x: find() leaves out the two-way relationship key of a row no related document points at (7.x populates it as an empty list, \"orders\": [])"
     },
     {
       "name": "skip mode skips what exists",
@@ -12324,7 +12324,6 @@
               "$updatedAt": "<masked>",
               "$permissions": [],
               "$sequence": "1",
-              "orders": [],
               "$collection": "database_1_collection_2"
             }
           ]
@@ -14072,7 +14071,8 @@
             "getUpdatedAt": ""
           }
         }
-      ]
+      ],
+      "blocked": "utopia-database 8.x: find() leaves out the two-way relationship key of a row no related document points at (7.x populates it as an empty list, \"orders\": [])"
     },
     {
       "name": "overwrite mode with the same spec skips",
@@ -15713,7 +15713,7 @@
                 "$resource": "row",
                 "id": "c1",
                 "status": "error",
-                "message": "Upsert is not implemented in the Memory adapter"
+                "message": "Adapter does not support upserts"
               }
             ]
           ]
@@ -15770,7 +15770,7 @@
                 "$resource": "row",
                 "id": "o2",
                 "status": "error",
-                "message": "Invalid document structure: Unknown attribute: \"paid\""
+                "message": "Adapter does not support upserts"
               }
             ]
           ]
@@ -16059,13 +16059,13 @@
             },
             {
               "code": 0,
-              "message": "Upsert is not implemented in the Memory adapter",
+              "message": "Adapter does not support upserts",
               "resourceName": "row",
               "resourceGroup": "databases",
               "resourceId": "c1",
               "json": {
                 "code": 0,
-                "message": "Upsert is not implemented in the Memory adapter",
+                "message": "Adapter does not support upserts",
                 "resourceName": "row",
                 "resourceGroup": "databases",
                 "resourceId": "c1",
@@ -16073,26 +16073,26 @@
               },
               "previous": {
                 "class": "Utopia\\Database\\Exception",
-                "message": "Upsert is not implemented in the Memory adapter"
+                "message": "Adapter does not support upserts"
               }
             },
             {
               "code": 0,
-              "message": "Invalid document structure: Unknown attribute: \"paid\"",
+              "message": "Adapter does not support upserts",
               "resourceName": "row",
               "resourceGroup": "databases",
               "resourceId": "o2",
               "json": {
                 "code": 0,
-                "message": "Invalid document structure: Unknown attribute: \"paid\"",
+                "message": "Adapter does not support upserts",
                 "resourceName": "row",
                 "resourceGroup": "databases",
                 "resourceId": "o2",
                 "trace": "<masked>"
               },
               "previous": {
-                "class": "Utopia\\Database\\Exception\\Structure",
-                "message": "Invalid document structure: Unknown attribute: \"paid\""
+                "class": "Utopia\\Database\\Exception",
+                "message": "Adapter does not support upserts"
               }
             },
             {
@@ -18639,7 +18639,7 @@
             },
             "getGroup": "databases",
             "getId": "o2",
-            "getMessage": "Invalid document structure: Unknown attribute: \"paid\"",
+            "getMessage": "Adapter does not support upserts",
             "getName": "row",
             "getOriginalId": "",
             "getPermissions": [],
@@ -18670,7 +18670,8 @@
             "getUpdatedAt": ""
           }
         }
-      ]
+      ],
+      "blocked": "utopia-database 8.x: upsertDocuments() on an adapter without the Upserts feature fails with \"Adapter does not support upserts\" (7.x Memory: \"Upsert is not implemented in the Memory adapter\")"
     },
     {
       "name": "invalid ids, missing parents, defaults, formats, indexes and rows that fail",
@@ -19902,7 +19903,7 @@
                 "$resource": "database",
                 "id": "bad id!",
                 "status": "error",
-                "message": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+                "message": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a leading period, hyphen, or underscore"
               },
               {
                 "$resource": "database",
@@ -19928,7 +19929,7 @@
                 "$resource": "table",
                 "id": "_bad",
                 "status": "error",
-                "message": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+                "message": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a leading period, hyphen, or underscore"
               },
               {
                 "$resource": "table",
@@ -20049,7 +20050,7 @@
                 "$resource": "row",
                 "id": "bad row!",
                 "status": "error",
-                "message": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+                "message": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a leading period, hyphen, or underscore"
               },
               {
                 "$resource": "row",
@@ -20088,7 +20089,7 @@
                 "$resource": "row",
                 "id": "bad row!",
                 "status": "error",
-                "message": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+                "message": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a leading period, hyphen, or underscore"
               },
               {
                 "$resource": "row",
@@ -20127,7 +20128,7 @@
                 "$resource": "row",
                 "id": "bad row!",
                 "status": "error",
-                "message": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
+                "message": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a leading period, hyphen, or underscore"
               },
               {
                 "$resource": "row",
@@ -20154,13 +20155,13 @@
           "expect": [
             {
               "code": 0,
-              "message": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore",
+              "message": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a leading period, hyphen, or underscore",
               "resourceName": "database",
               "resourceGroup": "databases",
               "resourceId": "bad id!",
               "json": {
                 "code": 0,
-                "message": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore",
+                "message": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a leading period, hyphen, or underscore",
                 "resourceName": "database",
                 "resourceGroup": "databases",
                 "resourceId": "bad id!",
@@ -20170,13 +20171,13 @@
             },
             {
               "code": 0,
-              "message": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore",
+              "message": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a leading period, hyphen, or underscore",
               "resourceName": "table",
               "resourceGroup": "databases",
               "resourceId": "_bad",
               "json": {
                 "code": 0,
-                "message": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore",
+                "message": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a leading period, hyphen, or underscore",
                 "resourceName": "table",
                 "resourceGroup": "databases",
                 "resourceId": "_bad",
@@ -20307,13 +20308,13 @@
             },
             {
               "code": 0,
-              "message": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore",
+              "message": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a leading period, hyphen, or underscore",
               "resourceName": "row",
               "resourceGroup": "databases",
               "resourceId": "bad row!",
               "json": {
                 "code": 0,
-                "message": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore",
+                "message": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a leading period, hyphen, or underscore",
                 "resourceName": "row",
                 "resourceGroup": "databases",
                 "resourceId": "bad row!",
@@ -20323,13 +20324,13 @@
             },
             {
               "code": 0,
-              "message": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore",
+              "message": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a leading period, hyphen, or underscore",
               "resourceName": "row",
               "resourceGroup": "databases",
               "resourceId": "bad row!",
               "json": {
                 "code": 0,
-                "message": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore",
+                "message": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a leading period, hyphen, or underscore",
                 "resourceName": "row",
                 "resourceGroup": "databases",
                 "resourceId": "bad row!",
@@ -20358,13 +20359,13 @@
             },
             {
               "code": 0,
-              "message": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore",
+              "message": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a leading period, hyphen, or underscore",
               "resourceName": "row",
               "resourceGroup": "databases",
               "resourceId": "bad row!",
               "json": {
                 "code": 0,
-                "message": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore",
+                "message": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a leading period, hyphen, or underscore",
                 "resourceName": "row",
                 "resourceGroup": "databases",
                 "resourceId": "bad row!",
@@ -20690,7 +20691,8 @@
           },
           "expect": []
         }
-      ]
+      ],
+      "blocked": "utopia-database 8.x: the UID validator allows periods and hyphens and says so in its description"
     },
     {
       "name": "overwrite mode updates newer schema in place, recreates changed types and drops orphans",
@@ -21595,7 +21597,7 @@
                 "$resource": "row",
                 "id": "r1",
                 "status": "error",
-                "message": "Upsert is not implemented in the Memory adapter"
+                "message": "Adapter does not support upserts"
               }
             ]
           ]
@@ -21915,8 +21917,8 @@
               {
                 "$resource": "column",
                 "id": "a@orders2",
-                "status": "error",
-                "message": "There is already an index with the same attributes and orders"
+                "status": "success",
+                "message": ""
               },
               {
                 "$resource": "column",
@@ -21936,7 +21938,7 @@
                 "$resource": "row",
                 "id": "r2",
                 "status": "error",
-                "message": "Upsert is not implemented in the Memory adapter"
+                "message": "Adapter does not support upserts"
               }
             ]
           ]
@@ -21989,13 +21991,13 @@
             },
             {
               "code": 0,
-              "message": "Upsert is not implemented in the Memory adapter",
+              "message": "Adapter does not support upserts",
               "resourceName": "row",
               "resourceGroup": "databases",
               "resourceId": "r1",
               "json": {
                 "code": 0,
-                "message": "Upsert is not implemented in the Memory adapter",
+                "message": "Adapter does not support upserts",
                 "resourceName": "row",
                 "resourceGroup": "databases",
                 "resourceId": "r1",
@@ -22003,37 +22005,18 @@
               },
               "previous": {
                 "class": "Utopia\\Database\\Exception",
-                "message": "Upsert is not implemented in the Memory adapter"
+                "message": "Adapter does not support upserts"
               }
             },
             {
               "code": 0,
-              "message": "There is already an index with the same attributes and orders",
-              "resourceName": "column",
-              "resourceGroup": "databases",
-              "resourceId": "a@orders2",
-              "json": {
-                "code": 0,
-                "message": "There is already an index with the same attributes and orders",
-                "resourceName": "column",
-                "resourceGroup": "databases",
-                "resourceId": "a@orders2",
-                "trace": "<masked>"
-              },
-              "previous": {
-                "class": "Utopia\\Database\\Exception\\Index",
-                "message": "There is already an index with the same attributes and orders"
-              }
-            },
-            {
-              "code": 0,
-              "message": "Upsert is not implemented in the Memory adapter",
+              "message": "Adapter does not support upserts",
               "resourceName": "row",
               "resourceGroup": "databases",
               "resourceId": "r2",
               "json": {
                 "code": 0,
-                "message": "Upsert is not implemented in the Memory adapter",
+                "message": "Adapter does not support upserts",
                 "resourceName": "row",
                 "resourceGroup": "databases",
                 "resourceId": "r2",
@@ -22041,7 +22024,7 @@
               },
               "previous": {
                 "class": "Utopia\\Database\\Exception",
-                "message": "Upsert is not implemented in the Memory adapter"
+                "message": "Adapter does not support upserts"
               }
             }
           ]
@@ -22072,8 +22055,8 @@
             },
             "column": {
               "pending": 0,
-              "success": 1,
-              "error": 1,
+              "success": 2,
+              "error": 0,
               "skip": 0,
               "processing": 0,
               "warning": 0
@@ -22169,7 +22152,7 @@
                   "collectionId": "orders",
                   "type": "string",
                   "status": "available",
-                  "size": 10,
+                  "size": 20,
                   "required": false,
                   "signed": false,
                   "default": null,
@@ -22268,7 +22251,7 @@
               "collectionId": "orders",
               "type": "string",
               "status": "available",
-              "size": 10,
+              "size": 20,
               "required": false,
               "signed": false,
               "default": null,
@@ -22484,14 +22467,14 @@
             "getGroup": "databases",
             "getId": "a@orders2",
             "getKey": "a",
-            "getMessage": "There is already an index with the same attributes and orders",
+            "getMessage": "",
             "getName": "column",
             "getOptions": [],
             "getOriginalId": "",
             "getPermissions": [],
             "getSequence": "<uniqid>",
             "getSize": 20,
-            "getStatus": "error",
+            "getStatus": "success",
             "getTable": {
               "database": {
                 "id": "shop",
@@ -22717,7 +22700,7 @@
             },
             "getGroup": "databases",
             "getId": "r2",
-            "getMessage": "Upsert is not implemented in the Memory adapter",
+            "getMessage": "Adapter does not support upserts",
             "getName": "row",
             "getOriginalId": "",
             "getPermissions": [],
@@ -22745,7 +22728,8 @@
             "getUpdatedAt": ""
           }
         }
-      ]
+      ],
+      "blocked": "utopia-database 8.x: updateAttribute() resizes a column an index covers (7.x re-validates the collection's indexes and fails with \"There is already an index with the same attributes and orders\"); utopia-database 8.x: upsertDocuments() on an adapter without the Upserts feature fails with \"Adapter does not support upserts\" (7.x Memory: \"Upsert is not implemented in the Memory adapter\")"
     },
     {
       "name": "vectorsdb collections take their dimension and documentsdb collections take no columns",
@@ -23680,12 +23664,58 @@
               "attribute"
             ]
           },
-          "expect": {
-            "$error": {
-              "class": "TypeError",
-              "message": "array_values(): Argument #1 ($array) must be of type array, null given"
-            }
-          }
+          "expect": [
+            [
+              {
+                "$resource": "documentsdb",
+                "id": "docs",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "vectorsdb",
+                "id": "vec",
+                "status": "success",
+                "message": ""
+              }
+            ],
+            [
+              {
+                "$resource": "column",
+                "id": "embeddings@items",
+                "status": "error",
+                "message": "Table not found"
+              },
+              {
+                "$resource": "column",
+                "id": "other@items",
+                "status": "error",
+                "message": "Table not found"
+              },
+              {
+                "$resource": "column",
+                "id": "body@notes",
+                "status": "skip",
+                "message": "Columns not supported for DocumentsDB"
+              }
+            ],
+            [
+              {
+                "$resource": "collection",
+                "id": "items",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "collection",
+                "id": "notes",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
         },
         {
           "op": "mock.push",
@@ -23709,12 +23739,16 @@
               "document"
             ]
           },
-          "expect": {
-            "$error": {
-              "class": "TypeError",
-              "message": "array_values(): Argument #1 ($array) must be of type array, null given"
-            }
-          }
+          "expect": [
+            [
+              {
+                "$resource": "document",
+                "id": "n1",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
         },
         {
           "op": "mock.push",
@@ -23738,12 +23772,22 @@
               "document"
             ]
           },
-          "expect": {
-            "$error": {
-              "class": "TypeError",
-              "message": "array_values(): Argument #1 ($array) must be of type array, null given"
-            }
-          }
+          "expect": [
+            [
+              {
+                "$resource": "document",
+                "id": "n1",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "document",
+                "id": "v1",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
         },
         {
           "op": "target.errors",
@@ -23752,7 +23796,40 @@
               "$ref": "d"
             }
           },
-          "expect": []
+          "expect": [
+            {
+              "code": 0,
+              "message": "Table not found",
+              "resourceName": "column",
+              "resourceGroup": "databases",
+              "resourceId": "embeddings@items",
+              "json": {
+                "code": 0,
+                "message": "Table not found",
+                "resourceName": "column",
+                "resourceGroup": "databases",
+                "resourceId": "embeddings@items",
+                "trace": "<masked>"
+              },
+              "previous": null
+            },
+            {
+              "code": 0,
+              "message": "Table not found",
+              "resourceName": "column",
+              "resourceGroup": "databases",
+              "resourceId": "other@items",
+              "json": {
+                "code": 0,
+                "message": "Table not found",
+                "resourceName": "column",
+                "resourceGroup": "databases",
+                "resourceId": "other@items",
+                "trace": "<masked>"
+              },
+              "previous": null
+            }
+          ]
         },
         {
           "op": "transfer.status_counters",
@@ -23761,7 +23838,16 @@
               "$ref": "t"
             }
           },
-          "expect": []
+          "expect": {
+            "document": {
+              "pending": 0,
+              "success": 3,
+              "error": 0,
+              "skip": 0,
+              "processing": 0,
+              "warning": 0
+            }
+          }
         },
         {
           "op": "db.find",
@@ -23828,7 +23914,24 @@
             ],
             "reason": "Timestamps of documents written during the case (now)"
           },
-          "expect": []
+          "expect": [
+            {
+              "databaseInternalId": "1",
+              "databaseId": "docs",
+              "documentSecurity": true,
+              "enabled": true,
+              "name": "Notes",
+              "search": "notes Notes",
+              "$id": "notes",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [],
+              "$sequence": "1",
+              "attributes": [],
+              "indexes": [],
+              "$collection": "database_1"
+            }
+          ]
         },
         {
           "op": "db.find",
@@ -23879,7 +23982,25 @@
             ],
             "reason": "Timestamps of documents written during the case (now)"
           },
-          "expect": []
+          "expect": [
+            {
+              "databaseInternalId": "2",
+              "databaseId": "vec",
+              "documentSecurity": false,
+              "enabled": true,
+              "name": "Items",
+              "search": "items Items",
+              "dimension": 0,
+              "$id": "items",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [],
+              "$sequence": "1",
+              "attributes": [],
+              "indexes": [],
+              "$collection": "database_2"
+            }
+          ]
         },
         {
           "op": "db.find",
@@ -23896,12 +24017,16 @@
             ],
             "reason": "Timestamps of documents written during the case (now)"
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+          "expect": [
+            {
+              "$id": "n1",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [],
+              "$sequence": "1",
+              "$collection": "database_1_collection_1"
             }
-          }
+          ]
         },
         {
           "op": "db.find",
@@ -23918,12 +24043,24 @@
             ],
             "reason": "Timestamps of documents written during the case (now)"
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+          "expect": [
+            {
+              "$id": "n1",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [],
+              "$sequence": "1",
+              "$collection": "database_2_collection_1"
+            },
+            {
+              "$id": "v1",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [],
+              "$sequence": "2",
+              "$collection": "database_2_collection_1"
             }
-          }
+          ]
         },
         {
           "op": "resource.describe",
@@ -23980,8 +24117,8 @@
             "getOriginalId": "",
             "getPermissions": [],
             "getRowSecurity": false,
-            "getSequence": "",
-            "getStatus": "pending",
+            "getSequence": "1",
+            "getStatus": "success",
             "getTableName": "Items",
             "getUpdatedAt": ""
           }
@@ -24041,8 +24178,8 @@
             "getOriginalId": "",
             "getPermissions": [],
             "getRowSecurity": true,
-            "getSequence": "",
-            "getStatus": "pending",
+            "getSequence": "1",
+            "getStatus": "success",
             "getTableName": "Notes",
             "getUpdatedAt": ""
           }
@@ -24098,14 +24235,14 @@
             "getGroup": "databases",
             "getId": "embeddings@items",
             "getKey": "embeddings",
-            "getMessage": "",
+            "getMessage": "Table not found",
             "getName": "column",
             "getOptions": [],
             "getOriginalId": "",
             "getPermissions": [],
-            "getSequence": "",
+            "getSequence": "<uniqid>",
             "getSize": 3,
-            "getStatus": "pending",
+            "getStatus": "error",
             "getTable": {
               "database": {
                 "id": "vec",
@@ -24183,14 +24320,14 @@
             "getGroup": "databases",
             "getId": "other@items",
             "getKey": "other",
-            "getMessage": "",
+            "getMessage": "Table not found",
             "getName": "column",
             "getOptions": [],
             "getOriginalId": "",
             "getPermissions": [],
-            "getSequence": "",
+            "getSequence": "<uniqid>",
             "getSize": 5,
-            "getStatus": "pending",
+            "getStatus": "error",
             "getTable": {
               "database": {
                 "id": "vec",
@@ -24268,14 +24405,14 @@
             "getGroup": "databases",
             "getId": "body@notes",
             "getKey": "body",
-            "getMessage": "",
+            "getMessage": "Columns not supported for DocumentsDB",
             "getName": "column",
             "getOptions": [],
             "getOriginalId": "",
             "getPermissions": [],
-            "getSequence": "",
+            "getSequence": "<uniqid>",
             "getSize": 255,
-            "getStatus": "pending",
+            "getStatus": "skip",
             "getTable": {
               "database": {
                 "id": "docs",
@@ -24324,8 +24461,8 @@
             "getName": "document",
             "getOriginalId": "",
             "getPermissions": [],
-            "getSequence": "",
-            "getStatus": "pending",
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
             "getTable": {
               "database": {
                 "id": "docs",
@@ -24371,8 +24508,8 @@
             "getName": "document",
             "getOriginalId": "",
             "getPermissions": [],
-            "getSequence": "",
-            "getStatus": "pending",
+            "getSequence": "<uniqid>",
+            "getStatus": "success",
             "getTable": {
               "database": {
                 "id": "vec",

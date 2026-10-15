@@ -112,6 +112,11 @@ pub const OPS: &[&str] = &[
     "db.collection",
     "db.document",
     "db.get",
+    "db.update",
+    "db.add_format",
+    "db.remove_format",
+    "source.previous_report",
+    "target.fetch",
     "db.find",
     "reader.api",
     "reader.database",
@@ -696,6 +701,7 @@ pub async fn call(op: &str, args: &Json, s: &mut Session) -> OpResult {
                 "plain" | "legacy_child" => {}
                 "counting" => m.counting = true,
                 "status" => m.status = true,
+                "schema" => m.schema_order = true,
                 other => return Err(Fault::new(format!("unknown mock source `{other}`"))),
             }
             Outcome::Ok(s.handle(SourceSlot::Owned(Box::new(m))))
@@ -982,6 +988,59 @@ pub async fn call(op: &str, args: &Json, s: &mut Session) -> OpResult {
                 Ok(d) => Outcome::Ok(plain(&d)),
                 Err(e) => db_error(e),
             }
+        }
+        "db.update" => {
+            let db = s.get::<utopia_database::Database>(a.value("db")?)?.clone();
+            match db.update_document(a.str("collection")?, a.str("id")?, document(a.value("document")?)?).await {
+                Ok(d) => Outcome::Ok(Json::Bool(!d.is_empty())),
+                Err(e) => db_error(e),
+            }
+        }
+        "db.add_format" => {
+            // AppwriteColumnOverwriteTest: Structure::addFormat($name, fn () => new Text(0), $type).
+            utopia_database::validator::structure::formats::add(
+                a.str("name")?,
+                Arc::new(|_: &utopia_database::Document| {
+                    Box::new(utopia_validators::Text::new(0)) as Box<dyn utopia_validators::Validator>
+                }),
+                a.str("type")?,
+            );
+            Outcome::Ok(Json::Null)
+        }
+        "db.remove_format" => {
+            utopia_database::validator::structure::formats::remove(a.str("name")?);
+            Outcome::Ok(Json::Null)
+        }
+        "source.previous_report" => {
+            let report = decode_array(a.value("report")?)?;
+            let mut t = target(s, a.value("source")?)?;
+            t.target_mut().previous_report = report.iter().map(|(k, v)| (key_text(k), v.clone())).collect();
+            Outcome::Ok(Json::Null)
+        }
+        "target.fetch" => {
+            // TargetTimeoutTest's ShortTimeoutTarget.
+            let url = if a.opt_str("server")? == Some("silent") {
+                format!("https://{}/", s.service("migration-silent")?)
+            } else {
+                format!("{}{}", s.service("migration-api")?, a.str("path")?)
+            };
+            let mut target = utopia_migration::Target::new();
+            target.connect_timeout = 1;
+            target.stall_timeout = 3;
+            let started = std::time::Instant::now();
+            let (body, error) = match target.call("GET", &url, &[], &php_std::Array::new()).await {
+                Ok((body, _)) => (encode(&body.value()), Json::Null),
+                Err(e) => {
+                    let code = match e.code() {
+                        utopia_migration::error::Code::Int(i) => json!(i),
+                        utopia_migration::error::Code::Str(c) => json!(c),
+                    };
+                    (Json::Null, json!({ "class": e.php_class(), "code": code }))
+                }
+            };
+            let elapsed = started.elapsed().as_secs_f64();
+            let within = elapsed >= a.f64("min")? && elapsed < a.f64("max")?;
+            Outcome::Ok(json!({ "body": body, "error": error, "within": within }))
         }
         "api.routes" | "api.requests" => {
             let base = s.service("migration-api")?.to_owned();
@@ -1326,6 +1385,14 @@ pub async fn call(op: &str, args: &Json, s: &mut Session) -> OpResult {
         }
         _ => return Err(Fault::new(format!("migration: unknown operation `{op}`"))),
     })
+}
+
+/// An array key as PHP prints it.
+fn key_text(k: php_std::types::KeyRef<'_>) -> String {
+    match k {
+        php_std::types::KeyRef::Int(i) => i.to_string(),
+        php_std::types::KeyRef::Str(s) => String::from_utf8_lossy(s).into_owned(),
+    }
 }
 
 fn db_fault(e: utopia_database::Error) -> Fault {

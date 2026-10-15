@@ -5,7 +5,7 @@ use std::sync::Arc;
 
 use bytes::Bytes;
 use indexmap::IndexMap;
-use php_std::{Array, ArrayKey, Value};
+use php_std::{Array, Value};
 
 use crate::cache::Cache;
 use crate::error::{Error, Result};
@@ -21,8 +21,7 @@ pub const CONNECT_TIMEOUT: i64 = 10;
 /// abandoned, so transfers of any length stay alive while data arrives.
 ///
 /// PHP: `Target::STALL_TIMEOUT` (cURL's low-speed limit of one byte a
-/// second; `utopia-client` has no such limit, so [`Target::call`] does not
-/// enforce it).
+/// second over that many seconds).
 pub const STALL_TIMEOUT: i64 = 30;
 
 /// Seconds an Appwrite SDK request may take in total (its requests are
@@ -76,6 +75,12 @@ pub struct Target {
     pub previous_report: Report,
     /// The resource selector of a destination's current run.
     pub resource_selector: Option<ResourceSelector>,
+    /// Seconds [`Target::call`] waits for a connection (PHP:
+    /// `static::CONNECT_TIMEOUT`, which a subclass may redeclare).
+    pub connect_timeout: i64,
+    /// Seconds [`Target::call`] waits without receiving a byte (PHP:
+    /// `static::STALL_TIMEOUT`).
+    pub stall_timeout: i64,
 }
 
 /// An HTTP response of [`Target::call`]: its body, decoded when JSON.
@@ -121,7 +126,7 @@ impl Target {
     pub fn new() -> Self {
         let mut headers = IndexMap::new();
         headers.insert("Content-Type".to_owned(), String::new());
-        Self { headers, ..Self::default() }
+        Self { headers, connect_timeout: CONNECT_TIMEOUT, stall_timeout: STALL_TIMEOUT, ..Self::default() }
     }
 
     /// Shares `cache` with the transfer.
@@ -179,24 +184,22 @@ impl Target {
         Ok(())
     }
 
-    /// `$params` flattened to `key[sub][...]` names (PHP's `flatten()`, for
-    /// multipart bodies).
-    pub fn flatten(data: &Array, prefix: &str) -> Vec<(String, Value)> {
-        let mut out: IndexMap<String, Value> = IndexMap::new();
-        flatten_into(data, prefix, &mut out);
-        out.into_iter().collect()
-    }
-
     /// Calls the service: `method` on `path` (relative to
     /// [`Target::endpoint`] unless it contains `http`), with the target's
-    /// headers merged with `headers` and `params` as the query string (GET)
-    /// or the body (JSON, multipart or form encoded, by `Content-Type`).
-    /// Follows redirects. A JSON response (its `Content-Type` before `;` is
-    /// `application/json`) is decoded. A status of 400 or more is an error
-    /// whose message is the JSON body re-encoded, or `<status>: <body>`.
-    /// Response headers are returned lowercased (names and values).
+    /// headers merged with `headers` (an empty value is not sent) and
+    /// `params` as the query string (GET and HEAD, RFC 3986) or the body
+    /// (JSON when `Content-Type` is `application/json`, otherwise a form in
+    /// RFC 3986). Follows redirects, with no limit on the whole request: it
+    /// fails when the connection takes over [`Target::connect_timeout`]
+    /// seconds, or when no byte arrives for [`Target::stall_timeout`]
+    /// seconds. A JSON response (its `Content-Type` starts with
+    /// `application/json`, in any case) is decoded. A status of 400 or more
+    /// is an error whose message is the JSON body re-encoded, or
+    /// `<status>: <body>`. Response headers are returned with lowercased
+    /// names, each with its values joined by `, `.
     ///
-    /// PHP: `Target::call()`, on cURL.
+    /// PHP: `Target::call()`, on `Utopia\Client` and `Utopia\Psr7`'s request
+    /// factory.
     pub async fn call(
         &self,
         method: &str,
@@ -208,29 +211,6 @@ impl Target {
         for (k, v) in headers {
             merged.insert((*k).to_owned(), v.clone());
         }
-        crate::http::call(&self.endpoint, method, path, &merged, params).await
-    }
-}
-
-fn flatten_into(data: &Array, prefix: &str, out: &mut IndexMap<String, Value>) {
-    for (k, v) in data.iter() {
-        let key = match k.to_owned() {
-            ArrayKey::Int(i) => i.to_string(),
-            ArrayKey::Str(s) => String::from_utf8_lossy(s.as_bytes()).into_owned(),
-        };
-        let final_key = if prefix.is_empty() { key } else { format!("{prefix}[{key}]") };
-        match v {
-            Value::Array(a) => {
-                // `$output += flatten(...)`: keys already set win.
-                let mut nested = IndexMap::new();
-                flatten_into(a, &final_key, &mut nested);
-                for (nk, nv) in nested {
-                    out.entry(nk).or_insert(nv);
-                }
-            }
-            other => {
-                out.insert(final_key, other.clone());
-            }
-        }
+        crate::http::call(self, method, path, &merged, params).await
     }
 }

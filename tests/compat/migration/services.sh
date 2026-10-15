@@ -4,7 +4,8 @@
 # stack's network:
 #
 #   compat-migration-api           fixtures/api.php, a Swoole HTTP server standing in for an
-#                                  Appwrite project's API, Google's APIs and the storage APIs
+#                                  Appwrite project's API, Google's APIs and the storage APIs,
+#                                  and a TCP port that never answers (migration-silent)
 #   compat-migration-nhost-db      PostgreSQL with the PHP suite's NHost dump
 #   compat-migration-supabase-db   PostgreSQL with the PHP suite's Supabase dump
 #
@@ -13,8 +14,9 @@
 #   tests/compat/migration/services.sh down   # stop them
 #
 # The endpoints match tests/compat/compat.json: migration-api on :8080 in the
-# network and localhost:17820 from the host, the databases on :5432 and
-# localhost:17821 (NHost) and :17822 (Supabase).
+# network and localhost:17820 from the host, migration-silent on :8081 and
+# localhost:17823, the databases on :5432 and localhost:17821 (NHost) and
+# :17822 (Supabase).
 set -euo pipefail
 cd "$(dirname "$0")/../../.."
 network="${COMPAT_NETWORK:-appwrite}"
@@ -39,9 +41,9 @@ database() {
 case "${1:-up}" in
 up)
     if ! running compat-migration-api; then
-        docker run -d --rm --network "$network" --name compat-migration-api -p 17820:8080 \
+        docker run -d --rm --network "$network" --name compat-migration-api -p 17820:8080 -p 17823:8081 \
             -v "$PWD/tests:/usr/src/code/tests" --entrypoint php "$image" \
-            /usr/src/code/tests/compat/migration/fixtures/api.php 8080 >/dev/null
+            /usr/src/code/tests/compat/migration/fixtures/api.php 8080 8081 >/dev/null
     fi
     database compat-migration-nhost-db 17821 nhost
     database compat-migration-supabase-db 17822 supabase

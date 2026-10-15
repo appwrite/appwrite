@@ -231,15 +231,16 @@
             "originalId": null,
             "type": "tablesdb",
             "database": "",
+            "$sequence": "1",
             "$id": "database",
             "$createdAt": "<masked>",
             "$updatedAt": "<masked>",
             "$permissions": [],
-            "$sequence": "1",
             "$collection": "databases"
           }
         }
-      ]
+      ],
+      "blocked": "utopia-database 8.x: Document::getArrayCopy() of a document read back puts $sequence before $id, $createdAt, $updatedAt and $permissions (the Rust 7.x port puts it after them)"
     },
     {
       "name": "testDatabaseCreationOmitsStatusThroughLegacyAndExplicitEntrypoints (explicit)",
@@ -479,15 +480,16 @@
             "originalId": null,
             "type": "tablesdb",
             "database": "",
+            "$sequence": "1",
             "$id": "database",
             "$createdAt": "<masked>",
             "$updatedAt": "<masked>",
             "$permissions": [],
-            "$sequence": "1",
             "$collection": "databases"
           }
         }
-      ]
+      ],
+      "blocked": "utopia-database 8.x: Document::getArrayCopy() of a document read back puts $sequence before $id, $createdAt, $updatedAt and $permissions (the Rust 7.x port puts it after them)"
     },
     {
       "name": "testDatabaseCreationPreservesLifecycleThroughLegacyAndExplicitEntrypoints (legacy)",
@@ -730,15 +732,16 @@
             "type": "tablesdb",
             "database": "",
             "status": "ready",
+            "$sequence": "1",
             "$id": "database",
             "$createdAt": "<masked>",
             "$updatedAt": "<masked>",
             "$permissions": [],
-            "$sequence": "1",
             "$collection": "databases"
           }
         }
-      ]
+      ],
+      "blocked": "utopia-database 8.x: Document::getArrayCopy() of a document read back puts $sequence before $id, $createdAt, $updatedAt and $permissions (the Rust 7.x port puts it after them)"
     },
     {
       "name": "testDatabaseCreationPreservesLifecycleThroughLegacyAndExplicitEntrypoints (explicit)",
@@ -989,15 +992,3193 @@
             "type": "tablesdb",
             "database": "",
             "status": "ready",
+            "$sequence": "1",
             "$id": "database",
             "$createdAt": "<masked>",
             "$updatedAt": "<masked>",
             "$permissions": [],
-            "$sequence": "1",
             "$collection": "databases"
           }
         }
-      ]
+      ],
+      "blocked": "utopia-database 8.x: Document::getArrayCopy() of a document read back puts $sequence before $id, $createdAt, $updatedAt and $permissions (the Rust 7.x port puts it after them)"
+    },
+    {
+      "name": "testIncompleteDatabasesAreRecoveredImmediately (fail)",
+      "steps": [
+        {
+          "op": "db.subquery_filters",
+          "args": {},
+          "expect": true
+        },
+        {
+          "op": "db.new",
+          "args": {},
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "databases",
+            "attributes": [
+              {
+                "$id": "name",
+                "type": "string",
+                "size": 256,
+                "required": true,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "enabled",
+                "type": "boolean",
+                "size": 0,
+                "required": false,
+                "default": true,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "search",
+                "type": "string",
+                "size": 16384,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "originalId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "type",
+                "type": "string",
+                "size": 128,
+                "required": false,
+                "default": "tablesdb",
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "database",
+                "type": "string",
+                "size": 2000,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "status",
+                "type": "string",
+                "size": 16,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "databases",
+            "document": {
+              "$id": "database-provisioning",
+              "name": "Incomplete database",
+              "enabled": true,
+              "search": "database-provisioning Incomplete database",
+              "originalId": null,
+              "type": "tablesdb",
+              "database": "",
+              "status": "provisioning"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "database_1"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "databases",
+            "document": {
+              "$id": "database-failed",
+              "name": "Incomplete database",
+              "enabled": true,
+              "search": "database-failed Incomplete database",
+              "originalId": null,
+              "type": "tablesdb",
+              "database": "",
+              "status": "failed"
+            }
+          },
+          "expect": "2"
+        },
+        {
+          "op": "mock.source",
+          "args": {
+            "variant": "status"
+          },
+          "bind": "s1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "database-provisioning",
+              "name": "Database",
+              "updatedAt": "",
+              "type": "tablesdb",
+              "database": "source-dsn",
+              "databaseStatus": "ready"
+            }
+          },
+          "bind": "dbres2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s1"
+            },
+            "resource": {
+              "$ref": "dbres2"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "database-failed",
+              "name": "Database",
+              "updatedAt": "",
+              "type": "tablesdb",
+              "database": "source-dsn",
+              "databaseStatus": "ready"
+            }
+          },
+          "bind": "dbres3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s1"
+            },
+            "resource": {
+              "$ref": "dbres3"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "appwrite_destination.new",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "structure": {
+              "attributes": [],
+              "indexes": []
+            },
+            "on_duplicate": "fail"
+          },
+          "bind": "d4",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s1"
+            },
+            "destination": {
+              "$ref": "d4"
+            }
+          },
+          "bind": "t5",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t5"
+            },
+            "resources": [
+              "database"
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "database",
+                "id": "database-provisioning",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "database",
+                "id": "database-failed",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "d4"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "db.get",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "databases",
+            "id": "database-provisioning"
+          },
+          "mask": {
+            "paths": [
+              "/$createdAt",
+              "/$updatedAt"
+            ],
+            "reason": "Timestamps of documents written during the case (now)"
+          },
+          "expect": {
+            "name": "Database",
+            "enabled": true,
+            "search": "database-provisioning Database",
+            "originalId": null,
+            "type": "tablesdb",
+            "database": "",
+            "status": "ready",
+            "$sequence": "1",
+            "$id": "database-provisioning",
+            "$createdAt": "<masked>",
+            "$updatedAt": "<masked>",
+            "$permissions": [],
+            "$collection": "databases"
+          }
+        },
+        {
+          "op": "db.get",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "databases",
+            "id": "database-failed"
+          },
+          "mask": {
+            "paths": [
+              "/$createdAt",
+              "/$updatedAt"
+            ],
+            "reason": "Timestamps of documents written during the case (now)"
+          },
+          "expect": {
+            "name": "Database",
+            "enabled": true,
+            "search": "database-failed Database",
+            "originalId": null,
+            "type": "tablesdb",
+            "database": "",
+            "status": "ready",
+            "$sequence": "2",
+            "$id": "database-failed",
+            "$createdAt": "<masked>",
+            "$updatedAt": "<masked>",
+            "$permissions": [],
+            "$collection": "databases"
+          }
+        },
+        {
+          "op": "db.find",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "_metadata"
+          },
+          "mask": {
+            "paths": [
+              "/*/$createdAt",
+              "/*/$updatedAt"
+            ],
+            "reason": "Timestamps of documents written during the case (now)"
+          },
+          "expect": [
+            {
+              "name": "databases",
+              "attributes": [
+                {
+                  "$id": "name",
+                  "key": "name",
+                  "type": "string",
+                  "size": 256,
+                  "required": true,
+                  "default": null,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "formatOptions": [],
+                  "filters": []
+                },
+                {
+                  "$id": "enabled",
+                  "key": "enabled",
+                  "type": "boolean",
+                  "size": 0,
+                  "required": false,
+                  "default": true,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "formatOptions": [],
+                  "filters": []
+                },
+                {
+                  "$id": "search",
+                  "key": "search",
+                  "type": "string",
+                  "size": 16384,
+                  "required": false,
+                  "default": null,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "formatOptions": [],
+                  "filters": []
+                },
+                {
+                  "$id": "originalId",
+                  "key": "originalId",
+                  "type": "string",
+                  "size": 255,
+                  "required": false,
+                  "default": null,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "formatOptions": [],
+                  "filters": []
+                },
+                {
+                  "$id": "type",
+                  "key": "type",
+                  "type": "string",
+                  "size": 128,
+                  "required": false,
+                  "default": "tablesdb",
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "formatOptions": [],
+                  "filters": []
+                },
+                {
+                  "$id": "database",
+                  "key": "database",
+                  "type": "string",
+                  "size": 2000,
+                  "required": false,
+                  "default": null,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "formatOptions": [],
+                  "filters": []
+                },
+                {
+                  "$id": "status",
+                  "key": "status",
+                  "type": "string",
+                  "size": 16,
+                  "required": false,
+                  "default": null,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "formatOptions": [],
+                  "filters": []
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$id": "databases",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$sequence": "1",
+              "$collection": "_metadata"
+            },
+            {
+              "name": "database_1",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$id": "database_1",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$sequence": "2",
+              "$collection": "_metadata"
+            },
+            {
+              "name": "database_2",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$id": "database_2",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$sequence": "3",
+              "$collection": "_metadata"
+            }
+          ]
+        }
+      ],
+      "blocked": "utopia-database 8.x: Document::getArrayCopy() of a document read back puts $sequence before $id, $createdAt, $updatedAt and $permissions (the Rust 7.x port puts it after them); utopia-database 8.x: collection metadata holds each attribute as Attribute::toDocument() ($id, key, type, size, required, default, signed, array, format, formatOptions, filters[, options])"
+    },
+    {
+      "name": "testIncompleteDatabasesAreRecoveredImmediately (skip)",
+      "steps": [
+        {
+          "op": "db.subquery_filters",
+          "args": {},
+          "expect": true
+        },
+        {
+          "op": "db.new",
+          "args": {},
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "databases",
+            "attributes": [
+              {
+                "$id": "name",
+                "type": "string",
+                "size": 256,
+                "required": true,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "enabled",
+                "type": "boolean",
+                "size": 0,
+                "required": false,
+                "default": true,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "search",
+                "type": "string",
+                "size": 16384,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "originalId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "type",
+                "type": "string",
+                "size": 128,
+                "required": false,
+                "default": "tablesdb",
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "database",
+                "type": "string",
+                "size": 2000,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "status",
+                "type": "string",
+                "size": 16,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "databases",
+            "document": {
+              "$id": "database-provisioning",
+              "name": "Incomplete database",
+              "enabled": true,
+              "search": "database-provisioning Incomplete database",
+              "originalId": null,
+              "type": "tablesdb",
+              "database": "",
+              "status": "provisioning"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "database_1"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "databases",
+            "document": {
+              "$id": "database-failed",
+              "name": "Incomplete database",
+              "enabled": true,
+              "search": "database-failed Incomplete database",
+              "originalId": null,
+              "type": "tablesdb",
+              "database": "",
+              "status": "failed"
+            }
+          },
+          "expect": "2"
+        },
+        {
+          "op": "mock.source",
+          "args": {
+            "variant": "status"
+          },
+          "bind": "s1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "database-provisioning",
+              "name": "Database",
+              "updatedAt": "",
+              "type": "tablesdb",
+              "database": "source-dsn",
+              "databaseStatus": "ready"
+            }
+          },
+          "bind": "dbres2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s1"
+            },
+            "resource": {
+              "$ref": "dbres2"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "database-failed",
+              "name": "Database",
+              "updatedAt": "",
+              "type": "tablesdb",
+              "database": "source-dsn",
+              "databaseStatus": "ready"
+            }
+          },
+          "bind": "dbres3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s1"
+            },
+            "resource": {
+              "$ref": "dbres3"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "appwrite_destination.new",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "structure": {
+              "attributes": [],
+              "indexes": []
+            },
+            "on_duplicate": "skip"
+          },
+          "bind": "d4",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s1"
+            },
+            "destination": {
+              "$ref": "d4"
+            }
+          },
+          "bind": "t5",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t5"
+            },
+            "resources": [
+              "database"
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "database",
+                "id": "database-provisioning",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "database",
+                "id": "database-failed",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "d4"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "db.get",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "databases",
+            "id": "database-provisioning"
+          },
+          "mask": {
+            "paths": [
+              "/$createdAt",
+              "/$updatedAt"
+            ],
+            "reason": "Timestamps of documents written during the case (now)"
+          },
+          "expect": {
+            "name": "Database",
+            "enabled": true,
+            "search": "database-provisioning Database",
+            "originalId": null,
+            "type": "tablesdb",
+            "database": "",
+            "status": "ready",
+            "$sequence": "1",
+            "$id": "database-provisioning",
+            "$createdAt": "<masked>",
+            "$updatedAt": "<masked>",
+            "$permissions": [],
+            "$collection": "databases"
+          }
+        },
+        {
+          "op": "db.get",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "databases",
+            "id": "database-failed"
+          },
+          "mask": {
+            "paths": [
+              "/$createdAt",
+              "/$updatedAt"
+            ],
+            "reason": "Timestamps of documents written during the case (now)"
+          },
+          "expect": {
+            "name": "Database",
+            "enabled": true,
+            "search": "database-failed Database",
+            "originalId": null,
+            "type": "tablesdb",
+            "database": "",
+            "status": "ready",
+            "$sequence": "2",
+            "$id": "database-failed",
+            "$createdAt": "<masked>",
+            "$updatedAt": "<masked>",
+            "$permissions": [],
+            "$collection": "databases"
+          }
+        },
+        {
+          "op": "db.find",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "_metadata"
+          },
+          "mask": {
+            "paths": [
+              "/*/$createdAt",
+              "/*/$updatedAt"
+            ],
+            "reason": "Timestamps of documents written during the case (now)"
+          },
+          "expect": [
+            {
+              "name": "databases",
+              "attributes": [
+                {
+                  "$id": "name",
+                  "key": "name",
+                  "type": "string",
+                  "size": 256,
+                  "required": true,
+                  "default": null,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "formatOptions": [],
+                  "filters": []
+                },
+                {
+                  "$id": "enabled",
+                  "key": "enabled",
+                  "type": "boolean",
+                  "size": 0,
+                  "required": false,
+                  "default": true,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "formatOptions": [],
+                  "filters": []
+                },
+                {
+                  "$id": "search",
+                  "key": "search",
+                  "type": "string",
+                  "size": 16384,
+                  "required": false,
+                  "default": null,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "formatOptions": [],
+                  "filters": []
+                },
+                {
+                  "$id": "originalId",
+                  "key": "originalId",
+                  "type": "string",
+                  "size": 255,
+                  "required": false,
+                  "default": null,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "formatOptions": [],
+                  "filters": []
+                },
+                {
+                  "$id": "type",
+                  "key": "type",
+                  "type": "string",
+                  "size": 128,
+                  "required": false,
+                  "default": "tablesdb",
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "formatOptions": [],
+                  "filters": []
+                },
+                {
+                  "$id": "database",
+                  "key": "database",
+                  "type": "string",
+                  "size": 2000,
+                  "required": false,
+                  "default": null,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "formatOptions": [],
+                  "filters": []
+                },
+                {
+                  "$id": "status",
+                  "key": "status",
+                  "type": "string",
+                  "size": 16,
+                  "required": false,
+                  "default": null,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "formatOptions": [],
+                  "filters": []
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$id": "databases",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$sequence": "1",
+              "$collection": "_metadata"
+            },
+            {
+              "name": "database_1",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$id": "database_1",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$sequence": "2",
+              "$collection": "_metadata"
+            },
+            {
+              "name": "database_2",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$id": "database_2",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$sequence": "3",
+              "$collection": "_metadata"
+            }
+          ]
+        }
+      ],
+      "blocked": "utopia-database 8.x: Document::getArrayCopy() of a document read back puts $sequence before $id, $createdAt, $updatedAt and $permissions (the Rust 7.x port puts it after them); utopia-database 8.x: collection metadata holds each attribute as Attribute::toDocument() ($id, key, type, size, required, default, signed, array, format, formatOptions, filters[, options])"
+    },
+    {
+      "name": "testIncompleteDatabasesAreRecoveredImmediately (overwrite with an older source)",
+      "steps": [
+        {
+          "op": "db.subquery_filters",
+          "args": {},
+          "expect": true
+        },
+        {
+          "op": "db.new",
+          "args": {},
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "databases",
+            "attributes": [
+              {
+                "$id": "name",
+                "type": "string",
+                "size": 256,
+                "required": true,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "enabled",
+                "type": "boolean",
+                "size": 0,
+                "required": false,
+                "default": true,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "search",
+                "type": "string",
+                "size": 16384,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "originalId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "type",
+                "type": "string",
+                "size": 128,
+                "required": false,
+                "default": "tablesdb",
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "database",
+                "type": "string",
+                "size": 2000,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "status",
+                "type": "string",
+                "size": 16,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "databases",
+            "document": {
+              "$id": "database-provisioning",
+              "name": "Incomplete database",
+              "enabled": true,
+              "search": "database-provisioning Incomplete database",
+              "originalId": null,
+              "type": "tablesdb",
+              "database": "",
+              "status": "provisioning"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "database_1"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "databases",
+            "document": {
+              "$id": "database-failed",
+              "name": "Incomplete database",
+              "enabled": true,
+              "search": "database-failed Incomplete database",
+              "originalId": null,
+              "type": "tablesdb",
+              "database": "",
+              "status": "failed"
+            }
+          },
+          "expect": "2"
+        },
+        {
+          "op": "mock.source",
+          "args": {
+            "variant": "status"
+          },
+          "bind": "s1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "database-provisioning",
+              "name": "Database",
+              "updatedAt": "2000-01-01T00:00:00.000+00:00",
+              "type": "tablesdb",
+              "database": "source-dsn",
+              "databaseStatus": "ready"
+            }
+          },
+          "bind": "dbres2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s1"
+            },
+            "resource": {
+              "$ref": "dbres2"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "database-failed",
+              "name": "Database",
+              "updatedAt": "2000-01-01T00:00:00.000+00:00",
+              "type": "tablesdb",
+              "database": "source-dsn",
+              "databaseStatus": "ready"
+            }
+          },
+          "bind": "dbres3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s1"
+            },
+            "resource": {
+              "$ref": "dbres3"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "appwrite_destination.new",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "structure": {
+              "attributes": [],
+              "indexes": []
+            },
+            "on_duplicate": "overwrite"
+          },
+          "bind": "d4",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s1"
+            },
+            "destination": {
+              "$ref": "d4"
+            }
+          },
+          "bind": "t5",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t5"
+            },
+            "resources": [
+              "database"
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "database",
+                "id": "database-provisioning",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "database",
+                "id": "database-failed",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "d4"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "db.get",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "databases",
+            "id": "database-provisioning"
+          },
+          "mask": {
+            "paths": [
+              "/$createdAt",
+              "/$updatedAt"
+            ],
+            "reason": "Timestamps of documents written during the case (now)"
+          },
+          "expect": {
+            "name": "Database",
+            "enabled": true,
+            "search": "database-provisioning Database",
+            "originalId": null,
+            "type": "tablesdb",
+            "database": "",
+            "status": "ready",
+            "$sequence": "1",
+            "$id": "database-provisioning",
+            "$createdAt": "<masked>",
+            "$updatedAt": "<masked>",
+            "$permissions": [],
+            "$collection": "databases"
+          }
+        },
+        {
+          "op": "db.get",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "databases",
+            "id": "database-failed"
+          },
+          "mask": {
+            "paths": [
+              "/$createdAt",
+              "/$updatedAt"
+            ],
+            "reason": "Timestamps of documents written during the case (now)"
+          },
+          "expect": {
+            "name": "Database",
+            "enabled": true,
+            "search": "database-failed Database",
+            "originalId": null,
+            "type": "tablesdb",
+            "database": "",
+            "status": "ready",
+            "$sequence": "2",
+            "$id": "database-failed",
+            "$createdAt": "<masked>",
+            "$updatedAt": "<masked>",
+            "$permissions": [],
+            "$collection": "databases"
+          }
+        },
+        {
+          "op": "db.find",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "_metadata"
+          },
+          "mask": {
+            "paths": [
+              "/*/$createdAt",
+              "/*/$updatedAt"
+            ],
+            "reason": "Timestamps of documents written during the case (now)"
+          },
+          "expect": [
+            {
+              "name": "databases",
+              "attributes": [
+                {
+                  "$id": "name",
+                  "key": "name",
+                  "type": "string",
+                  "size": 256,
+                  "required": true,
+                  "default": null,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "formatOptions": [],
+                  "filters": []
+                },
+                {
+                  "$id": "enabled",
+                  "key": "enabled",
+                  "type": "boolean",
+                  "size": 0,
+                  "required": false,
+                  "default": true,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "formatOptions": [],
+                  "filters": []
+                },
+                {
+                  "$id": "search",
+                  "key": "search",
+                  "type": "string",
+                  "size": 16384,
+                  "required": false,
+                  "default": null,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "formatOptions": [],
+                  "filters": []
+                },
+                {
+                  "$id": "originalId",
+                  "key": "originalId",
+                  "type": "string",
+                  "size": 255,
+                  "required": false,
+                  "default": null,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "formatOptions": [],
+                  "filters": []
+                },
+                {
+                  "$id": "type",
+                  "key": "type",
+                  "type": "string",
+                  "size": 128,
+                  "required": false,
+                  "default": "tablesdb",
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "formatOptions": [],
+                  "filters": []
+                },
+                {
+                  "$id": "database",
+                  "key": "database",
+                  "type": "string",
+                  "size": 2000,
+                  "required": false,
+                  "default": null,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "formatOptions": [],
+                  "filters": []
+                },
+                {
+                  "$id": "status",
+                  "key": "status",
+                  "type": "string",
+                  "size": 16,
+                  "required": false,
+                  "default": null,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "formatOptions": [],
+                  "filters": []
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$id": "databases",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$sequence": "1",
+              "$collection": "_metadata"
+            },
+            {
+              "name": "database_1",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$id": "database_1",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$sequence": "2",
+              "$collection": "_metadata"
+            },
+            {
+              "name": "database_2",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$id": "database_2",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$sequence": "3",
+              "$collection": "_metadata"
+            }
+          ]
+        }
+      ],
+      "blocked": "utopia-database 8.x: Document::getArrayCopy() of a document read back puts $sequence before $id, $createdAt, $updatedAt and $permissions (the Rust 7.x port puts it after them); utopia-database 8.x: collection metadata holds each attribute as Attribute::toDocument() ($id, key, type, size, required, default, signed, array, format, formatOptions, filters[, options])"
+    },
+    {
+      "name": "testIncompleteDatabasesAreRecoveredImmediately (overwrite with a newer source)",
+      "steps": [
+        {
+          "op": "db.subquery_filters",
+          "args": {},
+          "expect": true
+        },
+        {
+          "op": "db.new",
+          "args": {},
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "databases",
+            "attributes": [
+              {
+                "$id": "name",
+                "type": "string",
+                "size": 256,
+                "required": true,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "enabled",
+                "type": "boolean",
+                "size": 0,
+                "required": false,
+                "default": true,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "search",
+                "type": "string",
+                "size": 16384,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "originalId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "type",
+                "type": "string",
+                "size": 128,
+                "required": false,
+                "default": "tablesdb",
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "database",
+                "type": "string",
+                "size": 2000,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "status",
+                "type": "string",
+                "size": 16,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "databases",
+            "document": {
+              "$id": "database-provisioning",
+              "name": "Incomplete database",
+              "enabled": true,
+              "search": "database-provisioning Incomplete database",
+              "originalId": null,
+              "type": "tablesdb",
+              "database": "",
+              "status": "provisioning"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "database_1"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "databases",
+            "document": {
+              "$id": "database-failed",
+              "name": "Incomplete database",
+              "enabled": true,
+              "search": "database-failed Incomplete database",
+              "originalId": null,
+              "type": "tablesdb",
+              "database": "",
+              "status": "failed"
+            }
+          },
+          "expect": "2"
+        },
+        {
+          "op": "mock.source",
+          "args": {
+            "variant": "status"
+          },
+          "bind": "s1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "database-provisioning",
+              "name": "Database",
+              "updatedAt": "2099-01-01T00:00:00.000+00:00",
+              "type": "tablesdb",
+              "database": "source-dsn",
+              "databaseStatus": "ready"
+            }
+          },
+          "bind": "dbres2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s1"
+            },
+            "resource": {
+              "$ref": "dbres2"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "database-failed",
+              "name": "Database",
+              "updatedAt": "2099-01-01T00:00:00.000+00:00",
+              "type": "tablesdb",
+              "database": "source-dsn",
+              "databaseStatus": "ready"
+            }
+          },
+          "bind": "dbres3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s1"
+            },
+            "resource": {
+              "$ref": "dbres3"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "appwrite_destination.new",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "structure": {
+              "attributes": [],
+              "indexes": []
+            },
+            "on_duplicate": "overwrite"
+          },
+          "bind": "d4",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s1"
+            },
+            "destination": {
+              "$ref": "d4"
+            }
+          },
+          "bind": "t5",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t5"
+            },
+            "resources": [
+              "database"
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "database",
+                "id": "database-provisioning",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "database",
+                "id": "database-failed",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "d4"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "db.get",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "databases",
+            "id": "database-provisioning"
+          },
+          "mask": {
+            "paths": [
+              "/$createdAt",
+              "/$updatedAt"
+            ],
+            "reason": "Timestamps of documents written during the case (now)"
+          },
+          "expect": {
+            "name": "Database",
+            "enabled": true,
+            "search": "database-provisioning Database",
+            "originalId": null,
+            "type": "tablesdb",
+            "database": "",
+            "status": "ready",
+            "$sequence": "1",
+            "$id": "database-provisioning",
+            "$createdAt": "<masked>",
+            "$updatedAt": "<masked>",
+            "$permissions": [],
+            "$collection": "databases"
+          }
+        },
+        {
+          "op": "db.get",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "databases",
+            "id": "database-failed"
+          },
+          "mask": {
+            "paths": [
+              "/$createdAt",
+              "/$updatedAt"
+            ],
+            "reason": "Timestamps of documents written during the case (now)"
+          },
+          "expect": {
+            "name": "Database",
+            "enabled": true,
+            "search": "database-failed Database",
+            "originalId": null,
+            "type": "tablesdb",
+            "database": "",
+            "status": "ready",
+            "$sequence": "2",
+            "$id": "database-failed",
+            "$createdAt": "<masked>",
+            "$updatedAt": "<masked>",
+            "$permissions": [],
+            "$collection": "databases"
+          }
+        },
+        {
+          "op": "db.find",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "_metadata"
+          },
+          "mask": {
+            "paths": [
+              "/*/$createdAt",
+              "/*/$updatedAt"
+            ],
+            "reason": "Timestamps of documents written during the case (now)"
+          },
+          "expect": [
+            {
+              "name": "databases",
+              "attributes": [
+                {
+                  "$id": "name",
+                  "key": "name",
+                  "type": "string",
+                  "size": 256,
+                  "required": true,
+                  "default": null,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "formatOptions": [],
+                  "filters": []
+                },
+                {
+                  "$id": "enabled",
+                  "key": "enabled",
+                  "type": "boolean",
+                  "size": 0,
+                  "required": false,
+                  "default": true,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "formatOptions": [],
+                  "filters": []
+                },
+                {
+                  "$id": "search",
+                  "key": "search",
+                  "type": "string",
+                  "size": 16384,
+                  "required": false,
+                  "default": null,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "formatOptions": [],
+                  "filters": []
+                },
+                {
+                  "$id": "originalId",
+                  "key": "originalId",
+                  "type": "string",
+                  "size": 255,
+                  "required": false,
+                  "default": null,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "formatOptions": [],
+                  "filters": []
+                },
+                {
+                  "$id": "type",
+                  "key": "type",
+                  "type": "string",
+                  "size": 128,
+                  "required": false,
+                  "default": "tablesdb",
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "formatOptions": [],
+                  "filters": []
+                },
+                {
+                  "$id": "database",
+                  "key": "database",
+                  "type": "string",
+                  "size": 2000,
+                  "required": false,
+                  "default": null,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "formatOptions": [],
+                  "filters": []
+                },
+                {
+                  "$id": "status",
+                  "key": "status",
+                  "type": "string",
+                  "size": 16,
+                  "required": false,
+                  "default": null,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "formatOptions": [],
+                  "filters": []
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$id": "databases",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$sequence": "1",
+              "$collection": "_metadata"
+            },
+            {
+              "name": "database_1",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$id": "database_1",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$sequence": "2",
+              "$collection": "_metadata"
+            },
+            {
+              "name": "database_2",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$id": "database_2",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$sequence": "3",
+              "$collection": "_metadata"
+            }
+          ]
+        }
+      ],
+      "blocked": "utopia-database 8.x: Document::getArrayCopy() of a document read back puts $sequence before $id, $createdAt, $updatedAt and $permissions (the Rust 7.x port puts it after them); utopia-database 8.x: collection metadata holds each attribute as Attribute::toDocument() ($id, key, type, size, required, default, signed, array, format, formatOptions, filters[, options])"
+    },
+    {
+      "name": "a failed database without its collection is recovered under OnDuplicate::Fail",
+      "steps": [
+        {
+          "op": "db.subquery_filters",
+          "args": {},
+          "expect": true
+        },
+        {
+          "op": "db.new",
+          "args": {},
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "databases",
+            "attributes": [
+              {
+                "$id": "name",
+                "type": "string",
+                "size": 256,
+                "required": true,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "enabled",
+                "type": "boolean",
+                "size": 0,
+                "required": false,
+                "default": true,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "search",
+                "type": "string",
+                "size": 16384,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "originalId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "type",
+                "type": "string",
+                "size": 128,
+                "required": false,
+                "default": "tablesdb",
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "database",
+                "type": "string",
+                "size": 2000,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "status",
+                "type": "string",
+                "size": 16,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "databases",
+            "document": {
+              "$id": "database",
+              "name": "Database",
+              "enabled": true,
+              "search": "database Database",
+              "originalId": null,
+              "type": "tablesdb",
+              "database": "",
+              "status": "failed"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "mock.source",
+          "args": {
+            "variant": "status"
+          },
+          "bind": "s1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "database",
+              "name": "Database",
+              "updatedAt": "",
+              "type": "tablesdb",
+              "database": "source-dsn",
+              "databaseStatus": "ready"
+            }
+          },
+          "bind": "dbres2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s1"
+            },
+            "resource": {
+              "$ref": "dbres2"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "appwrite_destination.new",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "structure": {
+              "attributes": [],
+              "indexes": []
+            },
+            "on_duplicate": "fail"
+          },
+          "bind": "d3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s1"
+            },
+            "destination": {
+              "$ref": "d3"
+            }
+          },
+          "bind": "t4",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t4"
+            },
+            "resources": [
+              "database"
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "database",
+                "id": "database",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "d3"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "db.get",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "databases",
+            "id": "database"
+          },
+          "mask": {
+            "paths": [
+              "/$createdAt",
+              "/$updatedAt"
+            ],
+            "reason": "Timestamps of documents written during the case (now)"
+          },
+          "expect": {
+            "name": "Database",
+            "enabled": true,
+            "search": "database Database",
+            "originalId": null,
+            "type": "tablesdb",
+            "database": "",
+            "status": "ready",
+            "$sequence": "1",
+            "$id": "database",
+            "$createdAt": "<masked>",
+            "$updatedAt": "<masked>",
+            "$permissions": [],
+            "$collection": "databases"
+          }
+        },
+        {
+          "op": "db.find",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "_metadata"
+          },
+          "mask": {
+            "paths": [
+              "/*/$createdAt",
+              "/*/$updatedAt"
+            ],
+            "reason": "Timestamps of documents written during the case (now)"
+          },
+          "expect": [
+            {
+              "name": "databases",
+              "attributes": [
+                {
+                  "$id": "name",
+                  "key": "name",
+                  "type": "string",
+                  "size": 256,
+                  "required": true,
+                  "default": null,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "formatOptions": [],
+                  "filters": []
+                },
+                {
+                  "$id": "enabled",
+                  "key": "enabled",
+                  "type": "boolean",
+                  "size": 0,
+                  "required": false,
+                  "default": true,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "formatOptions": [],
+                  "filters": []
+                },
+                {
+                  "$id": "search",
+                  "key": "search",
+                  "type": "string",
+                  "size": 16384,
+                  "required": false,
+                  "default": null,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "formatOptions": [],
+                  "filters": []
+                },
+                {
+                  "$id": "originalId",
+                  "key": "originalId",
+                  "type": "string",
+                  "size": 255,
+                  "required": false,
+                  "default": null,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "formatOptions": [],
+                  "filters": []
+                },
+                {
+                  "$id": "type",
+                  "key": "type",
+                  "type": "string",
+                  "size": 128,
+                  "required": false,
+                  "default": "tablesdb",
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "formatOptions": [],
+                  "filters": []
+                },
+                {
+                  "$id": "database",
+                  "key": "database",
+                  "type": "string",
+                  "size": 2000,
+                  "required": false,
+                  "default": null,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "formatOptions": [],
+                  "filters": []
+                },
+                {
+                  "$id": "status",
+                  "key": "status",
+                  "type": "string",
+                  "size": 16,
+                  "required": false,
+                  "default": null,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "formatOptions": [],
+                  "filters": []
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$id": "databases",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$sequence": "1",
+              "$collection": "_metadata"
+            },
+            {
+              "name": "database_1",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$id": "database_1",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$sequence": "2",
+              "$collection": "_metadata"
+            }
+          ]
+        }
+      ],
+      "blocked": "utopia-database 8.x: Document::getArrayCopy() of a document read back puts $sequence before $id, $createdAt, $updatedAt and $permissions (the Rust 7.x port puts it after them); utopia-database 8.x: collection metadata holds each attribute as Attribute::toDocument() ($id, key, type, size, required, default, signed, array, format, formatOptions, filters[, options])"
+    },
+    {
+      "name": "a provisioning database without its collection is recovered under OnDuplicate::Fail",
+      "steps": [
+        {
+          "op": "db.subquery_filters",
+          "args": {},
+          "expect": true
+        },
+        {
+          "op": "db.new",
+          "args": {},
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "databases",
+            "attributes": [
+              {
+                "$id": "name",
+                "type": "string",
+                "size": 256,
+                "required": true,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "enabled",
+                "type": "boolean",
+                "size": 0,
+                "required": false,
+                "default": true,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "search",
+                "type": "string",
+                "size": 16384,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "originalId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "type",
+                "type": "string",
+                "size": 128,
+                "required": false,
+                "default": "tablesdb",
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "database",
+                "type": "string",
+                "size": 2000,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "status",
+                "type": "string",
+                "size": 16,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "db.document",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "databases",
+            "document": {
+              "$id": "database",
+              "name": "Database",
+              "enabled": true,
+              "search": "database Database",
+              "originalId": null,
+              "type": "tablesdb",
+              "database": "",
+              "status": "provisioning"
+            }
+          },
+          "expect": "1"
+        },
+        {
+          "op": "mock.source",
+          "args": {
+            "variant": "status"
+          },
+          "bind": "s1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "database",
+              "name": "Database",
+              "updatedAt": "",
+              "type": "tablesdb",
+              "database": "source-dsn",
+              "databaseStatus": "ready"
+            }
+          },
+          "bind": "dbres2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s1"
+            },
+            "resource": {
+              "$ref": "dbres2"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "appwrite_destination.new",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "structure": {
+              "attributes": [],
+              "indexes": []
+            },
+            "on_duplicate": "fail"
+          },
+          "bind": "d3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s1"
+            },
+            "destination": {
+              "$ref": "d3"
+            }
+          },
+          "bind": "t4",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t4"
+            },
+            "resources": [
+              "database"
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "database",
+                "id": "database",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "d3"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "db.get",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "databases",
+            "id": "database"
+          },
+          "mask": {
+            "paths": [
+              "/$createdAt",
+              "/$updatedAt"
+            ],
+            "reason": "Timestamps of documents written during the case (now)"
+          },
+          "expect": {
+            "name": "Database",
+            "enabled": true,
+            "search": "database Database",
+            "originalId": null,
+            "type": "tablesdb",
+            "database": "",
+            "status": "ready",
+            "$sequence": "1",
+            "$id": "database",
+            "$createdAt": "<masked>",
+            "$updatedAt": "<masked>",
+            "$permissions": [],
+            "$collection": "databases"
+          }
+        },
+        {
+          "op": "db.find",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "_metadata"
+          },
+          "mask": {
+            "paths": [
+              "/*/$createdAt",
+              "/*/$updatedAt"
+            ],
+            "reason": "Timestamps of documents written during the case (now)"
+          },
+          "expect": [
+            {
+              "name": "databases",
+              "attributes": [
+                {
+                  "$id": "name",
+                  "key": "name",
+                  "type": "string",
+                  "size": 256,
+                  "required": true,
+                  "default": null,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "formatOptions": [],
+                  "filters": []
+                },
+                {
+                  "$id": "enabled",
+                  "key": "enabled",
+                  "type": "boolean",
+                  "size": 0,
+                  "required": false,
+                  "default": true,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "formatOptions": [],
+                  "filters": []
+                },
+                {
+                  "$id": "search",
+                  "key": "search",
+                  "type": "string",
+                  "size": 16384,
+                  "required": false,
+                  "default": null,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "formatOptions": [],
+                  "filters": []
+                },
+                {
+                  "$id": "originalId",
+                  "key": "originalId",
+                  "type": "string",
+                  "size": 255,
+                  "required": false,
+                  "default": null,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "formatOptions": [],
+                  "filters": []
+                },
+                {
+                  "$id": "type",
+                  "key": "type",
+                  "type": "string",
+                  "size": 128,
+                  "required": false,
+                  "default": "tablesdb",
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "formatOptions": [],
+                  "filters": []
+                },
+                {
+                  "$id": "database",
+                  "key": "database",
+                  "type": "string",
+                  "size": 2000,
+                  "required": false,
+                  "default": null,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "formatOptions": [],
+                  "filters": []
+                },
+                {
+                  "$id": "status",
+                  "key": "status",
+                  "type": "string",
+                  "size": 16,
+                  "required": false,
+                  "default": null,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "formatOptions": [],
+                  "filters": []
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$id": "databases",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$sequence": "1",
+              "$collection": "_metadata"
+            },
+            {
+              "name": "database_1",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$id": "database_1",
+              "$createdAt": "<masked>",
+              "$updatedAt": "<masked>",
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$sequence": "2",
+              "$collection": "_metadata"
+            }
+          ]
+        }
+      ],
+      "blocked": "utopia-database 8.x: Document::getArrayCopy() of a document read back puts $sequence before $id, $createdAt, $updatedAt and $permissions (the Rust 7.x port puts it after them); utopia-database 8.x: collection metadata holds each attribute as Attribute::toDocument() ($id, key, type, size, required, default, signed, array, format, formatOptions, filters[, options])"
+    },
+    {
+      "name": "testReadyFlipAttemptsEveryDatabaseAndReportsEveryFailure, without failures: every database is flipped",
+      "steps": [
+        {
+          "op": "db.subquery_filters",
+          "args": {},
+          "expect": true
+        },
+        {
+          "op": "db.new",
+          "args": {},
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.collection",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "id": "databases",
+            "attributes": [
+              {
+                "$id": "name",
+                "type": "string",
+                "size": 256,
+                "required": true,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "enabled",
+                "type": "boolean",
+                "size": 0,
+                "required": false,
+                "default": true,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "search",
+                "type": "string",
+                "size": 16384,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "originalId",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "type",
+                "type": "string",
+                "size": 128,
+                "required": false,
+                "default": "tablesdb",
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "database",
+                "type": "string",
+                "size": 2000,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              },
+              {
+                "$id": "status",
+                "type": "string",
+                "size": 16,
+                "required": false,
+                "default": null,
+                "array": false,
+                "signed": true,
+                "filters": []
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "mock.source",
+          "args": {
+            "variant": "status"
+          },
+          "bind": "s1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "database-first",
+              "name": "Database",
+              "updatedAt": "",
+              "type": "tablesdb",
+              "database": "source-dsn",
+              "databaseStatus": "ready"
+            }
+          },
+          "bind": "dbres2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s1"
+            },
+            "resource": {
+              "$ref": "dbres2"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "database-second",
+              "name": "Database",
+              "updatedAt": "",
+              "type": "tablesdb",
+              "database": "source-dsn",
+              "databaseStatus": "ready"
+            }
+          },
+          "bind": "dbres3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s1"
+            },
+            "resource": {
+              "$ref": "dbres3"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "resource.new",
+          "args": {
+            "class": "Database\\Database",
+            "args": {
+              "id": "database-third",
+              "name": "Database",
+              "updatedAt": "",
+              "type": "tablesdb",
+              "database": "source-dsn",
+              "databaseStatus": "ready"
+            }
+          },
+          "bind": "dbres4",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "mock.push",
+          "args": {
+            "source": {
+              "$ref": "s1"
+            },
+            "resource": {
+              "$ref": "dbres4"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "appwrite_destination.new",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "structure": {
+              "attributes": [],
+              "indexes": []
+            },
+            "on_duplicate": "fail"
+          },
+          "bind": "d5",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.new",
+          "args": {
+            "source": {
+              "$ref": "s1"
+            },
+            "destination": {
+              "$ref": "d5"
+            }
+          },
+          "bind": "t6",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transfer.run",
+          "args": {
+            "transfer": {
+              "$ref": "t6"
+            },
+            "resources": [
+              "database"
+            ]
+          },
+          "expect": [
+            [
+              {
+                "$resource": "database",
+                "id": "database-first",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "database",
+                "id": "database-second",
+                "status": "success",
+                "message": ""
+              },
+              {
+                "$resource": "database",
+                "id": "database-third",
+                "status": "success",
+                "message": ""
+              }
+            ]
+          ]
+        },
+        {
+          "op": "target.errors",
+          "args": {
+            "target": {
+              "$ref": "d5"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "db.get",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "databases",
+            "id": "database-first"
+          },
+          "mask": {
+            "paths": [
+              "/$createdAt",
+              "/$updatedAt"
+            ],
+            "reason": "Timestamps of documents written during the case (now)"
+          },
+          "expect": {
+            "name": "Database",
+            "enabled": true,
+            "search": "database-first Database",
+            "originalId": null,
+            "type": "tablesdb",
+            "database": "",
+            "status": "ready",
+            "$sequence": "1",
+            "$id": "database-first",
+            "$createdAt": "<masked>",
+            "$updatedAt": "<masked>",
+            "$permissions": [],
+            "$collection": "databases"
+          }
+        },
+        {
+          "op": "db.get",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "databases",
+            "id": "database-second"
+          },
+          "mask": {
+            "paths": [
+              "/$createdAt",
+              "/$updatedAt"
+            ],
+            "reason": "Timestamps of documents written during the case (now)"
+          },
+          "expect": {
+            "name": "Database",
+            "enabled": true,
+            "search": "database-second Database",
+            "originalId": null,
+            "type": "tablesdb",
+            "database": "",
+            "status": "ready",
+            "$sequence": "2",
+            "$id": "database-second",
+            "$createdAt": "<masked>",
+            "$updatedAt": "<masked>",
+            "$permissions": [],
+            "$collection": "databases"
+          }
+        },
+        {
+          "op": "db.get",
+          "args": {
+            "db": {
+              "$ref": "db"
+            },
+            "collection": "databases",
+            "id": "database-third"
+          },
+          "mask": {
+            "paths": [
+              "/$createdAt",
+              "/$updatedAt"
+            ],
+            "reason": "Timestamps of documents written during the case (now)"
+          },
+          "expect": {
+            "name": "Database",
+            "enabled": true,
+            "search": "database-third Database",
+            "originalId": null,
+            "type": "tablesdb",
+            "database": "",
+            "status": "ready",
+            "$sequence": "3",
+            "$id": "database-third",
+            "$createdAt": "<masked>",
+            "$updatedAt": "<masked>",
+            "$permissions": [],
+            "$collection": "databases"
+          }
+        }
+      ],
+      "blocked": "utopia-database 8.x: Document::getArrayCopy() of a document read back puts $sequence before $id, $createdAt, $updatedAt and $permissions (the Rust 7.x port puts it after them)"
     }
   ]
 }

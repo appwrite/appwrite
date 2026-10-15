@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Compat\Migration;
 
 use Override;
+use Utopia\Migration\Resource;
 use Utopia\Migration\Source;
 use Utopia\Migration\Sources\Firebase;
 use Utopia\Migration\Target;
@@ -80,6 +81,19 @@ final class Mocks
                 public function supportsDatabaseStatus(): bool
                 {
                     return true;
+                }
+            },
+            // TransfersColumns::transferSchema(): columns before indexes, the
+            // order a real source emits them in.
+            'schema' => new class () extends MockSource {
+                #[Override]
+                protected function exportGroupDatabases(int $batchSize, array $resources): void
+                {
+                    foreach ([Resource::TYPE_DATABASE, Resource::TYPE_TABLE, Resource::TYPE_COLUMN, Resource::TYPE_INDEX] as $type) {
+                        if (Resource::isSupported($type, $resources)) {
+                            parent::exportGroupDatabases($batchSize, [$type]);
+                        }
+                    }
                 }
             },
             default => throw new \Tests\Compat\Fault("unknown mock source `{$variant}`"),
@@ -206,5 +220,49 @@ final class FirebaseFixture extends Firebase
         }
 
         return parent::call($method, $path, $headers, $params, $responseHeaders);
+    }
+}
+
+/**
+ * TargetTimeoutTest's ShortTimeoutTarget: a target whose timeouts are short
+ * enough to wait out, and a public fetch() of Target::call().
+ */
+final class ShortTimeoutTarget extends Target
+{
+    public const int CONNECT_TIMEOUT = 1;
+
+    public const int STALL_TIMEOUT = 3;
+
+    public const int REQUEST_TIMEOUT = 1;
+
+    #[Override]
+    public static function getName(): string
+    {
+        return 'ShortTimeout';
+    }
+
+    #[Override]
+    public static function getSupportedResources(): array
+    {
+        return [];
+    }
+
+    #[Override]
+    public function run(array $resources, callable $callback, string $rootResourceId = ''): void
+    {
+    }
+
+    #[Override]
+    public function report(array $resources = [], array $resourceIds = []): array
+    {
+        return [];
+    }
+
+    /**
+     * @return array<mixed>|string
+     */
+    public function fetch(string $url): array|string
+    {
+        return $this->call('GET', $url);
     }
 }
