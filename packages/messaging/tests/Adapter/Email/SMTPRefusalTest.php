@@ -55,6 +55,49 @@ final class SMTPRefusalTest extends TestCase
             '550 5.2.1 Not sending to previously bounced email',
             true,
         ];
+        yield 'sender address refused' => [
+            ['220 smtp.example.test ESMTP', self::EHLO, '235 2.7.0 Authentication successful', '553 5.7.1 Sender address rejected: not owned by user jane'],
+            '553 5.7.1 Sender address rejected',
+            true,
+        ];
+        yield 'recipient mailbox does not exist' => [
+            ['220 smtp.example.test ESMTP', self::EHLO, '235 2.7.0 Authentication successful', '250 2.1.0 Ok', '550 5.1.1 <to@example.test>: Recipient address rejected: User unknown', '250 2.0.0 Ok'],
+            '550 5.1.1',
+            true,
+        ];
+        yield 'message refused after the data' => [
+            ['220 smtp.example.test ESMTP', self::EHLO, '235 2.7.0 Authentication successful', '250 2.1.0 Ok', '250 2.1.5 Ok', '354 End data with <CR><LF>.<CR><LF>', '554 5.7.1 Message rejected as spam'],
+            '554 5.7.1 Message rejected as spam',
+            true,
+        ];
+        // A 421 like the one smtp.hostinger.com sent in sgp1 on 2026-10-14, here
+        // in place of an answer to the login: the server ends the session, and a
+        // later attempt can pass.
+        yield 'closing at the login' => [
+            ['220 smtp.hostinger.com ESMTP', self::EHLO, '421 4.7.0 Too many concurrent SMTP connections, try again later'],
+            'Authentication failed: 421 4.7.0 Too many concurrent SMTP connections',
+            false,
+        ];
+        yield 'sender refused for now' => [
+            ['220 smtp.example.test ESMTP', self::EHLO, '235 2.7.0 Authentication successful', '451 4.3.0 Temporary lookup failure'],
+            '451 4.3.0 Temporary lookup failure',
+            false,
+        ];
+        yield 'recipient refused for lack of storage' => [
+            ['220 smtp.example.test ESMTP', self::EHLO, '235 2.7.0 Authentication successful', '250 2.1.0 Ok', '452 4.5.3 Insufficient system storage', '250 2.0.0 Ok'],
+            '452 4.5.3 Insufficient system storage',
+            false,
+        ];
+        yield 'closing at the recipient' => [
+            ['220 smtp.example.test ESMTP', self::EHLO, '235 2.7.0 Authentication successful', '250 2.1.0 Ok', '421 4.7.0 Service not available, closing transmission channel'],
+            '421 4.7.0 Service not available',
+            false,
+        ];
+        yield 'message deferred after the data' => [
+            ['220 smtp.example.test ESMTP', self::EHLO, '235 2.7.0 Authentication successful', '250 2.1.0 Ok', '250 2.1.5 Ok', '354 End data with <CR><LF>.<CR><LF>', '451 4.7.1 Greylisted, please try again in 300 seconds'],
+            '451 4.7.1 Greylisted',
+            false,
+        ];
         yield 'login server unreachable for now' => [
             ['220 smtp.protonmail.ch ESMTP', self::EHLO, '454 4.7.0 Temporary authentication failure: Connection lost to authentication server'],
             'Authentication failed: 454 4.7.0 Temporary authentication failure',
@@ -236,6 +279,36 @@ final class SMTPRefusalTest extends TestCase
     {
         $result = $this->send('127.0.0.1:' . ScriptedSmtpServer::closedPort());
 
+        $this->assertStringStartsWith('No SMTP host answered: ', $result['results'][0]['error']);
+        $this->assertFalse($result['results'][0]['permanent']);
+    }
+
+    /**
+     * The kernel completes the connection from the listen backlog, and nothing
+     * ever greets: the client gives up on the read, as it does on a server too
+     * busy to answer.
+     */
+    public function testAHostThatNeverGreetsIsWorthRepeating(): void
+    {
+        $server = stream_socket_server('tcp://127.0.0.1:0');
+        $this->assertNotFalse($server);
+        $address = (string) stream_socket_get_name($server, false);
+        $port = (int) substr($address, (int) strrpos($address, ':') + 1);
+
+        try {
+            $adapter = new SMTP(host: "127.0.0.1:{$port}", username: 'jane', password: 'secret', timeout: 1, timelimit: 1);
+            $result = $adapter->send(new Email(
+                to: [['email' => 'to@example.test', 'name' => 'To']],
+                subject: 'Your code',
+                content: '123456',
+                fromName: 'Sender',
+                fromEmail: 'sender@example.test',
+            ));
+        } finally {
+            fclose($server);
+        }
+
+        $this->assertSame(0, $result['deliveredTo']);
         $this->assertStringStartsWith('No SMTP host answered: ', $result['results'][0]['error']);
         $this->assertFalse($result['results'][0]['permanent']);
     }
