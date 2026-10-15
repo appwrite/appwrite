@@ -55,7 +55,8 @@ use Utopia\Queue\Queue;
  * So the broker is wired the way Broker\Redis is: a connection dedicated to the
  * blocking receive, and a second, lock-guarded connection carrying the commands.
  *
- *   receive connection  — fetch, provisioning, the dead-letter advisory, publishing.
+ *   receive connection  — fetch, provisioning, the dead-letter advisory (consumers
+ *     only), publishing.
  *     Driven by the consume loop, behind {@see self::synchronize()}. The fetch parks
  *     here for the whole receive timeout, and nothing on the hot path waits for it.
  *   commands connection — commit, reject, extend, getQueueSize. Driven by the handler
@@ -776,6 +777,27 @@ class Nats implements Synchronous, Consumer, Bounded
     {
         $this->ensure($queue);
         $key = $this->identity($queue);
+
+        // The fallback for the spare delivery dying too: JetStream then stops delivering
+        // and emits this advisory, which drainDeadLetters() reads to move the message to
+        // the dead stream. Only a fallback, because core advisories are ephemeral: one
+        // emitted while no broker is subscribed is lost, and the message stays on the
+        // work stream reading as neither pending nor in flight.
+        //
+        // The queue group is what keeps this to one dead-letter copy: without it every
+        // worker publishes its own copy of the exhausted message. But the server hands
+        // each advisory to one member at random, so only a broker that drains it may
+        // join. Subscribed here, on the first receive, rather than in provisioning,
+        // which a publisher also runs and would join the group without ever reading it.
+        //
+        // Subscribed before this broker's first fetch, on the same connection. The
+        // server processes a connection's protocol in order, so the subscription is in
+        // place before any delivery this broker takes can exhaust. A reconnect clears
+        // it with the socket, and the next receive takes it again.
+        $this->advisories[$key] ??= $this->connection()->subscribe(
+            self::ADVISORY_MAX_DELIVERIES . ".{$this->workStream($queue)}.*",
+            queue: self::ADVISORY_GROUP,
+        );
         $this->drainDeadLetters($queue, $key);
 
         // Fetch one message first so a sparse queue never waits for a batch to fill.
@@ -1504,21 +1526,8 @@ class Nats implements Synchronous, Consumer, Bounded
             backoff: $this->backoff,
         ));
 
-        // The fallback for the spare delivery above dying too: JetStream then stops
-        // delivering and emits this advisory, which receive() drains to move the
-        // message to the dead stream. Only a fallback, because core advisories are
-        // ephemeral: one emitted while no broker is subscribed is lost, and the
-        // message stays on the work stream reading as neither pending nor in flight.
-        // The queue group is what keeps this to one dead-letter copy. A plain
-        // subscription delivers the advisory to every worker process, and each
-        // of them then publishes its own copy of the exhausted message onto the
-        // dead stream — so the dead letter multiplies by the worker count, on
-        // exactly the messages an operator is trying to read. With a group the
-        // server picks one subscriber.
-        $this->advisories[$key] = $this->connection()->subscribe(
-            self::ADVISORY_MAX_DELIVERIES . ".{$this->workStream($queue)}.*",
-            queue: self::ADVISORY_GROUP,
-        );
+        // The max-deliveries advisory is subscribed by pull(), not here: provisioning
+        // also runs on a publisher's first publish, and a publisher never drains it.
 
         $this->spareDelivery[$key] = $this->maxDeliver + 1;
         $this->provisioned[$key] = true;
@@ -1567,14 +1576,6 @@ class Nats implements Synchronous, Consumer, Bounded
         if ($this->spareDelivery[$key] === null && $allowed >= 1) {
             $this->report(new \RuntimeException('NATS consumer "' . self::CONSUMER_WORK . "\" on stream \"{$this->workStream($queue)}\" allows no delivery past max_deliver {$allowed}, so a message exhausted while no broker is subscribed is left on the work stream; reprovision it from the queue's owner."));
         }
-
-        // Same advisory subscription provisionOnce() takes: a core subscription carries no
-        // configuration, and a broker consuming a pre-provisioned queue still owes its
-        // exhausted messages a dead letter.
-        $this->advisories[$key] = $this->connection()->subscribe(
-            self::ADVISORY_MAX_DELIVERIES . ".{$this->workStream($queue)}.*",
-            queue: self::ADVISORY_GROUP,
-        );
 
         $this->provisioned[$key] = true;
     }

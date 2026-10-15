@@ -311,6 +311,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - appwrite
     environment:
       - VITE_CONSOLE_PROFILE=self-hosted
+      - VITE_APPWRITE_VERSION=2.5.0
       - APPWRITE_ENDPOINT_SAME_ORIGIN=true
     labels:
       - traefik.enable=true

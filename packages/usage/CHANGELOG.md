@@ -10,6 +10,19 @@
   already could. `setup()` adds the column to an existing event table, and the
   daily materialized view still groups by resource identity, so billing sums
   every member.
+- `Usage::migrate()` brings an existing schema up to date (tables, the daily
+  materialized view, columns, skip indexes and projections) without touching
+  retention. `setup()` is now `migrate()` followed by the retention TTL, so a
+  deployment can roll out a new column without re-applying a TTL it has not
+  reviewed. Adapters inherit a `migrate()` that runs `setup()`; the ClickHouse
+  adapter overrides it.
+
+### Fixed
+
+- `Accumulator::flush()` writes at most 1,000 entries per `addBatch()` call
+  and drops each batch from the buffer as soon as it is written. Before, it
+  handed the whole buffer to one `addBatch()` call, which inserts in chunks,
+  so when a later chunk failed the next flush wrote the earlier chunks again.
 
 ### Breaking
 
