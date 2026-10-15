@@ -1406,4 +1406,61 @@ export const jaAccountGlobalDictionary: Record<string, string> = {
     'ブラウザーから、このデバイスまたはパスワードマネージャーにパスキーを作成するよう求められます。',
   'You will no longer be able to sign in with this passkey. This action cannot be undone.':
     'このパスキーではサインインできなくなります。この操作は元に戻せません。',
+
+  // Zero projects
+  'Build window ended.': 'ビルド期間が終了しました。',
+  'Build window ends': 'ビルド期間の終了',
+  'Claim into a new free organization': '新しい無料組織で引き継ぐ',
+  'Claim it to keep it': '引き継いで保持しましょう',
+  'Claim project': 'プロジェクトを引き継ぐ',
+  'Claim this project to create more projects':
+    'プロジェクトを追加で作成するには、このプロジェクトを引き継いでください',
+  'Claim this project to create organizations':
+    '組織を作成するには、このプロジェクトを引き継いでください',
+  'Claim this project to keep it, with everything already built in it.':
+    'このプロジェクトを引き継ぐと、作成済みの内容をすべてそのまま保持できます。',
+  'Claim this project to set a password':
+    'パスワードを設定するには、このプロジェクトを引き継いでください',
+  'Claim this project to set an email':
+    'メールアドレスを設定するには、このプロジェクトを引き継いでください',
+  'Claim within {time} or the project is deleted.':
+    '{time}以内に引き継がないと、プロジェクトは削除されます。',
+  'Claim your project': 'プロジェクトを引き継ぐ',
+  'Could not claim the project': 'プロジェクトを引き継げませんでした',
+  'Could not sign out. Try again.':
+    'サインアウトできませんでした。もう一度お試しください。',
+  'Could not start a project without an account':
+    'アカウントなしでプロジェクトを開始できませんでした',
+  'Deleted unless claimed by': '引き継ぎ期限（過ぎると削除）',
+  'Invalid claim link': '無効な引き継ぎリンク',
+  'Just exploring?': 'まずは試してみたいですか？',
+  'Move into an existing organization': '既存の組織に移動',
+  'Move project': 'プロジェクトを移動',
+  'No projects are available without an account right now. Try again shortly or sign up.':
+    '現在、アカウントなしで利用できるプロジェクトはありません。しばらくしてから再度お試しいただくか、サインアップしてください。',
+  'Project already claimed': 'このプロジェクトはすでに引き継がれています',
+  'Project claimed': 'プロジェクトを引き継ぎました',
+  'Project deleted': 'プロジェクトは削除されました',
+  'Start without an account': 'アカウントなしで始める',
+  'The build window ended and the project is paused. Claim it to bring it back with all its data.':
+    'ビルド期間が終了し、プロジェクトは一時停止しています。引き継ぐと、すべてのデータとともに再開できます。',
+  'The project moves into an organization you own and counts toward its plan.':
+    'プロジェクトはあなたが所有する組織に移動し、その組織のプランの対象になります。',
+  'This claim link is incomplete or its secret is wrong. Use the exact link you were given.':
+    'この引き継ぎリンクは不完全か、シークレットが正しくありません。受け取ったリンクをそのまま使用してください。',
+  'This is a temporary project. Open the claim link you were given to keep it.':
+    'これは一時的なプロジェクトです。保持するには、受け取った引き継ぎリンクを開いてください。',
+  'This project does not exist or was already removed.':
+    'このプロジェクトは存在しないか、すでに削除されています。',
+  'This project now belongs to an account. Sign in to that account to open it.':
+    'このプロジェクトはすでにアカウントに属しています。開くにはそのアカウントでサインインしてください。',
+  'This project was not claimed in time and has been deleted.':
+    '期限内に引き継がれなかったため、このプロジェクトは削除されました。',
+  'This project was not claimed in time, so it and its data were deleted.':
+    '期限内に引き継がれなかったため、このプロジェクトとそのデータは削除されました。',
+  'Waiting for claim': '引き継ぎ待ち',
+  'You already have a free organization. Choose an organization to move the project into.':
+    '無料組織はすでにお持ちです。プロジェクトの移動先の組織を選択してください。',
+  'Zero project': 'Zero プロジェクト',
+  '{time} left to build': 'ビルド期間の残り {time}',
 }

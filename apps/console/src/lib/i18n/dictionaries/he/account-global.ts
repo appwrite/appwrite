@@ -1407,4 +1407,60 @@ export const heAccountGlobalDictionary: Record<string, string> = {
     'הדפדפן יבקש מכם ליצור מפתח גישה במכשיר הזה או במנהל הסיסמאות שלכם.',
   'You will no longer be able to sign in with this passkey. This action cannot be undone.':
     'לא תוכלו עוד להתחבר עם מפתח הגישה הזה. לא ניתן לבטל פעולה זו.',
+
+  // Zero projects
+  'Build window ended.': 'חלון הבנייה הסתיים.',
+  'Build window ends': 'חלון הבנייה מסתיים',
+  'Claim into a new free organization': 'העברה לארגון חינמי חדש',
+  'Claim it to keep it': 'תבעו בעלות כדי לשמור עליו',
+  'Claim project': 'תביעת בעלות על הפרויקט',
+  'Claim this project to create more projects':
+    'תבעו בעלות על הפרויקט כדי ליצור פרויקטים נוספים',
+  'Claim this project to create organizations':
+    'תבעו בעלות על הפרויקט כדי ליצור ארגונים',
+  'Claim this project to keep it, with everything already built in it.':
+    'תבעו בעלות על הפרויקט כדי לשמור אותו, עם כל מה שכבר בניתם בו.',
+  'Claim this project to set a password':
+    'תבעו בעלות על הפרויקט כדי להגדיר סיסמה',
+  'Claim this project to set an email':
+    'תבעו בעלות על הפרויקט כדי להגדיר אימייל',
+  'Claim within {time} or the project is deleted.':
+    'תבעו בעלות בתוך {time}, אחרת הפרויקט יימחק.',
+  'Claim your project': 'תביעת בעלות על הפרויקט',
+  'Could not claim the project': 'לא ניתן היה לתבוע בעלות על הפרויקט',
+  'Could not sign out. Try again.': 'לא ניתן היה להתנתק. נסו שוב.',
+  'Could not start a project without an account':
+    'לא ניתן היה להתחיל פרויקט בלי חשבון',
+  'Deleted unless claimed by': 'יימחק אם לא תיתבע בעלות עד',
+  'Invalid claim link': 'קישור תביעת בעלות לא תקין',
+  'Just exploring?': 'רק בודקים?',
+  'Move into an existing organization': 'העברה לארגון קיים',
+  'Move project': 'העברת הפרויקט',
+  'No projects are available without an account right now. Try again shortly or sign up.':
+    'אין כרגע פרויקטים זמינים בלי חשבון. נסו שוב בקרוב או הירשמו.',
+  'Project already claimed': 'כבר נתבעה בעלות על הפרויקט',
+  'Project claimed': 'הבעלות על הפרויקט נתבעה',
+  'Project deleted': 'הפרויקט נמחק',
+  'Start without an account': 'התחלה בלי חשבון',
+  'The build window ended and the project is paused. Claim it to bring it back with all its data.':
+    'חלון הבנייה הסתיים והפרויקט מושהה. תבעו בעלות כדי להחזיר אותו עם כל הנתונים שלו.',
+  'The project moves into an organization you own and counts toward its plan.':
+    'הפרויקט יועבר לארגון בבעלותכם וייספר במסגרת התוכנית שלו.',
+  'This claim link is incomplete or its secret is wrong. Use the exact link you were given.':
+    'קישור תביעת הבעלות חלקי או שהסוד שבו שגוי. השתמשו בקישור המדויק שקיבלתם.',
+  'This is a temporary project. Open the claim link you were given to keep it.':
+    'זהו פרויקט זמני. פתחו את קישור תביעת הבעלות שקיבלתם כדי לשמור עליו.',
+  'This project does not exist or was already removed.':
+    'הפרויקט לא קיים או שכבר הוסר.',
+  'This project now belongs to an account. Sign in to that account to open it.':
+    'הפרויקט שייך עכשיו לחשבון. התחברו לחשבון הזה כדי לפתוח אותו.',
+  'This project was not claimed in time and has been deleted.':
+    'לא נתבעה בעלות על הפרויקט בזמן והוא נמחק.',
+  'This project was not claimed in time, so it and its data were deleted.':
+    'לא נתבעה בעלות על הפרויקט בזמן, ולכן הוא והנתונים שלו נמחקו.',
+  'Waiting for claim': 'ממתין לתביעת בעלות',
+  'You already have a free organization. Choose an organization to move the project into.':
+    'כבר יש לכם ארגון חינמי. בחרו ארגון שאליו יועבר הפרויקט.',
+  'Zero project': 'פרויקט Zero',
+  '{time} left to build': 'נותרו {time} לבנייה',
 }
