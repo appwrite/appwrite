@@ -2,7 +2,6 @@
 layout: changelog
 title: "Cron schedules move to paid plans on Appwrite Cloud"
 date: 2026-10-15
-cover: /images/blog/announcing-function-intervals/cover.avif
 description: "From October 19, 2026, functions on the Appwrite Cloud Free and Education plans run on intervals instead of cron expressions."
 tags: functions
 ---
