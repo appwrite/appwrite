@@ -1,0 +1,53 @@
+{
+    "name": "utopia-php/migration",
+    "description": "A simple library to migrate resources between services.",
+    "type": "library",
+    "keywords": [
+        "php",
+        "framework",
+        "upf",
+        "utopia",
+        "migration"
+    ],
+    "license": "MIT",
+    "minimum-stability": "stable",
+    "autoload": {
+        "psr-4": {
+            "Utopia\\Migration\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Utopia\\Migration\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit --testsuite unit",
+        "test:e2e": [
+            "Composer\\Config::disableProcessTimeout",
+            "tests/e2e.sh"
+        ]
+    },
+    "require": {
+        "php": ">=8.5",
+        "ext-curl": "*",
+        "ext-openssl": "*",
+        "appwrite/appwrite": "^30.4.0",
+        "utopia-php/database": "^8.1.2",
+        "utopia-php/storage": "4.*",
+        "halaxa/json-machine": "^1.2",
+        "psr/http-client": "^1.0",
+        "utopia-php/client": "^0.6",
+        "utopia-php/psr7": "^0.2.1"
+    },
+    "require-dev": {
+        "ext-pdo": "*",
+        "vlucas/phpdotenv": "5.*"
+    },
+    "config": {
+        "allow-plugins": {
+            "php-http/discovery": true,
+            "tbachert/spi": true
+        }
+    }
+}
