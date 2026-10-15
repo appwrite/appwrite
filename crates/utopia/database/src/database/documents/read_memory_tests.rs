@@ -577,3 +577,26 @@ fn a_cursor_of_another_class_is_refused_as_an_invalid_uid() {
         assert!(!crate::document::is_document_class("Utopia\\Audit\\Log"));
     });
 }
+/// A missing collection definition reads as `Collection::fromArray([])`
+/// (PHP `newDocument()`), which is no empty document: updating one fails
+/// on the structure of the merged definition, as PHP's does.
+#[test]
+fn a_missing_definition_reads_as_an_unnamed_collection() {
+    block_on(async {
+        let db = seeded(1).await;
+        let missing = db.get_document(crate::database::METADATA, "missing", Vec::new(), false).await.unwrap();
+        assert!(!missing.is_empty());
+        assert_eq!(missing.class(), crate::collection::CLASS);
+        assert_eq!(missing.get("$id"), Some(&string("")));
+        let err = db
+            .update_document(
+                crate::database::METADATA,
+                "missing",
+                doc(vec![("name", string("actors")), ("$id", string("missing"))]),
+            )
+            .await
+            .unwrap_err();
+        assert_eq!(err.kind(), Kind::Structure);
+        assert_eq!(err.message(), "Invalid document structure: Missing collection attribute $collection");
+    });
+}

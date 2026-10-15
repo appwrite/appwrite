@@ -517,6 +517,16 @@ impl Database {
     /// set; non-string permissions dropped, as `Document::fromStorage()`
     /// does.
     pub(crate) fn new_document(&self, collection: &str, data: Array) -> Result<Document> {
+        // A missing definition reads as `Collection::fromArray([])`, an
+        // unnamed collection, not an empty document (PHP `newDocument()`
+        // builds every document of a custom type with `$className::fromArray()`):
+        // callers tell it apart by its empty id, as PHP's do.
+        if data.is_empty()
+            && let Some(class) = self.document_type(collection)
+            && class == crate::collection::CLASS
+        {
+            return Ok(Collection::from_array(data)?.to_document().with_class(class));
+        }
         let document = Document::from_storage(data)?;
         Ok(match self.document_type(collection) {
             Some(class) => document.with_class(class),
