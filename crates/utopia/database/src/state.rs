@@ -262,6 +262,9 @@ impl<T: Clone + Send + Sync + 'static> Scoped<T> {
     /// Runs `future` with the value overridden to `value` for it and what it
     /// awaits (`with()`).
     pub async fn with<F: Future>(&self, value: T, future: F) -> F::Output {
+        // Boxed: holding `future` both as the argument and inside the scope
+        // would double the state machine at each nested scope.
+        let future = Box::pin(future);
         let (_open, frame) = self.open(value);
         FRAMES.scope(Some(frame), future).await
     }
