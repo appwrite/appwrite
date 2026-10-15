@@ -4,9 +4,9 @@
 
 ### Fixed
 
-- `acquire()` now honours the documented contract for negative timeouts: `File`,
-  `Distributed`, and the non-coroutine `Mutex` and `Semaphore` paths wait until
-  the lock is released instead of making a single non-blocking attempt.
+- `acquire()` now honours the documented contract for negative timeouts: `File`
+  and `Distributed` wait until the lock is released instead of making a single
+  non-blocking attempt.
 
 ## 0.2.0 — 2026-04-24
 

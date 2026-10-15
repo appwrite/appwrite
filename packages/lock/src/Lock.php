@@ -10,6 +10,7 @@ interface Lock
      * Block up to $timeout seconds trying to acquire the lock.
      *
      * Passing 0.0 means do not wait; a negative value means wait forever.
+     * Outside a coroutine, in-process locks cannot wait: a held Mutex or Semaphore returns false at once.
      *
      * @return bool true if the lock was acquired
      */
