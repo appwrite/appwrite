@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react'
+import { useMemo, useState } from 'react'
+import { useSyncStateFromServer } from '@/hooks/use-sync-state-from-server'
 import { useParams, useNavigate, useLocation } from '@tanstack/react-router'
 import { Hash, Trash2 } from 'lucide-react'
 import {
@@ -58,21 +59,23 @@ export function View({
   const { access } = useOrganizationScopes(project?.teamId)
   const showSettingsTab = canShowTopicSettingsTab(access, features)
 
-  const [name, setName] = useState('')
-  const [description, setDescription] = useState('')
+  // Keyed on the saved values, not the topic object: a realtime push or a
+  // sibling mutation's `invalidateQueries` must not wipe half-written text.
+  const [name, setName] = useSyncStateFromServer(topic?.name ?? '')
+  const [description, setDescription] = useSyncStateFromServer(
+    readDescription(topic),
+  )
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 
-  // Initialize form when topic loads
-  useMemo(() => {
-    if (topic) {
-      setName(topic.name || '')
-      setDescription(readDescription(topic))
-    }
-  }, [topic])
-
-  // Update name mutation
-  const updateNameMutation = useMutation({
-    mutationFn: async (name: string) => {
+  // Update name and description mutation
+  const updateDetailsMutation = useMutation({
+    mutationFn: async ({
+      name,
+      description,
+    }: {
+      name: string
+      description: string
+    }) => {
       if (!projectId || !topicId) {
         throw new Error('Project ID and Topic ID are required')
       }
@@ -252,12 +255,14 @@ export function View({
                 disabled={
                   (name.trim() === topic.name &&
                     normalizeDescription(description) ===
-                      readDescription(topic)) ||
+                      normalizeDescription(readDescription(topic))) ||
                   !name.trim() ||
-                  updateNameMutation.isPending
+                  updateDetailsMutation.isPending
                 }
-                onClick={() => updateNameMutation.mutate(name)}
->
+                onClick={() =>
+                  updateDetailsMutation.mutate({ name, description })
+                }
+              >
                 {t('Update')}
               </Button>
             </div>

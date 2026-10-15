@@ -18,31 +18,31 @@ export interface DescriptionFieldProps {
   id: string
   value: string
   onChange: (value: string) => void
-  /** Field label. Defaults to "Description (optional)". */
-  label?: string
   placeholder?: string
-  /** Helper copy under the field, in place of the character count. */
-  hint?: string
   disabled?: boolean
   className?: string
+  /**
+   * Label classes, to match the sibling labels of the form this sits in.
+   * Defaults to the `text-[13px]` the settings cards use.
+   */
+  labelClassName?: string
 }
 
 export function DescriptionField({
   id,
   value,
   onChange,
-  label,
   placeholder,
-  hint,
   disabled = false,
   className,
+  labelClassName,
 }: DescriptionFieldProps) {
   const t = useT()
 
   return (
-    <div className={cn(className)}>
-      <Label htmlFor={id} className="text-[13px]">
-        {label ?? t('Description (optional)')}
+    <div className={className}>
+      <Label htmlFor={id} className={cn('text-[13px]', labelClassName)}>
+        {t('Description (optional)')}
       </Label>
       <Textarea
         id={id}
@@ -56,7 +56,7 @@ export function DescriptionField({
         className="mt-2 min-h-[72px] resize-y text-[13px]"
       />
       <p className="mt-1 text-[12px] text-muted-foreground">
-        {hint ?? `${value.length}/${DESCRIPTION_MAX_LENGTH} ${t('characters')}`}
+        {`${value.length}/${DESCRIPTION_MAX_LENGTH} ${t('characters')}`}
       </p>
     </div>
   )

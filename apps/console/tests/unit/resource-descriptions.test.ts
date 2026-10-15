@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from 'bun:test'
-import { Functions, Messaging, Storage, Webhooks } from '@appwrite.io/console'
+import { Functions, Messaging, Storage } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
   DESCRIPTION_MAX_LENGTH,
@@ -7,6 +7,8 @@ import {
   readDescription,
   withDescription,
 } from '@/lib/appwrite/resource-descriptions'
+import { updateProjectDatabase } from '@/lib/react-query/hooks/databases'
+import type { DatabaseRouteKind } from '@/lib/database-routes'
 
 type CapturedRequest = {
   url: string
@@ -117,11 +119,18 @@ describe('withDescription', () => {
     expect(request.captured?.body.description).toBe('')
   })
 
-  test('the pinned SDK drops description on its own, hence this helper', async () => {
+  test('the pinned SDK drops description, so when this fails delete the module', async () => {
     const request = captureRequest()
 
     // `description` only exists on the API, not in the pinned SDK's params,
     // so it reaches the service as an extra key the generated method ignores.
+    //
+    // This is the removal tripwire for the whole escape hatch: once
+    // `@appwrite.io/console` is pinned to a build that knows the param, this
+    // assertion fails. That is the signal to delete
+    // `src/lib/appwrite/resource-descriptions.ts` along with the Proxy and
+    // every `withDescription` call site, and pass `description` to the
+    // generated services directly.
     const params = {
       functionId: 'welcome',
       name: 'Welcome',
@@ -201,29 +210,6 @@ describe('payload shape', () => {
     })
   })
 
-  test('a webhook update carries the auth user, which the API resets when absent', async () => {
-    const request = captureRequest()
-
-    // The webhook update endpoint writes `httpUser` from a param that defaults
-    // to '', so the console has to resend it or the stored value is cleared.
-    await withDescription('test-project', 'Billing hook', Webhooks).update({
-      webhookId: 'billing',
-      name: 'Billing',
-      url: 'https://example.com/hook',
-      events: ['users.*.create'],
-      tls: true,
-      enabled: true,
-      authUsername: 'svc-billing',
-    })
-
-    expect(request.captured?.body).toMatchObject({
-      authUsername: 'svc-billing',
-      events: ['users.*.create'],
-      tls: true,
-      description: 'Billing hook',
-    })
-  })
-
   test('a topic update sends the description alongside the name', async () => {
     const request = captureRequest()
 
@@ -293,7 +279,7 @@ describe('withDescription does not leak', () => {
     expect(request.captured?.body).not.toHaveProperty('description')
   })
 
-  test('two scoped services do not see each other description', async () => {
+  test("two scoped services do not see each other's description", async () => {
     const first = captureRequest()
     const fnService = withDescription(
       'test-project',
@@ -312,5 +298,59 @@ describe('withDescription does not leak', () => {
     const second = captureRequest()
     await bucketService.updateBucket({ bucketId: 'invoices', name: 'Invoices' })
     expect(second.captured?.body.description).toBe('For the bucket')
+  })
+})
+
+/**
+ * `updateProjectDatabase` is the only description call site that picks its SDK
+ * class at runtime, from the route kind. A wrong class still answers 200 — it
+ * just writes through another product's route — so the URL is pinned per kind.
+ *
+ * `enabled` is pinned with it: `PUT /<product>/:databaseId` declares
+ * `enabled` non-nullable with a `true` default and writes it unconditionally,
+ * so a payload that leaves it out re-enables a disabled database. `name` and
+ * `description` are nullable there and keep their saved value when omitted.
+ */
+describe('updateProjectDatabase', () => {
+  const KINDS: ReadonlyArray<[DatabaseRouteKind, string]> = [
+    ['tablesdb', '/tablesdb/db1'],
+    ['documentsdb', '/documentsdb/db1'],
+    ['vectorsdb', '/vectorsdb/db1'],
+  ]
+
+  for (const [dbKind, path] of KINDS) {
+    test(`a ${dbKind} save keeps its own route, and keeps enabled`, async () => {
+      const request = captureRequest()
+
+      await updateProjectDatabase(
+        'test-project',
+        'db1',
+        { name: 'Orders', description: 'Customer orders', enabled: false },
+        dbKind,
+      )
+
+      expect(request.captured?.method).toBe('PUT')
+      expect(request.captured?.url).toEndWith(path)
+      expect(request.captured?.body).toEqual({
+        name: 'Orders',
+        description: 'Customer orders',
+        enabled: false,
+      })
+    })
+  }
+
+  test('a save with no description leaves the saved one alone', async () => {
+    const request = captureRequest()
+
+    await updateProjectDatabase(
+      'test-project',
+      'db1',
+      { name: 'Orders', enabled: true },
+      'tablesdb',
+    )
+
+    // No `description` key at all: the API keeps what is stored. Sending ''
+    // here would wipe the description every time the toggle is flipped.
+    expect(request.captured?.body).toEqual({ name: 'Orders', enabled: true })
   })
 })

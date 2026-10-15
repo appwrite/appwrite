@@ -55,7 +55,12 @@ export function View() {
   const deleteFunctionMutation = useDeleteFunction(projectId)
 
   const updateFunctionMutation = useMutation({
-    mutationFn: async (updates: Partial<Models.Function>) => {
+    // The description comes from the variables, not from render-time state, so
+    // the payload is whatever the caller passed and nothing else.
+    mutationFn: async ({
+      description,
+      ...updates
+    }: Partial<Models.Function> & { description: string }) => {
       if (!projectId || !functionId || !func)
         throw new Error('Project ID, Function ID, and Function are required')
       // Sent through `withDescription`: the pinned SDK drops `description`.
@@ -113,17 +118,20 @@ export function View() {
     },
   })
 
+  // Both sides normalized: the API's `Text(1024, 0)` does not trim, so a
+  // description another client stored with surrounding whitespace would
+  // otherwise leave this card dirty on an untouched form.
   const savedDescription = readDescription(func)
   const detailsDirty =
     name !== func?.name ||
-    normalizeDescription(description) !== savedDescription
+    normalizeDescription(description) !== normalizeDescription(savedDescription)
 
   const handleSaveDetails = () => {
     if (!name.trim()) {
       toast.error(t('Function name is required'))
       return
     }
-    updateFunctionMutation.mutate({ name })
+    updateFunctionMutation.mutate({ name, description })
   }
 
   const handleDeleteFunction = () => {

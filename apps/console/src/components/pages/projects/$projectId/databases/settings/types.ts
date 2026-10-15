@@ -2,6 +2,8 @@
 export type ProjectDatabaseDetail = {
   $id: string
   name: string
+  /** Saved description, `''` on a server that predates the field. */
+  description: string
   enabled?: boolean
   createdAt: string
   updatedAt: string

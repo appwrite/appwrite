@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useSyncStateFromServer } from '@/hooks/use-sync-state-from-server'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -35,21 +35,13 @@ export function DatabaseNameCard({
 }: DatabaseNameCardProps) {
   const t = useT()
   const queryClient = useQueryClient()
-  const [name, setName] = useState(database.name)
   const savedDescription = readDescription(database)
-  const [description, setDescription] = useState(savedDescription)
-
-  useEffect(() => {
-    setName(database.name)
-  }, [database.name])
-
-  useEffect(() => {
-    setDescription(savedDescription)
-  }, [savedDescription])
+  const [name, setName] = useSyncStateFromServer(database.name)
+  const [description, setDescription] = useSyncStateFromServer(savedDescription)
 
   const updateMutation = useMutation({
-    mutationFn: async (nextName: string) => {
-      const trimmed = nextName.trim()
+    mutationFn: async (next: { name: string; description: string }) => {
+      const trimmed = next.name.trim()
       if (trimmed.length < 1) {
         throw new Error(t('Name must be at least 1 character'))
       }
@@ -59,7 +51,14 @@ export function DatabaseNameCard({
       await updateProjectDatabase(
         projectId,
         databaseId,
-        { name: trimmed, description: normalizeDescription(description) },
+        {
+          name: trimmed,
+          description: normalizeDescription(next.description),
+          // The API writes `enabled` from a param that defaults to `true`, so
+          // a name or description save has to resend the saved value or it
+          // re-enables a disabled database.
+          enabled: database.enabled !== false,
+        },
         dbKind,
       )
     },
@@ -77,9 +76,12 @@ export function DatabaseNameCard({
     },
   })
 
+  // Both sides normalized: the API does not trim, so a description stored
+  // with surrounding whitespace would otherwise leave this card always dirty.
   const hasChanges =
     (name.trim() !== database.name ||
-      normalizeDescription(description) !== savedDescription) &&
+      normalizeDescription(description) !==
+        normalizeDescription(savedDescription)) &&
     name.trim().length > 0
 
   return (
@@ -117,7 +119,7 @@ export function DatabaseNameCard({
           size="sm"
           className="h-9 text-[13px]"
           disabled={!canWrite || !hasChanges || updateMutation.isPending}
-          onClick={() => updateMutation.mutate(name)}
+          onClick={() => updateMutation.mutate({ name, description })}
         >
           {t('Update')}
         </Button>

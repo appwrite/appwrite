@@ -53,6 +53,10 @@ const OWNER_SCOPES = [
   'buckets.write',
   'files.read',
   'files.write',
+  'databases.read',
+  'databases.write',
+  'tables.read',
+  'tables.write',
 ] satisfies Models.Roles['scopes']
 
 const ACCOUNT = {
@@ -101,13 +105,21 @@ const PROJECT = {
 /**
  * A function that already carries a description, so the specs can prove the
  * saved value loads into the form instead of starting empty.
+ *
+ * No `satisfies Partial<Models.Function>` (unlike the seeds above): the pinned
+ * SDK's model predates `description`, so the extra key would not type-check.
+ * Same for `BUCKET_SEED`. Add the constraint back once the pin ships the field.
+ *
+ * The description is deliberately padded. The API's `Text(1024, 0)` does not
+ * trim, so another client can store surrounding whitespace; the card must
+ * compare the trimmed form on both sides or an untouched form looks edited.
  */
 const FUNCTION_SEED = {
   $id: 'fn00000000000000000001',
   $createdAt: NOW,
   $updatedAt: NOW,
   name: 'Welcome mailer',
-  description: 'Sends a welcome email to newly registered users.',
+  description: '  Sends a welcome email to newly registered users.  ',
   execute: [],
   enabled: true,
   live: true,
@@ -143,7 +155,9 @@ const BUCKET_SEED = {
   $permissions: [],
   name: 'Invoices',
   description: 'Invoices and receipts uploaded by customers.',
-  fileSecurity: false,
+  // Not the server default (`false`), so a payload that drops the key fails
+  // the ride-along assertion instead of matching it by coincidence.
+  fileSecurity: true,
   enabled: true,
   maximumFileSize: 30_000_000,
   allowedFileExtensions: [],
@@ -152,6 +166,22 @@ const BUCKET_SEED = {
   antivirus: true,
   transformations: true,
   totalSize: 0,
+}
+
+/**
+ * A disabled TablesDB database. `enabled` is non-nullable on
+ * `PUT /tablesdb/:databaseId` and defaults to `true`, so a save that leaves
+ * the key out re-enables it; seeding `false` is what makes that visible.
+ */
+const DATABASE_SEED = {
+  $id: 'db00000000000000000001',
+  $createdAt: NOW,
+  $updatedAt: NOW,
+  name: 'Orders',
+  description: 'Customer orders and line items.',
+  enabled: false,
+  type: 'tablesdb',
+  policies: [],
 }
 
 const SPECIFICATIONS = {
@@ -200,17 +230,19 @@ type Write = {
 type Captured = {
   function?: Write
   bucket?: Write
+  database?: Write
 }
 
 /**
- * Intercepts all API traffic for an owner with one function and one bucket.
- * Writes are recorded and merged into the seeded resource, so a reload serves
- * what the page actually saved rather than a canned response.
+ * Intercepts all API traffic for an owner with one function, one bucket and
+ * one database. Writes are recorded and merged into the seeded resource, so a
+ * reload serves what the page actually saved rather than a canned response.
  */
 async function mockAppwriteApi(page: Page, captured: Captured) {
   const localOrigin = new URL(String(test.info().project.use.baseURL)).origin
   const fn: Record<string, unknown> = { ...FUNCTION_SEED }
   const bucket: Record<string, unknown> = { ...BUCKET_SEED }
+  const database: Record<string, unknown> = { ...DATABASE_SEED }
 
   await page.route('**/*', async (route) => {
     const request = route.request()
@@ -331,6 +363,31 @@ async function mockAppwriteApi(page: Page, captured: Captured) {
     if (apiPath === `/storage/buckets/${BUCKET_SEED.$id}/files`)
       return json(200, { total: 0, files: [] })
 
+    // --- databases ---
+    // The console merges the three product lists, so the other two must answer.
+    if (apiPath === '/documentsdb' || apiPath === '/vectorsdb')
+      return json(200, { total: 0, databases: [] })
+    if (apiPath === '/tablesdb')
+      return json(200, { total: 1, databases: [database] })
+    if (apiPath === `/tablesdb/${DATABASE_SEED.$id}`) {
+      if (request.method() === 'PUT') {
+        const body = request.postDataJSON() as Record<string, unknown>
+        captured.database = { path: apiPath, body }
+        if (typeof body.description === 'string') {
+          database.description = body.description
+        }
+        if (typeof body.name === 'string') database.name = body.name
+        // Mirror the API: `enabled` is written from a param that defaults to
+        // `true`, so an absent key really does re-enable the database.
+        database.enabled =
+          typeof body.enabled === 'boolean' ? body.enabled : true
+        return json(200, database)
+      }
+      return json(200, database)
+    }
+    if (apiPath === `/tablesdb/${DATABASE_SEED.$id}/tables`)
+      return json(200, { total: 0, tables: [] })
+
     return json(404, {
       message: 'Not found',
       code: 404,
@@ -340,12 +397,9 @@ async function mockAppwriteApi(page: Page, captured: Captured) {
   })
 }
 
-function newCaptured(): Captured {
-  return {}
-}
-
 const functionSettingsUrl = `/projects/${PROJECT.$id}/functions/${FUNCTION_SEED.$id}/settings`
 const bucketSettingsUrl = `/projects/${PROJECT.$id}/storage/${BUCKET_SEED.$id}/settings`
+const databaseSettingsUrl = `/projects/${PROJECT.$id}/databases/tablesdb/${DATABASE_SEED.$id}/settings`
 
 /**
  * The description box plus the Update button of the name-and-description card.
@@ -368,7 +422,7 @@ test.describe('function description (mocked API)', () => {
   test('loads the saved description and sends an edited one', async ({
     page,
   }) => {
-    const captured = newCaptured()
+    const captured: Captured = {}
     await mockAppwriteApi(page, captured)
     await page.goto(functionSettingsUrl, { waitUntil: 'domcontentloaded' })
 
@@ -406,7 +460,7 @@ test.describe('function description (mocked API)', () => {
   test("clearing the box sends '' and really clears the description", async ({
     page,
   }) => {
-    const captured = newCaptured()
+    const captured: Captured = {}
     await mockAppwriteApi(page, captured)
     await page.goto(functionSettingsUrl, { waitUntil: 'domcontentloaded' })
 
@@ -424,7 +478,6 @@ test.describe('function description (mocked API)', () => {
     await expect
       .poll(() => captured.function?.body, { timeout: 30_000 })
       .toHaveProperty('description', '')
-    expect(captured.function?.body.description).not.toBeNull()
 
     // Reload against the mock's updated state: it really is gone.
     await page.reload({ waitUntil: 'domcontentloaded' })
@@ -434,7 +487,7 @@ test.describe('function description (mocked API)', () => {
   test('clamps the description to 1024 characters before sending', async ({
     page,
   }) => {
-    const captured = newCaptured()
+    const captured: Captured = {}
     await mockAppwriteApi(page, captured)
     await page.goto(functionSettingsUrl, { waitUntil: 'domcontentloaded' })
 
@@ -468,7 +521,7 @@ test.describe('bucket description (mocked API)', () => {
   test('loads the saved description and sends an edited one', async ({
     page,
   }) => {
-    const captured = newCaptured()
+    const captured: Captured = {}
     await mockAppwriteApi(page, captured)
     await page.goto(bucketSettingsUrl, { waitUntil: 'domcontentloaded' })
 
@@ -485,13 +538,22 @@ test.describe('bucket description (mocked API)', () => {
     await expect
       .poll(() => captured.bucket?.body.description, { timeout: 30_000 })
       .toBe('Customer invoices, kept for seven years.')
-    // The other bucket settings ride along unchanged, as the SDK method built
-    // them: a description save must not reset encryption or the size limit.
+    // Every other bucket setting rides along unchanged. The whole body is
+    // pinned, not a subset: each of these params is non-nullable on
+    // `PUT /storage/buckets/:id`, so a key this payload drops is a key the
+    // API resets to its default — `fileSecurity` back to off, for instance.
     expect(captured.bucket?.path).toBe(`/storage/buckets/${BUCKET_SEED.$id}`)
-    expect(captured.bucket?.body).toMatchObject({
+    expect(captured.bucket?.body).toEqual({
       name: BUCKET_SEED.name,
+      description: 'Customer invoices, kept for seven years.',
+      enabled: BUCKET_SEED.enabled,
+      fileSecurity: BUCKET_SEED.fileSecurity,
       encryption: BUCKET_SEED.encryption,
+      antivirus: BUCKET_SEED.antivirus,
+      compression: BUCKET_SEED.compression,
+      transformations: BUCKET_SEED.transformations,
       maximumFileSize: BUCKET_SEED.maximumFileSize,
+      allowedFileExtensions: BUCKET_SEED.allowedFileExtensions,
     })
     await expect(page.getByText('Bucket has been updated')).toBeVisible()
   })
@@ -499,7 +561,7 @@ test.describe('bucket description (mocked API)', () => {
   test("clearing the box sends '' and really clears the description", async ({
     page,
   }) => {
-    const captured = newCaptured()
+    const captured: Captured = {}
     await mockAppwriteApi(page, captured)
     await page.goto(bucketSettingsUrl, { waitUntil: 'domcontentloaded' })
 
@@ -515,9 +577,40 @@ test.describe('bucket description (mocked API)', () => {
     await expect
       .poll(() => captured.bucket?.body, { timeout: 30_000 })
       .toHaveProperty('description', '')
-    expect(captured.bucket?.body.description).not.toBeNull()
 
     await page.reload({ waitUntil: 'domcontentloaded' })
     await expect(card.description).toHaveValue('', { timeout: 30_000 })
+  })
+})
+
+test.describe('database description (mocked API)', () => {
+  test('saves a description without re-enabling a disabled database', async ({
+    page,
+  }) => {
+    const captured: Captured = {}
+    await mockAppwriteApi(page, captured)
+    await page.goto(databaseSettingsUrl, { waitUntil: 'domcontentloaded' })
+
+    const card = detailsCard(page, 'database-description')
+    await expect(card.description).toHaveValue(DATABASE_SEED.description, {
+      timeout: 30_000,
+    })
+    await expect(card.update).toBeDisabled()
+
+    await card.description.fill('Customer orders, line items and refunds.')
+    await expect(card.update).toBeEnabled()
+    await card.update.click()
+
+    await expect
+      .poll(() => captured.database?.body.description, { timeout: 30_000 })
+      .toBe('Customer orders, line items and refunds.')
+    // The route is picked from `$dbKind` at runtime; a wrong SDK class writes
+    // to another product's database and still answers 200.
+    expect(captured.database?.path).toBe(`/tablesdb/${DATABASE_SEED.$id}`)
+    expect(captured.database?.body).toEqual({
+      name: DATABASE_SEED.name,
+      description: 'Customer orders, line items and refunds.',
+      enabled: false,
+    })
   })
 })

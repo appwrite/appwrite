@@ -125,6 +125,7 @@ export function CreateBucket({
               onChange={setDescription}
               placeholder={t('What is stored in this bucket?')}
               disabled={isLoading}
+              labelClassName="text-sm"
             />
 
             <div className="space-y-2">

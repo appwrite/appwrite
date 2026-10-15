@@ -37,7 +37,12 @@ export function NameCard({ projectId, siteId, site }: NameCardProps) {
 
   // Update site mutation
   const updateSiteMutation = useMutation({
-    mutationFn: async (updates: Partial<Models.Site>) => {
+    // The description comes from the variables, not from render-time state, so
+    // the payload is whatever the caller passed and nothing else.
+    mutationFn: async ({
+      description,
+      ...updates
+    }: Partial<Models.Site> & { description: string }) => {
       if (!projectId || !siteId || !site)
         throw new Error('Project ID, Site ID, and Site are required')
       // Sent through `withDescription`: the pinned SDK drops `description`.
@@ -49,10 +54,7 @@ export function NameCard({ projectId, siteId, site }: NameCardProps) {
     },
     onSuccess: (updated) => {
       toast.success(t('Site updated successfully'))
-      queryClient.setQueryData(
-        ['site', 'project', projectId, siteId],
-        updated,
-      )
+      queryClient.setQueryData(['site', 'project', projectId, siteId], updated)
       queryClient.invalidateQueries({
         queryKey: ['sites', 'project', projectId],
       })
@@ -67,12 +69,16 @@ export function NameCard({ projectId, siteId, site }: NameCardProps) {
       toast.error(t('Site name is required'))
       return
     }
-    updateSiteMutation.mutate({ name })
+    updateSiteMutation.mutate({ name, description })
   }
 
+  // Both sides normalized: the API's `Text(1024, 0)` does not trim, so a
+  // description another client stored with surrounding whitespace would
+  // otherwise leave this card dirty on an untouched form.
   const hasChanges =
     name !== site?.name ||
-    normalizeDescription(description) !== readDescription(site)
+    normalizeDescription(description) !==
+      normalizeDescription(readDescription(site))
 
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">

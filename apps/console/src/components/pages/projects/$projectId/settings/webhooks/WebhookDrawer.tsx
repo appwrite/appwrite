@@ -342,6 +342,7 @@ export function WebhookDrawer({
                   onChange={setDescription}
                   placeholder={t('What does this webhook notify?')}
                   disabled={isPending}
+                  labelClassName="text-[12px] font-medium"
                 />
 
                 <div className="space-y-2">

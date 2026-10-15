@@ -201,6 +201,7 @@ export function CreateWebhookDialog({
                   onChange={setDescription}
                   placeholder={t('What does this webhook notify?')}
                   disabled={createWebhookMutation.isPending}
+                  labelClassName="text-[12px] font-medium"
                 />
                 <div className="space-y-2">
                   <Label htmlFor="url" className="text-[12px] font-medium">

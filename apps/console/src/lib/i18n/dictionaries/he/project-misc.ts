@@ -2666,6 +2666,7 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Verify your SMTP configuration by sending a test email to one or more recipients.':
     'ודאו שתצורת ה-SMTP תקינה על ידי שליחת אימייל בדיקה לנמען אחד או יותר.',
   'View full list in Logs': 'צפייה ברשימה המלאה בלוגים',
+  'What does this webhook notify?': 'על מה ה-Webhook הזה מודיע?',
   'Webhook ID': 'מזהה webhook',
   'Webhook created': 'ה-webhook נוצר',
   'Webhook created. Secret ready to copy.': 'ה-webhook נוצר. הסוד מוכן להעתקה.',
@@ -3032,10 +3033,9 @@ export const heProjectMiscDictionary: Record<string, string> = {
   'Topic deleted': 'הנושא נמחק',
   'Topic deleted successfully': 'הנושא נמחק בהצלחה',
   'Topic name': 'שם הנושא',
+  'Topic not found': 'הנושא לא נמצא',
   'Topic updated successfully': 'הנושא עודכן בהצלחה',
   'Who subscribes to this topic?': 'מי מנוי לנושא הזה?',
-  'What does this webhook notify?': 'על מה ה-Webhook הזה מודיע?',
-  'Topic not found': 'הנושא לא נמצא',
   'Subscriber not found': 'המנוי לא נמצא',
   'Topics group subscribers for email, SMS, or push.':
     'נושאים מקבצים מנויים לאימייל, SMS או Push.',

@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
+import { useSyncStateFromServer } from '@/hooks/use-sync-state-from-server'
 import { useParams } from '@tanstack/react-router'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
@@ -97,9 +98,13 @@ export function BucketSettings() {
     return fileSizeNumber * 1000 * 1000
   }, [organizationPlan])
 
-  // State for form fields
-  const [bucketName, setBucketName] = useState('')
-  const [bucketDescription, setBucketDescription] = useState('')
+  // State for form fields. The two typed fields follow the saved value rather
+  // than the bucket object, so a realtime push or a sibling mutation's
+  // `invalidateQueries` cannot wipe half-written text.
+  const [bucketName, setBucketName] = useSyncStateFromServer(bucket?.name ?? '')
+  const [bucketDescription, setBucketDescription] = useSyncStateFromServer(
+    readDescription(bucket),
+  )
   const [enabled, setEnabled] = useState(false)
   const [encryption, setEncryption] = useState(false)
   const [compression, setCompression] = useState<'none' | 'gzip' | 'zstd'>(
@@ -117,11 +122,9 @@ export function BucketSettings() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [deleteConfirmation, setDeleteConfirmation] = useState('')
 
-  // Initialize form fields when bucket loads
+  // Initialize the mirrored toggles when bucket loads
   useEffect(() => {
     if (bucket) {
-      setBucketName(bucket.name)
-      setBucketDescription(readDescription(bucket))
       setEnabled(bucket.enabled)
       setEncryption(bucket.encryption)
       const bucketCompression =
@@ -144,20 +147,29 @@ export function BucketSettings() {
     }
   }, [bucket])
 
-  // Update name mutation
-  const updateNameMutation = useMutation({
-    mutationFn: async (name: string) => {
+  // Update name and description mutation
+  const updateDetailsMutation = useMutation({
+    mutationFn: async ({
+      name,
+      description,
+    }: {
+      name: string
+      description: string
+    }) => {
       if (!projectId || !bucketId || !bucket)
         throw new Error('Project ID, Bucket ID, and Bucket are required')
       // Sent through `withDescription`: the pinned SDK drops `description`.
       return await withDescription(
         projectId,
-        normalizeDescription(bucketDescription),
+        normalizeDescription(description),
         Storage,
       ).updateBucket({
         bucketId,
         name: name.trim(),
         enabled: bucket.enabled ?? undefined,
+        // Non-nullable on the API with a `false` default, so leaving it out
+        // turns file-level security off on every save from this card.
+        fileSecurity: bucket.fileSecurity ?? undefined,
         encryption: bucket.encryption ?? undefined,
         antivirus: bucket.antivirus ?? undefined,
         compression: bucket.compression as Compression,
@@ -398,13 +410,20 @@ export function BucketSettings() {
     },
   })
 
+  // Both sides are normalized: the API's `Text(1024, 0)` does not trim, so a
+  // description stored with surrounding whitespace by another client would
+  // otherwise leave this card permanently dirty.
   const bucketDetailsDirty =
     bucketName.trim() !== bucket?.name ||
-    normalizeDescription(bucketDescription) !== readDescription(bucket)
+    normalizeDescription(bucketDescription) !==
+      normalizeDescription(readDescription(bucket))
 
-  const handleNameUpdate = () => {
+  const handleDetailsUpdate = () => {
     if (bucketName.trim() && bucketDetailsDirty) {
-      updateNameMutation.mutate(bucketName)
+      updateDetailsMutation.mutate({
+        name: bucketName,
+        description: bucketDescription,
+      })
     }
   }
 
@@ -622,9 +641,9 @@ export function BucketSettings() {
               disabled={
                 !bucketDetailsDirty ||
                 !bucketName.trim() ||
-                updateNameMutation.isPending
+                updateDetailsMutation.isPending
               }
-              onClick={handleNameUpdate}
+              onClick={handleDetailsUpdate}
             >
               {t('Update')}
             </Button>

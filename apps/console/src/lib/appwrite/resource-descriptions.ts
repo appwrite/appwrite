@@ -23,6 +23,7 @@
 
 import { Client } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
+import { wrapServiceObject } from '@/lib/appwrite/slow-call-reporting'
 
 /** `Text(1024, 0)` on every `description` param. */
 export const DESCRIPTION_MAX_LENGTH = 1024
@@ -43,9 +44,12 @@ export function normalizeDescription(description: string): string {
 }
 
 /**
- * Client that adds `description` to the payload of every request made through
- * it. Scoped to a single service instance, so nothing leaks into the shared
- * project client or into calls in flight elsewhere.
+ * Client that adds `description` to the payload of every request a generated
+ * service method makes through it. Scoped to a single service instance, so
+ * nothing leaks into the shared project client or into calls in flight
+ * elsewhere. Only `call` is intercepted, so `chunkedUpload` (behind
+ * `storage.createFile`) does not carry the param — no description endpoint
+ * uploads a file, but a future one would need its own path here.
  */
 function clientWithDescription(client: Client, description: string): Client {
   return new Proxy(client, {
@@ -81,7 +85,9 @@ function clientWithDescription(client: Client, description: string): Client {
  * ```
  *
  * Call `sdk.forProject(projectId)` first (as this does) so the client carries
- * the project's region endpoint and `X-Appwrite-Project`.
+ * the project's region endpoint and `X-Appwrite-Project`. The instance is
+ * wrapped the same way `sdk.ts` wraps its own services, so saves routed
+ * through here keep the Sentry slow-call reporting every other call has.
  */
 export function withDescription<T>(
   projectId: string,
@@ -89,5 +95,11 @@ export function withDescription<T>(
   Service: new (client: Client) => T,
 ): T {
   const client = sdk.forProject(projectId).client
-  return new Service(clientWithDescription(client, description))
+  return wrapServiceObject(
+    new Service(clientWithDescription(client, description)) as Record<
+      string,
+      unknown
+    >,
+    'withDescription',
+  ) as T
 }
