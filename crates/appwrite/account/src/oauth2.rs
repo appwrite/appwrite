@@ -2218,7 +2218,7 @@ async fn verify_id_token(
             return Err(invalid("Nonce mismatch"));
         }
     }
-    if !claims.get("sub").and_then(Json::as_str).is_some_and(|s| !s.is_empty()) {
+    if claims.get("sub").and_then(Json::as_str).is_none_or(|s| s.is_empty()) {
         return Err(invalid("Missing subject"));
     }
     Ok(claims)
