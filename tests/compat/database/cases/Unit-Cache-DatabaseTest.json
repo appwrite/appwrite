@@ -1910,7 +1910,7 @@
           "expect": {
             "$error": {
               "class": "TypeError",
-              "message": "Utopia\\Database\\Cache\\Query::get(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 610"
+              "message": "Utopia\\Database\\Cache\\Query::get(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 609"
             }
           }
         },
@@ -1948,7 +1948,7 @@
           "expect": {
             "$error": {
               "class": "TypeError",
-              "message": "Utopia\\Database\\Cache\\Query::getGeneration(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 610"
+              "message": "Utopia\\Database\\Cache\\Query::getGeneration(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 609"
             }
           }
         },
@@ -1974,7 +1974,7 @@
           "expect": {
             "$error": {
               "class": "TypeError",
-              "message": "Utopia\\Database\\Cache\\Query::set(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 610"
+              "message": "Utopia\\Database\\Cache\\Query::set(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 609"
             }
           }
         },
@@ -1994,7 +1994,7 @@
           "expect": {
             "$error": {
               "class": "TypeError",
-              "message": "Utopia\\Database\\Cache\\Query::get(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 610"
+              "message": "Utopia\\Database\\Cache\\Query::get(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 609"
             }
           }
         },
@@ -2173,7 +2173,7 @@
           "expect": {
             "$error": {
               "class": "TypeError",
-              "message": "Utopia\\Database\\Cache\\Query::getGeneration(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 610"
+              "message": "Utopia\\Database\\Cache\\Query::getGeneration(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 609"
             }
           }
         },
@@ -2199,7 +2199,7 @@
           "expect": {
             "$error": {
               "class": "TypeError",
-              "message": "Utopia\\Database\\Cache\\Query::set(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 610"
+              "message": "Utopia\\Database\\Cache\\Query::set(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 609"
             }
           }
         },
@@ -2281,7 +2281,7 @@
           "expect": {
             "$error": {
               "class": "TypeError",
-              "message": "Utopia\\Database\\Cache\\Query::get(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 610"
+              "message": "Utopia\\Database\\Cache\\Query::get(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 609"
             }
           }
         },
@@ -5386,7 +5386,7 @@
           "expect": {
             "$error": {
               "class": "TypeError",
-              "message": "Utopia\\Database\\Cache\\Query::getGeneration(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 610"
+              "message": "Utopia\\Database\\Cache\\Query::getGeneration(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 609"
             }
           }
         },
@@ -5412,7 +5412,7 @@
           "expect": {
             "$error": {
               "class": "TypeError",
-              "message": "Utopia\\Database\\Cache\\Query::set(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 610"
+              "message": "Utopia\\Database\\Cache\\Query::set(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 609"
             }
           }
         },
@@ -5432,7 +5432,7 @@
           "expect": {
             "$error": {
               "class": "TypeError",
-              "message": "Utopia\\Database\\Cache\\Query::get(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 610"
+              "message": "Utopia\\Database\\Cache\\Query::get(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 609"
             }
           }
         },
@@ -5701,7 +5701,7 @@
           "expect": {
             "$error": {
               "class": "TypeError",
-              "message": "Utopia\\Database\\Cache\\Query::get(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 610"
+              "message": "Utopia\\Database\\Cache\\Query::get(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 609"
             }
           }
         },
@@ -5739,7 +5739,7 @@
           "expect": {
             "$error": {
               "class": "TypeError",
-              "message": "Utopia\\Database\\Cache\\Query::getGeneration(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 610"
+              "message": "Utopia\\Database\\Cache\\Query::getGeneration(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 609"
             }
           }
         },
@@ -5765,7 +5765,7 @@
           "expect": {
             "$error": {
               "class": "TypeError",
-              "message": "Utopia\\Database\\Cache\\Query::set(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 610"
+              "message": "Utopia\\Database\\Cache\\Query::set(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 609"
             }
           }
         },
@@ -5785,7 +5785,7 @@
           "expect": {
             "$error": {
               "class": "TypeError",
-              "message": "Utopia\\Database\\Cache\\Query::get(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 610"
+              "message": "Utopia\\Database\\Cache\\Query::get(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 609"
             }
           }
         },
@@ -6507,7 +6507,7 @@
           "expect": {
             "$error": {
               "class": "TypeError",
-              "message": "Utopia\\Database\\Cache\\Query::getGeneration(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 610"
+              "message": "Utopia\\Database\\Cache\\Query::getGeneration(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 609"
             }
           }
         },
@@ -6533,7 +6533,7 @@
           "expect": {
             "$error": {
               "class": "TypeError",
-              "message": "Utopia\\Database\\Cache\\Query::set(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 610"
+              "message": "Utopia\\Database\\Cache\\Query::set(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 609"
             }
           }
         },
@@ -6553,7 +6553,7 @@
           "expect": {
             "$error": {
               "class": "TypeError",
-              "message": "Utopia\\Database\\Cache\\Query::get(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 610"
+              "message": "Utopia\\Database\\Cache\\Query::get(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 609"
             }
           }
         },
@@ -6669,7 +6669,7 @@
           "expect": {
             "$error": {
               "class": "TypeError",
-              "message": "Utopia\\Database\\Cache\\Query::get(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 610"
+              "message": "Utopia\\Database\\Cache\\Query::get(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 609"
             }
           }
         },
@@ -6707,7 +6707,7 @@
           "expect": {
             "$error": {
               "class": "TypeError",
-              "message": "Utopia\\Database\\Cache\\Query::getGeneration(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 610"
+              "message": "Utopia\\Database\\Cache\\Query::getGeneration(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 609"
             }
           }
         },
@@ -6733,7 +6733,7 @@
           "expect": {
             "$error": {
               "class": "TypeError",
-              "message": "Utopia\\Database\\Cache\\Query::set(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 610"
+              "message": "Utopia\\Database\\Cache\\Query::set(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 609"
             }
           }
         },
@@ -6753,7 +6753,7 @@
           "expect": {
             "$error": {
               "class": "TypeError",
-              "message": "Utopia\\Database\\Cache\\Query::get(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 610"
+              "message": "Utopia\\Database\\Cache\\Query::get(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 609"
             }
           }
         },
@@ -7475,7 +7475,7 @@
           "expect": {
             "$error": {
               "class": "TypeError",
-              "message": "Utopia\\Database\\Cache\\Query::getGeneration(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 610"
+              "message": "Utopia\\Database\\Cache\\Query::getGeneration(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 609"
             }
           }
         },
@@ -7501,7 +7501,7 @@
           "expect": {
             "$error": {
               "class": "TypeError",
-              "message": "Utopia\\Database\\Cache\\Query::set(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 610"
+              "message": "Utopia\\Database\\Cache\\Query::set(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 609"
             }
           }
         },
@@ -7521,7 +7521,7 @@
           "expect": {
             "$error": {
               "class": "TypeError",
-              "message": "Utopia\\Database\\Cache\\Query::get(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 610"
+              "message": "Utopia\\Database\\Cache\\Query::get(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 609"
             }
           }
         },
@@ -7637,7 +7637,7 @@
           "expect": {
             "$error": {
               "class": "TypeError",
-              "message": "Utopia\\Database\\Cache\\Query::get(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 610"
+              "message": "Utopia\\Database\\Cache\\Query::get(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 609"
             }
           }
         },
@@ -7675,7 +7675,7 @@
           "expect": {
             "$error": {
               "class": "TypeError",
-              "message": "Utopia\\Database\\Cache\\Query::getGeneration(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 610"
+              "message": "Utopia\\Database\\Cache\\Query::getGeneration(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 609"
             }
           }
         },
@@ -7701,7 +7701,7 @@
           "expect": {
             "$error": {
               "class": "TypeError",
-              "message": "Utopia\\Database\\Cache\\Query::set(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 610"
+              "message": "Utopia\\Database\\Cache\\Query::set(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 609"
             }
           }
         },
@@ -7721,7 +7721,7 @@
           "expect": {
             "$error": {
               "class": "TypeError",
-              "message": "Utopia\\Database\\Cache\\Query::get(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 610"
+              "message": "Utopia\\Database\\Cache\\Query::get(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 609"
             }
           }
         },
@@ -8443,7 +8443,7 @@
           "expect": {
             "$error": {
               "class": "TypeError",
-              "message": "Utopia\\Database\\Cache\\Query::getGeneration(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 610"
+              "message": "Utopia\\Database\\Cache\\Query::getGeneration(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 609"
             }
           }
         },
@@ -8469,7 +8469,7 @@
           "expect": {
             "$error": {
               "class": "TypeError",
-              "message": "Utopia\\Database\\Cache\\Query::set(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 610"
+              "message": "Utopia\\Database\\Cache\\Query::set(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 609"
             }
           }
         },
@@ -8489,7 +8489,7 @@
           "expect": {
             "$error": {
               "class": "TypeError",
-              "message": "Utopia\\Database\\Cache\\Query::get(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 610"
+              "message": "Utopia\\Database\\Cache\\Query::get(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 609"
             }
           }
         },
@@ -8555,7 +8555,7 @@
           "expect": {
             "$error": {
               "class": "TypeError",
-              "message": "Utopia\\Database\\Cache\\Query::get(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 610"
+              "message": "Utopia\\Database\\Cache\\Query::get(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 609"
             }
           }
         },
@@ -8593,7 +8593,7 @@
           "expect": {
             "$error": {
               "class": "TypeError",
-              "message": "Utopia\\Database\\Cache\\Query::getGeneration(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 610"
+              "message": "Utopia\\Database\\Cache\\Query::getGeneration(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 609"
             }
           }
         },
@@ -8619,7 +8619,7 @@
           "expect": {
             "$error": {
               "class": "TypeError",
-              "message": "Utopia\\Database\\Cache\\Query::set(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 610"
+              "message": "Utopia\\Database\\Cache\\Query::set(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 609"
             }
           }
         },
@@ -8639,7 +8639,7 @@
           "expect": {
             "$error": {
               "class": "TypeError",
-              "message": "Utopia\\Database\\Cache\\Query::get(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 610"
+              "message": "Utopia\\Database\\Cache\\Query::get(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 609"
             }
           }
         },
@@ -9361,7 +9361,7 @@
           "expect": {
             "$error": {
               "class": "TypeError",
-              "message": "Utopia\\Database\\Cache\\Query::getGeneration(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 610"
+              "message": "Utopia\\Database\\Cache\\Query::getGeneration(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 609"
             }
           }
         },
@@ -9387,7 +9387,7 @@
           "expect": {
             "$error": {
               "class": "TypeError",
-              "message": "Utopia\\Database\\Cache\\Query::set(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 610"
+              "message": "Utopia\\Database\\Cache\\Query::set(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 609"
             }
           }
         },
@@ -9407,7 +9407,7 @@
           "expect": {
             "$error": {
               "class": "TypeError",
-              "message": "Utopia\\Database\\Cache\\Query::get(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 610"
+              "message": "Utopia\\Database\\Cache\\Query::get(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 609"
             }
           }
         },
@@ -9519,7 +9519,7 @@
           "expect": {
             "$error": {
               "class": "TypeError",
-              "message": "Utopia\\Database\\Cache\\Query::get(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 610"
+              "message": "Utopia\\Database\\Cache\\Query::get(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 609"
             }
           }
         },
@@ -9557,7 +9557,7 @@
           "expect": {
             "$error": {
               "class": "TypeError",
-              "message": "Utopia\\Database\\Cache\\Query::getGeneration(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 610"
+              "message": "Utopia\\Database\\Cache\\Query::getGeneration(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 609"
             }
           }
         },
@@ -9583,7 +9583,7 @@
           "expect": {
             "$error": {
               "class": "TypeError",
-              "message": "Utopia\\Database\\Cache\\Query::set(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 610"
+              "message": "Utopia\\Database\\Cache\\Query::set(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 609"
             }
           }
         },
@@ -9603,7 +9603,7 @@
           "expect": {
             "$error": {
               "class": "TypeError",
-              "message": "Utopia\\Database\\Cache\\Query::get(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 610"
+              "message": "Utopia\\Database\\Cache\\Query::get(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 609"
             }
           }
         },
@@ -10325,7 +10325,7 @@
           "expect": {
             "$error": {
               "class": "TypeError",
-              "message": "Utopia\\Database\\Cache\\Query::getGeneration(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 610"
+              "message": "Utopia\\Database\\Cache\\Query::getGeneration(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 609"
             }
           }
         },
@@ -10351,7 +10351,7 @@
           "expect": {
             "$error": {
               "class": "TypeError",
-              "message": "Utopia\\Database\\Cache\\Query::set(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 610"
+              "message": "Utopia\\Database\\Cache\\Query::set(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 609"
             }
           }
         },
@@ -10371,7 +10371,7 @@
           "expect": {
             "$error": {
               "class": "TypeError",
-              "message": "Utopia\\Database\\Cache\\Query::get(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 610"
+              "message": "Utopia\\Database\\Cache\\Query::get(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 609"
             }
           }
         },
@@ -10438,7 +10438,7 @@
           "expect": {
             "$error": {
               "class": "TypeError",
-              "message": "Utopia\\Database\\Cache\\Query::get(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 610"
+              "message": "Utopia\\Database\\Cache\\Query::get(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 609"
             }
           }
         },
@@ -10476,7 +10476,7 @@
           "expect": {
             "$error": {
               "class": "TypeError",
-              "message": "Utopia\\Database\\Cache\\Query::getGeneration(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 610"
+              "message": "Utopia\\Database\\Cache\\Query::getGeneration(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 609"
             }
           }
         },
@@ -10502,7 +10502,7 @@
           "expect": {
             "$error": {
               "class": "TypeError",
-              "message": "Utopia\\Database\\Cache\\Query::set(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 610"
+              "message": "Utopia\\Database\\Cache\\Query::set(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 609"
             }
           }
         },
@@ -10522,7 +10522,7 @@
           "expect": {
             "$error": {
               "class": "TypeError",
-              "message": "Utopia\\Database\\Cache\\Query::get(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 610"
+              "message": "Utopia\\Database\\Cache\\Query::get(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 609"
             }
           }
         },
@@ -11244,7 +11244,7 @@
           "expect": {
             "$error": {
               "class": "TypeError",
-              "message": "Utopia\\Database\\Cache\\Query::getGeneration(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 610"
+              "message": "Utopia\\Database\\Cache\\Query::getGeneration(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 609"
             }
           }
         },
@@ -11270,7 +11270,7 @@
           "expect": {
             "$error": {
               "class": "TypeError",
-              "message": "Utopia\\Database\\Cache\\Query::set(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 610"
+              "message": "Utopia\\Database\\Cache\\Query::set(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 609"
             }
           }
         },
@@ -11290,7 +11290,7 @@
           "expect": {
             "$error": {
               "class": "TypeError",
-              "message": "Utopia\\Database\\Cache\\Query::get(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 610"
+              "message": "Utopia\\Database\\Cache\\Query::get(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 609"
             }
           }
         },
@@ -11356,7 +11356,7 @@
           "expect": {
             "$error": {
               "class": "TypeError",
-              "message": "Utopia\\Database\\Cache\\Query::get(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 610"
+              "message": "Utopia\\Database\\Cache\\Query::get(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 609"
             }
           }
         },
@@ -11394,7 +11394,7 @@
           "expect": {
             "$error": {
               "class": "TypeError",
-              "message": "Utopia\\Database\\Cache\\Query::getGeneration(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 610"
+              "message": "Utopia\\Database\\Cache\\Query::getGeneration(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 609"
             }
           }
         },
@@ -11420,7 +11420,7 @@
           "expect": {
             "$error": {
               "class": "TypeError",
-              "message": "Utopia\\Database\\Cache\\Query::set(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 610"
+              "message": "Utopia\\Database\\Cache\\Query::set(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 609"
             }
           }
         },
@@ -11440,7 +11440,7 @@
           "expect": {
             "$error": {
               "class": "TypeError",
-              "message": "Utopia\\Database\\Cache\\Query::get(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 610"
+              "message": "Utopia\\Database\\Cache\\Query::get(): Argument #1 ($entry) must be of type Utopia\\Database\\Cache\\Entry, null given, called in /usr/src/code/tests/compat/database/ops/core.php on line 609"
             }
           }
         },
