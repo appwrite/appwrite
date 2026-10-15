@@ -9,7 +9,7 @@ repository = "https://github.com/utopia-rs/database"
 publish.workspace = true
 
 [features]
-default = ["postgres"]
+default = ["postgres", "memory"]
 # The PostgreSQL adapter.
 postgres = ["dep:postgres-protocol", "dep:fallible-iterator"]
 # The MariaDB adapter.
