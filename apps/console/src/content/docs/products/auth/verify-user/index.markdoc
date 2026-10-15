@@ -235,7 +235,7 @@ val userId = token.userId
 ```
 {% /multicode %}
 
-Next, ask the user for the code from the email. Confirm it by passing the user ID and the code as the `secret`.
+Next, ask the user for the code from the email. Confirm the email by passing the user ID and the code as the `secret`.
 
 {% multicode %}
 ```client-web
