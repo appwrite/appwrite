@@ -11,6 +11,8 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Usage\Context;
 use Appwrite\Usage\Operations;
+use Appwrite\Utopia\Database\Aggregation;
+use Appwrite\Utopia\Database\Documents\Aggregate;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
@@ -154,10 +156,17 @@ class XList extends Action
         try {
             $parsed = Query::groupByType($queries);
             $find = match (true) {
-                $parsed->isAggregation() => fn (): array => \array_map(
-                    static fn (array $row): Document => new Document($row),
-                    $dbForDatabases->aggregate($collectionTableId, $queries),
-                ),
+                $parsed->isAggregation() => function () use ($dbForDatabases, $dbForProject, $database, $collection, $collectionTableId, $queries, $parsed, $authorization): array {
+                    $rows = $dbForDatabases->aggregate($collectionTableId, $queries);
+                    $aggregation = Aggregation::from(
+                        $dbForDatabases->internalAttributes(),
+                        $collection,
+                        $this->getJoinedCollections($dbForProject, $database, $parsed->joins, $authorization),
+                        $queries,
+                    );
+
+                    return \array_map($aggregation->decode(...), $rows);
+                },
                 $parsed->selections !== [] => fn (): array => $dbForDatabases->find($collectionTableId, $queries),
                 default => fn (): array => $dbForDatabases->skipRelationships(fn (): array => $dbForDatabases->find($collectionTableId, $queries)),
             };
@@ -183,7 +192,7 @@ class XList extends Action
                 }
 
                 if (\is_array($cachedDocuments)) {
-                    $documents = \array_map(fn (array $document): Document => new Document($document), $cachedDocuments);
+                    $documents = \array_map(fn (array $document): Document => $parsed->isAggregation() ? new Aggregate($document) : new Document($document), $cachedDocuments);
                     $documentsCacheHit = true;
 
                     try {
@@ -273,6 +282,22 @@ class XList extends Action
      */
     protected function afterQuery(float $dbDurationMs, Document $database, Document $collection, array $queries, ?Http $utopia): void
     {
+    }
+
+    /**
+     * @param array<Query> $joins
+     * @return array<string, Document>
+     */
+    private function getJoinedCollections(Database $dbForProject, Document $database, array $joins, Authorization $authorization): array
+    {
+        $collections = [];
+        foreach ($joins as $join) {
+            $collections[$join->getAlias()] = $authorization->skip(
+                fn (): Document => $dbForProject->getDocument('database_' . $database->getSequence(), $join->getAttribute())
+            );
+        }
+
+        return $collections;
     }
 
     /**
