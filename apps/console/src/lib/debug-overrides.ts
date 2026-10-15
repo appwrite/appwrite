@@ -74,7 +74,10 @@ export type DebugOverrides = {
   showNativeAppBar: boolean
   /** When true, the activity log volume chart is shown above activity events. Default false. */
   showActivityChart: boolean
-  /** When true, the project sidebar shows the mock environment switcher. Default false. */
+  /**
+   * When true, the project sidebar shows the environment switcher
+   * (`/project/environments`, Cloud only). Default false.
+   */
   showProjectEnvironments: boolean
   /** When true, the success team card is shown on organization overview (custom plans). Default false. */
   showSuccessTeamCard: boolean

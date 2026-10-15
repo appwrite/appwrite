@@ -2,6 +2,8 @@ import * as React from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
+import { isValidProjectId } from '@/lib/project-id'
+import { useT } from '@/lib/i18n/translate'
 import { Info } from 'lucide-react'
 
 export interface IdInputProps {
@@ -37,10 +39,12 @@ export interface IdInputProps {
    */
   id?: string
   /**
-   * ID validation rules. Dedicated native databases only allow letters and numbers.
+   * ID validation rules. Dedicated native databases only allow letters and
+   * numbers; project-shaped IDs (projects, project environments) only allow
+   * lowercase letters, numbers and a non-leading hyphen.
    * @default 'default'
    */
-  idFormat?: 'default' | 'dedicated'
+  idFormat?: 'default' | 'dedicated' | 'project'
 }
 
 /**
@@ -71,28 +75,29 @@ export function IdInput({
   id,
   idFormat = 'default',
 }: IdInputProps) {
+  const t = useT()
   const validateId =
-    idFormat === 'dedicated' ? validateDedicatedId : validateDefaultId
+    idFormat === 'dedicated'
+      ? validateDedicatedId
+      : idFormat === 'project'
+        ? isValidProjectId
+        : validateDefaultId
   const idHelpText =
     idFormat === 'dedicated'
       ? 'Allowed characters: letters and numbers only'
-      : 'Allowed characters: alphanumeric, non-leading hyphen, underscore, period'
+      : idFormat === 'project'
+        ? 'Allowed characters: lowercase letters, numbers, non-leading hyphen'
+        : 'Allowed characters: alphanumeric, non-leading hyphen, underscore, period'
   const [isOpen, setIsOpen] = React.useState(false)
   const [inputValue, setInputValue] = React.useState(value || '')
   const [error, setError] = React.useState<string | null>(null)
 
-  // Sync input value with prop value
+  // Sync input value with prop value. `error` is deliberately not touched
+  // here: `handleToggle` already clears it on open, and clearing it on `value`
+  // wiped the message a keystroke had just set for every controlled caller.
   React.useEffect(() => {
     setInputValue(value || '')
   }, [value])
-
-  // Initialize input value when opened
-  React.useEffect(() => {
-    if (isOpen) {
-      setInputValue(value || '')
-      setError(null)
-    }
-  }, [isOpen, value])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value
@@ -100,7 +105,8 @@ export function IdInput({
 
     // Validate as user types
     if (newValue.length > maxLength) {
-      setError(`ID must be ${maxLength} characters or less`)
+      // The counter next to the field carries the number.
+      setError('ID is too long')
     } else if (newValue && !validateId(newValue)) {
       setError('Invalid ID format')
     } else {
@@ -124,7 +130,7 @@ export function IdInput({
   }
 
   // Display value: show custom ID if set, otherwise show "Auto-generated"
-  const displayValue = value || 'Auto-generated'
+  const displayValue = value || t('Auto-generated')
 
   return (
     <div className="space-y-2">
@@ -169,14 +175,14 @@ export function IdInput({
                 </span>
               </div>
             </div>
-            {error && <p className="text-[12px] text-destructive">{error}</p>}
+            {error && (
+              <p className="text-[12px] text-destructive">{t(error)}</p>
+            )}
           </div>
 
           <div className="flex items-start gap-2 rounded-lg border border-border bg-muted/30 p-3">
             <Info className="h-4 w-4 shrink-0 text-muted-foreground mt-0.5" />
-            <p className="text-[12px] text-muted-foreground">
-              {idHelpText}
-            </p>
+            <p className="text-[12px] text-muted-foreground">{t(idHelpText)}</p>
           </div>
         </div>
       )}
