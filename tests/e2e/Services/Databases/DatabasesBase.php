@@ -11,6 +11,7 @@ use Tests\E2E\Services\Databases\Queries\JoinPermissions;
 use Tests\E2E\Services\Databases\Queries\JoinProjection;
 use Tests\E2E\Services\Databases\Queries\JoinTypes;
 use Tests\E2E\Services\Databases\Queries\RejectedMethods;
+use Tests\E2E\Services\Databases\Queries\RejectedValues;
 use Tests\E2E\Services\Databases\Queries\StatisticalAggregates;
 use Tests\E2E\Services\Databases\Queries\Totals;
 use Tests\E2E\Traits\DatabasesUrlHelpers;
@@ -39,6 +40,7 @@ trait DatabasesBase
     use JoinProjection;
     use StatisticalAggregates;
     use RejectedMethods;
+    use RejectedValues;
     use Totals;
 
     /**
