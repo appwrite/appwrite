@@ -21404,10 +21404,25 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to create collection metadata for 'csParent_u000000000090': Failed to execute transaction: the transaction was lost before it could commit"
-            }
+            "$document": {
+              "$id": "csParent_u000000000090",
+              "name": "csParent_u000000000090",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"users\")",
+                "read(\"users\")",
+                "update(\"users\")",
+                "delete(\"users\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
           }
         },
         {
@@ -21434,9 +21449,21 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$value": "Attribute",
+            "fields": {
+              "key": "test",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 255,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
             }
           }
         },
@@ -21545,9 +21572,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "csO2O_u000000000091",
+              "type": {
+                "$enum": "RelationshipType::OneToOne"
+              },
+              "twoWay": false,
+              "key": "oneToOne",
+              "twoWayKey": "csParent_u000000000090",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Cascade"
+              }
             }
           }
         },
@@ -21656,9 +21692,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "csO2M_u000000000092",
+              "type": {
+                "$enum": "RelationshipType::OneToMany"
+              },
+              "twoWay": false,
+              "key": "oneToMany",
+              "twoWayKey": "csParent_u000000000090",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Cascade"
+              }
             }
           }
         },
@@ -21708,9 +21753,69 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$document": {
+              "$id": "u0000000000000000100",
+              "$permissions": [
+                "read(\"user:random\")",
+                "update(\"user:random\")",
+                "delete(\"user:random\")"
+              ],
+              "test": "lorem",
+              "$collection": "csParent_u000000000090",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1",
+              "oneToOne": {
+                "$document": {
+                  "test": "lorem ipsum",
+                  "$id": "u0000000000000000101",
+                  "$sequence": "1",
+                  "$tenant": "999",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"user:random\")",
+                    "update(\"user:random\")",
+                    "delete(\"user:random\")"
+                  ],
+                  "$collection": "csO2O_u000000000091"
+                }
+              },
+              "oneToMany": [
+                {
+                  "$document": {
+                    "test": "lorem ipsum",
+                    "$id": "u0000000000000000102",
+                    "$sequence": "1",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"user:random\")",
+                      "update(\"user:random\")",
+                      "delete(\"user:random\")"
+                    ],
+                    "$collection": "csO2M_u000000000092"
+                  }
+                },
+                {
+                  "$document": {
+                    "test": "dolor",
+                    "$id": "u0000000000000000103",
+                    "$sequence": "2",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"user:torsten\")",
+                      "update(\"user:random\")",
+                      "delete(\"user:random\")"
+                    ],
+                    "$collection": "csO2M_u000000000092"
+                  }
+                }
+              ]
             }
           }
         },
@@ -21730,9 +21835,19 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$document": {
+              "$id": "u0000000000000000104",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "test": "lorem ipsum",
+              "$collection": "csParent_u000000000090",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "2",
+              "oneToMany": []
             }
           }
         },
@@ -21742,12 +21857,7 @@
             "collection": "csParent_u000000000090",
             "id": "u0000000000000000100"
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
-            }
-          }
+          "expect": true
         },
         {
           "op": "database.create_document",
@@ -21795,9 +21905,69 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$document": {
+              "$id": "u0000000000000000105",
+              "$permissions": [
+                "read(\"user:random\")",
+                "update(\"user:random\")",
+                "delete(\"user:random\")"
+              ],
+              "test": "lorem",
+              "$collection": "csParent_u000000000090",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "3",
+              "oneToOne": {
+                "$document": {
+                  "test": "lorem ipsum",
+                  "$id": "u0000000000000000106",
+                  "$sequence": "2",
+                  "$tenant": "999",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"user:random\")",
+                    "update(\"user:random\")",
+                    "delete(\"user:random\")"
+                  ],
+                  "$collection": "csO2O_u000000000091"
+                }
+              },
+              "oneToMany": [
+                {
+                  "$document": {
+                    "test": "lorem ipsum",
+                    "$id": "u0000000000000000107",
+                    "$sequence": "3",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"user:random\")",
+                      "update(\"user:random\")",
+                      "delete(\"user:random\")"
+                    ],
+                    "$collection": "csO2M_u000000000092"
+                  }
+                },
+                {
+                  "$document": {
+                    "test": "dolor",
+                    "$id": "u0000000000000000108",
+                    "$sequence": "4",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"user:torsten\")",
+                      "update(\"user:random\")",
+                      "delete(\"user:random\")"
+                    ],
+                    "$collection": "csO2M_u000000000092"
+                  }
+                }
+              ]
             }
           }
         },
@@ -21807,12 +21977,7 @@
             "collection": "csParent_u000000000090",
             "id": "u0000000000000000105"
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
-            }
-          }
+          "expect": true
         },
         {
           "op": "database.delete_document",
@@ -21820,12 +21985,7 @@
             "collection": "csParent_u000000000090",
             "id": "u0000000000000000100"
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
-            }
-          }
+          "expect": false
         },
         {
           "op": "db.adapter",
@@ -21853,10 +22013,7 @@
             "id": "u0000000000000000100"
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
-            }
+            "$document": {}
           }
         },
         {
@@ -21864,12 +22021,7 @@
           "args": {
             "collection": "csParent_u000000000090"
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
-            }
-          }
+          "expect": null
         },
         {
           "op": "database.delete_collection",
@@ -22929,18 +23081,9 @@
             }
           },
           "expect": {
-            "$value": "Relationship",
-            "fields": {
-              "relatedCollection": "csO2M_u000000000092",
-              "type": {
-                "$enum": "RelationshipType::OneToMany"
-              },
-              "twoWay": false,
-              "key": "oneToMany",
-              "twoWayKey": "csParent_u000000000090",
-              "onDelete": {
-                "$enum": "RelationshipDeleteAction::Cascade"
-              }
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Failed to create relationship: Failed to execute transaction: the transaction was lost before it could commit"
             }
           }
         },

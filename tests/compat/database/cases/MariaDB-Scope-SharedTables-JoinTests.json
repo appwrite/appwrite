@@ -9059,9 +9059,21 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to persist metadata after retries for attribute creation 'name': Failed to execute transaction: the transaction was lost before it could commit"
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 100,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
             }
           }
         },
@@ -9202,9 +9214,17 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"name\""
+            "$document": {
+              "$id": "p1",
+              "name": "WithOrders",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "ljsn_p",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1"
             }
           }
         },
@@ -9223,9 +9243,17 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"name\""
+            "$document": {
+              "$id": "p2",
+              "name": "NoOrders",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "ljsn_p",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "2"
             }
           }
         },
@@ -9333,12 +9361,16 @@
               }
             ]
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Query",
-              "message": "Invalid query: Attribute not found in schema: name"
+          "expect": [
+            {
+              "total": null,
+              "name": "NoOrders"
+            },
+            {
+              "total": "300",
+              "name": "WithOrders"
             }
-          }
+          ]
         },
         {
           "op": "database.collection_exists",
@@ -48008,21 +48040,9 @@
             }
           },
           "expect": {
-            "$value": "Attribute",
-            "fields": {
-              "key": "name",
-              "type": {
-                "$enum": "Query\\Schema\\ColumnType::String"
-              },
-              "size": 100,
-              "required": true,
-              "default": null,
-              "signed": true,
-              "array": false,
-              "format": null,
-              "filters": [],
-              "relationship": null,
-              "side": null
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Failed to persist metadata after retries for attribute creation 'name': Failed to execute transaction: the transaction was lost before it could commit"
             }
           }
         },
@@ -48163,17 +48183,9 @@
             }
           },
           "expect": {
-            "$document": {
-              "$id": "p2",
-              "name": "Product p2",
-              "$permissions": [
-                "read(\"any\")"
-              ],
-              "$collection": "gd_ijue_p",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$tenant": "999",
-              "$sequence": "1"
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
             }
           }
         },
@@ -85714,23 +85726,10 @@
             }
           },
           "expect": {
-            "$document": {
-              "$id": "jti_authors",
-              "name": "jti_authors",
-              "attributes": [],
-              "indexes": [],
-              "documentSecurity": false,
-              "$permissions": [
-                "create(\"any\")",
-                "read(\"any\")"
-              ],
-              "$collection": "_metadata",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$tenant": null,
-              "$sequence": "1"
-            },
-            "$class": "Collection"
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Failed to create collection metadata for 'jti_authors': Failed to execute transaction: the transaction was lost before it could commit"
+            }
           }
         },
         {
@@ -85757,21 +85756,9 @@
             }
           },
           "expect": {
-            "$value": "Attribute",
-            "fields": {
-              "key": "name",
-              "type": {
-                "$enum": "Query\\Schema\\ColumnType::String"
-              },
-              "size": 64,
-              "required": true,
-              "default": null,
-              "signed": true,
-              "array": false,
-              "format": null,
-              "filters": [],
-              "relationship": null,
-              "side": null
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
             }
           }
         },
@@ -86043,17 +86030,9 @@
             }
           },
           "expect": {
-            "$document": {
-              "$id": "a1",
-              "$permissions": [
-                "read(\"any\")"
-              ],
-              "name": "one-a1",
-              "$collection": "jti_authors",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$tenant": "1",
-              "$sequence": "1"
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
             }
           }
         },
@@ -86072,17 +86051,9 @@
             }
           },
           "expect": {
-            "$document": {
-              "$id": "a2",
-              "$permissions": [
-                "read(\"any\")"
-              ],
-              "name": "one-a2",
-              "$collection": "jti_authors",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$tenant": "1",
-              "$sequence": "2"
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
             }
           }
         },
@@ -86327,17 +86298,9 @@
             }
           },
           "expect": {
-            "$document": {
-              "$id": "a1",
-              "$permissions": [
-                "read(\"any\")"
-              ],
-              "name": "two-a1",
-              "$collection": "jti_authors",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$tenant": "2",
-              "$sequence": "3"
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
             }
           }
         },
@@ -86356,17 +86319,9 @@
             }
           },
           "expect": {
-            "$document": {
-              "$id": "a2",
-              "$permissions": [
-                "read(\"any\")"
-              ],
-              "name": "two-a2",
-              "$collection": "jti_authors",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$tenant": "2",
-              "$sequence": "4"
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
             }
           }
         },
@@ -86385,17 +86340,9 @@
             }
           },
           "expect": {
-            "$document": {
-              "$id": "shared",
-              "$permissions": [
-                "read(\"any\")"
-              ],
-              "name": "two-shared",
-              "$collection": "jti_authors",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$tenant": "2",
-              "$sequence": "5"
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
             }
           }
         },
@@ -86516,17 +86463,9 @@
             }
           },
           "expect": {
-            "$document": {
-              "$id": "legacy",
-              "$permissions": [
-                "read(\"any\")"
-              ],
-              "name": "no-tenant",
-              "$collection": "jti_authors",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$tenant": "3",
-              "$sequence": "6"
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
             }
           }
         },
@@ -86688,7 +86627,7 @@
                     {
                       "$builder": true
                     },
-                    1,
+                    0,
                     {
                       "$builder": true
                     },
@@ -86806,23 +86745,12 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "one-a1",
-                "book.pages": 11,
-                "review.stars": 5,
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jti_authors"
-              }
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
             }
-          ]
+          }
         },
         {
           "op": "database.count",
@@ -86871,7 +86799,12 @@
               }
             ]
           },
-          "expect": 1
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
+          }
         },
         {
           "op": "database.sum",
@@ -86921,7 +86854,12 @@
               }
             ]
           },
-          "expect": 11
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
+          }
         },
         {
           "op": "database.set_tenant",
@@ -86990,7 +86928,12 @@
               }
             ]
           },
-          "expect": []
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
+          }
         },
         {
           "op": "database.count",
@@ -87039,7 +86982,12 @@
               }
             ]
           },
-          "expect": 0
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
+          }
         },
         {
           "op": "database.sum",
@@ -87089,7 +87037,12 @@
               }
             ]
           },
-          "expect": 0
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
+          }
         },
         {
           "op": "database.set_tenant",
@@ -87160,18 +87113,9 @@
             ]
           },
           "expect": {
-            "$document": {
-              "name": "one-a1",
-              "book.pages": 11,
-              "review.stars": 5,
-              "$sequence": "1",
-              "$id": "a1",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$permissions": [
-                "read(\"any\")"
-              ],
-              "$collection": "jti_authors"
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
             }
           }
         },
@@ -87235,7 +87179,10 @@
             ]
           },
           "expect": {
-            "$document": {}
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
           }
         },
         {
@@ -87298,7 +87245,10 @@
             ]
           },
           "expect": {
-            "$document": {}
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
           }
         },
         {
@@ -87368,38 +87318,12 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "one-a1",
-                "book.pages": 11,
-                "review.stars": 5,
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jti_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "one-a2",
-                "book.pages": null,
-                "review.stars": 4,
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jti_authors"
-              }
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
             }
-          ]
+          }
         },
         {
           "op": "database.count",
@@ -87448,7 +87372,12 @@
               }
             ]
           },
-          "expect": 2
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
+          }
         },
         {
           "op": "database.sum",
@@ -87498,7 +87427,12 @@
               }
             ]
           },
-          "expect": 11
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
+          }
         },
         {
           "op": "database.set_tenant",
@@ -87567,53 +87501,12 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "two-a1",
-                "book.pages": 21,
-                "review.stars": null,
-                "$id": "a1",
-                "$sequence": "3",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jti_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "two-a2",
-                "book.pages": 22,
-                "review.stars": null,
-                "$id": "a2",
-                "$sequence": "4",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jti_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "two-shared",
-                "book.pages": null,
-                "review.stars": 1,
-                "$id": "shared",
-                "$sequence": "5",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jti_authors"
-              }
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
             }
-          ]
+          }
         },
         {
           "op": "database.count",
@@ -87662,7 +87555,12 @@
               }
             ]
           },
-          "expect": 3
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
+          }
         },
         {
           "op": "database.sum",
@@ -87712,7 +87610,12 @@
               }
             ]
           },
-          "expect": 43
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
+          }
         },
         {
           "op": "database.set_tenant",
@@ -87783,18 +87686,9 @@
             ]
           },
           "expect": {
-            "$document": {
-              "name": "one-a1",
-              "book.pages": 11,
-              "review.stars": 5,
-              "$sequence": "1",
-              "$id": "a1",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$permissions": [
-                "read(\"any\")"
-              ],
-              "$collection": "jti_authors"
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
             }
           }
         },
@@ -87858,7 +87752,10 @@
             ]
           },
           "expect": {
-            "$document": {}
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
           }
         },
         {
@@ -87921,7 +87818,10 @@
             ]
           },
           "expect": {
-            "$document": {}
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
           }
         },
         {
@@ -87991,23 +87891,12 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "one-a1",
-                "book.pages": 11,
-                "review.stars": 5,
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jti_authors"
-              }
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
             }
-          ]
+          }
         },
         {
           "op": "database.count",
@@ -88056,7 +87945,12 @@
               }
             ]
           },
-          "expect": 1
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
+          }
         },
         {
           "op": "database.sum",
@@ -88106,7 +88000,12 @@
               }
             ]
           },
-          "expect": 11
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
+          }
         },
         {
           "op": "database.set_tenant",
@@ -88175,38 +88074,12 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "two-a1",
-                "book.pages": 21,
-                "review.stars": null,
-                "$id": "a1",
-                "$sequence": "3",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jti_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "two-a2",
-                "book.pages": 22,
-                "review.stars": null,
-                "$id": "a2",
-                "$sequence": "4",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jti_authors"
-              }
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
             }
-          ]
+          }
         },
         {
           "op": "database.count",
@@ -88255,7 +88128,12 @@
               }
             ]
           },
-          "expect": 2
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
+          }
         },
         {
           "op": "database.sum",
@@ -88305,7 +88183,12 @@
               }
             ]
           },
-          "expect": 43
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
+          }
         },
         {
           "op": "database.set_tenant",
@@ -88376,18 +88259,9 @@
             ]
           },
           "expect": {
-            "$document": {
-              "name": "one-a1",
-              "book.pages": 11,
-              "review.stars": 5,
-              "$sequence": "1",
-              "$id": "a1",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$permissions": [
-                "read(\"any\")"
-              ],
-              "$collection": "jti_authors"
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
             }
           }
         },
@@ -88451,7 +88325,10 @@
             ]
           },
           "expect": {
-            "$document": {}
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
           }
         },
         {
@@ -88514,7 +88391,10 @@
             ]
           },
           "expect": {
-            "$document": {}
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
           }
         },
         {
@@ -88584,38 +88464,12 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "one-a1",
-                "book.pages": 11,
-                "review.stars": 5,
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jti_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "one-a2",
-                "book.pages": null,
-                "review.stars": 4,
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jti_authors"
-              }
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
             }
-          ]
+          }
         },
         {
           "op": "database.count",
@@ -88664,7 +88518,12 @@
               }
             ]
           },
-          "expect": 2
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
+          }
         },
         {
           "op": "database.sum",
@@ -88714,7 +88573,12 @@
               }
             ]
           },
-          "expect": 11
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
+          }
         },
         {
           "op": "database.set_tenant",
@@ -88783,23 +88647,12 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "two-shared",
-                "book.pages": null,
-                "review.stars": 1,
-                "$id": "shared",
-                "$sequence": "5",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jti_authors"
-              }
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
             }
-          ]
+          }
         },
         {
           "op": "database.count",
@@ -88848,7 +88701,12 @@
               }
             ]
           },
-          "expect": 1
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
+          }
         },
         {
           "op": "database.sum",
@@ -88898,7 +88756,12 @@
               }
             ]
           },
-          "expect": 0
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
+          }
         },
         {
           "op": "database.set_tenant",
@@ -88969,18 +88832,9 @@
             ]
           },
           "expect": {
-            "$document": {
-              "name": "one-a1",
-              "book.pages": 11,
-              "review.stars": 5,
-              "$sequence": "1",
-              "$id": "a1",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$permissions": [
-                "read(\"any\")"
-              ],
-              "$collection": "jti_authors"
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
             }
           }
         },
@@ -89044,7 +88898,10 @@
             ]
           },
           "expect": {
-            "$document": {}
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
           }
         },
         {
@@ -89107,7 +88964,10 @@
             ]
           },
           "expect": {
-            "$document": {}
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
           }
         },
         {
@@ -89131,7 +88991,12 @@
           "args": {
             "collection": "jti_authors"
           },
-          "expect": null
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
+          }
         },
         {
           "op": "database.collection_exists",

@@ -17659,9 +17659,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to create relationship: Failed to execute transaction: the transaction was lost before it could commit"
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "csO2O_u000000000083",
+              "type": {
+                "$enum": "RelationshipType::OneToOne"
+              },
+              "twoWay": false,
+              "key": "oneToOne",
+              "twoWayKey": "csParent_u000000000082",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Cascade"
+              }
             }
           }
         },
@@ -18316,18 +18325,9 @@
             }
           },
           "expect": {
-            "$value": "Relationship",
-            "fields": {
-              "relatedCollection": "csO2M_u000000000084",
-              "type": {
-                "$enum": "RelationshipType::OneToMany"
-              },
-              "twoWay": false,
-              "key": "oneToMany",
-              "twoWayKey": "csParent_u000000000082",
-              "onDelete": {
-                "$enum": "RelationshipDeleteAction::Cascade"
-              }
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Failed to create relationship indexes: Failed to persist metadata after retries for index creation '_index_csParent_u000000000082': Failed to execute transaction: the transaction was lost before it could commit"
             }
           }
         },

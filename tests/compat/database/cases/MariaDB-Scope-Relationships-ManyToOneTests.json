@@ -13549,9 +13549,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to create relationship: Failed to execute transaction: the transaction was lost before it could commit"
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "m2o_select_cascade_parent",
+              "type": {
+                "$enum": "RelationshipType::ManyToOne"
+              },
+              "twoWay": true,
+              "key": "parent",
+              "twoWayKey": "children",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Cascade"
+              }
             }
           }
         },
@@ -13573,6 +13582,7 @@
               "$updatedAt": "<now>",
               "$permissions": [],
               "$sequence": "1",
+              "children": [],
               "name": null
             }
           }
@@ -13589,9 +13599,24 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$id": "child1",
+              "$collection": "m2o_select_cascade_child",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1",
+              "parent": {
+                "$document": {
+                  "name": null,
+                  "$id": "parent1",
+                  "$sequence": "1",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [],
+                  "$collection": "m2o_select_cascade_parent"
+                }
+              }
             }
           }
         },
@@ -13613,6 +13638,7 @@
               "$updatedAt": "<now>",
               "$permissions": [],
               "$sequence": "2",
+              "children": [],
               "name": null
             }
           }
@@ -13629,9 +13655,24 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$id": "child2",
+              "$collection": "m2o_select_cascade_child",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "2",
+              "parent": {
+                "$document": {
+                  "name": null,
+                  "$id": "parent2",
+                  "$sequence": "2",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [],
+                  "$collection": "m2o_select_cascade_parent"
+                }
+              }
             }
           }
         },
@@ -13686,6 +13727,18 @@
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [],
+                "children": [
+                  {
+                    "$document": {
+                      "$id": "child1",
+                      "$sequence": "1",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [],
+                      "$collection": "m2o_select_cascade_child"
+                    }
+                  }
+                ],
                 "$collection": "m2o_select_cascade_parent"
               }
             }
@@ -13705,7 +13758,29 @@
               }
             ]
           },
-          "expect": []
+          "expect": [
+            {
+              "$document": {
+                "$id": "child1",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "parent": {
+                  "$document": {
+                    "name": null,
+                    "$id": "parent1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [],
+                    "$collection": "m2o_select_cascade_parent"
+                  }
+                },
+                "$collection": "m2o_select_cascade_child"
+              }
+            }
+          ]
         },
         {
           "op": "database.delete_collection",
@@ -13719,12 +13794,7 @@
           "args": {
             "collection": "m2o_select_cascade_child"
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
-            }
-          }
+          "expect": null
         }
       ]
     },

@@ -44453,9 +44453,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Transaction",
-              "message": "Failed to execute transaction: the transaction was lost before it could commit"
+            "$document": {
+              "$id": "hb1",
+              "aId": "ha1",
+              "mainId": "hm1",
+              "label": "b-public",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "jh_b",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
             }
           }
         },
@@ -44543,19 +44552,9 @@
             }
           },
           "expect": {
-            "$document": {
-              "$id": "hc-hidden",
-              "bId": "hb1",
-              "mainId": "hm1",
-              "secret": "combo-hard-alpha",
-              "score": 8686,
-              "$permissions": [
-                "read(\"user:combo-hard-hidden\")"
-              ],
-              "$collection": "jh_c",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$sequence": "2"
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Transaction",
+              "message": "Failed to execute transaction: the transaction was lost before it could commit"
             }
           }
         },

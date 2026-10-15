@@ -1207,9 +1207,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to create relationship: Failed to execute transaction: the transaction was lost before it could commit"
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "halfRenamedAuthors",
+              "type": {
+                "$enum": "RelationshipType::OneToOne"
+              },
+              "twoWay": true,
+              "key": "author",
+              "twoWayKey": "book",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
             }
           }
         },
@@ -1250,9 +1259,27 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"book\""
+            "$document": {
+              "$id": "dune",
+              "name": "Dune",
+              "$collection": "halfRenamedBooks",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$tenant": "999",
+              "$sequence": "1",
+              "author": {
+                "$document": {
+                  "name": "Herbert",
+                  "$id": "herbert",
+                  "$sequence": "1",
+                  "$tenant": "999",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [],
+                  "$collection": "halfRenamedAuthors"
+                }
+              }
             }
           }
         },
@@ -1301,8 +1328,8 @@
           },
           "expect": {
             "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+              "class": "Utopia\\Database\\Exception",
+              "message": "Failed to update relationship 'author': SQLSTATE[42S21]: Column already exists: 1060 Duplicate column name 'novel'"
             }
           }
         },
@@ -1333,9 +1360,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "halfRenamedAuthors",
+              "type": {
+                "$enum": "RelationshipType::OneToOne"
+              },
+              "twoWay": true,
+              "key": "writer",
+              "twoWayKey": "novel",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
             }
           }
         },
@@ -1346,7 +1382,28 @@
             "id": "dune"
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "name": "Dune",
+              "$sequence": "1",
+              "$id": "dune",
+              "$tenant": "999",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "halfRenamedBooks",
+              "writer": {
+                "$document": {
+                  "name": "Herbert",
+                  "$id": "herbert",
+                  "$sequence": "1",
+                  "$tenant": "999",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [],
+                  "$collection": "halfRenamedAuthors"
+                }
+              }
+            }
           }
         },
         {
@@ -1364,7 +1421,19 @@
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$permissions": [],
-              "$collection": "halfRenamedAuthors"
+              "$collection": "halfRenamedAuthors",
+              "novel": {
+                "$document": {
+                  "name": "Dune",
+                  "$id": "dune",
+                  "$sequence": "1",
+                  "$tenant": "999",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [],
+                  "$collection": "halfRenamedBooks"
+                }
+              }
             }
           }
         },
@@ -1373,12 +1442,7 @@
           "args": {
             "collection": "halfRenamedBooks"
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Index not found"
-            }
-          }
+          "expect": null
         },
         {
           "op": "database.delete_collection",

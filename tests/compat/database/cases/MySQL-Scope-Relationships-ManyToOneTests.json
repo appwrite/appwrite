@@ -11064,10 +11064,21 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to create collection metadata for 'parent_relationship_error_many_to_one': Failed to execute transaction: the transaction was lost before it could commit"
-            }
+            "$document": {
+              "$id": "parent_relationship_error_many_to_one",
+              "name": "parent_relationship_error_many_to_one",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
           }
         },
         {
@@ -11126,9 +11137,21 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 255,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
             }
           }
         },
@@ -11227,9 +11250,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"name\""
+            "$document": {
+              "$id": "parent1",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "name": "Parent 1",
+              "$collection": "parent_relationship_error_many_to_one",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
             }
           }
         },
@@ -11251,9 +11283,33 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$document": {
+              "$id": "child1",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "name": "Child 1",
+              "$collection": "child_relationship_error_many_to_one",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1",
+              "parent_relationship_error_many_to_one": {
+                "$document": {
+                  "name": "Parent 1",
+                  "$id": "parent1",
+                  "$sequence": "1",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"any\")",
+                    "update(\"any\")",
+                    "delete(\"any\")"
+                  ],
+                  "$collection": "parent_relationship_error_many_to_one"
+                }
+              }
             }
           }
         },
@@ -11275,8 +11331,8 @@
           },
           "expect": {
             "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+              "class": "Utopia\\Database\\Exception\\Restricted",
+              "message": "Cannot delete document because it has at least one related document."
             }
           }
         },
@@ -11287,9 +11343,18 @@
             "id": "parent1"
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
+            "$document": {
+              "name": "Parent 1",
+              "$sequence": "1",
+              "$id": "parent1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "parent_relationship_error_many_to_one"
             }
           }
         },
@@ -11300,7 +11365,34 @@
             "id": "child1"
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "name": "Child 1",
+              "$sequence": "1",
+              "$id": "child1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "child_relationship_error_many_to_one",
+              "parent_relationship_error_many_to_one": {
+                "$document": {
+                  "name": "Parent 1",
+                  "$id": "parent1",
+                  "$sequence": "1",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"any\")",
+                    "update(\"any\")",
+                    "delete(\"any\")"
+                  ],
+                  "$collection": "parent_relationship_error_many_to_one"
+                }
+              }
+            }
           }
         },
         {

@@ -1,2566 +1,2566 @@
 {
-    "source": [
-        "vendor/utopia-php/database/tests/e2e/Adapter/Scopes/MongoReadFilterTests.php",
-        "vendor/utopia-php/database/tests/e2e/Adapter/Schemaless/MongoDBTest.php"
-    ],
-    "cases": [
+  "source": [
+    "vendor/utopia-php/database/tests/e2e/Adapter/Scopes/MongoReadFilterTests.php",
+    "vendor/utopia-php/database/tests/e2e/Adapter/Schemaless/MongoDBTest.php"
+  ],
+  "cases": [
+    {
+      "name": "MongoReadFilterTests::testStartsWithAndEndsWithAreAnchored",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
         {
-            "name": "MongoReadFilterTests::testStartsWithAndEndsWithAreAnchored",
-            "state": [
-                "mongo@database-mongo"
-            ],
-            "steps": [
-                {
-                    "op": "db.open",
-                    "args": {
-                        "engine": "mongo",
-                        "schemaless": true
-                    },
-                    "bind": "db",
-                    "expect": {
-                        "$handle": "*"
-                    }
-                },
-                {
-                    "op": "database.create_collection",
-                    "args": {
-                        "collection": {
-                            "$document": {
-                                "$id": "names_u000000000003",
-                                "name": "names_u000000000003",
-                                "attributes": [
-                                    {
-                                        "$id": "name",
-                                        "key": "name",
-                                        "type": "string",
-                                        "size": 64,
-                                        "required": false,
-                                        "default": null,
-                                        "signed": true,
-                                        "array": false,
-                                        "format": null,
-                                        "formatOptions": [],
-                                        "filters": []
-                                    },
-                                    {
-                                        "$id": "tags",
-                                        "key": "tags",
-                                        "type": "string",
-                                        "size": 16,
-                                        "required": false,
-                                        "default": null,
-                                        "signed": true,
-                                        "array": true,
-                                        "format": null,
-                                        "formatOptions": [],
-                                        "filters": []
-                                    }
-                                ],
-                                "indexes": [],
-                                "documentSecurity": false,
-                                "$permissions": [
-                                    "create(\"any\")",
-                                    "read(\"any\")"
-                                ]
-                            },
-                            "$class": "Collection"
-                        }
-                    },
-                    "expect": {
-                        "$document": {
-                            "$id": "names_u000000000003",
-                            "name": "names_u000000000003",
-                            "attributes": [
-                                {
-                                    "$document": {
-                                        "$id": "name",
-                                        "key": "name",
-                                        "type": "string",
-                                        "size": 64,
-                                        "required": false,
-                                        "default": null,
-                                        "signed": true,
-                                        "array": false,
-                                        "format": null,
-                                        "formatOptions": [],
-                                        "filters": []
-                                    }
-                                },
-                                {
-                                    "$document": {
-                                        "$id": "tags",
-                                        "key": "tags",
-                                        "type": "string",
-                                        "size": 16,
-                                        "required": false,
-                                        "default": null,
-                                        "signed": true,
-                                        "array": true,
-                                        "format": null,
-                                        "formatOptions": [],
-                                        "filters": []
-                                    }
-                                }
-                            ],
-                            "indexes": [],
-                            "documentSecurity": false,
-                            "$permissions": [
-                                "create(\"any\")",
-                                "read(\"any\")"
-                            ],
-                            "$collection": "_metadata",
-                            "$createdAt": "<now>",
-                            "$updatedAt": "<now>",
-                            "$sequence": "<uuid7>"
-                        },
-                        "$class": "Collection"
-                    }
-                },
-                {
-                    "op": "database.create_document",
-                    "args": {
-                        "collection": "names_u000000000003",
-                        "document": {
-                            "$document": {
-                                "name": "foobar",
-                                "tags": [
-                                    "foo",
-                                    "bar"
-                                ]
-                            }
-                        }
-                    },
-                    "expect": {
-                        "$document": {
-                            "name": "foobar",
-                            "tags": [
-                                "foo",
-                                "bar"
-                            ],
-                            "$id": "<uniqid>",
-                            "$collection": "names_u000000000003",
-                            "$createdAt": "<now>",
-                            "$updatedAt": "<now>",
-                            "$permissions": [],
-                            "$sequence": "<uuid7>"
-                        }
-                    }
-                },
-                {
-                    "op": "database.create_document",
-                    "args": {
-                        "collection": "names_u000000000003",
-                        "document": {
-                            "$document": {
-                                "name": "barfoo",
-                                "tags": [
-                                    "bar",
-                                    "foo"
-                                ]
-                            }
-                        }
-                    },
-                    "expect": {
-                        "$document": {
-                            "name": "barfoo",
-                            "tags": [
-                                "bar",
-                                "foo"
-                            ],
-                            "$id": "<uniqid>",
-                            "$collection": "names_u000000000003",
-                            "$createdAt": "<now>",
-                            "$updatedAt": "<now>",
-                            "$permissions": [],
-                            "$sequence": "<uuid7>"
-                        }
-                    }
-                },
-                {
-                    "op": "database.create_document",
-                    "args": {
-                        "collection": "names_u000000000003",
-                        "document": {
-                            "$document": {
-                                "name": "Foobar",
-                                "tags": [
-                                    "Foo",
-                                    "bar"
-                                ]
-                            }
-                        }
-                    },
-                    "expect": {
-                        "$document": {
-                            "name": "Foobar",
-                            "tags": [
-                                "Foo",
-                                "bar"
-                            ],
-                            "$id": "<uniqid>",
-                            "$collection": "names_u000000000003",
-                            "$createdAt": "<now>",
-                            "$updatedAt": "<now>",
-                            "$permissions": [],
-                            "$sequence": "<uuid7>"
-                        }
-                    }
-                },
-                {
-                    "op": "database.create_document",
-                    "args": {
-                        "collection": "names_u000000000003",
-                        "document": {
-                            "$document": {
-                                "name": "barfoobar",
-                                "tags": [
-                                    "bar",
-                                    "foo",
-                                    "bar"
-                                ]
-                            }
-                        }
-                    },
-                    "expect": {
-                        "$document": {
-                            "name": "barfoobar",
-                            "tags": [
-                                "bar",
-                                "foo",
-                                "bar"
-                            ],
-                            "$id": "<uniqid>",
-                            "$collection": "names_u000000000003",
-                            "$createdAt": "<now>",
-                            "$updatedAt": "<now>",
-                            "$permissions": [],
-                            "$sequence": "<uuid7>"
-                        }
-                    }
-                },
-                {
-                    "op": "database.find",
-                    "args": {
-                        "collection": "names_u000000000003",
-                        "queries": [
-                            {
-                                "$query": {
-                                    "method": "startsWith",
-                                    "attribute": "name",
-                                    "values": [
-                                        "foo"
-                                    ]
-                                }
-                            }
-                        ]
-                    },
-                    "expect": [
-                        {
-                            "$document": {
-                                "name": "foobar",
-                                "tags": [
-                                    "foo",
-                                    "bar"
-                                ],
-                                "$collection": "names_u000000000003",
-                                "$createdAt": "<now>",
-                                "$updatedAt": "<now>",
-                                "$permissions": [],
-                                "$sequence": "<uuid7>",
-                                "$id": "<uniqid>"
-                            }
-                        }
-                    ]
-                },
-                {
-                    "op": "database.find",
-                    "args": {
-                        "collection": "names_u000000000003",
-                        "queries": [
-                            {
-                                "$query": {
-                                    "method": "endsWith",
-                                    "attribute": "name",
-                                    "values": [
-                                        "foo"
-                                    ]
-                                }
-                            }
-                        ]
-                    },
-                    "expect": [
-                        {
-                            "$document": {
-                                "name": "barfoo",
-                                "tags": [
-                                    "bar",
-                                    "foo"
-                                ],
-                                "$collection": "names_u000000000003",
-                                "$createdAt": "<now>",
-                                "$updatedAt": "<now>",
-                                "$permissions": [],
-                                "$sequence": "<uuid7>",
-                                "$id": "<uniqid>"
-                            }
-                        }
-                    ]
-                },
-                {
-                    "op": "database.count",
-                    "args": {
-                        "collection": "names_u000000000003",
-                        "queries": [
-                            {
-                                "$query": {
-                                    "method": "startsWith",
-                                    "attribute": "name",
-                                    "values": [
-                                        "foo"
-                                    ]
-                                }
-                            }
-                        ]
-                    },
-                    "expect": 1
-                },
-                {
-                    "op": "database.delete_collection",
-                    "args": {
-                        "collection": "names_u000000000003"
-                    },
-                    "expect": null
-                }
-            ]
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
-            "name": "MongoReadFilterTests::testContainsAllWorksOnFind",
-            "state": [
-                "mongo@database-mongo"
-            ],
-            "steps": [
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "names_u000000000003",
+                "name": "names_u000000000003",
+                "attributes": [
+                  {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  },
+                  {
+                    "$id": "tags",
+                    "key": "tags",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": false,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "names_u000000000003",
+              "name": "names_u000000000003",
+              "attributes": [
                 {
-                    "op": "db.open",
-                    "args": {
-                        "engine": "mongo",
-                        "schemaless": true
-                    },
-                    "bind": "db",
-                    "expect": {
-                        "$handle": "*"
-                    }
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
                 },
                 {
-                    "op": "database.create_collection",
-                    "args": {
-                        "collection": {
-                            "$document": {
-                                "$id": "names_u000000000004",
-                                "name": "names_u000000000004",
-                                "attributes": [
-                                    {
-                                        "$id": "name",
-                                        "key": "name",
-                                        "type": "string",
-                                        "size": 64,
-                                        "required": false,
-                                        "default": null,
-                                        "signed": true,
-                                        "array": false,
-                                        "format": null,
-                                        "formatOptions": [],
-                                        "filters": []
-                                    },
-                                    {
-                                        "$id": "tags",
-                                        "key": "tags",
-                                        "type": "string",
-                                        "size": 16,
-                                        "required": false,
-                                        "default": null,
-                                        "signed": true,
-                                        "array": true,
-                                        "format": null,
-                                        "formatOptions": [],
-                                        "filters": []
-                                    }
-                                ],
-                                "indexes": [],
-                                "documentSecurity": false,
-                                "$permissions": [
-                                    "create(\"any\")",
-                                    "read(\"any\")"
-                                ]
-                            },
-                            "$class": "Collection"
-                        }
-                    },
-                    "expect": {
-                        "$document": {
-                            "$id": "names_u000000000004",
-                            "name": "names_u000000000004",
-                            "attributes": [
-                                {
-                                    "$document": {
-                                        "$id": "name",
-                                        "key": "name",
-                                        "type": "string",
-                                        "size": 64,
-                                        "required": false,
-                                        "default": null,
-                                        "signed": true,
-                                        "array": false,
-                                        "format": null,
-                                        "formatOptions": [],
-                                        "filters": []
-                                    }
-                                },
-                                {
-                                    "$document": {
-                                        "$id": "tags",
-                                        "key": "tags",
-                                        "type": "string",
-                                        "size": 16,
-                                        "required": false,
-                                        "default": null,
-                                        "signed": true,
-                                        "array": true,
-                                        "format": null,
-                                        "formatOptions": [],
-                                        "filters": []
-                                    }
-                                }
-                            ],
-                            "indexes": [],
-                            "documentSecurity": false,
-                            "$permissions": [
-                                "create(\"any\")",
-                                "read(\"any\")"
-                            ],
-                            "$collection": "_metadata",
-                            "$createdAt": "<now>",
-                            "$updatedAt": "<now>",
-                            "$sequence": "<uuid7>"
-                        },
-                        "$class": "Collection"
-                    }
-                },
-                {
-                    "op": "database.create_document",
-                    "args": {
-                        "collection": "names_u000000000004",
-                        "document": {
-                            "$document": {
-                                "name": "foobar",
-                                "tags": [
-                                    "foo",
-                                    "bar"
-                                ]
-                            }
-                        }
-                    },
-                    "expect": {
-                        "$document": {
-                            "name": "foobar",
-                            "tags": [
-                                "foo",
-                                "bar"
-                            ],
-                            "$id": "<uniqid>",
-                            "$collection": "names_u000000000004",
-                            "$createdAt": "<now>",
-                            "$updatedAt": "<now>",
-                            "$permissions": [],
-                            "$sequence": "<uuid7>"
-                        }
-                    }
-                },
-                {
-                    "op": "database.create_document",
-                    "args": {
-                        "collection": "names_u000000000004",
-                        "document": {
-                            "$document": {
-                                "name": "barfoo",
-                                "tags": [
-                                    "bar",
-                                    "foo"
-                                ]
-                            }
-                        }
-                    },
-                    "expect": {
-                        "$document": {
-                            "name": "barfoo",
-                            "tags": [
-                                "bar",
-                                "foo"
-                            ],
-                            "$id": "<uniqid>",
-                            "$collection": "names_u000000000004",
-                            "$createdAt": "<now>",
-                            "$updatedAt": "<now>",
-                            "$permissions": [],
-                            "$sequence": "<uuid7>"
-                        }
-                    }
-                },
-                {
-                    "op": "database.create_document",
-                    "args": {
-                        "collection": "names_u000000000004",
-                        "document": {
-                            "$document": {
-                                "name": "foobaz",
-                                "tags": [
-                                    "foo",
-                                    "baz"
-                                ]
-                            }
-                        }
-                    },
-                    "expect": {
-                        "$document": {
-                            "name": "foobaz",
-                            "tags": [
-                                "foo",
-                                "baz"
-                            ],
-                            "$id": "<uniqid>",
-                            "$collection": "names_u000000000004",
-                            "$createdAt": "<now>",
-                            "$updatedAt": "<now>",
-                            "$permissions": [],
-                            "$sequence": "<uuid7>"
-                        }
-                    }
-                },
-                {
-                    "op": "database.find",
-                    "args": {
-                        "collection": "names_u000000000004",
-                        "queries": [
-                            {
-                                "$query": {
-                                    "method": "containsAll",
-                                    "attribute": "tags",
-                                    "values": [
-                                        "foo",
-                                        "bar"
-                                    ]
-                                }
-                            }
-                        ]
-                    },
-                    "expect": [
-                        {
-                            "$document": {
-                                "name": "foobar",
-                                "tags": [
-                                    "foo",
-                                    "bar"
-                                ],
-                                "$collection": "names_u000000000004",
-                                "$createdAt": "<now>",
-                                "$updatedAt": "<now>",
-                                "$permissions": [],
-                                "$sequence": "<uuid7>",
-                                "$id": "<uniqid>"
-                            }
-                        },
-                        {
-                            "$document": {
-                                "name": "barfoo",
-                                "tags": [
-                                    "bar",
-                                    "foo"
-                                ],
-                                "$collection": "names_u000000000004",
-                                "$createdAt": "<now>",
-                                "$updatedAt": "<now>",
-                                "$permissions": [],
-                                "$sequence": "<uuid7>",
-                                "$id": "<uniqid>"
-                            }
-                        }
-                    ]
-                },
-                {
-                    "op": "database.count",
-                    "args": {
-                        "collection": "names_u000000000004",
-                        "queries": [
-                            {
-                                "$query": {
-                                    "method": "containsAll",
-                                    "attribute": "tags",
-                                    "values": [
-                                        "foo",
-                                        "bar"
-                                    ]
-                                }
-                            }
-                        ]
-                    },
-                    "expect": 2
-                },
-                {
-                    "op": "database.delete_collection",
-                    "args": {
-                        "collection": "names_u000000000004"
-                    },
-                    "expect": null
+                  "$document": {
+                    "$id": "tags",
+                    "key": "tags",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
                 }
-            ]
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            },
+            "$class": "Collection"
+          }
         },
         {
-            "name": "MongoReadFilterTests::testCountReportsDriverErrors",
-            "state": [
-                "mongo@database-mongo"
-            ],
-            "steps": [
-                {
-                    "op": "db.open",
-                    "args": {
-                        "engine": "mongo",
-                        "schemaless": true
-                    },
-                    "bind": "db",
-                    "expect": {
-                        "$handle": "*"
-                    }
-                },
-                {
-                    "op": "database.create_collection",
-                    "args": {
-                        "collection": {
-                            "$document": {
-                                "$id": "names_u000000000005",
-                                "name": "names_u000000000005",
-                                "attributes": [
-                                    {
-                                        "$id": "name",
-                                        "key": "name",
-                                        "type": "string",
-                                        "size": 64,
-                                        "required": false,
-                                        "default": null,
-                                        "signed": true,
-                                        "array": false,
-                                        "format": null,
-                                        "formatOptions": [],
-                                        "filters": []
-                                    },
-                                    {
-                                        "$id": "tags",
-                                        "key": "tags",
-                                        "type": "string",
-                                        "size": 16,
-                                        "required": false,
-                                        "default": null,
-                                        "signed": true,
-                                        "array": true,
-                                        "format": null,
-                                        "formatOptions": [],
-                                        "filters": []
-                                    }
-                                ],
-                                "indexes": [],
-                                "documentSecurity": false,
-                                "$permissions": [
-                                    "create(\"any\")",
-                                    "read(\"any\")"
-                                ]
-                            },
-                            "$class": "Collection"
-                        }
-                    },
-                    "bind": "s92",
-                    "expect": {
-                        "$document": {
-                            "$id": "names_u000000000005",
-                            "name": "names_u000000000005",
-                            "attributes": [
-                                {
-                                    "$document": {
-                                        "$id": "name",
-                                        "key": "name",
-                                        "type": "string",
-                                        "size": 64,
-                                        "required": false,
-                                        "default": null,
-                                        "signed": true,
-                                        "array": false,
-                                        "format": null,
-                                        "formatOptions": [],
-                                        "filters": []
-                                    }
-                                },
-                                {
-                                    "$document": {
-                                        "$id": "tags",
-                                        "key": "tags",
-                                        "type": "string",
-                                        "size": 16,
-                                        "required": false,
-                                        "default": null,
-                                        "signed": true,
-                                        "array": true,
-                                        "format": null,
-                                        "formatOptions": [],
-                                        "filters": []
-                                    }
-                                }
-                            ],
-                            "indexes": [],
-                            "documentSecurity": false,
-                            "$permissions": [
-                                "create(\"any\")",
-                                "read(\"any\")"
-                            ],
-                            "$collection": "_metadata",
-                            "$createdAt": "<now>",
-                            "$updatedAt": "<now>",
-                            "$sequence": "<uuid7>"
-                        },
-                        "$class": "Collection"
-                    }
-                },
-                {
-                    "op": "database.create_document",
-                    "args": {
-                        "collection": "names_u000000000005",
-                        "document": {
-                            "$document": {
-                                "name": "foobar",
-                                "tags": [
-                                    "foo",
-                                    "bar"
-                                ]
-                            }
-                        }
-                    },
-                    "expect": {
-                        "$document": {
-                            "name": "foobar",
-                            "tags": [
-                                "foo",
-                                "bar"
-                            ],
-                            "$id": "<uniqid>",
-                            "$collection": "names_u000000000005",
-                            "$createdAt": "<now>",
-                            "$updatedAt": "<now>",
-                            "$permissions": [],
-                            "$sequence": "<uuid7>"
-                        }
-                    }
-                },
-                {
-                    "op": "database.get_collection",
-                    "args": {
-                        "collection": "names_u000000000005"
-                    },
-                    "expect": {
-                        "$document": {
-                            "name": "names_u000000000005",
-                            "attributes": [
-                                {
-                                    "$document": {
-                                        "$id": "name",
-                                        "key": "name",
-                                        "type": "string",
-                                        "size": 64,
-                                        "required": false,
-                                        "default": null,
-                                        "signed": true,
-                                        "array": false,
-                                        "format": null,
-                                        "formatOptions": [],
-                                        "filters": []
-                                    }
-                                },
-                                {
-                                    "$document": {
-                                        "$id": "tags",
-                                        "key": "tags",
-                                        "type": "string",
-                                        "size": 16,
-                                        "required": false,
-                                        "default": null,
-                                        "signed": true,
-                                        "array": true,
-                                        "format": null,
-                                        "formatOptions": [],
-                                        "filters": []
-                                    }
-                                }
-                            ],
-                            "indexes": [],
-                            "documentSecurity": false,
-                            "$permissions": [
-                                "create(\"any\")",
-                                "read(\"any\")"
-                            ],
-                            "$collection": "_metadata",
-                            "$createdAt": "<now>",
-                            "$updatedAt": "<now>",
-                            "$sequence": "<uuid7>",
-                            "$id": "names_u000000000005"
-                        },
-                        "$class": "Collection"
-                    }
-                },
-                {
-                    "op": "db.adapter",
-                    "args": {
-                        "method": "count",
-                        "args": {
-                            "collection": {
-                                "$document": {
-                                    "name": "names_u000000000005",
-                                    "attributes": [
-                                        {
-                                            "$id": "name",
-                                            "key": "name",
-                                            "type": "string",
-                                            "size": 64,
-                                            "required": false,
-                                            "default": null,
-                                            "signed": true,
-                                            "array": false,
-                                            "format": null,
-                                            "formatOptions": [],
-                                            "filters": []
-                                        },
-                                        {
-                                            "$id": "tags",
-                                            "key": "tags",
-                                            "type": "string",
-                                            "size": 16,
-                                            "required": false,
-                                            "default": null,
-                                            "signed": true,
-                                            "array": true,
-                                            "format": null,
-                                            "formatOptions": [],
-                                            "filters": []
-                                        }
-                                    ],
-                                    "indexes": [],
-                                    "documentSecurity": false,
-                                    "$permissions": [
-                                        "create(\"any\")",
-                                        "read(\"any\")"
-                                    ],
-                                    "$collection": "_metadata",
-                                    "$createdAt": {
-                                        "$now": 0,
-                                        "format": "Y-m-d\\TH:i:s.vP"
-                                    },
-                                    "$updatedAt": {
-                                        "$now": 0,
-                                        "format": "Y-m-d\\TH:i:s.vP"
-                                    },
-                                    "$sequence": {
-                                        "$ref": "s92",
-                                        "path": "/$document/$sequence",
-                                        "default": "01a13e1c-ff73-723f-87fb-1f14800e2dec"
-                                    },
-                                    "$id": "names_u000000000005"
-                                },
-                                "$class": "Collection"
-                            },
-                            "queries": [
-                                {
-                                    "$query": {
-                                        "method": "regex",
-                                        "attribute": "name",
-                                        "values": [
-                                            "("
-                                        ]
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "expect": {
-                        "$error": {
-                            "class": "Utopia\\Mongo\\Exception",
-                            "message": "E51091 Location51091: Regular expression is invalid: missing closing parenthesis"
-                        }
-                    }
-                },
-                {
-                    "op": "database.delete_collection",
-                    "args": {
-                        "collection": "names_u000000000005"
-                    },
-                    "expect": null
-                }
-            ]
+          "op": "database.create_document",
+          "args": {
+            "collection": "names_u000000000003",
+            "document": {
+              "$document": {
+                "name": "foobar",
+                "tags": [
+                  "foo",
+                  "bar"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "name": "foobar",
+              "tags": [
+                "foo",
+                "bar"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "names_u000000000003",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
         },
         {
-            "name": "MongoReadFilterTests::testDottedAttributesSurviveRenameAndDelete",
-            "state": [
-                "mongo@database-mongo"
-            ],
-            "steps": [
-                {
-                    "op": "db.open",
-                    "args": {
-                        "engine": "mongo",
-                        "schemaless": true
-                    },
-                    "bind": "db",
-                    "expect": {
-                        "$handle": "*"
-                    }
-                },
-                {
-                    "op": "database.create_collection",
-                    "args": {
-                        "collection": {
-                            "$document": {
-                                "$id": "dotted_u000000000006",
-                                "name": "dotted_u000000000006",
-                                "attributes": [
-                                    {
-                                        "$id": "a.b",
-                                        "key": "a.b",
-                                        "type": "string",
-                                        "size": 16,
-                                        "required": false,
-                                        "default": null,
-                                        "signed": true,
-                                        "array": false,
-                                        "format": null,
-                                        "formatOptions": [],
-                                        "filters": []
-                                    },
-                                    {
-                                        "$id": "x.y",
-                                        "key": "x.y",
-                                        "type": "string",
-                                        "size": 16,
-                                        "required": false,
-                                        "default": null,
-                                        "signed": true,
-                                        "array": false,
-                                        "format": null,
-                                        "formatOptions": [],
-                                        "filters": []
-                                    }
-                                ],
-                                "indexes": [],
-                                "documentSecurity": false,
-                                "$permissions": [
-                                    "create(\"any\")",
-                                    "read(\"any\")"
-                                ]
-                            },
-                            "$class": "Collection"
-                        }
-                    },
-                    "expect": {
-                        "$document": {
-                            "$id": "dotted_u000000000006",
-                            "name": "dotted_u000000000006",
-                            "attributes": [
-                                {
-                                    "$document": {
-                                        "$id": "a.b",
-                                        "key": "a.b",
-                                        "type": "string",
-                                        "size": 16,
-                                        "required": false,
-                                        "default": null,
-                                        "signed": true,
-                                        "array": false,
-                                        "format": null,
-                                        "formatOptions": [],
-                                        "filters": []
-                                    }
-                                },
-                                {
-                                    "$document": {
-                                        "$id": "x.y",
-                                        "key": "x.y",
-                                        "type": "string",
-                                        "size": 16,
-                                        "required": false,
-                                        "default": null,
-                                        "signed": true,
-                                        "array": false,
-                                        "format": null,
-                                        "formatOptions": [],
-                                        "filters": []
-                                    }
-                                }
-                            ],
-                            "indexes": [],
-                            "documentSecurity": false,
-                            "$permissions": [
-                                "create(\"any\")",
-                                "read(\"any\")"
-                            ],
-                            "$collection": "_metadata",
-                            "$createdAt": "<now>",
-                            "$updatedAt": "<now>",
-                            "$sequence": "<uuid7>"
-                        },
-                        "$class": "Collection"
-                    }
-                },
-                {
-                    "op": "database.create_document",
-                    "args": {
-                        "collection": "dotted_u000000000006",
-                        "document": {
-                            "$document": {
-                                "$id": "first",
-                                "a.b": "renamed",
-                                "x.y": "deleted"
-                            }
-                        }
-                    },
-                    "expect": {
-                        "$document": {
-                            "$id": "first",
-                            "a.b": "renamed",
-                            "x.y": "deleted",
-                            "$collection": "dotted_u000000000006",
-                            "$createdAt": "<now>",
-                            "$updatedAt": "<now>",
-                            "$permissions": [],
-                            "$sequence": "<uuid7>"
-                        }
-                    }
-                },
-                {
-                    "op": "database.update_attribute",
-                    "args": {
-                        "collection": "dotted_u000000000006",
-                        "key": "a.b",
-                        "update": {
-                            "$value": "Attribute\\Update",
-                            "fields": {
-                                "type": null,
-                                "size": null,
-                                "required": null,
-                                "default": {
-                                    "$enum": "Unchanged::Value"
-                                },
-                                "signed": null,
-                                "array": null,
-                                "format": {
-                                    "$enum": "Unchanged::Value"
-                                },
-                                "filters": null,
-                                "key": "c"
-                            }
-                        }
-                    },
-                    "expect": {
-                        "$value": "Attribute",
-                        "fields": {
-                            "key": "c",
-                            "type": {
-                                "$enum": "Query\\Schema\\ColumnType::String"
-                            },
-                            "size": 16,
-                            "required": false,
-                            "default": null,
-                            "signed": true,
-                            "array": false,
-                            "format": null,
-                            "filters": [],
-                            "relationship": null,
-                            "side": null
-                        }
-                    }
-                },
-                {
-                    "op": "database.get_document",
-                    "args": {
-                        "collection": "dotted_u000000000006",
-                        "id": "first"
-                    },
-                    "expect": {
-                        "$document": {
-                            "c": "renamed",
-                            "x.y": "deleted",
-                            "$collection": "dotted_u000000000006",
-                            "$createdAt": "<now>",
-                            "$updatedAt": "<now>",
-                            "$permissions": [],
-                            "$sequence": "<uuid7>",
-                            "$id": "first"
-                        }
-                    }
-                },
-                {
-                    "op": "database.delete_attribute",
-                    "args": {
-                        "collection": "dotted_u000000000006",
-                        "key": "x.y"
-                    },
-                    "expect": null
-                },
-                {
-                    "op": "database.create_attribute",
-                    "args": {
-                        "collection": "dotted_u000000000006",
-                        "attribute": {
-                            "$value": "Attribute",
-                            "fields": {
-                                "key": "x.y",
-                                "type": {
-                                    "$enum": "Query\\Schema\\ColumnType::String"
-                                },
-                                "size": 16,
-                                "required": false,
-                                "default": null,
-                                "signed": true,
-                                "array": false,
-                                "format": null,
-                                "filters": [],
-                                "relationship": null,
-                                "side": null
-                            }
-                        }
-                    },
-                    "expect": {
-                        "$value": "Attribute",
-                        "fields": {
-                            "key": "x.y",
-                            "type": {
-                                "$enum": "Query\\Schema\\ColumnType::String"
-                            },
-                            "size": 16,
-                            "required": false,
-                            "default": null,
-                            "signed": true,
-                            "array": false,
-                            "format": null,
-                            "filters": [],
-                            "relationship": null,
-                            "side": null
-                        }
-                    }
-                },
-                {
-                    "op": "database.get_document",
-                    "args": {
-                        "collection": "dotted_u000000000006",
-                        "id": "first"
-                    },
-                    "expect": {
-                        "$document": {
-                            "c": "renamed",
-                            "$collection": "dotted_u000000000006",
-                            "$createdAt": "<now>",
-                            "$updatedAt": "<now>",
-                            "$permissions": [],
-                            "$sequence": "<uuid7>",
-                            "$id": "first",
-                            "x.y": null
-                        }
-                    }
-                },
-                {
-                    "op": "database.delete_collection",
-                    "args": {
-                        "collection": "dotted_u000000000006"
-                    },
-                    "expect": null
-                }
-            ]
+          "op": "database.create_document",
+          "args": {
+            "collection": "names_u000000000003",
+            "document": {
+              "$document": {
+                "name": "barfoo",
+                "tags": [
+                  "bar",
+                  "foo"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "name": "barfoo",
+              "tags": [
+                "bar",
+                "foo"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "names_u000000000003",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
         },
         {
-            "name": "MongoReadFilterTests::testOrderRandomIsRejectedAsAQueryError",
-            "state": [
-                "mongo@database-mongo"
-            ],
-            "steps": [
-                {
-                    "op": "db.open",
-                    "args": {
-                        "engine": "mongo",
-                        "schemaless": true
-                    },
-                    "bind": "db",
-                    "expect": {
-                        "$handle": "*"
-                    }
-                },
-                {
-                    "op": "database.create_collection",
-                    "args": {
-                        "collection": {
-                            "$document": {
-                                "$id": "names_u000000000007",
-                                "name": "names_u000000000007",
-                                "attributes": [
-                                    {
-                                        "$id": "name",
-                                        "key": "name",
-                                        "type": "string",
-                                        "size": 64,
-                                        "required": false,
-                                        "default": null,
-                                        "signed": true,
-                                        "array": false,
-                                        "format": null,
-                                        "formatOptions": [],
-                                        "filters": []
-                                    },
-                                    {
-                                        "$id": "tags",
-                                        "key": "tags",
-                                        "type": "string",
-                                        "size": 16,
-                                        "required": false,
-                                        "default": null,
-                                        "signed": true,
-                                        "array": true,
-                                        "format": null,
-                                        "formatOptions": [],
-                                        "filters": []
-                                    }
-                                ],
-                                "indexes": [],
-                                "documentSecurity": false,
-                                "$permissions": [
-                                    "create(\"any\")",
-                                    "read(\"any\")"
-                                ]
-                            },
-                            "$class": "Collection"
-                        }
-                    },
-                    "expect": {
-                        "$document": {
-                            "$id": "names_u000000000007",
-                            "name": "names_u000000000007",
-                            "attributes": [
-                                {
-                                    "$document": {
-                                        "$id": "name",
-                                        "key": "name",
-                                        "type": "string",
-                                        "size": 64,
-                                        "required": false,
-                                        "default": null,
-                                        "signed": true,
-                                        "array": false,
-                                        "format": null,
-                                        "formatOptions": [],
-                                        "filters": []
-                                    }
-                                },
-                                {
-                                    "$document": {
-                                        "$id": "tags",
-                                        "key": "tags",
-                                        "type": "string",
-                                        "size": 16,
-                                        "required": false,
-                                        "default": null,
-                                        "signed": true,
-                                        "array": true,
-                                        "format": null,
-                                        "formatOptions": [],
-                                        "filters": []
-                                    }
-                                }
-                            ],
-                            "indexes": [],
-                            "documentSecurity": false,
-                            "$permissions": [
-                                "create(\"any\")",
-                                "read(\"any\")"
-                            ],
-                            "$collection": "_metadata",
-                            "$createdAt": "<now>",
-                            "$updatedAt": "<now>",
-                            "$sequence": "<uuid7>"
-                        },
-                        "$class": "Collection"
-                    }
-                },
-                {
-                    "op": "database.create_document",
-                    "args": {
-                        "collection": "names_u000000000007",
-                        "document": {
-                            "$document": {
-                                "name": "foobar",
-                                "tags": [
-                                    "foo",
-                                    "bar"
-                                ]
-                            }
-                        }
-                    },
-                    "expect": {
-                        "$document": {
-                            "name": "foobar",
-                            "tags": [
-                                "foo",
-                                "bar"
-                            ],
-                            "$id": "<uniqid>",
-                            "$collection": "names_u000000000007",
-                            "$createdAt": "<now>",
-                            "$updatedAt": "<now>",
-                            "$permissions": [],
-                            "$sequence": "<uuid7>"
-                        }
-                    }
-                },
-                {
-                    "op": "database.find",
-                    "args": {
-                        "collection": "names_u000000000007",
-                        "queries": [
-                            {
-                                "$query": {
-                                    "method": "orderRandom",
-                                    "attribute": "",
-                                    "values": []
-                                }
-                            }
-                        ]
-                    },
-                    "mask": {
-                        "paths": [
-                            ""
-                        ],
-                        "reason": "Query::orderRandom() returns the documents in a random order"
-                    },
-                    "expect": "<masked>"
-                },
-                {
-                    "op": "database.skip_validation",
-                    "args": {
-                        "callback": {
-                            "steps": [
-                                {
-                                    "op": "database.find",
-                                    "args": {
-                                        "collection": "names_u000000000007",
-                                        "queries": [
-                                            {
-                                                "$query": {
-                                                    "method": "orderRandom",
-                                                    "attribute": "",
-                                                    "values": []
-                                                }
-                                            }
-                                        ]
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "expect": {
-                        "$error": {
-                            "class": "Utopia\\Database\\Exception\\Query",
-                            "message": "Random order is not supported by this adapter"
-                        }
-                    }
-                },
-                {
-                    "op": "database.delete_collection",
-                    "args": {
-                        "collection": "names_u000000000007"
-                    },
-                    "expect": null
-                }
-            ]
+          "op": "database.create_document",
+          "args": {
+            "collection": "names_u000000000003",
+            "document": {
+              "$document": {
+                "name": "Foobar",
+                "tags": [
+                  "Foo",
+                  "bar"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "name": "Foobar",
+              "tags": [
+                "Foo",
+                "bar"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "names_u000000000003",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
         },
         {
-            "name": "MongoReadFilterTests::testSumOnADottedAttributeMatchesTheCountedRows",
-            "state": [
-                "mongo@database-mongo"
-            ],
-            "steps": [
-                {
-                    "op": "db.open",
-                    "args": {
-                        "engine": "mongo",
-                        "schemaless": true
-                    },
-                    "bind": "db",
-                    "expect": {
-                        "$handle": "*"
-                    }
-                },
-                {
-                    "op": "database.create_collection",
-                    "args": {
-                        "collection": {
-                            "$document": {
-                                "$id": "dotted_sum_u000000000008",
-                                "name": "dotted_sum_u000000000008",
-                                "attributes": [
-                                    {
-                                        "$id": "score.value",
-                                        "key": "score.value",
-                                        "type": "integer",
-                                        "size": 0,
-                                        "required": false,
-                                        "default": null,
-                                        "signed": true,
-                                        "array": false,
-                                        "format": null,
-                                        "formatOptions": [],
-                                        "filters": []
-                                    },
-                                    {
-                                        "$id": "group.name",
-                                        "key": "group.name",
-                                        "type": "string",
-                                        "size": 16,
-                                        "required": false,
-                                        "default": null,
-                                        "signed": true,
-                                        "array": false,
-                                        "format": null,
-                                        "formatOptions": [],
-                                        "filters": []
-                                    }
-                                ],
-                                "indexes": [],
-                                "documentSecurity": false,
-                                "$permissions": [
-                                    "create(\"any\")",
-                                    "read(\"any\")"
-                                ]
-                            },
-                            "$class": "Collection"
-                        }
-                    },
-                    "expect": {
-                        "$document": {
-                            "$id": "dotted_sum_u000000000008",
-                            "name": "dotted_sum_u000000000008",
-                            "attributes": [
-                                {
-                                    "$document": {
-                                        "$id": "score.value",
-                                        "key": "score.value",
-                                        "type": "integer",
-                                        "size": 0,
-                                        "required": false,
-                                        "default": null,
-                                        "signed": true,
-                                        "array": false,
-                                        "format": null,
-                                        "formatOptions": [],
-                                        "filters": []
-                                    }
-                                },
-                                {
-                                    "$document": {
-                                        "$id": "group.name",
-                                        "key": "group.name",
-                                        "type": "string",
-                                        "size": 16,
-                                        "required": false,
-                                        "default": null,
-                                        "signed": true,
-                                        "array": false,
-                                        "format": null,
-                                        "formatOptions": [],
-                                        "filters": []
-                                    }
-                                }
-                            ],
-                            "indexes": [],
-                            "documentSecurity": false,
-                            "$permissions": [
-                                "create(\"any\")",
-                                "read(\"any\")"
-                            ],
-                            "$collection": "_metadata",
-                            "$createdAt": "<now>",
-                            "$updatedAt": "<now>",
-                            "$sequence": "<uuid7>"
-                        },
-                        "$class": "Collection"
-                    }
-                },
-                {
-                    "op": "database.create_document",
-                    "args": {
-                        "collection": "dotted_sum_u000000000008",
-                        "document": {
-                            "$document": {
-                                "score.value": 1,
-                                "group.name": "a"
-                            }
-                        }
-                    },
-                    "expect": {
-                        "$document": {
-                            "score.value": 1,
-                            "group.name": "a",
-                            "$id": "<uniqid>",
-                            "$collection": "dotted_sum_u000000000008",
-                            "$createdAt": "<now>",
-                            "$updatedAt": "<now>",
-                            "$permissions": [],
-                            "$sequence": "<uuid7>"
-                        }
-                    }
-                },
-                {
-                    "op": "database.create_document",
-                    "args": {
-                        "collection": "dotted_sum_u000000000008",
-                        "document": {
-                            "$document": {
-                                "score.value": 2,
-                                "group.name": "a"
-                            }
-                        }
-                    },
-                    "expect": {
-                        "$document": {
-                            "score.value": 2,
-                            "group.name": "a",
-                            "$id": "<uniqid>",
-                            "$collection": "dotted_sum_u000000000008",
-                            "$createdAt": "<now>",
-                            "$updatedAt": "<now>",
-                            "$permissions": [],
-                            "$sequence": "<uuid7>"
-                        }
-                    }
-                },
-                {
-                    "op": "database.create_document",
-                    "args": {
-                        "collection": "dotted_sum_u000000000008",
-                        "document": {
-                            "$document": {
-                                "score.value": 4,
-                                "group.name": "b"
-                            }
-                        }
-                    },
-                    "expect": {
-                        "$document": {
-                            "score.value": 4,
-                            "group.name": "b",
-                            "$id": "<uniqid>",
-                            "$collection": "dotted_sum_u000000000008",
-                            "$createdAt": "<now>",
-                            "$updatedAt": "<now>",
-                            "$permissions": [],
-                            "$sequence": "<uuid7>"
-                        }
-                    }
-                },
-                {
-                    "op": "database.count",
-                    "args": {
-                        "collection": "dotted_sum_u000000000008",
-                        "queries": [
-                            {
-                                "$query": {
-                                    "method": "equal",
-                                    "attribute": "group.name",
-                                    "values": [
-                                        "a"
-                                    ]
-                                }
-                            }
-                        ]
-                    },
-                    "expect": 2
-                },
-                {
-                    "op": "database.sum",
-                    "args": {
-                        "collection": "dotted_sum_u000000000008",
-                        "attribute": "score.value",
-                        "queries": [
-                            {
-                                "$query": {
-                                    "method": "equal",
-                                    "attribute": "group.name",
-                                    "values": [
-                                        "a"
-                                    ]
-                                }
-                            }
-                        ]
-                    },
-                    "expect": 3
-                },
-                {
-                    "op": "database.sum",
-                    "args": {
-                        "collection": "dotted_sum_u000000000008",
-                        "attribute": "score.value"
-                    },
-                    "expect": 7
-                },
-                {
-                    "op": "database.delete_collection",
-                    "args": {
-                        "collection": "dotted_sum_u000000000008"
-                    },
-                    "expect": null
-                }
-            ]
+          "op": "database.create_document",
+          "args": {
+            "collection": "names_u000000000003",
+            "document": {
+              "$document": {
+                "name": "barfoobar",
+                "tags": [
+                  "bar",
+                  "foo",
+                  "bar"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "name": "barfoobar",
+              "tags": [
+                "bar",
+                "foo",
+                "bar"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "names_u000000000003",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
         },
         {
-            "name": "MongoReadFilterTests::testFiltersMatchALiteralDollarWord",
-            "state": [
-                "mongo@database-mongo"
-            ],
-            "steps": [
-                {
-                    "op": "db.open",
-                    "args": {
-                        "engine": "mongo",
-                        "schemaless": true
-                    },
-                    "bind": "db",
-                    "expect": {
-                        "$handle": "*"
-                    }
-                },
-                {
-                    "op": "database.create_collection",
-                    "args": {
-                        "collection": {
-                            "$document": {
-                                "$id": "dollar_words",
-                                "name": "dollar_words",
-                                "attributes": [
-                                    {
-                                        "$id": "label",
-                                        "key": "label",
-                                        "type": "string",
-                                        "size": 64,
-                                        "required": true,
-                                        "default": null,
-                                        "signed": true,
-                                        "array": false,
-                                        "format": null,
-                                        "formatOptions": [],
-                                        "filters": []
-                                    }
-                                ],
-                                "indexes": [],
-                                "documentSecurity": false,
-                                "$permissions": [
-                                    "create(\"any\")",
-                                    "read(\"any\")"
-                                ]
-                            },
-                            "$class": "Collection"
-                        }
-                    },
-                    "expect": {
-                        "$document": {
-                            "$id": "dollar_words",
-                            "name": "dollar_words",
-                            "attributes": [
-                                {
-                                    "$document": {
-                                        "$id": "label",
-                                        "key": "label",
-                                        "type": "string",
-                                        "size": 64,
-                                        "required": true,
-                                        "default": null,
-                                        "signed": true,
-                                        "array": false,
-                                        "format": null,
-                                        "formatOptions": [],
-                                        "filters": []
-                                    }
-                                }
-                            ],
-                            "indexes": [],
-                            "documentSecurity": false,
-                            "$permissions": [
-                                "create(\"any\")",
-                                "read(\"any\")"
-                            ],
-                            "$collection": "_metadata",
-                            "$createdAt": "<now>",
-                            "$updatedAt": "<now>",
-                            "$sequence": "<uuid7>"
-                        },
-                        "$class": "Collection"
-                    }
-                },
-                {
-                    "op": "database.create_document",
-                    "args": {
-                        "collection": "dollar_words",
-                        "document": {
-                            "$document": {
-                                "$id": "lead",
-                                "label": "$USD 10"
-                            }
-                        }
-                    },
-                    "expect": {
-                        "$document": {
-                            "$id": "lead",
-                            "label": "$USD 10",
-                            "$collection": "dollar_words",
-                            "$createdAt": "<now>",
-                            "$updatedAt": "<now>",
-                            "$permissions": [],
-                            "$sequence": "<uuid7>"
-                        }
-                    }
-                },
-                {
-                    "op": "database.create_document",
-                    "args": {
-                        "collection": "dollar_words",
-                        "document": {
-                            "$document": {
-                                "$id": "tail",
-                                "label": "10 $USD"
-                            }
-                        }
-                    },
-                    "expect": {
-                        "$document": {
-                            "$id": "tail",
-                            "label": "10 $USD",
-                            "$collection": "dollar_words",
-                            "$createdAt": "<now>",
-                            "$updatedAt": "<now>",
-                            "$permissions": [],
-                            "$sequence": "<uuid7>"
-                        }
-                    }
-                },
-                {
-                    "op": "database.create_document",
-                    "args": {
-                        "collection": "dollar_words",
-                        "document": {
-                            "$document": {
-                                "$id": "plain",
-                                "label": "plain"
-                            }
-                        }
-                    },
-                    "expect": {
-                        "$document": {
-                            "$id": "plain",
-                            "label": "plain",
-                            "$collection": "dollar_words",
-                            "$createdAt": "<now>",
-                            "$updatedAt": "<now>",
-                            "$permissions": [],
-                            "$sequence": "<uuid7>"
-                        }
-                    }
-                },
-                {
-                    "op": "database.find",
-                    "args": {
-                        "collection": "dollar_words",
-                        "queries": [
-                            {
-                                "$query": {
-                                    "method": "contains",
-                                    "attribute": "label",
-                                    "values": [
-                                        "$USD"
-                                    ]
-                                }
-                            }
-                        ]
-                    },
-                    "expect": [
-                        {
-                            "$document": {
-                                "label": "$USD 10",
-                                "$collection": "dollar_words",
-                                "$createdAt": "<now>",
-                                "$updatedAt": "<now>",
-                                "$permissions": [],
-                                "$sequence": "<uuid7>",
-                                "$id": "lead"
-                            }
-                        },
-                        {
-                            "$document": {
-                                "label": "10 $USD",
-                                "$collection": "dollar_words",
-                                "$createdAt": "<now>",
-                                "$updatedAt": "<now>",
-                                "$permissions": [],
-                                "$sequence": "<uuid7>",
-                                "$id": "tail"
-                            }
-                        }
-                    ]
-                },
-                {
-                    "op": "database.find",
-                    "args": {
-                        "collection": "dollar_words",
-                        "queries": [
-                            {
-                                "$query": {
-                                    "method": "notContains",
-                                    "attribute": "label",
-                                    "values": [
-                                        "$USD"
-                                    ]
-                                }
-                            }
-                        ]
-                    },
-                    "expect": [
-                        {
-                            "$document": {
-                                "label": "plain",
-                                "$collection": "dollar_words",
-                                "$createdAt": "<now>",
-                                "$updatedAt": "<now>",
-                                "$permissions": [],
-                                "$sequence": "<uuid7>",
-                                "$id": "plain"
-                            }
-                        }
-                    ]
-                },
-                {
-                    "op": "database.find",
-                    "args": {
-                        "collection": "dollar_words",
-                        "queries": [
-                            {
-                                "$query": {
-                                    "method": "notStartsWith",
-                                    "attribute": "label",
-                                    "values": [
-                                        "$USD"
-                                    ]
-                                }
-                            }
-                        ]
-                    },
-                    "expect": [
-                        {
-                            "$document": {
-                                "label": "10 $USD",
-                                "$collection": "dollar_words",
-                                "$createdAt": "<now>",
-                                "$updatedAt": "<now>",
-                                "$permissions": [],
-                                "$sequence": "<uuid7>",
-                                "$id": "tail"
-                            }
-                        },
-                        {
-                            "$document": {
-                                "label": "plain",
-                                "$collection": "dollar_words",
-                                "$createdAt": "<now>",
-                                "$updatedAt": "<now>",
-                                "$permissions": [],
-                                "$sequence": "<uuid7>",
-                                "$id": "plain"
-                            }
-                        }
-                    ]
-                },
-                {
-                    "op": "database.find",
-                    "args": {
-                        "collection": "dollar_words",
-                        "queries": [
-                            {
-                                "$query": {
-                                    "method": "notEndsWith",
-                                    "attribute": "label",
-                                    "values": [
-                                        "$USD"
-                                    ]
-                                }
-                            }
-                        ]
-                    },
-                    "expect": [
-                        {
-                            "$document": {
-                                "label": "$USD 10",
-                                "$collection": "dollar_words",
-                                "$createdAt": "<now>",
-                                "$updatedAt": "<now>",
-                                "$permissions": [],
-                                "$sequence": "<uuid7>",
-                                "$id": "lead"
-                            }
-                        },
-                        {
-                            "$document": {
-                                "label": "plain",
-                                "$collection": "dollar_words",
-                                "$createdAt": "<now>",
-                                "$updatedAt": "<now>",
-                                "$permissions": [],
-                                "$sequence": "<uuid7>",
-                                "$id": "plain"
-                            }
-                        }
-                    ]
-                },
-                {
-                    "op": "database.delete_collection",
-                    "args": {
-                        "collection": "dollar_words"
-                    },
-                    "expect": null
+          "op": "database.find",
+          "args": {
+            "collection": "names_u000000000003",
+            "queries": [
+              {
+                "$query": {
+                  "method": "startsWith",
+                  "attribute": "name",
+                  "values": [
+                    "foo"
+                  ]
                 }
+              }
             ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "foobar",
+                "tags": [
+                  "foo",
+                  "bar"
+                ],
+                "$collection": "names_u000000000003",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$sequence": "<uuid7>",
+                "$id": "<uniqid>"
+              }
+            }
+          ]
         },
         {
-            "name": "MongoReadFilterTests::testContainsFamilyMatchesLikeTheOtherEngines",
-            "state": [
-                "mongo@database-mongo"
-            ],
-            "steps": [
-                {
-                    "op": "db.open",
-                    "args": {
-                        "engine": "mongo",
-                        "schemaless": true
-                    },
-                    "bind": "db",
-                    "expect": {
-                        "$handle": "*"
-                    }
-                },
-                {
-                    "op": "database.create_collection",
-                    "args": {
-                        "collection": {
-                            "$document": {
-                                "$id": "contains_family",
-                                "name": "contains_family",
-                                "attributes": [
-                                    {
-                                        "$id": "name",
-                                        "key": "name",
-                                        "type": "string",
-                                        "size": 64,
-                                        "required": true,
-                                        "default": null,
-                                        "signed": true,
-                                        "array": false,
-                                        "format": null,
-                                        "formatOptions": [],
-                                        "filters": []
-                                    },
-                                    {
-                                        "$id": "tags",
-                                        "key": "tags",
-                                        "type": "string",
-                                        "size": 32,
-                                        "required": false,
-                                        "default": null,
-                                        "signed": true,
-                                        "array": true,
-                                        "format": null,
-                                        "formatOptions": [],
-                                        "filters": []
-                                    }
-                                ],
-                                "indexes": [],
-                                "documentSecurity": false,
-                                "$permissions": [
-                                    "create(\"any\")",
-                                    "read(\"any\")"
-                                ]
-                            },
-                            "$class": "Collection"
-                        }
-                    },
-                    "expect": {
-                        "$document": {
-                            "$id": "contains_family",
-                            "name": "contains_family",
-                            "attributes": [
-                                {
-                                    "$document": {
-                                        "$id": "name",
-                                        "key": "name",
-                                        "type": "string",
-                                        "size": 64,
-                                        "required": true,
-                                        "default": null,
-                                        "signed": true,
-                                        "array": false,
-                                        "format": null,
-                                        "formatOptions": [],
-                                        "filters": []
-                                    }
-                                },
-                                {
-                                    "$document": {
-                                        "$id": "tags",
-                                        "key": "tags",
-                                        "type": "string",
-                                        "size": 32,
-                                        "required": false,
-                                        "default": null,
-                                        "signed": true,
-                                        "array": true,
-                                        "format": null,
-                                        "formatOptions": [],
-                                        "filters": []
-                                    }
-                                }
-                            ],
-                            "indexes": [],
-                            "documentSecurity": false,
-                            "$permissions": [
-                                "create(\"any\")",
-                                "read(\"any\")"
-                            ],
-                            "$collection": "_metadata",
-                            "$createdAt": "<now>",
-                            "$updatedAt": "<now>",
-                            "$sequence": "<uuid7>"
-                        },
-                        "$class": "Collection"
-                    }
-                },
-                {
-                    "op": "database.create_document",
-                    "args": {
-                        "collection": "contains_family",
-                        "document": {
-                            "$document": {
-                                "$id": "captain",
-                                "name": "Captain America",
-                                "tags": [
-                                    "comics",
-                                    "action"
-                                ]
-                            }
-                        }
-                    },
-                    "expect": {
-                        "$document": {
-                            "$id": "captain",
-                            "name": "Captain America",
-                            "tags": [
-                                "comics",
-                                "action"
-                            ],
-                            "$collection": "contains_family",
-                            "$createdAt": "<now>",
-                            "$updatedAt": "<now>",
-                            "$permissions": [],
-                            "$sequence": "<uuid7>"
-                        }
-                    }
-                },
-                {
-                    "op": "database.create_document",
-                    "args": {
-                        "collection": "contains_family",
-                        "document": {
-                            "$document": {
-                                "$id": "work",
-                                "name": "Work in Progress",
-                                "tags": [
-                                    "drama"
-                                ]
-                            }
-                        }
-                    },
-                    "expect": {
-                        "$document": {
-                            "$id": "work",
-                            "name": "Work in Progress",
-                            "tags": [
-                                "drama"
-                            ],
-                            "$collection": "contains_family",
-                            "$createdAt": "<now>",
-                            "$updatedAt": "<now>",
-                            "$permissions": [],
-                            "$sequence": "<uuid7>"
-                        }
-                    }
-                },
-                {
-                    "op": "database.create_document",
-                    "args": {
-                        "collection": "contains_family",
-                        "document": {
-                            "$document": {
-                                "$id": "kids",
-                                "name": "Frozen",
-                                "tags": [
-                                    "kids"
-                                ]
-                            }
-                        }
-                    },
-                    "expect": {
-                        "$document": {
-                            "$id": "kids",
-                            "name": "Frozen",
-                            "tags": [
-                                "kids"
-                            ],
-                            "$collection": "contains_family",
-                            "$createdAt": "<now>",
-                            "$updatedAt": "<now>",
-                            "$permissions": [],
-                            "$sequence": "<uuid7>"
-                        }
-                    }
-                },
-                {
-                    "op": "database.create_document",
-                    "args": {
-                        "collection": "contains_family",
-                        "document": {
-                            "$document": {
-                                "$id": "untagged",
-                                "name": "Untitled",
-                                "tags": []
-                            }
-                        }
-                    },
-                    "expect": {
-                        "$document": {
-                            "$id": "untagged",
-                            "name": "Untitled",
-                            "tags": [],
-                            "$collection": "contains_family",
-                            "$createdAt": "<now>",
-                            "$updatedAt": "<now>",
-                            "$permissions": [],
-                            "$sequence": "<uuid7>"
-                        }
-                    }
-                },
-                {
-                    "op": "database.find",
-                    "args": {
-                        "collection": "contains_family",
-                        "queries": [
-                            {
-                                "$query": {
-                                    "method": "contains",
-                                    "attribute": "tags",
-                                    "values": [
-                                        "comics",
-                                        "kids"
-                                    ]
-                                }
-                            }
-                        ]
-                    },
-                    "expect": [
-                        {
-                            "$document": {
-                                "name": "Captain America",
-                                "tags": [
-                                    "comics",
-                                    "action"
-                                ],
-                                "$collection": "contains_family",
-                                "$createdAt": "<now>",
-                                "$updatedAt": "<now>",
-                                "$permissions": [],
-                                "$sequence": "<uuid7>",
-                                "$id": "captain"
-                            }
-                        },
-                        {
-                            "$document": {
-                                "name": "Frozen",
-                                "tags": [
-                                    "kids"
-                                ],
-                                "$collection": "contains_family",
-                                "$createdAt": "<now>",
-                                "$updatedAt": "<now>",
-                                "$permissions": [],
-                                "$sequence": "<uuid7>",
-                                "$id": "kids"
-                            }
-                        }
-                    ]
-                },
-                {
-                    "op": "database.find",
-                    "args": {
-                        "collection": "contains_family",
-                        "queries": [
-                            {
-                                "$query": {
-                                    "method": "containsAny",
-                                    "attribute": "tags",
-                                    "values": [
-                                        "comics",
-                                        "kids"
-                                    ]
-                                }
-                            }
-                        ]
-                    },
-                    "expect": [
-                        {
-                            "$document": {
-                                "name": "Captain America",
-                                "tags": [
-                                    "comics",
-                                    "action"
-                                ],
-                                "$collection": "contains_family",
-                                "$createdAt": "<now>",
-                                "$updatedAt": "<now>",
-                                "$permissions": [],
-                                "$sequence": "<uuid7>",
-                                "$id": "captain"
-                            }
-                        },
-                        {
-                            "$document": {
-                                "name": "Frozen",
-                                "tags": [
-                                    "kids"
-                                ],
-                                "$collection": "contains_family",
-                                "$createdAt": "<now>",
-                                "$updatedAt": "<now>",
-                                "$permissions": [],
-                                "$sequence": "<uuid7>",
-                                "$id": "kids"
-                            }
-                        }
-                    ]
-                },
-                {
-                    "op": "database.find",
-                    "args": {
-                        "collection": "contains_family",
-                        "queries": [
-                            {
-                                "$query": {
-                                    "method": "notContains",
-                                    "attribute": "tags",
-                                    "values": [
-                                        "comics"
-                                    ]
-                                }
-                            }
-                        ]
-                    },
-                    "expect": [
-                        {
-                            "$document": {
-                                "name": "Work in Progress",
-                                "tags": [
-                                    "drama"
-                                ],
-                                "$collection": "contains_family",
-                                "$createdAt": "<now>",
-                                "$updatedAt": "<now>",
-                                "$permissions": [],
-                                "$sequence": "<uuid7>",
-                                "$id": "work"
-                            }
-                        },
-                        {
-                            "$document": {
-                                "name": "Frozen",
-                                "tags": [
-                                    "kids"
-                                ],
-                                "$collection": "contains_family",
-                                "$createdAt": "<now>",
-                                "$updatedAt": "<now>",
-                                "$permissions": [],
-                                "$sequence": "<uuid7>",
-                                "$id": "kids"
-                            }
-                        },
-                        {
-                            "$document": {
-                                "name": "Untitled",
-                                "tags": [],
-                                "$collection": "contains_family",
-                                "$createdAt": "<now>",
-                                "$updatedAt": "<now>",
-                                "$permissions": [],
-                                "$sequence": "<uuid7>",
-                                "$id": "untagged"
-                            }
-                        }
-                    ]
-                },
-                {
-                    "op": "database.find",
-                    "args": {
-                        "collection": "contains_family",
-                        "queries": [
-                            {
-                                "$query": {
-                                    "method": "contains",
-                                    "attribute": "name",
-                                    "values": [
-                                        "Captain",
-                                        "Work"
-                                    ]
-                                }
-                            }
-                        ]
-                    },
-                    "expect": [
-                        {
-                            "$document": {
-                                "name": "Captain America",
-                                "tags": [
-                                    "comics",
-                                    "action"
-                                ],
-                                "$collection": "contains_family",
-                                "$createdAt": "<now>",
-                                "$updatedAt": "<now>",
-                                "$permissions": [],
-                                "$sequence": "<uuid7>",
-                                "$id": "captain"
-                            }
-                        },
-                        {
-                            "$document": {
-                                "name": "Work in Progress",
-                                "tags": [
-                                    "drama"
-                                ],
-                                "$collection": "contains_family",
-                                "$createdAt": "<now>",
-                                "$updatedAt": "<now>",
-                                "$permissions": [],
-                                "$sequence": "<uuid7>",
-                                "$id": "work"
-                            }
-                        }
-                    ]
-                },
-                {
-                    "op": "database.find",
-                    "args": {
-                        "collection": "contains_family",
-                        "queries": [
-                            {
-                                "$query": {
-                                    "method": "containsAny",
-                                    "attribute": "name",
-                                    "values": [
-                                        "Captain",
-                                        "Work"
-                                    ]
-                                }
-                            }
-                        ]
-                    },
-                    "expect": [
-                        {
-                            "$document": {
-                                "name": "Captain America",
-                                "tags": [
-                                    "comics",
-                                    "action"
-                                ],
-                                "$collection": "contains_family",
-                                "$createdAt": "<now>",
-                                "$updatedAt": "<now>",
-                                "$permissions": [],
-                                "$sequence": "<uuid7>",
-                                "$id": "captain"
-                            }
-                        },
-                        {
-                            "$document": {
-                                "name": "Work in Progress",
-                                "tags": [
-                                    "drama"
-                                ],
-                                "$collection": "contains_family",
-                                "$createdAt": "<now>",
-                                "$updatedAt": "<now>",
-                                "$permissions": [],
-                                "$sequence": "<uuid7>",
-                                "$id": "work"
-                            }
-                        }
-                    ]
-                },
-                {
-                    "op": "database.find",
-                    "args": {
-                        "collection": "contains_family",
-                        "queries": [
-                            {
-                                "$query": {
-                                    "method": "notContains",
-                                    "attribute": "name",
-                                    "values": [
-                                        "Captain"
-                                    ]
-                                }
-                            }
-                        ]
-                    },
-                    "expect": [
-                        {
-                            "$document": {
-                                "name": "Work in Progress",
-                                "tags": [
-                                    "drama"
-                                ],
-                                "$collection": "contains_family",
-                                "$createdAt": "<now>",
-                                "$updatedAt": "<now>",
-                                "$permissions": [],
-                                "$sequence": "<uuid7>",
-                                "$id": "work"
-                            }
-                        },
-                        {
-                            "$document": {
-                                "name": "Frozen",
-                                "tags": [
-                                    "kids"
-                                ],
-                                "$collection": "contains_family",
-                                "$createdAt": "<now>",
-                                "$updatedAt": "<now>",
-                                "$permissions": [],
-                                "$sequence": "<uuid7>",
-                                "$id": "kids"
-                            }
-                        },
-                        {
-                            "$document": {
-                                "name": "Untitled",
-                                "tags": [],
-                                "$collection": "contains_family",
-                                "$createdAt": "<now>",
-                                "$updatedAt": "<now>",
-                                "$permissions": [],
-                                "$sequence": "<uuid7>",
-                                "$id": "untagged"
-                            }
-                        }
-                    ]
-                },
-                {
-                    "op": "database.skip_validation",
-                    "args": {
-                        "callback": {
-                            "steps": [
-                                {
-                                    "op": "database.find",
-                                    "args": {
-                                        "collection": "contains_family",
-                                        "queries": [
-                                            {
-                                                "$query": {
-                                                    "method": "notEqual",
-                                                    "attribute": "name",
-                                                    "values": [
-                                                        "Captain America",
-                                                        "Work in Progress"
-                                                    ]
-                                                }
-                                            }
-                                        ]
-                                    }
-                                },
-                                {
-                                    "op": "$return",
-                                    "args": {
-                                        "value": [
-                                            "kids",
-                                            "untagged"
-                                        ]
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "expect": {
-                        "result": [
-                            "kids",
-                            "untagged"
-                        ],
-                        "calls": {
-                            "callback": [
-                                {
-                                    "args": [],
-                                    "steps": [
-                                        [
-                                            {
-                                                "$document": {
-                                                    "name": "Frozen",
-                                                    "tags": [
-                                                        "kids"
-                                                    ],
-                                                    "$collection": "contains_family",
-                                                    "$createdAt": "<now>",
-                                                    "$updatedAt": "<now>",
-                                                    "$permissions": [],
-                                                    "$sequence": "<uuid7>",
-                                                    "$id": "kids"
-                                                }
-                                            },
-                                            {
-                                                "$document": {
-                                                    "name": "Untitled",
-                                                    "tags": [],
-                                                    "$collection": "contains_family",
-                                                    "$createdAt": "<now>",
-                                                    "$updatedAt": "<now>",
-                                                    "$permissions": [],
-                                                    "$sequence": "<uuid7>",
-                                                    "$id": "untagged"
-                                                }
-                                            }
-                                        ],
-                                        null
-                                    ]
-                                }
-                            ]
-                        }
-                    }
-                },
-                {
-                    "op": "database.delete_collection",
-                    "args": {
-                        "collection": "contains_family"
-                    },
-                    "expect": null
+          "op": "database.find",
+          "args": {
+            "collection": "names_u000000000003",
+            "queries": [
+              {
+                "$query": {
+                  "method": "endsWith",
+                  "attribute": "name",
+                  "values": [
+                    "foo"
+                  ]
                 }
+              }
             ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "barfoo",
+                "tags": [
+                  "bar",
+                  "foo"
+                ],
+                "$collection": "names_u000000000003",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$sequence": "<uuid7>",
+                "$id": "<uniqid>"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "names_u000000000003",
+            "queries": [
+              {
+                "$query": {
+                  "method": "startsWith",
+                  "attribute": "name",
+                  "values": [
+                    "foo"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": 1
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "names_u000000000003"
+          },
+          "expect": null
         }
-    ]
+      ]
+    },
+    {
+      "name": "MongoReadFilterTests::testContainsAllWorksOnFind",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "names_u000000000004",
+                "name": "names_u000000000004",
+                "attributes": [
+                  {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  },
+                  {
+                    "$id": "tags",
+                    "key": "tags",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": false,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "names_u000000000004",
+              "name": "names_u000000000004",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "tags",
+                    "key": "tags",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "names_u000000000004",
+            "document": {
+              "$document": {
+                "name": "foobar",
+                "tags": [
+                  "foo",
+                  "bar"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "name": "foobar",
+              "tags": [
+                "foo",
+                "bar"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "names_u000000000004",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "names_u000000000004",
+            "document": {
+              "$document": {
+                "name": "barfoo",
+                "tags": [
+                  "bar",
+                  "foo"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "name": "barfoo",
+              "tags": [
+                "bar",
+                "foo"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "names_u000000000004",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "names_u000000000004",
+            "document": {
+              "$document": {
+                "name": "foobaz",
+                "tags": [
+                  "foo",
+                  "baz"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "name": "foobaz",
+              "tags": [
+                "foo",
+                "baz"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "names_u000000000004",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "names_u000000000004",
+            "queries": [
+              {
+                "$query": {
+                  "method": "containsAll",
+                  "attribute": "tags",
+                  "values": [
+                    "foo",
+                    "bar"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "foobar",
+                "tags": [
+                  "foo",
+                  "bar"
+                ],
+                "$collection": "names_u000000000004",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$sequence": "<uuid7>",
+                "$id": "<uniqid>"
+              }
+            },
+            {
+              "$document": {
+                "name": "barfoo",
+                "tags": [
+                  "bar",
+                  "foo"
+                ],
+                "$collection": "names_u000000000004",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$sequence": "<uuid7>",
+                "$id": "<uniqid>"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "names_u000000000004",
+            "queries": [
+              {
+                "$query": {
+                  "method": "containsAll",
+                  "attribute": "tags",
+                  "values": [
+                    "foo",
+                    "bar"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": 2
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "names_u000000000004"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "MongoReadFilterTests::testCountReportsDriverErrors",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "names_u000000000005",
+                "name": "names_u000000000005",
+                "attributes": [
+                  {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  },
+                  {
+                    "$id": "tags",
+                    "key": "tags",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": false,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "bind": "s92",
+          "expect": {
+            "$document": {
+              "$id": "names_u000000000005",
+              "name": "names_u000000000005",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "tags",
+                    "key": "tags",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "names_u000000000005",
+            "document": {
+              "$document": {
+                "name": "foobar",
+                "tags": [
+                  "foo",
+                  "bar"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "name": "foobar",
+              "tags": [
+                "foo",
+                "bar"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "names_u000000000005",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "collection": "names_u000000000005"
+          },
+          "expect": {
+            "$document": {
+              "name": "names_u000000000005",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "tags",
+                    "key": "tags",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>",
+              "$id": "names_u000000000005"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "count",
+            "args": {
+              "collection": {
+                "$document": {
+                  "name": "names_u000000000005",
+                  "attributes": [
+                    {
+                      "$id": "name",
+                      "key": "name",
+                      "type": "string",
+                      "size": 64,
+                      "required": false,
+                      "default": null,
+                      "signed": true,
+                      "array": false,
+                      "format": null,
+                      "formatOptions": [],
+                      "filters": []
+                    },
+                    {
+                      "$id": "tags",
+                      "key": "tags",
+                      "type": "string",
+                      "size": 16,
+                      "required": false,
+                      "default": null,
+                      "signed": true,
+                      "array": true,
+                      "format": null,
+                      "formatOptions": [],
+                      "filters": []
+                    }
+                  ],
+                  "indexes": [],
+                  "documentSecurity": false,
+                  "$permissions": [
+                    "create(\"any\")",
+                    "read(\"any\")"
+                  ],
+                  "$collection": "_metadata",
+                  "$createdAt": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  },
+                  "$updatedAt": {
+                    "$now": 0,
+                    "format": "Y-m-d\\TH:i:s.vP"
+                  },
+                  "$sequence": {
+                    "$ref": "s92",
+                    "path": "/$document/$sequence",
+                    "default": "01a13e1c-ff73-723f-87fb-1f14800e2dec"
+                  },
+                  "$id": "names_u000000000005"
+                },
+                "$class": "Collection"
+              },
+              "queries": [
+                {
+                  "$query": {
+                    "method": "regex",
+                    "attribute": "name",
+                    "values": [
+                      "("
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Mongo\\Exception",
+              "message": "E51091 Location51091: Regular expression is invalid: missing closing parenthesis"
+            }
+          }
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "names_u000000000005"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "MongoReadFilterTests::testDottedAttributesSurviveRenameAndDelete",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "dotted_u000000000006",
+                "name": "dotted_u000000000006",
+                "attributes": [
+                  {
+                    "$id": "a.b",
+                    "key": "a.b",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  },
+                  {
+                    "$id": "x.y",
+                    "key": "x.y",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": false,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "dotted_u000000000006",
+              "name": "dotted_u000000000006",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "a.b",
+                    "key": "a.b",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "x.y",
+                    "key": "x.y",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "dotted_u000000000006",
+            "document": {
+              "$document": {
+                "$id": "first",
+                "a.b": "renamed",
+                "x.y": "deleted"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "a.b": "renamed",
+              "x.y": "deleted",
+              "$collection": "dotted_u000000000006",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.update_attribute",
+          "args": {
+            "collection": "dotted_u000000000006",
+            "key": "a.b",
+            "update": {
+              "$value": "Attribute\\Update",
+              "fields": {
+                "type": null,
+                "size": null,
+                "required": null,
+                "default": {
+                  "$enum": "Unchanged::Value"
+                },
+                "signed": null,
+                "array": null,
+                "format": {
+                  "$enum": "Unchanged::Value"
+                },
+                "filters": null,
+                "key": "c"
+              }
+            }
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "c",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 16,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "dotted_u000000000006",
+            "id": "first"
+          },
+          "expect": {
+            "$document": {
+              "c": "renamed",
+              "x.y": "deleted",
+              "$collection": "dotted_u000000000006",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>",
+              "$id": "first"
+            }
+          }
+        },
+        {
+          "op": "database.delete_attribute",
+          "args": {
+            "collection": "dotted_u000000000006",
+            "key": "x.y"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "dotted_u000000000006",
+            "attribute": {
+              "$value": "Attribute",
+              "fields": {
+                "key": "x.y",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 16,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            }
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "x.y",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 16,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "dotted_u000000000006",
+            "id": "first"
+          },
+          "expect": {
+            "$document": {
+              "c": "renamed",
+              "$collection": "dotted_u000000000006",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>",
+              "$id": "first",
+              "x.y": null
+            }
+          }
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "dotted_u000000000006"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "MongoReadFilterTests::testOrderRandomIsRejectedAsAQueryError",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "names_u000000000007",
+                "name": "names_u000000000007",
+                "attributes": [
+                  {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  },
+                  {
+                    "$id": "tags",
+                    "key": "tags",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": false,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "names_u000000000007",
+              "name": "names_u000000000007",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "tags",
+                    "key": "tags",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "names_u000000000007",
+            "document": {
+              "$document": {
+                "name": "foobar",
+                "tags": [
+                  "foo",
+                  "bar"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "name": "foobar",
+              "tags": [
+                "foo",
+                "bar"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "names_u000000000007",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "names_u000000000007",
+            "queries": [
+              {
+                "$query": {
+                  "method": "orderRandom",
+                  "attribute": "",
+                  "values": []
+                }
+              }
+            ]
+          },
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "Query::orderRandom() returns the documents in a random order"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "database.skip_validation",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.find",
+                  "args": {
+                    "collection": "names_u000000000007",
+                    "queries": [
+                      {
+                        "$query": {
+                          "method": "orderRandom",
+                          "attribute": "",
+                          "values": []
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Random order is not supported by this adapter"
+            }
+          }
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "names_u000000000007"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "MongoReadFilterTests::testSumOnADottedAttributeMatchesTheCountedRows",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "dotted_sum_u000000000008",
+                "name": "dotted_sum_u000000000008",
+                "attributes": [
+                  {
+                    "$id": "score.value",
+                    "key": "score.value",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  },
+                  {
+                    "$id": "group.name",
+                    "key": "group.name",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": false,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "dotted_sum_u000000000008",
+              "name": "dotted_sum_u000000000008",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "score.value",
+                    "key": "score.value",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "group.name",
+                    "key": "group.name",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "dotted_sum_u000000000008",
+            "document": {
+              "$document": {
+                "score.value": 1,
+                "group.name": "a"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "score.value": 1,
+              "group.name": "a",
+              "$id": "<uniqid>",
+              "$collection": "dotted_sum_u000000000008",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "dotted_sum_u000000000008",
+            "document": {
+              "$document": {
+                "score.value": 2,
+                "group.name": "a"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "score.value": 2,
+              "group.name": "a",
+              "$id": "<uniqid>",
+              "$collection": "dotted_sum_u000000000008",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "dotted_sum_u000000000008",
+            "document": {
+              "$document": {
+                "score.value": 4,
+                "group.name": "b"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "score.value": 4,
+              "group.name": "b",
+              "$id": "<uniqid>",
+              "$collection": "dotted_sum_u000000000008",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "dotted_sum_u000000000008",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "group.name",
+                  "values": [
+                    "a"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": 2
+        },
+        {
+          "op": "database.sum",
+          "args": {
+            "collection": "dotted_sum_u000000000008",
+            "attribute": "score.value",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "group.name",
+                  "values": [
+                    "a"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": 3
+        },
+        {
+          "op": "database.sum",
+          "args": {
+            "collection": "dotted_sum_u000000000008",
+            "attribute": "score.value"
+          },
+          "expect": 7
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "dotted_sum_u000000000008"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "MongoReadFilterTests::testFiltersMatchALiteralDollarWord",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "dollar_words",
+                "name": "dollar_words",
+                "attributes": [
+                  {
+                    "$id": "label",
+                    "key": "label",
+                    "type": "string",
+                    "size": 64,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": false,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "dollar_words",
+              "name": "dollar_words",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "label",
+                    "key": "label",
+                    "type": "string",
+                    "size": 64,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "dollar_words",
+            "document": {
+              "$document": {
+                "$id": "lead",
+                "label": "$USD 10"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "lead",
+              "label": "$USD 10",
+              "$collection": "dollar_words",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "dollar_words",
+            "document": {
+              "$document": {
+                "$id": "tail",
+                "label": "10 $USD"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "tail",
+              "label": "10 $USD",
+              "$collection": "dollar_words",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "dollar_words",
+            "document": {
+              "$document": {
+                "$id": "plain",
+                "label": "plain"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "plain",
+              "label": "plain",
+              "$collection": "dollar_words",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "dollar_words",
+            "queries": [
+              {
+                "$query": {
+                  "method": "contains",
+                  "attribute": "label",
+                  "values": [
+                    "$USD"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "label": "$USD 10",
+                "$collection": "dollar_words",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$sequence": "<uuid7>",
+                "$id": "lead"
+              }
+            },
+            {
+              "$document": {
+                "label": "10 $USD",
+                "$collection": "dollar_words",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$sequence": "<uuid7>",
+                "$id": "tail"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "dollar_words",
+            "queries": [
+              {
+                "$query": {
+                  "method": "notContains",
+                  "attribute": "label",
+                  "values": [
+                    "$USD"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "label": "plain",
+                "$collection": "dollar_words",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$sequence": "<uuid7>",
+                "$id": "plain"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "dollar_words",
+            "queries": [
+              {
+                "$query": {
+                  "method": "notStartsWith",
+                  "attribute": "label",
+                  "values": [
+                    "$USD"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "label": "10 $USD",
+                "$collection": "dollar_words",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$sequence": "<uuid7>",
+                "$id": "tail"
+              }
+            },
+            {
+              "$document": {
+                "label": "plain",
+                "$collection": "dollar_words",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$sequence": "<uuid7>",
+                "$id": "plain"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "dollar_words",
+            "queries": [
+              {
+                "$query": {
+                  "method": "notEndsWith",
+                  "attribute": "label",
+                  "values": [
+                    "$USD"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "label": "$USD 10",
+                "$collection": "dollar_words",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$sequence": "<uuid7>",
+                "$id": "lead"
+              }
+            },
+            {
+              "$document": {
+                "label": "plain",
+                "$collection": "dollar_words",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$sequence": "<uuid7>",
+                "$id": "plain"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "dollar_words"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "MongoReadFilterTests::testContainsFamilyMatchesLikeTheOtherEngines",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "contains_family",
+                "name": "contains_family",
+                "attributes": [
+                  {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  },
+                  {
+                    "$id": "tags",
+                    "key": "tags",
+                    "type": "string",
+                    "size": 32,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": false,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "contains_family",
+              "name": "contains_family",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "tags",
+                    "key": "tags",
+                    "type": "string",
+                    "size": 32,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "contains_family",
+            "document": {
+              "$document": {
+                "$id": "captain",
+                "name": "Captain America",
+                "tags": [
+                  "comics",
+                  "action"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "captain",
+              "name": "Captain America",
+              "tags": [
+                "comics",
+                "action"
+              ],
+              "$collection": "contains_family",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "contains_family",
+            "document": {
+              "$document": {
+                "$id": "work",
+                "name": "Work in Progress",
+                "tags": [
+                  "drama"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "work",
+              "name": "Work in Progress",
+              "tags": [
+                "drama"
+              ],
+              "$collection": "contains_family",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "contains_family",
+            "document": {
+              "$document": {
+                "$id": "kids",
+                "name": "Frozen",
+                "tags": [
+                  "kids"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "kids",
+              "name": "Frozen",
+              "tags": [
+                "kids"
+              ],
+              "$collection": "contains_family",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "contains_family",
+            "document": {
+              "$document": {
+                "$id": "untagged",
+                "name": "Untitled",
+                "tags": []
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "untagged",
+              "name": "Untitled",
+              "tags": [],
+              "$collection": "contains_family",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "contains_family",
+            "queries": [
+              {
+                "$query": {
+                  "method": "contains",
+                  "attribute": "tags",
+                  "values": [
+                    "comics",
+                    "kids"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "Captain America",
+                "tags": [
+                  "comics",
+                  "action"
+                ],
+                "$collection": "contains_family",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$sequence": "<uuid7>",
+                "$id": "captain"
+              }
+            },
+            {
+              "$document": {
+                "name": "Frozen",
+                "tags": [
+                  "kids"
+                ],
+                "$collection": "contains_family",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$sequence": "<uuid7>",
+                "$id": "kids"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "contains_family",
+            "queries": [
+              {
+                "$query": {
+                  "method": "containsAny",
+                  "attribute": "tags",
+                  "values": [
+                    "comics",
+                    "kids"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "Captain America",
+                "tags": [
+                  "comics",
+                  "action"
+                ],
+                "$collection": "contains_family",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$sequence": "<uuid7>",
+                "$id": "captain"
+              }
+            },
+            {
+              "$document": {
+                "name": "Frozen",
+                "tags": [
+                  "kids"
+                ],
+                "$collection": "contains_family",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$sequence": "<uuid7>",
+                "$id": "kids"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "contains_family",
+            "queries": [
+              {
+                "$query": {
+                  "method": "notContains",
+                  "attribute": "tags",
+                  "values": [
+                    "comics"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "Work in Progress",
+                "tags": [
+                  "drama"
+                ],
+                "$collection": "contains_family",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$sequence": "<uuid7>",
+                "$id": "work"
+              }
+            },
+            {
+              "$document": {
+                "name": "Frozen",
+                "tags": [
+                  "kids"
+                ],
+                "$collection": "contains_family",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$sequence": "<uuid7>",
+                "$id": "kids"
+              }
+            },
+            {
+              "$document": {
+                "name": "Untitled",
+                "tags": [],
+                "$collection": "contains_family",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$sequence": "<uuid7>",
+                "$id": "untagged"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "contains_family",
+            "queries": [
+              {
+                "$query": {
+                  "method": "contains",
+                  "attribute": "name",
+                  "values": [
+                    "Captain",
+                    "Work"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "Captain America",
+                "tags": [
+                  "comics",
+                  "action"
+                ],
+                "$collection": "contains_family",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$sequence": "<uuid7>",
+                "$id": "captain"
+              }
+            },
+            {
+              "$document": {
+                "name": "Work in Progress",
+                "tags": [
+                  "drama"
+                ],
+                "$collection": "contains_family",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$sequence": "<uuid7>",
+                "$id": "work"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "contains_family",
+            "queries": [
+              {
+                "$query": {
+                  "method": "containsAny",
+                  "attribute": "name",
+                  "values": [
+                    "Captain",
+                    "Work"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "Captain America",
+                "tags": [
+                  "comics",
+                  "action"
+                ],
+                "$collection": "contains_family",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$sequence": "<uuid7>",
+                "$id": "captain"
+              }
+            },
+            {
+              "$document": {
+                "name": "Work in Progress",
+                "tags": [
+                  "drama"
+                ],
+                "$collection": "contains_family",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$sequence": "<uuid7>",
+                "$id": "work"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "contains_family",
+            "queries": [
+              {
+                "$query": {
+                  "method": "notContains",
+                  "attribute": "name",
+                  "values": [
+                    "Captain"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "Work in Progress",
+                "tags": [
+                  "drama"
+                ],
+                "$collection": "contains_family",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$sequence": "<uuid7>",
+                "$id": "work"
+              }
+            },
+            {
+              "$document": {
+                "name": "Frozen",
+                "tags": [
+                  "kids"
+                ],
+                "$collection": "contains_family",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$sequence": "<uuid7>",
+                "$id": "kids"
+              }
+            },
+            {
+              "$document": {
+                "name": "Untitled",
+                "tags": [],
+                "$collection": "contains_family",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$sequence": "<uuid7>",
+                "$id": "untagged"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.skip_validation",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.find",
+                  "args": {
+                    "collection": "contains_family",
+                    "queries": [
+                      {
+                        "$query": {
+                          "method": "notEqual",
+                          "attribute": "name",
+                          "values": [
+                            "Captain America",
+                            "Work in Progress"
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "op": "$return",
+                  "args": {
+                    "value": [
+                      "kids",
+                      "untagged"
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": [
+              "kids",
+              "untagged"
+            ],
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    [
+                      {
+                        "$document": {
+                          "name": "Frozen",
+                          "tags": [
+                            "kids"
+                          ],
+                          "$collection": "contains_family",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$permissions": [],
+                          "$sequence": "<uuid7>",
+                          "$id": "kids"
+                        }
+                      },
+                      {
+                        "$document": {
+                          "name": "Untitled",
+                          "tags": [],
+                          "$collection": "contains_family",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$permissions": [],
+                          "$sequence": "<uuid7>",
+                          "$id": "untagged"
+                        }
+                      }
+                    ],
+                    null
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "contains_family"
+          },
+          "expect": null
+        }
+      ]
+    }
+  ]
 }

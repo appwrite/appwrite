@@ -17895,9 +17895,75 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Transaction",
-              "message": "Failed to execute transaction: the transaction was lost before it could commit"
+            "$document": {
+              "$id": "lawn1",
+              "$permissions": [
+                "read(\"any\")",
+                "read(\"user:user1\")",
+                "update(\"user:user1\")",
+                "delete(\"user:user2\")"
+              ],
+              "name": "Lawn 1",
+              "$collection": "lawns",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1",
+              "trees": [
+                {
+                  "$document": {
+                    "name": "Tree 1",
+                    "$id": "tree1",
+                    "$sequence": "1",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "read(\"user:user1\")",
+                      "update(\"user:user1\")",
+                      "delete(\"user:user2\")"
+                    ],
+                    "$collection": "trees",
+                    "birds": [
+                      {
+                        "$document": {
+                          "name": "Bird 1",
+                          "$id": "bird1",
+                          "$sequence": "1",
+                          "$tenant": "999",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$permissions": [
+                            "read(\"any\")",
+                            "read(\"user:user1\")",
+                            "update(\"user:user1\")",
+                            "delete(\"user:user2\")"
+                          ],
+                          "$collection": "birds"
+                        }
+                      },
+                      {
+                        "$document": {
+                          "name": "Bird 2",
+                          "$id": "bird2",
+                          "$sequence": "2",
+                          "$tenant": "999",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$permissions": [
+                            "read(\"any\")",
+                            "read(\"user:user1\")",
+                            "update(\"user:user1\")",
+                            "delete(\"user:user2\")"
+                          ],
+                          "$collection": "birds"
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
             }
           }
         },
@@ -17908,7 +17974,76 @@
             "id": "lawn1"
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "name": "Lawn 1",
+              "$sequence": "1",
+              "$id": "lawn1",
+              "$tenant": "999",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "read(\"user:user1\")",
+                "update(\"user:user1\")",
+                "delete(\"user:user2\")"
+              ],
+              "$collection": "lawns",
+              "trees": [
+                {
+                  "$document": {
+                    "name": "Tree 1",
+                    "$id": "tree1",
+                    "$sequence": "1",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "read(\"user:user1\")",
+                      "update(\"user:user1\")",
+                      "delete(\"user:user2\")"
+                    ],
+                    "$collection": "trees",
+                    "birds": [
+                      {
+                        "$document": {
+                          "name": "Bird 1",
+                          "$id": "bird1",
+                          "$sequence": "1",
+                          "$tenant": "999",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$permissions": [
+                            "read(\"any\")",
+                            "read(\"user:user1\")",
+                            "update(\"user:user1\")",
+                            "delete(\"user:user2\")"
+                          ],
+                          "$collection": "birds"
+                        }
+                      },
+                      {
+                        "$document": {
+                          "name": "Bird 2",
+                          "$id": "bird2",
+                          "$sequence": "2",
+                          "$tenant": "999",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$permissions": [
+                            "read(\"any\")",
+                            "read(\"user:user1\")",
+                            "update(\"user:user1\")",
+                            "delete(\"user:user2\")"
+                          ],
+                          "$collection": "birds"
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
           }
         },
         {
@@ -17933,7 +18068,21 @@
               ],
               "$collection": "trees",
               "lawn": {
-                "$document": {}
+                "$document": {
+                  "name": "Lawn 1",
+                  "$id": "lawn1",
+                  "$sequence": "1",
+                  "$tenant": "999",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"any\")",
+                    "read(\"user:user1\")",
+                    "update(\"user:user1\")",
+                    "delete(\"user:user2\")"
+                  ],
+                  "$collection": "lawns"
+                }
               },
               "birds": [
                 {
@@ -20225,18 +20374,9 @@
             }
           },
           "expect": {
-            "$value": "Relationship",
-            "fields": {
-              "relatedCollection": "null2",
-              "type": {
-                "$enum": "RelationshipType::OneToMany"
-              },
-              "twoWay": true,
-              "key": "null3",
-              "twoWayKey": "null4",
-              "onDelete": {
-                "$enum": "RelationshipDeleteAction::Restrict"
-              }
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Failed to create relationship: Failed to execute transaction: the transaction was lost before it could commit"
             }
           }
         },
@@ -20324,17 +20464,9 @@
             }
           },
           "expect": {
-            "$document": {
-              "$id": "u0000000000000000166",
-              "$collection": "null1",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$permissions": [],
-              "$tenant": "999",
-              "$sequence": "1",
-              "null2": null,
-              "null3": [],
-              "null6": []
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Attribute not found in schema: null4"
             }
           }
         },
@@ -20355,44 +20487,9 @@
             }
           },
           "expect": {
-            "result": {
-              "$document": {
-                "$sequence": "1",
-                "$id": "u0000000000000000166",
-                "$tenant": "999",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [],
-                "$collection": "null1",
-                "null2": null,
-                "null4": null,
-                "null3": [],
-                "null6": []
-              }
-            },
-            "calls": {
-              "callback": [
-                {
-                  "args": [],
-                  "steps": [
-                    {
-                      "$document": {
-                        "$sequence": "1",
-                        "$id": "u0000000000000000166",
-                        "$tenant": "999",
-                        "$createdAt": "<now>",
-                        "$updatedAt": "<now>",
-                        "$permissions": [],
-                        "$collection": "null1",
-                        "null2": null,
-                        "null4": null,
-                        "null3": [],
-                        "null6": []
-                      }
-                    }
-                  ]
-                }
-              ]
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Attribute not found in schema: null4"
             }
           }
         },
@@ -20449,7 +20546,6 @@
                 "$permissions": [],
                 "$collection": "null2",
                 "null1": null,
-                "null4": null,
                 "null5": [],
                 "null7": []
               }
@@ -20469,7 +20565,6 @@
                         "$permissions": [],
                         "$collection": "null2",
                         "null1": null,
-                        "null4": null,
                         "null5": [],
                         "null7": []
                       }
@@ -20492,16 +20587,9 @@
             }
           },
           "expect": {
-            "$document": {
-              "$id": "u0000000000000000168",
-              "$collection": "null1",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$permissions": [],
-              "$tenant": "999",
-              "$sequence": "2",
-              "null3": [],
-              "null6": []
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Attribute not found in schema: null4"
             }
           }
         },
@@ -20522,44 +20610,9 @@
             }
           },
           "expect": {
-            "result": {
-              "$document": {
-                "$sequence": "2",
-                "$id": "u0000000000000000168",
-                "$tenant": "999",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [],
-                "$collection": "null1",
-                "null2": null,
-                "null4": null,
-                "null3": [],
-                "null6": []
-              }
-            },
-            "calls": {
-              "callback": [
-                {
-                  "args": [],
-                  "steps": [
-                    {
-                      "$document": {
-                        "$sequence": "2",
-                        "$id": "u0000000000000000168",
-                        "$tenant": "999",
-                        "$createdAt": "<now>",
-                        "$updatedAt": "<now>",
-                        "$permissions": [],
-                        "$collection": "null1",
-                        "null2": null,
-                        "null4": null,
-                        "null3": [],
-                        "null6": []
-                      }
-                    }
-                  ]
-                }
-              ]
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Attribute not found in schema: null4"
             }
           }
         },
@@ -20575,17 +20628,9 @@
             }
           },
           "expect": {
-            "$document": {
-              "$id": "u0000000000000000169",
-              "$collection": "null2",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$permissions": [],
-              "$tenant": "999",
-              "$sequence": "2",
-              "null4": null,
-              "null5": [],
-              "null7": []
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Unknown attribute: \"null4\""
             }
           }
         },
@@ -20607,19 +20652,7 @@
           },
           "expect": {
             "result": {
-              "$document": {
-                "$sequence": "2",
-                "$id": "u0000000000000000169",
-                "$tenant": "999",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [],
-                "$collection": "null2",
-                "null1": null,
-                "null4": null,
-                "null5": [],
-                "null7": []
-              }
+              "$document": {}
             },
             "calls": {
               "callback": [
@@ -20627,19 +20660,7 @@
                   "args": [],
                   "steps": [
                     {
-                      "$document": {
-                        "$sequence": "2",
-                        "$id": "u0000000000000000169",
-                        "$tenant": "999",
-                        "$createdAt": "<now>",
-                        "$updatedAt": "<now>",
-                        "$permissions": [],
-                        "$collection": "null2",
-                        "null1": null,
-                        "null4": null,
-                        "null5": [],
-                        "null7": []
-                      }
+                      "$document": {}
                     }
                   ]
                 }
@@ -20659,17 +20680,9 @@
             }
           },
           "expect": {
-            "$document": {
-              "$id": "u0000000000000000170",
-              "$collection": "null1",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$permissions": [],
-              "$tenant": "999",
-              "$sequence": "3",
-              "null3": [],
-              "null4": null,
-              "null6": []
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Attribute not found in schema: null4"
             }
           }
         },
@@ -20690,44 +20703,9 @@
             }
           },
           "expect": {
-            "result": {
-              "$document": {
-                "$sequence": "3",
-                "$id": "u0000000000000000170",
-                "$tenant": "999",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [],
-                "$collection": "null1",
-                "null2": null,
-                "null4": null,
-                "null3": [],
-                "null6": []
-              }
-            },
-            "calls": {
-              "callback": [
-                {
-                  "args": [],
-                  "steps": [
-                    {
-                      "$document": {
-                        "$sequence": "3",
-                        "$id": "u0000000000000000170",
-                        "$tenant": "999",
-                        "$createdAt": "<now>",
-                        "$updatedAt": "<now>",
-                        "$permissions": [],
-                        "$collection": "null1",
-                        "null2": null,
-                        "null4": null,
-                        "null3": [],
-                        "null6": []
-                      }
-                    }
-                  ]
-                }
-              ]
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Attribute not found in schema: null4"
             }
           }
         },
@@ -20750,7 +20728,7 @@
               "$updatedAt": "<now>",
               "$permissions": [],
               "$tenant": "999",
-              "$sequence": "3",
+              "$sequence": "2",
               "null5": [],
               "null7": []
             }
@@ -20775,7 +20753,7 @@
           "expect": {
             "result": {
               "$document": {
-                "$sequence": "3",
+                "$sequence": "2",
                 "$id": "u0000000000000000171",
                 "$tenant": "999",
                 "$createdAt": "<now>",
@@ -20783,7 +20761,6 @@
                 "$permissions": [],
                 "$collection": "null2",
                 "null1": null,
-                "null4": null,
                 "null5": [],
                 "null7": []
               }
@@ -20795,7 +20772,7 @@
                   "steps": [
                     {
                       "$document": {
-                        "$sequence": "3",
+                        "$sequence": "2",
                         "$id": "u0000000000000000171",
                         "$tenant": "999",
                         "$createdAt": "<now>",
@@ -20803,7 +20780,6 @@
                         "$permissions": [],
                         "$collection": "null2",
                         "null1": null,
-                        "null4": null,
                         "null5": [],
                         "null7": []
                       }
@@ -20826,16 +20802,9 @@
             }
           },
           "expect": {
-            "$document": {
-              "$id": "u0000000000000000172",
-              "$collection": "null1",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$permissions": [],
-              "$tenant": "999",
-              "$sequence": "4",
-              "null3": [],
-              "null6": []
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Attribute not found in schema: null4"
             }
           }
         },
@@ -20856,44 +20825,9 @@
             }
           },
           "expect": {
-            "result": {
-              "$document": {
-                "$sequence": "4",
-                "$id": "u0000000000000000172",
-                "$tenant": "999",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [],
-                "$collection": "null1",
-                "null2": null,
-                "null4": null,
-                "null3": [],
-                "null6": []
-              }
-            },
-            "calls": {
-              "callback": [
-                {
-                  "args": [],
-                  "steps": [
-                    {
-                      "$document": {
-                        "$sequence": "4",
-                        "$id": "u0000000000000000172",
-                        "$tenant": "999",
-                        "$createdAt": "<now>",
-                        "$updatedAt": "<now>",
-                        "$permissions": [],
-                        "$collection": "null1",
-                        "null2": null,
-                        "null4": null,
-                        "null3": [],
-                        "null6": []
-                      }
-                    }
-                  ]
-                }
-              ]
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Attribute not found in schema: null4"
             }
           }
         },
@@ -20916,7 +20850,7 @@
               "$updatedAt": "<now>",
               "$permissions": [],
               "$tenant": "999",
-              "$sequence": "4",
+              "$sequence": "3",
               "null5": [],
               "null7": []
             }
@@ -20941,7 +20875,7 @@
           "expect": {
             "result": {
               "$document": {
-                "$sequence": "4",
+                "$sequence": "3",
                 "$id": "u0000000000000000173",
                 "$tenant": "999",
                 "$createdAt": "<now>",
@@ -20949,7 +20883,6 @@
                 "$permissions": [],
                 "$collection": "null2",
                 "null1": null,
-                "null4": null,
                 "null5": [],
                 "null7": []
               }
@@ -20961,7 +20894,7 @@
                   "steps": [
                     {
                       "$document": {
-                        "$sequence": "4",
+                        "$sequence": "3",
                         "$id": "u0000000000000000173",
                         "$tenant": "999",
                         "$createdAt": "<now>",
@@ -20969,7 +20902,6 @@
                         "$permissions": [],
                         "$collection": "null2",
                         "null1": null,
-                        "null4": null,
                         "null5": [],
                         "null7": []
                       }
@@ -20985,7 +20917,12 @@
           "args": {
             "collection": "null1"
           },
-          "expect": null
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Index not found"
+            }
+          }
         },
         {
           "op": "database.delete_collection",

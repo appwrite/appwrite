@@ -1764,9 +1764,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to persist metadata after retries for attribute metadata update 'back': Failed to execute transaction: the transaction was lost before it could commit"
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "parents_u0000000000000000203",
+              "type": {
+                "$enum": "RelationshipType::ManyToMany"
+              },
+              "twoWay": true,
+              "key": "owner",
+              "twoWayKey": "items",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
             }
           }
         },
@@ -1796,8 +1805,8 @@
                 },
                 {
                   "$document": {
-                    "$id": "back",
-                    "key": "back",
+                    "$id": "owner",
+                    "key": "owner",
                     "type": "relationship",
                     "size": 0,
                     "required": false,
@@ -1811,7 +1820,7 @@
                       "relatedCollection": "parents_u0000000000000000203",
                       "relationType": "manyToMany",
                       "twoWay": true,
-                      "twoWayKey": "related",
+                      "twoWayKey": "items",
                       "onDelete": "restrict",
                       "side": "child"
                     }
@@ -1862,8 +1871,8 @@
                 },
                 {
                   "$document": {
-                    "$id": "related",
-                    "key": "related",
+                    "$id": "items",
+                    "key": "items",
                     "type": "relationship",
                     "size": 0,
                     "required": false,
@@ -1877,7 +1886,7 @@
                       "relatedCollection": "children_u0000000000000000204",
                       "relationType": "manyToMany",
                       "twoWay": true,
-                      "twoWayKey": "back",
+                      "twoWayKey": "owner",
                       "onDelete": "restrict",
                       "side": "parent"
                     }
@@ -1928,8 +1937,8 @@
                 },
                 {
                   "$document": {
-                    "$id": "back",
-                    "key": "back",
+                    "$id": "owner",
+                    "key": "owner",
                     "type": "relationship",
                     "size": 0,
                     "required": false,
@@ -1943,7 +1952,7 @@
                       "relatedCollection": "parents_u0000000000000000203",
                       "relationType": "manyToMany",
                       "twoWay": true,
-                      "twoWayKey": "related",
+                      "twoWayKey": "items",
                       "onDelete": "restrict",
                       "side": "child"
                     }
@@ -1994,8 +2003,8 @@
                 },
                 {
                   "$document": {
-                    "$id": "related",
-                    "key": "related",
+                    "$id": "items",
+                    "key": "items",
                     "type": "relationship",
                     "size": 0,
                     "required": false,
@@ -2009,7 +2018,7 @@
                       "relatedCollection": "children_u0000000000000000204",
                       "relationType": "manyToMany",
                       "twoWay": true,
-                      "twoWayKey": "back",
+                      "twoWayKey": "owner",
                       "onDelete": "restrict",
                       "side": "parent"
                     }
@@ -2050,7 +2059,7 @@
               "$updatedAt": "<now>",
               "$permissions": [],
               "$collection": "parents_u0000000000000000203",
-              "related": [
+              "items": [
                 {
                   "$document": {
                     "name": "child",
@@ -2083,7 +2092,7 @@
               "$updatedAt": "<now>",
               "$permissions": [],
               "$collection": "children_u0000000000000000204",
-              "back": [
+              "owner": [
                 {
                   "$document": {
                     "name": "parent",
@@ -3442,29 +3451,9 @@
             }
           },
           "expect": {
-            "$document": {
-              "$id": "p1",
-              "name": "parent",
-              "$collection": "parents_u0000000000000000209",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$permissions": [],
-              "$tenant": "999",
-              "$sequence": "1",
-              "related": [
-                {
-                  "$document": {
-                    "name": "child",
-                    "$id": "c1",
-                    "$sequence": "1",
-                    "$tenant": "999",
-                    "$createdAt": "<now>",
-                    "$updatedAt": "<now>",
-                    "$permissions": [],
-                    "$collection": "children_u0000000000000000210"
-                  }
-                }
-              ]
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Transaction",
+              "message": "Failed to execute transaction: the transaction was lost before it could commit"
             }
           }
         },
@@ -3639,7 +3628,7 @@
             "collection": "parents_u0000000000000000209",
             "id": "p1"
           },
-          "expect": true
+          "expect": false
         },
         {
           "op": "database.get_document",
@@ -3648,7 +3637,17 @@
             "id": "c1"
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "name": "child",
+              "$sequence": "1",
+              "$id": "c1",
+              "$tenant": "999",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "children_u0000000000000000210",
+              "back": []
+            }
           }
         }
       ]

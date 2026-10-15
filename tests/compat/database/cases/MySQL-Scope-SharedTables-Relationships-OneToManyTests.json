@@ -12579,9 +12579,49 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Transaction",
-              "message": "Failed to execute transaction: the transaction was lost before it could commit"
+            "$document": {
+              "$id": "owner1",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "name": "Owner 1",
+              "$collection": "owners",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1",
+              "cats": [
+                {
+                  "$document": {
+                    "name": "Pet 1",
+                    "$id": "cat1",
+                    "$sequence": "1",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")"
+                    ],
+                    "$collection": "cats",
+                    "toys": [
+                      {
+                        "$document": {
+                          "name": "Toy 1",
+                          "$id": "toy1",
+                          "$sequence": "1",
+                          "$tenant": "999",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$permissions": [
+                            "read(\"any\")"
+                          ],
+                          "$collection": "toys"
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
             }
           }
         },
@@ -12592,7 +12632,50 @@
             "id": "owner1"
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "name": "Owner 1",
+              "$sequence": "1",
+              "$id": "owner1",
+              "$tenant": "999",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "owners",
+              "cats": [
+                {
+                  "$document": {
+                    "name": "Pet 1",
+                    "$id": "cat1",
+                    "$sequence": "1",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"any\")"
+                    ],
+                    "$collection": "cats",
+                    "toys": [
+                      {
+                        "$document": {
+                          "name": "Toy 1",
+                          "$id": "toy1",
+                          "$sequence": "1",
+                          "$tenant": "999",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$permissions": [
+                            "read(\"any\")"
+                          ],
+                          "$collection": "toys"
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
           }
         },
         {
@@ -12653,7 +12736,7 @@
                       "$document": {
                         "name": "Owner 2",
                         "$id": "owner2",
-                        "$sequence": "1",
+                        "$sequence": "2",
                         "$tenant": "999",
                         "$createdAt": "<now>",
                         "$updatedAt": "<now>",
@@ -12704,7 +12787,7 @@
                       "$document": {
                         "name": "Owner 2",
                         "$id": "owner2",
-                        "$sequence": "1",
+                        "$sequence": "2",
                         "$tenant": "999",
                         "$createdAt": "<now>",
                         "$updatedAt": "<now>",
@@ -14833,41 +14916,10 @@
             }
           },
           "expect": {
-            "$document": {
-              "$id": "one_u000000000285",
-              "name": "one_u000000000285",
-              "attributes": [
-                {
-                  "$document": {
-                    "$id": "name",
-                    "key": "name",
-                    "type": "string",
-                    "size": 100,
-                    "required": false,
-                    "default": null,
-                    "signed": true,
-                    "array": false,
-                    "format": null,
-                    "formatOptions": [],
-                    "filters": []
-                  }
-                }
-              ],
-              "indexes": [],
-              "documentSecurity": true,
-              "$permissions": [
-                "read(\"any\")",
-                "create(\"any\")",
-                "update(\"any\")",
-                "delete(\"any\")"
-              ],
-              "$collection": "_metadata",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$tenant": "999",
-              "$sequence": "1"
-            },
-            "$class": "Collection"
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Failed to create collection metadata for 'one_u000000000285': Failed to execute transaction: the transaction was lost before it could commit"
+            }
           }
         },
         {

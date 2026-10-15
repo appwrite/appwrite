@@ -101724,8 +101724,8 @@
           },
           "expect": {
             "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"RENAME\""
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
             }
           }
         },
@@ -101764,8 +101764,8 @@
           },
           "expect": {
             "$error": {
-              "class": "Utopia\\Database\\Exception\\Query",
-              "message": "Invalid query: Attribute not found in schema: RENAME"
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
             }
           }
         },
@@ -101785,8 +101785,8 @@
           },
           "expect": {
             "$error": {
-              "class": "Utopia\\Database\\Exception\\Query",
-              "message": "Invalid query: Attribute not found in schema: RENAME"
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
             }
           }
         },

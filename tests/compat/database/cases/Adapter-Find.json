@@ -3707,7 +3707,7 @@
           "expect": {
             "$error": {
               "class": "PDOException",
-              "message": "SQLSTATE[22P02]: Invalid text representation: 7 ERROR:  invalid input syntax for type integer: \"not a number\"\nLINE 1: ...2000001p\".\"ns_f\" AS \"table_main\" WHERE \"year\" IN ('not a num...\n                                                             ^"
+              "message": "SQLSTATE[22P02]: Invalid text representation: 7 ERROR:  invalid input syntax for type integer: \"not a number\"\nLINE 1: ...w000001p\".\"ns_f\" AS \"table_main\" WHERE \"year\" IN ('not a num...\n                                                             ^"
             }
           }
         },

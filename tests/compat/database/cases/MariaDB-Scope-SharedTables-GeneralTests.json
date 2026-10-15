@@ -10038,7 +10038,7 @@
                         "$sequence": "1"
                       }
                     },
-                    "2303",
+                    "7735",
                     {
                       "$error": {
                         "class": "PDOException",

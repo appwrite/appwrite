@@ -1202,10 +1202,10 @@
                 "bindings": {
                   ":_uid": "items"
                 },
-                "durationMs": 0.016927719116210938,
+                "durationMs": "<masked>",
                 "collection": "_metadata",
                 "operation": "document_read",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             },
             {
@@ -1217,13 +1217,22 @@
                   "any",
                   "read"
                 ],
-                "durationMs": 0.05793571472167969,
+                "durationMs": "<masked>",
                 "collection": "items",
                 "operation": "document_count",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/fields/durationMs",
+              "/*/fields/backtrace",
+              "/calls/*/*/steps/*/*/fields/durationMs",
+              "/calls/*/*/steps/*/*/fields/backtrace"
+            ],
+            "reason": "a profiled statement's duration and the PHP stack it ran from are the runtime's own"
+          }
         }
       ]
     },
@@ -2427,10 +2436,10 @@
                 "bindings": {
                   ":_uid": "items"
                 },
-                "durationMs": 0.015974044799804688,
+                "durationMs": "<masked>",
                 "collection": "_metadata",
                 "operation": "document_read",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             },
             {
@@ -2442,13 +2451,22 @@
                   "any",
                   "read"
                 ],
-                "durationMs": 0.06508827209472656,
+                "durationMs": "<masked>",
                 "collection": "items",
                 "operation": "document_sum",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/fields/durationMs",
+              "/*/fields/backtrace",
+              "/calls/*/*/steps/*/*/fields/durationMs",
+              "/calls/*/*/steps/*/*/fields/backtrace"
+            ],
+            "reason": "a profiled statement's duration and the PHP stack it ran from are the runtime's own"
+          }
         }
       ]
     },
@@ -3718,10 +3736,10 @@
                 "bindings": {
                   ":_uid": "items"
                 },
-                "durationMs": 0.015974044799804688,
+                "durationMs": "<masked>",
                 "collection": "_metadata",
                 "operation": "document_read",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             },
             {
@@ -3734,13 +3752,22 @@
                   "any",
                   "read"
                 ],
-                "durationMs": 0.06318092346191406,
+                "durationMs": "<masked>",
                 "collection": "items",
                 "operation": "document_count",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/fields/durationMs",
+              "/*/fields/backtrace",
+              "/calls/*/*/steps/*/*/fields/durationMs",
+              "/calls/*/*/steps/*/*/fields/backtrace"
+            ],
+            "reason": "a profiled statement's duration and the PHP stack it ran from are the runtime's own"
+          }
         }
       ]
     },
@@ -4993,10 +5020,10 @@
                           "bindings": {
                             ":_uid": "items"
                           },
-                          "durationMs": 0.01811981201171875,
+                          "durationMs": "<masked>",
                           "collection": "_metadata",
                           "operation": "document_read",
-                          "backtrace": null
+                          "backtrace": "<masked>"
                         }
                       },
                       {
@@ -5006,10 +5033,10 @@
                           "bindings": [
                             "a"
                           ],
-                          "durationMs": 0.008821487426757812,
+                          "durationMs": "<masked>",
                           "collection": "items",
                           "operation": "document_count",
-                          "backtrace": null
+                          "backtrace": "<masked>"
                         }
                       }
                     ],
@@ -5018,6 +5045,15 @@
                 }
               ]
             }
+          },
+          "mask": {
+            "paths": [
+              "/*/fields/durationMs",
+              "/*/fields/backtrace",
+              "/calls/*/*/steps/*/*/fields/durationMs",
+              "/calls/*/*/steps/*/*/fields/backtrace"
+            ],
+            "reason": "a profiled statement's duration and the PHP stack it ran from are the runtime's own"
           }
         }
       ]
@@ -6272,10 +6308,10 @@
                           "bindings": {
                             ":_uid": "items"
                           },
-                          "durationMs": 0.016927719116210938,
+                          "durationMs": "<masked>",
                           "collection": "_metadata",
                           "operation": "document_read",
-                          "backtrace": null
+                          "backtrace": "<masked>"
                         }
                       },
                       {
@@ -6286,10 +6322,10 @@
                             "a",
                             2
                           ],
-                          "durationMs": 0.017881393432617188,
+                          "durationMs": "<masked>",
                           "collection": "items",
                           "operation": "document_count",
-                          "backtrace": null
+                          "backtrace": "<masked>"
                         }
                       }
                     ],
@@ -6298,6 +6334,15 @@
                 }
               ]
             }
+          },
+          "mask": {
+            "paths": [
+              "/*/fields/durationMs",
+              "/*/fields/backtrace",
+              "/calls/*/*/steps/*/*/fields/durationMs",
+              "/calls/*/*/steps/*/*/fields/backtrace"
+            ],
+            "reason": "a profiled statement's duration and the PHP stack it ran from are the runtime's own"
           }
         }
       ]
@@ -7553,10 +7598,10 @@
                           "bindings": {
                             ":_uid": "items"
                           },
-                          "durationMs": 0.015020370483398438,
+                          "durationMs": "<masked>",
                           "collection": "_metadata",
                           "operation": "document_read",
-                          "backtrace": null
+                          "backtrace": "<masked>"
                         }
                       },
                       {
@@ -7567,10 +7612,10 @@
                             "a",
                             2
                           ],
-                          "durationMs": 0.016927719116210938,
+                          "durationMs": "<masked>",
                           "collection": "items",
                           "operation": "document_sum",
-                          "backtrace": null
+                          "backtrace": "<masked>"
                         }
                       }
                     ],
@@ -7579,6 +7624,15 @@
                 }
               ]
             }
+          },
+          "mask": {
+            "paths": [
+              "/*/fields/durationMs",
+              "/*/fields/backtrace",
+              "/calls/*/*/steps/*/*/fields/durationMs",
+              "/calls/*/*/steps/*/*/fields/backtrace"
+            ],
+            "reason": "a profiled statement's duration and the PHP stack it ran from are the runtime's own"
           }
         }
       ]
@@ -8820,10 +8874,10 @@
                 "bindings": {
                   ":_uid": "items"
                 },
-                "durationMs": 0.015020370483398438,
+                "durationMs": "<masked>",
                 "collection": "_metadata",
                 "operation": "document_read",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             },
             {
@@ -8833,10 +8887,10 @@
                 "bindings": {
                   ":_uid": "labels"
                 },
-                "durationMs": 0.0040531158447265625,
+                "durationMs": "<masked>",
                 "collection": "_metadata",
                 "operation": "document_read",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             },
             {
@@ -8849,13 +8903,22 @@
                   "any",
                   "read"
                 ],
-                "durationMs": 0.11396408081054688,
+                "durationMs": "<masked>",
                 "collection": "items",
                 "operation": "document_count",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/fields/durationMs",
+              "/*/fields/backtrace",
+              "/calls/*/*/steps/*/*/fields/durationMs",
+              "/calls/*/*/steps/*/*/fields/backtrace"
+            ],
+            "reason": "a profiled statement's duration and the PHP stack it ran from are the runtime's own"
+          }
         },
         {
           "op": "object.call",
@@ -8947,10 +9010,10 @@
                 "bindings": {
                   ":_uid": "items"
                 },
-                "durationMs": 0.016927719116210938,
+                "durationMs": "<masked>",
                 "collection": "_metadata",
                 "operation": "document_read",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             },
             {
@@ -8960,10 +9023,10 @@
                 "bindings": {
                   ":_uid": "labels"
                 },
-                "durationMs": 0.012874603271484375,
+                "durationMs": "<masked>",
                 "collection": "_metadata",
                 "operation": "document_read",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             },
             {
@@ -8976,13 +9039,22 @@
                   "any",
                   "read"
                 ],
-                "durationMs": 0.11706352233886719,
+                "durationMs": "<masked>",
                 "collection": "items",
                 "operation": "document_sum",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/fields/durationMs",
+              "/*/fields/backtrace",
+              "/calls/*/*/steps/*/*/fields/durationMs",
+              "/calls/*/*/steps/*/*/fields/backtrace"
+            ],
+            "reason": "a profiled statement's duration and the PHP stack it ran from are the runtime's own"
+          }
         }
       ]
     },

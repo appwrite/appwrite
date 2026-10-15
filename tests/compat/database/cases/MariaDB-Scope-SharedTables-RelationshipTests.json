@@ -21430,18 +21430,9 @@
             }
           },
           "expect": {
-            "$value": "Relationship",
-            "fields": {
-              "relatedCollection": "testUpdateDocumentsRelationships2",
-              "type": {
-                "$enum": "RelationshipType::OneToOne"
-              },
-              "twoWay": true,
-              "key": "testUpdateDocumentsRelationships2",
-              "twoWayKey": "testUpdateDocumentsRelationships1",
-              "onDelete": {
-                "$enum": "RelationshipDeleteAction::Restrict"
-              }
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Failed to create relationship: Failed to execute transaction: the transaction was lost before it could commit"
             }
           }
         },
@@ -21482,27 +21473,9 @@
             }
           },
           "expect": {
-            "$document": {
-              "$id": "doc1",
-              "string": "text📝",
-              "$collection": "testUpdateDocumentsRelationships2",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$permissions": [],
-              "$tenant": "999",
-              "$sequence": "1",
-              "testUpdateDocumentsRelationships1": {
-                "$document": {
-                  "string": "text📝",
-                  "$id": "doc1",
-                  "$sequence": "1",
-                  "$tenant": "999",
-                  "$createdAt": "<now>",
-                  "$updatedAt": "<now>",
-                  "$permissions": [],
-                  "$collection": "testUpdateDocumentsRelationships1"
-                }
-              }
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Unknown attribute: \"testUpdateDocumentsRelationships1\""
             }
           }
         },
@@ -21513,28 +21486,7 @@
             "id": "doc1"
           },
           "expect": {
-            "$document": {
-              "string": "text📝",
-              "$sequence": "1",
-              "$id": "doc1",
-              "$tenant": "999",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$permissions": [],
-              "$collection": "testUpdateDocumentsRelationships2",
-              "testUpdateDocumentsRelationships1": {
-                "$document": {
-                  "string": "text📝",
-                  "$id": "doc1",
-                  "$sequence": "1",
-                  "$tenant": "999",
-                  "$createdAt": "<now>",
-                  "$updatedAt": "<now>",
-                  "$permissions": [],
-                  "$collection": "testUpdateDocumentsRelationships1"
-                }
-              }
-            }
+            "$document": {}
           }
         },
         {
@@ -21563,18 +21515,6 @@
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$permissions": [],
-              "testUpdateDocumentsRelationships2": {
-                "$document": {
-                  "string": "text📝",
-                  "$id": "doc1",
-                  "$sequence": "1",
-                  "$tenant": "999",
-                  "$createdAt": "<now>",
-                  "$updatedAt": "<now>",
-                  "$permissions": [],
-                  "$collection": "testUpdateDocumentsRelationships2"
-                }
-              },
               "$collection": "testUpdateDocumentsRelationships1"
             }
           }
@@ -21586,28 +21526,7 @@
             "id": "doc1"
           },
           "expect": {
-            "$document": {
-              "string": "text📝",
-              "$sequence": "1",
-              "$id": "doc1",
-              "$tenant": "999",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$permissions": [],
-              "$collection": "testUpdateDocumentsRelationships2",
-              "testUpdateDocumentsRelationships1": {
-                "$document": {
-                  "string": "text📝 updated",
-                  "$id": "doc1",
-                  "$sequence": "1",
-                  "$tenant": "999",
-                  "$createdAt": "<now>",
-                  "$updatedAt": "<now>",
-                  "$permissions": [],
-                  "$collection": "testUpdateDocumentsRelationships1"
-                }
-              }
-            }
+            "$document": {}
           }
         },
         {
@@ -21616,7 +21535,12 @@
             "collection": "testUpdateDocumentsRelationships1",
             "key": "testUpdateDocumentsRelationships2"
           },
-          "expect": null
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Relationship not found"
+            }
+          }
         },
         {
           "op": "database.create_relationship",
@@ -21700,7 +21624,7 @@
               "$updatedAt": "<now>",
               "$permissions": [],
               "$tenant": "999",
-              "$sequence": "2",
+              "$sequence": "1",
               "testUpdateDocumentsRelationships1": {
                 "$document": {
                   "string": "text📝",
@@ -21762,7 +21686,7 @@
               "$updatedAt": "<now>",
               "$permissions": [],
               "$tenant": "999",
-              "$sequence": "3",
+              "$sequence": "2",
               "testUpdateDocumentsRelationships1": {
                 "$document": {
                   "string": "text📝",
@@ -21824,7 +21748,7 @@
               "$updatedAt": "<now>",
               "$permissions": [],
               "$tenant": "999",
-              "$sequence": "4",
+              "$sequence": "3",
               "testUpdateDocumentsRelationships1": {
                 "$document": {
                   "string": "text📝",
@@ -21886,7 +21810,7 @@
               "$updatedAt": "<now>",
               "$permissions": [],
               "$tenant": "999",
-              "$sequence": "5",
+              "$sequence": "4",
               "testUpdateDocumentsRelationships1": {
                 "$document": {
                   "string": "text📝",
@@ -21948,7 +21872,7 @@
               "$updatedAt": "<now>",
               "$permissions": [],
               "$tenant": "999",
-              "$sequence": "6",
+              "$sequence": "5",
               "testUpdateDocumentsRelationships1": {
                 "$document": {
                   "string": "text📝",
@@ -22010,7 +21934,7 @@
               "$updatedAt": "<now>",
               "$permissions": [],
               "$tenant": "999",
-              "$sequence": "7",
+              "$sequence": "6",
               "testUpdateDocumentsRelationships1": {
                 "$document": {
                   "string": "text📝",
@@ -22072,7 +21996,7 @@
               "$updatedAt": "<now>",
               "$permissions": [],
               "$tenant": "999",
-              "$sequence": "8",
+              "$sequence": "7",
               "testUpdateDocumentsRelationships1": {
                 "$document": {
                   "string": "text📝",
@@ -22134,7 +22058,7 @@
               "$updatedAt": "<now>",
               "$permissions": [],
               "$tenant": "999",
-              "$sequence": "9",
+              "$sequence": "8",
               "testUpdateDocumentsRelationships1": {
                 "$document": {
                   "string": "text📝",
@@ -22196,7 +22120,7 @@
               "$updatedAt": "<now>",
               "$permissions": [],
               "$tenant": "999",
-              "$sequence": "10",
+              "$sequence": "9",
               "testUpdateDocumentsRelationships1": {
                 "$document": {
                   "string": "text📝",
@@ -22222,7 +22146,7 @@
               }
             }
           },
-          "expect": 10
+          "expect": 9
         },
         {
           "op": "database.update_documents",
@@ -22234,7 +22158,7 @@
               }
             }
           },
-          "expect": 10
+          "expect": 9
         },
         {
           "op": "database.find",
@@ -22245,7 +22169,7 @@
             {
               "$document": {
                 "string": "text📝",
-                "$id": "doc1",
+                "$id": "doc2",
                 "$sequence": "1",
                 "$tenant": "999",
                 "$createdAt": "<now>",
@@ -22269,7 +22193,7 @@
             {
               "$document": {
                 "string": "text📝",
-                "$id": "doc2",
+                "$id": "doc3",
                 "$sequence": "2",
                 "$tenant": "999",
                 "$createdAt": "<now>",
@@ -22293,7 +22217,7 @@
             {
               "$document": {
                 "string": "text📝",
-                "$id": "doc3",
+                "$id": "doc4",
                 "$sequence": "3",
                 "$tenant": "999",
                 "$createdAt": "<now>",
@@ -22317,7 +22241,7 @@
             {
               "$document": {
                 "string": "text📝",
-                "$id": "doc4",
+                "$id": "doc5",
                 "$sequence": "4",
                 "$tenant": "999",
                 "$createdAt": "<now>",
@@ -22341,7 +22265,7 @@
             {
               "$document": {
                 "string": "text📝",
-                "$id": "doc5",
+                "$id": "doc6",
                 "$sequence": "5",
                 "$tenant": "999",
                 "$createdAt": "<now>",
@@ -22365,7 +22289,7 @@
             {
               "$document": {
                 "string": "text📝",
-                "$id": "doc6",
+                "$id": "doc7",
                 "$sequence": "6",
                 "$tenant": "999",
                 "$createdAt": "<now>",
@@ -22389,7 +22313,7 @@
             {
               "$document": {
                 "string": "text📝",
-                "$id": "doc7",
+                "$id": "doc8",
                 "$sequence": "7",
                 "$tenant": "999",
                 "$createdAt": "<now>",
@@ -22413,7 +22337,7 @@
             {
               "$document": {
                 "string": "text📝",
-                "$id": "doc8",
+                "$id": "doc9",
                 "$sequence": "8",
                 "$tenant": "999",
                 "$createdAt": "<now>",
@@ -22437,32 +22361,8 @@
             {
               "$document": {
                 "string": "text📝",
-                "$id": "doc9",
-                "$sequence": "9",
-                "$tenant": "999",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [],
-                "testUpdateDocumentsRelationships1": {
-                  "$document": {
-                    "string": "text📝 updated",
-                    "$id": "doc1",
-                    "$sequence": "1",
-                    "$tenant": "999",
-                    "$createdAt": "<now>",
-                    "$updatedAt": "<now>",
-                    "$permissions": [],
-                    "$collection": "testUpdateDocumentsRelationships1"
-                  }
-                },
-                "$collection": "testUpdateDocumentsRelationships2"
-              }
-            },
-            {
-              "$document": {
-                "string": "text📝",
                 "$id": "doc10",
-                "$sequence": "10",
+                "$sequence": "9",
                 "$tenant": "999",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",

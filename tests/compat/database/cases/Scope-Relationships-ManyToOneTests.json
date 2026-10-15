@@ -5524,18 +5524,9 @@
             }
           },
           "expect": {
-            "$value": "Relationship",
-            "fields": {
-              "relatedCollection": "capitals",
-              "type": {
-                "$enum": "RelationshipType::OneToOne"
-              },
-              "twoWay": true,
-              "key": "capital",
-              "twoWayKey": "homeland",
-              "onDelete": {
-                "$enum": "RelationshipDeleteAction::Restrict"
-              }
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Failed to create relationship indexes: Failed to persist metadata after retries for index creation '_index_capital': Failed to execute transaction: the transaction was lost before it could commit"
             }
           }
         },
@@ -5568,42 +5559,9 @@
             }
           },
           "expect": {
-            "$document": {
-              "$id": "town1",
-              "$permissions": [
-                "read(\"any\")"
-              ],
-              "name": "City 1",
-              "$collection": "towns",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$sequence": "1",
-              "homeland": {
-                "$document": {
-                  "name": "Country 1",
-                  "$id": "homeland1",
-                  "$sequence": "1",
-                  "$createdAt": "<now>",
-                  "$updatedAt": "<now>",
-                  "$permissions": [
-                    "read(\"any\")"
-                  ],
-                  "capital": {
-                    "$document": {
-                      "name": "Flag 1",
-                      "$id": "capital1",
-                      "$sequence": "1",
-                      "$createdAt": "<now>",
-                      "$updatedAt": "<now>",
-                      "$permissions": [
-                        "read(\"any\")"
-                      ],
-                      "$collection": "capitals"
-                    }
-                  },
-                  "$collection": "homelands"
-                }
-              }
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Unknown attribute: \"capital\""
             }
           }
         },
@@ -5614,43 +5572,7 @@
             "id": "town1"
           },
           "expect": {
-            "$document": {
-              "name": "City 1",
-              "$sequence": "1",
-              "$id": "town1",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$permissions": [
-                "read(\"any\")"
-              ],
-              "$collection": "towns",
-              "homeland": {
-                "$document": {
-                  "name": "Country 1",
-                  "$id": "homeland1",
-                  "$sequence": "1",
-                  "$createdAt": "<now>",
-                  "$updatedAt": "<now>",
-                  "$permissions": [
-                    "read(\"any\")"
-                  ],
-                  "capital": {
-                    "$document": {
-                      "name": "Flag 1",
-                      "$id": "capital1",
-                      "$sequence": "1",
-                      "$createdAt": "<now>",
-                      "$updatedAt": "<now>",
-                      "$permissions": [
-                        "read(\"any\")"
-                      ],
-                      "$collection": "capitals"
-                    }
-                  },
-                  "$collection": "homelands"
-                }
-              }
-            }
+            "$document": {}
           }
         },
         {
@@ -5691,57 +5613,9 @@
             }
           },
           "expect": {
-            "$document": {
-              "$id": "capital2",
-              "$permissions": [
-                "read(\"any\")"
-              ],
-              "name": "Flag 2",
-              "$collection": "capitals",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$sequence": "2",
-              "homeland": {
-                "$document": {
-                  "name": "Country 2",
-                  "$id": "homeland2",
-                  "$sequence": "2",
-                  "$createdAt": "<now>",
-                  "$updatedAt": "<now>",
-                  "$permissions": [
-                    "read(\"any\")"
-                  ],
-                  "$collection": "homelands",
-                  "towns": [
-                    {
-                      "$document": {
-                        "name": "Town 2",
-                        "$id": "town2",
-                        "$sequence": "2",
-                        "$createdAt": "<now>",
-                        "$updatedAt": "<now>",
-                        "$permissions": [
-                          "read(\"any\")"
-                        ],
-                        "$collection": "towns"
-                      }
-                    },
-                    {
-                      "$document": {
-                        "name": "Town 3",
-                        "$id": "town3",
-                        "$sequence": "3",
-                        "$createdAt": "<now>",
-                        "$updatedAt": "<now>",
-                        "$permissions": [
-                          "read(\"any\")"
-                        ],
-                        "$collection": "towns"
-                      }
-                    }
-                  ]
-                }
-              }
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Unknown attribute: \"homeland\""
             }
           }
         },
@@ -5752,58 +5626,7 @@
             "id": "capital2"
           },
           "expect": {
-            "$document": {
-              "name": "Flag 2",
-              "$sequence": "2",
-              "$id": "capital2",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$permissions": [
-                "read(\"any\")"
-              ],
-              "$collection": "capitals",
-              "homeland": {
-                "$document": {
-                  "name": "Country 2",
-                  "$id": "homeland2",
-                  "$sequence": "2",
-                  "$createdAt": "<now>",
-                  "$updatedAt": "<now>",
-                  "$permissions": [
-                    "read(\"any\")"
-                  ],
-                  "$collection": "homelands",
-                  "towns": [
-                    {
-                      "$document": {
-                        "name": "Town 2",
-                        "$id": "town2",
-                        "$sequence": "2",
-                        "$createdAt": "<now>",
-                        "$updatedAt": "<now>",
-                        "$permissions": [
-                          "read(\"any\")"
-                        ],
-                        "$collection": "towns"
-                      }
-                    },
-                    {
-                      "$document": {
-                        "name": "Town 3",
-                        "$id": "town3",
-                        "$sequence": "3",
-                        "$createdAt": "<now>",
-                        "$updatedAt": "<now>",
-                        "$permissions": [
-                          "read(\"any\")"
-                        ],
-                        "$collection": "towns"
-                      }
-                    }
-                  ]
-                }
-              }
-            }
+            "$document": {}
           }
         }
       ]

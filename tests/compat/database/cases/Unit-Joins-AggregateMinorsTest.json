@@ -3013,10 +3013,10 @@
                 "bindings": {
                   ":_uid": "orders"
                 },
-                "durationMs": 0.03314018249511719,
+                "durationMs": "<masked>",
                 "collection": "_metadata",
                 "operation": "document_read",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             },
             {
@@ -3026,10 +3026,10 @@
                 "bindings": {
                   ":_uid": "items"
                 },
-                "durationMs": 0.0050067901611328125,
+                "durationMs": "<masked>",
                 "collection": "_metadata",
                 "operation": "document_read",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             },
             {
@@ -3037,13 +3037,22 @@
               "fields": {
                 "query": "SELECT SUM(`sum_attr`) AS `sum` FROM (SELECT `it`.`price` AS `sum_attr` FROM `aggregate_minors_u000000000068_orders` AS `table_main` JOIN `aggregate_minors_u000000000068_items` AS `it` ON `table_main`.`item` = `it`.`code`) AS `table_count`",
                 "bindings": [],
-                "durationMs": 0.06914138793945312,
+                "durationMs": "<masked>",
                 "collection": "orders",
                 "operation": "document_sum",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/fields/durationMs",
+              "/*/fields/backtrace",
+              "/calls/*/*/steps/*/*/fields/durationMs",
+              "/calls/*/*/steps/*/*/fields/backtrace"
+            ],
+            "reason": "a profiled statement's duration and the PHP stack it ran from are the runtime's own"
+          }
         },
         {
           "op": "object.call",
@@ -3195,10 +3204,10 @@
                 "bindings": {
                   ":_uid": "orders"
                 },
-                "durationMs": 0.015974044799804688,
+                "durationMs": "<masked>",
                 "collection": "_metadata",
                 "operation": "document_read",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             },
             {
@@ -3208,10 +3217,10 @@
                 "bindings": {
                   ":_uid": "items"
                 },
-                "durationMs": 0.003814697265625,
+                "durationMs": "<masked>",
                 "collection": "_metadata",
                 "operation": "document_read",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             },
             {
@@ -3219,13 +3228,22 @@
               "fields": {
                 "query": "SELECT SUM(`sum_attr`) AS `sum` FROM (SELECT `it`.`price` AS `sum_attr` FROM `aggregate_minors_u000000000068_orders` AS `table_main` JOIN `aggregate_minors_u000000000068_items` AS `it` ON `table_main`.`item` = `it`.`code`) AS `table_count`",
                 "bindings": [],
-                "durationMs": 0.06103515625,
+                "durationMs": "<masked>",
                 "collection": "orders",
                 "operation": "document_sum",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/fields/durationMs",
+              "/*/fields/backtrace",
+              "/calls/*/*/steps/*/*/fields/durationMs",
+              "/calls/*/*/steps/*/*/fields/backtrace"
+            ],
+            "reason": "a profiled statement's duration and the PHP stack it ran from are the runtime's own"
+          }
         }
       ]
     },

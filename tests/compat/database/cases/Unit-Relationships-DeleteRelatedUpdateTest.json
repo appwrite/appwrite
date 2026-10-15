@@ -1386,10 +1386,10 @@
                 "bindings": {
                   ":_uid": "parent"
                 },
-                "durationMs": 0.017881393432617188,
+                "durationMs": "<masked>",
                 "collection": "_metadata",
                 "operation": "document_read",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             },
             {
@@ -1399,10 +1399,10 @@
                 "bindings": {
                   ":_uid": "parent1"
                 },
-                "durationMs": 0.0059604644775390625,
+                "durationMs": "<masked>",
                 "collection": "parent",
                 "operation": "document_read",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             },
             {
@@ -1412,10 +1412,10 @@
                 "bindings": {
                   ":_uid": "child"
                 },
-                "durationMs": 0.003814697265625,
+                "durationMs": "<masked>",
                 "collection": "_metadata",
                 "operation": "document_read",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             },
             {
@@ -1427,10 +1427,10 @@
                   9223372036854775807,
                   0
                 ],
-                "durationMs": 0.016927719116210938,
+                "durationMs": "<masked>",
                 "collection": "child",
                 "operation": "document_find",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             },
             {
@@ -1440,10 +1440,10 @@
                 "bindings": {
                   ":_uid": "owner"
                 },
-                "durationMs": 0.0059604644775390625,
+                "durationMs": "<masked>",
                 "collection": "_metadata",
                 "operation": "document_read",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             },
             {
@@ -1455,10 +1455,10 @@
                   9223372036854775807,
                   0
                 ],
-                "durationMs": 0.012159347534179688,
+                "durationMs": "<masked>",
                 "collection": "owner",
                 "operation": "document_find",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             },
             {
@@ -1470,10 +1470,10 @@
                   9223372036854775807,
                   0
                 ],
-                "durationMs": 0.014066696166992188,
+                "durationMs": "<masked>",
                 "collection": "child",
                 "operation": "document_find",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             },
             {
@@ -1483,10 +1483,10 @@
                 "bindings": {
                   ":_uid": "child1"
                 },
-                "durationMs": 0.00286102294921875,
+                "durationMs": "<masked>",
                 "collection": "child",
                 "operation": "document_read",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             },
             {
@@ -1496,10 +1496,10 @@
                 "bindings": {
                   ":_uid": "parent"
                 },
-                "durationMs": 0.00286102294921875,
+                "durationMs": "<masked>",
                 "collection": "_metadata",
                 "operation": "document_read",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             },
             {
@@ -1511,10 +1511,10 @@
                   9223372036854775807,
                   0
                 ],
-                "durationMs": 0.009059906005859375,
+                "durationMs": "<masked>",
                 "collection": "parent",
                 "operation": "document_find",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             },
             {
@@ -1526,10 +1526,10 @@
                   9223372036854775807,
                   0
                 ],
-                "durationMs": 0.017881393432617188,
+                "durationMs": "<masked>",
                 "collection": "owner",
                 "operation": "document_find",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             },
             {
@@ -1539,10 +1539,10 @@
                 "bindings": [
                   "child1"
                 ],
-                "durationMs": 0.0438690185546875,
+                "durationMs": "<masked>",
                 "collection": "",
                 "operation": "document_delete",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             },
             {
@@ -1552,10 +1552,10 @@
                 "bindings": [
                   "child1"
                 ],
-                "durationMs": 0.016927719116210938,
+                "durationMs": "<masked>",
                 "collection": "",
                 "operation": "permissions_delete",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             },
             {
@@ -1565,10 +1565,10 @@
                 "bindings": [
                   "parent1"
                 ],
-                "durationMs": 0.02002716064453125,
+                "durationMs": "<masked>",
                 "collection": "",
                 "operation": "document_delete",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             },
             {
@@ -1578,13 +1578,22 @@
                 "bindings": [
                   "parent1"
                 ],
-                "durationMs": 0.010013580322265625,
+                "durationMs": "<masked>",
                 "collection": "",
                 "operation": "permissions_delete",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/fields/durationMs",
+              "/*/fields/backtrace",
+              "/calls/*/*/steps/*/*/fields/durationMs",
+              "/calls/*/*/steps/*/*/fields/backtrace"
+            ],
+            "reason": "a profiled statement's duration and the PHP stack it ran from are the runtime's own"
+          }
         },
         {
           "op": "object.new",
@@ -3083,10 +3092,10 @@
                 "bindings": {
                   ":_uid": "parent"
                 },
-                "durationMs": 0.0820159912109375,
+                "durationMs": "<masked>",
                 "collection": "_metadata",
                 "operation": "document_read",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             },
             {
@@ -3096,10 +3105,10 @@
                 "bindings": {
                   ":_uid": "parent1"
                 },
-                "durationMs": 0.007152557373046875,
+                "durationMs": "<masked>",
                 "collection": "parent",
                 "operation": "document_read",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             },
             {
@@ -3109,10 +3118,10 @@
                 "bindings": {
                   ":_uid": "child"
                 },
-                "durationMs": 0.0040531158447265625,
+                "durationMs": "<masked>",
                 "collection": "_metadata",
                 "operation": "document_read",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             },
             {
@@ -3124,10 +3133,10 @@
                   9223372036854775807,
                   0
                 ],
-                "durationMs": 0.011920928955078125,
+                "durationMs": "<masked>",
                 "collection": "child",
                 "operation": "document_find",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             },
             {
@@ -3137,10 +3146,10 @@
                 "bindings": {
                   ":_uid": "owner"
                 },
-                "durationMs": 0.0030994415283203125,
+                "durationMs": "<masked>",
                 "collection": "_metadata",
                 "operation": "document_read",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             },
             {
@@ -3152,10 +3161,10 @@
                   9223372036854775807,
                   0
                 ],
-                "durationMs": 0.009059906005859375,
+                "durationMs": "<masked>",
                 "collection": "owner",
                 "operation": "document_find",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             },
             {
@@ -3167,10 +3176,10 @@
                   9223372036854775807,
                   0
                 ],
-                "durationMs": 0.008821487426757812,
+                "durationMs": "<masked>",
                 "collection": "child",
                 "operation": "document_find",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             },
             {
@@ -3180,10 +3189,10 @@
                 "bindings": {
                   ":_uid": "child1"
                 },
-                "durationMs": 0.0021457672119140625,
+                "durationMs": "<masked>",
                 "collection": "child",
                 "operation": "document_read",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             },
             {
@@ -3193,10 +3202,10 @@
                 "bindings": {
                   ":_uid": "parent"
                 },
-                "durationMs": 0.0030994415283203125,
+                "durationMs": "<masked>",
                 "collection": "_metadata",
                 "operation": "document_read",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             },
             {
@@ -3208,10 +3217,10 @@
                   9223372036854775807,
                   0
                 ],
-                "durationMs": 0.0069141387939453125,
+                "durationMs": "<masked>",
                 "collection": "parent",
                 "operation": "document_find",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             },
             {
@@ -3223,10 +3232,10 @@
                   9223372036854775807,
                   0
                 ],
-                "durationMs": 0.0069141387939453125,
+                "durationMs": "<masked>",
                 "collection": "owner",
                 "operation": "document_find",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             },
             {
@@ -3236,10 +3245,10 @@
                 "bindings": [
                   "child1"
                 ],
-                "durationMs": 0.04601478576660156,
+                "durationMs": "<masked>",
                 "collection": "",
                 "operation": "document_delete",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             },
             {
@@ -3249,10 +3258,10 @@
                 "bindings": [
                   "child1"
                 ],
-                "durationMs": 0.01811981201171875,
+                "durationMs": "<masked>",
                 "collection": "",
                 "operation": "permissions_delete",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             },
             {
@@ -3262,10 +3271,10 @@
                 "bindings": [
                   "parent1"
                 ],
-                "durationMs": 0.019073486328125,
+                "durationMs": "<masked>",
                 "collection": "",
                 "operation": "document_delete",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             },
             {
@@ -3275,13 +3284,22 @@
                 "bindings": [
                   "parent1"
                 ],
-                "durationMs": 0.010013580322265625,
+                "durationMs": "<masked>",
                 "collection": "",
                 "operation": "permissions_delete",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/fields/durationMs",
+              "/*/fields/backtrace",
+              "/calls/*/*/steps/*/*/fields/durationMs",
+              "/calls/*/*/steps/*/*/fields/backtrace"
+            ],
+            "reason": "a profiled statement's duration and the PHP stack it ran from are the runtime's own"
+          }
         },
         {
           "op": "object.new",
@@ -4742,10 +4760,10 @@
                 "bindings": {
                   ":_uid": "parent"
                 },
-                "durationMs": 0.015020370483398438,
+                "durationMs": "<masked>",
                 "collection": "_metadata",
                 "operation": "document_read",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             },
             {
@@ -4755,10 +4773,10 @@
                 "bindings": {
                   ":_uid": "parent1"
                 },
-                "durationMs": 0.0050067901611328125,
+                "durationMs": "<masked>",
                 "collection": "parent",
                 "operation": "document_read",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             },
             {
@@ -4768,10 +4786,10 @@
                 "bindings": {
                   ":_uid": "child"
                 },
-                "durationMs": 0.0030994415283203125,
+                "durationMs": "<masked>",
                 "collection": "_metadata",
                 "operation": "document_read",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             },
             {
@@ -4783,10 +4801,10 @@
                   9223372036854775807,
                   0
                 ],
-                "durationMs": 0.015020370483398438,
+                "durationMs": "<masked>",
                 "collection": "child",
                 "operation": "document_find",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             },
             {
@@ -4796,10 +4814,10 @@
                 "bindings": {
                   ":_uid": "owner"
                 },
-                "durationMs": 0.0059604644775390625,
+                "durationMs": "<masked>",
                 "collection": "_metadata",
                 "operation": "document_read",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             },
             {
@@ -4811,10 +4829,10 @@
                   9223372036854775807,
                   0
                 ],
-                "durationMs": 0.011920928955078125,
+                "durationMs": "<masked>",
                 "collection": "owner",
                 "operation": "document_find",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             },
             {
@@ -4826,10 +4844,10 @@
                   9223372036854775807,
                   0
                 ],
-                "durationMs": 0.010967254638671875,
+                "durationMs": "<masked>",
                 "collection": "child",
                 "operation": "document_find",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             },
             {
@@ -4839,10 +4857,10 @@
                 "bindings": {
                   ":_uid": "child1"
                 },
-                "durationMs": 0.00286102294921875,
+                "durationMs": "<masked>",
                 "collection": "child",
                 "operation": "document_read",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             },
             {
@@ -4852,10 +4870,10 @@
                 "bindings": {
                   ":_uid": "parent"
                 },
-                "durationMs": 0.0030994415283203125,
+                "durationMs": "<masked>",
                 "collection": "_metadata",
                 "operation": "document_read",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             },
             {
@@ -4867,10 +4885,10 @@
                   9223372036854775807,
                   0
                 ],
-                "durationMs": 0.008106231689453125,
+                "durationMs": "<masked>",
                 "collection": "parent",
                 "operation": "document_find",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             },
             {
@@ -4882,10 +4900,10 @@
                   9223372036854775807,
                   0
                 ],
-                "durationMs": 0.0069141387939453125,
+                "durationMs": "<masked>",
                 "collection": "owner",
                 "operation": "document_find",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             },
             {
@@ -4895,10 +4913,10 @@
                 "bindings": [
                   "child1"
                 ],
-                "durationMs": 0.048160552978515625,
+                "durationMs": "<masked>",
                 "collection": "",
                 "operation": "document_delete",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             },
             {
@@ -4908,10 +4926,10 @@
                 "bindings": [
                   "child1"
                 ],
-                "durationMs": 0.01811981201171875,
+                "durationMs": "<masked>",
                 "collection": "",
                 "operation": "permissions_delete",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             },
             {
@@ -4923,10 +4941,10 @@
                   1,
                   0
                 ],
-                "durationMs": 0.010967254638671875,
+                "durationMs": "<masked>",
                 "collection": "owner",
                 "operation": "document_find",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             },
             {
@@ -4936,10 +4954,10 @@
                 "bindings": [
                   "parent1"
                 ],
-                "durationMs": 0.02002716064453125,
+                "durationMs": "<masked>",
                 "collection": "",
                 "operation": "document_delete",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             },
             {
@@ -4949,13 +4967,22 @@
                 "bindings": [
                   "parent1"
                 ],
-                "durationMs": 0.010013580322265625,
+                "durationMs": "<masked>",
                 "collection": "",
                 "operation": "permissions_delete",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/fields/durationMs",
+              "/*/fields/backtrace",
+              "/calls/*/*/steps/*/*/fields/durationMs",
+              "/calls/*/*/steps/*/*/fields/backtrace"
+            ],
+            "reason": "a profiled statement's duration and the PHP stack it ran from are the runtime's own"
+          }
         }
       ]
     }

@@ -27504,18 +27504,9 @@
             }
           },
           "expect": {
-            "$value": "Relationship",
-            "fields": {
-              "relatedCollection": "usersRelId",
-              "type": {
-                "$enum": "RelationshipType::ManyToOne"
-              },
-              "twoWay": true,
-              "key": "user",
-              "twoWayKey": "posts",
-              "onDelete": {
-                "$enum": "RelationshipDeleteAction::Restrict"
-              }
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Failed to create relationship: Failed to execute transaction: the transaction was lost before it could commit"
             }
           }
         },
@@ -27545,8 +27536,7 @@
               "$collection": "usersRelId",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
-              "$sequence": "1",
-              "posts": []
+              "$sequence": "1"
             }
           }
         },
@@ -27576,8 +27566,7 @@
               "$collection": "usersRelId",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
-              "$sequence": "2",
-              "posts": []
+              "$sequence": "2"
             }
           }
         },
@@ -27598,31 +27587,9 @@
             }
           },
           "expect": {
-            "$document": {
-              "$id": "post1",
-              "$permissions": [
-                "read(\"any\")",
-                "update(\"any\")"
-              ],
-              "title": "Alice Post 1",
-              "$collection": "postsRelId",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$sequence": "1",
-              "user": {
-                "$document": {
-                  "name": "Alice",
-                  "$id": "user1",
-                  "$sequence": "1",
-                  "$createdAt": "<now>",
-                  "$updatedAt": "<now>",
-                  "$permissions": [
-                    "read(\"any\")",
-                    "update(\"any\")"
-                  ],
-                  "$collection": "usersRelId"
-                }
-              }
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
             }
           }
         },
@@ -27643,31 +27610,9 @@
             }
           },
           "expect": {
-            "$document": {
-              "$id": "post2",
-              "$permissions": [
-                "read(\"any\")",
-                "update(\"any\")"
-              ],
-              "title": "Alice Post 2",
-              "$collection": "postsRelId",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$sequence": "2",
-              "user": {
-                "$document": {
-                  "name": "Alice",
-                  "$id": "user1",
-                  "$sequence": "1",
-                  "$createdAt": "<now>",
-                  "$updatedAt": "<now>",
-                  "$permissions": [
-                    "read(\"any\")",
-                    "update(\"any\")"
-                  ],
-                  "$collection": "usersRelId"
-                }
-              }
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
             }
           }
         },
@@ -27688,31 +27633,9 @@
             }
           },
           "expect": {
-            "$document": {
-              "$id": "post3",
-              "$permissions": [
-                "read(\"any\")",
-                "update(\"any\")"
-              ],
-              "title": "Bob Post",
-              "$collection": "postsRelId",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$sequence": "3",
-              "user": {
-                "$document": {
-                  "name": "Bob",
-                  "$id": "user2",
-                  "$sequence": "2",
-                  "$createdAt": "<now>",
-                  "$updatedAt": "<now>",
-                  "$permissions": [
-                    "read(\"any\")",
-                    "update(\"any\")"
-                  ],
-                  "$collection": "usersRelId"
-                }
-              }
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
             }
           }
         },
@@ -27732,64 +27655,12 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "title": "Alice Post 1",
-                "$id": "post1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")",
-                  "update(\"any\")"
-                ],
-                "user": {
-                  "$document": {
-                    "name": "Alice",
-                    "$id": "user1",
-                    "$sequence": "1",
-                    "$createdAt": "<now>",
-                    "$updatedAt": "<now>",
-                    "$permissions": [
-                      "read(\"any\")",
-                      "update(\"any\")"
-                    ],
-                    "$collection": "usersRelId"
-                  }
-                },
-                "$collection": "postsRelId"
-              }
-            },
-            {
-              "$document": {
-                "title": "Alice Post 2",
-                "$id": "post2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")",
-                  "update(\"any\")"
-                ],
-                "user": {
-                  "$document": {
-                    "name": "Alice",
-                    "$id": "user1",
-                    "$sequence": "1",
-                    "$createdAt": "<now>",
-                    "$updatedAt": "<now>",
-                    "$permissions": [
-                      "read(\"any\")",
-                      "update(\"any\")"
-                    ],
-                    "$collection": "usersRelId"
-                  }
-                },
-                "$collection": "postsRelId"
-              }
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
             }
-          ]
+          }
         },
         {
           "op": "database.find",
@@ -27807,36 +27678,12 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "title": "Bob Post",
-                "$id": "post3",
-                "$sequence": "3",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")",
-                  "update(\"any\")"
-                ],
-                "user": {
-                  "$document": {
-                    "name": "Bob",
-                    "$id": "user2",
-                    "$sequence": "2",
-                    "$createdAt": "<now>",
-                    "$updatedAt": "<now>",
-                    "$permissions": [
-                      "read(\"any\")",
-                      "update(\"any\")"
-                    ],
-                    "$collection": "usersRelId"
-                  }
-                },
-                "$collection": "postsRelId"
-              }
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
             }
-          ]
+          }
         },
         {
           "op": "database.find",
@@ -27855,92 +27702,12 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "title": "Alice Post 1",
-                "$id": "post1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")",
-                  "update(\"any\")"
-                ],
-                "user": {
-                  "$document": {
-                    "name": "Alice",
-                    "$id": "user1",
-                    "$sequence": "1",
-                    "$createdAt": "<now>",
-                    "$updatedAt": "<now>",
-                    "$permissions": [
-                      "read(\"any\")",
-                      "update(\"any\")"
-                    ],
-                    "$collection": "usersRelId"
-                  }
-                },
-                "$collection": "postsRelId"
-              }
-            },
-            {
-              "$document": {
-                "title": "Alice Post 2",
-                "$id": "post2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")",
-                  "update(\"any\")"
-                ],
-                "user": {
-                  "$document": {
-                    "name": "Alice",
-                    "$id": "user1",
-                    "$sequence": "1",
-                    "$createdAt": "<now>",
-                    "$updatedAt": "<now>",
-                    "$permissions": [
-                      "read(\"any\")",
-                      "update(\"any\")"
-                    ],
-                    "$collection": "usersRelId"
-                  }
-                },
-                "$collection": "postsRelId"
-              }
-            },
-            {
-              "$document": {
-                "title": "Bob Post",
-                "$id": "post3",
-                "$sequence": "3",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")",
-                  "update(\"any\")"
-                ],
-                "user": {
-                  "$document": {
-                    "name": "Bob",
-                    "$id": "user2",
-                    "$sequence": "2",
-                    "$createdAt": "<now>",
-                    "$updatedAt": "<now>",
-                    "$permissions": [
-                      "read(\"any\")",
-                      "update(\"any\")"
-                    ],
-                    "$collection": "usersRelId"
-                  }
-                },
-                "$collection": "postsRelId"
-              }
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
             }
-          ]
+          }
         },
         {
           "op": "database.find",
@@ -27958,52 +27725,12 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "Alice",
-                "$id": "user1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")",
-                  "update(\"any\")"
-                ],
-                "posts": [
-                  {
-                    "$document": {
-                      "title": "Alice Post 1",
-                      "$id": "post1",
-                      "$sequence": "1",
-                      "$createdAt": "<now>",
-                      "$updatedAt": "<now>",
-                      "$permissions": [
-                        "read(\"any\")",
-                        "update(\"any\")"
-                      ],
-                      "$collection": "postsRelId"
-                    }
-                  },
-                  {
-                    "$document": {
-                      "title": "Alice Post 2",
-                      "$id": "post2",
-                      "$sequence": "2",
-                      "$createdAt": "<now>",
-                      "$updatedAt": "<now>",
-                      "$permissions": [
-                        "read(\"any\")",
-                        "update(\"any\")"
-                      ],
-                      "$collection": "postsRelId"
-                    }
-                  }
-                ],
-                "$collection": "usersRelId"
-              }
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Attribute not found in schema: posts"
             }
-          ]
+          }
         },
         {
           "op": "database.delete_collection",
@@ -28017,7 +27744,12 @@
           "args": {
             "collection": "postsRelId"
           },
-          "expect": null
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
+          }
         },
         {
           "op": "database.create_collection",

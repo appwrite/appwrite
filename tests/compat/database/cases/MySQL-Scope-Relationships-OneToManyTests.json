@@ -22041,9 +22041,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to create relationship: Failed to execute transaction: the transaction was lost before it could commit"
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "otm_setnull_limit_child",
+              "type": {
+                "$enum": "RelationshipType::OneToMany"
+              },
+              "twoWay": true,
+              "key": "children",
+              "twoWayKey": "parent",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::SetNull"
+              }
             }
           }
         },
@@ -22126,9 +22135,45 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"children\""
+            "$document": {
+              "$id": "parent1",
+              "$collection": "otm_setnull_limit_parent",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1",
+              "children": [
+                {
+                  "$document": {
+                    "$id": "child1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [],
+                    "$collection": "otm_setnull_limit_child"
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "child2",
+                    "$sequence": "2",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [],
+                    "$collection": "otm_setnull_limit_child"
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "child3",
+                    "$sequence": "3",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [],
+                    "$collection": "otm_setnull_limit_child"
+                  }
+                }
+              ]
             }
           }
         },
@@ -22152,7 +22197,7 @@
             "collection": "otm_setnull_limit_parent",
             "id": "parent1"
           },
-          "expect": false
+          "expect": true
         },
         {
           "op": "database.set_max_query_values",
@@ -22176,7 +22221,8 @@
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$permissions": [],
-              "$collection": "otm_setnull_limit_child"
+              "$collection": "otm_setnull_limit_child",
+              "parent": null
             }
           }
         },
@@ -22193,7 +22239,8 @@
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$permissions": [],
-              "$collection": "otm_setnull_limit_child"
+              "$collection": "otm_setnull_limit_child",
+              "parent": null
             }
           }
         },
@@ -22210,7 +22257,8 @@
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$permissions": [],
-              "$collection": "otm_setnull_limit_child"
+              "$collection": "otm_setnull_limit_child",
+              "parent": null
             }
           }
         }

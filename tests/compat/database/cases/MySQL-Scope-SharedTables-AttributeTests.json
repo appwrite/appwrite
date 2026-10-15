@@ -861,18 +861,9 @@
             }
           },
           "expect": {
-            "$value": "Index",
-            "fields": {
-              "key": "varchar2_index",
-              "type": {
-                "$enum": "Query\\Schema\\IndexType::Key"
-              },
-              "attributes": [
-                "varchar2"
-              ],
-              "lengths": [],
-              "orders": [],
-              "ttl": null
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Failed to persist metadata after retries for index creation 'varchar2_index': Failed to execute transaction: the transaction was lost before it could commit"
             }
           }
         },

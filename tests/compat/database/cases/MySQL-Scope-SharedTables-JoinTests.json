@@ -7631,9 +7631,21 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to persist metadata after retries for attribute creation 'cust_uid': Failed to execute transaction: the transaction was lost before it could commit"
+            "$value": "Attribute",
+            "fields": {
+              "key": "cust_uid",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 255,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
             }
           }
         },
@@ -7723,9 +7735,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "cust_uid": "c1",
+              "amount": 10,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "jgl_o",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1"
             }
           }
         },
@@ -7744,9 +7765,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "cust_uid": "c1",
+              "amount": 20,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "jgl_o",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "2"
             }
           }
         },
@@ -7765,9 +7795,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "cust_uid": "c1",
+              "amount": 30,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "jgl_o",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "3"
             }
           }
         },
@@ -7786,9 +7825,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "cust_uid": "c1",
+              "amount": 40,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "jgl_o",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "4"
             }
           }
         },
@@ -7807,9 +7855,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "cust_uid": "c1",
+              "amount": 50,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$id": "<uniqid>",
+              "$collection": "jgl_o",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "5"
             }
           }
         },
@@ -7866,12 +7923,11 @@
               }
             ]
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+          "expect": [
+            {
+              "cnt": "3"
             }
-          }
+          ]
         },
         {
           "op": "database.collection_exists",
@@ -45855,9 +45911,21 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to persist metadata after retries for attribute creation 'name': Failed to execute transaction: the transaction was lost before it could commit"
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 100,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
             }
           }
         },
@@ -45996,9 +46064,17 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"name\""
+            "$document": {
+              "$id": "cust1",
+              "name": "Alice",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "t8_folk_c",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1"
             }
           }
         },
@@ -46017,9 +46093,17 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"name\""
+            "$document": {
+              "$id": "cust2",
+              "name": "Bob",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "t8_folk_c",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "2"
             }
           }
         },
@@ -46140,15 +46224,35 @@
           "expect": [
             {
               "$document": {
+                "name": "Alice",
                 "j0.customerId": "cust1",
                 "j0.amount": 10,
                 "j0.$id": "ord-public",
-                "$id": "",
-                "$sequence": null,
-                "$tenant": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
+                "$id": "cust1",
+                "$sequence": "1",
+                "$tenant": "999",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "t8_folk_c"
+              }
+            },
+            {
+              "$document": {
+                "name": "Bob",
+                "j0.customerId": null,
+                "j0.amount": null,
+                "j0.$id": null,
+                "$id": "cust2",
+                "$sequence": "2",
+                "$tenant": "999",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
                 "$collection": "t8_folk_c"
               }
             }
@@ -80982,10 +81086,23 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to create collection metadata for 'jpar_doc_m': Failed to execute transaction: the transaction was lost before it could commit"
-            }
+            "$document": {
+              "$id": "jpar_doc_m",
+              "name": "jpar_doc_m",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
           }
         },
         {
@@ -82400,21 +82517,9 @@
             }
           },
           "expect": {
-            "$value": "Attribute",
-            "fields": {
-              "key": "authorId",
-              "type": {
-                "$enum": "Query\\Schema\\ColumnType::String"
-              },
-              "size": 64,
-              "required": true,
-              "default": null,
-              "signed": true,
-              "array": false,
-              "format": null,
-              "filters": [],
-              "relationship": null,
-              "side": null
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Failed to persist metadata after retries for attribute creation 'authorId': Failed to execute transaction: the transaction was lost before it could commit"
             }
           }
         },
@@ -82665,18 +82770,9 @@
             }
           },
           "expect": {
-            "$document": {
-              "$id": "b1",
-              "$permissions": [
-                "read(\"any\")"
-              ],
-              "authorId": "a1",
-              "pages": 11,
-              "$collection": "jtn_books",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$tenant": "1",
-              "$sequence": "1"
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
             }
           }
         },
@@ -82696,18 +82792,9 @@
             }
           },
           "expect": {
-            "$document": {
-              "$id": "b2",
-              "$permissions": [
-                "read(\"any\")"
-              ],
-              "authorId": "shared",
-              "pages": 12,
-              "$collection": "jtn_books",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$tenant": "1",
-              "$sequence": "2"
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
             }
           }
         },
@@ -82727,18 +82814,9 @@
             }
           },
           "expect": {
-            "$document": {
-              "$id": "b3",
-              "$permissions": [
-                "read(\"any\")"
-              ],
-              "authorId": "legacy",
-              "pages": 13,
-              "$collection": "jtn_books",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$tenant": "1",
-              "$sequence": "3"
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
             }
           }
         },
@@ -82978,18 +83056,9 @@
             }
           },
           "expect": {
-            "$document": {
-              "$id": "b1",
-              "$permissions": [
-                "read(\"any\")"
-              ],
-              "authorId": "a1",
-              "pages": 21,
-              "$collection": "jtn_books",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$tenant": "2",
-              "$sequence": "4"
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
             }
           }
         },
@@ -83009,18 +83078,9 @@
             }
           },
           "expect": {
-            "$document": {
-              "$id": "b2",
-              "$permissions": [
-                "read(\"any\")"
-              ],
-              "authorId": "a2",
-              "pages": 22,
-              "$collection": "jtn_books",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$tenant": "2",
-              "$sequence": "5"
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
             }
           }
         },
@@ -83109,18 +83169,9 @@
             }
           },
           "expect": {
-            "$document": {
-              "$id": "orphan",
-              "$permissions": [
-                "read(\"any\")"
-              ],
-              "authorId": "a1",
-              "pages": 99,
-              "$collection": "jtn_books",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$tenant": "3",
-              "$sequence": "6"
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
             }
           }
         },
@@ -83255,7 +83306,7 @@
                     {
                       "$builder": true
                     },
-                    1,
+                    0,
                     {
                       "$builder": true
                     },
@@ -83312,22 +83363,12 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "one-a1",
-                "book.pages": 11,
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jtn_authors"
-              }
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
             }
-          ]
+          }
         },
         {
           "op": "database.count",
@@ -83356,7 +83397,12 @@
               }
             ]
           },
-          "expect": 1
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
+            }
+          }
         },
         {
           "op": "database.sum",
@@ -83386,7 +83432,12 @@
               }
             ]
           },
-          "expect": 11
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
+            }
+          }
         },
         {
           "op": "database.set_tenant",
@@ -83434,36 +83485,12 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "two-a1",
-                "book.pages": 21,
-                "$id": "a1",
-                "$sequence": "3",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jtn_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "two-a2",
-                "book.pages": 22,
-                "$id": "a2",
-                "$sequence": "4",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jtn_authors"
-              }
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
             }
-          ]
+          }
         },
         {
           "op": "database.count",
@@ -83492,7 +83519,12 @@
               }
             ]
           },
-          "expect": 2
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
+            }
+          }
         },
         {
           "op": "database.sum",
@@ -83522,7 +83554,12 @@
               }
             ]
           },
-          "expect": 43
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
+            }
+          }
         },
         {
           "op": "database.set_tenant",
@@ -83572,17 +83609,9 @@
             ]
           },
           "expect": {
-            "$document": {
-              "name": "one-a1",
-              "book.pages": 11,
-              "$sequence": "1",
-              "$id": "a1",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$permissions": [
-                "read(\"any\")"
-              ],
-              "$collection": "jtn_authors"
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
             }
           }
         },
@@ -83625,7 +83654,10 @@
             ]
           },
           "expect": {
-            "$document": {}
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
+            }
           }
         },
         {
@@ -83667,7 +83699,10 @@
             ]
           },
           "expect": {
-            "$document": {}
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
+            }
           }
         },
         {
@@ -83716,36 +83751,12 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "one-a1",
-                "book.pages": 11,
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jtn_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "one-a2",
-                "book.pages": null,
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jtn_authors"
-              }
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
             }
-          ]
+          }
         },
         {
           "op": "database.count",
@@ -83774,7 +83785,12 @@
               }
             ]
           },
-          "expect": 2
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
+            }
+          }
         },
         {
           "op": "database.sum",
@@ -83804,7 +83820,12 @@
               }
             ]
           },
-          "expect": 11
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
+            }
+          }
         },
         {
           "op": "database.set_tenant",
@@ -83852,50 +83873,12 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "two-a1",
-                "book.pages": 21,
-                "$id": "a1",
-                "$sequence": "3",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jtn_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "two-a2",
-                "book.pages": 22,
-                "$id": "a2",
-                "$sequence": "4",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jtn_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "two-shared",
-                "book.pages": null,
-                "$id": "shared",
-                "$sequence": "5",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jtn_authors"
-              }
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
             }
-          ]
+          }
         },
         {
           "op": "database.count",
@@ -83924,7 +83907,12 @@
               }
             ]
           },
-          "expect": 3
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
+            }
+          }
         },
         {
           "op": "database.sum",
@@ -83954,7 +83942,12 @@
               }
             ]
           },
-          "expect": 43
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
+            }
+          }
         },
         {
           "op": "database.set_tenant",
@@ -84004,17 +83997,9 @@
             ]
           },
           "expect": {
-            "$document": {
-              "name": "one-a1",
-              "book.pages": 11,
-              "$sequence": "1",
-              "$id": "a1",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$permissions": [
-                "read(\"any\")"
-              ],
-              "$collection": "jtn_authors"
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
             }
           }
         },
@@ -84057,7 +84042,10 @@
             ]
           },
           "expect": {
-            "$document": {}
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
+            }
           }
         },
         {
@@ -84099,7 +84087,10 @@
             ]
           },
           "expect": {
-            "$document": {}
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
+            }
           }
         },
         {
@@ -84148,46 +84139,12 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "name": null,
-                "book.pages": 12,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jtn_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "book.pages": 13,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jtn_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "one-a1",
-                "book.pages": 11,
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jtn_authors"
-              }
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
             }
-          ]
+          }
         },
         {
           "op": "database.count",
@@ -84216,7 +84173,12 @@
               }
             ]
           },
-          "expect": 3
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
+            }
+          }
         },
         {
           "op": "database.sum",
@@ -84246,7 +84208,12 @@
               }
             ]
           },
-          "expect": 36
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
+            }
+          }
         },
         {
           "op": "database.set_tenant",
@@ -84294,36 +84261,12 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "two-a1",
-                "book.pages": 21,
-                "$id": "a1",
-                "$sequence": "3",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jtn_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "two-a2",
-                "book.pages": 22,
-                "$id": "a2",
-                "$sequence": "4",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jtn_authors"
-              }
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
             }
-          ]
+          }
         },
         {
           "op": "database.count",
@@ -84352,7 +84295,12 @@
               }
             ]
           },
-          "expect": 2
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
+            }
+          }
         },
         {
           "op": "database.sum",
@@ -84382,7 +84330,12 @@
               }
             ]
           },
-          "expect": 43
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
+            }
+          }
         },
         {
           "op": "database.set_tenant",
@@ -84432,17 +84385,9 @@
             ]
           },
           "expect": {
-            "$document": {
-              "name": "one-a1",
-              "book.pages": 11,
-              "$sequence": "1",
-              "$id": "a1",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$permissions": [
-                "read(\"any\")"
-              ],
-              "$collection": "jtn_authors"
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
             }
           }
         },
@@ -84485,7 +84430,10 @@
             ]
           },
           "expect": {
-            "$document": {}
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
+            }
           }
         },
         {
@@ -84527,7 +84475,10 @@
             ]
           },
           "expect": {
-            "$document": {}
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
+            }
           }
         },
         {
@@ -84576,60 +84527,12 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "name": null,
-                "book.pages": 12,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jtn_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": null,
-                "book.pages": 13,
-                "$id": "",
-                "$sequence": null,
-                "$createdAt": null,
-                "$updatedAt": null,
-                "$permissions": [],
-                "$collection": "jtn_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "one-a1",
-                "book.pages": 11,
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jtn_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "one-a2",
-                "book.pages": null,
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jtn_authors"
-              }
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
             }
-          ]
+          }
         },
         {
           "op": "database.count",
@@ -84658,7 +84561,12 @@
               }
             ]
           },
-          "expect": 4
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
+            }
+          }
         },
         {
           "op": "database.sum",
@@ -84688,7 +84596,12 @@
               }
             ]
           },
-          "expect": 36
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
+            }
+          }
         },
         {
           "op": "database.set_tenant",
@@ -84736,50 +84649,12 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "two-a1",
-                "book.pages": 21,
-                "$id": "a1",
-                "$sequence": "3",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jtn_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "two-a2",
-                "book.pages": 22,
-                "$id": "a2",
-                "$sequence": "4",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jtn_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "two-shared",
-                "book.pages": null,
-                "$id": "shared",
-                "$sequence": "5",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jtn_authors"
-              }
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
             }
-          ]
+          }
         },
         {
           "op": "database.count",
@@ -84808,7 +84683,12 @@
               }
             ]
           },
-          "expect": 3
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
+            }
+          }
         },
         {
           "op": "database.sum",
@@ -84838,7 +84718,12 @@
               }
             ]
           },
-          "expect": 43
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
+            }
+          }
         },
         {
           "op": "database.set_tenant",
@@ -84888,17 +84773,9 @@
             ]
           },
           "expect": {
-            "$document": {
-              "name": "one-a1",
-              "book.pages": 11,
-              "$sequence": "1",
-              "$id": "a1",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$permissions": [
-                "read(\"any\")"
-              ],
-              "$collection": "jtn_authors"
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
             }
           }
         },
@@ -84941,7 +84818,10 @@
             ]
           },
           "expect": {
-            "$document": {}
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
+            }
           }
         },
         {
@@ -84983,7 +84863,10 @@
             ]
           },
           "expect": {
-            "$document": {}
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
+            }
           }
         },
         {
@@ -85020,92 +84903,7 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "one-a1",
-                "book.pages": 11,
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jtn_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "one-a1",
-                "book.pages": 12,
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jtn_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "one-a1",
-                "book.pages": 13,
-                "$id": "a1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jtn_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "one-a2",
-                "book.pages": 11,
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jtn_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "one-a2",
-                "book.pages": 12,
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jtn_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "one-a2",
-                "book.pages": 13,
-                "$id": "a2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jtn_authors"
-              }
-            }
-          ]
+          "expect": []
         },
         {
           "op": "database.count",
@@ -85122,7 +84920,7 @@
               }
             ]
           },
-          "expect": 6
+          "expect": 0
         },
         {
           "op": "database.sum",
@@ -85140,7 +84938,7 @@
               }
             ]
           },
-          "expect": 72
+          "expect": 0
         },
         {
           "op": "database.set_tenant",
@@ -85176,92 +84974,7 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "two-a1",
-                "book.pages": 21,
-                "$id": "a1",
-                "$sequence": "3",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jtn_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "two-a1",
-                "book.pages": 22,
-                "$id": "a1",
-                "$sequence": "3",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jtn_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "two-a2",
-                "book.pages": 21,
-                "$id": "a2",
-                "$sequence": "4",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jtn_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "two-a2",
-                "book.pages": 22,
-                "$id": "a2",
-                "$sequence": "4",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jtn_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "two-shared",
-                "book.pages": 21,
-                "$id": "shared",
-                "$sequence": "5",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jtn_authors"
-              }
-            },
-            {
-              "$document": {
-                "name": "two-shared",
-                "book.pages": 22,
-                "$id": "shared",
-                "$sequence": "5",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "$collection": "jtn_authors"
-              }
-            }
-          ]
+          "expect": []
         },
         {
           "op": "database.count",
@@ -85278,7 +84991,7 @@
               }
             ]
           },
-          "expect": 6
+          "expect": 0
         },
         {
           "op": "database.sum",
@@ -85296,7 +85009,7 @@
               }
             ]
           },
-          "expect": 129
+          "expect": 0
         },
         {
           "op": "database.set_tenant",
@@ -85334,18 +85047,7 @@
             ]
           },
           "expect": {
-            "$document": {
-              "name": "one-a1",
-              "book.pages": 11,
-              "$sequence": "1",
-              "$id": "a1",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$permissions": [
-                "read(\"any\")"
-              ],
-              "$collection": "jtn_authors"
-            }
+            "$document": {}
           }
         },
         {

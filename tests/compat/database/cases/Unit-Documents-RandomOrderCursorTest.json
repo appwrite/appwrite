@@ -692,44 +692,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "title": "first",
-                "views": 1,
-                "$id": "first",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [],
-                "$sequence": "1",
-                "$collection": "posts"
-              }
-            },
-            {
-              "$document": {
-                "title": "third",
-                "views": 3,
-                "$id": "third",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [],
-                "$sequence": "3",
-                "$collection": "posts"
-              }
-            },
-            {
-              "$document": {
-                "title": "second",
-                "views": 2,
-                "$id": "second",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [],
-                "$sequence": "2",
-                "$collection": "posts"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "Query::orderRandom() returns the documents in a random order"
+          }
         },
         {
           "op": "object.call",
@@ -858,44 +827,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "title": "first",
-                "views": 1,
-                "$id": "first",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [],
-                "$sequence": "1",
-                "$collection": "posts"
-              }
-            },
-            {
-              "$document": {
-                "title": "third",
-                "views": 3,
-                "$id": "third",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [],
-                "$sequence": "3",
-                "$collection": "posts"
-              }
-            },
-            {
-              "$document": {
-                "title": "second",
-                "views": 2,
-                "$id": "second",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [],
-                "$sequence": "2",
-                "$collection": "posts"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "Query::orderRandom() returns the documents in a random order"
+          }
         },
         {
           "op": "object.call",
@@ -1667,44 +1605,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "$document": {
-                "title": "first",
-                "views": 1,
-                "$id": "first",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [],
-                "$sequence": "1",
-                "$collection": "posts"
-              }
-            },
-            {
-              "$document": {
-                "title": "third",
-                "views": 3,
-                "$id": "third",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [],
-                "$sequence": "3",
-                "$collection": "posts"
-              }
-            },
-            {
-              "$document": {
-                "title": "second",
-                "views": 2,
-                "$id": "second",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [],
-                "$sequence": "2",
-                "$collection": "posts"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "Query::orderRandom() returns the documents in a random order"
+          }
         }
       ]
     }

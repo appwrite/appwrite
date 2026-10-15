@@ -22346,9 +22346,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to create relationship: Failed to execute transaction: the transaction was lost before it could commit"
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "csO2M_u000000000092",
+              "type": {
+                "$enum": "RelationshipType::OneToMany"
+              },
+              "twoWay": false,
+              "key": "oneToMany",
+              "twoWayKey": "csParent_u000000000090",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Cascade"
+              }
             }
           }
         },
@@ -22414,9 +22423,69 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"csParent_u000000000090\""
+            "$document": {
+              "$id": "u0000000000000000109",
+              "$permissions": [
+                "read(\"user:random\")",
+                "update(\"user:random\")",
+                "delete(\"user:random\")"
+              ],
+              "test": "lorem",
+              "$collection": "csParent_u000000000090",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1",
+              "oneToOne": {
+                "$document": {
+                  "test": "lorem ipsum",
+                  "$id": "u0000000000000000110",
+                  "$sequence": "1",
+                  "$tenant": "999",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"user:random\")",
+                    "update(\"user:random\")",
+                    "delete(\"user:random\")"
+                  ],
+                  "$collection": "csO2O_u000000000091"
+                }
+              },
+              "oneToMany": [
+                {
+                  "$document": {
+                    "test": "lorem ipsum",
+                    "$id": "u0000000000000000111",
+                    "$sequence": "1",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"user:random\")",
+                      "update(\"user:random\")",
+                      "delete(\"user:random\")"
+                    ],
+                    "$collection": "csO2M_u000000000092"
+                  }
+                },
+                {
+                  "$document": {
+                    "test": "dolor",
+                    "$id": "u0000000000000000112",
+                    "$sequence": "2",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"user:torsten\")",
+                      "update(\"user:random\")",
+                      "delete(\"user:random\")"
+                    ],
+                    "$collection": "csO2M_u000000000092"
+                  }
+                }
+              ]
             }
           }
         },
@@ -22441,7 +22510,74 @@
           "args": {
             "collection": "csParent_u000000000090"
           },
-          "expect": []
+          "expect": [
+            {
+              "$document": {
+                "test": "lorem",
+                "$id": "u0000000000000000109",
+                "$sequence": "1",
+                "$tenant": "999",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"user:random\")",
+                  "update(\"user:random\")",
+                  "delete(\"user:random\")"
+                ],
+                "oneToOne": {
+                  "$document": {
+                    "test": "lorem ipsum",
+                    "$id": "u0000000000000000110",
+                    "$sequence": "1",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"user:random\")",
+                      "update(\"user:random\")",
+                      "delete(\"user:random\")"
+                    ],
+                    "$collection": "csO2O_u000000000091"
+                  }
+                },
+                "oneToMany": [
+                  {
+                    "$document": {
+                      "test": "lorem ipsum",
+                      "$id": "u0000000000000000111",
+                      "$sequence": "1",
+                      "$tenant": "999",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [
+                        "read(\"user:random\")",
+                        "update(\"user:random\")",
+                        "delete(\"user:random\")"
+                      ],
+                      "$collection": "csO2M_u000000000092"
+                    }
+                  },
+                  {
+                    "$document": {
+                      "test": "dolor",
+                      "$id": "u0000000000000000112",
+                      "$sequence": "2",
+                      "$tenant": "999",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [
+                        "read(\"user:torsten\")",
+                        "update(\"user:random\")",
+                        "delete(\"user:random\")"
+                      ],
+                      "$collection": "csO2M_u000000000092"
+                    }
+                  }
+                ],
+                "$collection": "csParent_u000000000090"
+              }
+            }
+          ]
         },
         {
           "op": "db.authorization.clean_roles",
@@ -22464,7 +22600,58 @@
           "args": {
             "collection": "csParent_u000000000090"
           },
-          "expect": []
+          "expect": [
+            {
+              "$document": {
+                "test": "lorem",
+                "$id": "u0000000000000000109",
+                "$sequence": "1",
+                "$tenant": "999",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"user:random\")",
+                  "update(\"user:random\")",
+                  "delete(\"user:random\")"
+                ],
+                "oneToOne": {
+                  "$document": {
+                    "test": "lorem ipsum",
+                    "$id": "u0000000000000000110",
+                    "$sequence": "1",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [
+                      "read(\"user:random\")",
+                      "update(\"user:random\")",
+                      "delete(\"user:random\")"
+                    ],
+                    "$collection": "csO2O_u000000000091"
+                  }
+                },
+                "oneToMany": [
+                  {
+                    "$document": {
+                      "test": "lorem ipsum",
+                      "$id": "u0000000000000000111",
+                      "$sequence": "1",
+                      "$tenant": "999",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [
+                        "read(\"user:random\")",
+                        "update(\"user:random\")",
+                        "delete(\"user:random\")"
+                      ],
+                      "$collection": "csO2M_u000000000092"
+                    }
+                  }
+                ],
+                "$collection": "csParent_u000000000090"
+              }
+            }
+          ]
         },
         {
           "op": "db.authorization.clean_roles",
@@ -23108,25 +23295,10 @@
             }
           },
           "expect": {
-            "$document": {
-              "$id": "csParent_u000000000090",
-              "name": "csParent_u000000000090",
-              "attributes": [],
-              "indexes": [],
-              "documentSecurity": true,
-              "$permissions": [
-                "create(\"users\")",
-                "read(\"users\")",
-                "update(\"users\")",
-                "delete(\"users\")"
-              ],
-              "$collection": "_metadata",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$tenant": "999",
-              "$sequence": "1"
-            },
-            "$class": "Collection"
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Failed to create collection metadata for 'csParent_u000000000090': Failed to execute transaction: the transaction was lost before it could commit"
+            }
           }
         },
         {

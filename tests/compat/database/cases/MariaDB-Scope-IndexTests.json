@@ -22719,8 +22719,8 @@
           },
           "expect": {
             "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to rename index 'byAge' to 'ageIndex': SQLSTATE[42S02]: Base table or view not found: 1146 Table '${ns}.compat_renameDroppedIndex' doesn't exist"
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
             }
           }
         },
@@ -22730,51 +22730,10 @@
             "collection": "renameDroppedIndex"
           },
           "expect": {
-            "$document": {
-              "name": "renameDroppedIndex",
-              "attributes": [
-                {
-                  "$document": {
-                    "$id": "age",
-                    "key": "age",
-                    "type": "integer",
-                    "size": 0,
-                    "required": false,
-                    "default": null,
-                    "signed": true,
-                    "array": false,
-                    "format": null,
-                    "formatOptions": [],
-                    "filters": []
-                  }
-                }
-              ],
-              "indexes": [
-                {
-                  "$document": {
-                    "$id": "byAge",
-                    "key": "byAge",
-                    "type": "key",
-                    "attributes": [
-                      "age"
-                    ],
-                    "lengths": [],
-                    "orders": []
-                  }
-                }
-              ],
-              "documentSecurity": false,
-              "$sequence": "1",
-              "$id": "renameDroppedIndex",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$permissions": [
-                "create(\"any\")",
-                "read(\"any\")"
-              ],
-              "$collection": "_metadata"
-            },
-            "$class": "Collection"
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
           }
         },
         {
@@ -22782,7 +22741,12 @@
           "args": {
             "collection": "renameDroppedIndex"
           },
-          "expect": null
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
+          }
         }
       ]
     },

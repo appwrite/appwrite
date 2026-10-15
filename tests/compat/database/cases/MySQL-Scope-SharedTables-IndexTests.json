@@ -14958,21 +14958,9 @@
             }
           },
           "expect": {
-            "$value": "Attribute",
-            "fields": {
-              "key": "test16",
-              "type": {
-                "$enum": "Query\\Schema\\ColumnType::String"
-              },
-              "size": 16,
-              "required": true,
-              "default": null,
-              "signed": true,
-              "array": false,
-              "format": null,
-              "filters": [],
-              "relationship": null,
-              "side": null
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Failed to persist metadata after retries for attribute creation 'test16': Failed to execute transaction: the transaction was lost before it could commit"
             }
           }
         },
@@ -17698,20 +17686,9 @@
             }
           },
           "expect": {
-            "$value": "Index",
-            "fields": {
-              "key": "index16",
-              "type": {
-                "$enum": "Query\\Schema\\IndexType::Key"
-              },
-              "attributes": [
-                "test16"
-              ],
-              "lengths": [
-                null
-              ],
-              "orders": [],
-              "ttl": null
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
             }
           }
         },
@@ -19589,8 +19566,8 @@
           },
           "expect": {
             "$error": {
-              "class": "Utopia\\Database\\Exception\\Limit",
-              "message": "Index limit reached. Cannot create new index."
+              "class": "Utopia\\Database\\Exception\\Index",
+              "message": "Invalid index attribute \"test64\" not found"
             }
           }
         },

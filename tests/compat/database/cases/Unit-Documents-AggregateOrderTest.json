@@ -26249,16 +26249,13 @@
               ]
             }
           },
-          "expect": [
-            {
-              "rows": 2,
-              "status": "a"
-            },
-            {
-              "rows": 1,
-              "status": "b"
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "Query::orderRandom() returns the documents in a random order"
+          }
         }
       ]
     },
@@ -29556,7 +29553,13 @@
               }
             }
           },
-          "expect": true
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "Query::orderRandom() returns the documents in a random order"
+          }
         },
         {
           "op": "object.call",

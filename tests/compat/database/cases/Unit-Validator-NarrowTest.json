@@ -638229,7 +638229,13 @@
               ]
             }
           },
-          "expect": true
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "Query::orderRandom() returns the documents in a random order"
+          }
         },
         {
           "op": "object.call",
@@ -640418,9 +640424,12 @@
             "as": "o19993"
           },
           "bind": "s22540",
-          "expect": {
-            "$value": "Validator\\Queries\\Narrow",
-            "fields": {}
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "Query::orderRandom() returns the documents in a random order"
           }
         },
         {
@@ -640438,7 +640447,13 @@
               ]
             }
           },
-          "expect": true
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "Query::orderRandom() returns the documents in a random order"
+          }
         },
         {
           "op": "object.call",
@@ -640455,7 +640470,13 @@
               ]
             }
           },
-          "expect": true
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "Query::orderRandom() returns the documents in a random order"
+          }
         },
         {
           "op": "object.call",
@@ -642643,9 +642664,12 @@
             "as": "o20045"
           },
           "bind": "s22595",
-          "expect": {
-            "$value": "Validator\\Queries\\Narrow",
-            "fields": {}
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "Query::orderRandom() returns the documents in a random order"
           }
         },
         {
@@ -642663,7 +642687,13 @@
               ]
             }
           },
-          "expect": false
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "Query::orderRandom() returns the documents in a random order"
+          }
         },
         {
           "op": "object.call",
@@ -642680,7 +642710,13 @@
               ]
             }
           },
-          "expect": false
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "Query::orderRandom() returns the documents in a random order"
+          }
         },
         {
           "op": "object.call",
@@ -644890,9 +644926,12 @@
             "as": "o20097"
           },
           "bind": "s22652",
-          "expect": {
-            "$value": "Validator\\Queries\\Narrow",
-            "fields": {}
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "Query::orderRandom() returns the documents in a random order"
           }
         },
         {
@@ -644910,7 +644949,13 @@
               ]
             }
           },
-          "expect": true
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "Query::orderRandom() returns the documents in a random order"
+          }
         },
         {
           "op": "object.call",
@@ -644927,7 +644972,13 @@
               ]
             }
           },
-          "expect": true
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "Query::orderRandom() returns the documents in a random order"
+          }
         },
         {
           "op": "object.call",
@@ -647103,9 +647154,12 @@
             "as": "o20149"
           },
           "bind": "s22707",
-          "expect": {
-            "$value": "Validator\\Queries\\Narrow",
-            "fields": {}
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "Query::orderRandom() returns the documents in a random order"
           }
         },
         {
@@ -647123,7 +647177,13 @@
               ]
             }
           },
-          "expect": false
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "Query::orderRandom() returns the documents in a random order"
+          }
         },
         {
           "op": "object.call",
@@ -647140,7 +647200,13 @@
               ]
             }
           },
-          "expect": false
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "Query::orderRandom() returns the documents in a random order"
+          }
         },
         {
           "op": "object.call",

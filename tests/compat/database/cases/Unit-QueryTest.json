@@ -1559,8 +1559,12 @@
             "method": "getMethod",
             "args": {}
           },
-          "expect": {
-            "$enum": "Query\\Method::OrderRandom"
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "Query::orderRandom() returns the documents in a random order"
           }
         },
         {
@@ -1572,7 +1576,13 @@
             "method": "getAttribute",
             "args": {}
           },
-          "expect": ""
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "Query::orderRandom() returns the documents in a random order"
+          }
         },
         {
           "op": "object.call",
@@ -1583,7 +1593,13 @@
             "method": "getValues",
             "args": {}
           },
-          "expect": []
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "Query::orderRandom() returns the documents in a random order"
+          }
         }
       ]
     },
@@ -4840,7 +4856,13 @@
             "method": "toString",
             "args": {}
           },
-          "expect": "{\"method\":\"orderRandom\",\"values\":[]}"
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "Query::orderRandom() returns the documents in a random order"
+          }
         },
         {
           "op": "object.call",

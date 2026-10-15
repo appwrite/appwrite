@@ -5889,9 +5889,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to update relationship indexes for 'back': Failed to persist metadata after retries for index metadata update '_index_related': Failed to execute transaction: the transaction was lost before it could commit"
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "parents_u0000000000000000209",
+              "type": {
+                "$enum": "RelationshipType::OneToOne"
+              },
+              "twoWay": false,
+              "key": "owner",
+              "twoWayKey": "item",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
             }
           }
         },
@@ -5921,8 +5930,8 @@
                 },
                 {
                   "$document": {
-                    "$id": "related",
-                    "key": "related",
+                    "$id": "item",
+                    "key": "item",
                     "type": "relationship",
                     "size": 0,
                     "required": false,
@@ -5936,7 +5945,7 @@
                       "relatedCollection": "children_u0000000000000000210",
                       "relationType": "oneToOne",
                       "twoWay": false,
-                      "twoWayKey": "back",
+                      "twoWayKey": "owner",
                       "onDelete": "restrict",
                       "side": "parent"
                     }
@@ -5946,11 +5955,11 @@
               "indexes": [
                 {
                   "$document": {
-                    "$id": "_index_related",
-                    "key": "_index_related",
+                    "$id": "_index_item",
+                    "key": "_index_item",
                     "type": "unique",
                     "attributes": [
-                      "related"
+                      "item"
                     ],
                     "lengths": [],
                     "orders": []
@@ -5999,8 +6008,8 @@
                 },
                 {
                   "$document": {
-                    "$id": "related",
-                    "key": "related",
+                    "$id": "item",
+                    "key": "item",
                     "type": "relationship",
                     "size": 0,
                     "required": false,
@@ -6014,7 +6023,7 @@
                       "relatedCollection": "children_u0000000000000000210",
                       "relationType": "oneToOne",
                       "twoWay": false,
-                      "twoWayKey": "back",
+                      "twoWayKey": "owner",
                       "onDelete": "restrict",
                       "side": "parent"
                     }
@@ -6024,11 +6033,11 @@
               "indexes": [
                 {
                   "$document": {
-                    "$id": "_index_related",
-                    "key": "_index_related",
+                    "$id": "_index_item",
+                    "key": "_index_item",
                     "type": "unique",
                     "attributes": [
-                      "related"
+                      "item"
                     ],
                     "lengths": [],
                     "orders": []
@@ -6077,8 +6086,8 @@
                 },
                 {
                   "$document": {
-                    "$id": "back",
-                    "key": "back",
+                    "$id": "owner",
+                    "key": "owner",
                     "type": "relationship",
                     "size": 0,
                     "required": false,
@@ -6092,7 +6101,7 @@
                       "relatedCollection": "parents_u0000000000000000209",
                       "relationType": "oneToOne",
                       "twoWay": false,
-                      "twoWayKey": "related",
+                      "twoWayKey": "item",
                       "onDelete": "restrict",
                       "side": "child"
                     }
@@ -6131,7 +6140,7 @@
               "$updatedAt": "<now>",
               "$permissions": [],
               "$collection": "parents_u0000000000000000209",
-              "related": {
+              "item": {
                 "$document": {
                   "name": "child",
                   "$id": "c1",
@@ -6157,9 +6166,15 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"item\""
+            "$document": {
+              "name": "parent",
+              "$sequence": "1",
+              "$id": "p1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "parents_u0000000000000000209",
+              "item": null
             }
           }
         },
@@ -6178,17 +6193,7 @@
               "$updatedAt": "<now>",
               "$permissions": [],
               "$collection": "parents_u0000000000000000209",
-              "related": {
-                "$document": {
-                  "name": "child",
-                  "$id": "c1",
-                  "$sequence": "1",
-                  "$createdAt": "<now>",
-                  "$updatedAt": "<now>",
-                  "$permissions": [],
-                  "$collection": "children_u0000000000000000210"
-                }
-              }
+              "item": null
             }
           }
         }

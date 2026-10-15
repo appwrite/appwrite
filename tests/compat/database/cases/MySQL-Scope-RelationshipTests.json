@@ -22647,9 +22647,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to create relationship indexes: Failed to persist metadata after retries for index creation '_index_group': Failed to execute transaction: the transaction was lost before it could commit"
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "group",
+              "type": {
+                "$enum": "RelationshipType::ManyToOne"
+              },
+              "twoWay": false,
+              "key": "group",
+              "twoWayKey": "userProfiles",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
             }
           }
         },
@@ -22735,9 +22744,97 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"group\""
+            "$document": {
+              "$id": "1",
+              "username": "user1",
+              "$collection": "userProfiles",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1",
+              "links": [
+                {
+                  "$document": {
+                    "title": "Link 1",
+                    "$id": "link1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [],
+                    "$collection": "links"
+                  }
+                }
+              ],
+              "videos": [
+                {
+                  "$document": {
+                    "title": "Video 1",
+                    "$id": "video1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [],
+                    "$collection": "videos"
+                  }
+                }
+              ],
+              "products": [
+                {
+                  "$document": {
+                    "title": "Product 1",
+                    "$id": "product1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [],
+                    "$collection": "products"
+                  }
+                }
+              ],
+              "settings": {
+                "$document": {
+                  "metaTitle": "Meta Title",
+                  "$id": "settings1",
+                  "$sequence": "1",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [],
+                  "$collection": "settings"
+                }
+              },
+              "appearance": {
+                "$document": {
+                  "metaTitle": "Meta Title",
+                  "$id": "appearance1",
+                  "$sequence": "1",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [],
+                  "$collection": "appearance"
+                }
+              },
+              "group": {
+                "$document": {
+                  "name": "Group 1",
+                  "$id": "group1",
+                  "$sequence": "1",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [],
+                  "$collection": "group"
+                }
+              },
+              "community": {
+                "$document": {
+                  "name": "Community 1",
+                  "$id": "community1",
+                  "$sequence": "1",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [],
+                  "$collection": "community"
+                }
+              }
             }
           }
         },
@@ -22843,7 +22940,98 @@
             }
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "username": "user1",
+              "$sequence": "1",
+              "$id": "1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "userProfiles",
+              "links": [
+                {
+                  "$document": {
+                    "title": "New Link Value",
+                    "$id": "link1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [],
+                    "$collection": "links"
+                  }
+                }
+              ],
+              "videos": [
+                {
+                  "$document": {
+                    "title": "Video 1",
+                    "$id": "video1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [],
+                    "$collection": "videos"
+                  }
+                }
+              ],
+              "products": [
+                {
+                  "$document": {
+                    "title": "Product 1",
+                    "$id": "product1",
+                    "$sequence": "1",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [],
+                    "$collection": "products"
+                  }
+                }
+              ],
+              "settings": {
+                "$document": {
+                  "metaTitle": "New Meta Title",
+                  "$id": "settings1",
+                  "$sequence": "1",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [],
+                  "$collection": "settings"
+                }
+              },
+              "appearance": {
+                "$document": {
+                  "metaTitle": "Meta Title",
+                  "$id": "appearance1",
+                  "$sequence": "1",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [],
+                  "$collection": "appearance"
+                }
+              },
+              "group": {
+                "$document": {
+                  "name": "New Group Name",
+                  "$id": "group1",
+                  "$sequence": "1",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [],
+                  "$collection": "group"
+                }
+              },
+              "community": {
+                "$document": {
+                  "name": "Community 1",
+                  "$id": "community1",
+                  "$sequence": "1",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [],
+                  "$collection": "community"
+                }
+              }
+            }
           }
         },
         {
@@ -22853,7 +23041,96 @@
             "id": "product1"
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "title": "Product 1",
+              "$sequence": "1",
+              "$id": "product1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "products",
+              "userProfile": {
+                "$document": {
+                  "username": "user1",
+                  "$id": "1",
+                  "$sequence": "1",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [],
+                  "settings": {
+                    "$document": {
+                      "metaTitle": "New Meta Title",
+                      "$id": "settings1",
+                      "$sequence": "1",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [],
+                      "$collection": "settings"
+                    }
+                  },
+                  "appearance": {
+                    "$document": {
+                      "metaTitle": "Meta Title",
+                      "$id": "appearance1",
+                      "$sequence": "1",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [],
+                      "$collection": "appearance"
+                    }
+                  },
+                  "group": {
+                    "$document": {
+                      "name": "New Group Name",
+                      "$id": "group1",
+                      "$sequence": "1",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [],
+                      "$collection": "group"
+                    }
+                  },
+                  "community": {
+                    "$document": {
+                      "name": "Community 1",
+                      "$id": "community1",
+                      "$sequence": "1",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [],
+                      "$collection": "community"
+                    }
+                  },
+                  "$collection": "userProfiles",
+                  "links": [
+                    {
+                      "$document": {
+                        "title": "New Link Value",
+                        "$id": "link1",
+                        "$sequence": "1",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$collection": "links"
+                      }
+                    }
+                  ],
+                  "videos": [
+                    {
+                      "$document": {
+                        "title": "Video 1",
+                        "$id": "video1",
+                        "$sequence": "1",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$collection": "videos"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
           }
         },
         {
@@ -22884,7 +23161,96 @@
             }
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "title": "Product 1",
+              "$sequence": "1",
+              "$id": "product1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "products",
+              "userProfile": {
+                "$document": {
+                  "username": "updated user value",
+                  "$id": "1",
+                  "$sequence": "1",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [],
+                  "settings": {
+                    "$document": {
+                      "metaTitle": "New Meta Title",
+                      "$id": "settings1",
+                      "$sequence": "1",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [],
+                      "$collection": "settings"
+                    }
+                  },
+                  "appearance": {
+                    "$document": {
+                      "metaTitle": "Meta Title",
+                      "$id": "appearance1",
+                      "$sequence": "1",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [],
+                      "$collection": "appearance"
+                    }
+                  },
+                  "group": {
+                    "$document": {
+                      "name": "New Group Name",
+                      "$id": "group1",
+                      "$sequence": "1",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [],
+                      "$collection": "group"
+                    }
+                  },
+                  "community": {
+                    "$document": {
+                      "name": "Community 1",
+                      "$id": "community1",
+                      "$sequence": "1",
+                      "$createdAt": "<now>",
+                      "$updatedAt": "<now>",
+                      "$permissions": [],
+                      "$collection": "community"
+                    }
+                  },
+                  "$collection": "userProfiles",
+                  "links": [
+                    {
+                      "$document": {
+                        "title": "New Link Value",
+                        "$id": "link1",
+                        "$sequence": "1",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$collection": "links"
+                      }
+                    }
+                  ],
+                  "videos": [
+                    {
+                      "$document": {
+                        "title": "Video 1",
+                        "$id": "video1",
+                        "$sequence": "1",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$collection": "videos"
+                      }
+                    }
+                  ]
+                }
+              }
+            }
           }
         },
         {
@@ -25061,21 +25427,9 @@
             }
           },
           "expect": {
-            "$value": "Attribute",
-            "fields": {
-              "key": "name",
-              "type": {
-                "$enum": "Query\\Schema\\ColumnType::String"
-              },
-              "size": 255,
-              "required": true,
-              "default": null,
-              "signed": true,
-              "array": false,
-              "format": null,
-              "filters": [],
-              "relationship": null,
-              "side": null
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Failed to persist metadata after retries for attribute creation 'name': Failed to execute transaction: the transaction was lost before it could commit"
             }
           }
         },
@@ -25258,19 +25612,9 @@
             }
           },
           "expect": {
-            "$document": {
-              "$id": "author1",
-              "$permissions": [
-                "read(\"any\")",
-                "update(\"any\")"
-              ],
-              "name": "Alice",
-              "age": 30,
-              "$collection": "authorsFilter",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$sequence": "1",
-              "posts": []
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
             }
           }
         },
@@ -25291,19 +25635,9 @@
             }
           },
           "expect": {
-            "$document": {
-              "$id": "author2",
-              "$permissions": [
-                "read(\"any\")",
-                "update(\"any\")"
-              ],
-              "name": "Bob",
-              "age": 25,
-              "$collection": "authorsFilter",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$sequence": "2",
-              "posts": []
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
             }
           }
         },
@@ -25338,19 +25672,7 @@
               "$updatedAt": "<now>",
               "$sequence": "1",
               "author": {
-                "$document": {
-                  "name": "Alice",
-                  "age": 30,
-                  "$id": "author1",
-                  "$sequence": "1",
-                  "$createdAt": "<now>",
-                  "$updatedAt": "<now>",
-                  "$permissions": [
-                    "read(\"any\")",
-                    "update(\"any\")"
-                  ],
-                  "$collection": "authorsFilter"
-                }
+                "$document": {}
               }
             }
           }
@@ -25386,19 +25708,7 @@
               "$updatedAt": "<now>",
               "$sequence": "2",
               "author": {
-                "$document": {
-                  "name": "Alice",
-                  "age": 30,
-                  "$id": "author1",
-                  "$sequence": "1",
-                  "$createdAt": "<now>",
-                  "$updatedAt": "<now>",
-                  "$permissions": [
-                    "read(\"any\")",
-                    "update(\"any\")"
-                  ],
-                  "$collection": "authorsFilter"
-                }
+                "$document": {}
               }
             }
           }
@@ -25434,19 +25744,7 @@
               "$updatedAt": "<now>",
               "$sequence": "3",
               "author": {
-                "$document": {
-                  "name": "Bob",
-                  "age": 25,
-                  "$id": "author2",
-                  "$sequence": "2",
-                  "$createdAt": "<now>",
-                  "$updatedAt": "<now>",
-                  "$permissions": [
-                    "read(\"any\")",
-                    "update(\"any\")"
-                  ],
-                  "$collection": "authorsFilter"
-                }
+                "$document": {}
               }
             }
           }
@@ -25467,68 +25765,7 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "title": "Alice Post 1",
-                "published": true,
-                "$id": "post1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")",
-                  "update(\"any\")"
-                ],
-                "author": {
-                  "$document": {
-                    "name": "Alice",
-                    "age": 30,
-                    "$id": "author1",
-                    "$sequence": "1",
-                    "$createdAt": "<now>",
-                    "$updatedAt": "<now>",
-                    "$permissions": [
-                      "read(\"any\")",
-                      "update(\"any\")"
-                    ],
-                    "$collection": "authorsFilter"
-                  }
-                },
-                "$collection": "postsFilter"
-              }
-            },
-            {
-              "$document": {
-                "title": "Alice Post 2",
-                "published": true,
-                "$id": "post2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")",
-                  "update(\"any\")"
-                ],
-                "author": {
-                  "$document": {
-                    "name": "Alice",
-                    "age": 30,
-                    "$id": "author1",
-                    "$sequence": "1",
-                    "$createdAt": "<now>",
-                    "$updatedAt": "<now>",
-                    "$permissions": [
-                      "read(\"any\")",
-                      "update(\"any\")"
-                    ],
-                    "$collection": "authorsFilter"
-                  }
-                },
-                "$collection": "postsFilter"
-              }
-            }
-          ]
+          "expect": []
         },
         {
           "op": "database.find",
@@ -25546,38 +25783,7 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "title": "Bob Post",
-                "published": true,
-                "$id": "post3",
-                "$sequence": "3",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")",
-                  "update(\"any\")"
-                ],
-                "author": {
-                  "$document": {
-                    "name": "Bob",
-                    "age": 25,
-                    "$id": "author2",
-                    "$sequence": "2",
-                    "$createdAt": "<now>",
-                    "$updatedAt": "<now>",
-                    "$permissions": [
-                      "read(\"any\")",
-                      "update(\"any\")"
-                    ],
-                    "$collection": "authorsFilter"
-                  }
-                },
-                "$collection": "postsFilter"
-              }
-            }
-          ]
+          "expect": []
         },
         {
           "op": "database.find",
@@ -25595,87 +25801,7 @@
               }
             ]
           },
-          "expect": [
-            {
-              "$document": {
-                "name": "Alice",
-                "age": 30,
-                "$id": "author1",
-                "$sequence": "1",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")",
-                  "update(\"any\")"
-                ],
-                "posts": [
-                  {
-                    "$document": {
-                      "title": "Alice Post 1",
-                      "published": true,
-                      "$id": "post1",
-                      "$sequence": "1",
-                      "$createdAt": "<now>",
-                      "$updatedAt": "<now>",
-                      "$permissions": [
-                        "read(\"any\")",
-                        "update(\"any\")"
-                      ],
-                      "$collection": "postsFilter"
-                    }
-                  },
-                  {
-                    "$document": {
-                      "title": "Alice Post 2",
-                      "published": true,
-                      "$id": "post2",
-                      "$sequence": "2",
-                      "$createdAt": "<now>",
-                      "$updatedAt": "<now>",
-                      "$permissions": [
-                        "read(\"any\")",
-                        "update(\"any\")"
-                      ],
-                      "$collection": "postsFilter"
-                    }
-                  }
-                ],
-                "$collection": "authorsFilter"
-              }
-            },
-            {
-              "$document": {
-                "name": "Bob",
-                "age": 25,
-                "$id": "author2",
-                "$sequence": "2",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [
-                  "read(\"any\")",
-                  "update(\"any\")"
-                ],
-                "posts": [
-                  {
-                    "$document": {
-                      "title": "Bob Post",
-                      "published": true,
-                      "$id": "post3",
-                      "$sequence": "3",
-                      "$createdAt": "<now>",
-                      "$updatedAt": "<now>",
-                      "$permissions": [
-                        "read(\"any\")",
-                        "update(\"any\")"
-                      ],
-                      "$collection": "postsFilter"
-                    }
-                  }
-                ],
-                "$collection": "authorsFilter"
-              }
-            }
-          ]
+          "expect": []
         },
         {
           "op": "database.delete_collection",

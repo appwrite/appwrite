@@ -1,1678 +1,1678 @@
 {
-    "source": [
-        "vendor/utopia-php/database/tests/unit/Validator/AuthorizationTest.php"
-    ],
-    "cases": [
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Validator/AuthorizationTest.php"
+  ],
+  "cases": [
+    {
+      "name": "AuthorizationTest::test_values",
+      "state": [],
+      "steps": [
         {
-            "name": "AuthorizationTest::test_values",
-            "state": [],
-            "steps": [
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "testformat"
-                    },
-                    "expect": true
-                },
-                {
-                    "op": "object.new",
-                    "args": {
-                        "class": "Validator\\Authorization",
-                        "args": {},
-                        "as": "o402"
-                    },
-                    "bind": "s577",
-                    "expect": {
-                        "$authorization": true
-                    }
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "class": "Role",
-                        "method": "any",
-                        "args": {},
-                        "as": "o403"
-                    },
-                    "bind": "s578",
-                    "expect": {
-                        "$value": "Role",
-                        "fields": {}
-                    }
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o403"
-                        },
-                        "method": "toString",
-                        "args": {}
-                    },
-                    "expect": "any"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o402"
-                        },
-                        "method": "addRole",
-                        "args": {
-                            "role": "any"
-                        }
-                    },
-                    "expect": {
-                        "$authorization": true
-                    }
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "class": "Id",
-                        "method": "unique",
-                        "args": {}
-                    },
-                    "bind": "s581",
-                    "expect": "<uniqid>"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "class": "Id",
-                        "method": "unique",
-                        "args": {}
-                    },
-                    "bind": "s582",
-                    "expect": "<uniqid>"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "class": "Id",
-                        "method": "custom",
-                        "args": {
-                            "id": "123"
-                        }
-                    },
-                    "expect": "123"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "class": "Role",
-                        "method": "user",
-                        "args": {
-                            "identifier": "123"
-                        },
-                        "as": "o404"
-                    },
-                    "bind": "s584",
-                    "expect": {
-                        "$value": "Role",
-                        "fields": {}
-                    }
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "class": "Permission",
-                        "method": "read",
-                        "args": {
-                            "role": {
-                                "$obj": "o404"
-                            }
-                        }
-                    },
-                    "expect": "read(\"user:123\")"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "class": "Id",
-                        "method": "custom",
-                        "args": {
-                            "id": "123"
-                        }
-                    },
-                    "expect": "123"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "class": "Role",
-                        "method": "team",
-                        "args": {
-                            "identifier": "123"
-                        },
-                        "as": "o405"
-                    },
-                    "bind": "s587",
-                    "expect": {
-                        "$value": "Role",
-                        "fields": {}
-                    }
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "class": "Permission",
-                        "method": "read",
-                        "args": {
-                            "role": {
-                                "$obj": "o405"
-                            }
-                        }
-                    },
-                    "expect": "read(\"team:123\")"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "class": "Role",
-                        "method": "any",
-                        "args": {},
-                        "as": "o406"
-                    },
-                    "bind": "s589",
-                    "expect": {
-                        "$value": "Role",
-                        "fields": {}
-                    }
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "class": "Permission",
-                        "method": "create",
-                        "args": {
-                            "role": {
-                                "$obj": "o406"
-                            }
-                        }
-                    },
-                    "expect": "create(\"any\")"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "class": "Role",
-                        "method": "any",
-                        "args": {},
-                        "as": "o407"
-                    },
-                    "bind": "s591",
-                    "expect": {
-                        "$value": "Role",
-                        "fields": {}
-                    }
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "class": "Permission",
-                        "method": "update",
-                        "args": {
-                            "role": {
-                                "$obj": "o407"
-                            }
-                        }
-                    },
-                    "expect": "update(\"any\")"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "class": "Role",
-                        "method": "any",
-                        "args": {},
-                        "as": "o408"
-                    },
-                    "bind": "s593",
-                    "expect": {
-                        "$value": "Role",
-                        "fields": {}
-                    }
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "class": "Permission",
-                        "method": "delete",
-                        "args": {
-                            "role": {
-                                "$obj": "o408"
-                            }
-                        }
-                    },
-                    "expect": "delete(\"any\")"
-                },
-                {
-                    "op": "object.new",
-                    "args": {
-                        "class": "Document",
-                        "args": {
-                            "input": {
-                                "$id": {
-                                    "$ref": "s581",
-                                    "path": ""
-                                },
-                                "$collection": {
-                                    "$ref": "s582",
-                                    "path": ""
-                                },
-                                "$permissions": [
-                                    "read(\"user:123\")",
-                                    "read(\"team:123\")",
-                                    "create(\"any\")",
-                                    "update(\"any\")",
-                                    "delete(\"any\")"
-                                ]
-                            }
-                        },
-                        "as": "o409"
-                    },
-                    "bind": "s595",
-                    "expect": {
-                        "$document": {
-                            "$id": "<uniqid>",
-                            "$collection": "<uniqid>",
-                            "$permissions": [
-                                "read(\"user:123\")",
-                                "read(\"team:123\")",
-                                "create(\"any\")",
-                                "update(\"any\")",
-                                "delete(\"any\")"
-                            ]
-                        }
-                    }
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o409"
-                        },
-                        "method": "getPermissionsByType",
-                        "args": {
-                            "type": {
-                                "$enum": "PermissionType::Read"
-                            }
-                        }
-                    },
-                    "expect": [
-                        "user:123",
-                        "team:123"
-                    ]
-                },
-                {
-                    "op": "object.new",
-                    "args": {
-                        "class": "Validator\\Authorization\\Input",
-                        "args": {
-                            "action": {
-                                "$enum": "PermissionType::Read"
-                            },
-                            "permissions": [
-                                "user:123",
-                                "team:123"
-                            ]
-                        },
-                        "as": "o410"
-                    },
-                    "bind": "s597",
-                    "expect": {
-                        "$value": "Validator\\Authorization\\Input",
-                        "fields": {}
-                    }
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o402"
-                        },
-                        "method": "isValid",
-                        "args": {
-                            "value": {
-                                "$obj": "o410"
-                            }
-                        }
-                    },
-                    "expect": false
-                },
-                {
-                    "op": "object.new",
-                    "args": {
-                        "class": "Validator\\Authorization\\Input",
-                        "args": {
-                            "action": {
-                                "$enum": "PermissionType::Read"
-                            },
-                            "permissions": []
-                        },
-                        "as": "o411"
-                    },
-                    "bind": "s599",
-                    "expect": {
-                        "$value": "Validator\\Authorization\\Input",
-                        "fields": {}
-                    }
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o402"
-                        },
-                        "method": "isValid",
-                        "args": {
-                            "value": {
-                                "$obj": "o411"
-                            }
-                        }
-                    },
-                    "expect": false
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o402"
-                        },
-                        "method": "getDescription",
-                        "args": {}
-                    },
-                    "expect": "No permissions provided for action 'read'"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "class": "Role",
-                        "method": "user",
-                        "args": {
-                            "identifier": "456"
-                        },
-                        "as": "o412"
-                    },
-                    "bind": "s602",
-                    "expect": {
-                        "$value": "Role",
-                        "fields": {}
-                    }
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o412"
-                        },
-                        "method": "toString",
-                        "args": {}
-                    },
-                    "expect": "user:456"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o402"
-                        },
-                        "method": "addRole",
-                        "args": {
-                            "role": "user:456"
-                        }
-                    },
-                    "expect": {
-                        "$authorization": true
-                    }
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "class": "Role",
-                        "method": "user",
-                        "args": {
-                            "identifier": "123"
-                        },
-                        "as": "o413"
-                    },
-                    "bind": "s605",
-                    "expect": {
-                        "$value": "Role",
-                        "fields": {}
-                    }
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o413"
-                        },
-                        "method": "toString",
-                        "args": {}
-                    },
-                    "expect": "user:123"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o402"
-                        },
-                        "method": "addRole",
-                        "args": {
-                            "role": "user:123"
-                        }
-                    },
-                    "expect": {
-                        "$authorization": true
-                    }
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "class": "Role",
-                        "method": "user",
-                        "args": {
-                            "identifier": "456"
-                        },
-                        "as": "o414"
-                    },
-                    "bind": "s608",
-                    "expect": {
-                        "$value": "Role",
-                        "fields": {}
-                    }
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o414"
-                        },
-                        "method": "toString",
-                        "args": {}
-                    },
-                    "expect": "user:456"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o402"
-                        },
-                        "method": "hasRole",
-                        "args": {
-                            "role": "user:456"
-                        }
-                    },
-                    "expect": true
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "class": "Role",
-                        "method": "user",
-                        "args": {
-                            "identifier": "457"
-                        },
-                        "as": "o415"
-                    },
-                    "bind": "s611",
-                    "expect": {
-                        "$value": "Role",
-                        "fields": {}
-                    }
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o415"
-                        },
-                        "method": "toString",
-                        "args": {}
-                    },
-                    "expect": "user:457"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o402"
-                        },
-                        "method": "hasRole",
-                        "args": {
-                            "role": "user:457"
-                        }
-                    },
-                    "expect": false
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o402"
-                        },
-                        "method": "hasRole",
-                        "args": {
-                            "role": ""
-                        }
-                    },
-                    "expect": false
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "class": "Role",
-                        "method": "any",
-                        "args": {},
-                        "as": "o416"
-                    },
-                    "bind": "s615",
-                    "expect": {
-                        "$value": "Role",
-                        "fields": {}
-                    }
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o416"
-                        },
-                        "method": "toString",
-                        "args": {}
-                    },
-                    "expect": "any"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o402"
-                        },
-                        "method": "hasRole",
-                        "args": {
-                            "role": "any"
-                        }
-                    },
-                    "expect": true
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o409"
-                        },
-                        "method": "getPermissionsByType",
-                        "args": {
-                            "type": {
-                                "$enum": "PermissionType::Read"
-                            }
-                        }
-                    },
-                    "expect": [
-                        "user:123",
-                        "team:123"
-                    ]
-                },
-                {
-                    "op": "object.new",
-                    "args": {
-                        "class": "Validator\\Authorization\\Input",
-                        "args": {
-                            "action": {
-                                "$enum": "PermissionType::Read"
-                            },
-                            "permissions": [
-                                "user:123",
-                                "team:123"
-                            ]
-                        },
-                        "as": "o417"
-                    },
-                    "bind": "s619",
-                    "expect": {
-                        "$value": "Validator\\Authorization\\Input",
-                        "fields": {}
-                    }
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o402"
-                        },
-                        "method": "isValid",
-                        "args": {
-                            "value": {
-                                "$obj": "o417"
-                            }
-                        }
-                    },
-                    "expect": true
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o402"
-                        },
-                        "method": "cleanRoles",
-                        "args": {}
-                    },
-                    "expect": {
-                        "$authorization": true
-                    }
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o409"
-                        },
-                        "method": "getPermissionsByType",
-                        "args": {
-                            "type": {
-                                "$enum": "PermissionType::Read"
-                            }
-                        }
-                    },
-                    "expect": [
-                        "user:123",
-                        "team:123"
-                    ]
-                },
-                {
-                    "op": "object.new",
-                    "args": {
-                        "class": "Validator\\Authorization\\Input",
-                        "args": {
-                            "action": {
-                                "$enum": "PermissionType::Read"
-                            },
-                            "permissions": [
-                                "user:123",
-                                "team:123"
-                            ]
-                        },
-                        "as": "o418"
-                    },
-                    "bind": "s623",
-                    "expect": {
-                        "$value": "Validator\\Authorization\\Input",
-                        "fields": {}
-                    }
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o402"
-                        },
-                        "method": "isValid",
-                        "args": {
-                            "value": {
-                                "$obj": "o418"
-                            }
-                        }
-                    },
-                    "expect": false
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "class": "Role",
-                        "method": "team",
-                        "args": {
-                            "identifier": "123"
-                        },
-                        "as": "o419"
-                    },
-                    "bind": "s625",
-                    "expect": {
-                        "$value": "Role",
-                        "fields": {}
-                    }
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o419"
-                        },
-                        "method": "toString",
-                        "args": {}
-                    },
-                    "expect": "team:123"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o402"
-                        },
-                        "method": "addRole",
-                        "args": {
-                            "role": "team:123"
-                        }
-                    },
-                    "expect": {
-                        "$authorization": true
-                    }
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o409"
-                        },
-                        "method": "getPermissionsByType",
-                        "args": {
-                            "type": {
-                                "$enum": "PermissionType::Read"
-                            }
-                        }
-                    },
-                    "expect": [
-                        "user:123",
-                        "team:123"
-                    ]
-                },
-                {
-                    "op": "object.new",
-                    "args": {
-                        "class": "Validator\\Authorization\\Input",
-                        "args": {
-                            "action": {
-                                "$enum": "PermissionType::Read"
-                            },
-                            "permissions": [
-                                "user:123",
-                                "team:123"
-                            ]
-                        },
-                        "as": "o420"
-                    },
-                    "bind": "s629",
-                    "expect": {
-                        "$value": "Validator\\Authorization\\Input",
-                        "fields": {}
-                    }
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o402"
-                        },
-                        "method": "isValid",
-                        "args": {
-                            "value": {
-                                "$obj": "o420"
-                            }
-                        }
-                    },
-                    "expect": true
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o402"
-                        },
-                        "method": "cleanRoles",
-                        "args": {}
-                    },
-                    "expect": {
-                        "$authorization": true
-                    }
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o402"
-                        },
-                        "method": "disable",
-                        "args": {}
-                    },
-                    "expect": {
-                        "$authorization": true
-                    }
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o409"
-                        },
-                        "method": "getPermissionsByType",
-                        "args": {
-                            "type": {
-                                "$enum": "PermissionType::Read"
-                            }
-                        }
-                    },
-                    "expect": [
-                        "user:123",
-                        "team:123"
-                    ]
-                },
-                {
-                    "op": "object.new",
-                    "args": {
-                        "class": "Validator\\Authorization\\Input",
-                        "args": {
-                            "action": {
-                                "$enum": "PermissionType::Read"
-                            },
-                            "permissions": [
-                                "user:123",
-                                "team:123"
-                            ]
-                        },
-                        "as": "o421"
-                    },
-                    "bind": "s634",
-                    "expect": {
-                        "$value": "Validator\\Authorization\\Input",
-                        "fields": {}
-                    }
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o402"
-                        },
-                        "method": "isValid",
-                        "args": {
-                            "value": {
-                                "$obj": "o421"
-                            }
-                        }
-                    },
-                    "expect": true
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o402"
-                        },
-                        "method": "reset",
-                        "args": {}
-                    },
-                    "expect": null
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o409"
-                        },
-                        "method": "getPermissionsByType",
-                        "args": {
-                            "type": {
-                                "$enum": "PermissionType::Read"
-                            }
-                        }
-                    },
-                    "expect": [
-                        "user:123",
-                        "team:123"
-                    ]
-                },
-                {
-                    "op": "object.new",
-                    "args": {
-                        "class": "Validator\\Authorization\\Input",
-                        "args": {
-                            "action": {
-                                "$enum": "PermissionType::Read"
-                            },
-                            "permissions": [
-                                "user:123",
-                                "team:123"
-                            ]
-                        },
-                        "as": "o422"
-                    },
-                    "bind": "s638",
-                    "expect": {
-                        "$value": "Validator\\Authorization\\Input",
-                        "fields": {}
-                    }
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o402"
-                        },
-                        "method": "isValid",
-                        "args": {
-                            "value": {
-                                "$obj": "o422"
-                            }
-                        }
-                    },
-                    "expect": false
-                },
-                {
-                    "op": "object.new",
-                    "args": {
-                        "class": "Validator\\Authorization",
-                        "args": {
-                            "defaultStatus": false
-                        },
-                        "as": "o423"
-                    },
-                    "bind": "s640",
-                    "expect": {
-                        "$authorization": true
-                    }
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o423"
-                        },
-                        "method": "cleanRoles",
-                        "args": {}
-                    },
-                    "expect": {
-                        "$authorization": true
-                    }
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o423"
-                        },
-                        "method": "getStatus",
-                        "args": {}
-                    },
-                    "expect": false
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o423"
-                        },
-                        "method": "disable",
-                        "args": {}
-                    },
-                    "expect": {
-                        "$authorization": true
-                    }
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o409"
-                        },
-                        "method": "getPermissionsByType",
-                        "args": {
-                            "type": {
-                                "$enum": "PermissionType::Read"
-                            }
-                        }
-                    },
-                    "expect": [
-                        "user:123",
-                        "team:123"
-                    ]
-                },
-                {
-                    "op": "object.new",
-                    "args": {
-                        "class": "Validator\\Authorization\\Input",
-                        "args": {
-                            "action": {
-                                "$enum": "PermissionType::Read"
-                            },
-                            "permissions": [
-                                "user:123",
-                                "team:123"
-                            ]
-                        },
-                        "as": "o424"
-                    },
-                    "bind": "s645",
-                    "expect": {
-                        "$value": "Validator\\Authorization\\Input",
-                        "fields": {}
-                    }
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o423"
-                        },
-                        "method": "isValid",
-                        "args": {
-                            "value": {
-                                "$obj": "o424"
-                            }
-                        }
-                    },
-                    "expect": true
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o423"
-                        },
-                        "method": "reset",
-                        "args": {}
-                    },
-                    "expect": null
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o409"
-                        },
-                        "method": "getPermissionsByType",
-                        "args": {
-                            "type": {
-                                "$enum": "PermissionType::Read"
-                            }
-                        }
-                    },
-                    "expect": [
-                        "user:123",
-                        "team:123"
-                    ]
-                },
-                {
-                    "op": "object.new",
-                    "args": {
-                        "class": "Validator\\Authorization\\Input",
-                        "args": {
-                            "action": {
-                                "$enum": "PermissionType::Read"
-                            },
-                            "permissions": [
-                                "user:123",
-                                "team:123"
-                            ]
-                        },
-                        "as": "o425"
-                    },
-                    "bind": "s649",
-                    "expect": {
-                        "$value": "Validator\\Authorization\\Input",
-                        "fields": {}
-                    }
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o423"
-                        },
-                        "method": "isValid",
-                        "args": {
-                            "value": {
-                                "$obj": "o425"
-                            }
-                        }
-                    },
-                    "expect": true
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o423"
-                        },
-                        "method": "enable",
-                        "args": {}
-                    },
-                    "expect": {
-                        "$authorization": true
-                    }
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o409"
-                        },
-                        "method": "getPermissionsByType",
-                        "args": {
-                            "type": {
-                                "$enum": "PermissionType::Read"
-                            }
-                        }
-                    },
-                    "expect": [
-                        "user:123",
-                        "team:123"
-                    ]
-                },
-                {
-                    "op": "object.new",
-                    "args": {
-                        "class": "Validator\\Authorization\\Input",
-                        "args": {
-                            "action": {
-                                "$enum": "PermissionType::Read"
-                            },
-                            "permissions": [
-                                "user:123",
-                                "team:123"
-                            ]
-                        },
-                        "as": "o426"
-                    },
-                    "bind": "s653",
-                    "expect": {
-                        "$value": "Validator\\Authorization\\Input",
-                        "fields": {}
-                    }
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o423"
-                        },
-                        "method": "isValid",
-                        "args": {
-                            "value": {
-                                "$obj": "o426"
-                            }
-                        }
-                    },
-                    "expect": false
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o423"
-                        },
-                        "method": "addRole",
-                        "args": {
-                            "role": "textX"
-                        }
-                    },
-                    "expect": {
-                        "$authorization": true
-                    }
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o423"
-                        },
-                        "method": "getRoles",
-                        "args": {}
-                    },
-                    "expect": [
-                        "textX"
-                    ]
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o423"
-                        },
-                        "method": "removeRole",
-                        "args": {
-                            "role": "textX"
-                        }
-                    },
-                    "expect": {
-                        "$authorization": true
-                    }
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o423"
-                        },
-                        "method": "getRoles",
-                        "args": {}
-                    },
-                    "expect": []
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o409"
-                        },
-                        "method": "getPermissionsByType",
-                        "args": {
-                            "type": {
-                                "$enum": "PermissionType::Read"
-                            }
-                        }
-                    },
-                    "expect": [
-                        "user:123",
-                        "team:123"
-                    ]
-                },
-                {
-                    "op": "object.new",
-                    "args": {
-                        "class": "Validator\\Authorization\\Input",
-                        "args": {
-                            "action": {
-                                "$enum": "PermissionType::Read"
-                            },
-                            "permissions": [
-                                "user:123",
-                                "team:123"
-                            ]
-                        },
-                        "as": "o427"
-                    },
-                    "bind": "s660",
-                    "expect": {
-                        "$value": "Validator\\Authorization\\Input",
-                        "fields": {}
-                    }
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o423"
-                        },
-                        "method": "isValid",
-                        "args": {
-                            "value": {
-                                "$obj": "o427"
-                            }
-                        }
-                    },
-                    "expect": false
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o423"
-                        },
-                        "method": "skip",
-                        "args": {
-                            "callback": {
-                                "steps": [
-                                    {
-                                        "op": "object.call",
-                                        "args": {
-                                            "this": {
-                                                "$obj": "o409"
-                                            },
-                                            "method": "getPermissionsByType",
-                                            "args": {
-                                                "type": {
-                                                    "$enum": "PermissionType::Read"
-                                                }
-                                            }
-                                        }
-                                    },
-                                    {
-                                        "op": "object.new",
-                                        "args": {
-                                            "class": "Validator\\Authorization\\Input",
-                                            "args": {
-                                                "action": {
-                                                    "$enum": "PermissionType::Read"
-                                                },
-                                                "permissions": [
-                                                    "user:123",
-                                                    "team:123"
-                                                ]
-                                            },
-                                            "as": "o428"
-                                        }
-                                    },
-                                    {
-                                        "op": "object.call",
-                                        "args": {
-                                            "this": {
-                                                "$obj": "o423"
-                                            },
-                                            "method": "isValid",
-                                            "args": {
-                                                "value": {
-                                                    "$obj": "o428"
-                                                }
-                                            }
-                                        },
-                                        "return": true
-                                    }
-                                ]
-                            }
-                        }
-                    },
-                    "bind": "s662",
-                    "expect": {
-                        "result": true,
-                        "calls": {
-                            "callback": [
-                                {
-                                    "args": [],
-                                    "steps": [
-                                        [
-                                            "user:123",
-                                            "team:123"
-                                        ],
-                                        {
-                                            "$value": "Validator\\Authorization\\Input",
-                                            "fields": {}
-                                        },
-                                        true
-                                    ]
-                                }
-                            ]
-                        }
-                    }
-                }
-            ]
+          "op": "db.add_format",
+          "args": {
+            "name": "testformat"
+          },
+          "expect": true
         },
         {
-            "name": "AuthorizationTest::test_nested_skips",
-            "state": [],
-            "steps": [
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "testformat"
-                    },
-                    "expect": true
-                },
-                {
-                    "op": "object.new",
-                    "args": {
-                        "class": "Validator\\Authorization",
-                        "args": {},
-                        "as": "o429"
-                    },
-                    "bind": "s663",
-                    "expect": {
-                        "$authorization": true
-                    }
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o429"
-                        },
-                        "method": "getStatus",
-                        "args": {}
-                    },
-                    "expect": true
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o429"
-                        },
-                        "method": "skip",
-                        "args": {
-                            "callback": {
-                                "steps": [
-                                    {
-                                        "op": "object.call",
-                                        "args": {
-                                            "this": {
-                                                "$obj": "o429"
-                                            },
-                                            "method": "getStatus",
-                                            "args": {}
-                                        }
-                                    },
-                                    {
-                                        "op": "object.call",
-                                        "args": {
-                                            "this": {
-                                                "$obj": "o429"
-                                            },
-                                            "method": "skip",
-                                            "args": {
-                                                "callback": {
-                                                    "steps": [
-                                                        {
-                                                            "op": "object.call",
-                                                            "args": {
-                                                                "this": {
-                                                                    "$obj": "o429"
-                                                                },
-                                                                "method": "getStatus",
-                                                                "args": {}
-                                                            }
-                                                        },
-                                                        {
-                                                            "op": "object.call",
-                                                            "args": {
-                                                                "this": {
-                                                                    "$obj": "o429"
-                                                                },
-                                                                "method": "skip",
-                                                                "args": {
-                                                                    "callback": {
-                                                                        "steps": [
-                                                                            {
-                                                                                "op": "object.call",
-                                                                                "args": {
-                                                                                    "this": {
-                                                                                        "$obj": "o429"
-                                                                                    },
-                                                                                    "method": "getStatus",
-                                                                                    "args": {}
-                                                                                }
-                                                                            }
-                                                                        ]
-                                                                    }
-                                                                }
-                                                            }
-                                                        },
-                                                        {
-                                                            "op": "object.call",
-                                                            "args": {
-                                                                "this": {
-                                                                    "$obj": "o429"
-                                                                },
-                                                                "method": "getStatus",
-                                                                "args": {}
-                                                            }
-                                                        }
-                                                    ]
-                                                }
-                                            }
-                                        }
-                                    },
-                                    {
-                                        "op": "object.call",
-                                        "args": {
-                                            "this": {
-                                                "$obj": "o429"
-                                            },
-                                            "method": "getStatus",
-                                            "args": {}
-                                        }
-                                    }
-                                ]
-                            }
-                        }
-                    },
-                    "expect": {
-                        "result": null,
-                        "calls": {
-                            "callback": [
-                                {
-                                    "args": [],
-                                    "steps": [
-                                        false,
-                                        {
-                                            "result": null,
-                                            "calls": {
-                                                "callback": [
-                                                    {
-                                                        "args": [],
-                                                        "steps": [
-                                                            false,
-                                                            {
-                                                                "result": null,
-                                                                "calls": {
-                                                                    "callback": [
-                                                                        {
-                                                                            "args": [],
-                                                                            "steps": [
-                                                                                false
-                                                                            ]
-                                                                        }
-                                                                    ]
-                                                                }
-                                                            },
-                                                            false
-                                                        ]
-                                                    }
-                                                ]
-                                            }
-                                        },
-                                        false
-                                    ]
-                                }
-                            ]
-                        }
-                    }
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o429"
-                        },
-                        "method": "getStatus",
-                        "args": {}
-                    },
-                    "expect": true
-                }
-            ]
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o402"
+          },
+          "bind": "s577",
+          "expect": {
+            "$authorization": true
+          }
         },
         {
-            "name": "AuthorizationTest::test_set_action_accepts_custom_string_and_enum",
-            "state": [],
-            "steps": [
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "testformat"
-                    },
-                    "expect": true
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o403"
+          },
+          "bind": "s578",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o403"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "any"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o402"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "any"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "unique",
+            "args": {}
+          },
+          "bind": "s581",
+          "expect": "<uniqid>"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "unique",
+            "args": {}
+          },
+          "bind": "s582",
+          "expect": "<uniqid>"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "123"
+            }
+          },
+          "expect": "123"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "user",
+            "args": {
+              "identifier": "123"
+            },
+            "as": "o404"
+          },
+          "bind": "s584",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o404"
+              }
+            }
+          },
+          "expect": "read(\"user:123\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "123"
+            }
+          },
+          "expect": "123"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "team",
+            "args": {
+              "identifier": "123"
+            },
+            "as": "o405"
+          },
+          "bind": "s587",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o405"
+              }
+            }
+          },
+          "expect": "read(\"team:123\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o406"
+          },
+          "bind": "s589",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o406"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o407"
+          },
+          "bind": "s591",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o407"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o408"
+          },
+          "bind": "s593",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "delete",
+            "args": {
+              "role": {
+                "$obj": "o408"
+              }
+            }
+          },
+          "expect": "delete(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": {
+                  "$ref": "s581",
+                  "path": ""
                 },
-                {
+                "$collection": {
+                  "$ref": "s582",
+                  "path": ""
+                },
+                "$permissions": [
+                  "read(\"user:123\")",
+                  "read(\"team:123\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              }
+            },
+            "as": "o409"
+          },
+          "bind": "s595",
+          "expect": {
+            "$document": {
+              "$id": "<uniqid>",
+              "$collection": "<uniqid>",
+              "$permissions": [
+                "read(\"user:123\")",
+                "read(\"team:123\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o409"
+            },
+            "method": "getPermissionsByType",
+            "args": {
+              "type": {
+                "$enum": "PermissionType::Read"
+              }
+            }
+          },
+          "expect": [
+            "user:123",
+            "team:123"
+          ]
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization\\Input",
+            "args": {
+              "action": {
+                "$enum": "PermissionType::Read"
+              },
+              "permissions": [
+                "user:123",
+                "team:123"
+              ]
+            },
+            "as": "o410"
+          },
+          "bind": "s597",
+          "expect": {
+            "$value": "Validator\\Authorization\\Input",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o402"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o410"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization\\Input",
+            "args": {
+              "action": {
+                "$enum": "PermissionType::Read"
+              },
+              "permissions": []
+            },
+            "as": "o411"
+          },
+          "bind": "s599",
+          "expect": {
+            "$value": "Validator\\Authorization\\Input",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o402"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o411"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o402"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "No permissions provided for action 'read'"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "user",
+            "args": {
+              "identifier": "456"
+            },
+            "as": "o412"
+          },
+          "bind": "s602",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o412"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "user:456"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o402"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "user:456"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "user",
+            "args": {
+              "identifier": "123"
+            },
+            "as": "o413"
+          },
+          "bind": "s605",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o413"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "user:123"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o402"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "user:123"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "user",
+            "args": {
+              "identifier": "456"
+            },
+            "as": "o414"
+          },
+          "bind": "s608",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o414"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "user:456"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o402"
+            },
+            "method": "hasRole",
+            "args": {
+              "role": "user:456"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "user",
+            "args": {
+              "identifier": "457"
+            },
+            "as": "o415"
+          },
+          "bind": "s611",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o415"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "user:457"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o402"
+            },
+            "method": "hasRole",
+            "args": {
+              "role": "user:457"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o402"
+            },
+            "method": "hasRole",
+            "args": {
+              "role": ""
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o416"
+          },
+          "bind": "s615",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o416"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "any"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o402"
+            },
+            "method": "hasRole",
+            "args": {
+              "role": "any"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o409"
+            },
+            "method": "getPermissionsByType",
+            "args": {
+              "type": {
+                "$enum": "PermissionType::Read"
+              }
+            }
+          },
+          "expect": [
+            "user:123",
+            "team:123"
+          ]
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization\\Input",
+            "args": {
+              "action": {
+                "$enum": "PermissionType::Read"
+              },
+              "permissions": [
+                "user:123",
+                "team:123"
+              ]
+            },
+            "as": "o417"
+          },
+          "bind": "s619",
+          "expect": {
+            "$value": "Validator\\Authorization\\Input",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o402"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o417"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o402"
+            },
+            "method": "cleanRoles",
+            "args": {}
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o409"
+            },
+            "method": "getPermissionsByType",
+            "args": {
+              "type": {
+                "$enum": "PermissionType::Read"
+              }
+            }
+          },
+          "expect": [
+            "user:123",
+            "team:123"
+          ]
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization\\Input",
+            "args": {
+              "action": {
+                "$enum": "PermissionType::Read"
+              },
+              "permissions": [
+                "user:123",
+                "team:123"
+              ]
+            },
+            "as": "o418"
+          },
+          "bind": "s623",
+          "expect": {
+            "$value": "Validator\\Authorization\\Input",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o402"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o418"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "team",
+            "args": {
+              "identifier": "123"
+            },
+            "as": "o419"
+          },
+          "bind": "s625",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o419"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "team:123"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o402"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "team:123"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o409"
+            },
+            "method": "getPermissionsByType",
+            "args": {
+              "type": {
+                "$enum": "PermissionType::Read"
+              }
+            }
+          },
+          "expect": [
+            "user:123",
+            "team:123"
+          ]
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization\\Input",
+            "args": {
+              "action": {
+                "$enum": "PermissionType::Read"
+              },
+              "permissions": [
+                "user:123",
+                "team:123"
+              ]
+            },
+            "as": "o420"
+          },
+          "bind": "s629",
+          "expect": {
+            "$value": "Validator\\Authorization\\Input",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o402"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o420"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o402"
+            },
+            "method": "cleanRoles",
+            "args": {}
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o402"
+            },
+            "method": "disable",
+            "args": {}
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o409"
+            },
+            "method": "getPermissionsByType",
+            "args": {
+              "type": {
+                "$enum": "PermissionType::Read"
+              }
+            }
+          },
+          "expect": [
+            "user:123",
+            "team:123"
+          ]
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization\\Input",
+            "args": {
+              "action": {
+                "$enum": "PermissionType::Read"
+              },
+              "permissions": [
+                "user:123",
+                "team:123"
+              ]
+            },
+            "as": "o421"
+          },
+          "bind": "s634",
+          "expect": {
+            "$value": "Validator\\Authorization\\Input",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o402"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o421"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o402"
+            },
+            "method": "reset",
+            "args": {}
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o409"
+            },
+            "method": "getPermissionsByType",
+            "args": {
+              "type": {
+                "$enum": "PermissionType::Read"
+              }
+            }
+          },
+          "expect": [
+            "user:123",
+            "team:123"
+          ]
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization\\Input",
+            "args": {
+              "action": {
+                "$enum": "PermissionType::Read"
+              },
+              "permissions": [
+                "user:123",
+                "team:123"
+              ]
+            },
+            "as": "o422"
+          },
+          "bind": "s638",
+          "expect": {
+            "$value": "Validator\\Authorization\\Input",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o402"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o422"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {
+              "defaultStatus": false
+            },
+            "as": "o423"
+          },
+          "bind": "s640",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o423"
+            },
+            "method": "cleanRoles",
+            "args": {}
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o423"
+            },
+            "method": "getStatus",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o423"
+            },
+            "method": "disable",
+            "args": {}
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o409"
+            },
+            "method": "getPermissionsByType",
+            "args": {
+              "type": {
+                "$enum": "PermissionType::Read"
+              }
+            }
+          },
+          "expect": [
+            "user:123",
+            "team:123"
+          ]
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization\\Input",
+            "args": {
+              "action": {
+                "$enum": "PermissionType::Read"
+              },
+              "permissions": [
+                "user:123",
+                "team:123"
+              ]
+            },
+            "as": "o424"
+          },
+          "bind": "s645",
+          "expect": {
+            "$value": "Validator\\Authorization\\Input",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o423"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o424"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o423"
+            },
+            "method": "reset",
+            "args": {}
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o409"
+            },
+            "method": "getPermissionsByType",
+            "args": {
+              "type": {
+                "$enum": "PermissionType::Read"
+              }
+            }
+          },
+          "expect": [
+            "user:123",
+            "team:123"
+          ]
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization\\Input",
+            "args": {
+              "action": {
+                "$enum": "PermissionType::Read"
+              },
+              "permissions": [
+                "user:123",
+                "team:123"
+              ]
+            },
+            "as": "o425"
+          },
+          "bind": "s649",
+          "expect": {
+            "$value": "Validator\\Authorization\\Input",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o423"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o425"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o423"
+            },
+            "method": "enable",
+            "args": {}
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o409"
+            },
+            "method": "getPermissionsByType",
+            "args": {
+              "type": {
+                "$enum": "PermissionType::Read"
+              }
+            }
+          },
+          "expect": [
+            "user:123",
+            "team:123"
+          ]
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization\\Input",
+            "args": {
+              "action": {
+                "$enum": "PermissionType::Read"
+              },
+              "permissions": [
+                "user:123",
+                "team:123"
+              ]
+            },
+            "as": "o426"
+          },
+          "bind": "s653",
+          "expect": {
+            "$value": "Validator\\Authorization\\Input",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o423"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o426"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o423"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "textX"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o423"
+            },
+            "method": "getRoles",
+            "args": {}
+          },
+          "expect": [
+            "textX"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o423"
+            },
+            "method": "removeRole",
+            "args": {
+              "role": "textX"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o423"
+            },
+            "method": "getRoles",
+            "args": {}
+          },
+          "expect": []
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o409"
+            },
+            "method": "getPermissionsByType",
+            "args": {
+              "type": {
+                "$enum": "PermissionType::Read"
+              }
+            }
+          },
+          "expect": [
+            "user:123",
+            "team:123"
+          ]
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization\\Input",
+            "args": {
+              "action": {
+                "$enum": "PermissionType::Read"
+              },
+              "permissions": [
+                "user:123",
+                "team:123"
+              ]
+            },
+            "as": "o427"
+          },
+          "bind": "s660",
+          "expect": {
+            "$value": "Validator\\Authorization\\Input",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o423"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o427"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o423"
+            },
+            "method": "skip",
+            "args": {
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o409"
+                      },
+                      "method": "getPermissionsByType",
+                      "args": {
+                        "type": {
+                          "$enum": "PermissionType::Read"
+                        }
+                      }
+                    }
+                  },
+                  {
                     "op": "object.new",
                     "args": {
-                        "class": "Validator\\Authorization",
-                        "args": {},
-                        "as": "o440"
-                    },
-                    "expect": {
-                        "$authorization": true
-                    }
-                },
-                {
-                    "op": "object.new",
-                    "args": {
-                        "class": "Validator\\Authorization\\Input",
-                        "args": {
-                            "action": {
-                                "$enum": "PermissionType::Read"
-                            },
-                            "permissions": []
+                      "class": "Validator\\Authorization\\Input",
+                      "args": {
+                        "action": {
+                          "$enum": "PermissionType::Read"
                         },
-                        "as": "o441"
-                    },
-                    "bind": "s693",
-                    "expect": {
-                        "$value": "Validator\\Authorization\\Input",
-                        "fields": {}
+                        "permissions": [
+                          "user:123",
+                          "team:123"
+                        ]
+                      },
+                      "as": "o428"
                     }
-                },
-                {
+                  },
+                  {
                     "op": "object.call",
                     "args": {
-                        "this": {
-                            "$obj": "o441"
-                        },
-                        "method": "setAction",
-                        "args": {
-                            "action": "subscribe"
+                      "this": {
+                        "$obj": "o423"
+                      },
+                      "method": "isValid",
+                      "args": {
+                        "value": {
+                          "$obj": "o428"
                         }
+                      }
                     },
-                    "expect": {
-                        "$error": {
-                            "class": "ValueError",
-                            "message": "\"subscribe\" is not a valid backing value for enum Utopia\\Database\\PermissionType"
-                        }
-                    }
-                },
+                    "return": true
+                  }
+                ]
+              }
+            }
+          },
+          "bind": "s662",
+          "expect": {
+            "result": true,
+            "calls": {
+              "callback": [
                 {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o441"
-                        },
-                        "method": "getAction",
-                        "args": {}
+                  "args": [],
+                  "steps": [
+                    [
+                      "user:123",
+                      "team:123"
+                    ],
+                    {
+                      "$value": "Validator\\Authorization\\Input",
+                      "fields": {}
                     },
-                    "expect": "read"
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o441"
-                        },
-                        "method": "setAction",
-                        "args": {
-                            "action": {
-                                "$enum": "PermissionType::Update"
-                            }
-                        }
-                    },
-                    "expect": {
-                        "$value": "Validator\\Authorization\\Input",
-                        "fields": {}
-                    }
-                },
-                {
-                    "op": "object.call",
-                    "args": {
-                        "this": {
-                            "$obj": "o441"
-                        },
-                        "method": "getAction",
-                        "args": {}
-                    },
-                    "expect": "update"
+                    true
+                  ]
                 }
-            ]
+              ]
+            }
+          }
         }
-    ]
+      ]
+    },
+    {
+      "name": "AuthorizationTest::test_nested_skips",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "testformat"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o429"
+          },
+          "bind": "s663",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o429"
+            },
+            "method": "getStatus",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o429"
+            },
+            "method": "skip",
+            "args": {
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o429"
+                      },
+                      "method": "getStatus",
+                      "args": {}
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o429"
+                      },
+                      "method": "skip",
+                      "args": {
+                        "callback": {
+                          "steps": [
+                            {
+                              "op": "object.call",
+                              "args": {
+                                "this": {
+                                  "$obj": "o429"
+                                },
+                                "method": "getStatus",
+                                "args": {}
+                              }
+                            },
+                            {
+                              "op": "object.call",
+                              "args": {
+                                "this": {
+                                  "$obj": "o429"
+                                },
+                                "method": "skip",
+                                "args": {
+                                  "callback": {
+                                    "steps": [
+                                      {
+                                        "op": "object.call",
+                                        "args": {
+                                          "this": {
+                                            "$obj": "o429"
+                                          },
+                                          "method": "getStatus",
+                                          "args": {}
+                                        }
+                                      }
+                                    ]
+                                  }
+                                }
+                              }
+                            },
+                            {
+                              "op": "object.call",
+                              "args": {
+                                "this": {
+                                  "$obj": "o429"
+                                },
+                                "method": "getStatus",
+                                "args": {}
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o429"
+                      },
+                      "method": "getStatus",
+                      "args": {}
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    false,
+                    {
+                      "result": null,
+                      "calls": {
+                        "callback": [
+                          {
+                            "args": [],
+                            "steps": [
+                              false,
+                              {
+                                "result": null,
+                                "calls": {
+                                  "callback": [
+                                    {
+                                      "args": [],
+                                      "steps": [
+                                        false
+                                      ]
+                                    }
+                                  ]
+                                }
+                              },
+                              false
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    false
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o429"
+            },
+            "method": "getStatus",
+            "args": {}
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "AuthorizationTest::test_set_action_accepts_custom_string_and_enum",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "testformat"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o440"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization\\Input",
+            "args": {
+              "action": {
+                "$enum": "PermissionType::Read"
+              },
+              "permissions": []
+            },
+            "as": "o441"
+          },
+          "bind": "s693",
+          "expect": {
+            "$value": "Validator\\Authorization\\Input",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o441"
+            },
+            "method": "setAction",
+            "args": {
+              "action": "subscribe"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "ValueError",
+              "message": "\"subscribe\" is not a valid backing value for enum Utopia\\Database\\PermissionType"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o441"
+            },
+            "method": "getAction",
+            "args": {}
+          },
+          "expect": "read"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o441"
+            },
+            "method": "setAction",
+            "args": {
+              "action": {
+                "$enum": "PermissionType::Update"
+              }
+            }
+          },
+          "expect": {
+            "$value": "Validator\\Authorization\\Input",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o441"
+            },
+            "method": "getAction",
+            "args": {}
+          },
+          "expect": "update"
+        }
+      ]
+    }
+  ]
 }

@@ -1785,9 +1785,21 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to persist metadata after retries for attribute creation 'divisor': Failed to execute transaction: the transaction was lost before it could commit"
+            "$value": "Attribute",
+            "fields": {
+              "key": "divisor",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Double"
+              },
+              "size": null,
+              "required": false,
+              "default": 100.0,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
             }
           }
         },
@@ -2559,9 +2571,80 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"divisor\""
+            "$document": {
+              "$id": "bulk_doc_1",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "counter": 10,
+              "score": 1.5,
+              "multiplier": 1.0,
+              "divisor": 50.0,
+              "remainder": 7,
+              "power_val": 2.0,
+              "title": "Title 1",
+              "content": "old content 1",
+              "tags": [
+                "tag_1",
+                "common"
+              ],
+              "categories": [
+                "cat_1",
+                "test"
+              ],
+              "items": [
+                "item_1",
+                "shared",
+                "item_1"
+              ],
+              "duplicates": [
+                "a",
+                "b",
+                "a",
+                "c",
+                "b",
+                "d"
+              ],
+              "numbers": [
+                1,
+                2,
+                3,
+                4,
+                5
+              ],
+              "intersect_items": [
+                "a",
+                "b",
+                "c",
+                "d"
+              ],
+              "diff_items": [
+                "x",
+                "y",
+                "z",
+                "w"
+              ],
+              "filter_numbers": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10
+              ],
+              "active": false,
+              "last_update": "<now>",
+              "next_update": "<now>",
+              "$collection": "test_all_operators_bulk",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1",
+              "now_field": null
             }
           }
         },
@@ -2650,8 +2733,8 @@
           },
           "expect": {
             "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"divisor\""
+              "class": "Utopia\\Database\\Exception\\Transaction",
+              "message": "Failed to execute transaction: the transaction was lost before it could commit"
             }
           }
         },
@@ -2739,9 +2822,80 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"divisor\""
+            "$document": {
+              "$id": "bulk_doc_3",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "counter": 30,
+              "score": 4.5,
+              "multiplier": 3.0,
+              "divisor": 150.0,
+              "remainder": 21,
+              "power_val": 4.0,
+              "title": "Title 3",
+              "content": "old content 3",
+              "tags": [
+                "tag_3",
+                "common"
+              ],
+              "categories": [
+                "cat_3",
+                "test"
+              ],
+              "items": [
+                "item_3",
+                "shared",
+                "item_3"
+              ],
+              "duplicates": [
+                "a",
+                "b",
+                "a",
+                "c",
+                "b",
+                "d"
+              ],
+              "numbers": [
+                1,
+                2,
+                3,
+                4,
+                5
+              ],
+              "intersect_items": [
+                "a",
+                "b",
+                "c",
+                "d"
+              ],
+              "diff_items": [
+                "x",
+                "y",
+                "z",
+                "w"
+              ],
+              "filter_numbers": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10
+              ],
+              "active": false,
+              "last_update": "<now>",
+              "next_update": "<now>",
+              "$collection": "test_all_operators_bulk",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "3",
+              "now_field": null
             }
           }
         },
@@ -2939,12 +3093,7 @@
               }
             }
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"divisor\""
-            }
-          }
+          "expect": 3
         },
         {
           "op": "database.find",
@@ -2960,7 +3109,212 @@
               }
             ]
           },
-          "expect": []
+          "expect": [
+            {
+              "$document": {
+                "counter": 15,
+                "score": 1.0,
+                "multiplier": 2.0,
+                "divisor": 25.0,
+                "remainder": 2,
+                "power_val": 4.0,
+                "title": "Title 1 - Updated",
+                "content": "new content 1",
+                "tags": [
+                  "tag_1",
+                  "common",
+                  "bulk"
+                ],
+                "categories": [
+                  "priority",
+                  "cat_1",
+                  "test"
+                ],
+                "items": [
+                  "item_1",
+                  "item_1"
+                ],
+                "duplicates": [
+                  "a",
+                  "b",
+                  "c",
+                  "d"
+                ],
+                "numbers": [
+                  1,
+                  2,
+                  99,
+                  3,
+                  4,
+                  5
+                ],
+                "intersect_items": [
+                  "b",
+                  "c"
+                ],
+                "diff_items": [
+                  "x",
+                  "w"
+                ],
+                "filter_numbers": [
+                  6,
+                  7,
+                  8,
+                  9,
+                  10
+                ],
+                "active": true,
+                "last_update": "<now>",
+                "next_update": "<now>",
+                "now_field": "<now>",
+                "$id": "bulk_doc_1",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ],
+                "$collection": "test_all_operators_bulk"
+              }
+            },
+            {
+              "$document": {
+                "counter": 25,
+                "score": 2.5,
+                "multiplier": 4.0,
+                "divisor": 50.0,
+                "remainder": 4,
+                "power_val": 9.0,
+                "title": "Title 2 - Updated",
+                "content": "new content 2",
+                "tags": [
+                  "tag_2",
+                  "common",
+                  "bulk"
+                ],
+                "categories": [
+                  "priority",
+                  "cat_2",
+                  "test"
+                ],
+                "items": [
+                  "item_2",
+                  "item_2"
+                ],
+                "duplicates": [
+                  "a",
+                  "b",
+                  "c",
+                  "d"
+                ],
+                "numbers": [
+                  1,
+                  2,
+                  99,
+                  3,
+                  4,
+                  5
+                ],
+                "intersect_items": [
+                  "b",
+                  "c"
+                ],
+                "diff_items": [
+                  "x",
+                  "w"
+                ],
+                "filter_numbers": [
+                  6,
+                  7,
+                  8,
+                  9,
+                  10
+                ],
+                "active": false,
+                "last_update": "<now>",
+                "next_update": "<now>",
+                "now_field": "<now>",
+                "$id": "bulk_doc_2",
+                "$sequence": "2",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ],
+                "$collection": "test_all_operators_bulk"
+              }
+            },
+            {
+              "$document": {
+                "counter": 35,
+                "score": 4.0,
+                "multiplier": 6.0,
+                "divisor": 75.0,
+                "remainder": 1,
+                "power_val": 16.0,
+                "title": "Title 3 - Updated",
+                "content": "new content 3",
+                "tags": [
+                  "tag_3",
+                  "common",
+                  "bulk"
+                ],
+                "categories": [
+                  "priority",
+                  "cat_3",
+                  "test"
+                ],
+                "items": [
+                  "item_3",
+                  "item_3"
+                ],
+                "duplicates": [
+                  "a",
+                  "b",
+                  "c",
+                  "d"
+                ],
+                "numbers": [
+                  1,
+                  2,
+                  99,
+                  3,
+                  4,
+                  5
+                ],
+                "intersect_items": [
+                  "b",
+                  "c"
+                ],
+                "diff_items": [
+                  "x",
+                  "w"
+                ],
+                "filter_numbers": [
+                  6,
+                  7,
+                  8,
+                  9,
+                  10
+                ],
+                "active": true,
+                "last_update": "<now>",
+                "next_update": "<now>",
+                "now_field": "<now>",
+                "$id": "bulk_doc_3",
+                "$sequence": "3",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ],
+                "$collection": "test_all_operators_bulk"
+              }
+            }
+          ]
         },
         {
           "op": "database.delete_collection",
@@ -96778,23 +97132,9 @@
             }
           },
           "expect": {
-            "$value": "Attribute",
-            "fields": {
-              "key": "date",
-              "type": {
-                "$enum": "Query\\Schema\\ColumnType::Datetime"
-              },
-              "size": null,
-              "required": false,
-              "default": null,
-              "signed": false,
-              "array": false,
-              "format": null,
-              "filters": [
-                "datetime"
-              ],
-              "relationship": null,
-              "side": null
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Failed to persist metadata after retries for attribute creation 'date': Failed to execute transaction: the transaction was lost before it could commit"
             }
           }
         },
@@ -96814,17 +97154,9 @@
             }
           },
           "expect": {
-            "$document": {
-              "$id": "date_boundary_doc",
-              "$permissions": [
-                "read(\"any\")",
-                "update(\"any\")"
-              ],
-              "date": "2023-12-31T23:59:59.000+00:00",
-              "$collection": "test_date_boundaries",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$sequence": "1"
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
             }
           }
         },
@@ -96848,18 +97180,7 @@
             }
           },
           "expect": {
-            "$document": {
-              "date": "2024-01-01T23:59:59.000+00:00",
-              "$id": "date_boundary_doc",
-              "$sequence": "1",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$permissions": [
-                "read(\"any\")",
-                "update(\"any\")"
-              ],
-              "$collection": "test_date_boundaries"
-            }
+            "$document": {}
           }
         },
         {
@@ -96874,18 +97195,7 @@
             }
           },
           "expect": {
-            "$document": {
-              "date": "2024-02-28T12:00:00.000+00:00",
-              "$sequence": "1",
-              "$id": "date_boundary_doc",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$permissions": [
-                "read(\"any\")",
-                "update(\"any\")"
-              ],
-              "$collection": "test_date_boundaries"
-            }
+            "$document": {}
           }
         },
         {
@@ -96908,18 +97218,7 @@
             }
           },
           "expect": {
-            "$document": {
-              "date": "2024-02-29T12:00:00.000+00:00",
-              "$id": "date_boundary_doc",
-              "$sequence": "1",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$permissions": [
-                "read(\"any\")",
-                "update(\"any\")"
-              ],
-              "$collection": "test_date_boundaries"
-            }
+            "$document": {}
           }
         },
         {
@@ -96934,18 +97233,7 @@
             }
           },
           "expect": {
-            "$document": {
-              "date": "2023-02-28T12:00:00.000+00:00",
-              "$sequence": "1",
-              "$id": "date_boundary_doc",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$permissions": [
-                "read(\"any\")",
-                "update(\"any\")"
-              ],
-              "$collection": "test_date_boundaries"
-            }
+            "$document": {}
           }
         },
         {
@@ -96968,18 +97256,7 @@
             }
           },
           "expect": {
-            "$document": {
-              "date": "2023-03-01T12:00:00.000+00:00",
-              "$id": "date_boundary_doc",
-              "$sequence": "1",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$permissions": [
-                "read(\"any\")",
-                "update(\"any\")"
-              ],
-              "$collection": "test_date_boundaries"
-            }
+            "$document": {}
           }
         },
         {
@@ -96994,18 +97271,7 @@
             }
           },
           "expect": {
-            "$document": {
-              "date": "2023-01-01T00:00:00.000+00:00",
-              "$sequence": "1",
-              "$id": "date_boundary_doc",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$permissions": [
-                "read(\"any\")",
-                "update(\"any\")"
-              ],
-              "$collection": "test_date_boundaries"
-            }
+            "$document": {}
           }
         },
         {
@@ -97028,18 +97294,7 @@
             }
           },
           "expect": {
-            "$document": {
-              "date": "2024-01-01T00:00:00.000+00:00",
-              "$id": "date_boundary_doc",
-              "$sequence": "1",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$permissions": [
-                "read(\"any\")",
-                "update(\"any\")"
-              ],
-              "$collection": "test_date_boundaries"
-            }
+            "$document": {}
           }
         },
         {

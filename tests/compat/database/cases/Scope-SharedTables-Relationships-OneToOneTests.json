@@ -16247,9 +16247,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to create relationship indexes: Failed to persist metadata after retries for index creation '_index_child': Failed to execute transaction: the transaction was lost before it could commit"
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "oto_select_child",
+              "type": {
+                "$enum": "RelationshipType::OneToOne"
+              },
+              "twoWay": true,
+              "key": "child",
+              "twoWayKey": "parent",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::SetNull"
+              }
             }
           }
         },
@@ -16304,9 +16313,35 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"child\""
+            "$document": {
+              "$id": "parent1",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "name": "Parent",
+              "$collection": "oto_select_parent",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1",
+              "child": {
+                "$document": {
+                  "name": "Child",
+                  "$id": "child1",
+                  "$sequence": "1",
+                  "$tenant": "999",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"any\")",
+                    "update(\"any\")",
+                    "delete(\"any\")"
+                  ],
+                  "$collection": "oto_select_child"
+                }
+              }
             }
           }
         },
@@ -16336,7 +16371,12 @@
               }
             ]
           },
-          "expect": 1
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Transaction",
+              "message": "Failed to execute transaction: the transaction was lost before it could commit"
+            }
+          }
         },
         {
           "op": "database.get_document",
@@ -16345,7 +16385,36 @@
             "id": "parent1"
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "name": "Parent",
+              "$sequence": "1",
+              "$id": "parent1",
+              "$tenant": "999",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "oto_select_parent",
+              "child": {
+                "$document": {
+                  "name": "Child",
+                  "$id": "child1",
+                  "$sequence": "1",
+                  "$tenant": "999",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"any\")",
+                    "update(\"any\")",
+                    "delete(\"any\")"
+                  ],
+                  "$collection": "oto_select_child"
+                }
+              }
+            }
           }
         },
         {

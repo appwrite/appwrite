@@ -485,13 +485,22 @@
                   "<now>",
                   "[]"
                 ],
-                "durationMs": 0.07414817810058594,
+                "durationMs": "<masked>",
                 "collection": "",
                 "operation": "document_create",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/fields/durationMs",
+              "/*/fields/backtrace",
+              "/calls/*/*/steps/*/*/fields/durationMs",
+              "/calls/*/*/steps/*/*/fields/backtrace"
+            ],
+            "reason": "a profiled statement's duration and the PHP stack it ran from are the runtime's own"
+          }
         },
         {
           "op": "object.call",
@@ -1091,10 +1100,10 @@
                   "<now>",
                   "[\"read(\\\"any\\\")\"]"
                 ],
-                "durationMs": 0.05602836608886719,
+                "durationMs": "<masked>",
                 "collection": "",
                 "operation": "document_create",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             },
             {
@@ -1106,13 +1115,22 @@
                   "read",
                   "any"
                 ],
-                "durationMs": 0.012874603271484375,
+                "durationMs": "<masked>",
                 "collection": "",
                 "operation": "permissions_create",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/fields/durationMs",
+              "/*/fields/backtrace",
+              "/calls/*/*/steps/*/*/fields/durationMs",
+              "/calls/*/*/steps/*/*/fields/backtrace"
+            ],
+            "reason": "a profiled statement's duration and the PHP stack it ran from are the runtime's own"
+          }
         },
         {
           "op": "object.call",
@@ -1682,13 +1700,22 @@
                   "[]",
                   1
                 ],
-                "durationMs": 0.06008148193359375,
+                "durationMs": "<masked>",
                 "collection": "",
                 "operation": "document_create",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/fields/durationMs",
+              "/*/fields/backtrace",
+              "/calls/*/*/steps/*/*/fields/durationMs",
+              "/calls/*/*/steps/*/*/fields/backtrace"
+            ],
+            "reason": "a profiled statement's duration and the PHP stack it ran from are the runtime's own"
+          }
         },
         {
           "op": "object.call",
@@ -2323,10 +2350,10 @@
                   "[\"read(\\\"any\\\")\"]",
                   1
                 ],
-                "durationMs": 0.07009506225585938,
+                "durationMs": "<masked>",
                 "collection": "",
                 "operation": "document_create",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             },
             {
@@ -2339,13 +2366,22 @@
                   "any",
                   1
                 ],
-                "durationMs": 0.015020370483398438,
+                "durationMs": "<masked>",
                 "collection": "",
                 "operation": "permissions_create",
-                "backtrace": null
+                "backtrace": "<masked>"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/fields/durationMs",
+              "/*/fields/backtrace",
+              "/calls/*/*/steps/*/*/fields/durationMs",
+              "/calls/*/*/steps/*/*/fields/backtrace"
+            ],
+            "reason": "a profiled statement's duration and the PHP stack it ran from are the runtime's own"
+          }
         },
         {
           "op": "object.call",

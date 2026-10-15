@@ -26640,9 +26640,18 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to create relationship indexes: Failed to persist metadata after retries for index creation '_index_parentRelationTest': Failed to execute transaction: the transaction was lost before it could commit"
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "childRelationTest",
+              "type": {
+                "$enum": "RelationshipType::OneToMany"
+              },
+              "twoWay": false,
+              "key": "children",
+              "twoWayKey": "parentRelationTest",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
             }
           }
         },
@@ -26664,9 +26673,29 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Unknown attribute: \"children\""
+            "$document": {
+              "$id": "parent1",
+              "name": "Parent 1",
+              "$collection": "parentRelationTest",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$tenant": "999",
+              "$sequence": "1",
+              "children": [
+                {
+                  "$document": {
+                    "name": "Child 1",
+                    "$id": "child1",
+                    "$sequence": "1",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [],
+                    "$collection": "childRelationTest"
+                  }
+                }
+              ]
             }
           }
         },
@@ -26700,7 +26729,30 @@
             }
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "name": "Parent 1",
+              "$sequence": "1",
+              "$id": "parent1",
+              "$tenant": 999,
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "parentRelationTest",
+              "children": [
+                {
+                  "$document": {
+                    "name": null,
+                    "$id": "child2",
+                    "$sequence": "2",
+                    "$tenant": "999",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$permissions": [],
+                    "$collection": "childRelationTest"
+                  }
+                }
+              ]
+            }
           }
         },
         {
@@ -26930,111 +26982,9 @@
             }
           },
           "expect": {
-            "result": null,
-            "calls": {
-              "callback": [
-                {
-                  "args": [],
-                  "steps": [
-                    {
-                      "$document": {
-                        "$id": "link_rule_parents_u000000000126",
-                        "name": "link_rule_parents_u000000000126",
-                        "attributes": [
-                          {
-                            "$document": {
-                              "$id": "name",
-                              "key": "name",
-                              "type": "string",
-                              "size": 64,
-                              "required": false,
-                              "default": null,
-                              "signed": true,
-                              "array": false,
-                              "format": null,
-                              "formatOptions": [],
-                              "filters": []
-                            }
-                          }
-                        ],
-                        "indexes": [],
-                        "documentSecurity": false,
-                        "$permissions": [
-                          "create(\"any\")",
-                          "read(\"any\")"
-                        ],
-                        "$collection": "_metadata",
-                        "$createdAt": "<now>",
-                        "$updatedAt": "<now>",
-                        "$tenant": "999",
-                        "$sequence": "1"
-                      },
-                      "$class": "Collection"
-                    },
-                    {
-                      "$document": {
-                        "$id": "link_rule_related_u000000000127",
-                        "name": "link_rule_related_u000000000127",
-                        "attributes": [
-                          {
-                            "$document": {
-                              "$id": "name",
-                              "key": "name",
-                              "type": "string",
-                              "size": 64,
-                              "required": false,
-                              "default": null,
-                              "signed": true,
-                              "array": false,
-                              "format": null,
-                              "formatOptions": [],
-                              "filters": []
-                            }
-                          }
-                        ],
-                        "indexes": [],
-                        "documentSecurity": false,
-                        "$permissions": [
-                          "read(\"users\")"
-                        ],
-                        "$collection": "_metadata",
-                        "$createdAt": "<now>",
-                        "$updatedAt": "<now>",
-                        "$tenant": "999",
-                        "$sequence": "2"
-                      },
-                      "$class": "Collection"
-                    },
-                    {
-                      "$value": "Relationship",
-                      "fields": {
-                        "relatedCollection": "link_rule_related_u000000000127",
-                        "type": {
-                          "$enum": "RelationshipType::OneToOne"
-                        },
-                        "twoWay": true,
-                        "key": "related",
-                        "twoWayKey": "back",
-                        "onDelete": {
-                          "$enum": "RelationshipDeleteAction::SetNull"
-                        }
-                      }
-                    },
-                    {
-                      "$document": {
-                        "$id": "stored",
-                        "name": "Stored",
-                        "$permissions": [],
-                        "$collection": "link_rule_related_u000000000127",
-                        "$createdAt": "<now>",
-                        "$updatedAt": "<now>",
-                        "$tenant": "999",
-                        "$sequence": "1"
-                      }
-                    }
-                  ]
-                }
-              ]
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Failed to create collection metadata for 'link_rule_related_u000000000127': Failed to execute transaction: the transaction was lost before it could commit"
             }
           }
         },
@@ -27067,9 +27017,16 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Authorization",
-              "message": "No permissions provided for action 'update'"
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    null
+                  ]
+                }
+              ]
             }
           }
         },
@@ -27114,8 +27071,8 @@
           },
           "expect": {
             "$error": {
-              "class": "Utopia\\Database\\Exception\\Authorization",
-              "message": "No permissions provided for action 'update'"
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Unknown attribute: \"related\""
             }
           }
         },
@@ -27136,40 +27093,9 @@
             }
           },
           "expect": {
-            "result": {
-              "$document": {
-                "name": "Stored",
-                "$sequence": "1",
-                "$id": "stored",
-                "$tenant": "999",
-                "$createdAt": "<now>",
-                "$updatedAt": "<now>",
-                "$permissions": [],
-                "$collection": "link_rule_related_u000000000127",
-                "back": null
-              }
-            },
-            "calls": {
-              "callback": [
-                {
-                  "args": [],
-                  "steps": [
-                    {
-                      "$document": {
-                        "name": "Stored",
-                        "$sequence": "1",
-                        "$id": "stored",
-                        "$tenant": "999",
-                        "$createdAt": "<now>",
-                        "$updatedAt": "<now>",
-                        "$permissions": [],
-                        "$collection": "link_rule_related_u000000000127",
-                        "back": null
-                      }
-                    }
-                  ]
-                }
-              ]
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
             }
           }
         },
@@ -27228,17 +27154,9 @@
             }
           },
           "expect": {
-            "result": null,
-            "calls": {
-              "callback": [
-                {
-                  "args": [],
-                  "steps": [
-                    null,
-                    null
-                  ]
-                }
-              ]
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
             }
           }
         },
