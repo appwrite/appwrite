@@ -1,2078 +1,2408 @@
 {
-    "source": [
-        "vendor/utopia-php/database/tests/e2e/Adapter/Scopes/SchemalessTests.php",
-        "vendor/utopia-php/database/tests/e2e/Adapter/MySQLTest.php"
-    ],
-    "cases": [
+  "source": [
+    "vendor/utopia-php/database/tests/e2e/Adapter/Scopes/SchemalessTests.php",
+    "vendor/utopia-php/database/tests/e2e/Adapter/MySQLTest.php"
+  ],
+  "cases": [
+    {
+      "name": "SchemalessTests::testSchemalessDocumentOperation",
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "steps": [
         {
-            "name": "SchemalessTests::testSchemalessDocumentOperation",
-            "state": [
-                "mysql@database-mysql"
-            ],
-            "steps": [
-                {
-                    "op": "db.open",
-                    "args": {
-                        "driver": "mysql"
-                    },
-                    "bind": "db"
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRange"
-                    }
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRangeNew"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "subQueryProbe"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "joinedSeal"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "operator_double_decode"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt",
-                        "fixture": "encrypt_operator"
-                    }
-                },
-                {
-                    "op": "db.adapter",
-                    "args": {
-                        "method": "supports",
-                        "args": {
-                            "capability": {
-                                "$enum": "Capability::DefinedAttributes"
-                            }
-                        }
-                    }
-                }
-            ]
+          "op": "db.open",
+          "args": {
+            "driver": "mysql"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
-            "name": "SchemalessTests::testSchemalessSelectionOnUnknownAttributes",
-            "state": [
-                "mysql@database-mysql"
-            ],
-            "steps": [
-                {
-                    "op": "db.open",
-                    "args": {
-                        "driver": "mysql"
-                    },
-                    "bind": "db"
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRange"
-                    }
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRangeNew"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "subQueryProbe"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "joinedSeal"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "operator_double_decode"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt",
-                        "fixture": "encrypt_operator"
-                    }
-                },
-                {
-                    "op": "db.adapter",
-                    "args": {
-                        "method": "supports",
-                        "args": {
-                            "capability": {
-                                "$enum": "Capability::DefinedAttributes"
-                            }
-                        }
-                    }
-                }
-            ]
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
         },
         {
-            "name": "SchemalessTests::testSchemalessIncrement",
-            "state": [
-                "mysql@database-mysql"
-            ],
-            "steps": [
-                {
-                    "op": "db.open",
-                    "args": {
-                        "driver": "mysql"
-                    },
-                    "bind": "db"
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRange"
-                    }
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRangeNew"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "subQueryProbe"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "joinedSeal"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "operator_double_decode"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt",
-                        "fixture": "encrypt_operator"
-                    }
-                },
-                {
-                    "op": "db.adapter",
-                    "args": {
-                        "method": "supports",
-                        "args": {
-                            "capability": {
-                                "$enum": "Capability::DefinedAttributes"
-                            }
-                        }
-                    }
-                }
-            ]
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
         },
         {
-            "name": "SchemalessTests::testSchemalessDecrement",
-            "state": [
-                "mysql@database-mysql"
-            ],
-            "steps": [
-                {
-                    "op": "db.open",
-                    "args": {
-                        "driver": "mysql"
-                    },
-                    "bind": "db"
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRange"
-                    }
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRangeNew"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "subQueryProbe"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "joinedSeal"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "operator_double_decode"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt",
-                        "fixture": "encrypt_operator"
-                    }
-                },
-                {
-                    "op": "db.adapter",
-                    "args": {
-                        "method": "supports",
-                        "args": {
-                            "capability": {
-                                "$enum": "Capability::DefinedAttributes"
-                            }
-                        }
-                    }
-                }
-            ]
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
         },
         {
-            "name": "SchemalessTests::testSchemalessUpdateDocumentWithQuery",
-            "state": [
-                "mysql@database-mysql"
-            ],
-            "steps": [
-                {
-                    "op": "db.open",
-                    "args": {
-                        "driver": "mysql"
-                    },
-                    "bind": "db"
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRange"
-                    }
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRangeNew"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "subQueryProbe"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "joinedSeal"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "operator_double_decode"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt",
-                        "fixture": "encrypt_operator"
-                    }
-                },
-                {
-                    "op": "db.adapter",
-                    "args": {
-                        "method": "supports",
-                        "args": {
-                            "capability": {
-                                "$enum": "Capability::DefinedAttributes"
-                            }
-                        }
-                    }
-                }
-            ]
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
         },
         {
-            "name": "SchemalessTests::testSchemalessDeleteDocumentWithQuery",
-            "state": [
-                "mysql@database-mysql"
-            ],
-            "steps": [
-                {
-                    "op": "db.open",
-                    "args": {
-                        "driver": "mysql"
-                    },
-                    "bind": "db"
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRange"
-                    }
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRangeNew"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "subQueryProbe"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "joinedSeal"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "operator_double_decode"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt",
-                        "fixture": "encrypt_operator"
-                    }
-                },
-                {
-                    "op": "db.adapter",
-                    "args": {
-                        "method": "supports",
-                        "args": {
-                            "capability": {
-                                "$enum": "Capability::DefinedAttributes"
-                            }
-                        }
-                    }
-                }
-            ]
+          "op": "database.add_filter",
+          "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
         },
         {
-            "name": "SchemalessTests::testSchemalessUpdateDocumentsWithQuery",
-            "state": [
-                "mysql@database-mysql"
-            ],
-            "steps": [
-                {
-                    "op": "db.open",
-                    "args": {
-                        "driver": "mysql"
-                    },
-                    "bind": "db"
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRange"
-                    }
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRangeNew"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "subQueryProbe"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "joinedSeal"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "operator_double_decode"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt",
-                        "fixture": "encrypt_operator"
-                    }
-                },
-                {
-                    "op": "db.adapter",
-                    "args": {
-                        "method": "supports",
-                        "args": {
-                            "capability": {
-                                "$enum": "Capability::DefinedAttributes"
-                            }
-                        }
-                    }
-                }
-            ]
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
         },
         {
-            "name": "SchemalessTests::testSchemalessDeleteDocumentsWithQuery",
-            "state": [
-                "mysql@database-mysql"
-            ],
-            "steps": [
-                {
-                    "op": "db.open",
-                    "args": {
-                        "driver": "mysql"
-                    },
-                    "bind": "db"
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRange"
-                    }
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRangeNew"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "subQueryProbe"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "joinedSeal"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "operator_double_decode"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt",
-                        "fixture": "encrypt_operator"
-                    }
-                },
-                {
-                    "op": "db.adapter",
-                    "args": {
-                        "method": "supports",
-                        "args": {
-                            "capability": {
-                                "$enum": "Capability::DefinedAttributes"
-                            }
-                        }
-                    }
-                }
-            ]
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
         },
         {
-            "name": "SchemalessTests::testSchemalessOperationsWithCallback",
-            "state": [
-                "mysql@database-mysql"
-            ],
-            "steps": [
-                {
-                    "op": "db.open",
-                    "args": {
-                        "driver": "mysql"
-                    },
-                    "bind": "db"
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRange"
-                    }
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRangeNew"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "subQueryProbe"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "joinedSeal"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "operator_double_decode"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt",
-                        "fixture": "encrypt_operator"
-                    }
-                },
-                {
-                    "op": "db.adapter",
-                    "args": {
-                        "method": "supports",
-                        "args": {
-                            "capability": {
-                                "$enum": "Capability::DefinedAttributes"
-                            }
-                        }
-                    }
-                }
-            ]
-        },
-        {
-            "name": "SchemalessTests::testSchemalessIndexCreateListDelete",
-            "state": [
-                "mysql@database-mysql"
-            ],
-            "steps": [
-                {
-                    "op": "db.open",
-                    "args": {
-                        "driver": "mysql"
-                    },
-                    "bind": "db"
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRange"
-                    }
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRangeNew"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "subQueryProbe"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "joinedSeal"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "operator_double_decode"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt",
-                        "fixture": "encrypt_operator"
-                    }
-                },
-                {
-                    "op": "db.adapter",
-                    "args": {
-                        "method": "supports",
-                        "args": {
-                            "capability": {
-                                "$enum": "Capability::DefinedAttributes"
-                            }
-                        }
-                    }
-                }
-            ]
-        },
-        {
-            "name": "SchemalessTests::testSchemalessObjectIndexes",
-            "state": [
-                "mysql@database-mysql"
-            ],
-            "steps": [
-                {
-                    "op": "db.open",
-                    "args": {
-                        "driver": "mysql"
-                    },
-                    "bind": "db"
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRange"
-                    }
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRangeNew"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "subQueryProbe"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "joinedSeal"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "operator_double_decode"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt",
-                        "fixture": "encrypt_operator"
-                    }
-                },
-                {
-                    "op": "db.adapter",
-                    "args": {
-                        "method": "supports",
-                        "args": {
-                            "capability": {
-                                "$enum": "Capability::DefinedAttributes"
-                            }
-                        }
-                    }
-                }
-            ]
-        },
-        {
-            "name": "SchemalessTests::testSchemalessPermissions",
-            "state": [
-                "mysql@database-mysql"
-            ],
-            "steps": [
-                {
-                    "op": "db.open",
-                    "args": {
-                        "driver": "mysql"
-                    },
-                    "bind": "db"
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRange"
-                    }
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRangeNew"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "subQueryProbe"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "joinedSeal"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "operator_double_decode"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt",
-                        "fixture": "encrypt_operator"
-                    }
-                },
-                {
-                    "op": "db.adapter",
-                    "args": {
-                        "method": "supports",
-                        "args": {
-                            "capability": {
-                                "$enum": "Capability::DefinedAttributes"
-                            }
-                        }
-                    }
-                }
-            ]
-        },
-        {
-            "name": "SchemalessTests::testSchemalessInternalAttributes",
-            "state": [
-                "mysql@database-mysql"
-            ],
-            "steps": [
-                {
-                    "op": "db.open",
-                    "args": {
-                        "driver": "mysql"
-                    },
-                    "bind": "db"
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRange"
-                    }
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRangeNew"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "subQueryProbe"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "joinedSeal"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "operator_double_decode"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt",
-                        "fixture": "encrypt_operator"
-                    }
-                },
-                {
-                    "op": "db.adapter",
-                    "args": {
-                        "method": "supports",
-                        "args": {
-                            "capability": {
-                                "$enum": "Capability::DefinedAttributes"
-                            }
-                        }
-                    }
-                }
-            ]
-        },
-        {
-            "name": "SchemalessTests::testSchemalessDates",
-            "state": [
-                "mysql@database-mysql"
-            ],
-            "steps": [
-                {
-                    "op": "db.open",
-                    "args": {
-                        "driver": "mysql"
-                    },
-                    "bind": "db"
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRange"
-                    }
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRangeNew"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "subQueryProbe"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "joinedSeal"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "operator_double_decode"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt",
-                        "fixture": "encrypt_operator"
-                    }
-                },
-                {
-                    "op": "db.adapter",
-                    "args": {
-                        "method": "supports",
-                        "args": {
-                            "capability": {
-                                "$enum": "Capability::DefinedAttributes"
-                            }
-                        }
-                    }
-                }
-            ]
-        },
-        {
-            "name": "SchemalessTests::testSchemalessExists",
-            "state": [
-                "mysql@database-mysql"
-            ],
-            "steps": [
-                {
-                    "op": "db.open",
-                    "args": {
-                        "driver": "mysql"
-                    },
-                    "bind": "db"
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRange"
-                    }
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRangeNew"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "subQueryProbe"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "joinedSeal"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "operator_double_decode"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt",
-                        "fixture": "encrypt_operator"
-                    }
-                },
-                {
-                    "op": "db.adapter",
-                    "args": {
-                        "method": "supports",
-                        "args": {
-                            "capability": {
-                                "$enum": "Capability::DefinedAttributes"
-                            }
-                        }
-                    }
-                }
-            ]
-        },
-        {
-            "name": "SchemalessTests::testSchemalessNotExists",
-            "state": [
-                "mysql@database-mysql"
-            ],
-            "steps": [
-                {
-                    "op": "db.open",
-                    "args": {
-                        "driver": "mysql"
-                    },
-                    "bind": "db"
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRange"
-                    }
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRangeNew"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "subQueryProbe"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "joinedSeal"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "operator_double_decode"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt",
-                        "fixture": "encrypt_operator"
-                    }
-                },
-                {
-                    "op": "db.adapter",
-                    "args": {
-                        "method": "supports",
-                        "args": {
-                            "capability": {
-                                "$enum": "Capability::DefinedAttributes"
-                            }
-                        }
-                    }
-                }
-            ]
-        },
-        {
-            "name": "SchemalessTests::testElemMatch",
-            "state": [
-                "mysql@database-mysql"
-            ],
-            "steps": [
-                {
-                    "op": "db.open",
-                    "args": {
-                        "driver": "mysql"
-                    },
-                    "bind": "db"
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRange"
-                    }
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRangeNew"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "subQueryProbe"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "joinedSeal"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "operator_double_decode"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt",
-                        "fixture": "encrypt_operator"
-                    }
-                },
-                {
-                    "op": "db.adapter",
-                    "args": {
-                        "method": "supports",
-                        "args": {
-                            "capability": {
-                                "$enum": "Capability::DefinedAttributes"
-                            }
-                        }
-                    }
-                }
-            ]
-        },
-        {
-            "name": "SchemalessTests::testElemMatchComplex",
-            "state": [
-                "mysql@database-mysql"
-            ],
-            "steps": [
-                {
-                    "op": "db.open",
-                    "args": {
-                        "driver": "mysql"
-                    },
-                    "bind": "db"
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRange"
-                    }
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRangeNew"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "subQueryProbe"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "joinedSeal"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "operator_double_decode"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt",
-                        "fixture": "encrypt_operator"
-                    }
-                },
-                {
-                    "op": "db.adapter",
-                    "args": {
-                        "method": "supports",
-                        "args": {
-                            "capability": {
-                                "$enum": "Capability::DefinedAttributes"
-                            }
-                        }
-                    }
-                }
-            ]
-        },
-        {
-            "name": "SchemalessTests::testSchemalessNestedObjectAttributeQueries",
-            "state": [
-                "mysql@database-mysql"
-            ],
-            "steps": [
-                {
-                    "op": "db.open",
-                    "args": {
-                        "driver": "mysql"
-                    },
-                    "bind": "db"
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRange"
-                    }
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRangeNew"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "subQueryProbe"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "joinedSeal"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "operator_double_decode"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt",
-                        "fixture": "encrypt_operator"
-                    }
-                },
-                {
-                    "op": "db.adapter",
-                    "args": {
-                        "method": "supports",
-                        "args": {
-                            "capability": {
-                                "$enum": "Capability::DefinedAttributes"
-                            }
-                        }
-                    }
-                }
-            ]
-        },
-        {
-            "name": "SchemalessTests::testUpsertFieldRemoval",
-            "state": [
-                "mysql@database-mysql"
-            ],
-            "steps": [
-                {
-                    "op": "db.open",
-                    "args": {
-                        "driver": "mysql"
-                    },
-                    "bind": "db"
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRange"
-                    }
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRangeNew"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "subQueryProbe"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "joinedSeal"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "operator_double_decode"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt",
-                        "fixture": "encrypt_operator"
-                    }
-                },
-                {
-                    "op": "db.adapter",
-                    "args": {
-                        "method": "supports",
-                        "args": {
-                            "capability": {
-                                "$enum": "Capability::DefinedAttributes"
-                            }
-                        }
-                    }
-                }
-            ]
-        },
-        {
-            "name": "SchemalessTests::testSchemalessTTLIndexes",
-            "state": [
-                "mysql@database-mysql"
-            ],
-            "steps": [
-                {
-                    "op": "db.open",
-                    "args": {
-                        "driver": "mysql"
-                    },
-                    "bind": "db"
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRange"
-                    }
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRangeNew"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "subQueryProbe"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "joinedSeal"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "operator_double_decode"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt",
-                        "fixture": "encrypt_operator"
-                    }
-                },
-                {
-                    "op": "db.adapter",
-                    "args": {
-                        "method": "supports",
-                        "args": {
-                            "capability": {
-                                "$enum": "Capability::DefinedAttributes"
-                            }
-                        }
-                    }
-                }
-            ]
-        },
-        {
-            "name": "SchemalessTests::testSchemalessTTLIndexDuplicatePrevention",
-            "state": [
-                "mysql@database-mysql"
-            ],
-            "steps": [
-                {
-                    "op": "db.open",
-                    "args": {
-                        "driver": "mysql"
-                    },
-                    "bind": "db"
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRange"
-                    }
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRangeNew"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "subQueryProbe"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "joinedSeal"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "operator_double_decode"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt",
-                        "fixture": "encrypt_operator"
-                    }
-                },
-                {
-                    "op": "db.adapter",
-                    "args": {
-                        "method": "supports",
-                        "args": {
-                            "capability": {
-                                "$enum": "Capability::DefinedAttributes"
-                            }
-                        }
-                    }
-                }
-            ]
-        },
-        {
-            "name": "SchemalessTests::testSchemalessDatetimeCreationAndFetching",
-            "state": [
-                "mysql@database-mysql"
-            ],
-            "steps": [
-                {
-                    "op": "db.open",
-                    "args": {
-                        "driver": "mysql"
-                    },
-                    "bind": "db"
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRange"
-                    }
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRangeNew"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "subQueryProbe"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "joinedSeal"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "operator_double_decode"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt",
-                        "fixture": "encrypt_operator"
-                    }
-                },
-                {
-                    "op": "db.adapter",
-                    "args": {
-                        "method": "supports",
-                        "args": {
-                            "capability": {
-                                "$enum": "Capability::DefinedAttributes"
-                            }
-                        }
-                    }
-                }
-            ]
-        },
-        {
-            "name": "SchemalessTests::testSchemalessTTLExpiry",
-            "state": [
-                "mysql@database-mysql"
-            ],
-            "steps": [
-                {
-                    "op": "db.open",
-                    "args": {
-                        "driver": "mysql"
-                    },
-                    "bind": "db"
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRange"
-                    }
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRangeNew"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "subQueryProbe"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "joinedSeal"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "operator_double_decode"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt",
-                        "fixture": "encrypt_operator"
-                    }
-                },
-                {
-                    "op": "db.adapter",
-                    "args": {
-                        "method": "supports",
-                        "args": {
-                            "capability": {
-                                "$enum": "Capability::DefinedAttributes"
-                            }
-                        }
-                    }
-                }
-            ]
-        },
-        {
-            "name": "SchemalessTests::testSchemalessTTLWithCacheExpiry",
-            "state": [
-                "mysql@database-mysql"
-            ],
-            "steps": [
-                {
-                    "op": "db.open",
-                    "args": {
-                        "driver": "mysql"
-                    },
-                    "bind": "db"
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRange"
-                    }
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRangeNew"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "subQueryProbe"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "joinedSeal"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "operator_double_decode"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt",
-                        "fixture": "encrypt_operator"
-                    }
-                },
-                {
-                    "op": "db.adapter",
-                    "args": {
-                        "method": "supports",
-                        "args": {
-                            "capability": {
-                                "$enum": "Capability::DefinedAttributes"
-                            }
-                        }
-                    }
-                }
-            ]
-        },
-        {
-            "name": "SchemalessTests::testStringAndDatetime",
-            "state": [
-                "mysql@database-mysql"
-            ],
-            "steps": [
-                {
-                    "op": "db.open",
-                    "args": {
-                        "driver": "mysql"
-                    },
-                    "bind": "db"
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRange"
-                    }
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRangeNew"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "subQueryProbe"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "joinedSeal"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "operator_double_decode"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt",
-                        "fixture": "encrypt_operator"
-                    }
-                },
-                {
-                    "op": "db.adapter",
-                    "args": {
-                        "method": "supports",
-                        "args": {
-                            "capability": {
-                                "$enum": "Capability::DefinedAttributes"
-                            }
-                        }
-                    }
-                }
-            ]
-        },
-        {
-            "name": "SchemalessTests::testStringAndDateWithTTL",
-            "state": [
-                "mysql@database-mysql"
-            ],
-            "steps": [
-                {
-                    "op": "db.open",
-                    "args": {
-                        "driver": "mysql"
-                    },
-                    "bind": "db"
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRange"
-                    }
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRangeNew"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "subQueryProbe"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "joinedSeal"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "operator_double_decode"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt",
-                        "fixture": "encrypt_operator"
-                    }
-                },
-                {
-                    "op": "db.adapter",
-                    "args": {
-                        "method": "supports",
-                        "args": {
-                            "capability": {
-                                "$enum": "Capability::DefinedAttributes"
-                            }
-                        }
-                    }
-                }
-            ]
-        },
-        {
-            "name": "SchemalessTests::testSchemalessMongoDotNotationIndexes",
-            "state": [
-                "mysql@database-mysql"
-            ],
-            "steps": [
-                {
-                    "op": "db.open",
-                    "args": {
-                        "driver": "mysql"
-                    },
-                    "bind": "db"
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRange"
-                    }
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRangeNew"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "subQueryProbe"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "joinedSeal"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "operator_double_decode"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt",
-                        "fixture": "encrypt_operator"
-                    }
-                },
-                {
-                    "op": "db.adapter",
-                    "args": {
-                        "method": "supports",
-                        "args": {
-                            "capability": {
-                                "$enum": "Capability::DefinedAttributes"
-                            }
-                        }
-                    }
-                }
-            ]
-        },
-        {
-            "name": "SchemalessTests::testQueryWithDatetime",
-            "state": [
-                "mysql@database-mysql"
-            ],
-            "steps": [
-                {
-                    "op": "db.open",
-                    "args": {
-                        "driver": "mysql"
-                    },
-                    "bind": "db"
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRange"
-                    }
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRangeNew"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "subQueryProbe"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "joinedSeal"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "operator_double_decode"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt",
-                        "fixture": "encrypt_operator"
-                    }
-                },
-                {
-                    "op": "db.adapter",
-                    "args": {
-                        "method": "supports",
-                        "args": {
-                            "capability": {
-                                "$enum": "Capability::DefinedAttributes"
-                            }
-                        }
-                    }
-                }
-            ]
-        },
-        {
-            "name": "SchemalessTests::testSchemalessCreatedAndUpdatedAtQuery",
-            "state": [
-                "mysql@database-mysql"
-            ],
-            "steps": [
-                {
-                    "op": "db.open",
-                    "args": {
-                        "driver": "mysql"
-                    },
-                    "bind": "db"
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRange"
-                    }
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRangeNew"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "subQueryProbe"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "joinedSeal"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "operator_double_decode"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt",
-                        "fixture": "encrypt_operator"
-                    }
-                },
-                {
-                    "op": "db.adapter",
-                    "args": {
-                        "method": "supports",
-                        "args": {
-                            "capability": {
-                                "$enum": "Capability::DefinedAttributes"
-                            }
-                        }
-                    }
-                }
-            ]
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
+          },
+          "expect": true
         }
-    ]
+      ]
+    },
+    {
+      "name": "SchemalessTests::testSchemalessSelectionOnUnknownAttributes",
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "driver": "mysql"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "SchemalessTests::testSchemalessIncrement",
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "driver": "mysql"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "SchemalessTests::testSchemalessDecrement",
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "driver": "mysql"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "SchemalessTests::testSchemalessUpdateDocumentWithQuery",
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "driver": "mysql"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "SchemalessTests::testSchemalessDeleteDocumentWithQuery",
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "driver": "mysql"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "SchemalessTests::testSchemalessUpdateDocumentsWithQuery",
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "driver": "mysql"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "SchemalessTests::testSchemalessDeleteDocumentsWithQuery",
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "driver": "mysql"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "SchemalessTests::testSchemalessOperationsWithCallback",
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "driver": "mysql"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "SchemalessTests::testSchemalessIndexCreateListDelete",
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "driver": "mysql"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "SchemalessTests::testSchemalessObjectIndexes",
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "driver": "mysql"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "SchemalessTests::testSchemalessPermissions",
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "driver": "mysql"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "SchemalessTests::testSchemalessInternalAttributes",
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "driver": "mysql"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "SchemalessTests::testSchemalessDates",
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "driver": "mysql"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "SchemalessTests::testSchemalessExists",
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "driver": "mysql"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "SchemalessTests::testSchemalessNotExists",
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "driver": "mysql"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "SchemalessTests::testElemMatch",
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "driver": "mysql"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "SchemalessTests::testElemMatchComplex",
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "driver": "mysql"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "SchemalessTests::testSchemalessNestedObjectAttributeQueries",
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "driver": "mysql"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "SchemalessTests::testUpsertFieldRemoval",
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "driver": "mysql"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "SchemalessTests::testSchemalessTTLIndexes",
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "driver": "mysql"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "SchemalessTests::testSchemalessTTLIndexDuplicatePrevention",
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "driver": "mysql"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "SchemalessTests::testSchemalessDatetimeCreationAndFetching",
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "driver": "mysql"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "SchemalessTests::testSchemalessTTLExpiry",
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "driver": "mysql"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "SchemalessTests::testSchemalessTTLWithCacheExpiry",
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "driver": "mysql"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "SchemalessTests::testStringAndDatetime",
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "driver": "mysql"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "SchemalessTests::testStringAndDateWithTTL",
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "driver": "mysql"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "SchemalessTests::testSchemalessMongoDotNotationIndexes",
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "driver": "mysql"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "SchemalessTests::testQueryWithDatetime",
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "driver": "mysql"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "SchemalessTests::testSchemalessCreatedAndUpdatedAtQuery",
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "driver": "mysql"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    }
+  ]
 }

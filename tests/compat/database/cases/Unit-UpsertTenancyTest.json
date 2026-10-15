@@ -1,2192 +1,1432 @@
 {
-  "source": [
-    "vendor/utopia-php/database/tests/unit/UpsertTenancyTest.php"
-  ],
-  "cases": [
-    {
-      "name": "UpsertTenancyTest::testAFirstWriteUpsertStoresItsPermissionRowsUnderTheTenant",
-      "state": [],
-      "steps": [
+    "source": [
+        "vendor/utopia-php/database/tests/unit/UpsertTenancyTest.php"
+    ],
+    "cases": [
         {
-          "op": "object.new",
-          "args": {
-            "class": "Validator\\Authorization",
-            "args": {},
-            "as": "o1061"
-          },
-          "bind": "s2141",
-          "expect": {
-            "$authorization": true
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "class": "Role",
-            "method": "any",
-            "args": {},
-            "as": "o1062"
-          },
-          "bind": "s2142",
-          "expect": {
-            "$value": "Role",
-            "fields": {}
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o1062"
-            },
-            "method": "toString",
-            "args": {}
-          },
-          "expect": "any"
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o1061"
-            },
-            "method": "addRole",
-            "args": {
-              "role": "any"
-            }
-          },
-          "expect": {
-            "$authorization": true
-          }
-        },
-        {
-          "op": "object.new",
-          "args": {
-            "class": "Adapter\\SQLite",
-            "args": {
-              "pdo": {
-                "$pdo": {
-                  "dsn": "sqlite::memory:"
-                }
-              }
-            },
-            "as": "o1063"
-          },
-          "bind": "s2145",
-          "expect": {
-            "$adapter": "SQLite"
-          }
-        },
-        {
-          "op": "object.new",
-          "args": {
-            "class": "Database",
-            "args": {
-              "adapter": {
-                "$obj": "o1063"
-              },
-              "cache": "none"
-            },
-            "as": "o1064"
-          },
-          "bind": "s2146",
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o1064"
-            },
-            "method": "setAuthorization",
-            "args": {
-              "authorization": {
-                "$obj": "o1061"
-              }
-            }
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o1064"
-            },
-            "method": "setDatabase",
-            "args": {
-              "name": "upsert_tenancy"
-            }
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o1064"
-            },
-            "method": "setNamespace",
-            "args": {
-              "namespace": "upsert_tenancy_u000000000051"
-            }
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o1064"
-            },
-            "method": "setSharedTables",
-            "args": {
-              "sharedTables": true
-            }
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o1064"
-            },
-            "method": "setTenant",
-            "args": {
-              "tenant": 7
-            }
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "object.new",
-          "args": {
-            "class": "Hook\\Permissions",
-            "args": {},
-            "as": "o1065"
-          },
-          "bind": "s2152",
-          "expect": {
-            "$hook": "Permissions"
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o1064"
-            },
-            "method": "addHook",
-            "args": {
-              "hook": {
-                "$obj": "o1065"
-              }
-            }
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o1064"
-            },
-            "method": "create",
-            "args": {}
-          },
-          "expect": true
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "class": "Attribute",
-            "method": "string",
-            "args": {
-              "key": "title",
-              "size": 64
-            },
-            "as": "o1066"
-          },
-          "bind": "s2155",
-          "expect": {
-            "$value": "Attribute",
-            "fields": {
-              "key": "title",
-              "type": {
-                "$enum": "Query\\Schema\\ColumnType::String"
-              },
-              "size": 64,
-              "required": false,
-              "default": null,
-              "signed": true,
-              "array": false,
-              "format": null,
-              "filters": [],
-              "relationship": null,
-              "side": null
-            }
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "class": "Role",
-            "method": "any",
-            "args": {},
-            "as": "o1067"
-          },
-          "bind": "s2156",
-          "expect": {
-            "$value": "Role",
-            "fields": {}
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "class": "Permission",
-            "method": "create",
-            "args": {
-              "role": {
-                "$obj": "o1067"
-              }
-            }
-          },
-          "expect": "create(\"any\")"
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "class": "Role",
-            "method": "any",
-            "args": {},
-            "as": "o1068"
-          },
-          "bind": "s2158",
-          "expect": {
-            "$value": "Role",
-            "fields": {}
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "class": "Permission",
-            "method": "update",
-            "args": {
-              "role": {
-                "$obj": "o1068"
-              }
-            }
-          },
-          "expect": "update(\"any\")"
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "class": "Collection",
-            "method": "create",
-            "args": {
-              "id": "notes",
-              "attributes": [
+            "name": "UpsertTenancyTest::testAFirstWriteUpsertStoresItsPermissionRowsUnderTheTenant",
+            "state": [],
+            "steps": [
                 {
-                  "$obj": "o1066"
-                }
-              ],
-              "permissions": [
-                "create(\"any\")",
-                "update(\"any\")"
-              ],
-              "documentSecurity": true
-            },
-            "as": "o1069"
-          },
-          "bind": "s2160",
-          "expect": {
-            "$document": {
-              "$id": "notes",
-              "name": "notes",
-              "attributes": [
-                {
-                  "$document": {
-                    "$id": "title",
-                    "key": "title",
-                    "type": "string",
-                    "size": 64,
-                    "required": false,
-                    "default": null,
-                    "signed": true,
-                    "array": false,
-                    "format": null,
-                    "formatOptions": [],
-                    "filters": []
-                  }
-                }
-              ],
-              "indexes": [],
-              "documentSecurity": true,
-              "$permissions": [
-                "create(\"any\")",
-                "update(\"any\")"
-              ]
-            },
-            "$class": "Collection"
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o1064"
-            },
-            "method": "createCollection",
-            "args": {
-              "collection": {
-                "$obj": "o1069"
-              }
-            },
-            "as": "o1070"
-          },
-          "expect": {
-            "$document": {
-              "$id": "notes",
-              "name": "notes",
-              "attributes": [
-                {
-                  "$document": {
-                    "$id": "title",
-                    "key": "title",
-                    "type": "string",
-                    "size": 64,
-                    "required": false,
-                    "default": null,
-                    "signed": true,
-                    "array": false,
-                    "format": null,
-                    "formatOptions": [],
-                    "filters": []
-                  }
-                }
-              ],
-              "indexes": [],
-              "documentSecurity": true,
-              "$permissions": [
-                "create(\"any\")",
-                "update(\"any\")"
-              ],
-              "$collection": "_metadata",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$tenant": "7",
-              "$sequence": "1"
-            },
-            "$class": "Collection"
-          }
-        },
-        {
-          "op": "object.new",
-          "args": {
-            "class": "Adapter\\SQLite",
-            "args": {
-              "pdo": {
-                "$pdo": {
-                  "dsn": "sqlite::memory:"
-                }
-              }
-            },
-            "as": "o1071"
-          },
-          "bind": "s2162",
-          "expect": {
-            "$adapter": "SQLite"
-          }
-        },
-        {
-          "op": "object.new",
-          "args": {
-            "class": "Database",
-            "args": {
-              "adapter": {
-                "$obj": "o1071"
-              },
-              "cache": "none"
-            },
-            "as": "o1072"
-          },
-          "bind": "s2163",
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o1072"
-            },
-            "method": "setAuthorization",
-            "args": {
-              "authorization": {
-                "$obj": "o1061"
-              }
-            }
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o1072"
-            },
-            "method": "setDatabase",
-            "args": {
-              "name": "upsert_tenancy"
-            }
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o1072"
-            },
-            "method": "setNamespace",
-            "args": {
-              "namespace": "upsert_tenancy_u000000000051"
-            }
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o1072"
-            },
-            "method": "setSharedTables",
-            "args": {
-              "sharedTables": true
-            }
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o1072"
-            },
-            "method": "setTenant",
-            "args": {
-              "tenant": 7
-            }
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "object.new",
-          "args": {
-            "class": "Hook\\Permissions",
-            "args": {},
-            "as": "o1073"
-          },
-          "bind": "s2169",
-          "expect": {
-            "$hook": "Permissions"
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o1072"
-            },
-            "method": "addHook",
-            "args": {
-              "hook": {
-                "$obj": "o1073"
-              }
-            }
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "class": "Role",
-            "method": "user",
-            "args": {
-              "identifier": "reader"
-            },
-            "as": "o1074"
-          },
-          "bind": "s2171",
-          "expect": {
-            "$value": "Role",
-            "fields": {}
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "class": "Permission",
-            "method": "read",
-            "args": {
-              "role": {
-                "$obj": "o1074"
-              }
-            }
-          },
-          "expect": "read(\"user:reader\")"
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "class": "Role",
-            "method": "user",
-            "args": {
-              "identifier": "reader"
-            },
-            "as": "o1075"
-          },
-          "bind": "s2173",
-          "expect": {
-            "$value": "Role",
-            "fields": {}
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "class": "Permission",
-            "method": "update",
-            "args": {
-              "role": {
-                "$obj": "o1075"
-              }
-            }
-          },
-          "expect": "update(\"user:reader\")"
-        },
-        {
-          "op": "object.new",
-          "args": {
-            "class": "Document",
-            "args": {
-              "input": {
-                "$id": "upserted",
-                "title": "upserted",
-                "$permissions": [
-                  "read(\"user:reader\")",
-                  "update(\"user:reader\")"
-                ]
-              }
-            },
-            "as": "o1076"
-          },
-          "bind": "s2175",
-          "expect": {
-            "$document": {
-              "$id": "upserted",
-              "title": "upserted",
-              "$permissions": [
-                "read(\"user:reader\")",
-                "update(\"user:reader\")"
-              ]
-            }
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o1072"
-            },
-            "method": "upsertDocuments",
-            "args": {
-              "collection": "notes",
-              "documents": [
-                {
-                  "$obj": "o1076"
-                }
-              ]
-            }
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
-            }
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "class": "Storage",
-            "method": "permissionsTable",
-            "args": {
-              "collection": "notes"
-            }
-          },
-          "expect": "notes_perms"
-        }
-      ]
-    },
-    {
-      "name": "UpsertTenancyTest::testAFirstWriteUpsertIsVisibleToAPermissionFilteredRead",
-      "state": [],
-      "steps": [
-        {
-          "op": "object.new",
-          "args": {
-            "class": "Validator\\Authorization",
-            "args": {},
-            "as": "o1077"
-          },
-          "bind": "s2178",
-          "expect": {
-            "$authorization": true
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "class": "Role",
-            "method": "any",
-            "args": {},
-            "as": "o1078"
-          },
-          "bind": "s2179",
-          "expect": {
-            "$value": "Role",
-            "fields": {}
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o1078"
-            },
-            "method": "toString",
-            "args": {}
-          },
-          "expect": "any"
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o1077"
-            },
-            "method": "addRole",
-            "args": {
-              "role": "any"
-            }
-          },
-          "expect": {
-            "$authorization": true
-          }
-        },
-        {
-          "op": "object.new",
-          "args": {
-            "class": "Adapter\\SQLite",
-            "args": {
-              "pdo": {
-                "$pdo": {
-                  "dsn": "sqlite::memory:"
-                }
-              }
-            },
-            "as": "o1079"
-          },
-          "bind": "s2182",
-          "expect": {
-            "$adapter": "SQLite"
-          }
-        },
-        {
-          "op": "object.new",
-          "args": {
-            "class": "Database",
-            "args": {
-              "adapter": {
-                "$obj": "o1079"
-              },
-              "cache": "none"
-            },
-            "as": "o1080"
-          },
-          "bind": "s2183",
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o1080"
-            },
-            "method": "setAuthorization",
-            "args": {
-              "authorization": {
-                "$obj": "o1077"
-              }
-            }
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o1080"
-            },
-            "method": "setDatabase",
-            "args": {
-              "name": "upsert_tenancy"
-            }
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o1080"
-            },
-            "method": "setNamespace",
-            "args": {
-              "namespace": "upsert_tenancy_u000000000052"
-            }
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o1080"
-            },
-            "method": "setSharedTables",
-            "args": {
-              "sharedTables": true
-            }
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o1080"
-            },
-            "method": "setTenant",
-            "args": {
-              "tenant": 7
-            }
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "object.new",
-          "args": {
-            "class": "Hook\\Permissions",
-            "args": {},
-            "as": "o1081"
-          },
-          "bind": "s2189",
-          "expect": {
-            "$hook": "Permissions"
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o1080"
-            },
-            "method": "addHook",
-            "args": {
-              "hook": {
-                "$obj": "o1081"
-              }
-            }
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o1080"
-            },
-            "method": "create",
-            "args": {}
-          },
-          "expect": true
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "class": "Attribute",
-            "method": "string",
-            "args": {
-              "key": "title",
-              "size": 64
-            },
-            "as": "o1082"
-          },
-          "bind": "s2192",
-          "expect": {
-            "$value": "Attribute",
-            "fields": {
-              "key": "title",
-              "type": {
-                "$enum": "Query\\Schema\\ColumnType::String"
-              },
-              "size": 64,
-              "required": false,
-              "default": null,
-              "signed": true,
-              "array": false,
-              "format": null,
-              "filters": [],
-              "relationship": null,
-              "side": null
-            }
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "class": "Role",
-            "method": "any",
-            "args": {},
-            "as": "o1083"
-          },
-          "bind": "s2193",
-          "expect": {
-            "$value": "Role",
-            "fields": {}
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "class": "Permission",
-            "method": "create",
-            "args": {
-              "role": {
-                "$obj": "o1083"
-              }
-            }
-          },
-          "expect": "create(\"any\")"
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "class": "Role",
-            "method": "any",
-            "args": {},
-            "as": "o1084"
-          },
-          "bind": "s2195",
-          "expect": {
-            "$value": "Role",
-            "fields": {}
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "class": "Permission",
-            "method": "update",
-            "args": {
-              "role": {
-                "$obj": "o1084"
-              }
-            }
-          },
-          "expect": "update(\"any\")"
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "class": "Collection",
-            "method": "create",
-            "args": {
-              "id": "notes",
-              "attributes": [
-                {
-                  "$obj": "o1082"
-                }
-              ],
-              "permissions": [
-                "create(\"any\")",
-                "update(\"any\")"
-              ],
-              "documentSecurity": true
-            },
-            "as": "o1085"
-          },
-          "bind": "s2197",
-          "expect": {
-            "$document": {
-              "$id": "notes",
-              "name": "notes",
-              "attributes": [
-                {
-                  "$document": {
-                    "$id": "title",
-                    "key": "title",
-                    "type": "string",
-                    "size": 64,
-                    "required": false,
-                    "default": null,
-                    "signed": true,
-                    "array": false,
-                    "format": null,
-                    "formatOptions": [],
-                    "filters": []
-                  }
-                }
-              ],
-              "indexes": [],
-              "documentSecurity": true,
-              "$permissions": [
-                "create(\"any\")",
-                "update(\"any\")"
-              ]
-            },
-            "$class": "Collection"
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o1080"
-            },
-            "method": "createCollection",
-            "args": {
-              "collection": {
-                "$obj": "o1085"
-              }
-            },
-            "as": "o1086"
-          },
-          "expect": {
-            "$document": {
-              "$id": "notes",
-              "name": "notes",
-              "attributes": [
-                {
-                  "$document": {
-                    "$id": "title",
-                    "key": "title",
-                    "type": "string",
-                    "size": 64,
-                    "required": false,
-                    "default": null,
-                    "signed": true,
-                    "array": false,
-                    "format": null,
-                    "formatOptions": [],
-                    "filters": []
-                  }
-                }
-              ],
-              "indexes": [],
-              "documentSecurity": true,
-              "$permissions": [
-                "create(\"any\")",
-                "update(\"any\")"
-              ],
-              "$collection": "_metadata",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$tenant": "7",
-              "$sequence": "1"
-            },
-            "$class": "Collection"
-          }
-        },
-        {
-          "op": "object.new",
-          "args": {
-            "class": "Adapter\\SQLite",
-            "args": {
-              "pdo": {
-                "$pdo": {
-                  "dsn": "sqlite::memory:"
-                }
-              }
-            },
-            "as": "o1087"
-          },
-          "bind": "s2199",
-          "expect": {
-            "$adapter": "SQLite"
-          }
-        },
-        {
-          "op": "object.new",
-          "args": {
-            "class": "Database",
-            "args": {
-              "adapter": {
-                "$obj": "o1087"
-              },
-              "cache": "none"
-            },
-            "as": "o1088"
-          },
-          "bind": "s2200",
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o1088"
-            },
-            "method": "setAuthorization",
-            "args": {
-              "authorization": {
-                "$obj": "o1077"
-              }
-            }
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o1088"
-            },
-            "method": "setDatabase",
-            "args": {
-              "name": "upsert_tenancy"
-            }
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o1088"
-            },
-            "method": "setNamespace",
-            "args": {
-              "namespace": "upsert_tenancy_u000000000052"
-            }
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o1088"
-            },
-            "method": "setSharedTables",
-            "args": {
-              "sharedTables": true
-            }
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o1088"
-            },
-            "method": "setTenant",
-            "args": {
-              "tenant": 7
-            }
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "object.new",
-          "args": {
-            "class": "Hook\\Permissions",
-            "args": {},
-            "as": "o1089"
-          },
-          "bind": "s2206",
-          "expect": {
-            "$hook": "Permissions"
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o1088"
-            },
-            "method": "addHook",
-            "args": {
-              "hook": {
-                "$obj": "o1089"
-              }
-            }
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "class": "Role",
-            "method": "user",
-            "args": {
-              "identifier": "reader"
-            },
-            "as": "o1090"
-          },
-          "bind": "s2208",
-          "expect": {
-            "$value": "Role",
-            "fields": {}
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "class": "Permission",
-            "method": "read",
-            "args": {
-              "role": {
-                "$obj": "o1090"
-              }
-            }
-          },
-          "expect": "read(\"user:reader\")"
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "class": "Role",
-            "method": "user",
-            "args": {
-              "identifier": "reader"
-            },
-            "as": "o1091"
-          },
-          "bind": "s2210",
-          "expect": {
-            "$value": "Role",
-            "fields": {}
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "class": "Permission",
-            "method": "update",
-            "args": {
-              "role": {
-                "$obj": "o1091"
-              }
-            }
-          },
-          "expect": "update(\"user:reader\")"
-        },
-        {
-          "op": "object.new",
-          "args": {
-            "class": "Document",
-            "args": {
-              "input": {
-                "$id": "upserted",
-                "title": "upserted",
-                "$permissions": [
-                  "read(\"user:reader\")",
-                  "update(\"user:reader\")"
-                ]
-              }
-            },
-            "as": "o1092"
-          },
-          "bind": "s2212",
-          "expect": {
-            "$document": {
-              "$id": "upserted",
-              "title": "upserted",
-              "$permissions": [
-                "read(\"user:reader\")",
-                "update(\"user:reader\")"
-              ]
-            }
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o1088"
-            },
-            "method": "upsertDocuments",
-            "args": {
-              "collection": "notes",
-              "documents": [
-                {
-                  "$obj": "o1092"
-                }
-              ]
-            }
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
-            }
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o1077"
-            },
-            "method": "cleanRoles",
-            "args": {}
-          },
-          "expect": {
-            "$authorization": true
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "class": "Role",
-            "method": "user",
-            "args": {
-              "identifier": "reader"
-            },
-            "as": "o1093"
-          },
-          "bind": "s2215",
-          "expect": {
-            "$value": "Role",
-            "fields": {}
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o1093"
-            },
-            "method": "toString",
-            "args": {}
-          },
-          "expect": "user:reader"
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o1077"
-            },
-            "method": "addRole",
-            "args": {
-              "role": "user:reader"
-            }
-          },
-          "expect": {
-            "$authorization": true
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o1088"
-            },
-            "method": "find",
-            "args": {
-              "collection": "notes"
-            }
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
-            }
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$document": {
-                "title": "upserted",
-                "$id": "upserted",
-                "$sequence": "1",
-                "$tenant": "7",
-                "$createdAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                    "op": "object.new",
+                    "args": {
+                        "class": "Validator\\Authorization",
+                        "args": {},
+                        "as": "o1061"
+                    },
+                    "bind": "s2141",
+                    "expect": {
+                        "$authorization": true
+                    }
                 },
-                "$updatedAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
-                },
-                "$permissions": [
-                  "read(\"user:reader\")",
-                  "update(\"user:reader\")"
-                ],
-                "$collection": "notes"
-              }
-            },
-            "method": "getId",
-            "args": {}
-          },
-          "expect": "upserted"
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o1088"
-            },
-            "method": "count",
-            "args": {
-              "collection": "notes"
-            }
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "UpsertTenancyTest::testAnAdapterUpsertStoresADocumentWithoutATenantUnderTheSelectedTenant",
-      "state": [],
-      "steps": [
-        {
-          "op": "object.new",
-          "args": {
-            "class": "Validator\\Authorization",
-            "args": {},
-            "as": "o1115"
-          },
-          "bind": "s2271",
-          "expect": {
-            "$authorization": true
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "class": "Role",
-            "method": "any",
-            "args": {},
-            "as": "o1116"
-          },
-          "bind": "s2272",
-          "expect": {
-            "$value": "Role",
-            "fields": {}
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o1116"
-            },
-            "method": "toString",
-            "args": {}
-          },
-          "expect": "any"
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o1115"
-            },
-            "method": "addRole",
-            "args": {
-              "role": "any"
-            }
-          },
-          "expect": {
-            "$authorization": true
-          }
-        },
-        {
-          "op": "object.new",
-          "args": {
-            "class": "Adapter\\SQLite",
-            "args": {
-              "pdo": {
-                "$pdo": {
-                  "dsn": "sqlite::memory:"
-                }
-              }
-            },
-            "as": "o1117"
-          },
-          "bind": "s2275",
-          "expect": {
-            "$adapter": "SQLite"
-          }
-        },
-        {
-          "op": "object.new",
-          "args": {
-            "class": "Database",
-            "args": {
-              "adapter": {
-                "$obj": "o1117"
-              },
-              "cache": "none"
-            },
-            "as": "o1118"
-          },
-          "bind": "s2276",
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o1118"
-            },
-            "method": "setAuthorization",
-            "args": {
-              "authorization": {
-                "$obj": "o1115"
-              }
-            }
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o1118"
-            },
-            "method": "setDatabase",
-            "args": {
-              "name": "upsert_tenancy"
-            }
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o1118"
-            },
-            "method": "setNamespace",
-            "args": {
-              "namespace": "upsert_tenancy_u000000000054"
-            }
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o1118"
-            },
-            "method": "setSharedTables",
-            "args": {
-              "sharedTables": true
-            }
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o1118"
-            },
-            "method": "setTenant",
-            "args": {
-              "tenant": 7
-            }
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "object.new",
-          "args": {
-            "class": "Hook\\Permissions",
-            "args": {},
-            "as": "o1119"
-          },
-          "bind": "s2282",
-          "expect": {
-            "$hook": "Permissions"
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o1118"
-            },
-            "method": "addHook",
-            "args": {
-              "hook": {
-                "$obj": "o1119"
-              }
-            }
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o1118"
-            },
-            "method": "create",
-            "args": {}
-          },
-          "expect": true
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "class": "Attribute",
-            "method": "string",
-            "args": {
-              "key": "title",
-              "size": 64
-            },
-            "as": "o1120"
-          },
-          "bind": "s2285",
-          "expect": {
-            "$value": "Attribute",
-            "fields": {
-              "key": "title",
-              "type": {
-                "$enum": "Query\\Schema\\ColumnType::String"
-              },
-              "size": 64,
-              "required": false,
-              "default": null,
-              "signed": true,
-              "array": false,
-              "format": null,
-              "filters": [],
-              "relationship": null,
-              "side": null
-            }
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "class": "Role",
-            "method": "any",
-            "args": {},
-            "as": "o1121"
-          },
-          "bind": "s2286",
-          "expect": {
-            "$value": "Role",
-            "fields": {}
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "class": "Permission",
-            "method": "create",
-            "args": {
-              "role": {
-                "$obj": "o1121"
-              }
-            }
-          },
-          "expect": "create(\"any\")"
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "class": "Role",
-            "method": "any",
-            "args": {},
-            "as": "o1122"
-          },
-          "bind": "s2288",
-          "expect": {
-            "$value": "Role",
-            "fields": {}
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "class": "Permission",
-            "method": "update",
-            "args": {
-              "role": {
-                "$obj": "o1122"
-              }
-            }
-          },
-          "expect": "update(\"any\")"
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "class": "Collection",
-            "method": "create",
-            "args": {
-              "id": "notes",
-              "attributes": [
                 {
-                  "$obj": "o1120"
-                }
-              ],
-              "permissions": [
-                "create(\"any\")",
-                "update(\"any\")"
-              ],
-              "documentSecurity": true
-            },
-            "as": "o1123"
-          },
-          "bind": "s2290",
-          "expect": {
-            "$document": {
-              "$id": "notes",
-              "name": "notes",
-              "attributes": [
-                {
-                  "$document": {
-                    "$id": "title",
-                    "key": "title",
-                    "type": "string",
-                    "size": 64,
-                    "required": false,
-                    "default": null,
-                    "signed": true,
-                    "array": false,
-                    "format": null,
-                    "formatOptions": [],
-                    "filters": []
-                  }
-                }
-              ],
-              "indexes": [],
-              "documentSecurity": true,
-              "$permissions": [
-                "create(\"any\")",
-                "update(\"any\")"
-              ]
-            },
-            "$class": "Collection"
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o1118"
-            },
-            "method": "createCollection",
-            "args": {
-              "collection": {
-                "$obj": "o1123"
-              }
-            },
-            "as": "o1124"
-          },
-          "expect": {
-            "$document": {
-              "$id": "notes",
-              "name": "notes",
-              "attributes": [
-                {
-                  "$document": {
-                    "$id": "title",
-                    "key": "title",
-                    "type": "string",
-                    "size": 64,
-                    "required": false,
-                    "default": null,
-                    "signed": true,
-                    "array": false,
-                    "format": null,
-                    "formatOptions": [],
-                    "filters": []
-                  }
-                }
-              ],
-              "indexes": [],
-              "documentSecurity": true,
-              "$permissions": [
-                "create(\"any\")",
-                "update(\"any\")"
-              ],
-              "$collection": "_metadata",
-              "$createdAt": "<now>",
-              "$updatedAt": "<now>",
-              "$tenant": "7",
-              "$sequence": "1"
-            },
-            "$class": "Collection"
-          }
-        },
-        {
-          "op": "object.new",
-          "args": {
-            "class": "Adapter\\SQLite",
-            "args": {
-              "pdo": {
-                "$pdo": {
-                  "dsn": "sqlite::memory:"
-                }
-              }
-            },
-            "as": "o1125"
-          },
-          "bind": "s2292",
-          "expect": {
-            "$adapter": "SQLite"
-          }
-        },
-        {
-          "op": "object.new",
-          "args": {
-            "class": "Database",
-            "args": {
-              "adapter": {
-                "$obj": "o1125"
-              },
-              "cache": "none"
-            },
-            "as": "o1126"
-          },
-          "bind": "s2293",
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o1126"
-            },
-            "method": "setAuthorization",
-            "args": {
-              "authorization": {
-                "$obj": "o1115"
-              }
-            }
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o1126"
-            },
-            "method": "setDatabase",
-            "args": {
-              "name": "upsert_tenancy"
-            }
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o1126"
-            },
-            "method": "setNamespace",
-            "args": {
-              "namespace": "upsert_tenancy_u000000000054"
-            }
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o1126"
-            },
-            "method": "setSharedTables",
-            "args": {
-              "sharedTables": true
-            }
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o1126"
-            },
-            "method": "setTenant",
-            "args": {
-              "tenant": 7
-            }
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "object.new",
-          "args": {
-            "class": "Hook\\Permissions",
-            "args": {},
-            "as": "o1127"
-          },
-          "bind": "s2299",
-          "expect": {
-            "$hook": "Permissions"
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o1126"
-            },
-            "method": "addHook",
-            "args": {
-              "hook": {
-                "$obj": "o1127"
-              }
-            }
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o1126"
-            },
-            "method": "getCollection",
-            "args": {
-              "collection": "notes"
-            },
-            "as": "o1128"
-          },
-          "bind": "s2301",
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Collection not found"
-            }
-          }
-        },
-        {
-          "op": "object.new",
-          "args": {
-            "class": "Document",
-            "args": {},
-            "as": "o1129"
-          },
-          "bind": "s2302",
-          "expect": {
-            "$document": {}
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "class": "Role",
-            "method": "user",
-            "args": {
-              "identifier": "reader"
-            },
-            "as": "o1130"
-          },
-          "bind": "s2303",
-          "expect": {
-            "$value": "Role",
-            "fields": {}
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "class": "Permission",
-            "method": "read",
-            "args": {
-              "role": {
-                "$obj": "o1130"
-              }
-            }
-          },
-          "expect": "read(\"user:reader\")"
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "class": "Role",
-            "method": "user",
-            "args": {
-              "identifier": "reader"
-            },
-            "as": "o1131"
-          },
-          "bind": "s2305",
-          "expect": {
-            "$value": "Role",
-            "fields": {}
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "class": "Permission",
-            "method": "update",
-            "args": {
-              "role": {
-                "$obj": "o1131"
-              }
-            }
-          },
-          "expect": "update(\"user:reader\")"
-        },
-        {
-          "op": "object.new",
-          "args": {
-            "class": "Document",
-            "args": {
-              "input": {
-                "$id": "upserted",
-                "title": "upserted",
-                "$permissions": [
-                  "read(\"user:reader\")",
-                  "update(\"user:reader\")"
-                ]
-              }
-            },
-            "as": "o1132"
-          },
-          "bind": "s2307",
-          "expect": {
-            "$document": {
-              "$id": "upserted",
-              "title": "upserted",
-              "$permissions": [
-                "read(\"user:reader\")",
-                "update(\"user:reader\")"
-              ]
-            }
-          }
-        },
-        {
-          "op": "object.new",
-          "args": {
-            "class": "Change",
-            "args": {
-              "old": {
-                "$obj": "o1129"
-              },
-              "new": {
-                "$obj": "o1132"
-              }
-            },
-            "as": "o1133"
-          },
-          "bind": "s2308",
-          "expect": {
-            "$value": "Change",
-            "fields": {
-              "old": {
-                "$document": {}
-              },
-              "new": {
-                "$document": {
-                  "$id": "upserted",
-                  "title": "upserted",
-                  "$permissions": [
-                    "read(\"user:reader\")",
-                    "update(\"user:reader\")"
-                  ]
-                }
-              }
-            }
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o1125"
-            },
-            "method": "upsertDocuments",
-            "args": {
-              "collection": {
-                "$obj": "o1128"
-              },
-              "changes": [
-                {
-                  "$obj": "o1133"
-                }
-              ]
-            }
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "class": "Storage",
-            "method": "permissionsTable",
-            "args": {
-              "collection": "notes"
-            }
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o1115"
-            },
-            "method": "skip",
-            "args": {
-              "callback": {
-                "steps": [
-                  {
                     "op": "object.call",
                     "args": {
-                      "this": {
-                        "$obj": "o1126"
-                      },
-                      "method": "getDocument",
-                      "args": {
-                        "collection": "notes",
-                        "id": "upserted"
-                      },
-                      "as": "o1134"
+                        "class": "Role",
+                        "method": "any",
+                        "args": {},
+                        "as": "o1062"
                     },
-                    "return": true
-                  }
-                ]
-              }
-            }
-          },
-          "bind": "s2311"
+                    "bind": "s2142",
+                    "expect": {
+                        "$value": "Role",
+                        "fields": {}
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o1062"
+                        },
+                        "method": "toString",
+                        "args": {}
+                    },
+                    "expect": "any"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o1061"
+                        },
+                        "method": "addRole",
+                        "args": {
+                            "role": "any"
+                        }
+                    },
+                    "expect": {
+                        "$authorization": true
+                    }
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Adapter\\SQLite",
+                        "args": {
+                            "pdo": {
+                                "$pdo": {
+                                    "dsn": "sqlite::memory:"
+                                }
+                            }
+                        },
+                        "as": "o1063"
+                    },
+                    "bind": "s2145",
+                    "expect": {
+                        "$adapter": "SQLite"
+                    }
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Database",
+                        "args": {
+                            "adapter": {
+                                "$obj": "o1063"
+                            },
+                            "cache": "none"
+                        },
+                        "as": "o1064"
+                    },
+                    "bind": "s2146",
+                    "expect": {
+                        "$database": true
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o1064"
+                        },
+                        "method": "setAuthorization",
+                        "args": {
+                            "authorization": {
+                                "$obj": "o1061"
+                            }
+                        }
+                    },
+                    "expect": {
+                        "$database": true
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o1064"
+                        },
+                        "method": "setDatabase",
+                        "args": {
+                            "name": "upsert_tenancy"
+                        }
+                    },
+                    "expect": {
+                        "$database": true
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o1064"
+                        },
+                        "method": "setNamespace",
+                        "args": {
+                            "namespace": "upsert_tenancy_u000000000051"
+                        }
+                    },
+                    "expect": {
+                        "$database": true
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o1064"
+                        },
+                        "method": "setSharedTables",
+                        "args": {
+                            "sharedTables": true
+                        }
+                    },
+                    "expect": {
+                        "$database": true
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o1064"
+                        },
+                        "method": "setTenant",
+                        "args": {
+                            "tenant": 7
+                        }
+                    },
+                    "expect": {
+                        "$database": true
+                    }
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Hook\\Permissions",
+                        "args": {},
+                        "as": "o1065"
+                    },
+                    "bind": "s2152",
+                    "expect": {
+                        "$hook": "Permissions"
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o1064"
+                        },
+                        "method": "addHook",
+                        "args": {
+                            "hook": {
+                                "$obj": "o1065"
+                            }
+                        }
+                    },
+                    "expect": {
+                        "$database": true
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o1064"
+                        },
+                        "method": "create",
+                        "args": {}
+                    },
+                    "expect": true
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Attribute",
+                        "method": "string",
+                        "args": {
+                            "key": "title",
+                            "size": 64
+                        },
+                        "as": "o1066"
+                    },
+                    "bind": "s2155",
+                    "expect": {
+                        "$value": "Attribute",
+                        "fields": {
+                            "key": "title",
+                            "type": {
+                                "$enum": "Query\\Schema\\ColumnType::String"
+                            },
+                            "size": 64,
+                            "required": false,
+                            "default": null,
+                            "signed": true,
+                            "array": false,
+                            "format": null,
+                            "filters": [],
+                            "relationship": null,
+                            "side": null
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Role",
+                        "method": "any",
+                        "args": {},
+                        "as": "o1067"
+                    },
+                    "bind": "s2156",
+                    "expect": {
+                        "$value": "Role",
+                        "fields": {}
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Permission",
+                        "method": "create",
+                        "args": {
+                            "role": {
+                                "$obj": "o1067"
+                            }
+                        }
+                    },
+                    "expect": "create(\"any\")"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Role",
+                        "method": "any",
+                        "args": {},
+                        "as": "o1068"
+                    },
+                    "bind": "s2158",
+                    "expect": {
+                        "$value": "Role",
+                        "fields": {}
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Permission",
+                        "method": "update",
+                        "args": {
+                            "role": {
+                                "$obj": "o1068"
+                            }
+                        }
+                    },
+                    "expect": "update(\"any\")"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Collection",
+                        "method": "create",
+                        "args": {
+                            "id": "notes",
+                            "attributes": [
+                                {
+                                    "$obj": "o1066"
+                                }
+                            ],
+                            "permissions": [
+                                "create(\"any\")",
+                                "update(\"any\")"
+                            ],
+                            "documentSecurity": true
+                        },
+                        "as": "o1069"
+                    },
+                    "bind": "s2160",
+                    "expect": {
+                        "$document": {
+                            "$id": "notes",
+                            "name": "notes",
+                            "attributes": [
+                                {
+                                    "$document": {
+                                        "$id": "title",
+                                        "key": "title",
+                                        "type": "string",
+                                        "size": 64,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                }
+                            ],
+                            "indexes": [],
+                            "documentSecurity": true,
+                            "$permissions": [
+                                "create(\"any\")",
+                                "update(\"any\")"
+                            ]
+                        },
+                        "$class": "Collection"
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o1064"
+                        },
+                        "method": "createCollection",
+                        "args": {
+                            "collection": {
+                                "$obj": "o1069"
+                            }
+                        },
+                        "as": "o1070"
+                    },
+                    "expect": {
+                        "$document": {
+                            "$id": "notes",
+                            "name": "notes",
+                            "attributes": [
+                                {
+                                    "$document": {
+                                        "$id": "title",
+                                        "key": "title",
+                                        "type": "string",
+                                        "size": 64,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                }
+                            ],
+                            "indexes": [],
+                            "documentSecurity": true,
+                            "$permissions": [
+                                "create(\"any\")",
+                                "update(\"any\")"
+                            ],
+                            "$collection": "_metadata",
+                            "$createdAt": "<now>",
+                            "$updatedAt": "<now>",
+                            "$tenant": "7",
+                            "$sequence": "1"
+                        },
+                        "$class": "Collection"
+                    }
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Adapter\\SQLite",
+                        "args": {
+                            "pdo": {
+                                "$pdo": {
+                                    "dsn": "sqlite::memory:"
+                                }
+                            }
+                        },
+                        "as": "o1071"
+                    },
+                    "bind": "s2162",
+                    "expect": {
+                        "$adapter": "SQLite"
+                    }
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Database",
+                        "args": {
+                            "adapter": {
+                                "$obj": "o1071"
+                            },
+                            "cache": "none"
+                        },
+                        "as": "o1072"
+                    },
+                    "bind": "s2163",
+                    "expect": {
+                        "$database": true
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o1072"
+                        },
+                        "method": "setAuthorization",
+                        "args": {
+                            "authorization": {
+                                "$obj": "o1061"
+                            }
+                        }
+                    },
+                    "expect": {
+                        "$database": true
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o1072"
+                        },
+                        "method": "setDatabase",
+                        "args": {
+                            "name": "upsert_tenancy"
+                        }
+                    },
+                    "expect": {
+                        "$database": true
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o1072"
+                        },
+                        "method": "setNamespace",
+                        "args": {
+                            "namespace": "upsert_tenancy_u000000000051"
+                        }
+                    },
+                    "expect": {
+                        "$database": true
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o1072"
+                        },
+                        "method": "setSharedTables",
+                        "args": {
+                            "sharedTables": true
+                        }
+                    },
+                    "expect": {
+                        "$database": true
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o1072"
+                        },
+                        "method": "setTenant",
+                        "args": {
+                            "tenant": 7
+                        }
+                    },
+                    "expect": {
+                        "$database": true
+                    }
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Hook\\Permissions",
+                        "args": {},
+                        "as": "o1073"
+                    },
+                    "bind": "s2169",
+                    "expect": {
+                        "$hook": "Permissions"
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o1072"
+                        },
+                        "method": "addHook",
+                        "args": {
+                            "hook": {
+                                "$obj": "o1073"
+                            }
+                        }
+                    },
+                    "expect": {
+                        "$database": true
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Role",
+                        "method": "user",
+                        "args": {
+                            "identifier": "reader"
+                        },
+                        "as": "o1074"
+                    },
+                    "bind": "s2171",
+                    "expect": {
+                        "$value": "Role",
+                        "fields": {}
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Permission",
+                        "method": "read",
+                        "args": {
+                            "role": {
+                                "$obj": "o1074"
+                            }
+                        }
+                    },
+                    "expect": "read(\"user:reader\")"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Role",
+                        "method": "user",
+                        "args": {
+                            "identifier": "reader"
+                        },
+                        "as": "o1075"
+                    },
+                    "bind": "s2173",
+                    "expect": {
+                        "$value": "Role",
+                        "fields": {}
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Permission",
+                        "method": "update",
+                        "args": {
+                            "role": {
+                                "$obj": "o1075"
+                            }
+                        }
+                    },
+                    "expect": "update(\"user:reader\")"
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Document",
+                        "args": {
+                            "input": {
+                                "$id": "upserted",
+                                "title": "upserted",
+                                "$permissions": [
+                                    "read(\"user:reader\")",
+                                    "update(\"user:reader\")"
+                                ]
+                            }
+                        },
+                        "as": "o1076"
+                    },
+                    "bind": "s2175",
+                    "expect": {
+                        "$document": {
+                            "$id": "upserted",
+                            "title": "upserted",
+                            "$permissions": [
+                                "read(\"user:reader\")",
+                                "update(\"user:reader\")"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o1072"
+                        },
+                        "method": "upsertDocuments",
+                        "args": {
+                            "collection": "notes",
+                            "documents": [
+                                {
+                                    "$obj": "o1076"
+                                }
+                            ]
+                        }
+                    },
+                    "expect": {
+                        "$error": {
+                            "class": "Utopia\\Database\\Exception\\NotFound",
+                            "message": "Collection not found"
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Storage",
+                        "method": "permissionsTable",
+                        "args": {
+                            "collection": "notes"
+                        }
+                    },
+                    "expect": "notes_perms"
+                }
+            ]
         },
         {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o1134"
-            },
-            "method": "getId",
-            "args": {}
-          }
+            "name": "UpsertTenancyTest::testAFirstWriteUpsertIsVisibleToAPermissionFilteredRead",
+            "state": [],
+            "steps": [
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Validator\\Authorization",
+                        "args": {},
+                        "as": "o1077"
+                    },
+                    "bind": "s2178",
+                    "expect": {
+                        "$authorization": true
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Role",
+                        "method": "any",
+                        "args": {},
+                        "as": "o1078"
+                    },
+                    "bind": "s2179",
+                    "expect": {
+                        "$value": "Role",
+                        "fields": {}
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o1078"
+                        },
+                        "method": "toString",
+                        "args": {}
+                    },
+                    "expect": "any"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o1077"
+                        },
+                        "method": "addRole",
+                        "args": {
+                            "role": "any"
+                        }
+                    },
+                    "expect": {
+                        "$authorization": true
+                    }
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Adapter\\SQLite",
+                        "args": {
+                            "pdo": {
+                                "$pdo": {
+                                    "dsn": "sqlite::memory:"
+                                }
+                            }
+                        },
+                        "as": "o1079"
+                    },
+                    "bind": "s2182",
+                    "expect": {
+                        "$adapter": "SQLite"
+                    }
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Database",
+                        "args": {
+                            "adapter": {
+                                "$obj": "o1079"
+                            },
+                            "cache": "none"
+                        },
+                        "as": "o1080"
+                    },
+                    "bind": "s2183",
+                    "expect": {
+                        "$database": true
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o1080"
+                        },
+                        "method": "setAuthorization",
+                        "args": {
+                            "authorization": {
+                                "$obj": "o1077"
+                            }
+                        }
+                    },
+                    "expect": {
+                        "$database": true
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o1080"
+                        },
+                        "method": "setDatabase",
+                        "args": {
+                            "name": "upsert_tenancy"
+                        }
+                    },
+                    "expect": {
+                        "$database": true
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o1080"
+                        },
+                        "method": "setNamespace",
+                        "args": {
+                            "namespace": "upsert_tenancy_u000000000052"
+                        }
+                    },
+                    "expect": {
+                        "$database": true
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o1080"
+                        },
+                        "method": "setSharedTables",
+                        "args": {
+                            "sharedTables": true
+                        }
+                    },
+                    "expect": {
+                        "$database": true
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o1080"
+                        },
+                        "method": "setTenant",
+                        "args": {
+                            "tenant": 7
+                        }
+                    },
+                    "expect": {
+                        "$database": true
+                    }
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Hook\\Permissions",
+                        "args": {},
+                        "as": "o1081"
+                    },
+                    "bind": "s2189",
+                    "expect": {
+                        "$hook": "Permissions"
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o1080"
+                        },
+                        "method": "addHook",
+                        "args": {
+                            "hook": {
+                                "$obj": "o1081"
+                            }
+                        }
+                    },
+                    "expect": {
+                        "$database": true
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o1080"
+                        },
+                        "method": "create",
+                        "args": {}
+                    },
+                    "expect": true
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Attribute",
+                        "method": "string",
+                        "args": {
+                            "key": "title",
+                            "size": 64
+                        },
+                        "as": "o1082"
+                    },
+                    "bind": "s2192",
+                    "expect": {
+                        "$value": "Attribute",
+                        "fields": {
+                            "key": "title",
+                            "type": {
+                                "$enum": "Query\\Schema\\ColumnType::String"
+                            },
+                            "size": 64,
+                            "required": false,
+                            "default": null,
+                            "signed": true,
+                            "array": false,
+                            "format": null,
+                            "filters": [],
+                            "relationship": null,
+                            "side": null
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Role",
+                        "method": "any",
+                        "args": {},
+                        "as": "o1083"
+                    },
+                    "bind": "s2193",
+                    "expect": {
+                        "$value": "Role",
+                        "fields": {}
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Permission",
+                        "method": "create",
+                        "args": {
+                            "role": {
+                                "$obj": "o1083"
+                            }
+                        }
+                    },
+                    "expect": "create(\"any\")"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Role",
+                        "method": "any",
+                        "args": {},
+                        "as": "o1084"
+                    },
+                    "bind": "s2195",
+                    "expect": {
+                        "$value": "Role",
+                        "fields": {}
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Permission",
+                        "method": "update",
+                        "args": {
+                            "role": {
+                                "$obj": "o1084"
+                            }
+                        }
+                    },
+                    "expect": "update(\"any\")"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Collection",
+                        "method": "create",
+                        "args": {
+                            "id": "notes",
+                            "attributes": [
+                                {
+                                    "$obj": "o1082"
+                                }
+                            ],
+                            "permissions": [
+                                "create(\"any\")",
+                                "update(\"any\")"
+                            ],
+                            "documentSecurity": true
+                        },
+                        "as": "o1085"
+                    },
+                    "bind": "s2197",
+                    "expect": {
+                        "$document": {
+                            "$id": "notes",
+                            "name": "notes",
+                            "attributes": [
+                                {
+                                    "$document": {
+                                        "$id": "title",
+                                        "key": "title",
+                                        "type": "string",
+                                        "size": 64,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                }
+                            ],
+                            "indexes": [],
+                            "documentSecurity": true,
+                            "$permissions": [
+                                "create(\"any\")",
+                                "update(\"any\")"
+                            ]
+                        },
+                        "$class": "Collection"
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o1080"
+                        },
+                        "method": "createCollection",
+                        "args": {
+                            "collection": {
+                                "$obj": "o1085"
+                            }
+                        },
+                        "as": "o1086"
+                    },
+                    "expect": {
+                        "$document": {
+                            "$id": "notes",
+                            "name": "notes",
+                            "attributes": [
+                                {
+                                    "$document": {
+                                        "$id": "title",
+                                        "key": "title",
+                                        "type": "string",
+                                        "size": 64,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                }
+                            ],
+                            "indexes": [],
+                            "documentSecurity": true,
+                            "$permissions": [
+                                "create(\"any\")",
+                                "update(\"any\")"
+                            ],
+                            "$collection": "_metadata",
+                            "$createdAt": "<now>",
+                            "$updatedAt": "<now>",
+                            "$tenant": "7",
+                            "$sequence": "1"
+                        },
+                        "$class": "Collection"
+                    }
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Adapter\\SQLite",
+                        "args": {
+                            "pdo": {
+                                "$pdo": {
+                                    "dsn": "sqlite::memory:"
+                                }
+                            }
+                        },
+                        "as": "o1087"
+                    },
+                    "bind": "s2199",
+                    "expect": {
+                        "$adapter": "SQLite"
+                    }
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Database",
+                        "args": {
+                            "adapter": {
+                                "$obj": "o1087"
+                            },
+                            "cache": "none"
+                        },
+                        "as": "o1088"
+                    },
+                    "bind": "s2200",
+                    "expect": {
+                        "$database": true
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o1088"
+                        },
+                        "method": "setAuthorization",
+                        "args": {
+                            "authorization": {
+                                "$obj": "o1077"
+                            }
+                        }
+                    },
+                    "expect": {
+                        "$database": true
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o1088"
+                        },
+                        "method": "setDatabase",
+                        "args": {
+                            "name": "upsert_tenancy"
+                        }
+                    },
+                    "expect": {
+                        "$database": true
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o1088"
+                        },
+                        "method": "setNamespace",
+                        "args": {
+                            "namespace": "upsert_tenancy_u000000000052"
+                        }
+                    },
+                    "expect": {
+                        "$database": true
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o1088"
+                        },
+                        "method": "setSharedTables",
+                        "args": {
+                            "sharedTables": true
+                        }
+                    },
+                    "expect": {
+                        "$database": true
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o1088"
+                        },
+                        "method": "setTenant",
+                        "args": {
+                            "tenant": 7
+                        }
+                    },
+                    "expect": {
+                        "$database": true
+                    }
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Hook\\Permissions",
+                        "args": {},
+                        "as": "o1089"
+                    },
+                    "bind": "s2206",
+                    "expect": {
+                        "$hook": "Permissions"
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o1088"
+                        },
+                        "method": "addHook",
+                        "args": {
+                            "hook": {
+                                "$obj": "o1089"
+                            }
+                        }
+                    },
+                    "expect": {
+                        "$database": true
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Role",
+                        "method": "user",
+                        "args": {
+                            "identifier": "reader"
+                        },
+                        "as": "o1090"
+                    },
+                    "bind": "s2208",
+                    "expect": {
+                        "$value": "Role",
+                        "fields": {}
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Permission",
+                        "method": "read",
+                        "args": {
+                            "role": {
+                                "$obj": "o1090"
+                            }
+                        }
+                    },
+                    "expect": "read(\"user:reader\")"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Role",
+                        "method": "user",
+                        "args": {
+                            "identifier": "reader"
+                        },
+                        "as": "o1091"
+                    },
+                    "bind": "s2210",
+                    "expect": {
+                        "$value": "Role",
+                        "fields": {}
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Permission",
+                        "method": "update",
+                        "args": {
+                            "role": {
+                                "$obj": "o1091"
+                            }
+                        }
+                    },
+                    "expect": "update(\"user:reader\")"
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Document",
+                        "args": {
+                            "input": {
+                                "$id": "upserted",
+                                "title": "upserted",
+                                "$permissions": [
+                                    "read(\"user:reader\")",
+                                    "update(\"user:reader\")"
+                                ]
+                            }
+                        },
+                        "as": "o1092"
+                    },
+                    "bind": "s2212",
+                    "expect": {
+                        "$document": {
+                            "$id": "upserted",
+                            "title": "upserted",
+                            "$permissions": [
+                                "read(\"user:reader\")",
+                                "update(\"user:reader\")"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o1088"
+                        },
+                        "method": "upsertDocuments",
+                        "args": {
+                            "collection": "notes",
+                            "documents": [
+                                {
+                                    "$obj": "o1092"
+                                }
+                            ]
+                        }
+                    },
+                    "expect": {
+                        "$error": {
+                            "class": "Utopia\\Database\\Exception\\NotFound",
+                            "message": "Collection not found"
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o1077"
+                        },
+                        "method": "cleanRoles",
+                        "args": {}
+                    },
+                    "expect": {
+                        "$authorization": true
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "class": "Role",
+                        "method": "user",
+                        "args": {
+                            "identifier": "reader"
+                        },
+                        "as": "o1093"
+                    },
+                    "bind": "s2215",
+                    "expect": {
+                        "$value": "Role",
+                        "fields": {}
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o1093"
+                        },
+                        "method": "toString",
+                        "args": {}
+                    },
+                    "expect": "user:reader"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o1077"
+                        },
+                        "method": "addRole",
+                        "args": {
+                            "role": "user:reader"
+                        }
+                    },
+                    "expect": {
+                        "$authorization": true
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o1088"
+                        },
+                        "method": "find",
+                        "args": {
+                            "collection": "notes"
+                        }
+                    },
+                    "expect": {
+                        "$error": {
+                            "class": "Utopia\\Database\\Exception\\NotFound",
+                            "message": "Collection not found"
+                        }
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$document": {
+                                "title": "upserted",
+                                "$id": "upserted",
+                                "$sequence": "1",
+                                "$tenant": "7",
+                                "$createdAt": {
+                                    "$now": 0,
+                                    "format": "Y-m-d\\TH:i:s.vP"
+                                },
+                                "$updatedAt": {
+                                    "$now": 0,
+                                    "format": "Y-m-d\\TH:i:s.vP"
+                                },
+                                "$permissions": [
+                                    "read(\"user:reader\")",
+                                    "update(\"user:reader\")"
+                                ],
+                                "$collection": "notes"
+                            }
+                        },
+                        "method": "getId",
+                        "args": {}
+                    },
+                    "expect": "upserted"
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o1088"
+                        },
+                        "method": "count",
+                        "args": {
+                            "collection": "notes"
+                        }
+                    },
+                    "expect": {
+                        "$error": {
+                            "class": "Utopia\\Database\\Exception\\NotFound",
+                            "message": "Collection not found"
+                        }
+                    }
+                }
+            ]
         }
-      ]
-    }
-  ]
+    ]
 }

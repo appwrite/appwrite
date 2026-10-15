@@ -1,966 +1,1220 @@
 {
-    "source": [
-        "vendor/utopia-php/database/tests/e2e/Adapter/Scopes/ObjectAttributeTests.php",
-        "vendor/utopia-php/database/tests/e2e/Adapter/MySQLTest.php"
-    ],
-    "cases": [
+  "source": [
+    "vendor/utopia-php/database/tests/e2e/Adapter/Scopes/ObjectAttributeTests.php",
+    "vendor/utopia-php/database/tests/e2e/Adapter/MySQLTest.php"
+  ],
+  "cases": [
+    {
+      "name": "ObjectAttributeTests::testObjectAttribute",
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "steps": [
         {
-            "name": "ObjectAttributeTests::testObjectAttribute",
-            "state": [
-                "mysql@database-mysql"
-            ],
-            "steps": [
-                {
-                    "op": "db.open",
-                    "args": {
-                        "driver": "mysql"
-                    },
-                    "bind": "db"
-                },
-                {
-                    "op": "db.authorization.clean_roles",
-                    "args": {}
-                },
-                {
-                    "op": "db.authorization.add_role",
-                    "args": {
-                        "role": "any"
-                    }
-                },
-                {
-                    "op": "db.authorization.add_role",
-                    "args": {
-                        "role": "users"
-                    }
-                },
-                {
-                    "op": "db.authorization.add_role",
-                    "args": {
-                        "role": "user:x"
-                    }
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRange"
-                    }
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRangeNew"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "subQueryProbe"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "joinedSeal"
-                    }
-                },
-                {
-                    "op": "db.adapter",
-                    "args": {
-                        "method": "supports",
-                        "args": {
-                            "capability": {
-                                "$enum": "Capability::Objects"
-                            }
-                        }
-                    }
-                }
-            ]
+          "op": "db.open",
+          "args": {
+            "driver": "mysql"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
-            "name": "ObjectAttributeTests::testObjectAttributeGinIndex",
-            "state": [
-                "mysql@database-mysql"
-            ],
-            "steps": [
-                {
-                    "op": "db.open",
-                    "args": {
-                        "driver": "mysql"
-                    },
-                    "bind": "db"
-                },
-                {
-                    "op": "db.authorization.clean_roles",
-                    "args": {}
-                },
-                {
-                    "op": "db.authorization.add_role",
-                    "args": {
-                        "role": "any"
-                    }
-                },
-                {
-                    "op": "db.authorization.add_role",
-                    "args": {
-                        "role": "users"
-                    }
-                },
-                {
-                    "op": "db.authorization.add_role",
-                    "args": {
-                        "role": "user:x"
-                    }
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRange"
-                    }
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRangeNew"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "subQueryProbe"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "joinedSeal"
-                    }
-                },
-                {
-                    "op": "db.adapter",
-                    "args": {
-                        "method": "supports",
-                        "args": {
-                            "capability": {
-                                "$enum": "Capability::IndexObject"
-                            }
-                        }
-                    }
-                }
-            ]
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
         },
         {
-            "name": "ObjectAttributeTests::testObjectAttributeInvalidCases",
-            "state": [
-                "mysql@database-mysql"
-            ],
-            "steps": [
-                {
-                    "op": "db.open",
-                    "args": {
-                        "driver": "mysql"
-                    },
-                    "bind": "db"
-                },
-                {
-                    "op": "db.authorization.clean_roles",
-                    "args": {}
-                },
-                {
-                    "op": "db.authorization.add_role",
-                    "args": {
-                        "role": "any"
-                    }
-                },
-                {
-                    "op": "db.authorization.add_role",
-                    "args": {
-                        "role": "users"
-                    }
-                },
-                {
-                    "op": "db.authorization.add_role",
-                    "args": {
-                        "role": "user:x"
-                    }
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRange"
-                    }
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRangeNew"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "subQueryProbe"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "joinedSeal"
-                    }
-                },
-                {
-                    "op": "db.adapter",
-                    "args": {
-                        "method": "supports",
-                        "args": {
-                            "capability": {
-                                "$enum": "Capability::Objects"
-                            }
-                        }
-                    }
-                }
-            ]
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
-            "name": "ObjectAttributeTests::testObjectAttributeDefaults",
-            "state": [
-                "mysql@database-mysql"
-            ],
-            "steps": [
-                {
-                    "op": "db.open",
-                    "args": {
-                        "driver": "mysql"
-                    },
-                    "bind": "db"
-                },
-                {
-                    "op": "db.authorization.clean_roles",
-                    "args": {}
-                },
-                {
-                    "op": "db.authorization.add_role",
-                    "args": {
-                        "role": "any"
-                    }
-                },
-                {
-                    "op": "db.authorization.add_role",
-                    "args": {
-                        "role": "users"
-                    }
-                },
-                {
-                    "op": "db.authorization.add_role",
-                    "args": {
-                        "role": "user:x"
-                    }
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRange"
-                    }
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRangeNew"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "subQueryProbe"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "joinedSeal"
-                    }
-                },
-                {
-                    "op": "db.adapter",
-                    "args": {
-                        "method": "supports",
-                        "args": {
-                            "capability": {
-                                "$enum": "Capability::Objects"
-                            }
-                        }
-                    }
-                }
-            ]
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
-            "name": "ObjectAttributeTests::testObjectAttributeIntegersBeyondInt32",
-            "state": [
-                "mysql@database-mysql"
-            ],
-            "steps": [
-                {
-                    "op": "db.open",
-                    "args": {
-                        "driver": "mysql"
-                    },
-                    "bind": "db"
-                },
-                {
-                    "op": "db.authorization.clean_roles",
-                    "args": {}
-                },
-                {
-                    "op": "db.authorization.add_role",
-                    "args": {
-                        "role": "any"
-                    }
-                },
-                {
-                    "op": "db.authorization.add_role",
-                    "args": {
-                        "role": "users"
-                    }
-                },
-                {
-                    "op": "db.authorization.add_role",
-                    "args": {
-                        "role": "user:x"
-                    }
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRange"
-                    }
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRangeNew"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "subQueryProbe"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "joinedSeal"
-                    }
-                },
-                {
-                    "op": "db.adapter",
-                    "args": {
-                        "method": "supports",
-                        "args": {
-                            "capability": {
-                                "$enum": "Capability::Objects"
-                            }
-                        }
-                    }
-                }
-            ]
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
-            "name": "ObjectAttributeTests::testObjectAttributeEmptyObject",
-            "state": [
-                "mysql@database-mysql"
-            ],
-            "steps": [
-                {
-                    "op": "db.open",
-                    "args": {
-                        "driver": "mysql"
-                    },
-                    "bind": "db"
-                },
-                {
-                    "op": "db.authorization.clean_roles",
-                    "args": {}
-                },
-                {
-                    "op": "db.authorization.add_role",
-                    "args": {
-                        "role": "any"
-                    }
-                },
-                {
-                    "op": "db.authorization.add_role",
-                    "args": {
-                        "role": "users"
-                    }
-                },
-                {
-                    "op": "db.authorization.add_role",
-                    "args": {
-                        "role": "user:x"
-                    }
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRange"
-                    }
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRangeNew"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "subQueryProbe"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "joinedSeal"
-                    }
-                },
-                {
-                    "op": "db.adapter",
-                    "args": {
-                        "method": "supports",
-                        "args": {
-                            "capability": {
-                                "$enum": "Capability::Objects"
-                            }
-                        }
-                    }
-                }
-            ]
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
         },
         {
-            "name": "ObjectAttributeTests::testObjectAttributeNestedEmptyObjects",
-            "state": [
-                "mysql@database-mysql"
-            ],
-            "steps": [
-                {
-                    "op": "db.open",
-                    "args": {
-                        "driver": "mysql"
-                    },
-                    "bind": "db"
-                },
-                {
-                    "op": "db.authorization.clean_roles",
-                    "args": {}
-                },
-                {
-                    "op": "db.authorization.add_role",
-                    "args": {
-                        "role": "any"
-                    }
-                },
-                {
-                    "op": "db.authorization.add_role",
-                    "args": {
-                        "role": "users"
-                    }
-                },
-                {
-                    "op": "db.authorization.add_role",
-                    "args": {
-                        "role": "user:x"
-                    }
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRange"
-                    }
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRangeNew"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "subQueryProbe"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "joinedSeal"
-                    }
-                },
-                {
-                    "op": "db.adapter",
-                    "args": {
-                        "method": "supports",
-                        "args": {
-                            "capability": {
-                                "$enum": "Capability::Objects"
-                            }
-                        }
-                    }
-                }
-            ]
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
         },
         {
-            "name": "ObjectAttributeTests::testMetadataWithVector",
-            "state": [
-                "mysql@database-mysql"
-            ],
-            "steps": [
-                {
-                    "op": "db.open",
-                    "args": {
-                        "driver": "mysql"
-                    },
-                    "bind": "db"
-                },
-                {
-                    "op": "db.authorization.clean_roles",
-                    "args": {}
-                },
-                {
-                    "op": "db.authorization.add_role",
-                    "args": {
-                        "role": "any"
-                    }
-                },
-                {
-                    "op": "db.authorization.add_role",
-                    "args": {
-                        "role": "users"
-                    }
-                },
-                {
-                    "op": "db.authorization.add_role",
-                    "args": {
-                        "role": "user:x"
-                    }
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRange"
-                    }
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRangeNew"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "subQueryProbe"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "joinedSeal"
-                    }
-                },
-                {
-                    "op": "db.adapter",
-                    "args": {
-                        "method": "supports",
-                        "args": {
-                            "capability": {
-                                "$enum": "Capability::Vectors"
-                            }
-                        }
-                    }
-                }
-            ]
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
         },
         {
-            "name": "ObjectAttributeTests::testNestedObjectAttributeIndexes",
-            "state": [
-                "mysql@database-mysql"
-            ],
-            "steps": [
-                {
-                    "op": "db.open",
-                    "args": {
-                        "driver": "mysql"
-                    },
-                    "bind": "db"
-                },
-                {
-                    "op": "db.authorization.clean_roles",
-                    "args": {}
-                },
-                {
-                    "op": "db.authorization.add_role",
-                    "args": {
-                        "role": "any"
-                    }
-                },
-                {
-                    "op": "db.authorization.add_role",
-                    "args": {
-                        "role": "users"
-                    }
-                },
-                {
-                    "op": "db.authorization.add_role",
-                    "args": {
-                        "role": "user:x"
-                    }
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRange"
-                    }
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRangeNew"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "subQueryProbe"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "joinedSeal"
-                    }
-                },
-                {
-                    "op": "db.adapter",
-                    "args": {
-                        "method": "supports",
-                        "args": {
-                            "capability": {
-                                "$enum": "Capability::DefinedAttributes"
-                            }
-                        }
-                    }
-                },
-                {
-                    "op": "db.adapter",
-                    "args": {
-                        "method": "supports",
-                        "args": {
-                            "capability": {
-                                "$enum": "Capability::IndexObject"
-                            }
-                        }
-                    }
-                }
-            ]
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
         },
         {
-            "name": "ObjectAttributeTests::testQueryNestedAttribute",
-            "state": [
-                "mysql@database-mysql"
-            ],
-            "steps": [
-                {
-                    "op": "db.open",
-                    "args": {
-                        "driver": "mysql"
-                    },
-                    "bind": "db"
-                },
-                {
-                    "op": "db.authorization.clean_roles",
-                    "args": {}
-                },
-                {
-                    "op": "db.authorization.add_role",
-                    "args": {
-                        "role": "any"
-                    }
-                },
-                {
-                    "op": "db.authorization.add_role",
-                    "args": {
-                        "role": "users"
-                    }
-                },
-                {
-                    "op": "db.authorization.add_role",
-                    "args": {
-                        "role": "user:x"
-                    }
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRange"
-                    }
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRangeNew"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "subQueryProbe"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "joinedSeal"
-                    }
-                },
-                {
-                    "op": "db.adapter",
-                    "args": {
-                        "method": "supports",
-                        "args": {
-                            "capability": {
-                                "$enum": "Capability::DefinedAttributes"
-                            }
-                        }
-                    }
-                },
-                {
-                    "op": "db.adapter",
-                    "args": {
-                        "method": "supports",
-                        "args": {
-                            "capability": {
-                                "$enum": "Capability::IndexObject"
-                            }
-                        }
-                    }
-                }
-            ]
+          "op": "database.add_filter",
+          "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
         },
         {
-            "name": "ObjectAttributeTests::testObjectPathKeysOutsideTheAllowedCharsAreRefused",
-            "state": [
-                "mysql@database-mysql"
-            ],
-            "steps": [
-                {
-                    "op": "db.open",
-                    "args": {
-                        "driver": "mysql"
-                    },
-                    "bind": "db"
-                },
-                {
-                    "op": "db.authorization.clean_roles",
-                    "args": {}
-                },
-                {
-                    "op": "db.authorization.add_role",
-                    "args": {
-                        "role": "any"
-                    }
-                },
-                {
-                    "op": "db.authorization.add_role",
-                    "args": {
-                        "role": "users"
-                    }
-                },
-                {
-                    "op": "db.authorization.add_role",
-                    "args": {
-                        "role": "user:x"
-                    }
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRange"
-                    }
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRangeNew"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "subQueryProbe"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "joinedSeal"
-                    }
-                },
-                {
-                    "op": "db.adapter",
-                    "args": {
-                        "method": "supports",
-                        "args": {
-                            "capability": {
-                                "$enum": "Capability::Objects"
-                            }
-                        }
-                    }
-                }
-            ]
-        },
-        {
-            "name": "ObjectAttributeTests::testNestedObjectAttributeEdgeCases",
-            "state": [
-                "mysql@database-mysql"
-            ],
-            "steps": [
-                {
-                    "op": "db.open",
-                    "args": {
-                        "driver": "mysql"
-                    },
-                    "bind": "db"
-                },
-                {
-                    "op": "db.authorization.clean_roles",
-                    "args": {}
-                },
-                {
-                    "op": "db.authorization.add_role",
-                    "args": {
-                        "role": "any"
-                    }
-                },
-                {
-                    "op": "db.authorization.add_role",
-                    "args": {
-                        "role": "users"
-                    }
-                },
-                {
-                    "op": "db.authorization.add_role",
-                    "args": {
-                        "role": "user:x"
-                    }
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRange"
-                    }
-                },
-                {
-                    "op": "db.add_format",
-                    "args": {
-                        "name": "priceRangeNew"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "encrypt"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "subQueryProbe"
-                    }
-                },
-                {
-                    "op": "database.add_filter",
-                    "args": {
-                        "name": "joinedSeal"
-                    }
-                },
-                {
-                    "op": "db.adapter",
-                    "args": {
-                        "method": "supports",
-                        "args": {
-                            "capability": {
-                                "$enum": "Capability::Objects"
-                            }
-                        }
-                    }
-                }
-            ]
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Objects"
+              }
+            }
+          },
+          "expect": false
         }
-    ]
+      ]
+    },
+    {
+      "name": "ObjectAttributeTests::testObjectAttributeGinIndex",
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "driver": "mysql"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::IndexObject"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "ObjectAttributeTests::testObjectAttributeInvalidCases",
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "driver": "mysql"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Objects"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "ObjectAttributeTests::testObjectAttributeDefaults",
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "driver": "mysql"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Objects"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "ObjectAttributeTests::testObjectAttributeIntegersBeyondInt32",
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "driver": "mysql"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Objects"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "ObjectAttributeTests::testObjectAttributeEmptyObject",
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "driver": "mysql"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Objects"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "ObjectAttributeTests::testObjectAttributeNestedEmptyObjects",
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "driver": "mysql"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Objects"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "ObjectAttributeTests::testMetadataWithVector",
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "driver": "mysql"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Vectors"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "ObjectAttributeTests::testNestedObjectAttributeIndexes",
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "driver": "mysql"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::IndexObject"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "ObjectAttributeTests::testQueryNestedAttribute",
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "driver": "mysql"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::IndexObject"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "ObjectAttributeTests::testObjectPathKeysOutsideTheAllowedCharsAreRefused",
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "driver": "mysql"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Objects"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "ObjectAttributeTests::testNestedObjectAttributeEdgeCases",
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "driver": "mysql"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Objects"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    }
+  ]
 }
