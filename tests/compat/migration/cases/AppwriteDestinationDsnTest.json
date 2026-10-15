@@ -1,5 +1,5 @@
 {
-  "source": "vendor/utopia-php/migration/tests/Migration/Unit/Destinations/AppwriteDestinationDsnTest.php",
+  "source": "packages/migration/tests/Destinations/AppwriteDestinationDsnTest.php",
   "cases": [
     {
       "name": "testWithoutResolverReturnsEmptyString",

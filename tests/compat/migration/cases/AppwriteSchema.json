@@ -1,5 +1,5 @@
 {
-  "source": "vendor/utopia-php/migration/src/Migration/Destinations/Appwrite.php",
+  "source": "packages/migration/src/Destinations/Appwrite.php",
   "cases": [
     {
       "name": "a database, two tables, every column type, a two-way relationship, indexes and rows",

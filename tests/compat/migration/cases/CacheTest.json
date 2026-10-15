@@ -1,5 +1,5 @@
 {
-  "source": "vendor/utopia-php/migration/tests/Migration/Unit/General/CacheTest.php",
+  "source": "packages/migration/tests/General/CacheTest.php",
   "cases": [
     {
       "name": "testTestCache",

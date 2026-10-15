@@ -1,8 +1,8 @@
 <?php
+
 // Prints {provider: {secret, scopes, url}} for every OAuth2 provider without PKCE.
 require '/usr/src/code/vendor/autoload.php';
 
-use Utopia\Config\Config;
 
 $providers = include '/usr/src/code/app/config/oAuthProviders.php';
 $client = new \Utopia\Client\Client(new \Utopia\Client\Adapter\Curl\Client());

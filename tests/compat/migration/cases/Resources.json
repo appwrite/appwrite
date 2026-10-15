@@ -1,5 +1,5 @@
 {
-  "source": "vendor/utopia-php/migration/src/Migration/Resource.php",
+  "source": "packages/migration/src/Resource.php",
   "cases": [
     {
       "name": "a column as an attribute, and an attribute from a column",

@@ -4,10 +4,10 @@
   "complete": true,
   "php": {
     "src": [
-      "vendor/utopia-php/migration/src"
+      "packages/migration/src"
     ],
     "tests": [
-      "vendor/utopia-php/migration/tests"
+      "packages/migration/tests"
     ]
   },
   "rust": {
@@ -1737,15 +1737,15 @@
     "Utopia\\Migration\\Destination::setSource": "Accessor subsumed by Rust types: the Transfer owns the source and hands it to Destination::run"
   },
   "tests_waived": {
-    "vendor/utopia-php/migration/tests/Migration/Unit/General/TargetTest.php": "Checks that a PHP subclass declaring the legacy three-parameter run() still satisfies Target's abstract signature, a PHP inheritance rule; Rust's Source and Destination traits fix one signature, so there is no behaviour to compare",
-    "vendor/utopia-php/migration/tests/Migration/Unit/Destinations/AppwriteAttributeSdkBoundaryTest.php": "Reflection over the PHP SDK's update*Column/update*Attribute methods against a private constant of the destination; the behaviour the constant drives (an Overwrite updates an attribute in place, or drops and recreates it when an immutable field changed) is in the AppwriteSchema cases",
-    "vendor/utopia-php/migration/tests/Migration/Unit/Destinations/AppwriteSdkCoverageTest.php": "Reflection over the PHP SDK's service methods and the destination's source, failing when an SDK bump adds a parameter the destination does not send; a check on the PHP code with no behaviour to compare. The parameters the destination sends are in the AppwriteDestinationApi requests, and the Rust SDK tables are regenerated from the same SDK (tests/compat/migration/tools/gen_sdk.py)",
-    "vendor/utopia-php/migration/tests/Migration/Unit/MigrationCLITest.php": "Tests bin/MigrationCLI.php, the developer harness waived under tasks_waived: its subclass replaces the harness's database, source, frame and .env loading, leaving a transfer into the Appwrite destination, which the AppwriteRunCompletionTest and AppwriteDatabaseStatusTest cases cover (databases flipped to ready, failed resources reported), and the harness's subQueryAttributes and subQueryIndexes filters, which are the db.subquery_filters glue every destination case registers",
-    "vendor/utopia-php/migration/tests/Migration/Unit/Destinations/AppwriteSpatialIndexTest.php": "Pending utopia-database 8.x: it wraps a spatial Memory adapter (one implementing Utopia\\Database\\Adapter\\Feature\\Spatial) in Utopia\\Database\\Adapter\\Pool and checks that Database::profile()->hasFeature(Spatial::class) sees through the pool, so the destination's IndexDefinition validator accepts a spatial index. The Rust database (7.x) has no adapter features, profile, Pool adapter or spatial Memory adapter to build that destination from; port it with the upgrade"
+    "packages/migration/tests/General/TargetTest.php": "Checks that a PHP subclass declaring the legacy three-parameter run() still satisfies Target's abstract signature, a PHP inheritance rule; Rust's Source and Destination traits fix one signature, so there is no behaviour to compare",
+    "packages/migration/tests/Destinations/AppwriteAttributeSdkBoundaryTest.php": "Reflection over the PHP SDK's update*Column/update*Attribute methods against a private constant of the destination; the behaviour the constant drives (an Overwrite updates an attribute in place, or drops and recreates it when an immutable field changed) is in the AppwriteSchema cases",
+    "packages/migration/tests/Destinations/AppwriteSdkCoverageTest.php": "Reflection over the PHP SDK's service methods and the destination's source, failing when an SDK bump adds a parameter the destination does not send; a check on the PHP code with no behaviour to compare. The parameters the destination sends are in the AppwriteDestinationApi requests, and the Rust SDK tables are regenerated from the same SDK (tests/compat/migration/tools/gen_sdk.py)",
+    "packages/migration/tests/MigrationCLITest.php": "Tests bin/MigrationCLI.php, the developer harness waived under tasks_waived: its subclass replaces the harness's database, source, frame and .env loading, leaving a transfer into the Appwrite destination, which the AppwriteRunCompletionTest and AppwriteDatabaseStatusTest cases cover (databases flipped to ready, failed resources reported), and the harness's subQueryAttributes and subQueryIndexes filters, which are the db.subquery_filters glue every destination case registers",
+    "packages/migration/tests/Destinations/AppwriteSpatialIndexTest.php": "Pending utopia-database 8.x: it wraps a spatial Memory adapter (one implementing Utopia\\Database\\Adapter\\Feature\\Spatial) in Utopia\\Database\\Adapter\\Pool and checks that Database::profile()->hasFeature(Spatial::class) sees through the pool, so the destination's IndexDefinition validator accepts a spatial index. The Rust database (7.x) has no adapter features, profile, Pool adapter or spatial Memory adapter to build that destination from; port it with the upgrade"
   },
   "tasks": {},
   "tasks_waived": {
-    "vendor/utopia-php/migration/bin/MigrationCLI.php": "A developer harness, not a task the library ships: it reads credentials from a .env file (vlucas/phpdotenv, a dev dependency) and connects to MariaDB to run a transfer between real projects; the transfers it would run are covered by the cases"
+    "packages/migration/bin/MigrationCLI.php": "A developer harness, not a task the library ships: it reads credentials from a .env file (vlucas/phpdotenv, a dev dependency) and connects to MariaDB to run a transfer between real projects; the transfers it would run are covered by the cases"
   },
   "quirks": [
     {

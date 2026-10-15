@@ -1,5 +1,5 @@
 {
-  "source": "vendor/utopia-php/migration/tests/Migration/Unit/Resources/SpecificationTest.php",
+  "source": "packages/migration/tests/Resources/SpecificationTest.php",
   "cases": [
     {
       "name": "testFunctionPreservesBuildAndRuntimeSpecifications",

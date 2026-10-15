@@ -1,5 +1,5 @@
 {
-  "source": "vendor/utopia-php/migration/tests/Migration/Unit/Destinations/AppwriteColumnOverwriteTest.php",
+  "source": "packages/migration/tests/Destinations/AppwriteColumnOverwriteTest.php",
   "cases": [
     {
       "name": "testAnOverwriteWithANullSourceDefaultClearsTheDestinationDefault",

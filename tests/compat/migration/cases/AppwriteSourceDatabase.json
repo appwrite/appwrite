@@ -1,5 +1,5 @@
 {
-  "source": "vendor/utopia-php/migration/src/Migration/Sources/Appwrite.php",
+  "source": "packages/migration/src/Sources/Appwrite.php",
   "cases": [
     {
       "name": "a project database read straight, every resource into a mock destination",

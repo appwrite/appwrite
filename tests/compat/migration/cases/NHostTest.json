@@ -1,5 +1,5 @@
 {
-  "source": "vendor/utopia-php/migration/tests/Migration/E2E/Sources/NHostTest.php",
+  "source": "packages/migration/tests/E2E/Sources/NHostTest.php",
   "cases": [
     {
       "name": "testSourceReport, testRunTransfer and the transferred users, databases, tables and storage",

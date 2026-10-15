@@ -1,5 +1,5 @@
 {
-  "source": "vendor/utopia-php/migration/tests/Migration/Unit/Destinations/AppwriteRelationshipOnDeleteTest.php",
+  "source": "packages/migration/tests/Destinations/AppwriteRelationshipOnDeleteTest.php",
   "cases": [
     {
       "name": "testOverwriteWithoutAUsableSourceActionKeepsTheDestinationAction (empty)",

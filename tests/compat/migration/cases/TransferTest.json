@@ -1,5 +1,5 @@
 {
-  "source": "vendor/utopia-php/migration/tests/Migration/Unit/General/TransferTest.php",
+  "source": "packages/migration/tests/General/TransferTest.php",
   "cases": [
     {
       "name": "testRootResourceId",

@@ -1,5 +1,5 @@
 {
-  "source": "vendor/utopia-php/migration/src/Migration/Sources/Appwrite/Reader/Database.php",
+  "source": "packages/migration/src/Sources/Appwrite/Reader/Database.php",
   "cases": [
     {
       "name": "report counts by type and id",

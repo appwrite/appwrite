@@ -1,5 +1,5 @@
 {
-  "source": "vendor/utopia-php/migration/tests/Migration/Unit/General/CSVTest.php",
+  "source": "packages/migration/tests/General/CSVTest.php",
   "cases": [
     {
       "name": "testDetectDelimiter",

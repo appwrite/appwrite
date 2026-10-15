@@ -9,11 +9,11 @@ use Utopia\Migration\Resource;
 use Utopia\Migration\Source;
 use Utopia\Migration\Sources\Firebase;
 use Utopia\Migration\Target;
-use Utopia\Tests\Unit\Adapters\MockDestination;
-use Utopia\Tests\Unit\Adapters\MockSource;
+use Utopia\Migration\Tests\Adapters\MockDestination;
+use Utopia\Migration\Tests\Adapters\MockSource;
 
-require_once \dirname(__DIR__, 3) . '/vendor/utopia-php/migration/tests/Migration/Unit/Adapters/MockSource.php';
-require_once \dirname(__DIR__, 3) . '/vendor/utopia-php/migration/tests/Migration/Unit/Adapters/MockDestination.php';
+require_once \dirname(__DIR__, 3) . '/packages/migration/tests/Adapters/MockSource.php';
+require_once \dirname(__DIR__, 3) . '/packages/migration/tests/Adapters/MockDestination.php';
 
 /**
  * The PHP suite's test doubles: its MockSource and MockDestination, and the

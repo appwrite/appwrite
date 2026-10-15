@@ -1,5 +1,5 @@
 {
-  "source": "vendor/utopia-php/migration/tests/Migration/Unit/General/TargetTimeoutTest.php",
+  "source": "packages/migration/tests/General/TargetTimeoutTest.php",
   "cases": [
     {
       "name": "testTransferOutlastingEveryTimeoutSucceedsWhileDataKeepsArriving",

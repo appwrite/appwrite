@@ -1,5 +1,5 @@
 {
-  "source": "vendor/utopia-php/migration/tests/Migration/Unit/Sources/AppwriteReaderApiTest.php",
+  "source": "packages/migration/tests/Sources/AppwriteReaderApiTest.php",
   "cases": [
     {
       "name": "testListColumnsNormalizesSdkListResponse, and the other reads",

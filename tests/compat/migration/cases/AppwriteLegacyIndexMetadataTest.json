@@ -1,5 +1,5 @@
 {
-  "source": "vendor/utopia-php/migration/tests/Migration/Unit/Destinations/AppwriteLegacyIndexMetadataTest.php",
+  "source": "packages/migration/tests/Destinations/AppwriteLegacyIndexMetadataTest.php",
   "cases": [
     {
       "name": "testAnUnchangedIndexWithLegacyMetadataIsSkipped (fulltext index stored with lengths and orders)",

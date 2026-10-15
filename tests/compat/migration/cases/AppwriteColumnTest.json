@@ -1,5 +1,5 @@
 {
-  "source": "vendor/utopia-php/migration/tests/Migration/Unit/Sources/AppwriteColumnTest.php",
+  "source": "packages/migration/tests/Sources/AppwriteColumnTest.php",
   "cases": [
     {
       "name": "testFixedWidthTypesWithoutASize",

@@ -379,7 +379,7 @@ final class Adapter implements Base, Benchmarks
                             ));
                         }
                     }
-                    : new MemoryAdapter();
+                : new MemoryAdapter();
                 $db = new UtopiaDatabase($adapter, new UtopiaCache(new MemoryCache()));
                 $db->setDatabase('appwrite')->setNamespace('_project');
                 $db->getAuthorization()->disable();
@@ -398,17 +398,17 @@ final class Adapter implements Base, Benchmarks
             'db.add_format' => function (array $a, Session $s) {
                 Structure::addFormat($a['name'], static fn (): Text => new Text(0), ColumnType::from($a['type']));
 
-                return null;
+                return;
             },
             'db.remove_format' => function (array $a, Session $s) {
                 Structure::removeFormat($a['name']);
 
-                return null;
+                return;
             },
             'source.previous_report' => function (array $a, Session $s) {
                 $s->get($a['source'])->previousReport = $a['report'];
 
-                return null;
+                return;
             },
             // TargetTimeoutTest: one GET on a target with short timeouts,
             // against a fixture that streams, stalls or stays silent; whether

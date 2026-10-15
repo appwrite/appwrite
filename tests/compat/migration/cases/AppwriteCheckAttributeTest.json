@@ -1,5 +1,5 @@
 {
-  "source": "vendor/utopia-php/migration/tests/Migration/Unit/Destinations/AppwriteCheckAttributeTest.php",
+  "source": "packages/migration/tests/Destinations/AppwriteCheckAttributeTest.php",
   "cases": [
     {
       "name": "testTheCheckedColumnIsKeyedByTheResourceKeyNotTheMetadataId, testTheLimitCheckMeasuresThePhysicalTableCollection, testTheCheckedColumnCarriesTheSpecificationBeingCreated",

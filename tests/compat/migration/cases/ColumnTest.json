@@ -1,5 +1,5 @@
 {
-  "source": "vendor/utopia-php/migration/tests/Migration/Unit/Resources/ColumnTest.php",
+  "source": "packages/migration/tests/Resources/ColumnTest.php",
   "cases": [
     {
       "name": "testFixedWidthTypesDeriveTheirSize#text",

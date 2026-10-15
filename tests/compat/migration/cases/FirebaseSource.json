@@ -1,5 +1,5 @@
 {
-  "source": "vendor/utopia-php/migration/src/Migration/Sources/Firebase.php",
+  "source": "packages/migration/src/Sources/Firebase.php",
   "cases": [
     {
       "name": "users, Firestore collections and documents, Storage buckets and files",

@@ -1,5 +1,5 @@
 {
-  "source": "vendor/utopia-php/migration/tests/Migration/Unit/Destinations/AppwriteIndexLengthsTest.php",
+  "source": "packages/migration/tests/Destinations/AppwriteIndexLengthsTest.php",
   "cases": [
     {
       "name": "testRestoredIndexCarriesTheSourcePrefixLengths",

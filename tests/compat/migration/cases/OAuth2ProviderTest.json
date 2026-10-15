@@ -1,5 +1,5 @@
 {
-  "source": "vendor/utopia-php/migration/tests/Migration/Unit/Resources/OAuth2ProviderTest.php",
+  "source": "packages/migration/tests/Resources/OAuth2ProviderTest.php",
   "cases": [
     {
       "name": "testFromArrayAppwrite",

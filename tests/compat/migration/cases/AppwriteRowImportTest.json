@@ -1,5 +1,5 @@
 {
-  "source": "vendor/utopia-php/migration/tests/Migration/Unit/Destinations/AppwriteRowImportTest.php",
+  "source": "packages/migration/tests/Destinations/AppwriteRowImportTest.php",
   "cases": [
     {
       "name": "testRowImportDropsConsecutiveUndeclaredFields",

@@ -1,5 +1,5 @@
 {
-  "source": "vendor/utopia-php/migration/tests/Migration/Unit/Resources/CollectionTest.php",
+  "source": "packages/migration/tests/Resources/CollectionTest.php",
   "cases": [
     {
       "name": "testDimensionRoundTrip",

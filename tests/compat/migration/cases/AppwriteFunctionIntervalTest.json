@@ -1,5 +1,5 @@
 {
-  "source": "vendor/utopia-php/migration/tests/Migration/Unit/Destinations/AppwriteFunctionIntervalTest.php",
+  "source": "packages/migration/tests/Destinations/AppwriteFunctionIntervalTest.php",
   "cases": [
     {
       "name": "the interval is sent on create",
