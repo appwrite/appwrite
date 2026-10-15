@@ -628,12 +628,12 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
 
                         // The HTTP API re-checks these on every request; a connection only
                         // gets here, so this is where it learns that its user is gone or
-                        // blocked, or that the session it was opened with has ended. It
-                        // keeps its roles for this one event and is closed once that has
-                        // been delivered.
+                        // blocked, or that the session it was opened with has ended or
+                        // now needs more factors. It keeps its roles for this one event
+                        // and is closed once that has been delivered.
                         $revoked = static fn (?string $sessionId): bool => $user->isEmpty()
                             || $user->getAttribute('status') === false
-                            || ($sessionId !== null && !$user->sessionActive($sessionId));
+                            || ($sessionId !== null && (!$user->sessionActive($sessionId) || $user->sessionNeedsMoreFactors($sessionId)));
 
                         foreach ($impersonating as $connection) {
                             $impersonatorSessionId = $realtime->connections[$connection]['impersonator']['sessionId'] ?? null;
@@ -998,6 +998,15 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
 
         if (!empty($origin) && !$originValidator->isValid($origin)) {
             throw new Exception(Exception::REALTIME_POLICY_VIOLATION, $originValidator->getDescription());
+        }
+
+        // As in the HTTP API: $session belongs to $user, who stays the impersonator while
+        // impersonating, and impersonating needs a session to count their factors on.
+        if (
+            (!$impersonatorUser->isEmpty() && $session === null)
+            || ($session !== null && $user->sessionNeedsMoreFactors($session->getId()))
+        ) {
+            throw new Exception(Exception::USER_MORE_FACTORS_REQUIRED);
         }
 
         $roles = $targetUser->getRoles($authorization);

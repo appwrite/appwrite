@@ -2,6 +2,7 @@
 
 namespace Appwrite\Utopia\Database\Documents;
 
+use Appwrite\Auth\MFA\Type\TOTP;
 use Utopia\Auth\Proof;
 use Utopia\Auth\Proofs\Token;
 use Utopia\Database\Database;
@@ -189,6 +190,26 @@ class User extends Document
         }
 
         return (new \DateTime($session->getAttribute('expire')))->getTimestamp();
+    }
+
+    /**
+     * Check whether a session of the user has yet to complete MFA: once MFA is on
+     * and the user has a verified second factor, a session needs two factors.
+     */
+    public function sessionNeedsMoreFactors(string $sessionId): bool
+    {
+        $session = $this->getSession($sessionId);
+
+        if ($session === null) {
+            return false;
+        }
+
+        $hasMoreFactors = $this->getAttribute('emailVerification', false)
+            || $this->getAttribute('phoneVerification', false)
+            || (TOTP::getAuthenticatorFromUser($this)?->getAttribute('verified') ?? false);
+        $minimumFactors = ($this->getAttribute('mfa', false) && $hasMoreFactors) ? 2 : 1;
+
+        return \count($session->getAttribute('factors', [])) < $minimumFactors;
     }
 
     private function getSession(string $sessionId): ?Document

@@ -65,6 +65,10 @@ class Authentication extends Action
             throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Session is not valid.');
         }
 
+        if ($user->sessionNeedsMoreFactors($sessionId)) {
+            throw new Exception(Exception::USER_MORE_FACTORS_REQUIRED);
+        }
+
         $roles = $user->getRoles($database->getAuthorization());
 
         $authorization = $realtime->connections[$connectionId]['authorization'] ?? null;
