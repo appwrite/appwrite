@@ -365,6 +365,7 @@
       "processes": null,
       "paths": [
         "src/Appwrite/Platform/Modules/VCS/",
+        "src/Appwrite/Platform/Modules/Functions/Workers/Builds.php",
         "packages/vcs/",
         "packages/detector/"
       ]

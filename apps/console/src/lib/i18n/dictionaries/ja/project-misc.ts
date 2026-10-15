@@ -344,9 +344,6 @@ export const jaProjectMiscDictionary: Record<string, string> = {
   'Block hosting provider traffic': 'ホスティング事業者トラフィックをブロック',
   'Deny API requests from hosting provider networks.':
     'ホスティング事業者ネットワークからの API リクエストを拒否します。',
-  'Block datacenter connection traffic': 'データセンター接続トラフィックをブロック',
-  'Deny API requests from datacenter connection types.':
-    'データセンター接続タイプからの API リクエストを拒否します。',
   'Add-on required': 'アドオンが必要',
   'Premium Geo DB': 'Premium Geo DB',
   'Set a per-IP request quota for matching API traffic. Review the impact preview before tightening limits.':

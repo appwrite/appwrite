@@ -22,6 +22,16 @@ abstract class Adapter
     abstract public function setup(): void;
 
     /**
+     * Bring an existing database structure up to date without changing any
+     * policy setup() applies, such as retention. Adapters whose setup() does
+     * more than create missing structure override this.
+     */
+    public function migrate(): void
+    {
+        $this->setup();
+    }
+
+    /**
      * Add metrics in batch (raw append).
      *
      * Routes rows to the correct table based on the $type parameter.
