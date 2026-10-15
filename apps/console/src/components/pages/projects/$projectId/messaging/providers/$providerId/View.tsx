@@ -37,6 +37,7 @@ import { patchMessagingProvider } from '@/lib/messaging/patch-messaging-provider
 import {
   parseAppwritePushExpiry,
   parseAppwritePushQos,
+  type AppwritePushOptions,
 } from '@/lib/messaging/appwrite-push'
 import { AwsSesRegionSelect } from '../../_components/AwsSesRegionSelect'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
@@ -202,9 +203,8 @@ export function View({
             : '',
         )
       } else if (provider.provider === 'appwrite') {
-        const qos = provider.options?.qos
+        const { qos, expiry } = (provider.options ?? {}) as AppwritePushOptions
         setAppwriteQos(qos == null ? 'default' : String(qos))
-        const expiry = provider.options?.expiry
         setAppwriteExpiry(expiry == null ? '' : String(expiry))
       }
     }
@@ -253,7 +253,7 @@ export function View({
       )
     }
     if (provider.type === 'push' && provider.provider === 'appwrite') {
-      const o = provider.options
+      const o = provider.options as AppwritePushOptions | undefined
       const qosBaseline = o?.qos == null ? 'default' : String(o.qos)
       const expiryBaseline = o?.expiry == null ? '' : String(o.expiry)
       return (

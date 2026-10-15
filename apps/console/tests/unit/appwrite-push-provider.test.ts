@@ -3,6 +3,7 @@ import type { Messaging, Models } from '@appwrite.io/console'
 import {
   parseAppwritePushExpiry,
   parseAppwritePushQos,
+  type AppwritePushOptions,
 } from '@/lib/messaging/appwrite-push'
 import { patchMessagingProvider } from '@/lib/messaging/patch-messaging-provider'
 
@@ -58,7 +59,8 @@ describe('parseAppwritePushExpiry', () => {
   })
 })
 
-type AppwriteUpdateArgs = Parameters<Messaging['updateAppwriteProvider']>[0]
+// The SDK's object overload, with the `null` reset it forwards at runtime.
+type AppwriteUpdateArgs = { providerId: string } & AppwritePushOptions
 
 function makeMessaging() {
   const calls: AppwriteUpdateArgs[] = []

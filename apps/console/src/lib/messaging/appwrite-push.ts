@@ -14,6 +14,12 @@
  *    `undefined` omits the parameter and leaves the old value in place.
  */
 
+/** Stored options of an Appwrite push provider; `null` means unset. */
+export type AppwritePushOptions = {
+  qos?: number | null
+  expiry?: number | null
+}
+
 /** QoS select value meaning "let the subscriber choose" (no provider default). */
 export const APPWRITE_PUSH_QOS_DEFAULT = 'default'
 
