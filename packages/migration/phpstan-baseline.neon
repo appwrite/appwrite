@@ -7171,12 +7171,6 @@ parameters:
 			path: tests/E2E/Sources/Base.php
 
 		-
-			message: '#^Call to method PHPUnit\\Framework\\Assert\:\:assertNotNull\(\) with Utopia\\Migration\\Cache will always evaluate to true\.$#'
-			identifier: method.alreadyNarrowedType
-			count: 1
-			path: tests/E2E/Sources/Base.php
-
-		-
 			message: '#^Cannot access property \$cache on Utopia\\Migration\\Source\|null\.$#'
 			identifier: property.nonObject
 			count: 1

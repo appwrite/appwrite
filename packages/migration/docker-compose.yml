@@ -56,8 +56,10 @@ services:
       - tests
     volumes:
       - ./:/usr/src/code
-      # phpunit comes from the root toolchain, as on the host
+      # phpunit comes from the root toolchain, as on the host; its autoloader
+      # also loads files from the sibling packages, relative to the vendor dir
       - ../../vendor:/usr/src/toolchain:ro
+      - ../../packages:/usr/src/packages:ro
     working_dir: /usr/src/code
     depends_on:
       supabase-db:
