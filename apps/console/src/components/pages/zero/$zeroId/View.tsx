@@ -41,12 +41,7 @@ import {
 } from '@/lib/react-query/hooks/zero'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { formatRemaining, getRemainingMs } from '@/lib/zero/countdown'
-import {
-  clearZeroSession,
-  getZeroClaimPath,
-  isZeroAccount,
-  readZeroSession,
-} from '@/lib/zero/session'
+import { getZeroClaimPath, isZeroAccount } from '@/lib/zero/session'
 
 type ViewProps = {
   zeroId: string
@@ -195,7 +190,6 @@ export function View({ zeroId, secret }: ViewProps) {
       setMoveError(null)
     },
     onSuccess: async (claimed) => {
-      if (readZeroSession()?.zeroId === zeroId) clearZeroSession()
       setProjectRegion(claimed.projectId, claimed.region)
       toast.success(t('Project claimed'))
       await refreshConsoleAccountAfterAuth(queryClient)

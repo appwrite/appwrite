@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { Clock, TriangleAlert } from 'lucide-react'
 import type { Models } from '@appwrite.io/console'
@@ -10,9 +9,9 @@ import {
 } from '@/components/global/shared/HeaderAlertBar'
 import { analyticsAttrs } from '@/lib/analytics-actions'
 import { useT } from '@/lib/i18n/translate'
-import { useZero } from '@/lib/react-query/hooks/zero'
+import { useAccountZero } from '@/lib/react-query/hooks/zero'
 import { formatRemaining, getRemainingMs } from '@/lib/zero/countdown'
-import { isZeroAccount, readZeroSession } from '@/lib/zero/session'
+import { isZeroAccount } from '@/lib/zero/session'
 
 /**
  * Counts down a Zero project's build and claim windows while the console is
@@ -27,19 +26,16 @@ export function ZeroBanner({ className }: { className?: string }) {
 function ZeroBannerContent({ className }: { className?: string }) {
   const t = useT()
   const now = useNow()
-  const [session] = useState(readZeroSession)
-  const { data: zero } = useZero(session?.zeroId, session?.secret, {
-    poll: true,
-  })
+  const { data: zero } = useAccountZero({ poll: true })
 
-  const expiresAt = zero?.expiresAt ?? session?.expiresAt
-  const claimBy = zero?.claimBy ?? session?.claimBy
+  const expiresAt = zero?.expiresAt
+  const claimBy = zero?.claimBy
 
-  const claimLink = session ? (
+  const claimLink = zero?.secret ? (
     <Link
       to="/zero/$zeroId"
-      params={{ zeroId: session.zeroId }}
-      search={{ secret: session.secret }}
+      params={{ zeroId: zero.$id }}
+      search={{ secret: zero.secret }}
       className={headerAlertOutlineButtonClass(
         expiresAt && getRemainingMs(expiresAt, now) > 0 ? 'info' : 'warning',
       )}
@@ -49,7 +45,7 @@ function ZeroBannerContent({ className }: { className?: string }) {
     </Link>
   ) : null
 
-  if (!session || !expiresAt || !claimBy) {
+  if (!zero || !expiresAt || !claimBy) {
     return (
       <HeaderAlertBar
         variant="info"

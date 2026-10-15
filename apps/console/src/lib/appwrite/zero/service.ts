@@ -50,6 +50,15 @@ export class Zero {
   }
 
   /**
+   * Get the Zero project the signed-in anonymous account owns, with its claim
+   * link, so the browser never has to keep the claim secret.
+   */
+  getAccount(): Promise<ZeroProject> {
+    const uri = new URL(this.client.config.endpoint + '/account/zero')
+    return this.client.call('get', uri, this.headers())
+  }
+
+  /**
    * Claim a Zero project for the signed-in account. Without an organization
    * the account takes over the project's free organization.
    */

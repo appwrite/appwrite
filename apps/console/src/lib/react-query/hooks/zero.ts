@@ -17,7 +17,6 @@ import { useT } from '@/lib/i18n/translate'
 import { refreshConsoleAccountAfterAuth } from '@/lib/react-query/hooks/auth'
 import { fetchOrganizationScopes } from '@/lib/react-query/hooks/organizations'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
-import { writeZeroSession } from '@/lib/zero/session'
 
 /** How often the banner and claim page re-read a Zero project's status. */
 export const ZERO_POLL_INTERVAL_MS = 30 * 1000
@@ -47,6 +46,24 @@ export function useZero(
 ) {
   return useQuery({
     ...zeroQueryOptions(zeroId, secret),
+    refetchInterval: options?.poll ? ZERO_POLL_INTERVAL_MS : false,
+  })
+}
+
+export const ACCOUNT_ZERO_QUERY_KEY = ['zero', 'account'] as const
+
+/**
+ * The Zero project the signed-in anonymous account owns. The server returns
+ * its claim link, so nothing about the claim is stored in the browser.
+ */
+export function useAccountZero(options?: { poll?: boolean }) {
+  return useQuery({
+    queryKey: ACCOUNT_ZERO_QUERY_KEY,
+    queryFn: () => sdk.forConsole.zero.getAccount(),
+    staleTime: ZERO_POLL_INTERVAL_MS,
+    retry: false,
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
     refetchInterval: options?.poll ? ZERO_POLL_INTERVAL_MS : false,
   })
 }
@@ -116,7 +133,7 @@ export function useStartZero() {
   return useMutation({
     mutationFn: () => sdk.forConsole.zero.create({ source: 'console' }),
     onSuccess: async (zero) => {
-      writeZeroSession(zero)
+      queryClient.setQueryData(ACCOUNT_ZERO_QUERY_KEY, zero)
       setProjectRegion(zero.projectId, zero.region)
       await refreshConsoleAccountAfterAuth(queryClient)
       await router.invalidate()
