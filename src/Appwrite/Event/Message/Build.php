@@ -22,7 +22,7 @@ final class Build extends Base
         $platform = !empty($this->platform) ? $this->platform : Config::getParam('platform', []);
 
         return [
-            'project' => $this->project->getArrayCopy(),
+            'project' => ProjectContext::fromDocument($this->project)->toArray(),
             'resource' => $this->resource->getArrayCopy(),
             'deployment' => $this->deployment->getArrayCopy(),
             'type' => $this->type,

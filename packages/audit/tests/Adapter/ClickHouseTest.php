@@ -7,8 +7,14 @@ namespace Utopia\Audit\Tests\Adapter;
 use Exception;
 use PHPUnit\Framework\TestCase;
 use Utopia\Audit\Adapter\ClickHouse;
+use Utopia\Audit\Adapter\Database;
 use Utopia\Audit\Query;
+use Utopia\Cache\Adapter\None as NoCache;
+use Utopia\Cache\Cache;
 use Utopia\Client\Exception\ConnectionException;
+use Utopia\Database\Adapter\Memory;
+use Utopia\Database\Attribute;
+use Utopia\Database\Database as UtopiaDatabase;
 use Utopia\Psr7\Method;
 use Utopia\Psr7\Request\Factory as RequestFactory;
 
@@ -18,6 +24,7 @@ final class ClickHouseTest extends TestCase
 
     private ClickHouse $adapter;
 
+    #[\Override]
     protected function setUp(): void
     {
         $this->client = new Client();
@@ -167,5 +174,31 @@ final class ClickHouseTest extends TestCase
         }
 
         return $fields;
+    }
+
+    public function testRenamesTheUserColumnToActor(): void
+    {
+        $user = \array_find(
+            new Database(new UtopiaDatabase(new Memory(), new Cache(new NoCache())))->getAttributes(),
+            static fn (Attribute $attribute): bool => $attribute->key === 'userId',
+        );
+        $this->assertNotNull($user, 'the Database adapter must still declare the userId column the ClickHouse rename starts from');
+        $attributes = [];
+        foreach ($this->adapter->getAttributes() as $attribute) {
+            $attributes[$attribute->key] = $attribute;
+        }
+        $indexes = [];
+        foreach ($this->adapter->getIndexes() as $index) {
+            $indexes[$index->key] = $index;
+        }
+
+        $this->assertArrayNotHasKey('userId', $attributes);
+        $this->assertSame($user->type, $attributes['actorId']->type);
+        $this->assertSame($user->size, $attributes['actorId']->size);
+        $this->assertSame($user->required, $attributes['actorId']->required);
+        $this->assertSame($user->array, $attributes['actorId']->array);
+        $this->assertSame($user->filters, $attributes['actorId']->filters);
+        $this->assertArrayNotHasKey('idx_userId_event', $indexes);
+        $this->assertSame(['actorId', 'event'], $indexes['idx_actorId_event']->attributes);
     }
 }

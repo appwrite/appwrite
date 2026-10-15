@@ -91,4 +91,9 @@ abstract class Action extends DatabasesAction
     {
         return $this->isCollectionsAPI() ? 'attribute' : 'column';
     }
+
+    protected function getSDKNamespace(): string
+    {
+        return $this->isCollectionsAPI() ? 'databases' : 'tablesDB';
+    }
 }

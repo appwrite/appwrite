@@ -105,7 +105,7 @@ using Appwrite.Models;
 using Appwrite.Services;
 
 Client client = new Client()
-    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
     .SetProject("<YOUR_PROJECT_ID>") // Your project ID
     .SetKey("<YOUR_API_KEY>"); // Your secret API key
 
@@ -349,7 +349,7 @@ $result = $vectorsDB->createDocument(
     collectionId: '<COLLECTION_ID>',
     documentId: ID::unique(),
     data: [
-        'embeddings' => $generated['embeddings'][0]['embedding'],
+        'embeddings' => $generated->embeddings[0]->embedding,
         'metadata' => ['text' => $text]
     ]
 );
@@ -379,7 +379,7 @@ result = vectors_db.create_document(
     collection_id = '<COLLECTION_ID>',
     document_id = ID.unique(),
     data = {
-        "embeddings": generated["embeddings"][0]["embedding"],
+        "embeddings": generated.embeddings[0].embedding,
         "metadata": { "text": text }
     }
 )
@@ -419,7 +419,7 @@ using Appwrite.Models;
 using Appwrite.Services;
 
 Client client = new Client()
-    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
     .SetProject("<YOUR_PROJECT_ID>") // Your project ID
     .SetKey("<YOUR_API_KEY>"); // Your secret API key
 

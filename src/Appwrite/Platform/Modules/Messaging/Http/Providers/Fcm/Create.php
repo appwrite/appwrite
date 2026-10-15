@@ -13,7 +13,7 @@ use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Boolean;
@@ -75,7 +75,7 @@ class Create extends Action
                     ]
                 )
             ])
-            ->param('providerId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
+            ->param('providerId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getMaxUidLength()), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
             ->param('name', '', new Text(128), 'Provider name.')
             ->param('serviceAccountJSON', null, new Nullable(new FCMValidator()), 'FCM service account JSON.', true)
             ->param('enabled', null, new Nullable(new Boolean()), 'Set as enabled.', true)
@@ -87,7 +87,7 @@ class Create extends Action
 
     public function action(string $providerId, string $name, array|string|\stdClass|null $serviceAccountJSON, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response)
     {
-        $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
+        $providerId = $providerId == 'unique()' ? Id::unique() : $providerId;
 
         $serviceAccountJSON = \is_string($serviceAccountJSON)
             ? \json_decode($serviceAccountJSON, true)
