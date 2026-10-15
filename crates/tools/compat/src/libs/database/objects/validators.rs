@@ -383,7 +383,7 @@ fn query_validators(a: &Args, key: &str) -> R<Vec<Arc<dyn QueryValidator>>> {
         .into_iter()
         .map(|o| match o.downcast_ref::<ValidatorObj>().and_then(|v| v.0.query_validator()) {
             Some(v) => Ok(v),
-            None => fault(format!("`{key}` holds a {:?}, not a query validator", o)),
+            None => fault(format!("`{key}` holds a {o:?}, not a query validator")),
         })
         .collect()
 }

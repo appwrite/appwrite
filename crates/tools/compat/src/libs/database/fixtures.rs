@@ -483,9 +483,9 @@ pub fn make_hook(spec: &Json) -> R<HookObj> {
         },
         "Log" => {
             let events = match params.get("events") {
-                Some(list) => Some(
-                    codec::list(list)?.into_iter().map(|e| values::enum_of::<Event>(e)).collect::<R<Vec<Event>>>()?,
-                ),
+                Some(list) => {
+                    Some(codec::list(list)?.into_iter().map(values::enum_of::<Event>).collect::<R<Vec<Event>>>()?)
+                }
                 None => None,
             };
             let class = match (&events, text("name")) {

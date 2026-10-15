@@ -283,7 +283,7 @@ impl Args {
             None | Some(Json::Null) => Ok(Vec::new()),
             Some(j) => {
                 if let Some(Obj::List(items)) = stored_obj(&self.cx, j)? {
-                    return items.into_iter().map(|o| obj_document(o)).collect();
+                    return items.into_iter().map(obj_document).collect();
                 }
                 if let Some(Obj::Value(Value::Array(a))) = stored_obj(&self.cx, j)? {
                     return a.into_iter().map(|(_, v)| document_value(v)).collect();
@@ -432,7 +432,7 @@ pub fn decode_value(cx: &Ctx, json: &Json) -> R<Value> {
     if let Some(obj) = stored_obj(cx, json)? {
         return match obj.into_result() {
             Obj::Value(v) => Ok(v),
-            Obj::List(items) => Ok(Value::Array(items.into_iter().map(|o| obj_value(o)).collect::<R<Array>>()?)),
+            Obj::List(items) => Ok(Value::Array(items.into_iter().map(obj_value).collect::<R<Array>>()?)),
             other => fault(format!("a stored {} is not a value", other.class().unwrap_or("object"))),
         };
     }
