@@ -9,9 +9,10 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\DateTime;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 
 final class KeyOriginTest extends Scope
 {
@@ -30,7 +31,7 @@ final class KeyOriginTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $apiKey,
         ], [
-            'databaseId' => ID::unique(),
+            'databaseId' => Id::unique(),
             'name' => 'Key Origin Database',
         ]);
         $this->assertSame(201, $database['headers']['status-code']);
@@ -41,7 +42,7 @@ final class KeyOriginTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $apiKey,
         ], [
-            'collectionId' => ID::unique(),
+            'collectionId' => Id::unique(),
             'name' => 'Key Origin Collection',
             'documentSecurity' => true,
             'permissions' => [
@@ -84,7 +85,7 @@ final class KeyOriginTest extends Scope
             'cookie' => $sessionCookie,
             'x-appwrite-project' => $projectId,
         ], [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => [
                 'title' => 'session-allowed-origin',
             ],
@@ -97,7 +98,7 @@ final class KeyOriginTest extends Scope
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => $apiKey,
         ], [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => [
                 'title' => 'server-api-key',
             ],
@@ -114,7 +115,7 @@ final class KeyOriginTest extends Scope
             'cookie' => $sessionCookie,
             'x-appwrite-project' => $projectId,
         ], [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => [
                 'title' => 'session-disallowed-origin',
             ],
@@ -129,7 +130,7 @@ final class KeyOriginTest extends Scope
         ];
 
         foreach ($junkKeys as $junkKey) {
-            $junkDocumentId = ID::unique();
+            $junkDocumentId = Id::unique();
             $junk = $this->client->call(Client::METHOD_POST, $documentsUrl, [
                 'content-type' => 'application/json',
                 'origin' => 'https://evil.example.com',
@@ -153,13 +154,42 @@ final class KeyOriginTest extends Scope
             $this->assertSame(404, $created['headers']['status-code']);
         }
 
+        $expiredKey = $this->client->call(Client::METHOD_POST, '/projects/' . $projectId . '/keys', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => 'console',
+        ], [
+            'keyId' => Id::unique(),
+            'name' => 'Expired Key Origin Key',
+            'scopes' => ['documents.write'],
+            'expire' => DateTime::addSeconds(new \DateTime(), -3600),
+        ]);
+        $this->assertSame(201, $expiredKey['headers']['status-code']);
+
+        $expiredDocumentId = Id::unique();
+        $expired = $this->client->call(Client::METHOD_POST, $documentsUrl, [
+            'content-type' => 'application/json',
+            'origin' => 'https://evil.example.com',
+            'cookie' => $sessionCookie,
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $expiredKey['body']['secret'],
+        ], [
+            'documentId' => $expiredDocumentId,
+            'data' => [
+                'title' => 'session-expired-key',
+            ],
+        ]);
+        $this->assertSame(403, $expired['headers']['status-code']);
+        $this->assertSame(Exception::GENERAL_UNKNOWN_ORIGIN, $expired['body']['type']);
+
         $junkWithoutOrigin = $this->client->call(Client::METHOD_POST, $documentsUrl, [
             'content-type' => 'application/json',
             'cookie' => $sessionCookie,
             'x-appwrite-project' => $projectId,
             'x-appwrite-key' => 'not-a-real-key',
         ], [
-            'documentId' => ID::unique(),
+            'documentId' => Id::unique(),
             'data' => [
                 'title' => 'session-junk-key-no-origin',
             ],

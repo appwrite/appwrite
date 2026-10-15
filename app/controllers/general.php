@@ -1088,10 +1088,12 @@ Http::init()
             $response->addHeader('Strict-Transport-Security', "max-age=$maxAge");
         }
 
-        // Application level CSRF protection. Skip Origin only when there is none
-        // (server-side) or when X-Appwrite-Key authenticated as a project key.
+        // Application level CSRF protection
         $origin = $request->getOrigin();
-        if (empty($origin) || ($apiKey !== null && $apiKey->getRole() === DBUser::ROLE_KEYS)) {
+        $authenticatedByKey = $apiKey !== null
+            && $apiKey->getRole() === DBUser::ROLE_KEYS
+            && ! $apiKey->isExpired();
+        if (empty($origin) || $authenticatedByKey) {
             return;
         }
         $route = $request->getRoute();
