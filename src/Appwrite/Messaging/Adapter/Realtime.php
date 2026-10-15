@@ -192,13 +192,8 @@ class Realtime extends MessagingAdapter
             'roles' => \array_values(\array_unique(\array_merge($existingRoles, $roles))),
             'userId' => $userId ?? ($existing['userId'] ?? ''),
             'channels' => \array_values(\array_unique(\array_merge($existingChannels, $channels))),
-            'subscriptions' => $existing['subscriptions'] ?? [],
             'presences' => $this->connections[$identifier]['presences'] ?? []
         ];
-
-        if (!empty($channels) && !empty($roles)) {
-            $entry['subscriptions'][$subscriptionId] = true;
-        }
 
         // Recorded once by the connection handler; every later (re)subscribe keeps it.
         foreach (['authorization', 'sessionId', 'impersonatedUserId', 'impersonator', 'expire', 'jwtExpire'] as $key) {
@@ -255,16 +250,6 @@ class Realtime extends MessagingAdapter
         }
 
         return $subscriptions;
-    }
-
-    public function getSubscriptionCount(mixed $connection): int
-    {
-        return \count($this->connections[$connection]['subscriptions'] ?? []);
-    }
-
-    public function hasSubscription(mixed $connection, string $subscriptionId): bool
-    {
-        return isset($this->connections[$connection]['subscriptions'][$subscriptionId]);
     }
 
     /**
@@ -380,20 +365,21 @@ class Realtime extends MessagingAdapter
      */
     public function unsubscribeSubscription(mixed $connection, string $subscriptionId): bool
     {
-        if (!$this->hasSubscription($connection, $subscriptionId)) {
+        $projectId = $this->connections[$connection]['projectId'] ?? '';
+        if ($projectId === '' || !isset($this->subscriptions[$projectId])) {
             return false;
         }
 
-        $projectId = $this->connections[$connection]['projectId'] ?? '';
-        $channels = $this->connections[$connection]['channels'] ?? [];
+        $removed = false;
 
-        foreach ($this->connections[$connection]['roles'] ?? [] as $role) {
-            foreach ($channels as $channel) {
-                if (!isset($this->subscriptions[$projectId][$role][$channel][$connection][$subscriptionId])) {
+        foreach ($this->subscriptions[$projectId] as $role => $byChannel) {
+            foreach ($byChannel as $channel => $byConnection) {
+                if (!isset($byConnection[$connection][$subscriptionId])) {
                     continue;
                 }
 
                 unset($this->subscriptions[$projectId][$role][$channel][$connection][$subscriptionId]);
+                $removed = true;
 
                 if (empty($this->subscriptions[$projectId][$role][$channel][$connection])) {
                     unset($this->subscriptions[$projectId][$role][$channel][$connection]);
@@ -411,10 +397,11 @@ class Realtime extends MessagingAdapter
             unset($this->subscriptions[$projectId]);
         }
 
-        unset($this->connections[$connection]['subscriptions'][$subscriptionId]);
-        $this->recomputeConnectionState($connection);
+        if ($removed) {
+            $this->recomputeConnectionState($connection);
+        }
 
-        return true;
+        return $removed;
     }
 
     /**
@@ -438,16 +425,15 @@ class Realtime extends MessagingAdapter
         $projectId = $this->connections[$connection]['projectId'] ?? '';
         $channels = [];
 
-        foreach ($this->connections[$connection]['channels'] ?? [] as $channel) {
-            foreach ($this->connections[$connection]['roles'] ?? [] as $role) {
-                if (isset($this->subscriptions[$projectId][$role][$channel][$connection])) {
-                    $channels[] = $channel;
-                    break;
+        foreach ($this->subscriptions[$projectId] ?? [] as $byChannel) {
+            foreach ($byChannel as $channel => $byConnection) {
+                if (isset($byConnection[$connection])) {
+                    $channels[$channel] = true;
                 }
             }
         }
 
-        $this->connections[$connection]['channels'] = $channels;
+        $this->connections[$connection]['channels'] = \array_keys($channels);
     }
 
     /**

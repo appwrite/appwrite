@@ -660,7 +660,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                                 continue;
                             }
 
-                            $subscriptionsBefore = $realtime->getSubscriptionCount($connection);
+                            $subscriptionsBefore = \count($realtime->getSubscriptionMetadata($connection));
                             $authorization = $realtime->connections[$connection]['authorization'] ?? null;
                             $impersonatedUserId = $realtime->connections[$connection]['impersonatedUserId'] ?? null;
                             $impersonator = $realtime->connections[$connection]['impersonator'] ?? null;
@@ -715,7 +715,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                                 $realtime->connections[$connection]['presences'] = $presences;
                             }
 
-                            $subscriptionsAfter = $realtime->getSubscriptionCount($connection);
+                            $subscriptionsAfter = \count($realtime->getSubscriptionMetadata($connection));
                             $subscriptionDelta = $subscriptionsAfter - $subscriptionsBefore;
                             if ($subscriptionDelta !== 0) {
                                 $register->get('telemetry.workerSubscriptionCounter')->add($subscriptionDelta, $register->get('telemetry.workerAttributes'));
@@ -1450,7 +1450,7 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register, $
             if (!empty($projectId)) {
                 $stats->decr($projectId, 'connectionsTotal');
             }
-            $subscriptionsBeforeClose = $realtime->getSubscriptionCount($connection);
+            $subscriptionsBeforeClose = \count($realtime->getSubscriptionMetadata($connection));
             if ($subscriptionsBeforeClose > 0) {
                 $register->get('telemetry.workerSubscriptionCounter')->add(-$subscriptionsBeforeClose, $register->get('telemetry.workerAttributes'));
             }

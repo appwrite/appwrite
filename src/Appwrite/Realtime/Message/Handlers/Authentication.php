@@ -78,7 +78,7 @@ class Authentication extends Action
         // so we can rebind any account channels that were stored under it.
         $previousUserId = $realtime->connections[$connectionId]['userId'] ?? '';
 
-        $subscriptionsBefore = $realtime->getSubscriptionCount($connectionId);
+        $subscriptionsBefore = \count($realtime->getSubscriptionMetadata($connectionId));
         $meta = $realtime->getSubscriptionMetadata($connectionId);
 
         $realtime->unsubscribe($connectionId);
@@ -113,7 +113,7 @@ class Authentication extends Action
             $realtime->connections[$connectionId]['jwtExpire'] = null;
         }
 
-        $subscriptionsAfter = $realtime->getSubscriptionCount($connectionId);
+        $subscriptionsAfter = \count($realtime->getSubscriptionMetadata($connectionId));
         $subscriptionDelta = $subscriptionsAfter - $subscriptionsBefore;
         if ($subscriptionDelta !== 0) {
             $register->get('telemetry.workerSubscriptionCounter')

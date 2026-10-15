@@ -51,7 +51,8 @@ class Subscribe extends Action
         $userId = $realtime->connections[$connectionId]['userId'] ?? '';
 
         $parsedPayloads = [];
-        $subscriptionsBefore = $realtime->getSubscriptionCount($connectionId);
+        $existing = $realtime->getSubscriptionMetadata($connectionId);
+        $subscriptionsBefore = \count($existing);
 
         foreach ($items as $payload) {
             $subscriptionId = \array_key_exists('subscriptionId', $payload)
@@ -76,28 +77,22 @@ class Subscribe extends Action
             ];
         }
 
-        $added = [];
-        $channels = \array_flip($realtime->connections[$connectionId]['channels'] ?? []);
+        // Checked against the whole batch before any state changes, so a rejected batch applies nothing.
+        $subscriptionIds = \array_keys($existing);
+        $channels = $realtime->connections[$connectionId]['channels'] ?? [];
         foreach ($parsedPayloads as $parsedPayload) {
-            if (empty($parsedPayload['convertedChannels'])) {
-                continue;
-            }
-            if (!$realtime->hasSubscription($connectionId, $parsedPayload['subscriptionId'])) {
-                $added[$parsedPayload['subscriptionId']] = true;
-            }
-            foreach ($parsedPayload['convertedChannels'] as $channel) {
-                $channels[$channel] = true;
-            }
+            $subscriptionIds[] = $parsedPayload['subscriptionId'];
+            $channels = [...$channels, ...$parsedPayload['convertedChannels']];
         }
 
-        if ($subscriptionsBefore + \count($added) > APP_LIMIT_REALTIME_SUBSCRIPTIONS) {
+        if (\count(\array_unique($subscriptionIds)) > APP_LIMIT_REALTIME_SUBSCRIPTIONS) {
             throw new Exception(
                 Exception::REALTIME_POLICY_VIOLATION,
                 'Too many subscriptions. A connection can have at most ' . APP_LIMIT_REALTIME_SUBSCRIPTIONS . ' subscriptions.'
             );
         }
 
-        if (\count($channels) > APP_LIMIT_REALTIME_CHANNELS) {
+        if (\count(\array_unique($channels)) > APP_LIMIT_REALTIME_CHANNELS) {
             throw new Exception(
                 Exception::REALTIME_POLICY_VIOLATION,
                 'Too many channels. A connection can subscribe to at most ' . APP_LIMIT_REALTIME_CHANNELS . ' channels.'
@@ -181,7 +176,7 @@ class Subscribe extends Action
             $eventTailRegistry->add($connectionId, $subId, $targetProjectId, $compiled, $now, $role);
         }
 
-        $subscriptionsAfter = $realtime->getSubscriptionCount($connectionId);
+        $subscriptionsAfter = \count($realtime->getSubscriptionMetadata($connectionId));
         $subscriptionDelta = $subscriptionsAfter - $subscriptionsBefore;
         $subscriptionsRequested = \count($parsedPayloads);
 
