@@ -23,7 +23,11 @@
 //! blobs as `{"$blob": base64}`, text as strings (`{"$bytes": base64}` when
 //! not UTF-8); they are sorted, so the order rows were stored in does not
 //! matter. Virtual tables (FTS5) are not read themselves: their shadow
-//! tables are. Cleanup removes the directory, like `files`.
+//! tables are. `sqlite_stat4` (and `sqlite_stat3`) are left out: `ANALYZE`
+//! writes them only on a SQLite built with `SQLITE_ENABLE_STAT4` (the
+//! bundled one Rust links, not PHP's), so they say which build ran, not what
+//! the library did; `sqlite_stat1`, which every build writes, is kept.
+//! Cleanup removes the directory, like `files`.
 
 use base64::Engine as _;
 use base64::engine::general_purpose::STANDARD as BASE64;
@@ -69,6 +73,9 @@ fn file(path: &std::path::Path) -> Result<Value, String> {
             let name: String = row.get(1).map_err(err)?;
             let table: String = row.get(2).map_err(err)?;
             let sql: Option<String> = row.get(3).map_err(err)?;
+            if name == "sqlite_stat4" || name == "sqlite_stat3" {
+                continue;
+            }
             let is_virtual = sql.as_deref().is_some_and(|s| s.starts_with("CREATE VIRTUAL TABLE"));
             if kind == "table" && !is_virtual {
                 tables.push(name.clone());

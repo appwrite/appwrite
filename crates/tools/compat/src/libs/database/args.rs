@@ -412,6 +412,26 @@ impl Args {
     }
 }
 
+/// An object the library changed in place: `{"$obj": <name>}` now names
+/// the changed value, as the PHP object.
+pub fn store_back(a: &Args, json: &Json, changed: Obj) {
+    if let Some(name) = json.as_object().filter(|o| o.len() == 1).and_then(|o| o.get("$obj")).and_then(Json::as_str) {
+        a.cx.store(name, changed);
+    }
+}
+
+/// [`store_back`] for a list argument changed element by element: the
+/// `n`-th `{"$obj": <name>}` of `key` names `changed[n]`.
+pub fn store_back_list<T: Clone + super::convert::IntoObj>(a: &Args, key: &str, changed: &[T]) {
+    if let Some(Json::Array(sent)) = a.raw(key)
+        && sent.len() == changed.len()
+    {
+        for (json, value) in sent.iter().zip(changed) {
+            store_back(a, json, value.clone().into_obj());
+        }
+    }
+}
+
 /// The stored object a `{"$obj": <name>}` names, if `json` is one.
 pub fn stored_obj(cx: &Ctx, json: &Json) -> R<Option<Obj>> {
     match json {

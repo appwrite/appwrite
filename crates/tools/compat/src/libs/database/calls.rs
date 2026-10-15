@@ -165,9 +165,11 @@ impl Cb {
                 });
             }
             if op == "$return" {
+                // `Values::decode()` as PHP's interpreter does: a
+                // `{"$obj": <name>}` in the value stays that array.
                 push(Json::Null);
                 let value =
-                    args::tags(step_args.get("value").unwrap_or(&Json::Null)).and_then(|j| args::decode_obj(&cx, &j));
+                    args::tags(step_args.get("value").unwrap_or(&Json::Null)).and_then(|j| args::decode_obj_static(&j));
                 match value {
                     Ok(v) => returned = Some(v),
                     Err(Fail::Fault(f)) => return Err(calls.fail(f)),

@@ -90,11 +90,50 @@ fn returned(r: Result<Option<Obj>, Error>) -> R<Obj> {
 
 /// An `onNext` callback of the bulk writes: the document and the one it
 /// replaced, encoded.
-struct Next(Cb);
+struct Next(Cb, Written);
+
+/// The stored documents a bulk write was given, in order: PHP writes those
+/// objects, so by its `n`-th `onNext` the `n`-th one is the written
+/// document (its `$id`, `$sequence`, `$tenant` set).
+#[derive(Default)]
+struct Written {
+    names: Vec<Option<String>>,
+    cx: Option<Arc<super::ctx::Ctx>>,
+    seen: usize,
+}
+
+impl Next {
+    fn new(cb: Cb) -> Self {
+        Next(cb, Written::default())
+    }
+
+    /// A callback of a write of the documents `key` lists.
+    fn writing(cb: Cb, a: &Args, key: &str) -> Self {
+        let names = match a.raw(key) {
+            Some(Json::Array(sent)) => sent
+                .iter()
+                .map(|j| {
+                    j.as_object()
+                        .filter(|o| o.len() == 1)
+                        .and_then(|o| o.get("$obj"))
+                        .and_then(Json::as_str)
+                        .map(str::to_owned)
+                })
+                .collect(),
+            _ => Vec::new(),
+        };
+        Next(cb, Written { names, cx: Some(a.cx.clone()), seen: 0 })
+    }
+}
 
 #[async_trait::async_trait]
 impl Callback<(Document, Option<Document>)> for Next {
     async fn call(&mut self, (document, old): (Document, Option<Document>)) -> utopia_database::Result<()> {
+        let written = &mut self.1;
+        if let (Some(cx), Some(Some(name))) = (&written.cx, written.names.get(written.seen)) {
+            cx.store(name, document.clone().into_obj());
+        }
+        written.seen += 1;
         let old = old.map(|d| codec::encode_document(&d)).unwrap_or(Json::Null);
         self.0.invoke(vec![codec::encode_document(&document), old]).await.map(|_| ())
     }
@@ -676,9 +715,18 @@ fn section_documents_writes<'a>(
             "getDocument" => ok(db
                 .get_document(&s("collection")?, &s("id")?, a.queries("queries")?, a.bool_or("forUpdate", false)?)
                 .await)?,
-            "createDocument" => ok(db.create_document(&s("collection")?, a.document("document")?).await)?,
+            "createDocument" => {
+                let created = db.create_document(&s("collection")?, a.document("document")?).await;
+                // PHP prepares, writes and decodes the document object it was
+                // given (Trait/Documents.php createDocument()): the caller's
+                // object ends as the created document.
+                if let (Ok(document), Some(json)) = (&created, a.raw("document")) {
+                    store_back(a, json, document.clone().into_obj());
+                }
+                ok(created)?
+            }
             "createDocuments" => {
-                let mut next = calls.callback("onNext", a.raw("onNext"))?.map(Next);
+                let mut next = calls.callback("onNext", a.raw("onNext"))?.map(|cb| Next::writing(cb, a, "documents"));
                 ok(db
                     .create_documents(
                         &s("collection")?,
@@ -690,7 +738,7 @@ fn section_documents_writes<'a>(
             }
             "updateDocument" => ok(db.update_document(&s("collection")?, &s("id")?, a.document("document")?).await)?,
             "updateDocuments" => {
-                let mut next = calls.callback("onNext", a.raw("onNext"))?.map(Next);
+                let mut next = calls.callback("onNext", a.raw("onNext"))?.map(Next::new);
                 ok(db
                     .update_documents(
                         &s("collection")?,
@@ -701,9 +749,16 @@ fn section_documents_writes<'a>(
                     )
                     .await)?
             }
-            "upsertDocument" => ok(db.upsert_document(&s("collection")?, a.document("document")?).await)?,
+            "upsertDocument" => {
+                let written = db.upsert_document(&s("collection")?, a.document("document")?).await;
+                // As createDocument(): PHP writes the object it was given.
+                if let (Ok(document), Some(json)) = (&written, a.raw("document")) {
+                    store_back(a, json, document.clone().into_obj());
+                }
+                ok(written)?
+            }
             "upsertDocuments" => {
-                let mut next = calls.callback("onNext", a.raw("onNext"))?.map(Next);
+                let mut next = calls.callback("onNext", a.raw("onNext"))?.map(|cb| Next::writing(cb, a, "documents"));
                 let increase = a.opt_string("increase")?;
                 ok(db
                     .upsert_documents(
@@ -717,7 +772,7 @@ fn section_documents_writes<'a>(
             }
             "deleteDocument" => ok(db.delete_document(&s("collection")?, &s("id")?).await)?,
             "deleteDocuments" => {
-                let mut next = calls.callback("onNext", a.raw("onNext"))?.map(Next);
+                let mut next = calls.callback("onNext", a.raw("onNext"))?.map(Next::new);
                 ok(db
                     .delete_documents(
                         &s("collection")?,
@@ -918,13 +973,7 @@ fn section_encoding<'a>(
     })
 }
 
-/// An object the library changed in place: `{"$obj": <name>}` now names
-/// the changed value, as the PHP object.
-fn store_back(a: &Args, json: &Json, changed: Obj) {
-    if let Some(name) = json.as_object().filter(|o| o.len() == 1).and_then(|o| o.get("$obj")).and_then(Json::as_str) {
-        a.cx.store(name, changed);
-    }
-}
+use super::args::store_back;
 
 /// The `Raw statements` methods (`None`: not one of them).
 fn section_raw_statements<'a>(

@@ -269,7 +269,9 @@ async fn pdo_of(a: &Args, key: &str) -> R<utopia_database::Result<Pdo>> {
     let text = |k: &str| spec.get(k).and_then(Json::as_str).map(str::to_owned);
     // A PDO without attributes fetches native numbers (PDO's default
     // ATTR_STRINGIFY_FETCHES is off).
-    let mut options = PdoOptions { stringify_fetches: false, ..PdoOptions::default() };
+    // A plain `new \PDO(...)` (no `wrapper`) has no `createFunction()`.
+    let wrapper = spec.get("wrapper").and_then(Json::as_bool).unwrap_or(false);
+    let mut options = PdoOptions { stringify_fetches: false, user_functions: wrapper, ..PdoOptions::default() };
     if let Some(Json::Object(attributes)) = spec.get("options") {
         // PDO::ATTR_STRINGIFY_FETCHES (17).
         if let Some(stringify) = attributes.get("17") {
@@ -522,7 +524,16 @@ async fn call_method(adapter: &Arc<dyn Adapter>, method: &str, a: &Args, calls: 
         "deleteIndex" => ok(adapter.delete_index(&s("collection")?, &s("key")?).await)?,
         "renameIndex" => ok(adapter.rename_index(&s("collection")?, &s("old")?, &s("new")?).await)?,
         // ----- Documents -----
-        "createDocument" => ok(adapter.create_document(&collection(a, "collection")?, a.document("document")?).await)?,
+        // The adapter writes the document object it is given and returns it
+        // (`Adapter::createDocument()`, `getSequences()`): the caller's
+        // object is the written one.
+        "createDocument" => {
+            let created = adapter.create_document(&collection(a, "collection")?, a.document("document")?).await;
+            if let (Ok(document), Some(json)) = (&created, a.raw("document")) {
+                super::args::store_back(a, json, document.clone().into_obj());
+            }
+            ok(created)?
+        }
         "createDocuments" => {
             ok(adapter.create_documents(&collection(a, "collection")?, a.documents("documents")?).await)?
         }
@@ -574,7 +585,13 @@ async fn call_method(adapter: &Arc<dyn Adapter>, method: &str, a: &Args, calls: 
         "sum" => ok(adapter
             .sum(&collection(a, "collection")?, &s("attribute")?, a.queries("queries")?, a.opt_int("max")?)
             .await)?,
-        "getSequences" => ok(adapter.get_sequences(&collection(a, "collection")?, a.documents("documents")?).await)?,
+        "getSequences" => {
+            let documents = adapter.get_sequences(&collection(a, "collection")?, a.documents("documents")?).await;
+            if let Ok(documents) = &documents {
+                super::args::store_back_list(a, "documents", documents);
+            }
+            ok(documents)?
+        }
         // ----- Features -----
         "ping" => match adapter.connection() {
             Some(c) => ok(c.ping().await)?,

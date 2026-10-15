@@ -764,7 +764,11 @@ async fn build(class: &str, a: &Args, calls: &Calls) -> R<Option<Obj>> {
                     }
                 }
             };
-            object(CodecObj(Arc::new(utopia_database::filter::Callback::new(s("name")?, run(encode), run(decode)))))
+            // PHP's closures are the step interpreter's (`Core::callback()`).
+            let signature = format!("{0}:{0}", super::super::fixtures::CALLBACK_SIGNATURE);
+            object(CodecObj(Arc::new(
+                utopia_database::filter::Callback::new(s("name")?, run(encode), run(decode)).with_signature(signature),
+            )))
         }
         "Hook\\Permissions" => object(HookObj {
             hook: Hook::write(Arc::new(utopia_database::hook::Permissions::new())),

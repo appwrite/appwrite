@@ -106,9 +106,14 @@ pub fn decode(json: &Json) -> D<Value> {
                     Json::Object(m) if m.is_empty() => Document::empty(),
                     other => Document::new(decode_array(other)?)?,
                 };
+                // `Values::decode()` makes a Collection of a `Collection`
+                // tag and a plain Document of any other class (a custom
+                // document type, an anonymous `new class extends Document`).
                 return Ok(Value::from(match o.get("$class").and_then(Json::as_str) {
-                    Some(class) => document.with_class(full_class(class)),
-                    None => document,
+                    Some(class) if full_class(class) == "Utopia\\Database\\Collection" => {
+                        document.with_class(full_class(class))
+                    }
+                    _ => document,
                 }));
             }
             if o.len() == 1 {
@@ -124,11 +129,17 @@ pub fn decode(json: &Json) -> D<Value> {
                 if let Some(bson) = o.get("$bson") {
                     return decode_bson(bson);
                 }
-                // A backed enum case held in a value: its backing value.
+                // A backed enum case held in a value: the case object, which
+                // the library reads as its backing value.
                 if let Some(Json::String(tag)) = o.get("$enum")
-                    && let Some(backing) = super::enums::parse_tag(tag).as_ref().and_then(super::enums::backing_value)
+                    && let Some(case) = super::enums::parse_tag(tag)
+                    && let Some(backing) = super::enums::backing_value(&case)
                 {
-                    return Ok(Value::Str(Str::from(backing)));
+                    return Ok(Value::Ext(Ext::Enum(Box::new(value::EnumValue {
+                        class: full_class(&case.class),
+                        case: case.case,
+                        backing: Value::Str(Str::from(backing)),
+                    }))));
                 }
             }
             Value::Array(
@@ -255,6 +266,9 @@ pub fn encode(value: &Value) -> Json {
                 "values": encode_array(&o.values()),
             }),
         ),
+        Value::Ext(Ext::Enum(e)) => {
+            json!({ "$enum": format!("{}::{}", short_class(&e.class).unwrap_or(&e.class), e.case) })
+        }
         Value::Ext(Ext::Bson(b)) => tag(
             "$bson",
             match &**b {
@@ -262,6 +276,7 @@ pub fn encode(value: &Value) -> Json {
                 BsonValue::ObjectId(bytes) => {
                     json!({ "$oid": bytes.iter().map(|b| format!("{b:02x}")).collect::<String>() })
                 }
+                BsonValue::Int64(n) => json!({ "$numberLong": n.to_string() }),
                 BsonValue::Regex { pattern, flags } => {
                     json!({ "$regularExpression": { "pattern": pattern, "options": flags } })
                 }
@@ -314,9 +329,9 @@ fn key_text(k: KeyRef<'_>) -> String {
 fn decode_bson(json: &Json) -> D<Value> {
     let bad = || Fault::new(format!("unsupported $bson value: {json}"));
     let o = json.as_object().ok_or_else(bad)?;
-    // A `MongoDB\BSON\Int64`: the extension reads it back as an int.
+    // A `MongoDB\BSON\Int64`: an object, as the extension decodes it.
     if let Some(Json::String(n)) = o.get("$numberLong") {
-        return Ok(Value::Int(n.parse().map_err(|_| bad())?));
+        return Ok(Value::from(BsonValue::Int64(n.parse().map_err(|_| bad())?)));
     }
     if let Some(date) = o.get("$date") {
         let ms = date.get("$numberLong").and_then(Json::as_str).and_then(|s| s.parse().ok()).ok_or_else(bad)?;
