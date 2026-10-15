@@ -158,7 +158,7 @@ class XList extends Action
             $find = match (true) {
                 $parsed->isAggregation() => fn (): array => \array_map(
                     static fn (array $row): Document => new Document($row),
-                    $this->assertRepresentable($dbForDatabases->aggregate($collectionTableId, $paged)),
+                    $dbForDatabases->aggregate($collectionTableId, $paged),
                 ),
                 $parsed->selections !== [] => fn (): array => $dbForDatabases->find($collectionTableId, $paged),
                 default => fn (): array => $dbForDatabases->skipRelationships(fn (): array => $dbForDatabases->find($collectionTableId, $paged)),
@@ -277,24 +277,6 @@ class XList extends Action
      */
     protected function afterQuery(float $dbDurationMs, Document $database, Document $collection, array $queries, ?Http $utopia): void
     {
-    }
-
-    /**
-     * @param list<array<string, mixed>> $rows
-     * @return list<array<string, mixed>>
-     * @throws Exception
-     */
-    private function assertRepresentable(array $rows): array
-    {
-        foreach ($rows as $row) {
-            foreach ($row as $value) {
-                if (\is_float($value) && !\is_finite($value)) {
-                    throw new Exception(Exception::DATABASE_QUERY_OUT_OF_RANGE);
-                }
-            }
-        }
-
-        return $rows;
     }
 
     /**

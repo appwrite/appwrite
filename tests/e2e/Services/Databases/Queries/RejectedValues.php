@@ -70,19 +70,16 @@ trait RejectedValues
         $this->createRejectedValuesRecord($databaseId, $collectionId, ['score' => 1e308]);
         $this->createRejectedValuesRecord($databaseId, $collectionId, ['score' => 1e308]);
 
-        $overflows = $this->getConsoleVariables()['_APP_DB_ADAPTER'] === 'postgresql';
+        $sum = $this->listRejectedValues($databaseId, $collectionId, [Query::sum('score', 'total')->toString()]);
+        $this->assertSame(400, $sum['headers']['status-code'], 'A sum past the range of a double: ' . ($sum['body']['message'] ?? ''));
+        $this->assertSame(Exception::DATABASE_QUERY_OUT_OF_RANGE, $sum['body']['type']);
 
-        foreach ([Query::sum('score', 'total'), Query::stddev('score', 'spread')] as $aggregate) {
-            $response = $this->listRejectedValues($databaseId, $collectionId, [$aggregate->toString()]);
-            $method = $aggregate->getMethod()->value;
-
-            $this->assertContains($response['headers']['status-code'], [200, 400], "{$method}: " . ($response['body']['message'] ?? ''));
-            if ($overflows) {
-                $this->assertSame(400, $response['headers']['status-code'], "{$method} overflows a double on this database");
-            }
-            if ($response['headers']['status-code'] === 400) {
-                $this->assertSame(Exception::DATABASE_QUERY_OUT_OF_RANGE, $response['body']['type'], $method);
-            }
+        $spread = $this->listRejectedValues($databaseId, $collectionId, [Query::stddev('score', 'spread')->toString()]);
+        $this->assertContains($spread['headers']['status-code'], [200, 400], 'A deviation of two equal values is 0, or out of range where the engine squares them: ' . ($spread['body']['message'] ?? ''));
+        if ($spread['headers']['status-code'] === 400) {
+            $this->assertSame(Exception::DATABASE_QUERY_OUT_OF_RANGE, $spread['body']['type']);
+        } else {
+            $this->assertEqualsWithDelta(0.0, $spread['body'][$this->getRecordResource()][0]['spread'], 0.0001);
         }
     }
 
