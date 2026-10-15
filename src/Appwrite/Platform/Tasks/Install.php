@@ -27,6 +27,7 @@ use Utopia\Psr7\Method;
 use Utopia\Psr7\Request\Factory as RequestFactory;
 use Utopia\System\System;
 use Utopia\Validator\Boolean;
+use Utopia\Validator\Port;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
@@ -70,8 +71,8 @@ class Install extends Action
     {
         $this
             ->desc('Install Appwrite')
-            ->param('http-port', '', new Text(4), 'Server HTTP port', true)
-            ->param('https-port', '', new Text(4), 'Server HTTPS port', true)
+            ->param('http-port', '', new Port(), 'Server HTTP port, optionally bound to a host IP (127.0.0.1:80)', true)
+            ->param('https-port', '', new Port(), 'Server HTTPS port, optionally bound to a host IP (127.0.0.1:443)', true)
             ->param('organization', 'appwrite', new Text(0), 'Docker Registry organization', true)
             ->param('image', 'appwrite', new Text(0), 'Main appwrite docker image', true)
             ->param('interactive', 'Y', new Text(1), 'Run an interactive session', true)
@@ -147,10 +148,7 @@ class Install extends Action
             try {
                 $ports = $compose->getService('traefik')->getPorts();
             } catch (\Throwable $th) {
-                $ports = [
-                    $defaultHttpPort => $defaultHttpPort,
-                    $defaultHttpsPort => $defaultHttpsPort
-                ];
+                $ports = [];
                 Console::warning('Traefik not found. Falling back to default ports.');
             }
 
@@ -189,15 +187,25 @@ class Install extends Action
                             $vars[$key]['default'] = $value;
                         }
                     }
+
+                    // The compose file publishes ${_APP_HTTP_PORT} and ${_APP_HTTPS_PORT}, so .env holds the ports in use.
+                    $defaultHttpPort = ($env->list()['_APP_HTTP_PORT'] ?? '') ?: $defaultHttpPort;
+                    $defaultHttpsPort = ($env->list()['_APP_HTTPS_PORT'] ?? '') ?: $defaultHttpsPort;
                 }
 
-                foreach ($ports as $key => $value) {
-                    if ($value === $defaultHttpPort) {
-                        $defaultHttpPort = $key;
+                // A literal port in the compose file is what is published, even if .env says otherwise.
+                foreach ($ports as $published => $target) {
+                    $published = (string) $published;
+                    if (\str_starts_with($published, '$')) {
+                        continue;
                     }
 
-                    if ($value === $defaultHttpsPort) {
-                        $defaultHttpsPort = $key;
+                    if ($target === '80') {
+                        $defaultHttpPort = $published;
+                    }
+
+                    if ($target === '443') {
+                        $defaultHttpsPort = $published;
                     }
                 }
             }
@@ -262,6 +270,14 @@ class Install extends Action
         if (empty($httpsPort)) {
             $httpsPort = Console::confirm('Choose your server HTTPS port: (default: ' . $defaultHttpsPort . ')');
             $httpsPort = ($httpsPort) ?: $defaultHttpsPort;
+        }
+
+        $portValidator = new Port();
+        foreach (['HTTP' => $httpPort, 'HTTPS' => $httpsPort] as $label => $port) {
+            if (!$portValidator->isValid($port)) {
+                Console::error("Invalid {$label} port '{$port}'. " . $portValidator->getDescription() . '.');
+                Console::exit(1);
+            }
         }
 
         $userInput = [];
@@ -1063,6 +1079,12 @@ class Install extends Action
         $requestFactory = new RequestFactory();
 
         $healthPath = '/v1/health/version';
+
+        // A port bound to one host interface (127.0.0.1:80) is still reached on its port.
+        $separator = \strrpos($httpPort, ':');
+        if ($separator !== false) {
+            $httpPort = \substr($httpPort, $separator + 1);
+        }
 
         if ($isLocalInstall) {
             $candidates = (file_exists('/.dockerenv') || file_exists('/run/.containerenv'))

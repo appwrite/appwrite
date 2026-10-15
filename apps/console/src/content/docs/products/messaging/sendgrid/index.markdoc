@@ -180,7 +180,7 @@ using Appwrite.Enums;
 using Appwrite.Enums;
 
 var client = new Client()
-    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
     .SetProject("<PROJECT_ID>") // Your project ID
     .SetKey("<API_KEY>"); // Your secret API key
 
@@ -464,7 +464,7 @@ using Appwrite.Services;
 using Appwrite.Models;
 
 var client = new Client()
-    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
     .SetProject("<PROJECT_ID>")   // Your project ID
     .SetKey("<YOUR_API_KEY>");         // Your secret API key
 
@@ -590,7 +590,7 @@ let provider = try await messaging.updateSendgridProvider(
   providerId: "<PROVIDER_ID>",
   name: "<NAME>",                    // optional
   apiKey: "<API_KEY>",               // optional
-  enabled: xfalse,                   // optional
+  enabled: false,                   // optional
   fromName: "<FROM_NAME>",           // optional
   fromEmail: "email@example.com",    // optional
   replyToName: "<REPLY_TO_NAME>",    // optional

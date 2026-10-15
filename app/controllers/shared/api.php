@@ -1064,11 +1064,7 @@ Http::shutdown()
 
         $auditUser = $auditContext->user;
         if (! empty($auditContext->resource) && ! $auditUser->isEmpty()) {
-            /**
-             * audits.payload is switched to default true
-             * in order to auto audit payload for all endpoints
-             */
-            $pattern = $route->getLabel('audits.payload', true);
+            $pattern = $route->getLabel('audits.payload', false);
             if (! empty($pattern)) {
                 $auditContext->payload = $responsePayload;
             }

@@ -16,7 +16,7 @@ final class Migration extends Base
     public function toArray(): array
     {
         return [
-            'project' => $this->project->getArrayCopy(),
+            'project' => ProjectContext::fromDocument($this->project)->toArray(),
             'migration' => $this->migration->getArrayCopy(),
             'platform' => $this->platform,
         ];

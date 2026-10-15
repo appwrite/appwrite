@@ -608,7 +608,10 @@ final class RealtimeConsoleClientTest extends Scope
 
         $projectId = $this->getProject()['$id'];
 
-        $response = json_decode($client->receive(), true);
+        $response = $this->receiveUntilEvent(
+            $client,
+            fn (array $message): bool => \in_array("databases.{$databaseId}.collections.{$actorsId}.indexes.*.create", $message['data']['events'] ?? [], true)
+        );
 
         $this->assertArrayHasKey('type', $response);
         $this->assertArrayHasKey('data', $response);
@@ -627,7 +630,11 @@ final class RealtimeConsoleClientTest extends Scope
         $this->assertNotEmpty($response['data']['payload']);
         $this->assertEquals('processing', $response['data']['payload']['status']);
 
-        $response = json_decode($client->receive(), true);
+        $response = $this->receiveUntilEvent(
+            $client,
+            fn (array $message): bool => \in_array("databases.{$databaseId}.collections.{$actorsId}.indexes.*.update", $message['data']['events'] ?? [], true)
+                && ($message['data']['payload']['status'] ?? null) === 'available'
+        );
 
         $this->assertArrayHasKey('type', $response);
         $this->assertArrayHasKey('data', $response);
@@ -688,7 +695,10 @@ final class RealtimeConsoleClientTest extends Scope
 
         $projectId = $this->getProject()['$id'];
 
-        $response = json_decode($client->receive(), true);
+        $response = $this->receiveUntilEvent(
+            $client,
+            fn (array $message): bool => \in_array("databases.{$databaseId}.tables.{$actorsId}.indexes.*.create", $message['data']['events'] ?? [], true)
+        );
 
         $this->assertArrayHasKey('type', $response);
         $this->assertArrayHasKey('data', $response);
@@ -707,7 +717,11 @@ final class RealtimeConsoleClientTest extends Scope
         $this->assertNotEmpty($response['data']['payload']);
         $this->assertEquals('processing', $response['data']['payload']['status']);
 
-        $response = json_decode($client->receive(), true);
+        $response = $this->receiveUntilEvent(
+            $client,
+            fn (array $message): bool => \in_array("databases.{$databaseId}.tables.{$actorsId}.indexes.*.update", $message['data']['events'] ?? [], true)
+                && ($message['data']['payload']['status'] ?? null) === 'available'
+        );
 
         $this->assertArrayHasKey('type', $response);
         $this->assertArrayHasKey('data', $response);
