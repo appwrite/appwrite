@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-15T20:30:00Z",
+  "updated": "2026-10-15T21:05:00Z",
   "tasks": [
     {
       "id": "db-lanes-ci",
@@ -26,6 +26,14 @@
       "note": "30 from custom-domain rule origins (401 vs 403, one header fewer), 8 internal IDs in queued messages, 6 team searches. Clean in a local run, so reproducing in a CI-like stack first."
     },
     {
+      "id": "lib-sync",
+      "title": "Sync http, usage and queue with main",
+      "area": "Libraries",
+      "status": "done",
+      "updated": "2026-10-15T21:05:00Z",
+      "note": "usage: column codecs, migrate(), column convergence and a retry-safe accumulator flush; http: loose booleans reach actions as bools; queue: the NATS dead-letter advisory subscribed on first receive. messaging, abuse and audit already matched. main merged into the branch (188 commits)."
+    },
+    {
       "id": "async-callbacks",
       "title": "Callbacks as async closures, without Box::pin",
       "area": "Libraries",
@@ -34,20 +42,20 @@
       "note": "utopia-http actions take async |scope| { .. } and platform callbacks take Callback::http, ::task and ::worker, so guides read like PHP's ->action(function () { .. }). CONVERSION.md makes it the rule."
     },
     {
+      "id": "query-sync",
+      "title": "Sync utopia-query with main",
+      "area": "Libraries",
+      "status": "todo",
+      "updated": "2026-10-15T21:05:00Z",
+      "note": "main's query package added spatial validation, refuses distinct with an attribute or values, and parses limit and offset more strictly. filter_distance must start returning an error, which touches the database crate."
+    },
+    {
       "id": "async-traits",
       "title": "Adapter traits take async fn, without BoxFuture",
       "area": "Libraries",
       "status": "todo",
       "updated": "2026-10-15T20:20:00Z",
       "note": "Implementing a Transport, Client, Consumer or other adapter still means BoxFuture return types and Box::pin bodies (agents, abuse and domains guides show it). Move them to async fn with an object-safe companion trait, as utopia-cache's Adapter and DynAdapter do."
-    },
-    {
-      "id": "lib-sync",
-      "title": "Sync http and usage with main",
-      "area": "Libraries",
-      "status": "progress",
-      "updated": "2026-10-15T19:17:00Z",
-      "note": "main changed packages/usage (ClickHouse column codecs) and packages/http (a boolean param default) after the crates last synced."
     },
     {
       "id": "migration-newer",
