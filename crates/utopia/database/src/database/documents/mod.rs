@@ -6,6 +6,7 @@
 //! |---|---|
 //! | `cache.rs` | the document cache: keys' epochs, purges, `withCache()`, the cached reads' helpers |
 //! | `read.rs` | `getDocument()`, `readDocument()`, `refetchDocuments()`, `applySelectFiltersToDocuments()`, the query validators |
+//! | `aggregation.rs` | `Aggregation`: the type of each aggregate `aggregate()` returns |
 //! | `find.rs` | `find()`, `findOne()`, `count()`, `sum()`, `aggregate()`, `cursor()`, joins |
 //! | `cursors.rs` | `resolveCursor()` (`Trait\Cursors`) |
 //! | `create.rs` | `createDocument()`, `createDocuments()`, `prepareCreate()`, `createPrepared()`, `authorize*()` |
@@ -14,6 +15,7 @@
 //! | `numeric.rs` | `increaseDocumentAttribute()`, `decreaseDocumentAttribute()` |
 //! | `delete.rs` | `deleteDocument()`, `deleteDocuments()` |
 
+mod aggregation;
 mod cache;
 pub(crate) mod cached;
 mod create;

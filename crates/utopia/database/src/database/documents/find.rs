@@ -15,6 +15,7 @@ use std::sync::Arc;
 use utopia_query::{CursorDirection, Method, OrderDirection, Value as QValue};
 
 use super::super::{BoxFuture, BoxStream, Database, METADATA, internal_attributes, warning};
+use super::aggregation::Aggregation;
 use super::joins::{
     Joined, assert_join_count, assert_max, batch_size, joined, joined_by_alias, outer_join_id_selections,
     with_join_authorization,
@@ -702,11 +703,19 @@ impl Database {
         let definition = self.silent(self.get_collection(collection)).await?;
         let queries = alias_aggregates(self.rewrite_queries(Event::DocumentAggregate, &definition, queries).await?)?;
 
+        let joins: Vec<Query> = queries.iter().filter(|q| q.method().is_join()).cloned().collect();
+        let joined = if joins.is_empty() {
+            Vec::new()
+        } else {
+            joined_by_alias(&joins, &self.resolve_joined_collections(&joins).await?)
+        };
+        let aggregation = Aggregation::from(self.internal_attributes(), &definition, &joined, &queries);
+
         let rows: Vec<Array> = self
             .fetch(&definition, queries, PermissionType::Read, true)
             .await?
             .into_iter()
-            .map(|row| row.array_copy())
+            .map(|row| aggregation.decode(row.array_copy()))
             .collect();
 
         self.trigger(Event::DocumentAggregate, || Domain::DocumentAggregated {
