@@ -638,12 +638,19 @@ pub async fn construct(class: &str, a: &Args) -> R<Option<Obj>> {
 
 /// `new AttributeDefinition($attributes, $profile, $schemaAttributes,
 /// $attributeCount, $attributeWidth, $filter)`: with callbacks, the result
-/// carries the calls they received while it was built (none).
+/// carries the calls they received while it was built (none). The
+/// callbacks the validator keeps record their later calls apart (`finish`
+/// closes the record the result reports).
 fn attribute_definition(a: &Args) -> R<Obj> {
     let calls = Calls::new(&a.cx);
-    let count = calls.callback("attributeCount", a.raw("attributeCount"))?;
-    let width = calls.callback("attributeWidth", a.raw("attributeWidth"))?;
-    let filter = calls.callback("filter", a.raw("filter"))?;
+    let kept = Calls::new(&a.cx);
+    let callback = |name: &str| -> R<Option<Cb>> {
+        calls.callback(name, a.raw(name))?;
+        kept.callback(name, a.raw(name))
+    };
+    let count = callback("attributeCount")?;
+    let width = callback("attributeWidth")?;
+    let filter = callback("filter")?;
     let mut validator = AttributeDefinition::new(attributes(a, "attributes")?, profile(a)?)
         .schema_attributes(&a.list::<Column>("schemaAttributes")?);
     if count.is_some() || width.is_some() {
