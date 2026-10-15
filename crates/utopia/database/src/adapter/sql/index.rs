@@ -205,10 +205,7 @@ impl Sql {
         let table = self.table_raw(stored.id());
         let mut columns = Vec::with_capacity(index.attributes.len() + 1);
         for (position, key) in index.attributes.iter().enumerate() {
-            let array = attributes
-                .iter()
-                .find(|a| a.key.to_ascii_lowercase() == key.to_ascii_lowercase())
-                .is_some_and(|a| a.array);
+            let array = attributes.iter().find(|a| a.key.eq_ignore_ascii_case(key)).is_some_and(|a| a.array);
             let order = if kind == IndexType::Fulltext {
                 ""
             } else {
@@ -255,11 +252,7 @@ impl Sql {
     /// parts keep the caller's order.
     pub(crate) fn compile_index_column(&self, column: &str, array: bool, length: i64, order: &str) -> String {
         if array && self.supports(Capability::IndexArrayCast) {
-            return format!(
-                "(CAST({} AS char({}) ARRAY))",
-                self.quote(column),
-                database::MAX_ARRAY_INDEX_LENGTH
-            );
+            return format!("(CAST({} AS char({}) ARRAY))", self.quote(column), database::MAX_ARRAY_INDEX_LENGTH);
         }
         let mut part = self.quote(column);
         if length > 0 {
@@ -281,7 +274,10 @@ impl Sql {
             return self.create_fulltext_index(&name, &id, &index.attributes, event).await;
         }
         let mut statement = self
-            .sqlite_prepare("\n\t\t\tSELECT name\n\t\t\tFROM sqlite_master\n\t\t\tWHERE type='index' AND name=:_index;\n\t\t\t", Some(event))
+            .sqlite_prepare(
+                "\n\t\t\tSELECT name\n\t\t\tFROM sqlite_master\n\t\t\tWHERE type='index' AND name=:_index;\n\t\t\t",
+                Some(event),
+            )
             .await?;
         statement.bind_value(
             ":_index",
@@ -403,7 +399,9 @@ impl Sql {
             format!(
                 "\n                CREATE TRIGGER `{fts}_{FTS_TRIGGER_UPDATE}` AFTER UPDATE OF {column_list} ON `{parent}`{update_when} BEGIN\n                    INSERT INTO `{fts}` (`{fts}`, rowid, {column_list}) VALUES ('delete', OLD.{seq}, {old_columns});\n                    INSERT INTO `{fts}` (rowid, {column_list}) VALUES (NEW.{seq}, {new_columns});\n                END\n            "
             ),
-            format!("INSERT INTO `{fts}` (rowid, {column_list}) SELECT {seq}, {column_list} FROM `{parent}`{backfill_where}"),
+            format!(
+                "INSERT INTO `{fts}` (rowid, {column_list}) SELECT {seq}, {column_list} FROM `{parent}`{backfill_where}"
+            ),
         ];
         self.start_transaction().await?;
         let created = async {
@@ -704,7 +702,11 @@ impl Sql {
             string(format!("{}%", escape_like_pattern(&self.fulltext_table_prefix(collection)))),
             ParamType::Str,
         )?;
-        statement.bind_value(":_suffix", string(format!("%{}", escape_like_pattern(FTS_TABLE_SUFFIX))), ParamType::Str)?;
+        statement.bind_value(
+            ":_suffix",
+            string(format!("%{}", escape_like_pattern(FTS_TABLE_SUFFIX))),
+            ParamType::Str,
+        )?;
         {
             let mut pdo = self.connection.lock().await;
             statement.statement.execute(&mut pdo).await?;

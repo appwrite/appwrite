@@ -230,10 +230,7 @@ impl Sql {
             let mut table = self.schema().table(&self.table_raw(collection));
             self.add_attribute_column(&mut table, attribute)?;
             let sql = table.alter().map_err(query_error)?.query;
-            return self
-                .execute_statement(&sql, Event::AttributeCreate)
-                .await
-                .map_err(|e| self.process_exception(e));
+            return self.execute_statement(&sql, Event::AttributeCreate).await.map_err(|e| self.process_exception(e));
         }
         self.create_attribute_with_event(collection, attribute, Event::AttributeCreate).await
     }
@@ -424,10 +421,8 @@ impl Sql {
             } else {
                 String::new()
             };
-            let sql = format!(
-                "SELECT 1 FROM {} WHERE LENGTH(`{column}`) > :max{tenant_clause} LIMIT 1",
-                self.table(&name)
-            );
+            let sql =
+                format!("SELECT 1 FROM {} WHERE LENGTH(`{column}`) > :max{tenant_clause} LIMIT 1", self.table(&name));
             let mut prepared = self.sqlite_prepare(&sql, Some(Event::AttributeUpdate)).await?;
             prepared.bind_value(":max", Value::Int(size), ParamType::Int)?;
             if self.shared_tables() {

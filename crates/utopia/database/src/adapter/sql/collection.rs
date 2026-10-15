@@ -125,8 +125,16 @@ impl Sql {
                 &[storage::UID, storage::TENANT],
                 IndexOptions { unique: true, collations: uid_collation(), ..IndexOptions::default() },
             )?);
-            statements.push(index(&short("_created"), &[storage::TENANT, storage::CREATED_AT], IndexOptions::default())?);
-            statements.push(index(&short("_updated"), &[storage::TENANT, storage::UPDATED_AT], IndexOptions::default())?);
+            statements.push(index(
+                &short("_created"),
+                &[storage::TENANT, storage::CREATED_AT],
+                IndexOptions::default(),
+            )?);
+            statements.push(index(
+                &short("_updated"),
+                &[storage::TENANT, storage::UPDATED_AT],
+                IndexOptions::default(),
+            )?);
             statements.push(index(
                 &short(storage::INDEX_TENANT_ID),
                 &[storage::TENANT, storage::SEQUENCE],
@@ -310,7 +318,9 @@ impl Sql {
         };
         if shared {
             table.raw_column(&format!("{} INT(11) UNSIGNED DEFAULT NULL", storage::TENANT));
-            table.add_index(plain(storage::UID, &[storage::UID, storage::TENANT], IndexType::Unique)).map_err(query_error)?;
+            table
+                .add_index(plain(storage::UID, &[storage::UID, storage::TENANT], IndexType::Unique))
+                .map_err(query_error)?;
             table
                 .add_index(plain(storage::INDEX_CREATED_AT, &[storage::TENANT, storage::CREATED_AT], IndexType::Index))
                 .map_err(query_error)?;
@@ -322,8 +332,12 @@ impl Sql {
                 .map_err(query_error)?;
         } else {
             table.add_index(plain(storage::UID, &[storage::UID], IndexType::Unique)).map_err(query_error)?;
-            table.add_index(plain(storage::INDEX_CREATED_AT, &[storage::CREATED_AT], IndexType::Index)).map_err(query_error)?;
-            table.add_index(plain(storage::INDEX_UPDATED_AT, &[storage::UPDATED_AT], IndexType::Index)).map_err(query_error)?;
+            table
+                .add_index(plain(storage::INDEX_CREATED_AT, &[storage::CREATED_AT], IndexType::Index))
+                .map_err(query_error)?;
+            table
+                .add_index(plain(storage::INDEX_UPDATED_AT, &[storage::UPDATED_AT], IndexType::Index))
+                .map_err(query_error)?;
         }
         let collection_sql = table.create().map_err(query_error)?.query;
 
@@ -446,10 +460,22 @@ impl Sql {
             let key = |key: &str, attributes: &[&str]| Index::key(key, attributes.to_vec(), vec![], vec![]);
             let perms = storage::permissions_table(&id);
             self.create_index_with_event(&id, &unique(storage::INDEX_1, &[storage::UID])?, &[], &[], event).await?;
-            self.create_index_with_event(&id, &key(storage::INDEX_CREATED_AT, &[storage::CREATED_AT])?, &[], &[], event)
-                .await?;
-            self.create_index_with_event(&id, &key(storage::INDEX_UPDATED_AT, &[storage::UPDATED_AT])?, &[], &[], event)
-                .await?;
+            self.create_index_with_event(
+                &id,
+                &key(storage::INDEX_CREATED_AT, &[storage::CREATED_AT])?,
+                &[],
+                &[],
+                event,
+            )
+            .await?;
+            self.create_index_with_event(
+                &id,
+                &key(storage::INDEX_UPDATED_AT, &[storage::UPDATED_AT])?,
+                &[],
+                &[],
+                event,
+            )
+            .await?;
             self.create_index_with_event(
                 &perms,
                 &unique(
@@ -470,8 +496,14 @@ impl Sql {
             )
             .await?;
             if self.shared_tables() {
-                self.create_index_with_event(&id, &key(storage::INDEX_TENANT_ID, &[storage::SEQUENCE])?, &[], &[], event)
-                    .await?;
+                self.create_index_with_event(
+                    &id,
+                    &key(storage::INDEX_TENANT_ID, &[storage::SEQUENCE])?,
+                    &[],
+                    &[],
+                    event,
+                )
+                .await?;
             }
             for index in indexes {
                 self.create_index_with_event(&id, &index.with_key(self.filter(&index.key)), &[], &[], event).await?;
@@ -516,13 +548,15 @@ impl Sql {
         let id = self.filter(collection);
         if self.engine == Engine::Sqlite {
             for fts in self.find_fulltext_tables(&id).await? {
-                let mut prepared =
-                    self.sqlite_prepare(&format!("DROP TABLE IF EXISTS `{fts}`"), Some(Event::CollectionDelete)).await?;
+                let mut prepared = self
+                    .sqlite_prepare(&format!("DROP TABLE IF EXISTS `{fts}`"), Some(Event::CollectionDelete))
+                    .await?;
                 self.execute(&mut prepared).await?;
             }
             for table in [self.table(&id), self.table(&storage::permissions_table(&id))] {
-                let mut prepared =
-                    self.sqlite_prepare(&format!("DROP TABLE IF EXISTS {table}"), Some(Event::CollectionDelete)).await?;
+                let mut prepared = self
+                    .sqlite_prepare(&format!("DROP TABLE IF EXISTS {table}"), Some(Event::CollectionDelete))
+                    .await?;
                 self.execute(&mut prepared).await?;
             }
             self.forget_fulltext_tables(&id);
@@ -658,7 +692,7 @@ impl Sql {
         statement.bind_value(":name", string(name), ParamType::Str)?;
         statement.bind_value(":perms", string(permissions), ParamType::Str)?;
         statement.bind_value(":fts_pattern", string(pattern), ParamType::Str)?;
-        let size = async {
+        async {
             self.execute(&mut statement).await?;
             let result = statement.statement.fetch_column(0)?;
             let size = match result {
@@ -672,8 +706,7 @@ impl Sql {
             Ok::<_, Error>(Ok(size))
         }
         .await
-        .map_err(|e| Error::database(format!("Failed to get collection size: {}", e.message())))?;
-        size
+        .map_err(|e| Error::database(format!("Failed to get collection size: {}", e.message())))?
     }
 
     /// `getSizeOfCollectionOnDisk()`

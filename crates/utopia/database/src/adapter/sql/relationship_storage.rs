@@ -57,7 +57,9 @@ impl Sql {
             let table = self.table(&name);
             let related_table = self.table(&related);
             let sql_type = self.sql_type(ColumnType::Relationship, 0, false, false, false)?;
-            let add = |table: &str, column: &str| format!("ALTER TABLE {table} ADD COLUMN `{column}` {sql_type} DEFAULT NULL");
+            let add = |table: &str, column: &str| {
+                format!("ALTER TABLE {table} ADD COLUMN `{column}` {sql_type} DEFAULT NULL")
+            };
             let statements = match relationship.kind {
                 RelationshipType::OneToOne if relationship.two_way => {
                     vec![add(&table, &key), add(&related_table, &two_way_key)]
@@ -179,9 +181,17 @@ impl Sql {
         // (table, column) of each drop, in order.
         let drops: Vec<(&str, &str)> = match relationship.kind {
             RelationshipType::OneToOne => {
-                let mut drops = if parent { vec![(name.as_str(), key.as_str())] } else { vec![(related.as_str(), two_way_key.as_str())] };
+                let mut drops = if parent {
+                    vec![(name.as_str(), key.as_str())]
+                } else {
+                    vec![(related.as_str(), two_way_key.as_str())]
+                };
                 if two_way {
-                    drops.push(if parent { (related.as_str(), two_way_key.as_str()) } else { (name.as_str(), key.as_str()) });
+                    drops.push(if parent {
+                        (related.as_str(), two_way_key.as_str())
+                    } else {
+                        (name.as_str(), key.as_str())
+                    });
                 }
                 drops
             }

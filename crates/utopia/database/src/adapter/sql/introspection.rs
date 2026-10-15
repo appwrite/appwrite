@@ -51,9 +51,7 @@ fn text(row: &Array, key: &str) -> Option<String> {
 /// `is_scalar($row[$key]) ? (string) $row[$key] : null`.
 fn scalar(row: &Array, key: &str) -> Option<String> {
     match field(row, key) {
-        Some(v @ (Value::Str(_) | Value::Int(_) | Value::Float(_) | Value::Bool(_))) => {
-            Some(crate::value::to_text(v))
-        }
+        Some(v @ (Value::Str(_) | Value::Int(_) | Value::Float(_) | Value::Bool(_))) => Some(crate::value::to_text(v)),
         _ => None,
     }
 }
@@ -391,11 +389,8 @@ impl Sql {
             }
             let rows = prepared.statement.fetch_all_assoc();
             prepared.statement.close_cursor();
-            let columns: Vec<String> = rows
-                .iter()
-                .filter_map(|row| scalar(row, "name"))
-                .filter(|name| !name.is_empty())
-                .collect();
+            let columns: Vec<String> =
+                rows.iter().filter_map(|row| scalar(row, "name")).filter(|name| !name.is_empty()).collect();
             // array_flip(): the last index naming a table wins.
             let name = by_id.iter().rev().find(|(_, t)| *t == table).map_or_else(|| table.clone(), |(k, _)| k.clone());
             indexes.push(schema::Index {

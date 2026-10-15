@@ -95,11 +95,13 @@ pub(crate) fn wkt(value: &Value, kind: ColumnType) -> Result<String> {
 }
 
 /// Whether a value is a list (`array_is_list()`).
+#[allow(dead_code)] // used by `convert_array_to_wkt`, which the document writes call
 fn is_list(array: &Array) -> bool {
     array.is_list()
 }
 
 /// `x y` of a point checked to be two numbers.
+#[allow(dead_code)] // used by `convert_array_to_wkt`, which the document writes call
 fn checked_point(point: &Value, message: &str) -> Result<String> {
     match point {
         Value::Array(p) if p.len() == 2 && is_numeric(&at(point, 0)) && is_numeric(&at(point, 1)) => {
@@ -109,6 +111,8 @@ fn checked_point(point: &Value, message: &str) -> Result<String> {
     }
 }
 
+// The document writes and finds (other modules) call these.
+#[allow(dead_code)]
 impl Sql {
     /// `convertArrayToWkt()`: `POINT(x y)`, `LINESTRING(...)` or
     /// `POLYGON((...), ...)` of a coordinate array.

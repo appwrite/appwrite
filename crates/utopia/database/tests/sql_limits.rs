@@ -46,7 +46,12 @@ mod limits_test {
             assert_eq!(limits.id_type, ColumnType::Integer);
             assert_eq!(
                 limits.internal_index_keys,
-                [storage::INDEX_PRIMARY, storage::INDEX_CREATED_AT, storage::INDEX_UPDATED_AT, storage::INDEX_TENANT_ID]
+                [
+                    storage::INDEX_PRIMARY,
+                    storage::INDEX_CREATED_AT,
+                    storage::INDEX_UPDATED_AT,
+                    storage::INDEX_TENANT_ID
+                ]
             );
         }
     }

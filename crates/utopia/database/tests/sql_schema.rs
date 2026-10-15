@@ -12,8 +12,8 @@
 use std::sync::{Arc, Mutex};
 
 use serde_json::{Value as Json, json};
-use utopia_database::adapter::{Adapter, Relationships};
 use utopia_database::adapter::sql::{Engine, Sql};
+use utopia_database::adapter::{Adapter, Relationships};
 use utopia_database::attribute::IntegerWidth;
 use utopia_database::event::Event;
 use utopia_database::hook::Transform;
@@ -225,7 +225,9 @@ async fn replay(engine: Engine, shared: bool) -> Option<Json> {
     })
     .await;
     run.step("createAttributes", || async {
-        a.create_attributes("movies", &[Attribute::integer("a1"), Attribute::boolean("a2").required(true)]).await.map(ok)
+        a.create_attributes("movies", &[Attribute::integer("a1"), Attribute::boolean("a2").required(true)])
+            .await
+            .map(ok)
     })
     .await;
     run.step("updateAttribute", || async {
@@ -250,18 +252,13 @@ async fn replay(engine: Engine, shared: bool) -> Option<Json> {
         })
         .await;
         run.step("createIndex unique", || async {
-            a.create_index(
-                "movies",
-                &Index::unique("uq_a1r", ["a1r", "$updatedAt"], vec![], vec![]).unwrap(),
-                &[],
-                &[],
-            )
-            .await
-            .map(ok)
+            a.create_index("movies", &Index::unique("uq_a1r", ["a1r", "$updatedAt"], vec![], vec![]).unwrap(), &[], &[])
+                .await
+                .map(ok)
         })
         .await;
     }
-    if !(is(Engine::Postgres) && shared) && !is(Engine::Sqlite) {
+    if engine.is_mariadb_family() || (is(Engine::Postgres) && !shared) {
         run.step("renameIndex", || async { a.rename_index("movies", "idx_title", "idx_title2").await.map(ok) }).await;
     }
     run.step("deleteIndex", || async { a.delete_index("movies", "uq_code").await.map(ok) }).await;
@@ -270,7 +267,8 @@ async fn replay(engine: Engine, shared: bool) -> Option<Json> {
     }
     let rel = |r: Relationship| r;
     run.step("createRelationship oneToOne", || async {
-        Relationships::create_relationship(a, 
+        Relationships::create_relationship(
+            a,
             "movies",
             &rel(Relationship::one_to_one("people").key("star").two_way(true).two_way_key("starred")),
         )
@@ -279,30 +277,44 @@ async fn replay(engine: Engine, shared: bool) -> Option<Json> {
     })
     .await;
     run.step("createRelationship oneToMany", || async {
-        Relationships::create_relationship(a, "movies", &Relationship::one_to_many("people").key("crew").two_way_key("crewOf"))
-            .await
-            .map(ok)
+        Relationships::create_relationship(
+            a,
+            "movies",
+            &Relationship::one_to_many("people").key("crew").two_way_key("crewOf"),
+        )
+        .await
+        .map(ok)
     })
     .await;
     run.step("createRelationship manyToMany", || async {
-        Relationships::create_relationship(a, "movies", &Relationship::many_to_many("people").key("fans").two_way_key("liked"))
-            .await
-            .map(ok)
+        Relationships::create_relationship(
+            a,
+            "movies",
+            &Relationship::many_to_many("people").key("fans").two_way_key("liked"),
+        )
+        .await
+        .map(ok)
     })
     .await;
     run.step("updateRelationship oneToOne", || async {
-        Relationships::update_relationship(a, 
+        Relationships::update_relationship(
+            a,
             "movies",
             &Relationship::one_to_one("people").key("star").two_way(true).two_way_key("starred"),
             RelationshipSide::Parent,
-            &relationship::Update { key: Some("lead".into()), two_way_key: Some("leading".into()), ..Default::default() },
+            &relationship::Update {
+                key: Some("lead".into()),
+                two_way_key: Some("leading".into()),
+                ..Default::default()
+            },
         )
         .await
         .map(ok)
     })
     .await;
     run.step("updateRelationship oneToMany child", || async {
-        Relationships::update_relationship(a, 
+        Relationships::update_relationship(
+            a,
             "movies",
             &Relationship::one_to_many("people").key("crew").two_way_key("crewOf"),
             RelationshipSide::Parent,
@@ -313,7 +325,8 @@ async fn replay(engine: Engine, shared: bool) -> Option<Json> {
     })
     .await;
     run.step("deleteRelationship oneToOne", || async {
-        Relationships::delete_relationship(a, 
+        Relationships::delete_relationship(
+            a,
             "movies",
             &Relationship::one_to_one("people").key("lead").two_way(true).two_way_key("leading"),
             RelationshipSide::Child,
@@ -323,7 +336,8 @@ async fn replay(engine: Engine, shared: bool) -> Option<Json> {
     })
     .await;
     run.step("deleteRelationship oneToMany", || async {
-        Relationships::delete_relationship(a, 
+        Relationships::delete_relationship(
+            a,
             "movies",
             &Relationship::one_to_many("people").key("crew").two_way_key("crewIn"),
             RelationshipSide::Parent,
@@ -341,8 +355,7 @@ async fn replay(engine: Engine, shared: bool) -> Option<Json> {
     let after = schema_of(a, "movies").await;
     run.step("deleteCollection", || async { a.delete_collection("movies").await.map(ok) }).await;
     run.step("deleteCollection missing", || async { a.delete_collection("movies").await.map(ok) }).await;
-    run.step("createCollection people again", || async { a.create_collection("people", &[], &[]).await.map(ok) })
-        .await;
+    run.step("createCollection people again", || async { a.create_collection("people", &[], &[]).await.map(ok) }).await;
     let steps = std::mem::take(&mut run.steps);
     let _ = adapter.delete(name).await;
     Some(json!({ "engine": engine_name(engine), "shared": shared, "steps": steps, "schema": schema, "after": after }))
@@ -363,12 +376,17 @@ async fn parity(engine: Engine) {
     for shared in [false, true] {
         let Some(actual) = replay(engine, shared).await else { return };
         let expected = expected(engine, shared);
-        let (actual_steps, expected_steps) = (actual["steps"].as_array().unwrap(), expected["steps"].as_array().unwrap());
+        let (actual_steps, expected_steps) =
+            (actual["steps"].as_array().unwrap(), expected["steps"].as_array().unwrap());
         for (a, e) in actual_steps.iter().zip(expected_steps) {
             assert_eq!(a, e, "{engine:?} shared={shared}");
         }
         assert_eq!(actual_steps.len(), expected_steps.len(), "{engine:?} shared={shared}");
-        eprintln!("{engine:?} shared={shared}: {} steps, {} statements", actual_steps.len(), actual_steps.iter().map(|s| s["statements"].as_array().unwrap().len()).sum::<usize>());
+        eprintln!(
+            "{engine:?} shared={shared}: {} steps, {} statements",
+            actual_steps.len(),
+            actual_steps.iter().map(|s| s["statements"].as_array().unwrap().len()).sum::<usize>()
+        );
         for key in ["schema", "after"] {
             assert_eq!(actual[key]["columns"], expected[key]["columns"], "{engine:?} shared={shared}: {key}");
             if !actual[key]["indexes"].is_null() {
@@ -442,9 +460,7 @@ async fn replay_metadata(engine: Engine, shared: bool, expected: &Json) {
     .await
     .unwrap();
     a.create_collection("people", &[Attribute::string("name", 64)], &[]).await.unwrap();
-    a.create_collection("_1_2", &[Attribute::string("fans", 255), Attribute::string("liked", 255)], &[])
-        .await
-        .unwrap();
+    a.create_collection("_1_2", &[Attribute::string("fans", 255), Attribute::string("liked", 255)], &[]).await.unwrap();
     for sql in expected["seed"].as_array().unwrap() {
         a.pdo().lock().await.exec(sql.as_str().unwrap()).await.unwrap();
     }
@@ -455,9 +471,8 @@ async fn replay_metadata(engine: Engine, shared: bool, expected: &Json) {
     macro_rules! step {
         ($label:expr, $body:expr) => {
             if !stopped {
-                let outcome = std::panic::AssertUnwindSafe(run.step($label, || async { $body.map(ok) }))
-                    .catch_unwind()
-                    .await;
+                let outcome =
+                    std::panic::AssertUnwindSafe(run.step($label, || async { $body.map(ok) })).catch_unwind().await;
                 if outcome.is_err() {
                     *run.recorder.recording.lock().unwrap() = false;
                     eprintln!("{engine:?} shared={shared}: stopped at {}: getDocument() is not ported yet", $label);
@@ -477,7 +492,10 @@ async fn replay_metadata(engine: Engine, shared: bool, expected: &Json) {
             let index = Index::key("idx_tags", ["tags"], vec![], vec![]).unwrap();
             step!("createIndex array", a.create_index("movies", &index, &[], &[]).await);
         }
-        step!("createIndex fulltext", a.create_index("movies", &Index::fulltext("ft_title", ["title"]), &[], &[]).await);
+        step!(
+            "createIndex fulltext",
+            a.create_index("movies", &Index::fulltext("ft_title", ["title"]), &[], &[]).await
+        );
         let index = Index::key("idx_x", ["x"], vec![], vec![]).unwrap();
         step!("createIndex missing collection", a.create_index("nope", &index, &[], &[]).await);
     }
@@ -574,9 +592,7 @@ mod env {
         pub fn fail(&self, prefix: impl Into<String>, state: &'static str, code: i64, info: &'static str) {
             self.recorder.failures.lock().unwrap().push((
                 prefix.into(),
-                Box::new(move || {
-                    utopia_database::adapter::sql::pdo::PdoError::driver(state, code, info).into_error()
-                }),
+                Box::new(move || utopia_database::adapter::sql::pdo::PdoError::driver(state, code, info).into_error()),
             ));
         }
 
@@ -674,10 +690,12 @@ mod postgres_collection_index_test {
                 .create_collection(
                     "places",
                     &[Attribute::object("data"), Attribute::string("status", 32)],
-                    &[Index::key("countryfirst", ["data.country", "status"], vec![], vec![
-                        Some(OrderDirection::Desc),
-                        None,
-                    ])
+                    &[Index::key(
+                        "countryfirst",
+                        ["data.country", "status"],
+                        vec![],
+                        vec![Some(OrderDirection::Desc), None],
+                    )
                     .unwrap()],
                 )
                 .await
@@ -743,7 +761,8 @@ mod spatial_column_definition_test {
             // The columns exist now: the batch is refused, its statement recorded all the same.
             let _ = e.adapter.create_attributes("places", &spatial(false)).await;
             let table = e.table("places");
-            let mut expected: Vec<String> = columns.iter().map(|c| format!("ALTER TABLE {table} ADD COLUMN {c}")).collect();
+            let mut expected: Vec<String> =
+                columns.iter().map(|c| format!("ALTER TABLE {table} ADD COLUMN {c}")).collect();
             expected.push(format!("ALTER TABLE {table} ADD COLUMN {}", columns.join(", ADD COLUMN ")));
             assert_eq!(e.take(), expected, "{engine:?}");
             e.drop().await;
@@ -778,8 +797,11 @@ mod spatial_column_definition_test {
     #[tokio::test]
     async fn test_my_sql_declares_required_spatial_columns_not_null_on_collection_and_update_paths() {
         let Some(e) = env(Engine::MySql, "l3c_spatialnotnull", false, Default::default()).await else { return };
-        let columns =
-            ["`location` POINT SRID 4326 NOT NULL", "`route` LINESTRING SRID 4326 NOT NULL", "`area` POLYGON SRID 4326 NOT NULL"];
+        let columns = [
+            "`location` POINT SRID 4326 NOT NULL",
+            "`route` LINESTRING SRID 4326 NOT NULL",
+            "`area` POLYGON SRID 4326 NOT NULL",
+        ];
         e.adapter.create_collection("places", &spatial(true), &[]).await.unwrap();
         let statements = e.take();
         for column in columns {
@@ -824,7 +846,8 @@ mod sql_child_side_relationship_rename_test {
         Some(e)
     }
 
-    const ENGINES: [(Engine, &str); 2] = [(Engine::MariaDb, "l3c_childrename_m"), (Engine::Postgres, "l3c_childrename_p")];
+    const ENGINES: [(Engine, &str); 2] =
+        [(Engine::MariaDb, "l3c_childrename_m"), (Engine::Postgres, "l3c_childrename_p")];
 
     #[tokio::test]
     async fn test_a_rename_touches_the_column_the_side_stores() {
@@ -845,9 +868,15 @@ mod sql_child_side_relationship_rename_test {
                     two_way_key: two_way_key.map(str::to_owned),
                     ..Default::default()
                 };
-                assert!(Relationships::update_relationship(&e.adapter, collection, &relationship, side, &update).await.unwrap());
+                assert!(
+                    Relationships::update_relationship(&e.adapter, collection, &relationship, side, &update)
+                        .await
+                        .unwrap()
+                );
                 let expected = match engine {
-                    Engine::Postgres => format!("ALTER TABLE {} RENAME COLUMN \"author\" TO \"writer\";", e.table("books")),
+                    Engine::Postgres => {
+                        format!("ALTER TABLE {} RENAME COLUMN \"author\" TO \"writer\";", e.table("books"))
+                    }
                     _ => format!("ALTER TABLE {} RENAME COLUMN `author` TO `writer`;", e.table("books")),
                 };
                 assert_eq!(e.take(), [expected], "{engine:?} {kind:?} {side:?}");
@@ -877,7 +906,11 @@ mod sql_child_side_relationship_rename_test {
                     two_way_key: two_way_key.map(str::to_owned),
                     ..Default::default()
                 };
-                assert!(Relationships::update_relationship(&e.adapter, collection, &relationship, side, &update).await.unwrap());
+                assert!(
+                    Relationships::update_relationship(&e.adapter, collection, &relationship, side, &update)
+                        .await
+                        .unwrap()
+                );
                 assert!(e.take().is_empty(), "{engine:?} {kind:?} {side:?}");
             }
             e.drop().await;
@@ -903,7 +936,9 @@ mod spatial_codec_test {
     }
 
     fn v(json: &str) -> Value {
-        utopia_database::value::from_plain(php_std::json::decode(json.as_bytes(), Some(true), 512, Default::default()).unwrap())
+        utopia_database::value::from_plain(
+            php_std::json::decode(json.as_bytes(), Some(true), 512, Default::default()).unwrap(),
+        )
     }
 
     fn geometries() -> Vec<(ColumnType, &'static str, &'static str)> {
@@ -946,7 +981,12 @@ mod spatial_codec_test {
                     && matches!(&value, Value::Array(a) if matches!(a.values().next(), Some(Value::Array(p)) if matches!(p.values().next(), Some(Value::Int(_) | Value::Float(_)))));
                 let expected = if one_ring { utopia_database::value::list([value.clone()]) } else { value.clone() };
                 let encoded = adapter.encode(&value, kind).unwrap();
-                assert_eq!(adapter.decode(encoded.as_bytes(), kind).unwrap(), floats(&expected), "{:?}", adapter.engine());
+                assert_eq!(
+                    adapter.decode(encoded.as_bytes(), kind).unwrap(),
+                    floats(&expected),
+                    "{:?}",
+                    adapter.engine()
+                );
             }
         }
     }
@@ -1123,7 +1163,9 @@ mod column_rename_test {
     async fn test_maria_db_update_attribute_adopts_a_column_another_tenant_already_renamed() {
         for (engine, db) in MARIADB {
             let Some(e) = users(engine, db, &["years"]).await else { continue };
-            assert!(e.adapter.update_attribute("users", "age", &Attribute::integer("years").required(true)).await.unwrap());
+            assert!(
+                e.adapter.update_attribute("users", "age", &Attribute::integer("years").required(true)).await.unwrap()
+            );
             let statements = e.take();
             assert_eq!(statements.len(), 2);
             assert!(statements[1].starts_with(&format!("ALTER TABLE {} MODIFY `years` INT", e.table("users"))));
@@ -1135,10 +1177,14 @@ mod column_rename_test {
     async fn test_maria_db_update_attribute_changes_the_column_while_the_old_one_exists() {
         for (engine, db) in MARIADB {
             let Some(e) = users(engine, db, &["age"]).await else { continue };
-            assert!(e.adapter.update_attribute("users", "age", &Attribute::integer("years").required(true)).await.unwrap());
+            assert!(
+                e.adapter.update_attribute("users", "age", &Attribute::integer("years").required(true)).await.unwrap()
+            );
             let statements = e.take();
             assert_eq!(statements.len(), 2);
-            assert!(statements[1].starts_with(&format!("ALTER TABLE {} CHANGE COLUMN `age` `years` INT", e.table("users"))));
+            assert!(
+                statements[1].starts_with(&format!("ALTER TABLE {} CHANGE COLUMN `age` `years` INT", e.table("users")))
+            );
             e.drop().await;
         }
     }
@@ -1147,7 +1193,9 @@ mod column_rename_test {
     async fn test_maria_db_reads_no_catalog_without_a_rename() {
         for (engine, db) in MARIADB {
             let Some(e) = users(engine, db, &["age"]).await else { continue };
-            assert!(e.adapter.update_attribute("users", "age", &Attribute::integer("age").required(true)).await.unwrap());
+            assert!(
+                e.adapter.update_attribute("users", "age", &Attribute::integer("age").required(true)).await.unwrap()
+            );
             let statements = e.take();
             assert_eq!(statements.len(), 1);
             assert!(statements[0].starts_with(&format!("ALTER TABLE {} MODIFY `age` INT", e.table("users"))));
@@ -1313,7 +1361,12 @@ mod maria_db_create_collection_cleanup_test {
     async fn test_a_permissions_table_that_fails_drops_the_collection_table() {
         for (engine, db) in ENGINES {
             let Some(e) = env(engine, db, false, Default::default()).await else { continue };
-            e.fail(permissions_table(&e.db), "70100", 1969, "Query execution was interrupted (max_statement_time exceeded)");
+            e.fail(
+                permissions_table(&e.db),
+                "70100",
+                1969,
+                "Query execution was interrupted (max_statement_time exceeded)",
+            );
             let error = e.adapter.create_collection("books", &[Attribute::string("title", 64)], &[]).await.unwrap_err();
             assert_eq!(error.kind(), Kind::Timeout);
             assert_eq!(error.message(), "Query timed out");
@@ -1331,7 +1384,12 @@ mod maria_db_create_collection_cleanup_test {
     async fn test_a_cleanup_that_fails_keeps_the_original_error_and_logs_the_cleanup_failure() {
         for (engine, db) in ENGINES {
             let Some(e) = env(engine, db, false, Default::default()).await else { continue };
-            e.fail(permissions_table(&e.db), "70100", 1969, "Query execution was interrupted (max_statement_time exceeded)");
+            e.fail(
+                permissions_table(&e.db),
+                "70100",
+                1969,
+                "Query execution was interrupted (max_statement_time exceeded)",
+            );
             e.fail("DROP TABLE IF EXISTS", "HY000", 2006, "MySQL server has gone away");
             let error = e.adapter.create_collection("books", &[Attribute::string("title", 64)], &[]).await.unwrap_err();
             assert_eq!(error.kind(), Kind::Timeout);
@@ -1398,11 +1456,7 @@ mod postgres_create_collection_cleanup_test {
         assert!(statements[2].starts_with(DECLARED_INDEX));
         assert_eq!(
             statements[3],
-            format!(
-                "DROP TABLE IF EXISTS {}; DROP TABLE IF EXISTS {}",
-                e.table("books"),
-                e.table("books_perms")
-            )
+            format!("DROP TABLE IF EXISTS {}; DROP TABLE IF EXISTS {}", e.table("books"), e.table("books_perms"))
         );
         e.drop().await;
     }
@@ -1454,11 +1508,7 @@ mod postgres_create_collection_cleanup_test {
         assert_eq!(statements.len(), 3);
         assert_eq!(
             statements[2],
-            format!(
-                "DROP TABLE IF EXISTS {}; DROP TABLE IF EXISTS {}",
-                e.table("places"),
-                e.table("places_perms")
-            )
+            format!("DROP TABLE IF EXISTS {}; DROP TABLE IF EXISTS {}", e.table("places"), e.table("places_perms"))
         );
         e.drop().await;
     }
@@ -1466,7 +1516,12 @@ mod postgres_create_collection_cleanup_test {
     #[tokio::test]
     async fn test_a_table_that_fails_to_be_created_drops_nothing() {
         let Some(e) = env(Engine::Postgres, "l3c_pcleanup_5", false, Default::default()).await else { return };
-        e.fail(format!("CREATE TABLE {}", e.table("books")), "57014", 7, "ERROR:  canceling statement due to statement timeout");
+        e.fail(
+            format!("CREATE TABLE {}", e.table("books")),
+            "57014",
+            7,
+            "ERROR:  canceling statement due to statement timeout",
+        );
         let error = e.adapter.create_collection("books", &[Attribute::string("title", 64)], &[]).await.unwrap_err();
         assert_eq!(error.kind(), Kind::Timeout);
         assert_eq!(error.message(), "Query timed out");
@@ -1747,8 +1802,14 @@ mod maria_db_schema_test {
         for (engine, db) in ENGINES {
             let Some(e) = with_collection(engine, db).await else { continue };
             for kind in [IndexType::Ttl, IndexType::Object, IndexType::Trigram, IndexType::HnswCosine] {
-                let index = Index { kind, ttl: Some(3600), ..Index::key("happened_index", ["happened"], vec![], vec![]).unwrap() };
-                let Some(result) = reading_definitions(e.adapter.create_index("events", &index, &[], &[])).await else { break };
+                let index = Index {
+                    kind,
+                    ttl: Some(3600),
+                    ..Index::key("happened_index", ["happened"], vec![], vec![]).unwrap()
+                };
+                let Some(result) = reading_definitions(e.adapter.create_index("events", &index, &[], &[])).await else {
+                    break;
+                };
                 let error = result.unwrap_err();
                 assert_eq!(
                     error.message(),
@@ -1815,7 +1876,11 @@ mod postgres_schema_test {
     #[tokio::test]
     async fn test_create_index_refuses_a_type_the_engine_does_not_create() {
         let Some(e) = env(Engine::Postgres, "l3c_pschema_2", false, Default::default()).await else { return };
-        let index = Index { kind: IndexType::Ttl, ttl: Some(3600), ..Index::key("happened_index", ["happened"], vec![], vec![]).unwrap() };
+        let index = Index {
+            kind: IndexType::Ttl,
+            ttl: Some(3600),
+            ..Index::key("happened_index", ["happened"], vec![], vec![]).unwrap()
+        };
         let error = e.adapter.create_index("events", &index, &[], &[]).await.unwrap_err();
         assert_eq!(
             error.message(),
@@ -1828,12 +1893,20 @@ mod postgres_schema_test {
     #[tokio::test]
     async fn test_a_nested_object_index_path_with_an_invalid_segment_is_refused() {
         let Some(e) = env(Engine::Postgres, "l3c_pschema_3", false, Default::default()).await else { return };
-        for (path, segment) in
-            [("meta.bad key", "bad key"), ("meta.it's", "it's"), ("meta..leaf", ""), ("meta.inner.bad;drop", "bad;drop")]
-        {
+        for (path, segment) in [
+            ("meta.bad key", "bad key"),
+            ("meta.it's", "it's"),
+            ("meta..leaf", ""),
+            ("meta.inner.bad;drop", "bad;drop"),
+        ] {
             let error = e
                 .adapter
-                .create_index("books", &Index::object("meta_index", path), &[(path.to_owned(), ColumnType::Object)], &[])
+                .create_index(
+                    "books",
+                    &Index::object("meta_index", path),
+                    &[(path.to_owned(), ColumnType::Object)],
+                    &[],
+                )
                 .await
                 .unwrap_err();
             assert_eq!(error.message(), format!("Invalid JSON key {segment}"));
@@ -1898,7 +1971,11 @@ mod index_column_order_test {
                 .adapter
                 .create_collection(
                     "places",
-                    &[Attribute::string("tags", 64).array(true), Attribute::string("status", 32), Attribute::string("name", 128)],
+                    &[
+                        Attribute::string("tags", 64).array(true),
+                        Attribute::string("status", 32),
+                        Attribute::string("name", 128),
+                    ],
                     &[Index::key(
                         "tagsfirst",
                         ["tags", "status", "name"],
@@ -1927,8 +2004,13 @@ mod index_column_order_test {
                 .adapter
                 .create_index(
                     "places",
-                    &Index::key("countryfirst", ["data.country", "status"], vec![], vec![Some(OrderDirection::Desc), None])
-                        .unwrap(),
+                    &Index::key(
+                        "countryfirst",
+                        ["data.country", "status"],
+                        vec![],
+                        vec![Some(OrderDirection::Desc), None],
+                    )
+                    .unwrap(),
                     &[("data.country".to_owned(), ColumnType::Object), ("status".to_owned(), ColumnType::String)],
                     &[],
                 )
@@ -1976,15 +2058,23 @@ mod index_column_order_test {
                 .adapter
                 .create_index(
                     "places",
-                    &Index::key("twice", ["name", "name"], vec![], vec![Some(OrderDirection::Asc), Some(OrderDirection::Desc)])
-                        .unwrap(),
+                    &Index::key(
+                        "twice",
+                        ["name", "name"],
+                        vec![],
+                        vec![Some(OrderDirection::Asc), Some(OrderDirection::Desc)],
+                    )
+                    .unwrap(),
                     &[],
                     &[],
                 )
                 .await;
             assert_eq!(
                 e.take(),
-                [format!("CREATE INDEX \"namespace__places_twice\" ON {} (\"name\" ASC, \"name\" DESC)", e.table("places"))]
+                [format!(
+                    "CREATE INDEX \"namespace__places_twice\" ON {} (\"name\" ASC, \"name\" DESC)",
+                    e.table("places")
+                )]
             );
             e.drop().await;
         }
@@ -2011,7 +2101,9 @@ mod index_column_order_test {
                 format!(
                     "CREATE INDEX \"namespace__places_names\" ON {table} USING GIN (\"name\" gin_trgm_ops, \"status\" gin_trgm_ops)"
                 ),
-                format!("CREATE INDEX \"namespace__places_embeddings\" ON {table} USING HNSW (\"embedding\" vector_cosine_ops)"),
+                format!(
+                    "CREATE INDEX \"namespace__places_embeddings\" ON {table} USING HNSW (\"embedding\" vector_cosine_ops)"
+                ),
             ]
         );
         e.drop().await;
@@ -2048,9 +2140,13 @@ mod maria_db_varchar_column_test {
             for (size, message) in [
                 (0, "VARCHAR size 0 is invalid; must be > 0. Use TEXT, MEDIUMTEXT, or LONGTEXT instead."),
                 (-5, "VARCHAR size -5 is invalid; must be > 0. Use TEXT, MEDIUMTEXT, or LONGTEXT instead."),
-                (16382, "VARCHAR size 16382 exceeds maximum varchar length 16381. Use TEXT, MEDIUMTEXT, or LONGTEXT instead."),
+                (
+                    16382,
+                    "VARCHAR size 16382 exceeds maximum varchar length 16381. Use TEXT, MEDIUMTEXT, or LONGTEXT instead.",
+                ),
             ] {
-                let error = e.adapter.create_collection("codes", &[Attribute::varchar("code", size)], &[]).await.unwrap_err();
+                let error =
+                    e.adapter.create_collection("codes", &[Attribute::varchar("code", size)], &[]).await.unwrap_err();
                 assert_eq!(error.message(), message);
             }
             assert!(e.take().is_empty());
@@ -2082,15 +2178,21 @@ mod sql_varchar_attribute_test {
                 ] {
                     let error = if several {
                         e.adapter
-                            .create_attributes("codes", &[Attribute::string("name", 16), Attribute::varchar("code", size)])
+                            .create_attributes(
+                                "codes",
+                                &[Attribute::string("name", 16), Attribute::varchar("code", size)],
+                            )
                             .await
                             .unwrap_err()
                     } else {
                         e.adapter.create_attribute("codes", &Attribute::varchar("code", size)).await.unwrap_err()
                     };
                     assert_eq!(error.message(), message, "{engine:?}");
-                    let error =
-                        e.adapter.create_collection("codes", &[Attribute::varchar("code", size)], &[]).await.unwrap_err();
+                    let error = e
+                        .adapter
+                        .create_collection("codes", &[Attribute::varchar("code", size)], &[])
+                        .await
+                        .unwrap_err();
                     assert_eq!(error.message(), message, "{engine:?}");
                 }
             }
@@ -2158,20 +2260,26 @@ mod schema_introspection_test {
         let e = sqlite().await;
         e.adapter.create_attribute("people", &Attribute::string("name", 64)).await.unwrap();
         e.adapter.create_attribute("people", &Attribute::string("email", 64)).await.unwrap();
-        e.adapter.create_index("people", &Index::key("by_name", ["name"], vec![], vec![]).unwrap(), &[], &[]).await.unwrap();
-        e.adapter.create_index("people", &Index::unique("by_email", ["email"], vec![], vec![]).unwrap(), &[], &[]).await.unwrap();
+        e.adapter
+            .create_index("people", &Index::key("by_name", ["name"], vec![], vec![]).unwrap(), &[], &[])
+            .await
+            .unwrap();
+        e.adapter
+            .create_index("people", &Index::unique("by_email", ["email"], vec![], vec![]).unwrap(), &[], &[])
+            .await
+            .unwrap();
         e.adapter.create_index("people", &Index::fulltext("search", ["name"]), &[], &[]).await.unwrap();
         let Some(indexes) = reading_definitions(e.adapter.schema_indexes("people")).await else { return };
         let indexes: std::collections::HashMap<String, SchemaIndex> =
             indexes.unwrap().into_iter().map(|i| (i.name.clone(), i)).collect();
-        assert_eq!((indexes["by_name"].kind, indexes["by_name"].columns.clone(), indexes["by_name"].lengths.clone()), (
-            IndexType::Key,
-            vec!["name".to_owned()],
-            vec![None]
-        ));
-        assert_eq!((indexes["by_email"].kind, indexes["by_email"].columns.clone()), (IndexType::Unique, vec![
-            "email".to_owned()
-        ]));
+        assert_eq!(
+            (indexes["by_name"].kind, indexes["by_name"].columns.clone(), indexes["by_name"].lengths.clone()),
+            (IndexType::Key, vec!["name".to_owned()], vec![None])
+        );
+        assert_eq!(
+            (indexes["by_email"].kind, indexes["by_email"].columns.clone()),
+            (IndexType::Unique, vec!["email".to_owned()])
+        );
         assert_eq!(indexes["search"].kind, IndexType::Fulltext);
     }
 
@@ -2183,7 +2291,9 @@ mod schema_introspection_test {
         let columns = by_name(e.adapter.schema_attributes("people").await.unwrap());
         assert_eq!(columns["legacy"].kind, "TINYINT");
         assert_eq!(columns["settings"].kind, "LONGTEXT");
-        for internal in [storage::SEQUENCE, storage::UID, storage::CREATED_AT, storage::UPDATED_AT, storage::PERMISSIONS] {
+        for internal in
+            [storage::SEQUENCE, storage::UID, storage::CREATED_AT, storage::UPDATED_AT, storage::PERMISSIONS]
+        {
             assert!(columns.contains_key(internal));
         }
     }
@@ -2200,12 +2310,15 @@ mod schema_introspection_test {
             .await;
             assert!(e.adapter.supports(Capability::SchemaIntrospection));
             let columns = e.adapter.schema_attributes("people").await.unwrap();
-            assert_eq!(&columns[1..], [
-                Column { name: "_tenant".into(), kind: "INT UNSIGNED".into(), length: None, nullable: true },
-                Column { name: "name".into(), kind: "VARCHAR(64)".into(), length: Some(64), nullable: true },
-                Column { name: "tags".into(), kind: "LONGTEXT".into(), length: columns[3].length, nullable: true },
-                Column { name: "spot".into(), kind: "POINT".into(), length: None, nullable: false },
-            ]);
+            assert_eq!(
+                &columns[1..],
+                [
+                    Column { name: "_tenant".into(), kind: "INT UNSIGNED".into(), length: None, nullable: true },
+                    Column { name: "name".into(), kind: "VARCHAR(64)".into(), length: Some(64), nullable: true },
+                    Column { name: "tags".into(), kind: "LONGTEXT".into(), length: columns[3].length, nullable: true },
+                    Column { name: "spot".into(), kind: "POINT".into(), length: None, nullable: false },
+                ]
+            );
             assert_eq!(e.adapter.column_type(&Attribute::string("name", 64)).unwrap().as_deref(), Some("VARCHAR(64)"));
             assert_eq!(
                 e.adapter.column_type(&Attribute::string("tags", 64).array(true)).unwrap().as_deref(),
@@ -2213,19 +2326,35 @@ mod schema_introspection_test {
             );
             let mut indexes = e.adapter.schema_indexes("people").await.unwrap();
             indexes.sort_by(|a, b| a.name.cmp(&b.name));
-            assert_eq!(indexes, [
-                SchemaIndex { name: "PRIMARY".into(), kind: IndexType::Unique, columns: vec!["_id".into()], lengths: vec![None] },
-                SchemaIndex { name: "area".into(), kind: IndexType::Spatial, columns: vec!["spot".into()], lengths: vec![
-                    indexes[1].lengths[0]
-                ] },
-                SchemaIndex {
-                    name: "by_name".into(),
-                    kind: IndexType::Key,
-                    columns: vec!["_tenant".into(), "name".into()],
-                    lengths: vec![None, Some(16)]
-                },
-                SchemaIndex { name: "search".into(), kind: IndexType::Fulltext, columns: vec!["name".into()], lengths: vec![None] },
-            ]);
+            assert_eq!(
+                indexes,
+                [
+                    SchemaIndex {
+                        name: "PRIMARY".into(),
+                        kind: IndexType::Unique,
+                        columns: vec!["_id".into()],
+                        lengths: vec![None]
+                    },
+                    SchemaIndex {
+                        name: "area".into(),
+                        kind: IndexType::Spatial,
+                        columns: vec!["spot".into()],
+                        lengths: vec![indexes[1].lengths[0]]
+                    },
+                    SchemaIndex {
+                        name: "by_name".into(),
+                        kind: IndexType::Key,
+                        columns: vec!["_tenant".into(), "name".into()],
+                        lengths: vec![None, Some(16)]
+                    },
+                    SchemaIndex {
+                        name: "search".into(),
+                        kind: IndexType::Fulltext,
+                        columns: vec!["name".into()],
+                        lengths: vec![None]
+                    },
+                ]
+            );
             e.drop().await;
         }
     }
@@ -2244,38 +2373,54 @@ mod schema_introspection_test {
         e.raw(&format!("CREATE INDEX \"namespace_2_people_names\" ON {table} USING GIN (\"name\" gin_trgm_ops)")).await;
         assert!(e.adapter.supports(Capability::SchemaIntrospection));
         let columns = e.adapter.schema_attributes("people").await.unwrap();
-        assert_eq!(&columns[..4], [
-            Column { name: "_id".into(), kind: "BIGINT".into(), length: None, nullable: false },
-            Column { name: "name".into(), kind: "VARCHAR(64)".into(), length: Some(64), nullable: true },
-            Column { name: "born".into(), kind: "TIMESTAMP(3)".into(), length: None, nullable: true },
-            Column { name: "spot".into(), kind: "GEOMETRY(POINT,4326)".into(), length: None, nullable: true },
-        ]);
+        assert_eq!(
+            &columns[..4],
+            [
+                Column { name: "_id".into(), kind: "BIGINT".into(), length: None, nullable: false },
+                Column { name: "name".into(), kind: "VARCHAR(64)".into(), length: Some(64), nullable: true },
+                Column { name: "born".into(), kind: "TIMESTAMP(3)".into(), length: None, nullable: true },
+                Column { name: "spot".into(), kind: "GEOMETRY(POINT,4326)".into(), length: None, nullable: true },
+            ]
+        );
         assert_eq!(e.adapter.column_type(&Attribute::string("name", 64)).unwrap().as_deref(), Some("VARCHAR(64)"));
         assert_eq!(e.adapter.column_type(&Attribute::datetime("born")).unwrap().as_deref(), Some("TIMESTAMP(3)"));
         assert_eq!(e.adapter.column_type(&Attribute::point("spot")).unwrap().as_deref(), Some("GEOMETRY(POINT,4326)"));
         let indexes = e.adapter.schema_indexes("people").await.unwrap();
-        assert_eq!(indexes, [
-            SchemaIndex { name: "area".into(), kind: IndexType::Spatial, columns: vec!["spot".into()], lengths: vec![None] },
-            SchemaIndex {
-                name: "by_name".into(),
-                kind: IndexType::Key,
-                columns: vec!["_tenant".into(), "fullName".into()],
-                lengths: vec![None, None]
-            },
-            SchemaIndex { name: "names".into(), kind: IndexType::Trigram, columns: vec!["name".into()], lengths: vec![None] },
-            SchemaIndex {
-                name: "namespace_3_people_by_name".into(),
-                kind: IndexType::Unique,
-                columns: vec!["name".into()],
-                lengths: vec![None]
-            },
-            SchemaIndex {
-                name: "namespace_people_pkey".into(),
-                kind: IndexType::Unique,
-                columns: vec!["_id".into()],
-                lengths: vec![None]
-            },
-        ]);
+        assert_eq!(
+            indexes,
+            [
+                SchemaIndex {
+                    name: "area".into(),
+                    kind: IndexType::Spatial,
+                    columns: vec!["spot".into()],
+                    lengths: vec![None]
+                },
+                SchemaIndex {
+                    name: "by_name".into(),
+                    kind: IndexType::Key,
+                    columns: vec!["_tenant".into(), "fullName".into()],
+                    lengths: vec![None, None]
+                },
+                SchemaIndex {
+                    name: "names".into(),
+                    kind: IndexType::Trigram,
+                    columns: vec!["name".into()],
+                    lengths: vec![None]
+                },
+                SchemaIndex {
+                    name: "namespace_3_people_by_name".into(),
+                    kind: IndexType::Unique,
+                    columns: vec!["name".into()],
+                    lengths: vec![None]
+                },
+                SchemaIndex {
+                    name: "namespace_people_pkey".into(),
+                    kind: IndexType::Unique,
+                    columns: vec!["_id".into()],
+                    lengths: vec![None]
+                },
+            ]
+        );
         e.drop().await;
     }
 
@@ -2449,5 +2594,148 @@ mod adapter_database_rename_test {
         assert!(e.adapter.collection_exists(&archive, "authors_perms").await.unwrap());
         let _ = e.adapter.delete(&archive).await;
         e.drop().await;
+    }
+}
+
+/// The declared type of a column of a SQLite table (`PRAGMA table_info`).
+async fn sqlite_column_type(e: &env::Env, table: &str, column: &str) -> Option<String> {
+    let mut pdo = e.adapter.pdo().lock().await;
+    let mut statement = pdo.query(&format!("PRAGMA table_info(`namespace_{table}`)")).await.unwrap();
+    statement.fetch_all_assoc().into_iter().find_map(|row| {
+        (row.get_str("name").map(utopia_database::value::to_text).as_deref() == Some(column))
+            .then(|| row.get_str("type").map(utopia_database::value::to_text).unwrap_or_default())
+    })
+}
+
+/// PHP: `tests/unit/Adapter/SQLiteSchemaTest.php` (the adapter cases; the
+/// index renames read the stored definition through `Database`, and are
+/// covered by `metadata_parity_sqlite` once `getDocument()` is ported; the
+/// long string round trip writes documents).
+mod sqlite_schema_test {
+    use super::env::env;
+    use super::*;
+
+    #[tokio::test]
+    async fn test_a_string_column_grows_into_the_type_its_size_needs() {
+        for (size, kind) in [(16381, "VARCHAR(16381)"), (16382, "TEXT"), (65536, "MEDIUMTEXT"), (16777216, "LONGTEXT")]
+        {
+            let e = env(Engine::Sqlite, "main", false, Default::default()).await.unwrap();
+            assert!(e.adapter.create_collection("texts", &[Attribute::string("body", size)], &[]).await.unwrap());
+            assert_eq!(sqlite_column_type(&e, "texts", "body").await.as_deref(), Some(kind));
+        }
+    }
+
+    #[tokio::test]
+    async fn test_a_varchar_column_outside_its_sizes_is_refused() {
+        for (size, message) in [
+            (0, "VARCHAR size 0 is invalid; must be > 0. Use TEXT, MEDIUMTEXT, or LONGTEXT instead."),
+            (-1, "VARCHAR size -1 is invalid; must be > 0. Use TEXT, MEDIUMTEXT, or LONGTEXT instead."),
+            (
+                16382,
+                "VARCHAR size 16382 exceeds maximum varchar length 16381. Use TEXT, MEDIUMTEXT, or LONGTEXT instead.",
+            ),
+        ] {
+            let e = env(Engine::Sqlite, "main", false, Default::default()).await.unwrap();
+            let error =
+                e.adapter.create_collection("codes", &[Attribute::varchar("code", size)], &[]).await.unwrap_err();
+            assert_eq!(error.message(), message);
+            assert!(!e.adapter.collection_exists("main", "codes").await.unwrap());
+        }
+    }
+
+    #[tokio::test]
+    async fn test_a_varchar_column_within_its_sizes_is_created() {
+        let e = env(Engine::Sqlite, "main", false, Default::default()).await.unwrap();
+        assert!(e.adapter.create_collection("codes", &[Attribute::varchar("code", 16381)], &[]).await.unwrap());
+        assert_eq!(sqlite_column_type(&e, "codes", "code").await.as_deref(), Some("VARCHAR(16381)"));
+    }
+
+    #[tokio::test]
+    async fn test_a_spatial_column_is_untyped() {
+        let e = env(Engine::Sqlite, "main", false, Default::default()).await.unwrap();
+        assert!(e.adapter.create_collection("places", &[Attribute::point("position")], &[]).await.unwrap());
+        assert_eq!(sqlite_column_type(&e, "places", "position").await.as_deref(), Some(""));
+    }
+}
+
+/// PHP: `tests/unit/SQLiteTenantIndexTest.php` (the adapter's part: the
+/// duplicate documents a dropped unique index stops refusing are written
+/// through `Database`).
+mod sqlite_tenant_index_test {
+    use super::env::{Env, env};
+    use super::*;
+
+    async fn database(tenant: &str) -> Env {
+        let e = env(Engine::Sqlite, "main", true, utopia_database::value::string(tenant)).await.unwrap();
+        e.adapter.create_collection("profiles", &[Attribute::string("email", 64)], &[]).await.unwrap();
+        e
+    }
+
+    async fn indexes(e: &Env) -> Vec<String> {
+        let mut pdo = e.adapter.pdo().lock().await;
+        let mut statement = pdo
+            .query("SELECT name FROM sqlite_master WHERE type = 'index' AND tbl_name = 'namespace_profiles'")
+            .await
+            .unwrap();
+        statement
+            .fetch_all_column(0)
+            .unwrap()
+            .iter()
+            .map(utopia_database::value::to_text)
+            .filter(|name| name.ends_with("_email"))
+            .collect()
+    }
+
+    #[tokio::test]
+    async fn test_deleting_an_index_drops_it_for_a_tenant_outside_the_identifier_alphabet() {
+        let e = database("acme.1").await;
+        e.adapter
+            .create_index("profiles", &Index::unique("email", ["email"], vec![], vec![]).unwrap(), &[], &[])
+            .await
+            .unwrap();
+        assert_eq!(indexes(&e).await.len(), 1);
+        assert!(e.adapter.delete_index("profiles", "email").await.unwrap());
+        assert!(indexes(&e).await.is_empty(), "The index deleteIndex() reported as dropped must be gone");
+    }
+
+    #[tokio::test]
+    async fn test_creating_an_index_that_already_exists_is_a_no_op() {
+        let e = database("acme.1").await;
+        let index = Index::key("email", ["email"], vec![], vec![]).unwrap();
+        e.adapter.create_index("profiles", &index, &[], &[]).await.unwrap();
+        assert!(e.adapter.create_index("profiles", &index, &[], &[]).await.unwrap());
+        assert_eq!(indexes(&e).await, ["namespace_acme1_profiles_email"]);
+    }
+
+    #[tokio::test]
+    async fn test_a_tenant_cannot_break_out_of_the_index_identifier() {
+        let e = database("a`b").await;
+        e.adapter
+            .create_index("profiles", &Index::key("email", ["email"], vec![], vec![]).unwrap(), &[], &[])
+            .await
+            .unwrap();
+        assert_eq!(indexes(&e).await, ["namespace_ab_profiles_email"]);
+    }
+}
+
+/// SQLite's FTS5 tables under shared tables (PHP:
+/// `tests/unit/Adapter/SQLiteSharedFulltextTest.php`, its schema part: the
+/// searches belong to the find port).
+mod sqlite_shared_fulltext_test {
+    use super::env::env;
+    use super::*;
+
+    #[tokio::test]
+    async fn test_a_string_tenants_fulltext_table_and_triggers_are_scoped_to_it() {
+        let e = env(Engine::Sqlite, "main", true, utopia_database::value::string("o'brien")).await.unwrap();
+        e.adapter
+            .create_collection("notes", &[Attribute::text("body")], &[Index::fulltext("search", ["body"])])
+            .await
+            .unwrap();
+        let statements = e.take();
+        let trigger = statements.iter().find(|s| s.contains("_ai` AFTER INSERT")).unwrap();
+        assert!(trigger.contains("WHEN NEW.`_tenant` IS 'o''brien' BEGIN"), "{trigger}");
+        let backfill = statements.iter().find(|s| s.starts_with("INSERT INTO")).unwrap();
+        assert!(backfill.ends_with("FROM `namespace_notes` WHERE `_tenant` IS 'o''brien'"), "{backfill}");
     }
 }
