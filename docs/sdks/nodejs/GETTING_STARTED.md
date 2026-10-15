@@ -24,7 +24,13 @@ Once your SDK object is set, create any of the Appwrite service objects and choo
 ```js
 let users = new sdk.Users(client);
 
-let promise = users.create(sdk.ID.unique(), "email@example.com", "+123456789", "password", "Walter O'Brien");
+let promise = users.create({
+    userId: sdk.ID.unique(),
+    email: "email@example.com",
+    phone: "+123456789",
+    password: "password",
+    name: "Walter O'Brien"
+});
 
 promise.then(function (response) {
     console.log(response);
@@ -47,7 +53,13 @@ client
 ;
 
 let users = new sdk.Users(client);
-let promise = users.create(sdk.ID.unique(), "email@example.com", "+123456789", "password", "Walter O'Brien");
+let promise = users.create({
+    userId: sdk.ID.unique(),
+    email: "email@example.com",
+    phone: "+123456789",
+    password: "password",
+    name: "Walter O'Brien"
+});
 
 promise.then(function (response) {
     console.log(response);
@@ -58,11 +70,11 @@ promise.then(function (response) {
 
 ### Type Safety with Models
 
-The Appwrite Node SDK provides type safety when working with database documents through generic methods. Methods like `listDocuments`, `getDocument`, and others accept a generic type parameter that allows you to specify your custom model type for full type safety.
+The Appwrite Node SDK provides type safety when working with table rows through generic methods. Methods like `listRows`, `getRow`, and others accept a generic type parameter that allows you to specify your custom model type for full type safety.
 
 **TypeScript:**
 ```typescript
-interface Book {
+interface Book extends Models.Row {
     name: string;
     author: string;
     releaseYear?: string;
@@ -71,15 +83,15 @@ interface Book {
     isCheckedOut: boolean;
 }
 
-const databases = new Databases(client);
+const tablesDB = new TablesDB(client);
 
 try {
-    const documents = await databases.listDocuments<Book>(
-        'your-database-id',
-        'your-collection-id'
-    );
+    const result = await tablesDB.listRows<Book>({
+        databaseId: 'your-database-id',
+        tableId: 'your-table-id'
+    });
     
-    documents.documents.forEach(book => {
+    result.rows.forEach(book => {
         console.log(`Book: ${book.name} by ${book.author}`); // Now you have full type safety
     });
 } catch (error) {
@@ -99,16 +111,16 @@ try {
  * @property {boolean} isCheckedOut
  */
 
-const databases = new Databases(client);
+const tablesDB = new TablesDB(client);
 
 try {
-    /** @type {Models.DocumentList<Book>} */
-    const documents = await databases.listDocuments(
-        'your-database-id',
-        'your-collection-id'
-    );
+    /** @type {Models.RowList<Book>} */
+    const result = await tablesDB.listRows({
+        databaseId: 'your-database-id',
+        tableId: 'your-table-id'
+    });
     
-    documents.documents.forEach(book => {
+    result.rows.forEach(book => {
         console.log(`Book: ${book.name} by ${book.author}`); // Type hints available in IDE
     });
 } catch (error) {
@@ -126,7 +138,13 @@ The Appwrite Node SDK raises `AppwriteException` object with `message`, `code` a
 let users = new sdk.Users(client);
 
 try {
-    let res = await users.create(sdk.ID.unique(), "email@example.com", "+123456789", "password", "Walter O'Brien");
+    let res = await users.create({
+    userId: sdk.ID.unique(),
+    email: "email@example.com",
+    phone: "+123456789",
+    password: "password",
+    name: "Walter O'Brien"
+});
 } catch(e) {
     console.log(e.message);
 }

@@ -9,8 +9,8 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideConsole;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Role;
 use Utopia\System\System;
 
 final class VCSGiteaConsoleClientTest extends Scope
@@ -64,7 +64,7 @@ final class VCSGiteaConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Gitea VCS',
             'execute' => [Role::any()->toString()],
             'runtime' => 'node-22',
@@ -187,7 +187,7 @@ final class VCSGiteaConsoleClientTest extends Scope
         $this->gitHelper('git push origin main', $workdir);
 
         $function = $this->client->call(Client::METHOD_POST, '/functions', $headers, [
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Gitea root directory',
             'execute' => [Role::any()->toString()],
             'runtime' => 'node-22',
@@ -289,7 +289,7 @@ final class VCSGiteaConsoleClientTest extends Scope
         $providerRepositoryId = (string) $repository['body']['id'];
 
         $site = $this->client->call(Client::METHOD_POST, '/sites', $headers, [
-            'siteId' => ID::unique(),
+            'siteId' => Id::unique(),
             'name' => 'Gitea site',
             'framework' => 'other',
             'buildRuntime' => 'node-22',
@@ -331,7 +331,7 @@ final class VCSGiteaConsoleClientTest extends Scope
         $this->createGiteaUserHelper(self::GITEA_USERNAME_SECOND, self::GITEA_PASSWORD);
 
         $repository = $this->giteaApiHelper(Client::METHOD_POST, '/api/v1/user/repos', [
-            'name' => 'pull-requests-' . ID::unique(),
+            'name' => 'pull-requests-' . Id::unique(),
             'auto_init' => true,
             'default_branch' => 'main',
             'private' => false,
@@ -353,7 +353,7 @@ final class VCSGiteaConsoleClientTest extends Scope
         }, 30000, 1000);
 
         $function = $this->client->call(Client::METHOD_POST, '/functions', $headers, [
-            'functionId' => ID::unique(),
+            'functionId' => Id::unique(),
             'name' => 'Gitea pull requests',
             'runtime' => 'node-22',
             'entrypoint' => 'index.js',
@@ -824,7 +824,7 @@ final class VCSGiteaConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
         ], [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => $password,
             'name' => 'VCS Tenant',
@@ -848,7 +848,7 @@ final class VCSGiteaConsoleClientTest extends Scope
             'cookie' => 'a_session_console=' . $sessionCookie,
             'x-appwrite-project' => 'console',
         ], [
-            'teamId' => ID::unique(),
+            'teamId' => Id::unique(),
             'name' => 'VCS Tenant Team',
         ]);
         $this->assertEquals(200, $team['headers']['status-code']);
@@ -861,7 +861,7 @@ final class VCSGiteaConsoleClientTest extends Scope
                 'cookie' => 'a_session_console=' . $sessionCookie,
                 'x-appwrite-project' => 'console',
             ], [
-                'projectId' => ID::unique(),
+                'projectId' => Id::unique(),
                 'region' => System::getEnv('_APP_REGION', 'default'),
                 'name' => 'VCS Tenant Project',
                 'teamId' => $team['body']['$id'],

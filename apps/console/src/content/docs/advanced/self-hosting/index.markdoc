@@ -4,7 +4,7 @@ title: Self-hosting
 description: Set up your self-hosted Appwrite instance easily. Read the installation guide to configure and deploy Appwrite on your infrastructure for complete control.
 ---
 
-Appwrite was designed from the ground up with self-hosting in mind. You can install and run Appwrite on any operating system that can run a [Docker CLI](https://www.docker.com/products/docker-desktop). Self-hosted Appwrite instances can be configured flexibly with access to the same features found on Appwrite Cloud.
+Appwrite was designed from the ground up with self-hosting in mind. You can install and run Appwrite on any operating system that can run a [Docker CLI](https://www.docker.com/products/docker-desktop), or on your own Kubernetes cluster with the [official Helm chart](/docs/advanced/self-hosting/platforms/kubernetes). Self-hosted Appwrite instances can be configured flexibly with access to the same features found on Appwrite Cloud.
 
 {% info title="Looking for the source?" icon="github" %}
 Appwrite is open source. Peek at the Docker files, services, and the rest of the stack in the [appwrite/appwrite](https://github.com/appwrite/appwrite) repository.
@@ -48,7 +48,7 @@ For compliance features and dedicated support, explore [enterprise self-hosting 
 The fastest way to get started with Appwrite self-hosting:
 
 1. **Use a one-click deployment** - Choose from [marketplace installations](#one-click-deployments) for instant setup
-2. **Or follow the manual installation** - Use our [Docker installation guide](/docs/advanced/self-hosting/installation) for custom setups
+2. **Or follow the manual installation** - Use our [Docker installation guide](/docs/advanced/self-hosting/installation) for custom setups, or the [Helm chart](/docs/advanced/self-hosting/platforms/kubernetes) if you run Kubernetes
 3. **Configure services** - Set up [email](/docs/advanced/self-hosting/configuration/email), [storage](/docs/advanced/self-hosting/configuration/storage), and other services
 
 # Deployment options {% #deployment-options %}
@@ -96,6 +96,16 @@ Deploy using Cloud Run, Compute Engine, or other Google Cloud services.
 
 {% cards_item href="/docs/advanced/self-hosting/platforms/azure" title="Microsoft Azure" %}
 Deploy using Container Apps, Virtual Machines, or other Azure services.
+{% /cards_item %}
+{% /cards %}
+
+## Kubernetes {% #kubernetes %}
+
+Run Appwrite on your own Kubernetes cluster, such as EKS, GKE, AKS, or one you operate yourself:
+
+{% cards %}
+{% cards_item href="/docs/advanced/self-hosting/platforms/kubernetes" title="Helm chart" %}
+Install and upgrade Appwrite with Helm, with built-in or managed PostgreSQL, Redis, ClickHouse, and S3.
 {% /cards_item %}
 {% /cards %}
 
@@ -168,5 +178,7 @@ Ready to self-host Appwrite? Choose your preferred path:
 **Manual Installation** - Follow our [Docker installation guide](/docs/advanced/self-hosting/installation) for custom setups
 
 **Cloud Platform** - [Choose a cloud platform](#cloud-platforms) for production hosting with custom configuration
+
+**Kubernetes** - Install the [Helm chart](/docs/advanced/self-hosting/platforms/kubernetes) on your own cluster
 
 **Platform-as-a-Service** - Deploy on [Coolify](/docs/advanced/self-hosting/platforms/coolify) or [Dokploy](/docs/advanced/self-hosting/platforms/dokploy) for simplified management

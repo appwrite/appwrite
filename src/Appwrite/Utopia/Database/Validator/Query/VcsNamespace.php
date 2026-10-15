@@ -4,6 +4,7 @@ namespace Appwrite\Utopia\Database\Validator\Query;
 
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Query\Base;
+use Utopia\Query\Method;
 use Utopia\Validator\Text;
 
 class VcsNamespace extends Base
@@ -20,7 +21,7 @@ class VcsNamespace extends Base
             return false;
         }
 
-        if ($value->getMethod() !== Query::TYPE_EQUAL) {
+        if ($value->getMethod() !== Method::Equal) {
             $this->message = 'Only equal queries are supported for namespace';
             return false;
         }

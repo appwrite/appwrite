@@ -67,6 +67,7 @@ final class RevokeTest extends TestCase
             $this->mqtt,
             fn () => throw new \LogicException('revoking must not touch the cache'),
             fn () => 5,
+            fn () => throw new \LogicException('revoking must not read the clock'),
         );
 
         $this->network = new RecordingAdapter();
