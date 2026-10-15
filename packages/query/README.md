@@ -215,6 +215,8 @@ Query::or([
 
 A `Query::elemMatch($attribute, $queries)` factory also exists, for matching a single array element against all of the given predicates. It serializes and parses like any other query, but **no bundled builder compiles it** — every dialect throws `UnsupportedException`. It is only useful to consumers that implement their own [`Compiler`](#compiler-interface).
 
+`Query::relationship($attribute, $queries)` is the same kind of query: it carries queries written against the collection a relationship attribute points to, for consumers that populate related documents themselves (such as `utopia-php/database`). It serializes and parses its child queries, contributes them to `shape()` and `fingerprint()`, and is skipped by `Query::validate()`, since its children name another collection's attributes. No bundled builder compiles it.
+
 ### Spatial Queries
 
 ```php
