@@ -1,26 +1,24 @@
-import { useCallback } from 'react'
-import { useI18n, type SupportedLanguage } from '@/lib/i18n'
+import { useCallback, useSyncExternalStore } from 'react'
+import { useI18n } from '@/lib/i18n'
+import type { SupportedLanguage } from '@/lib/i18n/active-language'
 import { getActiveLanguage } from '@/lib/i18n/active-language'
-import { heDictionary } from '@/lib/i18n/dictionaries/he'
-import { jaDictionary } from '@/lib/i18n/dictionaries/ja'
-
-const LANGUAGE_DICTIONARIES: Partial<
-  Record<SupportedLanguage, Record<string, string>>
-> = {
-  he: heDictionary,
-  ja: jaDictionary,
-}
+import {
+  getLanguageDictionary,
+  getLanguageDictionariesVersion,
+  subscribeLanguageDictionaries,
+} from '@/lib/i18n/dictionaries/load'
 
 /**
  * Translate an English source string to the given language.
  * English is the source of truth: unknown strings fall back to English.
+ * Non-English dictionaries load on demand; until then this returns English.
  */
 export function translateText(
   text: string,
   language: SupportedLanguage,
 ): string {
   if (language === 'en') return text
-  const dictionary = LANGUAGE_DICTIONARIES[language]
+  const dictionary = getLanguageDictionary(language)
   return dictionary?.[text] ?? text
 }
 
@@ -35,7 +33,15 @@ export type Translator = (text: string) => string
  */
 export function useT(): Translator {
   const { language } = useI18n()
-  return useCallback((text: string) => translateText(text, language), [language])
+  const version = useSyncExternalStore(
+    subscribeLanguageDictionaries,
+    getLanguageDictionariesVersion,
+    getLanguageDictionariesVersion,
+  )
+  return useCallback(
+    (text: string) => translateText(text, language),
+    [language, version],
+  )
 }
 
 /**
