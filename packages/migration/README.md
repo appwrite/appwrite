@@ -3,7 +3,6 @@
 > [!IMPORTANT]
 > This repository is a read-only mirror of [`packages/migration`](https://github.com/appwrite/appwrite/tree/main/packages/migration) in [appwrite/appwrite](https://github.com/appwrite/appwrite). Development happens there — please open issues and pull requests against appwrite/appwrite.
 
-[![Build Status](https://travis-ci.com/utopia-php/migration.svg?branch=main)](https://travis-ci.com/utopia-php/migration)
 ![Total Downloads](https://img.shields.io/packagist/dt/utopia-php/migration.svg)
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord)](https://appwrite.io/discord)
 
@@ -22,30 +21,34 @@ Init in your application:
 ```php
 <?php
 
-use Utopia\Migration\Transfer;
+use Utopia\Migration\Destinations\Local;
+use Utopia\Migration\Resource;
 use Utopia\Migration\Sources\NHost;
-use Utopia\Migration\Destinations\Appwrite;
+use Utopia\Migration\Transfer;
 
-require_once __DIR__ . '/../../vendor/autoload.php';
+require_once __DIR__ . '/vendor/autoload.php';
 
 // Initialize your Source
-$source = new NHost('db.xxxxxxxxx.nhost.run', 'database-name', 'username', 'password');
+$source = new NHost('subdomain', 'eu-central-1', 'admin-secret', 'database-name', 'username', 'password');
 
 // Initialize your Destination
-$destination = new Appwrite('project-id', 'https://cloud.appwrite.io/v1', 'api-key');
+$destination = new Local(__DIR__ . '/backup');
 
 // Initialize Transfer
-$migration = new Transfer($source, $destination);
+$transfer = new Transfer($source, $destination);
 
-// Transfer the resource groups you want
+// Transfer the resources you want
 $transfer->run(
-    [
-        Transfer::GROUP_AUTH
-    ], function ($status) {
-        echo $status['message'] . PHP_EOL;
+    [Resource::TYPE_USER],
+    function (array $resources) {
+        foreach ($resources as $resource) {
+            echo $resource->getName() . ' ' . $resource->getId() . ': ' . $resource->getStatus() . PHP_EOL;
+        }
     }
 );
 ```
+
+The Appwrite destination writes to the destination project's databases as well as its API, so it also takes the project's database handles; see `Destinations\Appwrite::__construct()`.
 
 ## Supported Resources Chart
 
@@ -70,7 +73,7 @@ Destinations:
 
 ## System Requirements
 
-Utopia Migration requires PHP 8.0 or later. We recommend using the latest PHP version whenever possible.
+Utopia Migration requires PHP 8.5 or later. We recommend using the latest PHP version whenever possible.
 
 ## Copyright and license
 

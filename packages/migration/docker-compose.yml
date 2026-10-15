@@ -11,7 +11,7 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: postgres
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "postgres"]
+      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-U", "postgres"]
       interval: 2s
       timeout: 5s
       retries: 60
@@ -28,7 +28,7 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: postgres
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "postgres"]
+      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-U", "postgres"]
       interval: 2s
       timeout: 5s
       retries: 60
