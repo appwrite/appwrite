@@ -55,7 +55,6 @@ import {
   canCreateTeam,
 } from '@/lib/console-access-checks'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
-import { usePasskeysAllowed } from '@/hooks/use-passkeys-allowed'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   deleteProjectUser,
@@ -278,7 +277,6 @@ export function View({
   const { access } = useOrganizationScopes(project?.teamId)
   const showAuthSecuritySettings = canShowAuthSecuritySettings(access, features)
   const showOAuth2Server = canShowProjectOAuth2Server(access, features)
-  const passkeysAllowed = usePasskeysAllowed()
 
   const urlPage = usersListParams?.page ?? 1
   const urlLimit = usersListParams?.limit ?? GRID_DEFAULT_PAGE_SIZE
@@ -2301,7 +2299,7 @@ export function View({
             ) : policiesSubTab === 'passwords' ? (
               <PasswordsPolicies projectId={projectId} />
             ) : policiesSubTab === 'passkeys' ? (
-              passkeysAllowed && <PasskeysPolicies projectId={projectId} />
+              <PasskeysPolicies projectId={projectId} />
             ) : (
               <SessionsPolicies projectId={projectId} />
             )}

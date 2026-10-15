@@ -10,8 +10,9 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Storage\Bytes;
 use Appwrite\Utopia\Response;
 use Utopia\Compression\Compression;
+use Utopia\Database\Collection\Update as CollectionUpdate;
 use Utopia\Database\Database;
-use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Permission;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
@@ -123,7 +124,7 @@ class Update extends Action
             ->setAttribute('transformations', $transformations)
             ->setAttribute('stripMetadata', $stripMetadata));
 
-        $dbForProject->updateCollection('bucket_' . $bucket->getSequence(), $permissions, $fileSecurity);
+        $dbForProject->updateCollection('bucket_' . $bucket->getSequence(), new CollectionUpdate(permissions: $permissions, documentSecurity: $fileSecurity));
 
         $queueForEvents
             ->setParam('bucketId', $bucket->getId());

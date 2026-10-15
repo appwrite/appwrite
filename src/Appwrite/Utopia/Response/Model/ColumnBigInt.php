@@ -2,7 +2,10 @@
 
 namespace Appwrite\Utopia\Response\Model;
 
+use Appwrite\Utopia\Database\Attribute as AttributeDefinition;
 use Appwrite\Utopia\Response;
+use Utopia\Database\Document;
+use Utopia\Query\Schema\ColumnType;
 
 class ColumnBigInt extends Column
 {
@@ -53,6 +56,27 @@ class ColumnBigInt extends Column
     public array $conditions = [
         'type' => 'bigint'
     ];
+
+    public function matches(Document $document): bool
+    {
+        return $this->isBigInteger($document->getAttribute('type'));
+    }
+
+    public function filter(Document $document): Document
+    {
+        $type = $document->getAttribute('type');
+
+        if ($this->isBigInteger($type)) {
+            $document->setAttribute('type', AttributeDefinition::storedType($type));
+        }
+
+        return $document;
+    }
+
+    private function isBigInteger(mixed $type): bool
+    {
+        return ($type instanceof ColumnType || \is_string($type)) && AttributeDefinition::sameType($type, ColumnType::BigInteger);
+    }
 
     public function getName(): string
     {

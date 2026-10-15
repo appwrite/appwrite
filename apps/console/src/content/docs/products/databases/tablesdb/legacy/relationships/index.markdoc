@@ -358,7 +358,7 @@ let client = Client()
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
     .setProject("<PROJECT_ID>")                // Your project ID
 
-let databases = Database(client: client)
+let databases = Databases(client)
 
 databases.createDocument(
     databaseId: "marvel",
@@ -467,7 +467,7 @@ let client = Client()
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
     .setProject("<PROJECT_ID>")                // Your project ID
 
-let databases = Database(client: client)
+let databases = Databases(client)
 
 databases.createDocument(
     databaseId: "marvel",
@@ -660,7 +660,7 @@ let client = Client()
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
     .setProject("<PROJECT_ID>")
 
-let databases = Database(client: client)
+let databases = Databases(client)
 
 databases.updateDocument(
     databaseId: "marvel",
@@ -763,7 +763,7 @@ let client = Client()
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
     .setProject("<PROJECT_ID>")
 
-let databases = Database(client: client)
+let databases = Databases(client)
 
 databases.deleteDocument(
     databaseId: "marvel",
@@ -863,7 +863,7 @@ let client = Client()
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
     .setProject("<PROJECT_ID>")
 
-let databases = Database(client: client)
+let databases = Databases(client)
 
 databases.createDocument(
     databaseId: "marvel",
@@ -885,32 +885,36 @@ databases.createDocument(
 );
 ```
 ```kotlin
-import Appwrite
+import io.appwrite.Client
+import io.appwrite.ID
+import io.appwrite.Permission
+import io.appwrite.Role
+import io.appwrite.services.Databases
 
-let client = Client()
+val client = Client()
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
     .setProject("<PROJECT_ID>")
 
-let databases = Database(client: client)
+val databases = Databases(client)
 
 databases.createDocument(
-    databaseId: "marvel",
-    collectionId: "movies",
-    documentId: ID.unique(),
-    data: [
-        "title": "Spiderman",
-        "year": 2002,
-        "reviews": [
-            [
-                "author": "Bob",
-                "text": "Great movie!",
-                "$permissions": [
+    databaseId = "marvel",
+    collectionId = "movies",
+    documentId = ID.unique(),
+    data = mapOf(
+        "title" to "Spiderman",
+        "year" to 2002,
+        "reviews" to listOf(
+            mapOf(
+                "author" to "Bob",
+                "text" to "Great movie!",
+                "\$permissions" to listOf(
                     Permission.read(Role.any())
-                ]
-            ],
-        ]
-    ]
-);
+                )
+            )
+        )
+    )
+)
 ```
 {% /multicode %}
 

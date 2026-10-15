@@ -10,7 +10,6 @@ import {
   useUpdateAuthMethod,
 } from '@/lib/react-query/hooks'
 import { authMethodsRecordFromProject } from '@/lib/project-settings'
-import { usePasskeysAllowed } from '@/hooks/use-passkeys-allowed'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import {
@@ -129,15 +128,6 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
   )
   const passkeyReady = security.authPasskey.origins.length > 0
   const [passkeySetupOpen, setPasskeySetupOpen] = useState(false)
-  const passkeysAllowed = usePasskeysAllowed()
-  const visibleAuthMethods = useMemo(
-    () =>
-      AUTH_METHODS.filter(
-        (method) =>
-          passkeysAllowed || method.key !== ProjectAuthMethodId.Passkey,
-      ),
-    [passkeysAllowed],
-  )
 
   const [optimisticAuthMethods, setOptimisticAuthMethods] = useState<
     Record<string, boolean>
@@ -232,7 +222,7 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
             {t('Enable the authentication methods you wish to use.')}
           </p>
           <div className={RESOURCE_CARD_GRID_CLASSNAME}>
-            {visibleAuthMethods.map((method) => {
+            {AUTH_METHODS.map((method) => {
               const Icon = method.icon
               const isUpdating = updatingAuthMethods.has(method.key)
               const enabled = authMethods[method.key] ?? false
@@ -309,21 +299,19 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
         currentNumbers={mockNumbers}
       />
 
-      {passkeysAllowed && (
-        <EnablePasskeys
-          projectId={projectId}
-          open={passkeySetupOpen}
-          onOpenChange={setPasskeySetupOpen}
-          policy={security.authPasskey}
-          platforms={platforms}
-          sharedDomains={[sitesDomain, functionsDomain].filter(
-            (domain): domain is string => Boolean(domain),
-          )}
-          onEnable={() =>
-            handleAuthMethodToggle(ProjectAuthMethodId.Passkey, true)
-          }
-        />
-      )}
+      <EnablePasskeys
+        projectId={projectId}
+        open={passkeySetupOpen}
+        onOpenChange={setPasskeySetupOpen}
+        policy={security.authPasskey}
+        platforms={platforms}
+        sharedDomains={[sitesDomain, functionsDomain].filter(
+          (domain): domain is string => Boolean(domain),
+        )}
+        onEnable={() =>
+          handleAuthMethodToggle(ProjectAuthMethodId.Passkey, true)
+        }
+      />
     </div>
   )
 }

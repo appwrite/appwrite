@@ -17,7 +17,7 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\UID;
@@ -92,11 +92,11 @@ class Create extends Action
                     ]
                 )
             ])
-            ->param('messageId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Message ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
+            ->param('messageId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getMaxUidLength()), 'Message ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', false, ['dbForProject'])
             ->param('content', '', new Text(64230), 'SMS Content.')
-            ->param('topics', [], fn (Database $dbForProject) => new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'List of Topic IDs.', true, ['dbForProject'])
-            ->param('users', [], fn (Database $dbForProject) => new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'List of User IDs.', true, ['dbForProject'])
-            ->param('targets', [], fn (Database $dbForProject) => new ArrayList(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'List of Targets IDs.', true, ['dbForProject'])
+            ->param('topics', [], fn (Database $dbForProject) => new ArrayList(new UID($dbForProject->getMaxUidLength())), 'List of Topic IDs.', true, ['dbForProject'])
+            ->param('users', [], fn (Database $dbForProject) => new ArrayList(new UID($dbForProject->getMaxUidLength())), 'List of User IDs.', true, ['dbForProject'])
+            ->param('targets', [], fn (Database $dbForProject) => new ArrayList(new UID($dbForProject->getMaxUidLength())), 'List of Targets IDs.', true, ['dbForProject'])
             ->param('draft', false, new Boolean(), 'Is message a draft', true)
             ->param('scheduledAt', null, new Nullable(new DatetimeValidator(requireDateInFuture: true)), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
             ->inject('queueForEvents')
@@ -111,7 +111,7 @@ class Create extends Action
     public function action(string $messageId, string $content, ?array $topics, ?array $users, ?array $targets, bool $draft, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, MessagingPublisher $publisherForMessaging, Response $response)
     {
         $messageId = $messageId == 'unique()'
-            ? ID::unique()
+            ? Id::unique()
             : $messageId;
 
         if ($draft) {

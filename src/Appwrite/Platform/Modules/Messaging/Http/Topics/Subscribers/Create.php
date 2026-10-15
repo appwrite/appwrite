@@ -15,7 +15,7 @@ use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\UID;
@@ -56,9 +56,9 @@ class Create extends Action
                     )
                 ]
             ))
-            ->param('subscriberId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Subscriber ID. Choose a custom Subscriber ID or a new Subscriber ID.', false, ['dbForProject'])
-            ->param('topicId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Topic ID. The topic ID to subscribe to.', false, ['dbForProject'])
-            ->param('targetId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Target ID. The target ID to link to the specified Topic ID.', false, ['dbForProject'])
+            ->param('subscriberId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getMaxUidLength()), 'Subscriber ID. Choose a custom Subscriber ID or a new Subscriber ID.', false, ['dbForProject'])
+            ->param('topicId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Topic ID. The topic ID to subscribe to.', false, ['dbForProject'])
+            ->param('targetId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Target ID. The target ID to link to the specified Topic ID.', false, ['dbForProject'])
             ->inject('queueForEvents')
             ->inject('dbForProject')
             ->inject('authorization')
@@ -69,7 +69,7 @@ class Create extends Action
 
     public function action(string $subscriberId, string $topicId, string $targetId, Event $queueForEvents, Database $dbForProject, Authorization $authorization, Response $response, User $user)
     {
-        $subscriberId = $subscriberId == 'unique()' ? ID::unique() : $subscriberId;
+        $subscriberId = $subscriberId == 'unique()' ? Id::unique() : $subscriberId;
 
         $topic = $authorization->skip(fn () => $dbForProject->getDocument('topics', $topicId));
 

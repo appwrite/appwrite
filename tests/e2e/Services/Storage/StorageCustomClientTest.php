@@ -9,9 +9,9 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 final class StorageCustomClientTest extends Scope
@@ -43,7 +43,7 @@ final class StorageCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'bucketId' => ID::unique(),
+            'bucketId' => Id::unique(),
             'stripMetadata' => false,
             'name' => 'Test Bucket',
             'fileSecurity' => true,
@@ -59,7 +59,7 @@ final class StorageCustomClientTest extends Scope
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'permissions.png'),
         ]);
 
@@ -87,7 +87,7 @@ final class StorageCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'bucketId' => ID::unique(),
+            'bucketId' => Id::unique(),
             'stripMetadata' => false,
             'name' => 'Test Bucket',
             'fileSecurity' => true,
@@ -103,7 +103,7 @@ final class StorageCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'permissions.png'),
         ]);
 
@@ -181,7 +181,7 @@ final class StorageCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'bucketId' => ID::unique(),
+            'bucketId' => Id::unique(),
             'stripMetadata' => false,
             'name' => 'Test Bucket',
             'permissions' => [
@@ -200,7 +200,7 @@ final class StorageCustomClientTest extends Scope
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'permissions.png'),
         ]);
 
@@ -268,7 +268,7 @@ final class StorageCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'bucketId' => ID::unique(),
+            'bucketId' => Id::unique(),
             'stripMetadata' => false,
             'name' => 'Test Bucket',
             'permissions' => [
@@ -287,7 +287,7 @@ final class StorageCustomClientTest extends Scope
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'permissions.png'),
         ]);
 
@@ -350,7 +350,7 @@ final class StorageCustomClientTest extends Scope
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'permissions.png'),
         ]);
 
@@ -394,7 +394,7 @@ final class StorageCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'bucketId' => ID::unique(),
+            'bucketId' => Id::unique(),
             'stripMetadata' => false,
             'name' => 'Test Bucket',
             'permissions' => [
@@ -413,7 +413,7 @@ final class StorageCustomClientTest extends Scope
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'permissions.png'),
         ]);
 
@@ -476,7 +476,7 @@ final class StorageCustomClientTest extends Scope
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'permissions.png'),
         ]);
 
@@ -498,7 +498,7 @@ final class StorageCustomClientTest extends Scope
 
         $this->assertEquals(401, $file['headers']['status-code']);
 
-        $email = ID::unique() . '@localhost.test';
+        $email = Id::unique() . '@localhost.test';
         $password = 'password';
         $user2 = $this->createUser('user2', $email, $password);
 
@@ -515,7 +515,7 @@ final class StorageCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $user2['session'],
         ], [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'permissions.png'),
         ]);
 
@@ -554,10 +554,10 @@ final class StorageCustomClientTest extends Scope
 
     public function testBucketTeamPermissions(): void
     {
-        $team1 = $this->createTeam(ID::unique(), 'Team 1');
-        $team2 = $this->createTeam(ID::unique(), 'Team 1');
-        $user1 = $this->createUser(ID::unique(), ID::unique() . '@localhost.test', 'password');
-        $user2 = $this->createUser(ID::unique(), ID::unique() . '@localhost.test', 'password');
+        $team1 = $this->createTeam(Id::unique(), 'Team 1');
+        $team2 = $this->createTeam(Id::unique(), 'Team 1');
+        $user1 = $this->createUser(Id::unique(), Id::unique() . '@localhost.test', 'password');
+        $user2 = $this->createUser(Id::unique(), Id::unique() . '@localhost.test', 'password');
 
         $this->addToTeam($user1['$id'], $team1['$id']);
         $this->addToTeam($user2['$id'], $team2['$id']);
@@ -570,15 +570,15 @@ final class StorageCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'bucketId' => ID::unique(),
+            'bucketId' => Id::unique(),
             'stripMetadata' => false,
             'name' => 'Test Bucket',
             'permissions' => [
-                Permission::read(Role::team(ID::custom($team1['$id']))),
-                Permission::read(Role::team(ID::custom($team2['$id']))),
-                Permission::create(Role::team(ID::custom($team1['$id']))),
-                Permission::update(Role::team(ID::custom($team1['$id']))),
-                Permission::delete(Role::team(ID::custom($team1['$id']))),
+                Permission::read(Role::team(Id::custom($team1['$id']))),
+                Permission::read(Role::team(Id::custom($team2['$id']))),
+                Permission::create(Role::team(Id::custom($team1['$id']))),
+                Permission::update(Role::team(Id::custom($team1['$id']))),
+                Permission::delete(Role::team(Id::custom($team1['$id']))),
             ],
         ]);
 
@@ -592,7 +592,7 @@ final class StorageCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $user1['session'],
         ], [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'permissions.png'),
         ]);
 
@@ -686,7 +686,7 @@ final class StorageCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $user2['session'],
         ], [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'permissions.png'),
         ]);
 
@@ -736,7 +736,7 @@ final class StorageCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'bucketId' => ID::unique(),
+            'bucketId' => Id::unique(),
             'stripMetadata' => false,
             'name' => 'Test Bucket',
             'permissions' => [],
@@ -752,7 +752,7 @@ final class StorageCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'permissions.png'),
             'permissions' => [
                 Permission::read(Role::any()),
@@ -802,7 +802,7 @@ final class StorageCustomClientTest extends Scope
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'permissions.png'),
         ]);
 
@@ -826,7 +826,7 @@ final class StorageCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'bucketId' => ID::unique(),
+            'bucketId' => Id::unique(),
             'stripMetadata' => false,
             'name' => 'Test Bucket',
             'permissions' => [],
@@ -842,7 +842,7 @@ final class StorageCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'permissions.png'),
             'permissions' => [
                 Permission::read(Role::users()),
@@ -892,7 +892,7 @@ final class StorageCustomClientTest extends Scope
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'permissions.png'),
         ]);
 
@@ -916,7 +916,7 @@ final class StorageCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'bucketId' => ID::unique(),
+            'bucketId' => Id::unique(),
             'stripMetadata' => false,
             'name' => 'Test Bucket',
             'permissions' => [],
@@ -932,7 +932,7 @@ final class StorageCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'permissions.png'),
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),
@@ -982,7 +982,7 @@ final class StorageCustomClientTest extends Scope
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'permissions.png'),
         ]);
 
@@ -995,7 +995,7 @@ final class StorageCustomClientTest extends Scope
 
         $this->assertEquals(401, $file['headers']['status-code']);
 
-        $user2 = $this->createUser(ID::unique(), uniqid() . '@localhost.test', 'password');
+        $user2 = $this->createUser(Id::unique(), uniqid() . '@localhost.test', 'password');
 
         $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId, [
             'content-type' => 'multipart/form-data',
@@ -1010,7 +1010,7 @@ final class StorageCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $user2['session'],
         ], [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'permissions.png'),
         ]);
 
@@ -1037,10 +1037,10 @@ final class StorageCustomClientTest extends Scope
 
     public function testFileTeamPermissions(): void
     {
-        $team1 = $this->createTeam(ID::unique(), 'Team 1');
-        $team2 = $this->createTeam(ID::unique(), 'Team 1');
-        $user1 = $this->createUser(ID::unique(), ID::unique() . '@localhost.test', 'password');
-        $user2 = $this->createUser(ID::unique(), ID::unique() . '@localhost.test', 'password');
+        $team1 = $this->createTeam(Id::unique(), 'Team 1');
+        $team2 = $this->createTeam(Id::unique(), 'Team 1');
+        $user1 = $this->createUser(Id::unique(), Id::unique() . '@localhost.test', 'password');
+        $user2 = $this->createUser(Id::unique(), Id::unique() . '@localhost.test', 'password');
 
         $this->addToTeam($user1['$id'], $team1['$id']);
         $this->addToTeam($user2['$id'], $team2['$id']);
@@ -1053,7 +1053,7 @@ final class StorageCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'bucketId' => ID::unique(),
+            'bucketId' => Id::unique(),
             'stripMetadata' => false,
             'name' => 'Test Bucket',
             'permissions' => [],
@@ -1069,13 +1069,13 @@ final class StorageCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'permissions.png'),
             'permissions' => [
-                Permission::read(Role::team(ID::custom($team1['$id']))),
-                Permission::read(Role::team(ID::custom($team2['$id']))),
-                Permission::update(Role::team(ID::custom($team1['$id']))),
-                Permission::delete(Role::team(ID::custom($team1['$id']))),
+                Permission::read(Role::team(Id::custom($team1['$id']))),
+                Permission::read(Role::team(Id::custom($team2['$id']))),
+                Permission::update(Role::team(Id::custom($team1['$id']))),
+                Permission::delete(Role::team(Id::custom($team1['$id']))),
             ],
         ]);
 
@@ -1169,7 +1169,7 @@ final class StorageCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $user1['session'],
         ], [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'permissions.png'),
         ]);
 
@@ -1179,7 +1179,7 @@ final class StorageCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $user2['session'],
         ], [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'permissions.png'),
         ]);
 
@@ -1231,7 +1231,7 @@ final class StorageCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'bucketId' => ID::unique(),
+            'bucketId' => Id::unique(),
             'stripMetadata' => false,
             'name' => 'Test Bucket',
             'permissions' => [
@@ -1252,7 +1252,7 @@ final class StorageCustomClientTest extends Scope
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'permissions.png'),
             'permissions' => [
                 Permission::write(Role::user($this->getUser()['$id'])),
@@ -1272,7 +1272,7 @@ final class StorageCustomClientTest extends Scope
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'permissions.png'),
             'permissions' => [
                 Permission::create(Role::user($this->getUser()['$id'])),
@@ -1292,7 +1292,7 @@ final class StorageCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'bucketId' => ID::unique(),
+            'bucketId' => Id::unique(),
             'stripMetadata' => false,
             'name' => 'Test Bucket',
             'fileSecurity' => true,
@@ -1310,7 +1310,7 @@ final class StorageCustomClientTest extends Scope
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'permissions.png'),
         ]);
 
@@ -1336,11 +1336,11 @@ final class StorageCustomClientTest extends Scope
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'permissions.png'),
-            'folderId' => ID::custom('xyz'),
+            'folderId' => Id::custom('xyz'),
             'permissions' => [
-                Permission::read(Role::user(ID::custom('notme'))),
+                Permission::read(Role::user(Id::custom('notme'))),
             ],
         ]);
 
@@ -1354,12 +1354,12 @@ final class StorageCustomClientTest extends Scope
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'permissions.png'),
-            'folderId' => ID::custom('xyz'),
+            'folderId' => Id::custom('xyz'),
             'permissions' => [
-                Permission::update(Role::user(ID::custom('notme'))),
-                Permission::delete(Role::user(ID::custom('notme'))),
+                Permission::update(Role::user(Id::custom('notme'))),
+                Permission::delete(Role::user(Id::custom('notme'))),
             ]
         ]);
 
@@ -1373,13 +1373,13 @@ final class StorageCustomClientTest extends Scope
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'permissions.png'),
-            'folderId' => ID::custom('xyz'),
+            'folderId' => Id::custom('xyz'),
             'permissions' => [
-                Permission::read(Role::user(ID::custom('notme'))),
-                Permission::update(Role::user(ID::custom('notme'))),
-                Permission::delete(Role::user(ID::custom('notme'))),
+                Permission::read(Role::user(Id::custom('notme'))),
+                Permission::update(Role::user(Id::custom('notme'))),
+                Permission::delete(Role::user(Id::custom('notme'))),
             ],
         ]);
 
@@ -1401,7 +1401,7 @@ final class StorageCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'permissions' => [
-                Permission::read(Role::user(ID::custom('notme'))),
+                Permission::read(Role::user(Id::custom('notme'))),
             ],
         ]);
 
@@ -1416,8 +1416,8 @@ final class StorageCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'permissions' => [
-                Permission::update(Role::user(ID::custom('notme'))),
-                Permission::delete(Role::user(ID::custom('notme'))),
+                Permission::update(Role::user(Id::custom('notme'))),
+                Permission::delete(Role::user(Id::custom('notme'))),
             ]
         ]);
 
@@ -1432,9 +1432,9 @@ final class StorageCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'permissions' => [
-                Permission::read(Role::user(ID::custom('notme'))),
-                Permission::update(Role::user(ID::custom('notme'))),
-                Permission::delete(Role::user(ID::custom('notme'))),
+                Permission::read(Role::user(Id::custom('notme'))),
+                Permission::update(Role::user(Id::custom('notme'))),
+                Permission::delete(Role::user(Id::custom('notme'))),
             ],
         ]);
 
@@ -1453,7 +1453,7 @@ final class StorageCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'bucketId' => ID::unique(),
+            'bucketId' => Id::unique(),
             'stripMetadata' => false,
             'name' => 'Test Bucket Transformations Disabled',
             'permissions' => [
@@ -1468,7 +1468,7 @@ final class StorageCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'transformations.png'),
         ]);
         $this->assertEquals(201, $file['headers']['status-code']);
@@ -1515,7 +1515,7 @@ final class StorageCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'bucketId' => ID::unique(),
+            'bucketId' => Id::unique(),
             'stripMetadata' => false,
             'name' => 'Test Bucket',
             'permissions' => [
@@ -1532,7 +1532,7 @@ final class StorageCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'transformations.png'),
         ]);
         $this->assertSame(201, $file['headers']['status-code']);
@@ -1584,7 +1584,7 @@ final class StorageCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'fileId' => ID::unique(),
+            'fileId' => Id::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'transformations.png'),
         ]);
         $this->assertSame(201, $file['headers']['status-code']);
@@ -1633,7 +1633,7 @@ final class StorageCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'bucketId' => ID::unique(),
+            'bucketId' => Id::unique(),
             'stripMetadata' => false,
             'name' => 'Chunked resume ownership',
             'fileSecurity' => true,
@@ -1648,7 +1648,7 @@ final class StorageCustomClientTest extends Scope
         $this->assertEquals(201, $bucket['headers']['status-code']);
         $bucketId = $bucket['body']['$id'];
 
-        $other = $this->createUser(ID::unique(), ID::unique() . '@localhost.test', 'password');
+        $other = $this->createUser(Id::unique(), Id::unique() . '@localhost.test', 'password');
         $ownerId = $this->getUser()['$id'];
         $chunkSize = 5 * 1024 * 1024;
         $totalSize = $chunkSize + 1;
@@ -1692,7 +1692,7 @@ final class StorageCustomClientTest extends Scope
             $headers['content-range'] = $range;
 
             return $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', $headers, [
-                'fileId' => ID::unique(),
+                'fileId' => Id::unique(),
                 'file' => new CURLFile('data://text/plain;base64,' . base64_encode($body), 'text/plain', 'resume.txt'),
                 'permissions' => $permissions,
             ]);
@@ -1831,7 +1831,7 @@ final class StorageCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'bucketId' => ID::unique(),
+            'bucketId' => Id::unique(),
             'stripMetadata' => false,
             'name' => 'Guest chunked upload',
             'fileSecurity' => true,
@@ -1865,7 +1865,7 @@ final class StorageCustomClientTest extends Scope
             }
 
             $params = [
-                'fileId' => ID::unique(),
+                'fileId' => Id::unique(),
                 'file' => new CURLFile('data://text/plain;base64,' . base64_encode($body), 'text/plain', 'guest.txt'),
             ];
             if ($permissions !== null) {

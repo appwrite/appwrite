@@ -1,6 +1,5 @@
 import { useMemo } from 'react'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
-import { usePasskeysAllowed } from '@/hooks/use-passkeys-allowed'
 import { fetchAccountIdentities } from '@/lib/react-query/hooks'
 import type { Models } from '@appwrite.io/console'
 import {
@@ -25,7 +24,6 @@ export function AccountSecurity({
   initialData?: AccountSecurityInitialData
 } = {}) {
   const { features } = useConsoleProfile()
-  const passkeysAllowed = usePasskeysAllowed()
 
   const cards = useMemo<SettingsCardItem[]>(() => {
     const items: SettingsCardItem[] = [
@@ -61,7 +59,7 @@ export function AccountSecurity({
       })
     }
 
-    if (passkeysAllowed) {
+    if (features.accountPasskeys) {
       items.push({
         id: 'passkeys',
         search: {
@@ -82,7 +80,7 @@ export function AccountSecurity({
   }, [
     features.accountIdentities,
     features.accountMfa,
-    passkeysAllowed,
+    features.accountPasskeys,
     initialData?.identities,
     initialData?.passkeys,
   ])
