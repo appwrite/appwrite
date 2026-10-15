@@ -12,6 +12,7 @@ use Tests\E2E\Services\Databases\Queries\JoinProjection;
 use Tests\E2E\Services\Databases\Queries\JoinTypes;
 use Tests\E2E\Services\Databases\Queries\RejectedMethods;
 use Tests\E2E\Services\Databases\Queries\StatisticalAggregates;
+use Tests\E2E\Services\Databases\Queries\Totals;
 use Tests\E2E\Traits\DatabasesUrlHelpers;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -38,6 +39,7 @@ trait DatabasesBase
     use JoinProjection;
     use StatisticalAggregates;
     use RejectedMethods;
+    use Totals;
 
     /**
      * Static caches for test data - keyed by project ID to support parallel test runs
