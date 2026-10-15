@@ -23,7 +23,6 @@
 require_once __DIR__ . '/../../../app/init.php';
 
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 
@@ -44,7 +43,7 @@ $output = [];
                     throw new \Exception("No {$key['resourceType']} document {$key['resourceId']}");
                 }
                 $created = $database->createDocument('keys', new Document([
-                    '$id' => ID::unique(),
+                    '$id' => \class_exists(\Utopia\Database\Id::class) ? \Utopia\Database\Id::unique() : \Utopia\Database\Helpers\ID::unique(),
                     '$permissions' => [],
                     'resourceType' => $key['resourceType'],
                     'resourceId' => $owner->getId(),
@@ -68,7 +67,7 @@ $output = [];
                     throw new \Exception("No project {$rule['projectId']}");
                 }
                 $created = $database->createDocument('rules', new Document([
-                    '$id' => ID::unique(),
+                    '$id' => \class_exists(\Utopia\Database\Id::class) ? \Utopia\Database\Id::unique() : \Utopia\Database\Helpers\ID::unique(),
                     '$permissions' => [],
                     'projectId' => $project->getId(),
                     'projectInternalId' => $project->getSequence(),

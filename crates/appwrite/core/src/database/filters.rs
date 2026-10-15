@@ -92,31 +92,31 @@ fn all() -> Vec<(&'static str, Arc<dyn Filter>)> {
     };
     vec![
         ("casting", Arc::new(Casting)),
-        ("enum", Arc::new(Passthrough(signature(26, 33)))),
-        ("range", Arc::new(Passthrough(signature(45, 55)))),
-        sub("subQueryAttributes", SubQuery::Attributes, 69, 72),
-        sub("subQueryIndexes", SubQuery::Indexes, 108, 111),
-        sub("subQueryPlatforms", SubQuery::Platforms, 123, 126),
-        sub("subQueryKeys", SubQuery::Keys("projects"), 143, 146),
-        sub("subQueryDevKeys", SubQuery::Empty, 161, 164),
-        sub("subQueryWebhooks", SubQuery::ByProject("webhooks"), 171, 174),
-        sub("subQuerySessions", SubQuery::ByUser("sessions", false), 185, 188),
-        sub("subQueryTokens", SubQuery::ByUser("tokens", false), 198, 201),
-        sub("subQueryChallenges", SubQuery::ByUser("challenges", false), 212, 215),
-        sub("subQueryAuthenticators", SubQuery::ByUser("authenticators", true), 226, 229),
-        sub("subQueryMemberships", SubQuery::ByUser("memberships", false), 241, 244),
-        sub("subQueryVariables", SubQuery::Variables, 255, 258),
+        ("enum", Arc::new(Passthrough(signature(27, 34)))),
+        ("range", Arc::new(Passthrough(signature(49, 59)))),
+        sub("subQueryAttributes", SubQuery::Attributes, 76, 79),
+        sub("subQueryIndexes", SubQuery::Indexes, 114, 117),
+        sub("subQueryPlatforms", SubQuery::Platforms, 129, 132),
+        sub("subQueryKeys", SubQuery::Keys("projects"), 149, 152),
+        sub("subQueryDevKeys", SubQuery::Empty, 167, 170),
+        sub("subQueryWebhooks", SubQuery::ByProject("webhooks"), 177, 180),
+        sub("subQuerySessions", SubQuery::ByUser("sessions", false), 191, 194),
+        sub("subQueryTokens", SubQuery::ByUser("tokens", false), 204, 207),
+        sub("subQueryChallenges", SubQuery::ByUser("challenges", false), 218, 221),
+        sub("subQueryAuthenticators", SubQuery::ByUser("authenticators", true), 232, 235),
+        sub("subQueryMemberships", SubQuery::ByUser("memberships", false), 247, 250),
+        sub("subQueryVariables", SubQuery::Variables, 261, 264),
         ("encrypt", Arc::new(Encrypt)),
-        sub("subQueryProjectVariables", SubQuery::ProjectVariables, 304, 307),
-        search("userSearch", Search::User, 318, 334),
-        sub("subQueryTargets", SubQuery::ByUser("targets", false), 341, 344),
-        sub("subQueryTopicTargets", SubQuery::TopicTargets, 355, 358),
-        search("providerSearch", Search::Provider, 383, 395),
-        search("topicSearch", Search::Topic, 402, 413),
-        search("messageSearch", Search::Message, 420, 449),
-        sub("subQueryOrganizationKeys", SubQuery::Keys("teams"), 457, 460),
-        sub("subQueryAccountKeys", SubQuery::Keys("users"), 472, 475),
-        sub("subQueryReportInsights", SubQuery::ReportInsights, 487, 490),
+        sub("subQueryProjectVariables", SubQuery::ProjectVariables, 310, 313),
+        search("userSearch", Search::User, 324, 340),
+        sub("subQueryTargets", SubQuery::ByUser("targets", false), 347, 350),
+        sub("subQueryTopicTargets", SubQuery::TopicTargets, 361, 364),
+        search("providerSearch", Search::Provider, 389, 401),
+        search("topicSearch", Search::Topic, 408, 419),
+        search("messageSearch", Search::Message, 426, 455),
+        sub("subQueryOrganizationKeys", SubQuery::Keys("teams"), 463, 466),
+        sub("subQueryAccountKeys", SubQuery::Keys("users"), 478, 481),
+        sub("subQueryReportInsights", SubQuery::ReportInsights, 493, 496),
     ]
 }
 
@@ -146,7 +146,7 @@ impl Filter for Casting {
     }
 
     fn signature(&self) -> String {
-        signature(12, 15)
+        signature(13, 16)
     }
 }
 
@@ -189,7 +189,7 @@ impl Filter for Encrypt {
     }
 
     fn signature(&self) -> String {
-        signature(278, 291)
+        signature(284, 297)
     }
 }
 
@@ -284,7 +284,6 @@ impl Filter for Sub {
                                     attribute.set(Str::from(key_text(key)), value.clone());
                                 }
                             }
-                            attribute.remove("options");
                         }
                         Database::VAR_STRING
                         | Database::VAR_VARCHAR
