@@ -485,7 +485,7 @@ https://github.com/appwrite/appwrite/blob/master/CHANGES.md
 - Support for Appwrite 0.10
 - Refactored for better cross platform support
 - Exception implements `toString()` to get proper error message for unhandled exceptions
-- Introduces new Realtime service, [more on official docs](link-to-realtime-docs)
+- Introduces new Realtime service, [more on official docs](https://appwrite.io/docs/apis/realtime)
 - Breaking Signature for `MultipartFile` has changed as now we are using `http` package. [Here is the new signature for MultipartFile](https://pub.dev/documentation/http/latest/http/MultipartFile-class.html)
 - Breaking Signature for `Response` has changed, now it only exposes the `data`.
 
