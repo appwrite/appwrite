@@ -1765,6 +1765,14 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 { category: 'Products' },
               ),
               createProfileFeatureFlagItem(
+                'Appwrite push',
+                'Show the Appwrite push provider in messaging (create wizard and QoS/expiry settings).',
+                'appwritePush',
+                profileId,
+                features.appwritePush,
+                { category: 'Products' },
+              ),
+              createProfileFeatureFlagItem(
                 'Native DBs: MongoDB',
                 'Enable dedicated MongoDB databases in the databases list.',
                 'nativeDbsMongo',
@@ -2116,6 +2124,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     features.videos,
     features.analytics,
     features.analyticsTrafficFilter,
+    features.appwritePush,
     features.nativeDbsMongo,
     features.databasePitrRestore,
     features.databaseSpecifications,
