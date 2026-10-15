@@ -57,8 +57,8 @@ fn collection(id: &str, attributes: Vec<Json>) -> utopia_database::Document {
 
 /// One of the validators a test runs the same list through.
 enum Lists {
-    Documents(Documents),
-    Document(DocumentQueries),
+    Documents(Box<Documents>),
+    Document(Box<DocumentQueries>),
     Base(Queries),
 }
 
@@ -141,8 +141,8 @@ mod join_condition_columns {
         let joins = Queries::new(vec![Arc::new(Join::new(Some(&customers()), true))], 0);
         joins.set_joined_collections(&collections()).unwrap();
         vec![
-            ("documents", Lists::Documents(documents(false))),
-            ("document", Lists::Document(document)),
+            ("documents", Lists::Documents(Box::new(documents(false)))),
+            ("document", Lists::Document(Box::new(document))),
             ("join", Lists::Base(joins)),
         ]
     }
