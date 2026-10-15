@@ -1177,25 +1177,33 @@ class ClickHouse extends SQL
     ];
 
     /**
-     * Setup ClickHouse table structure.
-     *
-     * Creates:
-     * 1. Events table (MergeTree) with event-specific columns
-     * 2. Events daily table (SummingMergeTree) for pre-aggregation
-     * 3. Events daily materialized view
-     * 4. Gauges table (MergeTree) with simple schema
-     * 5. Per-dim projections on the events / gauges base tables
+     * Migrate the schema, then apply (or strip) the retention TTL on the
+     * events and events_daily tables.
      *
      * @throws Exception
      */
     public function setup(): void
     {
-        $this->setOperationContext('setup()');
+        $this->migrate();
 
-        // Create database if not exists
+        $this->setOperationContext('setup()');
+        $this->applyRetention($this->getEventsTableName());
+        $this->applyRetention($this->getEventsDailyTableName());
+    }
+
+    /**
+     * Create the database, tables, daily materialized view and projections,
+     * and add the columns and skip indexes an existing table lacks. Every
+     * statement is idempotent, and the retention TTL is left as it is.
+     *
+     * @throws Exception
+     */
+    public function migrate(): void
+    {
+        $this->setOperationContext('migrate()');
+
         $escapedDatabase = $this->escapeIdentifier($this->database);
-        $createDbSql = "CREATE DATABASE IF NOT EXISTS {$escapedDatabase}";
-        $this->query($createDbSql);
+        $this->query("CREATE DATABASE IF NOT EXISTS {$escapedDatabase}");
 
         $this->createTable(
             $this->getEventsTableName(),
@@ -1205,11 +1213,7 @@ class ClickHouse extends SQL
 
         $this->ensureEventDimColumns();
 
-        $this->applyRetention($this->getEventsTableName());
-
         $this->createDailyTable();
-
-        $this->applyRetention($this->getEventsDailyTableName());
 
         $this->createDailyMaterializedView();
 

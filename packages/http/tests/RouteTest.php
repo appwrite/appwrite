@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Utopia\Http\Tests;
 
+use PHPUnit\Framework\Attributes\IgnoreDeprecations;
 use PHPUnit\Framework\TestCase;
 use Utopia\Http\Route;
 use Utopia\Validator\Text;
@@ -17,6 +18,7 @@ final class RouteTest extends TestCase
         $this->route = new Route('GET', '/');
     }
 
+    #[IgnoreDeprecations]
     public function testCanGetMethod(): void
     {
         $this->assertSame('GET', $this->route->getMethod());
