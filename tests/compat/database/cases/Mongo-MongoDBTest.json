@@ -25,6 +25,20 @@
           "expect": true
         },
         {
+          "op": "database.exists",
+          "args": {
+            "database": "${ns}"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.exists",
+          "args": {
+            "database": "${ns}_${ns}Absent"
+          },
+          "expect": false
+        },
+        {
           "op": "database.delete",
           "args": {
             "database": "${ns}"
@@ -32,8 +46,22 @@
           "expect": true
         },
         {
+          "op": "database.exists",
+          "args": {
+            "database": "${ns}"
+          },
+          "expect": false
+        },
+        {
           "op": "database.create",
           "args": {},
+          "expect": true
+        },
+        {
+          "op": "database.exists",
+          "args": {
+            "database": "${ns}"
+          },
           "expect": true
         },
         {
@@ -43,6 +71,1877 @@
           },
           "expect": {
             "$database": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "MongoDBTest::testCollectionGrantsAuthorizeWritesWithoutReadPermission",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "collectionGrantedWrites",
+                "name": "collectionGrantedWrites",
+                "attributes": [
+                  {
+                    "$id": "count",
+                    "key": "count",
+                    "type": "integer",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": false,
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"users\")",
+                  "delete(\"users\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "collectionGrantedWrites",
+              "name": "collectionGrantedWrites",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "count",
+                    "key": "count",
+                    "type": "integer",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"users\")",
+                "delete(\"users\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "db.authorization.skip",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "collectionGrantedWrites",
+                    "document": {
+                      "$document": {
+                        "$id": "first",
+                        "$permissions": [],
+                        "count": 0
+                      }
+                    }
+                  }
+                },
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "collectionGrantedWrites",
+                    "document": {
+                      "$document": {
+                        "$id": "second",
+                        "$permissions": [],
+                        "count": 0
+                      }
+                    }
+                  }
+                },
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "collectionGrantedWrites",
+                    "document": {
+                      "$document": {
+                        "$id": "third",
+                        "$permissions": [],
+                        "count": 0
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "$id": "first",
+                        "$permissions": [],
+                        "count": 0,
+                        "$collection": "collectionGrantedWrites",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$sequence": "<uuid7>"
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "second",
+                        "$permissions": [],
+                        "count": 0,
+                        "$collection": "collectionGrantedWrites",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$sequence": "<uuid7>"
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "third",
+                        "$permissions": [],
+                        "count": 0,
+                        "$collection": "collectionGrantedWrites",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$sequence": "<uuid7>"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "db.authorization.get_roles",
+          "args": {},
+          "expect": [
+            "any"
+          ]
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:bob"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "database.increase_document_attribute",
+          "args": {
+            "collection": "collectionGrantedWrites",
+            "id": "first",
+            "attribute": "count",
+            "value": 5
+          },
+          "expect": {
+            "$document": {
+              "count": 5,
+              "$permissions": [],
+              "$collection": "collectionGrantedWrites",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>",
+              "$id": "first"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "collectionGrantedWrites",
+            "id": "first"
+          },
+          "expect": {
+            "$document": {
+              "count": 5,
+              "$permissions": [],
+              "$collection": "collectionGrantedWrites",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>",
+              "$id": "first"
+            }
+          }
+        },
+        {
+          "op": "database.decrease_document_attribute",
+          "args": {
+            "collection": "collectionGrantedWrites",
+            "id": "first",
+            "attribute": "count",
+            "value": 2
+          },
+          "expect": {
+            "$document": {
+              "count": 3,
+              "$permissions": [],
+              "$collection": "collectionGrantedWrites",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>",
+              "$id": "first"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "collectionGrantedWrites",
+            "id": "first"
+          },
+          "expect": {
+            "$document": {
+              "count": 3,
+              "$permissions": [],
+              "$collection": "collectionGrantedWrites",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>",
+              "$id": "first"
+            }
+          }
+        },
+        {
+          "op": "database.update_documents",
+          "args": {
+            "collection": "collectionGrantedWrites",
+            "updates": {
+              "$document": {
+                "count": 42
+              }
+            }
+          },
+          "expect": 3
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "collectionGrantedWrites"
+          },
+          "expect": [
+            {
+              "$document": {
+                "count": 42,
+                "$permissions": [],
+                "$collection": "collectionGrantedWrites",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "first"
+              }
+            },
+            {
+              "$document": {
+                "count": 42,
+                "$permissions": [],
+                "$collection": "collectionGrantedWrites",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "second"
+              }
+            },
+            {
+              "$document": {
+                "count": 42,
+                "$permissions": [],
+                "$collection": "collectionGrantedWrites",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "third"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.delete_documents",
+          "args": {
+            "collection": "collectionGrantedWrites"
+          },
+          "expect": 3
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "collectionGrantedWrites"
+          },
+          "expect": 0
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "MongoDBTest::testDocumentGrantsAuthorizeWritesWithoutReadPermission",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "documentGrantedWrites",
+                "name": "documentGrantedWrites",
+                "attributes": [
+                  {
+                    "$id": "count",
+                    "key": "count",
+                    "type": "integer",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": []
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "documentGrantedWrites",
+              "name": "documentGrantedWrites",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "count",
+                    "key": "count",
+                    "type": "integer",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "db.authorization.skip",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "documentGrantedWrites",
+                    "document": {
+                      "$document": {
+                        "$id": "first",
+                        "$permissions": [
+                          "update(\"user:bob\")",
+                          "delete(\"user:bob\")"
+                        ],
+                        "count": 0
+                      }
+                    }
+                  }
+                },
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "documentGrantedWrites",
+                    "document": {
+                      "$document": {
+                        "$id": "second",
+                        "$permissions": [
+                          "update(\"user:bob\")",
+                          "delete(\"user:bob\")"
+                        ],
+                        "count": 0
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "$id": "first",
+                        "$permissions": [
+                          "update(\"user:bob\")",
+                          "delete(\"user:bob\")"
+                        ],
+                        "count": 0,
+                        "$collection": "documentGrantedWrites",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$sequence": "<uuid7>"
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "second",
+                        "$permissions": [
+                          "update(\"user:bob\")",
+                          "delete(\"user:bob\")"
+                        ],
+                        "count": 0,
+                        "$collection": "documentGrantedWrites",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$sequence": "<uuid7>"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "db.authorization.get_roles",
+          "args": {},
+          "expect": [
+            "any"
+          ]
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:bob"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "database.increase_document_attribute",
+          "args": {
+            "collection": "documentGrantedWrites",
+            "id": "first",
+            "attribute": "count",
+            "value": 5
+          },
+          "expect": {
+            "$document": {
+              "count": 5,
+              "$permissions": [
+                "update(\"user:bob\")",
+                "delete(\"user:bob\")"
+              ],
+              "$collection": "documentGrantedWrites",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>",
+              "$id": "first"
+            }
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.skip",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.find",
+                  "args": {
+                    "collection": "documentGrantedWrites"
+                  }
+                },
+                {
+                  "op": "$return",
+                  "args": {
+                    "value": [
+                      5,
+                      0
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": [
+              5,
+              0
+            ],
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    [
+                      {
+                        "$document": {
+                          "count": 5,
+                          "$permissions": [
+                            "update(\"user:bob\")",
+                            "delete(\"user:bob\")"
+                          ],
+                          "$collection": "documentGrantedWrites",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$sequence": "<uuid7>",
+                          "$id": "first"
+                        }
+                      },
+                      {
+                        "$document": {
+                          "count": 0,
+                          "$permissions": [
+                            "update(\"user:bob\")",
+                            "delete(\"user:bob\")"
+                          ],
+                          "$collection": "documentGrantedWrites",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$sequence": "<uuid7>",
+                          "$id": "second"
+                        }
+                      }
+                    ],
+                    null
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "db.authorization.get_roles",
+          "args": {},
+          "expect": [
+            "any"
+          ]
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:bob"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "database.update_documents",
+          "args": {
+            "collection": "documentGrantedWrites",
+            "updates": {
+              "$document": {
+                "count": 42
+              }
+            }
+          },
+          "expect": 2
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.skip",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.find",
+                  "args": {
+                    "collection": "documentGrantedWrites"
+                  }
+                },
+                {
+                  "op": "$return",
+                  "args": {
+                    "value": [
+                      42,
+                      42
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": [
+              42,
+              42
+            ],
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    [
+                      {
+                        "$document": {
+                          "count": 42,
+                          "$permissions": [
+                            "update(\"user:bob\")",
+                            "delete(\"user:bob\")"
+                          ],
+                          "$collection": "documentGrantedWrites",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$sequence": "<uuid7>",
+                          "$id": "first"
+                        }
+                      },
+                      {
+                        "$document": {
+                          "count": 42,
+                          "$permissions": [
+                            "update(\"user:bob\")",
+                            "delete(\"user:bob\")"
+                          ],
+                          "$collection": "documentGrantedWrites",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$sequence": "<uuid7>",
+                          "$id": "second"
+                        }
+                      }
+                    ],
+                    null
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "db.authorization.get_roles",
+          "args": {},
+          "expect": [
+            "any"
+          ]
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:bob"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "database.delete_documents",
+          "args": {
+            "collection": "documentGrantedWrites"
+          },
+          "expect": 2
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.skip",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.find",
+                  "args": {
+                    "collection": "documentGrantedWrites"
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": [],
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    []
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "MongoDBTest::testDeniedReaderDoesNotHideADocumentFromItsReader",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "deniedReaderProfiles",
+                "name": "deniedReaderProfiles",
+                "attributes": [
+                  {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": false,
+                "$permissions": [
+                  "read(\"user:alice\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "deniedReaderProfiles",
+              "name": "deniedReaderProfiles",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "read(\"user:alice\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "db.authorization.skip",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "deniedReaderProfiles",
+                    "document": {
+                      "$document": {
+                        "$id": "alice",
+                        "$permissions": [
+                          "read(\"user:alice\")"
+                        ],
+                        "name": "Alice"
+                      }
+                    }
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": {
+              "$document": {
+                "$id": "alice",
+                "$permissions": [
+                  "read(\"user:alice\")"
+                ],
+                "name": "Alice",
+                "$collection": "deniedReaderProfiles",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>"
+              }
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "$id": "alice",
+                        "$permissions": [
+                          "read(\"user:alice\")"
+                        ],
+                        "name": "Alice",
+                        "$collection": "deniedReaderProfiles",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$sequence": "<uuid7>"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "db.authorization.get_roles",
+          "args": {},
+          "expect": [
+            "any"
+          ]
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:bob"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "deniedReaderProfiles",
+            "id": "alice"
+          },
+          "expect": {
+            "$document": {}
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.get_roles",
+          "args": {},
+          "expect": [
+            "any"
+          ]
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:alice"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "deniedReaderProfiles",
+            "id": "alice"
+          },
+          "expect": {
+            "$document": {
+              "name": "Alice",
+              "$permissions": [
+                "read(\"user:alice\")"
+              ],
+              "$collection": "deniedReaderProfiles",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>",
+              "$id": "alice"
+            }
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "MongoDBTest::testListCollectionsReturnsOnlyReadableDefinitions",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "listedDefinition",
+                "name": "listedDefinition",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "listedDefinition",
+              "name": "listedDefinition",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "adminDefinition",
+                "name": "adminDefinition",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "read(\"user:admin\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "adminDefinition",
+              "name": "adminDefinition",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "read(\"user:admin\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "unlistedDefinition",
+                "name": "unlistedDefinition",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "create(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "unlistedDefinition",
+              "name": "unlistedDefinition",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "db.authorization.get_roles",
+          "args": {},
+          "expect": [
+            "any"
+          ]
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:bob"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "database.list_collections",
+          "args": {
+            "limit": 100
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "listedDefinition",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "_metadata",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "listedDefinition"
+              },
+              "$class": "Collection"
+            }
+          ]
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "_metadata",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "$id",
+                  "values": [
+                    "adminDefinition",
+                    "listedDefinition",
+                    "unlistedDefinition"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "listedDefinition",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "_metadata",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "listedDefinition"
+              },
+              "$class": "Collection"
+            }
+          ]
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "_metadata",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "$id",
+                  "values": [
+                    "adminDefinition",
+                    "listedDefinition",
+                    "unlistedDefinition"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": 1
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.get_roles",
+          "args": {},
+          "expect": [
+            "any"
+          ]
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:admin"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "database.list_collections",
+          "args": {
+            "limit": 100
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "listedDefinition",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "_metadata",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "listedDefinition"
+              },
+              "$class": "Collection"
+            },
+            {
+              "$document": {
+                "name": "adminDefinition",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "read(\"user:admin\")"
+                ],
+                "$collection": "_metadata",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "adminDefinition"
+              },
+              "$class": "Collection"
+            }
+          ]
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "_metadata",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "$id",
+                  "values": [
+                    "adminDefinition",
+                    "listedDefinition",
+                    "unlistedDefinition"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": 2
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.skip",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.list_collections",
+                  "args": {
+                    "limit": 100
+                  }
+                },
+                {
+                  "op": "$return",
+                  "args": {
+                    "value": [
+                      "adminDefinition",
+                      "listedDefinition",
+                      "unlistedDefinition"
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": [
+              "adminDefinition",
+              "listedDefinition",
+              "unlistedDefinition"
+            ],
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    [
+                      {
+                        "$document": {
+                          "name": "listedDefinition",
+                          "attributes": [],
+                          "indexes": [],
+                          "documentSecurity": true,
+                          "$permissions": [
+                            "read(\"any\")"
+                          ],
+                          "$collection": "_metadata",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$sequence": "<uuid7>",
+                          "$id": "listedDefinition"
+                        },
+                        "$class": "Collection"
+                      },
+                      {
+                        "$document": {
+                          "name": "adminDefinition",
+                          "attributes": [],
+                          "indexes": [],
+                          "documentSecurity": true,
+                          "$permissions": [
+                            "read(\"user:admin\")"
+                          ],
+                          "$collection": "_metadata",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$sequence": "<uuid7>",
+                          "$id": "adminDefinition"
+                        },
+                        "$class": "Collection"
+                      },
+                      {
+                        "$document": {
+                          "name": "unlistedDefinition",
+                          "attributes": [],
+                          "indexes": [],
+                          "documentSecurity": true,
+                          "$permissions": [
+                            "create(\"any\")"
+                          ],
+                          "$collection": "_metadata",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$sequence": "<uuid7>",
+                          "$id": "unlistedDefinition"
+                        },
+                        "$class": "Collection"
+                      }
+                    ],
+                    null
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "MongoDBTest::testUpdateMovesEveryCollectionIntoTheNewDatabase",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.get_cache",
+          "args": {
+            "as": "o13"
+          },
+          "bind": "s130",
+          "expect": {
+            "$cache": true
+          }
+        },
+        {
+          "op": "db.open",
+          "args": {
+            "adapter": {
+              "$unsupported": "Utopia\\Database\\Adapter\\Mongo"
+            },
+            "cache": {
+              "$obj": "o13"
+            },
+            "hooks": []
+          },
+          "bind": "s131"
+        },
+        {
+          "op": "database.set_authorization",
+          "args": {
+            "db": {
+              "$ref": "s131"
+            },
+            "authorization": {
+              "$ref": "db"
+            }
+          }
+        },
+        {
+          "op": "database.set_database",
+          "args": {
+            "db": {
+              "$ref": "s131"
+            },
+            "name": "${ns}_from9b0de7"
+          }
+        }
+      ]
+    },
+    {
+      "name": "MongoDBTest::testReadsDropAStoredNonStringPermission",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "lenientReads",
+                "name": "lenientReads",
+                "attributes": [
+                  {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "lenientReads",
+              "name": "lenientReads",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "lenientReads",
+            "document": {
+              "$document": {
+                "$id": "note",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "title": "stored"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "note",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "title": "stored",
+              "$collection": "lenientReads",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getDriver",
+            "args": {}
           }
         }
       ]

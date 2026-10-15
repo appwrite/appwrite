@@ -30,6 +30,10 @@ class RecordingSQLite extends \Utopia\Database\Adapter\SQLite
 {
 }
 
+class RecordingEmulatedSQLite extends \Tests\Compat\Database\Fixture\EmulatedSQLite
+{
+}
+
 class RecordingMemory extends \Utopia\Database\Adapter\Memory
 {
 }
@@ -57,6 +61,13 @@ class RecordingAuthorization extends \Utopia\Database\Validator\Authorization
 class PeerDatabase extends RecordingDatabase
 {
     public ?int $opened = null;
+}
+
+class RecordingProfiler extends \Utopia\Database\Profiler
+{
+    public function __construct(public readonly \Utopia\Database\Profiler $inner)
+    {
+    }
 }
 
 class RecordingPostgresTest extends \PHPUnit\Framework\TestCase

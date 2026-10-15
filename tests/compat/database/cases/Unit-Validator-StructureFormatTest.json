@@ -1,0 +1,1819 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Validator/StructureFormatTest.php"
+  ],
+  "cases": [
+    {
+      "name": "StructureFormatTest::testAFormatRegisteredForAnotherTypeIsRefused",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "structureFormatProbe"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\Structure",
+            "method": "getFormat",
+            "args": {
+              "name": "structureFormatProbe",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown format validator \"structureFormatProbe\""
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\Structure",
+            "method": "getFormat",
+            "args": {
+              "name": "structureFormatProbe",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown format validator \"structureFormatProbe\""
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\Structure",
+            "method": "removeFormat",
+            "args": {
+              "name": "structureFormatProbe"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "StructureFormatTest::testAFormatSeesAnAttributeDefinedAsAPlainArrayInItsStoredShape#within the format",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "structureFormatProbe"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "structureFormatProbe"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "codes",
+                "$collection": "_metadata",
+                "name": "codes",
+                "attributes": [],
+                "indexes": []
+              }
+            },
+            "as": "o4359"
+          },
+          "bind": "s6899",
+          "expect": {
+            "$document": {
+              "$id": "codes",
+              "$collection": "_metadata",
+              "name": "codes",
+              "attributes": [],
+              "indexes": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4359"
+            },
+            "method": "setAttribute",
+            "args": {
+              "key": "attributes",
+              "value": [
+                {
+                  "$id": "code",
+                  "type": "string",
+                  "format": "structureFormatProbe",
+                  "formatOptions": {
+                    "maximum": 4
+                  },
+                  "size": 32,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "codes",
+              "$collection": "_metadata",
+              "name": "codes",
+              "attributes": [
+                {
+                  "$id": "code",
+                  "type": "string",
+                  "format": "structureFormatProbe",
+                  "formatOptions": {
+                    "maximum": 4
+                  },
+                  "size": 32,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              ],
+              "indexes": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Limits",
+            "args": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            },
+            "as": "o4360"
+          },
+          "bind": "s6901",
+          "expect": {
+            "$value": "Adapter\\Limits",
+            "fields": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Profile",
+            "args": {
+              "limits": {
+                "$obj": "o4360"
+              },
+              "capabilities": [
+                {
+                  "$enum": "Capability::DefinedAttributes"
+                },
+                {
+                  "$enum": "Capability::UnsignedBigInt"
+                }
+              ],
+              "features": [],
+              "sharedTables": false,
+              "migrating": false
+            },
+            "as": "o4361"
+          },
+          "bind": "s6902",
+          "expect": {
+            "$value": "Adapter\\Profile",
+            "fields": {
+              "limits": {
+                "$value": "Adapter\\Limits",
+                "fields": {
+                  "string": 0,
+                  "varchar": 0,
+                  "integer": 0,
+                  "bigInteger": 0,
+                  "attributes": 0,
+                  "indexes": 0,
+                  "defaultAttributes": 0,
+                  "defaultIndexes": 0,
+                  "indexLength": 0,
+                  "uidLength": 36,
+                  "documentSize": 0,
+                  "minDateTime": {
+                    "$datetime": "0000-01-01T00:00:00.000000+00:00"
+                  },
+                  "maxDateTime": {
+                    "$datetime": "9999-12-31T00:00:00.000000+00:00"
+                  },
+                  "idType": {
+                    "$enum": "Query\\Schema\\ColumnType::Integer"
+                  },
+                  "keywords": [],
+                  "internalIndexKeys": []
+                }
+              },
+              "capabilities": [
+                {
+                  "$enum": "Capability::DefinedAttributes"
+                },
+                {
+                  "$enum": "Capability::UnsignedBigInt"
+                }
+              ],
+              "features": [],
+              "sharedTables": false,
+              "migrating": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Structure",
+            "args": {
+              "collection": {
+                "$obj": "o4359"
+              },
+              "profile": {
+                "$obj": "o4361"
+              }
+            },
+            "as": "o4362"
+          },
+          "bind": "s6903",
+          "expect": {
+            "$value": "Validator\\Structure",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$collection": "codes",
+                "code": "abc",
+                "$createdAt": "2026-09-30T00:00:00.000+00:00",
+                "$updatedAt": "2026-09-30T00:00:00.000+00:00"
+              }
+            },
+            "as": "o4363"
+          },
+          "bind": "s6904",
+          "expect": {
+            "$document": {
+              "$collection": "codes",
+              "code": "abc",
+              "$createdAt": "2026-09-30T00:00:00.000+00:00",
+              "$updatedAt": "2026-09-30T00:00:00.000+00:00"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4362"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4363"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown format validator \"structureFormatProbe\""
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4362"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid document structure: General Error"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "code",
+                "type": "string",
+                "format": "structureFormatProbe",
+                "formatOptions": {
+                  "maximum": 4
+                },
+                "size": 32,
+                "required": true,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            },
+            "as": "o4364"
+          },
+          "bind": "s6907",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "code",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": {
+                "$value": "Format",
+                "fields": {
+                  "name": "structureFormatProbe",
+                  "options": {
+                    "maximum": 4
+                  }
+                }
+              },
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4364"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4365"
+          },
+          "bind": "s6908",
+          "expect": {
+            "$document": {
+              "$id": "code",
+              "key": "code",
+              "type": "string",
+              "size": 32,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": "structureFormatProbe",
+              "formatOptions": {
+                "maximum": 4
+              },
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4365"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "$id": "code",
+            "key": "code",
+            "type": "string",
+            "size": 32,
+            "required": true,
+            "default": null,
+            "signed": true,
+            "array": false,
+            "format": "structureFormatProbe",
+            "formatOptions": {
+              "maximum": 4
+            },
+            "filters": []
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\Structure",
+            "method": "removeFormat",
+            "args": {
+              "name": "structureFormatProbe"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "StructureFormatTest::testAFormatSeesAnAttributeDefinedAsAPlainArrayInItsStoredShape#past the format",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "structureFormatProbe"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "structureFormatProbe"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "structureFormatProbe"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "codes",
+                "$collection": "_metadata",
+                "name": "codes",
+                "attributes": [],
+                "indexes": []
+              }
+            },
+            "as": "o4366"
+          },
+          "bind": "s6912",
+          "expect": {
+            "$document": {
+              "$id": "codes",
+              "$collection": "_metadata",
+              "name": "codes",
+              "attributes": [],
+              "indexes": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4366"
+            },
+            "method": "setAttribute",
+            "args": {
+              "key": "attributes",
+              "value": [
+                {
+                  "$id": "code",
+                  "type": "string",
+                  "format": "structureFormatProbe",
+                  "formatOptions": {
+                    "maximum": 4
+                  },
+                  "size": 32,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "codes",
+              "$collection": "_metadata",
+              "name": "codes",
+              "attributes": [
+                {
+                  "$id": "code",
+                  "type": "string",
+                  "format": "structureFormatProbe",
+                  "formatOptions": {
+                    "maximum": 4
+                  },
+                  "size": 32,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              ],
+              "indexes": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Limits",
+            "args": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            },
+            "as": "o4367"
+          },
+          "bind": "s6914",
+          "expect": {
+            "$value": "Adapter\\Limits",
+            "fields": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Profile",
+            "args": {
+              "limits": {
+                "$obj": "o4367"
+              },
+              "capabilities": [
+                {
+                  "$enum": "Capability::DefinedAttributes"
+                },
+                {
+                  "$enum": "Capability::UnsignedBigInt"
+                }
+              ],
+              "features": [],
+              "sharedTables": false,
+              "migrating": false
+            },
+            "as": "o4368"
+          },
+          "bind": "s6915",
+          "expect": {
+            "$value": "Adapter\\Profile",
+            "fields": {
+              "limits": {
+                "$value": "Adapter\\Limits",
+                "fields": {
+                  "string": 0,
+                  "varchar": 0,
+                  "integer": 0,
+                  "bigInteger": 0,
+                  "attributes": 0,
+                  "indexes": 0,
+                  "defaultAttributes": 0,
+                  "defaultIndexes": 0,
+                  "indexLength": 0,
+                  "uidLength": 36,
+                  "documentSize": 0,
+                  "minDateTime": {
+                    "$datetime": "0000-01-01T00:00:00.000000+00:00"
+                  },
+                  "maxDateTime": {
+                    "$datetime": "9999-12-31T00:00:00.000000+00:00"
+                  },
+                  "idType": {
+                    "$enum": "Query\\Schema\\ColumnType::Integer"
+                  },
+                  "keywords": [],
+                  "internalIndexKeys": []
+                }
+              },
+              "capabilities": [
+                {
+                  "$enum": "Capability::DefinedAttributes"
+                },
+                {
+                  "$enum": "Capability::UnsignedBigInt"
+                }
+              ],
+              "features": [],
+              "sharedTables": false,
+              "migrating": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Structure",
+            "args": {
+              "collection": {
+                "$obj": "o4366"
+              },
+              "profile": {
+                "$obj": "o4368"
+              }
+            },
+            "as": "o4369"
+          },
+          "bind": "s6916",
+          "expect": {
+            "$value": "Validator\\Structure",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$collection": "codes",
+                "code": "abcdef",
+                "$createdAt": "2026-09-30T00:00:00.000+00:00",
+                "$updatedAt": "2026-09-30T00:00:00.000+00:00"
+              }
+            },
+            "as": "o4370"
+          },
+          "bind": "s6917",
+          "expect": {
+            "$document": {
+              "$collection": "codes",
+              "code": "abcdef",
+              "$createdAt": "2026-09-30T00:00:00.000+00:00",
+              "$updatedAt": "2026-09-30T00:00:00.000+00:00"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4369"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4370"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown format validator \"structureFormatProbe\""
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4369"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid document structure: General Error"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "code",
+                "type": "string",
+                "format": "structureFormatProbe",
+                "formatOptions": {
+                  "maximum": 4
+                },
+                "size": 32,
+                "required": true,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            },
+            "as": "o4371"
+          },
+          "bind": "s6920",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "code",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": {
+                "$value": "Format",
+                "fields": {
+                  "name": "structureFormatProbe",
+                  "options": {
+                    "maximum": 4
+                  }
+                }
+              },
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4371"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4372"
+          },
+          "bind": "s6921",
+          "expect": {
+            "$document": {
+              "$id": "code",
+              "key": "code",
+              "type": "string",
+              "size": 32,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": "structureFormatProbe",
+              "formatOptions": {
+                "maximum": 4
+              },
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4372"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "$id": "code",
+            "key": "code",
+            "type": "string",
+            "size": 32,
+            "required": true,
+            "default": null,
+            "signed": true,
+            "array": false,
+            "format": "structureFormatProbe",
+            "formatOptions": {
+              "maximum": 4
+            },
+            "filters": []
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\Structure",
+            "method": "removeFormat",
+            "args": {
+              "name": "structureFormatProbe"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "StructureFormatTest::testAFormatSeesAnAttributeDefinedAsADocumentInItsStoredShape#within the format",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "structureFormatProbe"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "structureFormatProbe"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "structureFormatProbe"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "structureFormatProbe"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "codes",
+                "$collection": "_metadata",
+                "name": "codes",
+                "attributes": [],
+                "indexes": []
+              }
+            },
+            "as": "o4373"
+          },
+          "bind": "s6925",
+          "expect": {
+            "$document": {
+              "$id": "codes",
+              "$collection": "_metadata",
+              "name": "codes",
+              "attributes": [],
+              "indexes": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "code",
+                "type": "string",
+                "format": "structureFormatProbe",
+                "formatOptions": {
+                  "maximum": 4
+                },
+                "size": 32,
+                "required": true,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            },
+            "as": "o4374"
+          },
+          "bind": "s6926",
+          "expect": {
+            "$document": {
+              "$id": "code",
+              "type": "string",
+              "format": "structureFormatProbe",
+              "formatOptions": {
+                "maximum": 4
+              },
+              "size": 32,
+              "required": true,
+              "signed": true,
+              "array": false,
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4373"
+            },
+            "method": "setAttribute",
+            "args": {
+              "key": "attributes",
+              "value": [
+                {
+                  "$obj": "o4374"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "codes",
+              "$collection": "_metadata",
+              "name": "codes",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "code",
+                    "type": "string",
+                    "format": "structureFormatProbe",
+                    "formatOptions": {
+                      "maximum": 4
+                    },
+                    "size": 32,
+                    "required": true,
+                    "signed": true,
+                    "array": false,
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Limits",
+            "args": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            },
+            "as": "o4375"
+          },
+          "bind": "s6928",
+          "expect": {
+            "$value": "Adapter\\Limits",
+            "fields": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Profile",
+            "args": {
+              "limits": {
+                "$obj": "o4375"
+              },
+              "capabilities": [
+                {
+                  "$enum": "Capability::DefinedAttributes"
+                },
+                {
+                  "$enum": "Capability::UnsignedBigInt"
+                }
+              ],
+              "features": [],
+              "sharedTables": false,
+              "migrating": false
+            },
+            "as": "o4376"
+          },
+          "bind": "s6929",
+          "expect": {
+            "$value": "Adapter\\Profile",
+            "fields": {
+              "limits": {
+                "$value": "Adapter\\Limits",
+                "fields": {
+                  "string": 0,
+                  "varchar": 0,
+                  "integer": 0,
+                  "bigInteger": 0,
+                  "attributes": 0,
+                  "indexes": 0,
+                  "defaultAttributes": 0,
+                  "defaultIndexes": 0,
+                  "indexLength": 0,
+                  "uidLength": 36,
+                  "documentSize": 0,
+                  "minDateTime": {
+                    "$datetime": "0000-01-01T00:00:00.000000+00:00"
+                  },
+                  "maxDateTime": {
+                    "$datetime": "9999-12-31T00:00:00.000000+00:00"
+                  },
+                  "idType": {
+                    "$enum": "Query\\Schema\\ColumnType::Integer"
+                  },
+                  "keywords": [],
+                  "internalIndexKeys": []
+                }
+              },
+              "capabilities": [
+                {
+                  "$enum": "Capability::DefinedAttributes"
+                },
+                {
+                  "$enum": "Capability::UnsignedBigInt"
+                }
+              ],
+              "features": [],
+              "sharedTables": false,
+              "migrating": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Structure",
+            "args": {
+              "collection": {
+                "$obj": "o4373"
+              },
+              "profile": {
+                "$obj": "o4376"
+              }
+            },
+            "as": "o4377"
+          },
+          "bind": "s6930",
+          "expect": {
+            "$value": "Validator\\Structure",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$collection": "codes",
+                "code": "abc",
+                "$createdAt": "2026-09-30T00:00:00.000+00:00",
+                "$updatedAt": "2026-09-30T00:00:00.000+00:00"
+              }
+            },
+            "as": "o4378"
+          },
+          "bind": "s6931",
+          "expect": {
+            "$document": {
+              "$collection": "codes",
+              "code": "abc",
+              "$createdAt": "2026-09-30T00:00:00.000+00:00",
+              "$updatedAt": "2026-09-30T00:00:00.000+00:00"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4377"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4378"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown format validator \"structureFormatProbe\""
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4377"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid document structure: General Error"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "code",
+                "type": "string",
+                "format": "structureFormatProbe",
+                "formatOptions": {
+                  "maximum": 4
+                },
+                "size": 32,
+                "required": true,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            },
+            "as": "o4379"
+          },
+          "bind": "s6934",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "code",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": {
+                "$value": "Format",
+                "fields": {
+                  "name": "structureFormatProbe",
+                  "options": {
+                    "maximum": 4
+                  }
+                }
+              },
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4379"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4380"
+          },
+          "bind": "s6935",
+          "expect": {
+            "$document": {
+              "$id": "code",
+              "key": "code",
+              "type": "string",
+              "size": 32,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": "structureFormatProbe",
+              "formatOptions": {
+                "maximum": 4
+              },
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4380"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "$id": "code",
+            "key": "code",
+            "type": "string",
+            "size": 32,
+            "required": true,
+            "default": null,
+            "signed": true,
+            "array": false,
+            "format": "structureFormatProbe",
+            "formatOptions": {
+              "maximum": 4
+            },
+            "filters": []
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\Structure",
+            "method": "removeFormat",
+            "args": {
+              "name": "structureFormatProbe"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "StructureFormatTest::testAFormatSeesAnAttributeDefinedAsADocumentInItsStoredShape#past the format",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "structureFormatProbe"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "structureFormatProbe"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "structureFormatProbe"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "structureFormatProbe"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "structureFormatProbe"
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "codes",
+                "$collection": "_metadata",
+                "name": "codes",
+                "attributes": [],
+                "indexes": []
+              }
+            },
+            "as": "o4381"
+          },
+          "bind": "s6939",
+          "expect": {
+            "$document": {
+              "$id": "codes",
+              "$collection": "_metadata",
+              "name": "codes",
+              "attributes": [],
+              "indexes": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "code",
+                "type": "string",
+                "format": "structureFormatProbe",
+                "formatOptions": {
+                  "maximum": 4
+                },
+                "size": 32,
+                "required": true,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            },
+            "as": "o4382"
+          },
+          "bind": "s6940",
+          "expect": {
+            "$document": {
+              "$id": "code",
+              "type": "string",
+              "format": "structureFormatProbe",
+              "formatOptions": {
+                "maximum": 4
+              },
+              "size": 32,
+              "required": true,
+              "signed": true,
+              "array": false,
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4381"
+            },
+            "method": "setAttribute",
+            "args": {
+              "key": "attributes",
+              "value": [
+                {
+                  "$obj": "o4382"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "codes",
+              "$collection": "_metadata",
+              "name": "codes",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "code",
+                    "type": "string",
+                    "format": "structureFormatProbe",
+                    "formatOptions": {
+                      "maximum": 4
+                    },
+                    "size": 32,
+                    "required": true,
+                    "signed": true,
+                    "array": false,
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Limits",
+            "args": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            },
+            "as": "o4383"
+          },
+          "bind": "s6942",
+          "expect": {
+            "$value": "Adapter\\Limits",
+            "fields": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Profile",
+            "args": {
+              "limits": {
+                "$obj": "o4383"
+              },
+              "capabilities": [
+                {
+                  "$enum": "Capability::DefinedAttributes"
+                },
+                {
+                  "$enum": "Capability::UnsignedBigInt"
+                }
+              ],
+              "features": [],
+              "sharedTables": false,
+              "migrating": false
+            },
+            "as": "o4384"
+          },
+          "bind": "s6943",
+          "expect": {
+            "$value": "Adapter\\Profile",
+            "fields": {
+              "limits": {
+                "$value": "Adapter\\Limits",
+                "fields": {
+                  "string": 0,
+                  "varchar": 0,
+                  "integer": 0,
+                  "bigInteger": 0,
+                  "attributes": 0,
+                  "indexes": 0,
+                  "defaultAttributes": 0,
+                  "defaultIndexes": 0,
+                  "indexLength": 0,
+                  "uidLength": 36,
+                  "documentSize": 0,
+                  "minDateTime": {
+                    "$datetime": "0000-01-01T00:00:00.000000+00:00"
+                  },
+                  "maxDateTime": {
+                    "$datetime": "9999-12-31T00:00:00.000000+00:00"
+                  },
+                  "idType": {
+                    "$enum": "Query\\Schema\\ColumnType::Integer"
+                  },
+                  "keywords": [],
+                  "internalIndexKeys": []
+                }
+              },
+              "capabilities": [
+                {
+                  "$enum": "Capability::DefinedAttributes"
+                },
+                {
+                  "$enum": "Capability::UnsignedBigInt"
+                }
+              ],
+              "features": [],
+              "sharedTables": false,
+              "migrating": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Structure",
+            "args": {
+              "collection": {
+                "$obj": "o4381"
+              },
+              "profile": {
+                "$obj": "o4384"
+              }
+            },
+            "as": "o4385"
+          },
+          "bind": "s6944",
+          "expect": {
+            "$value": "Validator\\Structure",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$collection": "codes",
+                "code": "abcdef",
+                "$createdAt": "2026-09-30T00:00:00.000+00:00",
+                "$updatedAt": "2026-09-30T00:00:00.000+00:00"
+              }
+            },
+            "as": "o4386"
+          },
+          "bind": "s6945",
+          "expect": {
+            "$document": {
+              "$collection": "codes",
+              "code": "abcdef",
+              "$createdAt": "2026-09-30T00:00:00.000+00:00",
+              "$updatedAt": "2026-09-30T00:00:00.000+00:00"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4385"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o4386"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown format validator \"structureFormatProbe\""
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4385"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid document structure: General Error"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "code",
+                "type": "string",
+                "format": "structureFormatProbe",
+                "formatOptions": {
+                  "maximum": 4
+                },
+                "size": 32,
+                "required": true,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            },
+            "as": "o4387"
+          },
+          "bind": "s6948",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "code",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": {
+                "$value": "Format",
+                "fields": {
+                  "name": "structureFormatProbe",
+                  "options": {
+                    "maximum": 4
+                  }
+                }
+              },
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4387"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4388"
+          },
+          "bind": "s6949",
+          "expect": {
+            "$document": {
+              "$id": "code",
+              "key": "code",
+              "type": "string",
+              "size": 32,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": "structureFormatProbe",
+              "formatOptions": {
+                "maximum": 4
+              },
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4388"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "$id": "code",
+            "key": "code",
+            "type": "string",
+            "size": 32,
+            "required": true,
+            "default": null,
+            "signed": true,
+            "array": false,
+            "format": "structureFormatProbe",
+            "formatOptions": {
+              "maximum": 4
+            },
+            "filters": []
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\Structure",
+            "method": "removeFormat",
+            "args": {
+              "name": "structureFormatProbe"
+            }
+          },
+          "expect": null
+        }
+      ]
+    }
+  ]
+}

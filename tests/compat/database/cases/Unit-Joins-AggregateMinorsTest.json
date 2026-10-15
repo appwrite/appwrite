@@ -1,0 +1,4743 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Joins/AggregateMinorsTest.php"
+  ],
+  "cases": [
+    {
+      "name": "AggregateMinorsTest::testSumResolvesAJoinDeclaredAttribute",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o16070"
+          },
+          "bind": "s37959",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o16070"
+              },
+              "cache": "none"
+            },
+            "as": "o16071"
+          },
+          "bind": "s37960",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o16071"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "aggregate_minors"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o16071"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "aggregate_minors_u000000000067"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o16072"
+          },
+          "bind": "s37963",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o16071"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o16072"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Hook\\Permissions",
+            "args": {},
+            "as": "o16073"
+          },
+          "bind": "s37965",
+          "expect": {
+            "$hook": "Permissions"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o16071"
+            },
+            "method": "addHook",
+            "args": {
+              "hook": {
+                "$obj": "o16073"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o16071"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o16074"
+          },
+          "bind": "s37968",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o16074"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o16075"
+          },
+          "bind": "s37970",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o16075"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "item",
+              "size": 16
+            },
+            "as": "o16076"
+          },
+          "bind": "s37972",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "item",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 16,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "quantity"
+            },
+            "as": "o16077"
+          },
+          "bind": "s37973",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "quantity",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "name",
+              "size": 16
+            },
+            "as": "o16078"
+          },
+          "bind": "s37974",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 16,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "orders",
+              "attributes": [
+                {
+                  "$obj": "o16076"
+                },
+                {
+                  "$obj": "o16077"
+                },
+                {
+                  "$obj": "o16078"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "as": "o16079"
+          },
+          "bind": "s37975",
+          "expect": {
+            "$document": {
+              "$id": "orders",
+              "name": "orders",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "item",
+                    "key": "item",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "quantity",
+                    "key": "quantity",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o16071"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o16079"
+              }
+            },
+            "as": "o16080"
+          },
+          "expect": {
+            "$document": {
+              "$id": "orders",
+              "name": "orders",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "item",
+                    "key": "item",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "quantity",
+                    "key": "quantity",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "code",
+              "size": 16
+            },
+            "as": "o16081"
+          },
+          "bind": "s37977",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "code",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 16,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "price"
+            },
+            "as": "o16082"
+          },
+          "bind": "s37978",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "price",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "quantity"
+            },
+            "as": "o16083"
+          },
+          "bind": "s37979",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "quantity",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "name",
+              "size": 16
+            },
+            "as": "o16084"
+          },
+          "bind": "s37980",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 16,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "items",
+              "attributes": [
+                {
+                  "$obj": "o16081"
+                },
+                {
+                  "$obj": "o16082"
+                },
+                {
+                  "$obj": "o16083"
+                },
+                {
+                  "$obj": "o16084"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "as": "o16085"
+          },
+          "bind": "s37981",
+          "expect": {
+            "$document": {
+              "$id": "items",
+              "name": "items",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "code",
+                    "key": "code",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "price",
+                    "key": "price",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "quantity",
+                    "key": "quantity",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o16071"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o16085"
+              }
+            },
+            "as": "o16086"
+          },
+          "expect": {
+            "$document": {
+              "$id": "items",
+              "name": "items",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "code",
+                    "key": "code",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "price",
+                    "key": "price",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "quantity",
+                    "key": "quantity",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "code",
+              "size": 16
+            },
+            "as": "o16087"
+          },
+          "bind": "s37983",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "code",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 16,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "price"
+            },
+            "as": "o16088"
+          },
+          "bind": "s37984",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "price",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "extras",
+              "attributes": [
+                {
+                  "$obj": "o16087"
+                },
+                {
+                  "$obj": "o16088"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "as": "o16089"
+          },
+          "bind": "s37985",
+          "expect": {
+            "$document": {
+              "$id": "extras",
+              "name": "extras",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "code",
+                    "key": "code",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "price",
+                    "key": "price",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o16071"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o16089"
+              }
+            },
+            "as": "o16090"
+          },
+          "expect": {
+            "$document": {
+              "$id": "extras",
+              "name": "extras",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "code",
+                    "key": "code",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "price",
+                    "key": "price",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "3"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "o1",
+                "$permissions": [],
+                "item": "a",
+                "quantity": 1,
+                "name": "x"
+              }
+            },
+            "as": "o16091"
+          },
+          "bind": "s37987",
+          "expect": {
+            "$document": {
+              "$id": "o1",
+              "$permissions": [],
+              "item": "a",
+              "quantity": 1,
+              "name": "x"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o16071"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "orders",
+              "document": {
+                "$obj": "o16091"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o1",
+              "$permissions": [],
+              "item": "a",
+              "quantity": 1,
+              "name": "x",
+              "$collection": "orders",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "o2",
+                "$permissions": [],
+                "item": "b",
+                "quantity": 2,
+                "name": "y"
+              }
+            },
+            "as": "o16092"
+          },
+          "bind": "s37989",
+          "expect": {
+            "$document": {
+              "$id": "o2",
+              "$permissions": [],
+              "item": "b",
+              "quantity": 2,
+              "name": "y"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o16071"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "orders",
+              "document": {
+                "$obj": "o16092"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o2",
+              "$permissions": [],
+              "item": "b",
+              "quantity": 2,
+              "name": "y",
+              "$collection": "orders",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "o3",
+                "$permissions": [],
+                "item": "a",
+                "quantity": 3,
+                "name": "x"
+              }
+            },
+            "as": "o16093"
+          },
+          "bind": "s37991",
+          "expect": {
+            "$document": {
+              "$id": "o3",
+              "$permissions": [],
+              "item": "a",
+              "quantity": 3,
+              "name": "x"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o16071"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "orders",
+              "document": {
+                "$obj": "o16093"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o3",
+              "$permissions": [],
+              "item": "a",
+              "quantity": 3,
+              "name": "x",
+              "$collection": "orders",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "3"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "a",
+                "$permissions": [],
+                "code": "a",
+                "price": 10,
+                "quantity": 100,
+                "name": "apple"
+              }
+            },
+            "as": "o16094"
+          },
+          "bind": "s37993",
+          "expect": {
+            "$document": {
+              "$id": "a",
+              "$permissions": [],
+              "code": "a",
+              "price": 10,
+              "quantity": 100,
+              "name": "apple"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o16071"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "items",
+              "document": {
+                "$obj": "o16094"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "a",
+              "$permissions": [],
+              "code": "a",
+              "price": 10,
+              "quantity": 100,
+              "name": "apple",
+              "$collection": "items",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "b",
+                "$permissions": [],
+                "code": "b",
+                "price": 20,
+                "quantity": 100,
+                "name": "banana"
+              }
+            },
+            "as": "o16095"
+          },
+          "bind": "s37995",
+          "expect": {
+            "$document": {
+              "$id": "b",
+              "$permissions": [],
+              "code": "b",
+              "price": 20,
+              "quantity": 100,
+              "name": "banana"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o16071"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "items",
+              "document": {
+                "$obj": "o16095"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "b",
+              "$permissions": [],
+              "code": "b",
+              "price": 20,
+              "quantity": 100,
+              "name": "banana",
+              "$collection": "items",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "a",
+                "$permissions": [],
+                "code": "a",
+                "price": 100
+              }
+            },
+            "as": "o16096"
+          },
+          "bind": "s37997",
+          "expect": {
+            "$document": {
+              "$id": "a",
+              "$permissions": [],
+              "code": "a",
+              "price": 100
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o16071"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "extras",
+              "document": {
+                "$obj": "o16096"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "a",
+              "$permissions": [],
+              "code": "a",
+              "price": 100,
+              "$collection": "extras",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "on",
+            "args": {
+              "left": "item",
+              "right": "code"
+            },
+            "as": "o16097"
+          },
+          "bind": "s37999",
+          "expect": {
+            "$query": {
+              "method": "on",
+              "attribute": "",
+              "values": [
+                "item",
+                "=",
+                "code"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "join",
+            "args": {
+              "collection": "items",
+              "alias": "it",
+              "on": [
+                {
+                  "$obj": "o16097"
+                }
+              ]
+            },
+            "as": "o16098"
+          },
+          "bind": "s38000",
+          "expect": {
+            "$query": {
+              "method": "join",
+              "attribute": "items",
+              "values": [
+                {
+                  "$query": {
+                    "method": "on",
+                    "attribute": "",
+                    "values": [
+                      "item",
+                      "=",
+                      "code"
+                    ]
+                  }
+                }
+              ],
+              "alias": "it"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o16071"
+            },
+            "method": "sum",
+            "args": {
+              "collection": "orders",
+              "attribute": "price",
+              "queries": [
+                {
+                  "$obj": "o16098"
+                }
+              ]
+            }
+          },
+          "expect": 40
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "sum",
+            "args": {
+              "attribute": "price",
+              "alias": "total"
+            },
+            "as": "o16099"
+          },
+          "bind": "s38002",
+          "expect": {
+            "$query": {
+              "method": "sum",
+              "attribute": "price",
+              "values": [],
+              "alias": "total"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o16071"
+            },
+            "method": "aggregate",
+            "args": {
+              "collection": "orders",
+              "queries": [
+                {
+                  "$obj": "o16098"
+                },
+                {
+                  "$obj": "o16099"
+                }
+              ]
+            }
+          },
+          "expect": [
+            {
+              "total": 40
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o16071"
+            },
+            "method": "sum",
+            "args": {
+              "collection": "orders",
+              "attribute": "it.price",
+              "queries": [
+                {
+                  "$obj": "o16098"
+                }
+              ]
+            }
+          },
+          "expect": 40
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "it.code",
+              "values": [
+                "a"
+              ]
+            },
+            "as": "o16100"
+          },
+          "bind": "s38005",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "it.code",
+              "values": [
+                "a"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o16071"
+            },
+            "method": "sum",
+            "args": {
+              "collection": "orders",
+              "attribute": "price",
+              "queries": [
+                {
+                  "$obj": "o16098"
+                },
+                {
+                  "$obj": "o16100"
+                }
+              ]
+            }
+          },
+          "expect": 20
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o16071"
+            },
+            "method": "sum",
+            "args": {
+              "collection": "orders",
+              "attribute": "quantity",
+              "queries": [
+                {
+                  "$obj": "o16098"
+                }
+              ]
+            }
+          },
+          "expect": 6
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "it.code",
+              "values": [
+                "z"
+              ]
+            },
+            "as": "o16101"
+          },
+          "bind": "s38008",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "it.code",
+              "values": [
+                "z"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o16071"
+            },
+            "method": "sum",
+            "args": {
+              "collection": "orders",
+              "attribute": "price",
+              "queries": [
+                {
+                  "$obj": "o16098"
+                },
+                {
+                  "$obj": "o16101"
+                }
+              ]
+            }
+          },
+          "expect": 0
+        }
+      ]
+    },
+    {
+      "name": "AggregateMinorsTest::testSumReadsEachJoinedCollectionDefinitionOnce",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o16102"
+          },
+          "bind": "s38010",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o16102"
+              },
+              "cache": "none"
+            },
+            "as": "o16103"
+          },
+          "bind": "s38011",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o16103"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "aggregate_minors"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o16103"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "aggregate_minors_u000000000068"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o16104"
+          },
+          "bind": "s38014",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o16103"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o16104"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Hook\\Permissions",
+            "args": {},
+            "as": "o16105"
+          },
+          "bind": "s38016",
+          "expect": {
+            "$hook": "Permissions"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o16103"
+            },
+            "method": "addHook",
+            "args": {
+              "hook": {
+                "$obj": "o16105"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o16103"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o16106"
+          },
+          "bind": "s38019",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o16106"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o16107"
+          },
+          "bind": "s38021",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o16107"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "item",
+              "size": 16
+            },
+            "as": "o16108"
+          },
+          "bind": "s38023",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "item",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 16,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "quantity"
+            },
+            "as": "o16109"
+          },
+          "bind": "s38024",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "quantity",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "name",
+              "size": 16
+            },
+            "as": "o16110"
+          },
+          "bind": "s38025",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 16,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "orders",
+              "attributes": [
+                {
+                  "$obj": "o16108"
+                },
+                {
+                  "$obj": "o16109"
+                },
+                {
+                  "$obj": "o16110"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "as": "o16111"
+          },
+          "bind": "s38026",
+          "expect": {
+            "$document": {
+              "$id": "orders",
+              "name": "orders",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "item",
+                    "key": "item",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "quantity",
+                    "key": "quantity",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o16103"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o16111"
+              }
+            },
+            "as": "o16112"
+          },
+          "expect": {
+            "$document": {
+              "$id": "orders",
+              "name": "orders",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "item",
+                    "key": "item",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "quantity",
+                    "key": "quantity",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "code",
+              "size": 16
+            },
+            "as": "o16113"
+          },
+          "bind": "s38028",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "code",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 16,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "price"
+            },
+            "as": "o16114"
+          },
+          "bind": "s38029",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "price",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "quantity"
+            },
+            "as": "o16115"
+          },
+          "bind": "s38030",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "quantity",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "name",
+              "size": 16
+            },
+            "as": "o16116"
+          },
+          "bind": "s38031",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 16,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "items",
+              "attributes": [
+                {
+                  "$obj": "o16113"
+                },
+                {
+                  "$obj": "o16114"
+                },
+                {
+                  "$obj": "o16115"
+                },
+                {
+                  "$obj": "o16116"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "as": "o16117"
+          },
+          "bind": "s38032",
+          "expect": {
+            "$document": {
+              "$id": "items",
+              "name": "items",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "code",
+                    "key": "code",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "price",
+                    "key": "price",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "quantity",
+                    "key": "quantity",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o16103"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o16117"
+              }
+            },
+            "as": "o16118"
+          },
+          "expect": {
+            "$document": {
+              "$id": "items",
+              "name": "items",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "code",
+                    "key": "code",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "price",
+                    "key": "price",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "quantity",
+                    "key": "quantity",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "code",
+              "size": 16
+            },
+            "as": "o16119"
+          },
+          "bind": "s38034",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "code",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 16,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "price"
+            },
+            "as": "o16120"
+          },
+          "bind": "s38035",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "price",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "extras",
+              "attributes": [
+                {
+                  "$obj": "o16119"
+                },
+                {
+                  "$obj": "o16120"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "as": "o16121"
+          },
+          "bind": "s38036",
+          "expect": {
+            "$document": {
+              "$id": "extras",
+              "name": "extras",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "code",
+                    "key": "code",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "price",
+                    "key": "price",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o16103"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o16121"
+              }
+            },
+            "as": "o16122"
+          },
+          "expect": {
+            "$document": {
+              "$id": "extras",
+              "name": "extras",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "code",
+                    "key": "code",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "price",
+                    "key": "price",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "3"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "o1",
+                "$permissions": [],
+                "item": "a",
+                "quantity": 1,
+                "name": "x"
+              }
+            },
+            "as": "o16123"
+          },
+          "bind": "s38038",
+          "expect": {
+            "$document": {
+              "$id": "o1",
+              "$permissions": [],
+              "item": "a",
+              "quantity": 1,
+              "name": "x"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o16103"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "orders",
+              "document": {
+                "$obj": "o16123"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o1",
+              "$permissions": [],
+              "item": "a",
+              "quantity": 1,
+              "name": "x",
+              "$collection": "orders",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "o2",
+                "$permissions": [],
+                "item": "b",
+                "quantity": 2,
+                "name": "y"
+              }
+            },
+            "as": "o16124"
+          },
+          "bind": "s38040",
+          "expect": {
+            "$document": {
+              "$id": "o2",
+              "$permissions": [],
+              "item": "b",
+              "quantity": 2,
+              "name": "y"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o16103"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "orders",
+              "document": {
+                "$obj": "o16124"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o2",
+              "$permissions": [],
+              "item": "b",
+              "quantity": 2,
+              "name": "y",
+              "$collection": "orders",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "o3",
+                "$permissions": [],
+                "item": "a",
+                "quantity": 3,
+                "name": "x"
+              }
+            },
+            "as": "o16125"
+          },
+          "bind": "s38042",
+          "expect": {
+            "$document": {
+              "$id": "o3",
+              "$permissions": [],
+              "item": "a",
+              "quantity": 3,
+              "name": "x"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o16103"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "orders",
+              "document": {
+                "$obj": "o16125"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o3",
+              "$permissions": [],
+              "item": "a",
+              "quantity": 3,
+              "name": "x",
+              "$collection": "orders",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "3"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "a",
+                "$permissions": [],
+                "code": "a",
+                "price": 10,
+                "quantity": 100,
+                "name": "apple"
+              }
+            },
+            "as": "o16126"
+          },
+          "bind": "s38044",
+          "expect": {
+            "$document": {
+              "$id": "a",
+              "$permissions": [],
+              "code": "a",
+              "price": 10,
+              "quantity": 100,
+              "name": "apple"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o16103"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "items",
+              "document": {
+                "$obj": "o16126"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "a",
+              "$permissions": [],
+              "code": "a",
+              "price": 10,
+              "quantity": 100,
+              "name": "apple",
+              "$collection": "items",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "b",
+                "$permissions": [],
+                "code": "b",
+                "price": 20,
+                "quantity": 100,
+                "name": "banana"
+              }
+            },
+            "as": "o16127"
+          },
+          "bind": "s38046",
+          "expect": {
+            "$document": {
+              "$id": "b",
+              "$permissions": [],
+              "code": "b",
+              "price": 20,
+              "quantity": 100,
+              "name": "banana"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o16103"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "items",
+              "document": {
+                "$obj": "o16127"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "b",
+              "$permissions": [],
+              "code": "b",
+              "price": 20,
+              "quantity": 100,
+              "name": "banana",
+              "$collection": "items",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "a",
+                "$permissions": [],
+                "code": "a",
+                "price": 100
+              }
+            },
+            "as": "o16128"
+          },
+          "bind": "s38048",
+          "expect": {
+            "$document": {
+              "$id": "a",
+              "$permissions": [],
+              "code": "a",
+              "price": 100
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o16103"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "extras",
+              "document": {
+                "$obj": "o16128"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "a",
+              "$permissions": [],
+              "code": "a",
+              "price": 100,
+              "$collection": "extras",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o16103"
+            },
+            "method": "setProfiling",
+            "args": {
+              "profiling": true
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o16103"
+            },
+            "method": "setValidation",
+            "args": {
+              "validation": true
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o16103"
+            },
+            "method": "getProfiler",
+            "args": {},
+            "as": "o16129"
+          },
+          "bind": "s38052",
+          "expect": {
+            "$profiler": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o16129"
+            },
+            "method": "reset",
+            "args": {}
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "on",
+            "args": {
+              "left": "item",
+              "right": "code"
+            },
+            "as": "o16130"
+          },
+          "bind": "s38054",
+          "expect": {
+            "$query": {
+              "method": "on",
+              "attribute": "",
+              "values": [
+                "item",
+                "=",
+                "code"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "join",
+            "args": {
+              "collection": "items",
+              "alias": "it",
+              "on": [
+                {
+                  "$obj": "o16130"
+                }
+              ]
+            },
+            "as": "o16131"
+          },
+          "bind": "s38055",
+          "expect": {
+            "$query": {
+              "method": "join",
+              "attribute": "items",
+              "values": [
+                {
+                  "$query": {
+                    "method": "on",
+                    "attribute": "",
+                    "values": [
+                      "item",
+                      "=",
+                      "code"
+                    ]
+                  }
+                }
+              ],
+              "alias": "it"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o16103"
+            },
+            "method": "sum",
+            "args": {
+              "collection": "orders",
+              "attribute": "price",
+              "queries": [
+                {
+                  "$obj": "o16131"
+                }
+              ]
+            }
+          },
+          "expect": 40
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o16103"
+            },
+            "method": "getProfiler",
+            "args": {}
+          },
+          "expect": {
+            "$profiler": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o16129"
+            },
+            "method": "getLogs",
+            "args": {}
+          },
+          "expect": [
+            {
+              "$value": "Profiler\\Log",
+              "fields": {
+                "query": "SELECT * FROM `aggregate_minors_u000000000068__metadata` AS `table_main` WHERE `_uid` COLLATE NOCASE = :_uid",
+                "bindings": {
+                  ":_uid": "orders"
+                },
+                "durationMs": 0.03314018249511719,
+                "collection": "_metadata",
+                "operation": "document_read",
+                "backtrace": null
+              }
+            },
+            {
+              "$value": "Profiler\\Log",
+              "fields": {
+                "query": "SELECT * FROM `aggregate_minors_u000000000068__metadata` AS `table_main` WHERE `_uid` COLLATE NOCASE = :_uid",
+                "bindings": {
+                  ":_uid": "items"
+                },
+                "durationMs": 0.0050067901611328125,
+                "collection": "_metadata",
+                "operation": "document_read",
+                "backtrace": null
+              }
+            },
+            {
+              "$value": "Profiler\\Log",
+              "fields": {
+                "query": "SELECT SUM(`sum_attr`) AS `sum` FROM (SELECT `it`.`price` AS `sum_attr` FROM `aggregate_minors_u000000000068_orders` AS `table_main` JOIN `aggregate_minors_u000000000068_items` AS `it` ON `table_main`.`item` = `it`.`code`) AS `table_count`",
+                "bindings": [],
+                "durationMs": 0.06914138793945312,
+                "collection": "orders",
+                "operation": "document_sum",
+                "backtrace": null
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o16103"
+            },
+            "method": "setValidation",
+            "args": {
+              "validation": false
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o16103"
+            },
+            "method": "getProfiler",
+            "args": {}
+          },
+          "expect": {
+            "$profiler": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o16129"
+            },
+            "method": "reset",
+            "args": {}
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "on",
+            "args": {
+              "left": "item",
+              "right": "code"
+            },
+            "as": "o16132"
+          },
+          "bind": "s38062",
+          "expect": {
+            "$query": {
+              "method": "on",
+              "attribute": "",
+              "values": [
+                "item",
+                "=",
+                "code"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "join",
+            "args": {
+              "collection": "items",
+              "alias": "it",
+              "on": [
+                {
+                  "$obj": "o16132"
+                }
+              ]
+            },
+            "as": "o16133"
+          },
+          "bind": "s38063",
+          "expect": {
+            "$query": {
+              "method": "join",
+              "attribute": "items",
+              "values": [
+                {
+                  "$query": {
+                    "method": "on",
+                    "attribute": "",
+                    "values": [
+                      "item",
+                      "=",
+                      "code"
+                    ]
+                  }
+                }
+              ],
+              "alias": "it"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o16103"
+            },
+            "method": "sum",
+            "args": {
+              "collection": "orders",
+              "attribute": "price",
+              "queries": [
+                {
+                  "$obj": "o16133"
+                }
+              ]
+            }
+          },
+          "expect": 40
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o16103"
+            },
+            "method": "getProfiler",
+            "args": {}
+          },
+          "expect": {
+            "$profiler": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o16129"
+            },
+            "method": "getLogs",
+            "args": {}
+          },
+          "expect": [
+            {
+              "$value": "Profiler\\Log",
+              "fields": {
+                "query": "SELECT * FROM `aggregate_minors_u000000000068__metadata` AS `table_main` WHERE `_uid` COLLATE NOCASE = :_uid",
+                "bindings": {
+                  ":_uid": "orders"
+                },
+                "durationMs": 0.015974044799804688,
+                "collection": "_metadata",
+                "operation": "document_read",
+                "backtrace": null
+              }
+            },
+            {
+              "$value": "Profiler\\Log",
+              "fields": {
+                "query": "SELECT * FROM `aggregate_minors_u000000000068__metadata` AS `table_main` WHERE `_uid` COLLATE NOCASE = :_uid",
+                "bindings": {
+                  ":_uid": "items"
+                },
+                "durationMs": 0.003814697265625,
+                "collection": "_metadata",
+                "operation": "document_read",
+                "backtrace": null
+              }
+            },
+            {
+              "$value": "Profiler\\Log",
+              "fields": {
+                "query": "SELECT SUM(`sum_attr`) AS `sum` FROM (SELECT `it`.`price` AS `sum_attr` FROM `aggregate_minors_u000000000068_orders` AS `table_main` JOIN `aggregate_minors_u000000000068_items` AS `it` ON `table_main`.`item` = `it`.`code`) AS `table_count`",
+                "bindings": [],
+                "durationMs": 0.06103515625,
+                "collection": "orders",
+                "operation": "document_sum",
+                "backtrace": null
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "AggregateMinorsTest::testSumRefusesABareNameNoCollectionOrSeveralJoinsDeclare",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o16134"
+          },
+          "bind": "s38067",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o16134"
+              },
+              "cache": "none"
+            },
+            "as": "o16135"
+          },
+          "bind": "s38068",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o16135"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "aggregate_minors"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o16135"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "aggregate_minors_u000000000069"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o16136"
+          },
+          "bind": "s38071",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o16135"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o16136"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Hook\\Permissions",
+            "args": {},
+            "as": "o16137"
+          },
+          "bind": "s38073",
+          "expect": {
+            "$hook": "Permissions"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o16135"
+            },
+            "method": "addHook",
+            "args": {
+              "hook": {
+                "$obj": "o16137"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o16135"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o16138"
+          },
+          "bind": "s38076",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o16138"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o16139"
+          },
+          "bind": "s38078",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o16139"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "item",
+              "size": 16
+            },
+            "as": "o16140"
+          },
+          "bind": "s38080",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "item",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 16,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "quantity"
+            },
+            "as": "o16141"
+          },
+          "bind": "s38081",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "quantity",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "name",
+              "size": 16
+            },
+            "as": "o16142"
+          },
+          "bind": "s38082",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 16,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "orders",
+              "attributes": [
+                {
+                  "$obj": "o16140"
+                },
+                {
+                  "$obj": "o16141"
+                },
+                {
+                  "$obj": "o16142"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "as": "o16143"
+          },
+          "bind": "s38083",
+          "expect": {
+            "$document": {
+              "$id": "orders",
+              "name": "orders",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "item",
+                    "key": "item",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "quantity",
+                    "key": "quantity",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o16135"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o16143"
+              }
+            },
+            "as": "o16144"
+          },
+          "expect": {
+            "$document": {
+              "$id": "orders",
+              "name": "orders",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "item",
+                    "key": "item",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "quantity",
+                    "key": "quantity",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "code",
+              "size": 16
+            },
+            "as": "o16145"
+          },
+          "bind": "s38085",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "code",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 16,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "price"
+            },
+            "as": "o16146"
+          },
+          "bind": "s38086",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "price",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "quantity"
+            },
+            "as": "o16147"
+          },
+          "bind": "s38087",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "quantity",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "name",
+              "size": 16
+            },
+            "as": "o16148"
+          },
+          "bind": "s38088",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 16,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "items",
+              "attributes": [
+                {
+                  "$obj": "o16145"
+                },
+                {
+                  "$obj": "o16146"
+                },
+                {
+                  "$obj": "o16147"
+                },
+                {
+                  "$obj": "o16148"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "as": "o16149"
+          },
+          "bind": "s38089",
+          "expect": {
+            "$document": {
+              "$id": "items",
+              "name": "items",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "code",
+                    "key": "code",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "price",
+                    "key": "price",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "quantity",
+                    "key": "quantity",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o16135"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o16149"
+              }
+            },
+            "as": "o16150"
+          },
+          "expect": {
+            "$document": {
+              "$id": "items",
+              "name": "items",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "code",
+                    "key": "code",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "price",
+                    "key": "price",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "quantity",
+                    "key": "quantity",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "code",
+              "size": 16
+            },
+            "as": "o16151"
+          },
+          "bind": "s38091",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "code",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 16,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "price"
+            },
+            "as": "o16152"
+          },
+          "bind": "s38092",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "price",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "extras",
+              "attributes": [
+                {
+                  "$obj": "o16151"
+                },
+                {
+                  "$obj": "o16152"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "as": "o16153"
+          },
+          "bind": "s38093",
+          "expect": {
+            "$document": {
+              "$id": "extras",
+              "name": "extras",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "code",
+                    "key": "code",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "price",
+                    "key": "price",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o16135"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o16153"
+              }
+            },
+            "as": "o16154"
+          },
+          "expect": {
+            "$document": {
+              "$id": "extras",
+              "name": "extras",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "code",
+                    "key": "code",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "price",
+                    "key": "price",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "3"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "o1",
+                "$permissions": [],
+                "item": "a",
+                "quantity": 1,
+                "name": "x"
+              }
+            },
+            "as": "o16155"
+          },
+          "bind": "s38095",
+          "expect": {
+            "$document": {
+              "$id": "o1",
+              "$permissions": [],
+              "item": "a",
+              "quantity": 1,
+              "name": "x"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o16135"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "orders",
+              "document": {
+                "$obj": "o16155"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o1",
+              "$permissions": [],
+              "item": "a",
+              "quantity": 1,
+              "name": "x",
+              "$collection": "orders",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "o2",
+                "$permissions": [],
+                "item": "b",
+                "quantity": 2,
+                "name": "y"
+              }
+            },
+            "as": "o16156"
+          },
+          "bind": "s38097",
+          "expect": {
+            "$document": {
+              "$id": "o2",
+              "$permissions": [],
+              "item": "b",
+              "quantity": 2,
+              "name": "y"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o16135"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "orders",
+              "document": {
+                "$obj": "o16156"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o2",
+              "$permissions": [],
+              "item": "b",
+              "quantity": 2,
+              "name": "y",
+              "$collection": "orders",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "o3",
+                "$permissions": [],
+                "item": "a",
+                "quantity": 3,
+                "name": "x"
+              }
+            },
+            "as": "o16157"
+          },
+          "bind": "s38099",
+          "expect": {
+            "$document": {
+              "$id": "o3",
+              "$permissions": [],
+              "item": "a",
+              "quantity": 3,
+              "name": "x"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o16135"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "orders",
+              "document": {
+                "$obj": "o16157"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o3",
+              "$permissions": [],
+              "item": "a",
+              "quantity": 3,
+              "name": "x",
+              "$collection": "orders",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "3"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "a",
+                "$permissions": [],
+                "code": "a",
+                "price": 10,
+                "quantity": 100,
+                "name": "apple"
+              }
+            },
+            "as": "o16158"
+          },
+          "bind": "s38101",
+          "expect": {
+            "$document": {
+              "$id": "a",
+              "$permissions": [],
+              "code": "a",
+              "price": 10,
+              "quantity": 100,
+              "name": "apple"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o16135"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "items",
+              "document": {
+                "$obj": "o16158"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "a",
+              "$permissions": [],
+              "code": "a",
+              "price": 10,
+              "quantity": 100,
+              "name": "apple",
+              "$collection": "items",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "b",
+                "$permissions": [],
+                "code": "b",
+                "price": 20,
+                "quantity": 100,
+                "name": "banana"
+              }
+            },
+            "as": "o16159"
+          },
+          "bind": "s38103",
+          "expect": {
+            "$document": {
+              "$id": "b",
+              "$permissions": [],
+              "code": "b",
+              "price": 20,
+              "quantity": 100,
+              "name": "banana"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o16135"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "items",
+              "document": {
+                "$obj": "o16159"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "b",
+              "$permissions": [],
+              "code": "b",
+              "price": 20,
+              "quantity": 100,
+              "name": "banana",
+              "$collection": "items",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "a",
+                "$permissions": [],
+                "code": "a",
+                "price": 100
+              }
+            },
+            "as": "o16160"
+          },
+          "bind": "s38105",
+          "expect": {
+            "$document": {
+              "$id": "a",
+              "$permissions": [],
+              "code": "a",
+              "price": 100
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o16135"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "extras",
+              "document": {
+                "$obj": "o16160"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "a",
+              "$permissions": [],
+              "code": "a",
+              "price": 100,
+              "$collection": "extras",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "on",
+            "args": {
+              "left": "item",
+              "right": "code"
+            },
+            "as": "o16161"
+          },
+          "bind": "s38107",
+          "expect": {
+            "$query": {
+              "method": "on",
+              "attribute": "",
+              "values": [
+                "item",
+                "=",
+                "code"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "join",
+            "args": {
+              "collection": "items",
+              "alias": "it",
+              "on": [
+                {
+                  "$obj": "o16161"
+                }
+              ]
+            },
+            "as": "o16162"
+          },
+          "bind": "s38108",
+          "expect": {
+            "$query": {
+              "method": "join",
+              "attribute": "items",
+              "values": [
+                {
+                  "$query": {
+                    "method": "on",
+                    "attribute": "",
+                    "values": [
+                      "item",
+                      "=",
+                      "code"
+                    ]
+                  }
+                }
+              ],
+              "alias": "it"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "on",
+            "args": {
+              "left": "item",
+              "right": "code"
+            },
+            "as": "o16163"
+          },
+          "bind": "s38109",
+          "expect": {
+            "$query": {
+              "method": "on",
+              "attribute": "",
+              "values": [
+                "item",
+                "=",
+                "code"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "join",
+            "args": {
+              "collection": "extras",
+              "alias": "ex",
+              "on": [
+                {
+                  "$obj": "o16163"
+                }
+              ]
+            },
+            "as": "o16164"
+          },
+          "bind": "s38110",
+          "expect": {
+            "$query": {
+              "method": "join",
+              "attribute": "extras",
+              "values": [
+                {
+                  "$query": {
+                    "method": "on",
+                    "attribute": "",
+                    "values": [
+                      "item",
+                      "=",
+                      "code"
+                    ]
+                  }
+                }
+              ],
+              "alias": "ex"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o16135"
+            },
+            "method": "sum",
+            "args": {
+              "collection": "orders",
+              "attribute": "price",
+              "queries": [
+                {
+                  "$obj": "o16162"
+                },
+                {
+                  "$obj": "o16164"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Attribute \"price\" is ambiguous across joins; qualify it with a join alias"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o16135"
+            },
+            "method": "sum",
+            "args": {
+              "collection": "orders",
+              "attribute": "price"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Attribute not found in schema: price"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o16135"
+            },
+            "method": "sum",
+            "args": {
+              "collection": "orders",
+              "attribute": "weight",
+              "queries": [
+                {
+                  "$obj": "o16162"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Attribute not found in schema: weight"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o16135"
+            },
+            "method": "sum",
+            "args": {
+              "collection": "orders",
+              "attribute": "ex.price",
+              "queries": [
+                {
+                  "$obj": "o16162"
+                },
+                {
+                  "$obj": "o16164"
+                }
+              ]
+            }
+          },
+          "expect": 200
+        }
+      ]
+    }
+  ]
+}

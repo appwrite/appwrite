@@ -1,0 +1,2404 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/SQLiteInsertStatementTest.php"
+  ],
+  "cases": [
+    {
+      "name": "SQLiteInsertStatementTest::testCreateDocumentRunsOneInsertPerTableAndNoSelect#plain tables",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o531"
+          },
+          "bind": "s1049",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o531"
+              },
+              "cache": "memory"
+            },
+            "as": "o532"
+          },
+          "bind": "s1050",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o533"
+          },
+          "bind": "s1051",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o532"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o533"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o532"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "insert_statement"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o532"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "insert_statement"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o532"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Hook\\Permissions",
+            "args": {},
+            "as": "o534"
+          },
+          "bind": "s1056",
+          "expect": {
+            "$hook": "Permissions"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o532"
+            },
+            "method": "addHook",
+            "args": {
+              "hook": {
+                "$obj": "o534"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "body",
+              "size": 64
+            },
+            "as": "o535"
+          },
+          "bind": "s1058",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "body",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o536"
+          },
+          "bind": "s1059",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o536"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o537"
+          },
+          "bind": "s1061",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o537"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "notes",
+              "attributes": [
+                {
+                  "$obj": "o535"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "documentSecurity": true
+            },
+            "as": "o538"
+          },
+          "bind": "s1063",
+          "expect": {
+            "$document": {
+              "$id": "notes",
+              "name": "notes",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "body",
+                    "key": "body",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o532"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o538"
+              }
+            },
+            "as": "o539"
+          },
+          "expect": {
+            "$document": {
+              "$id": "notes",
+              "name": "notes",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "body",
+                    "key": "body",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "warmup",
+                "$permissions": [],
+                "body": "warmup"
+              }
+            },
+            "as": "o540"
+          },
+          "bind": "s1065",
+          "expect": {
+            "$document": {
+              "$id": "warmup",
+              "$permissions": [],
+              "body": "warmup"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o532"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "notes",
+              "document": {
+                "$obj": "o540"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "warmup",
+              "$permissions": [],
+              "body": "warmup",
+              "$collection": "notes",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o532"
+            },
+            "method": "setProfiling",
+            "args": {
+              "profiling": true
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o532"
+            },
+            "method": "getProfiler",
+            "args": {},
+            "as": "o541"
+          },
+          "bind": "s1068",
+          "expect": {
+            "$profiler": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o541"
+            },
+            "method": "reset",
+            "args": {}
+          },
+          "expect": null
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "measured",
+                "$permissions": [],
+                "body": "measured"
+              }
+            },
+            "as": "o542"
+          },
+          "bind": "s1070",
+          "expect": {
+            "$document": {
+              "$id": "measured",
+              "$permissions": [],
+              "body": "measured"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o532"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "notes",
+              "document": {
+                "$obj": "o542"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "measured",
+              "$permissions": [],
+              "body": "measured",
+              "$collection": "notes",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o541"
+            },
+            "method": "getLogs",
+            "args": {}
+          },
+          "expect": [
+            {
+              "$value": "Profiler\\Log",
+              "fields": {
+                "query": "INSERT INTO `insert_statement_notes` (`_uid`, `body`, `_createdAt`, `_updatedAt`, `_permissions`) VALUES (?, ?, ?, ?, ?)",
+                "bindings": [
+                  "measured",
+                  "measured",
+                  "<now>",
+                  "<now>",
+                  "[]"
+                ],
+                "durationMs": 0.07414817810058594,
+                "collection": "",
+                "operation": "document_create",
+                "backtrace": null
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o542"
+            },
+            "method": "getSequence",
+            "args": {}
+          },
+          "expect": "2"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o532"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "notes",
+              "id": "measured"
+            },
+            "as": "o543"
+          },
+          "bind": "s1074",
+          "expect": {
+            "$document": {
+              "body": "measured",
+              "$sequence": "2",
+              "$id": "measured",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "notes"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o543"
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "measured"
+        }
+      ]
+    },
+    {
+      "name": "SQLiteInsertStatementTest::testCreateDocumentRunsOneInsertPerTableAndNoSelect#plain tables, document permissions",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o544"
+          },
+          "bind": "s1076",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o544"
+              },
+              "cache": "memory"
+            },
+            "as": "o545"
+          },
+          "bind": "s1077",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o546"
+          },
+          "bind": "s1078",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o545"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o546"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o545"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "insert_statement"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o545"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "insert_statement"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o545"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Hook\\Permissions",
+            "args": {},
+            "as": "o547"
+          },
+          "bind": "s1083",
+          "expect": {
+            "$hook": "Permissions"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o545"
+            },
+            "method": "addHook",
+            "args": {
+              "hook": {
+                "$obj": "o547"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "body",
+              "size": 64
+            },
+            "as": "o548"
+          },
+          "bind": "s1085",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "body",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o549"
+          },
+          "bind": "s1086",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o549"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o550"
+          },
+          "bind": "s1088",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o550"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "notes",
+              "attributes": [
+                {
+                  "$obj": "o548"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "documentSecurity": true
+            },
+            "as": "o551"
+          },
+          "bind": "s1090",
+          "expect": {
+            "$document": {
+              "$id": "notes",
+              "name": "notes",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "body",
+                    "key": "body",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o545"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o551"
+              }
+            },
+            "as": "o552"
+          },
+          "expect": {
+            "$document": {
+              "$id": "notes",
+              "name": "notes",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "body",
+                    "key": "body",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o553"
+          },
+          "bind": "s1092",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o553"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "warmup",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "body": "warmup"
+              }
+            },
+            "as": "o554"
+          },
+          "bind": "s1094",
+          "expect": {
+            "$document": {
+              "$id": "warmup",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "body": "warmup"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o545"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "notes",
+              "document": {
+                "$obj": "o554"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "warmup",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "body": "warmup",
+              "$collection": "notes",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o545"
+            },
+            "method": "setProfiling",
+            "args": {
+              "profiling": true
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o545"
+            },
+            "method": "getProfiler",
+            "args": {},
+            "as": "o555"
+          },
+          "bind": "s1097",
+          "expect": {
+            "$profiler": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o555"
+            },
+            "method": "reset",
+            "args": {}
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o556"
+          },
+          "bind": "s1099",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o556"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "measured",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "body": "measured"
+              }
+            },
+            "as": "o557"
+          },
+          "bind": "s1101",
+          "expect": {
+            "$document": {
+              "$id": "measured",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "body": "measured"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o545"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "notes",
+              "document": {
+                "$obj": "o557"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "measured",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "body": "measured",
+              "$collection": "notes",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o555"
+            },
+            "method": "getLogs",
+            "args": {}
+          },
+          "expect": [
+            {
+              "$value": "Profiler\\Log",
+              "fields": {
+                "query": "INSERT INTO `insert_statement_notes` (`_uid`, `body`, `_createdAt`, `_updatedAt`, `_permissions`) VALUES (?, ?, ?, ?, ?)",
+                "bindings": [
+                  "measured",
+                  "measured",
+                  "<now>",
+                  "<now>",
+                  "[\"read(\\\"any\\\")\"]"
+                ],
+                "durationMs": 0.05602836608886719,
+                "collection": "",
+                "operation": "document_create",
+                "backtrace": null
+              }
+            },
+            {
+              "$value": "Profiler\\Log",
+              "fields": {
+                "query": "INSERT INTO `insert_statement_notes_perms` (`_document`, `_type`, `_permission`) VALUES (?, ?, ?)",
+                "bindings": [
+                  "measured",
+                  "read",
+                  "any"
+                ],
+                "durationMs": 0.012874603271484375,
+                "collection": "",
+                "operation": "permissions_create",
+                "backtrace": null
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o557"
+            },
+            "method": "getSequence",
+            "args": {}
+          },
+          "expect": "2"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o545"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "notes",
+              "id": "measured"
+            },
+            "as": "o558"
+          },
+          "bind": "s1105",
+          "expect": {
+            "$document": {
+              "body": "measured",
+              "$sequence": "2",
+              "$id": "measured",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "notes"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o558"
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "measured"
+        }
+      ]
+    },
+    {
+      "name": "SQLiteInsertStatementTest::testCreateDocumentRunsOneInsertPerTableAndNoSelect#shared tables",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o559"
+          },
+          "bind": "s1107",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o559"
+              },
+              "cache": "memory"
+            },
+            "as": "o560"
+          },
+          "bind": "s1108",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o561"
+          },
+          "bind": "s1109",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o560"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o561"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o560"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "insert_statement"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o560"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "insert_statement"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o560"
+            },
+            "method": "setSharedTables",
+            "args": {
+              "sharedTables": true
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o560"
+            },
+            "method": "setTenant",
+            "args": {
+              "tenant": 1
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o560"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Hook\\Permissions",
+            "args": {},
+            "as": "o562"
+          },
+          "bind": "s1116",
+          "expect": {
+            "$hook": "Permissions"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o560"
+            },
+            "method": "addHook",
+            "args": {
+              "hook": {
+                "$obj": "o562"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "body",
+              "size": 64
+            },
+            "as": "o563"
+          },
+          "bind": "s1118",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "body",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o564"
+          },
+          "bind": "s1119",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o564"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o565"
+          },
+          "bind": "s1121",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o565"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "notes",
+              "attributes": [
+                {
+                  "$obj": "o563"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "documentSecurity": true
+            },
+            "as": "o566"
+          },
+          "bind": "s1123",
+          "expect": {
+            "$document": {
+              "$id": "notes",
+              "name": "notes",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "body",
+                    "key": "body",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o560"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o566"
+              }
+            },
+            "as": "o567"
+          },
+          "expect": {
+            "$document": {
+              "$id": "notes",
+              "name": "notes",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "body",
+                    "key": "body",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "1",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "warmup",
+                "$permissions": [],
+                "body": "warmup"
+              }
+            },
+            "as": "o568"
+          },
+          "bind": "s1125",
+          "expect": {
+            "$document": {
+              "$id": "warmup",
+              "$permissions": [],
+              "body": "warmup"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o560"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "notes",
+              "document": {
+                "$obj": "o568"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "warmup",
+              "$permissions": [],
+              "body": "warmup",
+              "$collection": "notes",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "1",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o560"
+            },
+            "method": "setProfiling",
+            "args": {
+              "profiling": true
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o560"
+            },
+            "method": "getProfiler",
+            "args": {},
+            "as": "o569"
+          },
+          "bind": "s1128",
+          "expect": {
+            "$profiler": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o569"
+            },
+            "method": "reset",
+            "args": {}
+          },
+          "expect": null
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "measured",
+                "$permissions": [],
+                "body": "measured"
+              }
+            },
+            "as": "o570"
+          },
+          "bind": "s1130",
+          "expect": {
+            "$document": {
+              "$id": "measured",
+              "$permissions": [],
+              "body": "measured"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o560"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "notes",
+              "document": {
+                "$obj": "o570"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "measured",
+              "$permissions": [],
+              "body": "measured",
+              "$collection": "notes",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "1",
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o569"
+            },
+            "method": "getLogs",
+            "args": {}
+          },
+          "expect": [
+            {
+              "$value": "Profiler\\Log",
+              "fields": {
+                "query": "INSERT INTO `insert_statement_notes` (`_uid`, `body`, `_createdAt`, `_updatedAt`, `_permissions`, `_tenant`) VALUES (?, ?, ?, ?, ?, ?)",
+                "bindings": [
+                  "measured",
+                  "measured",
+                  "<now>",
+                  "<now>",
+                  "[]",
+                  1
+                ],
+                "durationMs": 0.06008148193359375,
+                "collection": "",
+                "operation": "document_create",
+                "backtrace": null
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o570"
+            },
+            "method": "getSequence",
+            "args": {}
+          },
+          "expect": "2"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o560"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "notes",
+              "id": "measured"
+            },
+            "as": "o571"
+          },
+          "bind": "s1134",
+          "expect": {
+            "$document": {
+              "body": "measured",
+              "$sequence": "2",
+              "$id": "measured",
+              "$tenant": "1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "notes"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o571"
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "measured"
+        }
+      ]
+    },
+    {
+      "name": "SQLiteInsertStatementTest::testCreateDocumentRunsOneInsertPerTableAndNoSelect#shared tables, document permissions",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o572"
+          },
+          "bind": "s1136",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o572"
+              },
+              "cache": "memory"
+            },
+            "as": "o573"
+          },
+          "bind": "s1137",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o574"
+          },
+          "bind": "s1138",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o573"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o574"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o573"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "insert_statement"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o573"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "insert_statement"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o573"
+            },
+            "method": "setSharedTables",
+            "args": {
+              "sharedTables": true
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o573"
+            },
+            "method": "setTenant",
+            "args": {
+              "tenant": 1
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o573"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Hook\\Permissions",
+            "args": {},
+            "as": "o575"
+          },
+          "bind": "s1145",
+          "expect": {
+            "$hook": "Permissions"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o573"
+            },
+            "method": "addHook",
+            "args": {
+              "hook": {
+                "$obj": "o575"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "body",
+              "size": 64
+            },
+            "as": "o576"
+          },
+          "bind": "s1147",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "body",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o577"
+          },
+          "bind": "s1148",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o577"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o578"
+          },
+          "bind": "s1150",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o578"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "notes",
+              "attributes": [
+                {
+                  "$obj": "o576"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "documentSecurity": true
+            },
+            "as": "o579"
+          },
+          "bind": "s1152",
+          "expect": {
+            "$document": {
+              "$id": "notes",
+              "name": "notes",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "body",
+                    "key": "body",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o573"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o579"
+              }
+            },
+            "as": "o580"
+          },
+          "expect": {
+            "$document": {
+              "$id": "notes",
+              "name": "notes",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "body",
+                    "key": "body",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "1",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o581"
+          },
+          "bind": "s1154",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o581"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "warmup",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "body": "warmup"
+              }
+            },
+            "as": "o582"
+          },
+          "bind": "s1156",
+          "expect": {
+            "$document": {
+              "$id": "warmup",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "body": "warmup"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o573"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "notes",
+              "document": {
+                "$obj": "o582"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "warmup",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "body": "warmup",
+              "$collection": "notes",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "1",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o573"
+            },
+            "method": "setProfiling",
+            "args": {
+              "profiling": true
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o573"
+            },
+            "method": "getProfiler",
+            "args": {},
+            "as": "o583"
+          },
+          "bind": "s1159",
+          "expect": {
+            "$profiler": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o583"
+            },
+            "method": "reset",
+            "args": {}
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o584"
+          },
+          "bind": "s1161",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o584"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "measured",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "body": "measured"
+              }
+            },
+            "as": "o585"
+          },
+          "bind": "s1163",
+          "expect": {
+            "$document": {
+              "$id": "measured",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "body": "measured"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o573"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "notes",
+              "document": {
+                "$obj": "o585"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "measured",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "body": "measured",
+              "$collection": "notes",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "1",
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o583"
+            },
+            "method": "getLogs",
+            "args": {}
+          },
+          "expect": [
+            {
+              "$value": "Profiler\\Log",
+              "fields": {
+                "query": "INSERT INTO `insert_statement_notes` (`_uid`, `body`, `_createdAt`, `_updatedAt`, `_permissions`, `_tenant`) VALUES (?, ?, ?, ?, ?, ?)",
+                "bindings": [
+                  "measured",
+                  "measured",
+                  "<now>",
+                  "<now>",
+                  "[\"read(\\\"any\\\")\"]",
+                  1
+                ],
+                "durationMs": 0.07009506225585938,
+                "collection": "",
+                "operation": "document_create",
+                "backtrace": null
+              }
+            },
+            {
+              "$value": "Profiler\\Log",
+              "fields": {
+                "query": "INSERT INTO `insert_statement_notes_perms` (`_document`, `_type`, `_permission`, `_tenant`) VALUES (?, ?, ?, ?)",
+                "bindings": [
+                  "measured",
+                  "read",
+                  "any",
+                  1
+                ],
+                "durationMs": 0.015020370483398438,
+                "collection": "",
+                "operation": "permissions_create",
+                "backtrace": null
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o585"
+            },
+            "method": "getSequence",
+            "args": {}
+          },
+          "expect": "2"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o573"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "notes",
+              "id": "measured"
+            },
+            "as": "o586"
+          },
+          "bind": "s1167",
+          "expect": {
+            "$document": {
+              "body": "measured",
+              "$sequence": "2",
+              "$id": "measured",
+              "$tenant": "1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "notes"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o586"
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "measured"
+        }
+      ]
+    }
+  ]
+}

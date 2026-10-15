@@ -1,0 +1,79 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Model/RelationshipFactoryTest.php"
+  ],
+  "cases": [
+    {
+      "name": "RelationshipFactoryTest::testFactoriesAcceptNamedArguments",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "manyToMany",
+            "args": {
+              "relatedCollection": "tags",
+              "key": "tags",
+              "twoWay": true,
+              "twoWayKey": "posts",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::SetNull"
+              }
+            },
+            "as": "o4271"
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "tags",
+              "type": {
+                "$enum": "RelationshipType::ManyToMany"
+              },
+              "twoWay": true,
+              "key": "tags",
+              "twoWayKey": "posts",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::SetNull"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "RelationshipFactoryTest::testOneWayRelationshipMayNameItsTwoWayKey",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Relationship",
+            "method": "manyToOne",
+            "args": {
+              "relatedCollection": "users",
+              "key": "author",
+              "twoWayKey": "posts"
+            },
+            "as": "o4272"
+          },
+          "expect": {
+            "$value": "Relationship",
+            "fields": {
+              "relatedCollection": "users",
+              "type": {
+                "$enum": "RelationshipType::ManyToOne"
+              },
+              "twoWay": false,
+              "key": "author",
+              "twoWayKey": "posts",
+              "onDelete": {
+                "$enum": "RelationshipDeleteAction::Restrict"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

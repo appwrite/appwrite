@@ -17,33 +17,98 @@
           }
         },
         {
-          "op": "database.create_collection",
+          "op": "object.call",
           "args": {
-            "id": "people",
-            "permissions": [
-              "read(\"any\")",
-              "create(\"any\")",
-              "update(\"any\")",
-              "delete(\"any\")"
-            ]
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "people",
+              "permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ]
+            },
+            "as": "c77"
           },
           "expect": {
             "$document": {
               "$id": "people",
+              "name": "people",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$obj": "c77"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "people",
+              "name": "people",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
               "$permissions": [
                 "read(\"any\")",
                 "create(\"any\")",
                 "update(\"any\")",
                 "delete(\"any\")"
               ],
-              "name": "people",
-              "attributes": [],
-              "indexes": [],
-              "documentSecurity": true,
               "$collection": "_metadata",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "<uuid7>"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "name",
+                "key": "name",
+                "type": "string",
+                "size": 128,
+                "required": true
+              }
+            },
+            "as": "a78"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 128,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
             }
           }
         },
@@ -51,49 +116,216 @@
           "op": "database.create_attribute",
           "args": {
             "collection": "people",
-            "id": "name",
-            "type": "string",
-            "size": 128,
-            "required": true
+            "attribute": {
+              "$obj": "a78"
+            }
           },
-          "expect": true
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 128,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "age",
+                "key": "age",
+                "type": "integer",
+                "size": 0,
+                "required": false
+              }
+            },
+            "as": "a79"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "age",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
         },
         {
           "op": "database.create_attribute",
           "args": {
             "collection": "people",
-            "id": "age",
-            "type": "integer",
-            "size": 0,
-            "required": false
+            "attribute": {
+              "$obj": "a79"
+            }
           },
-          "expect": true
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "age",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "born",
+                "key": "born",
+                "type": "datetime",
+                "size": 0,
+                "required": false,
+                "filters": [
+                  "datetime"
+                ]
+              }
+            },
+            "as": "a80"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "born",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Datetime"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "filters": [
+                "datetime"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
         },
         {
           "op": "database.create_attribute",
           "args": {
             "collection": "people",
-            "id": "born",
-            "type": "datetime",
-            "size": 0,
-            "required": false,
-            "filters": [
-              "datetime"
-            ]
+            "attribute": {
+              "$obj": "a80"
+            }
           },
-          "expect": true
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "born",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Datetime"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": false,
+              "array": false,
+              "format": null,
+              "filters": [
+                "datetime"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "by_name",
+                "key": "by_name",
+                "type": "key",
+                "attributes": [
+                  "name"
+                ]
+              }
+            },
+            "as": "i81"
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
         },
         {
           "op": "database.create_index",
           "args": {
             "collection": "people",
-            "id": "by_name",
-            "type": "key",
-            "attributes": [
-              "name"
-            ]
+            "index": {
+              "$obj": "i81"
+            }
           },
-          "expect": true
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
         },
         {
           "op": "database.create_document",
@@ -358,57 +590,6 @@
                 "born": null
               }
             }
-          ]
-        },
-        {
-          "op": "mongo.adapter",
-          "args": {
-            "method": "getTenantFilters",
-            "args": {
-              "collection": "people"
-            }
-          },
-          "expect": []
-        },
-        {
-          "op": "mongo.adapter",
-          "args": {
-            "method": "castingBefore",
-            "args": {
-              "collection": {
-                "$id": "people",
-                "attributes": [
-                  {
-                    "$id": "born",
-                    "type": "datetime",
-                    "array": false
-                  }
-                ]
-              },
-              "document": {
-                "born": "2024-01-02T03:04:05.678+00:00"
-              }
-            }
-          },
-          "expect": {
-            "$error": {
-              "class": "TypeError",
-              "message": "array_filter(): Argument #1 ($array) must be of type array, null given"
-            }
-          }
-        },
-        {
-          "op": "mongo.permission_strings",
-          "args": {
-            "roles": [
-              "user:alice.",
-              "users"
-            ],
-            "type": "read"
-          },
-          "expect": [
-            "read(\"user:alice.\")",
-            "read(\"users\")"
           ]
         }
       ]

@@ -22,19 +22,18 @@
           }
         },
         {
-          "op": "database.set_metadata",
+          "op": "db.add_format",
           "args": {
-            "key": "compat",
-            "value": ""
+            "name": "priceRange"
           },
-          "expect": {
-            "$database": true
-          }
+          "expect": true
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
         },
         {
           "op": "database.add_filter",
@@ -58,136 +57,22 @@
           "expect": null
         },
         {
-          "op": "db.adapter",
-          "args": {
-            "method": "getSupportForVectors",
-            "args": {}
-          },
-          "expect": false
-        }
-      ]
-    },
-    {
-      "name": "VectorTests::testVectorInvalidDimensions",
-      "state": [
-        "mongo@database-mongo"
-      ],
-      "steps": [
-        {
-          "op": "db.open",
-          "args": {
-            "engine": "mongo",
-            "schemaless": true
-          },
-          "bind": "db",
-          "expect": {
-            "$handle": "*"
-          }
-        },
-        {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
           "op": "database.add_filter",
           "args": {
-            "name": "encrypt"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "subQueryProbe"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "operator_double_decode"
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
           },
           "expect": null
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForVectors",
-            "args": {}
-          },
-          "expect": false
-        }
-      ]
-    },
-    {
-      "name": "VectorTests::testVectorTooManyDimensions",
-      "state": [
-        "mongo@database-mongo"
-      ],
-      "steps": [
-        {
-          "op": "db.open",
-          "args": {
-            "engine": "mongo",
-            "schemaless": true
-          },
-          "bind": "db",
-          "expect": {
-            "$handle": "*"
-          }
-        },
-        {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "encrypt"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "subQueryProbe"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "operator_double_decode"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.adapter",
-          "args": {
-            "method": "getSupportForVectors",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Vectors"
+              }
+            }
           },
           "expect": false
         }
@@ -211,19 +96,18 @@
           }
         },
         {
-          "op": "database.set_metadata",
+          "op": "db.add_format",
           "args": {
-            "key": "compat",
-            "value": ""
+            "name": "priceRange"
           },
-          "expect": {
-            "$database": true
-          }
+          "expect": true
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
         },
         {
           "op": "database.add_filter",
@@ -247,10 +131,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForVectors",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Vectors"
+              }
+            }
           },
           "expect": false
         }
@@ -274,19 +170,18 @@
           }
         },
         {
-          "op": "database.set_metadata",
+          "op": "db.add_format",
           "args": {
-            "key": "compat",
-            "value": ""
+            "name": "priceRange"
           },
-          "expect": {
-            "$database": true
-          }
+          "expect": true
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
         },
         {
           "op": "database.add_filter",
@@ -310,136 +205,22 @@
           "expect": null
         },
         {
-          "op": "db.adapter",
-          "args": {
-            "method": "getSupportForVectors",
-            "args": {}
-          },
-          "expect": false
-        }
-      ]
-    },
-    {
-      "name": "VectorTests::testVectorDistance",
-      "state": [
-        "mongo@database-mongo"
-      ],
-      "steps": [
-        {
-          "op": "db.open",
-          "args": {
-            "engine": "mongo",
-            "schemaless": true
-          },
-          "bind": "db",
-          "expect": {
-            "$handle": "*"
-          }
-        },
-        {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
           "op": "database.add_filter",
           "args": {
-            "name": "encrypt"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "subQueryProbe"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "operator_double_decode"
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
           },
           "expect": null
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForVectors",
-            "args": {}
-          },
-          "expect": false
-        }
-      ]
-    },
-    {
-      "name": "VectorTests::testVectorQueryValidation",
-      "state": [
-        "mongo@database-mongo"
-      ],
-      "steps": [
-        {
-          "op": "db.open",
-          "args": {
-            "engine": "mongo",
-            "schemaless": true
-          },
-          "bind": "db",
-          "expect": {
-            "$handle": "*"
-          }
-        },
-        {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "encrypt"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "subQueryProbe"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "operator_double_decode"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.adapter",
-          "args": {
-            "method": "getSupportForVectors",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Vectors"
+              }
+            }
           },
           "expect": false
         }
@@ -463,19 +244,18 @@
           }
         },
         {
-          "op": "database.set_metadata",
+          "op": "db.add_format",
           "args": {
-            "key": "compat",
-            "value": ""
+            "name": "priceRange"
           },
-          "expect": {
-            "$database": true
-          }
+          "expect": true
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
         },
         {
           "op": "database.add_filter",
@@ -499,10 +279,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForVectors",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Vectors"
+              }
+            }
           },
           "expect": false
         }
@@ -526,19 +318,18 @@
           }
         },
         {
-          "op": "database.set_metadata",
+          "op": "db.add_format",
           "args": {
-            "key": "compat",
-            "value": ""
+            "name": "priceRange"
           },
-          "expect": {
-            "$database": true
-          }
+          "expect": true
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
         },
         {
           "op": "database.add_filter",
@@ -562,73 +353,22 @@
           "expect": null
         },
         {
-          "op": "db.adapter",
-          "args": {
-            "method": "getSupportForVectors",
-            "args": {}
-          },
-          "expect": false
-        }
-      ]
-    },
-    {
-      "name": "VectorTests::testVectorWithInvalidDataTypes",
-      "state": [
-        "mongo@database-mongo"
-      ],
-      "steps": [
-        {
-          "op": "db.open",
-          "args": {
-            "engine": "mongo",
-            "schemaless": true
-          },
-          "bind": "db",
-          "expect": {
-            "$handle": "*"
-          }
-        },
-        {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
           "op": "database.add_filter",
           "args": {
-            "name": "encrypt"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "subQueryProbe"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "operator_double_decode"
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
           },
           "expect": null
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForVectors",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Vectors"
+              }
+            }
           },
           "expect": false
         }
@@ -652,19 +392,18 @@
           }
         },
         {
-          "op": "database.set_metadata",
+          "op": "db.add_format",
           "args": {
-            "key": "compat",
-            "value": ""
+            "name": "priceRange"
           },
-          "expect": {
-            "$database": true
-          }
+          "expect": true
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
         },
         {
           "op": "database.add_filter",
@@ -688,10 +427,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForVectors",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Vectors"
+              }
+            }
           },
           "expect": false
         }
@@ -715,19 +466,18 @@
           }
         },
         {
-          "op": "database.set_metadata",
+          "op": "db.add_format",
           "args": {
-            "key": "compat",
-            "value": ""
+            "name": "priceRange"
           },
-          "expect": {
-            "$database": true
-          }
+          "expect": true
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
         },
         {
           "op": "database.add_filter",
@@ -751,10 +501,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForVectors",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Vectors"
+              }
+            }
           },
           "expect": false
         }
@@ -778,19 +540,18 @@
           }
         },
         {
-          "op": "database.set_metadata",
+          "op": "db.add_format",
           "args": {
-            "key": "compat",
-            "value": ""
+            "name": "priceRange"
           },
-          "expect": {
-            "$database": true
-          }
+          "expect": true
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
         },
         {
           "op": "database.add_filter",
@@ -814,10 +575,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForVectors",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Vectors"
+              }
+            }
           },
           "expect": false
         }
@@ -841,19 +614,18 @@
           }
         },
         {
-          "op": "database.set_metadata",
+          "op": "db.add_format",
           "args": {
-            "key": "compat",
-            "value": ""
+            "name": "priceRange"
           },
-          "expect": {
-            "$database": true
-          }
+          "expect": true
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
         },
         {
           "op": "database.add_filter",
@@ -877,10 +649,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForVectors",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Vectors"
+              }
+            }
           },
           "expect": false
         }
@@ -904,19 +688,18 @@
           }
         },
         {
-          "op": "database.set_metadata",
+          "op": "db.add_format",
           "args": {
-            "key": "compat",
-            "value": ""
+            "name": "priceRange"
           },
-          "expect": {
-            "$database": true
-          }
+          "expect": true
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
         },
         {
           "op": "database.add_filter",
@@ -940,10 +723,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForVectors",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Vectors"
+              }
+            }
           },
           "expect": false
         }
@@ -967,19 +762,18 @@
           }
         },
         {
-          "op": "database.set_metadata",
+          "op": "db.add_format",
           "args": {
-            "key": "compat",
-            "value": ""
+            "name": "priceRange"
           },
-          "expect": {
-            "$database": true
-          }
+          "expect": true
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
         },
         {
           "op": "database.add_filter",
@@ -1003,10 +797,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForVectors",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Vectors"
+              }
+            }
           },
           "expect": false
         }
@@ -1030,19 +836,18 @@
           }
         },
         {
-          "op": "database.set_metadata",
+          "op": "db.add_format",
           "args": {
-            "key": "compat",
-            "value": ""
+            "name": "priceRange"
           },
-          "expect": {
-            "$database": true
-          }
+          "expect": true
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
         },
         {
           "op": "database.add_filter",
@@ -1066,10 +871,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForVectors",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Vectors"
+              }
+            }
           },
           "expect": false
         }
@@ -1093,19 +910,18 @@
           }
         },
         {
-          "op": "database.set_metadata",
+          "op": "db.add_format",
           "args": {
-            "key": "compat",
-            "value": ""
+            "name": "priceRange"
           },
-          "expect": {
-            "$database": true
-          }
+          "expect": true
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
         },
         {
           "op": "database.add_filter",
@@ -1129,73 +945,22 @@
           "expect": null
         },
         {
-          "op": "db.adapter",
-          "args": {
-            "method": "getSupportForVectors",
-            "args": {}
-          },
-          "expect": false
-        }
-      ]
-    },
-    {
-      "name": "VectorTests::testVectorQueryValidationExtended",
-      "state": [
-        "mongo@database-mongo"
-      ],
-      "steps": [
-        {
-          "op": "db.open",
-          "args": {
-            "engine": "mongo",
-            "schemaless": true
-          },
-          "bind": "db",
-          "expect": {
-            "$handle": "*"
-          }
-        },
-        {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
           "op": "database.add_filter",
           "args": {
-            "name": "encrypt"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "subQueryProbe"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "operator_double_decode"
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
           },
           "expect": null
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForVectors",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Vectors"
+              }
+            }
           },
           "expect": false
         }
@@ -1219,19 +984,18 @@
           }
         },
         {
-          "op": "database.set_metadata",
+          "op": "db.add_format",
           "args": {
-            "key": "compat",
-            "value": ""
+            "name": "priceRange"
           },
-          "expect": {
-            "$database": true
-          }
+          "expect": true
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
         },
         {
           "op": "database.add_filter",
@@ -1255,10 +1019,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForVectors",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Vectors"
+              }
+            }
           },
           "expect": false
         }
@@ -1282,19 +1058,18 @@
           }
         },
         {
-          "op": "database.set_metadata",
+          "op": "db.add_format",
           "args": {
-            "key": "compat",
-            "value": ""
+            "name": "priceRange"
           },
-          "expect": {
-            "$database": true
-          }
+          "expect": true
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
         },
         {
           "op": "database.add_filter",
@@ -1318,10 +1093,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForVectors",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Vectors"
+              }
+            }
           },
           "expect": false
         }
@@ -1345,19 +1132,18 @@
           }
         },
         {
-          "op": "database.set_metadata",
+          "op": "db.add_format",
           "args": {
-            "key": "compat",
-            "value": ""
+            "name": "priceRange"
           },
-          "expect": {
-            "$database": true
-          }
+          "expect": true
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
         },
         {
           "op": "database.add_filter",
@@ -1381,262 +1167,22 @@
           "expect": null
         },
         {
-          "op": "db.adapter",
-          "args": {
-            "method": "getSupportForVectors",
-            "args": {}
-          },
-          "expect": false
-        }
-      ]
-    },
-    {
-      "name": "VectorTests::testVectorWithAssociativeArray",
-      "state": [
-        "mongo@database-mongo"
-      ],
-      "steps": [
-        {
-          "op": "db.open",
-          "args": {
-            "engine": "mongo",
-            "schemaless": true
-          },
-          "bind": "db",
-          "expect": {
-            "$handle": "*"
-          }
-        },
-        {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
           "op": "database.add_filter",
           "args": {
-            "name": "encrypt"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "subQueryProbe"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "operator_double_decode"
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
           },
           "expect": null
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForVectors",
-            "args": {}
-          },
-          "expect": false
-        }
-      ]
-    },
-    {
-      "name": "VectorTests::testVectorWithSparseArray",
-      "state": [
-        "mongo@database-mongo"
-      ],
-      "steps": [
-        {
-          "op": "db.open",
-          "args": {
-            "engine": "mongo",
-            "schemaless": true
-          },
-          "bind": "db",
-          "expect": {
-            "$handle": "*"
-          }
-        },
-        {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "encrypt"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "subQueryProbe"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "operator_double_decode"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.adapter",
-          "args": {
-            "method": "getSupportForVectors",
-            "args": {}
-          },
-          "expect": false
-        }
-      ]
-    },
-    {
-      "name": "VectorTests::testVectorWithNestedArrays",
-      "state": [
-        "mongo@database-mongo"
-      ],
-      "steps": [
-        {
-          "op": "db.open",
-          "args": {
-            "engine": "mongo",
-            "schemaless": true
-          },
-          "bind": "db",
-          "expect": {
-            "$handle": "*"
-          }
-        },
-        {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "encrypt"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "subQueryProbe"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "operator_double_decode"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.adapter",
-          "args": {
-            "method": "getSupportForVectors",
-            "args": {}
-          },
-          "expect": false
-        }
-      ]
-    },
-    {
-      "name": "VectorTests::testVectorWithBooleansInArray",
-      "state": [
-        "mongo@database-mongo"
-      ],
-      "steps": [
-        {
-          "op": "db.open",
-          "args": {
-            "engine": "mongo",
-            "schemaless": true
-          },
-          "bind": "db",
-          "expect": {
-            "$handle": "*"
-          }
-        },
-        {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "encrypt"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "subQueryProbe"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "operator_double_decode"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.adapter",
-          "args": {
-            "method": "getSupportForVectors",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Vectors"
+              }
+            }
           },
           "expect": false
         }
@@ -1660,19 +1206,18 @@
           }
         },
         {
-          "op": "database.set_metadata",
+          "op": "db.add_format",
           "args": {
-            "key": "compat",
-            "value": ""
+            "name": "priceRange"
           },
-          "expect": {
-            "$database": true
-          }
+          "expect": true
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
         },
         {
           "op": "database.add_filter",
@@ -1696,10 +1241,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForVectors",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Vectors"
+              }
+            }
           },
           "expect": false
         }
@@ -1723,19 +1280,18 @@
           }
         },
         {
-          "op": "database.set_metadata",
+          "op": "db.add_format",
           "args": {
-            "key": "compat",
-            "value": ""
+            "name": "priceRange"
           },
-          "expect": {
-            "$database": true
-          }
+          "expect": true
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
         },
         {
           "op": "database.add_filter",
@@ -1759,10 +1315,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForVectors",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Vectors"
+              }
+            }
           },
           "expect": false
         }
@@ -1786,19 +1354,18 @@
           }
         },
         {
-          "op": "database.set_metadata",
+          "op": "db.add_format",
           "args": {
-            "key": "compat",
-            "value": ""
+            "name": "priceRange"
           },
-          "expect": {
-            "$database": true
-          }
+          "expect": true
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
         },
         {
           "op": "database.add_filter",
@@ -1822,10 +1389,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForVectors",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Vectors"
+              }
+            }
           },
           "expect": false
         }
@@ -1849,19 +1428,18 @@
           }
         },
         {
-          "op": "database.set_metadata",
+          "op": "db.add_format",
           "args": {
-            "key": "compat",
-            "value": ""
+            "name": "priceRange"
           },
-          "expect": {
-            "$database": true
-          }
+          "expect": true
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
         },
         {
           "op": "database.add_filter",
@@ -1885,10 +1463,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForVectors",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Vectors"
+              }
+            }
           },
           "expect": false
         }
@@ -1912,19 +1502,18 @@
           }
         },
         {
-          "op": "database.set_metadata",
+          "op": "db.add_format",
           "args": {
-            "key": "compat",
-            "value": ""
+            "name": "priceRange"
           },
-          "expect": {
-            "$database": true
-          }
+          "expect": true
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
         },
         {
           "op": "database.add_filter",
@@ -1948,10 +1537,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForVectors",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Vectors"
+              }
+            }
           },
           "expect": false
         }
@@ -1975,19 +1576,18 @@
           }
         },
         {
-          "op": "database.set_metadata",
+          "op": "db.add_format",
           "args": {
-            "key": "compat",
-            "value": ""
+            "name": "priceRange"
           },
-          "expect": {
-            "$database": true
-          }
+          "expect": true
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
         },
         {
           "op": "database.add_filter",
@@ -2011,10 +1611,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForVectors",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Vectors"
+              }
+            }
           },
           "expect": false
         }
@@ -2038,19 +1650,18 @@
           }
         },
         {
-          "op": "database.set_metadata",
+          "op": "db.add_format",
           "args": {
-            "key": "compat",
-            "value": ""
+            "name": "priceRange"
           },
-          "expect": {
-            "$database": true
-          }
+          "expect": true
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
         },
         {
           "op": "database.add_filter",
@@ -2074,10 +1685,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForVectors",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Vectors"
+              }
+            }
           },
           "expect": false
         }
@@ -2101,19 +1724,18 @@
           }
         },
         {
-          "op": "database.set_metadata",
+          "op": "db.add_format",
           "args": {
-            "key": "compat",
-            "value": ""
+            "name": "priceRange"
           },
-          "expect": {
-            "$database": true
-          }
+          "expect": true
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
         },
         {
           "op": "database.add_filter",
@@ -2137,10 +1759,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForVectors",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Vectors"
+              }
+            }
           },
           "expect": false
         }
@@ -2164,19 +1798,18 @@
           }
         },
         {
-          "op": "database.set_metadata",
+          "op": "db.add_format",
           "args": {
-            "key": "compat",
-            "value": ""
+            "name": "priceRange"
           },
-          "expect": {
-            "$database": true
-          }
+          "expect": true
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
         },
         {
           "op": "database.add_filter",
@@ -2200,10 +1833,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForVectors",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Vectors"
+              }
+            }
           },
           "expect": false
         }
@@ -2227,19 +1872,18 @@
           }
         },
         {
-          "op": "database.set_metadata",
+          "op": "db.add_format",
           "args": {
-            "key": "compat",
-            "value": ""
+            "name": "priceRange"
           },
-          "expect": {
-            "$database": true
-          }
+          "expect": true
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
         },
         {
           "op": "database.add_filter",
@@ -2263,10 +1907,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForVectors",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Vectors"
+              }
+            }
           },
           "expect": false
         }
@@ -2290,19 +1946,18 @@
           }
         },
         {
-          "op": "database.set_metadata",
+          "op": "db.add_format",
           "args": {
-            "key": "compat",
-            "value": ""
+            "name": "priceRange"
           },
-          "expect": {
-            "$database": true
-          }
+          "expect": true
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
         },
         {
           "op": "database.add_filter",
@@ -2326,10 +1981,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForVectors",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Vectors"
+              }
+            }
           },
           "expect": false
         }
@@ -2353,19 +2020,18 @@
           }
         },
         {
-          "op": "database.set_metadata",
+          "op": "db.add_format",
           "args": {
-            "key": "compat",
-            "value": ""
+            "name": "priceRange"
           },
-          "expect": {
-            "$database": true
-          }
+          "expect": true
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
         },
         {
           "op": "database.add_filter",
@@ -2389,10 +2055,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForVectors",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Vectors"
+              }
+            }
           },
           "expect": false
         }
@@ -2416,19 +2094,18 @@
           }
         },
         {
-          "op": "database.set_metadata",
+          "op": "db.add_format",
           "args": {
-            "key": "compat",
-            "value": ""
+            "name": "priceRange"
           },
-          "expect": {
-            "$database": true
-          }
+          "expect": true
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
         },
         {
           "op": "database.add_filter",
@@ -2452,10 +2129,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForVectors",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Vectors"
+              }
+            }
           },
           "expect": false
         }
@@ -2479,19 +2168,18 @@
           }
         },
         {
-          "op": "database.set_metadata",
+          "op": "db.add_format",
           "args": {
-            "key": "compat",
-            "value": ""
+            "name": "priceRange"
           },
-          "expect": {
-            "$database": true
-          }
+          "expect": true
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
         },
         {
           "op": "database.add_filter",
@@ -2515,10 +2203,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForVectors",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Vectors"
+              }
+            }
           },
           "expect": false
         }
@@ -2542,19 +2242,18 @@
           }
         },
         {
-          "op": "database.set_metadata",
+          "op": "db.add_format",
           "args": {
-            "key": "compat",
-            "value": ""
+            "name": "priceRange"
           },
-          "expect": {
-            "$database": true
-          }
+          "expect": true
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
         },
         {
           "op": "database.add_filter",
@@ -2578,10 +2277,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForVectors",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Vectors"
+              }
+            }
           },
           "expect": false
         }
@@ -2605,19 +2316,18 @@
           }
         },
         {
-          "op": "database.set_metadata",
+          "op": "db.add_format",
           "args": {
-            "key": "compat",
-            "value": ""
+            "name": "priceRange"
           },
-          "expect": {
-            "$database": true
-          }
+          "expect": true
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
         },
         {
           "op": "database.add_filter",
@@ -2641,10 +2351,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForVectors",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Vectors"
+              }
+            }
           },
           "expect": false
         }
@@ -2668,19 +2390,18 @@
           }
         },
         {
-          "op": "database.set_metadata",
+          "op": "db.add_format",
           "args": {
-            "key": "compat",
-            "value": ""
+            "name": "priceRange"
           },
-          "expect": {
-            "$database": true
-          }
+          "expect": true
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
         },
         {
           "op": "database.add_filter",
@@ -2704,10 +2425,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForVectors",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Vectors"
+              }
+            }
           },
           "expect": false
         }
@@ -2731,19 +2464,18 @@
           }
         },
         {
-          "op": "database.set_metadata",
+          "op": "db.add_format",
           "args": {
-            "key": "compat",
-            "value": ""
+            "name": "priceRange"
           },
-          "expect": {
-            "$database": true
-          }
+          "expect": true
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
         },
         {
           "op": "database.add_filter",
@@ -2767,10 +2499,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForVectors",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Vectors"
+              }
+            }
           },
           "expect": false
         }
@@ -2794,19 +2538,18 @@
           }
         },
         {
-          "op": "database.set_metadata",
+          "op": "db.add_format",
           "args": {
-            "key": "compat",
-            "value": ""
+            "name": "priceRange"
           },
-          "expect": {
-            "$database": true
-          }
+          "expect": true
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
         },
         {
           "op": "database.add_filter",
@@ -2830,10 +2573,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForVectors",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Vectors"
+              }
+            }
           },
           "expect": false
         }
@@ -2857,19 +2612,18 @@
           }
         },
         {
-          "op": "database.set_metadata",
+          "op": "db.add_format",
           "args": {
-            "key": "compat",
-            "value": ""
+            "name": "priceRange"
           },
-          "expect": {
-            "$database": true
-          }
+          "expect": true
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
         },
         {
           "op": "database.add_filter",
@@ -2893,10 +2647,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForVectors",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Vectors"
+              }
+            }
           },
           "expect": false
         }
@@ -2920,19 +2686,18 @@
           }
         },
         {
-          "op": "database.set_metadata",
+          "op": "db.add_format",
           "args": {
-            "key": "compat",
-            "value": ""
+            "name": "priceRange"
           },
-          "expect": {
-            "$database": true
-          }
+          "expect": true
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
         },
         {
           "op": "database.add_filter",
@@ -2956,10 +2721,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForVectors",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Vectors"
+              }
+            }
           },
           "expect": false
         }
@@ -2983,19 +2760,18 @@
           }
         },
         {
-          "op": "database.set_metadata",
+          "op": "db.add_format",
           "args": {
-            "key": "compat",
-            "value": ""
+            "name": "priceRange"
           },
-          "expect": {
-            "$database": true
-          }
+          "expect": true
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
         },
         {
           "op": "database.add_filter",
@@ -3019,73 +2795,22 @@
           "expect": null
         },
         {
-          "op": "db.adapter",
-          "args": {
-            "method": "getSupportForVectors",
-            "args": {}
-          },
-          "expect": false
-        }
-      ]
-    },
-    {
-      "name": "VectorTests::testVectorNonNumericValidationE2E",
-      "state": [
-        "mongo@database-mongo"
-      ],
-      "steps": [
-        {
-          "op": "db.open",
-          "args": {
-            "engine": "mongo",
-            "schemaless": true
-          },
-          "bind": "db",
-          "expect": {
-            "$handle": "*"
-          }
-        },
-        {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
           "op": "database.add_filter",
           "args": {
-            "name": "encrypt"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "subQueryProbe"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "operator_double_decode"
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
           },
           "expect": null
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForVectors",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Vectors"
+              }
+            }
           },
           "expect": false
         }
@@ -3109,19 +2834,18 @@
           }
         },
         {
-          "op": "database.set_metadata",
+          "op": "db.add_format",
           "args": {
-            "key": "compat",
-            "value": ""
+            "name": "priceRange"
           },
-          "expect": {
-            "$database": true
-          }
+          "expect": true
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
         },
         {
           "op": "database.add_filter",
@@ -3145,10 +2869,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForVectors",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Vectors"
+              }
+            }
           },
           "expect": false
         }
@@ -3172,19 +2908,18 @@
           }
         },
         {
-          "op": "database.set_metadata",
+          "op": "db.add_format",
           "args": {
-            "key": "compat",
-            "value": ""
+            "name": "priceRange"
           },
-          "expect": {
-            "$database": true
-          }
+          "expect": true
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
         },
         {
           "op": "database.add_filter",
@@ -3208,10 +2943,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForVectors",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Vectors"
+              }
+            }
           },
           "expect": false
         }
@@ -3235,19 +2982,18 @@
           }
         },
         {
-          "op": "database.set_metadata",
+          "op": "db.add_format",
           "args": {
-            "key": "compat",
-            "value": ""
+            "name": "priceRange"
           },
-          "expect": {
-            "$database": true
-          }
+          "expect": true
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
         },
         {
           "op": "database.add_filter",
@@ -3271,10 +3017,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForVectors",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Vectors"
+              }
+            }
           },
           "expect": false
         }
@@ -3298,19 +3056,18 @@
           }
         },
         {
-          "op": "database.set_metadata",
+          "op": "db.add_format",
           "args": {
-            "key": "compat",
-            "value": ""
+            "name": "priceRange"
           },
-          "expect": {
-            "$database": true
-          }
+          "expect": true
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
         },
         {
           "op": "database.add_filter",
@@ -3334,10 +3091,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForVectors",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Vectors"
+              }
+            }
           },
           "expect": false
         }
@@ -3361,19 +3130,18 @@
           }
         },
         {
-          "op": "database.set_metadata",
+          "op": "db.add_format",
           "args": {
-            "key": "compat",
-            "value": ""
+            "name": "priceRange"
           },
-          "expect": {
-            "$database": true
-          }
+          "expect": true
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
         },
         {
           "op": "database.add_filter",
@@ -3397,10 +3165,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForVectors",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Vectors"
+              }
+            }
           },
           "expect": false
         }
@@ -3424,19 +3204,18 @@
           }
         },
         {
-          "op": "database.set_metadata",
+          "op": "db.add_format",
           "args": {
-            "key": "compat",
-            "value": ""
+            "name": "priceRange"
           },
-          "expect": {
-            "$database": true
-          }
+          "expect": true
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
         },
         {
           "op": "database.add_filter",
@@ -3460,10 +3239,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForVectors",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Vectors"
+              }
+            }
           },
           "expect": false
         }
@@ -3487,19 +3278,18 @@
           }
         },
         {
-          "op": "database.set_metadata",
+          "op": "db.add_format",
           "args": {
-            "key": "compat",
-            "value": ""
+            "name": "priceRange"
           },
-          "expect": {
-            "$database": true
-          }
+          "expect": true
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
         },
         {
           "op": "database.add_filter",
@@ -3523,10 +3313,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForVectors",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Vectors"
+              }
+            }
           },
           "expect": false
         }
@@ -3550,19 +3352,18 @@
           }
         },
         {
-          "op": "database.set_metadata",
+          "op": "db.add_format",
           "args": {
-            "key": "compat",
-            "value": ""
+            "name": "priceRange"
           },
-          "expect": {
-            "$database": true
-          }
+          "expect": true
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
         },
         {
           "op": "database.add_filter",
@@ -3586,10 +3387,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForVectors",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Vectors"
+              }
+            }
           },
           "expect": false
         }
@@ -3613,19 +3426,18 @@
           }
         },
         {
-          "op": "database.set_metadata",
+          "op": "db.add_format",
           "args": {
-            "key": "compat",
-            "value": ""
+            "name": "priceRange"
           },
-          "expect": {
-            "$database": true
-          }
+          "expect": true
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
         },
         {
           "op": "database.add_filter",
@@ -3649,10 +3461,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForVectors",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Vectors"
+              }
+            }
           },
           "expect": false
         }
@@ -3676,19 +3500,18 @@
           }
         },
         {
-          "op": "database.set_metadata",
+          "op": "db.add_format",
           "args": {
-            "key": "compat",
-            "value": ""
+            "name": "priceRange"
           },
-          "expect": {
-            "$database": true
-          }
+          "expect": true
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
         },
         {
           "op": "database.add_filter",
@@ -3712,10 +3535,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForVectors",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Vectors"
+              }
+            }
           },
           "expect": false
         }
@@ -3739,19 +3574,18 @@
           }
         },
         {
-          "op": "database.set_metadata",
+          "op": "db.add_format",
           "args": {
-            "key": "compat",
-            "value": ""
+            "name": "priceRange"
           },
-          "expect": {
-            "$database": true
-          }
+          "expect": true
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
         },
         {
           "op": "database.add_filter",
@@ -3775,10 +3609,170 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForVectors",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Vectors"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorDistance",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Vectors"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorWithAssociativeArray",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Vectors"
+              }
+            }
           },
           "expect": false
         }

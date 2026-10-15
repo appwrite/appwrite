@@ -1,0 +1,1630 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Validator/QueriesCompatibilityTest.php"
+  ],
+  "cases": [
+    {
+      "name": "QueriesCompatibilityTest::test_nested_child_is_validated_before_its_parent",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "name",
+                "key": "name",
+                "type": "string",
+                "size": 128,
+                "array": false
+              }
+            },
+            "as": "o884"
+          },
+          "bind": "s1523",
+          "expect": {
+            "$document": {
+              "$id": "name",
+              "key": "name",
+              "type": "string",
+              "size": 128,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "age",
+                "key": "age",
+                "type": "integer",
+                "size": 4,
+                "array": false
+              }
+            },
+            "as": "o885"
+          },
+          "bind": "s1524",
+          "expect": {
+            "$document": {
+              "$id": "age",
+              "key": "age",
+              "type": "integer",
+              "size": 4,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "tags",
+                "key": "tags",
+                "type": "string",
+                "size": 64,
+                "array": true
+              }
+            },
+            "as": "o886"
+          },
+          "bind": "s1525",
+          "expect": {
+            "$document": {
+              "$id": "tags",
+              "key": "tags",
+              "type": "string",
+              "size": 64,
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Limits",
+            "args": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            },
+            "as": "o887"
+          },
+          "bind": "s1526",
+          "expect": {
+            "$value": "Adapter\\Limits",
+            "fields": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Profile",
+            "args": {
+              "limits": {
+                "$obj": "o887"
+              },
+              "capabilities": [
+                {
+                  "$enum": "Capability::DefinedAttributes"
+                },
+                {
+                  "$enum": "Capability::OrderRandom"
+                }
+              ],
+              "features": [],
+              "sharedTables": false,
+              "migrating": false
+            },
+            "as": "o888"
+          },
+          "bind": "s1527",
+          "expect": {
+            "$value": "Adapter\\Profile",
+            "fields": {
+              "limits": {
+                "$value": "Adapter\\Limits",
+                "fields": {
+                  "string": 0,
+                  "varchar": 0,
+                  "integer": 0,
+                  "bigInteger": 0,
+                  "attributes": 0,
+                  "indexes": 0,
+                  "defaultAttributes": 0,
+                  "defaultIndexes": 0,
+                  "indexLength": 0,
+                  "uidLength": 36,
+                  "documentSize": 0,
+                  "minDateTime": {
+                    "$datetime": "0000-01-01T00:00:00.000000+00:00"
+                  },
+                  "maxDateTime": {
+                    "$datetime": "9999-12-31T00:00:00.000000+00:00"
+                  },
+                  "idType": {
+                    "$enum": "Query\\Schema\\ColumnType::Integer"
+                  },
+                  "keywords": [],
+                  "internalIndexKeys": []
+                }
+              },
+              "capabilities": [
+                {
+                  "$enum": "Capability::DefinedAttributes"
+                },
+                {
+                  "$enum": "Capability::OrderRandom"
+                }
+              ],
+              "features": [],
+              "sharedTables": false,
+              "migrating": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Queries\\Documents",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o884"
+                },
+                {
+                  "$obj": "o885"
+                },
+                {
+                  "$obj": "o886"
+                }
+              ],
+              "indexes": [],
+              "profile": {
+                "$obj": "o888"
+              }
+            },
+            "as": "o889"
+          },
+          "bind": "s1528",
+          "expect": {
+            "$value": "Validator\\Queries\\Documents",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o889"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "{\"method\":\"and\",\"values\":[{\"method\":\"equal\",\"attribute\":\"nope\",\"values\":[\"a\"]}]}"
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o889"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid query: Attribute not found in schema: nope"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o889"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "{\"method\":\"or\",\"values\":[{\"method\":\"equal\",\"attribute\":\"nope\",\"values\":[\"a\"]},{\"method\":\"limit\",\"values\":[1]}]}"
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o889"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid query: Attribute not found in schema: nope"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o889"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "{\"method\":\"elemMatch\",\"attribute\":\"tags\",\"values\":[{\"method\":\"equal\",\"attribute\":\"x\",\"values\":[\"a\"]}]}"
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o889"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid query: Attribute not found in schema: x"
+        }
+      ]
+    },
+    {
+      "name": "QueriesCompatibilityTest::test_first_invalid_query_wins_over_a_later_parse_failure",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "name",
+                "key": "name",
+                "type": "string",
+                "size": 128,
+                "array": false
+              }
+            },
+            "as": "o890"
+          },
+          "bind": "s1535",
+          "expect": {
+            "$document": {
+              "$id": "name",
+              "key": "name",
+              "type": "string",
+              "size": 128,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "age",
+                "key": "age",
+                "type": "integer",
+                "size": 4,
+                "array": false
+              }
+            },
+            "as": "o891"
+          },
+          "bind": "s1536",
+          "expect": {
+            "$document": {
+              "$id": "age",
+              "key": "age",
+              "type": "integer",
+              "size": 4,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "tags",
+                "key": "tags",
+                "type": "string",
+                "size": 64,
+                "array": true
+              }
+            },
+            "as": "o892"
+          },
+          "bind": "s1537",
+          "expect": {
+            "$document": {
+              "$id": "tags",
+              "key": "tags",
+              "type": "string",
+              "size": 64,
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Limits",
+            "args": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            },
+            "as": "o893"
+          },
+          "bind": "s1538",
+          "expect": {
+            "$value": "Adapter\\Limits",
+            "fields": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Profile",
+            "args": {
+              "limits": {
+                "$obj": "o893"
+              },
+              "capabilities": [
+                {
+                  "$enum": "Capability::DefinedAttributes"
+                },
+                {
+                  "$enum": "Capability::OrderRandom"
+                }
+              ],
+              "features": [],
+              "sharedTables": false,
+              "migrating": false
+            },
+            "as": "o894"
+          },
+          "bind": "s1539",
+          "expect": {
+            "$value": "Adapter\\Profile",
+            "fields": {
+              "limits": {
+                "$value": "Adapter\\Limits",
+                "fields": {
+                  "string": 0,
+                  "varchar": 0,
+                  "integer": 0,
+                  "bigInteger": 0,
+                  "attributes": 0,
+                  "indexes": 0,
+                  "defaultAttributes": 0,
+                  "defaultIndexes": 0,
+                  "indexLength": 0,
+                  "uidLength": 36,
+                  "documentSize": 0,
+                  "minDateTime": {
+                    "$datetime": "0000-01-01T00:00:00.000000+00:00"
+                  },
+                  "maxDateTime": {
+                    "$datetime": "9999-12-31T00:00:00.000000+00:00"
+                  },
+                  "idType": {
+                    "$enum": "Query\\Schema\\ColumnType::Integer"
+                  },
+                  "keywords": [],
+                  "internalIndexKeys": []
+                }
+              },
+              "capabilities": [
+                {
+                  "$enum": "Capability::DefinedAttributes"
+                },
+                {
+                  "$enum": "Capability::OrderRandom"
+                }
+              ],
+              "features": [],
+              "sharedTables": false,
+              "migrating": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Queries\\Documents",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o890"
+                },
+                {
+                  "$obj": "o891"
+                },
+                {
+                  "$obj": "o892"
+                }
+              ],
+              "indexes": [],
+              "profile": {
+                "$obj": "o894"
+              }
+            },
+            "as": "o895"
+          },
+          "bind": "s1540",
+          "expect": {
+            "$value": "Validator\\Queries\\Documents",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o895"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "{\"method\":\"equal\",\"attribute\":\"nope\",\"values\":[\"a\"]}",
+                "not json"
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o895"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid query: Attribute not found in schema: nope"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o895"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "not json",
+                "{\"method\":\"equal\",\"attribute\":\"nope\",\"values\":[\"a\"]}"
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o895"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid query: Invalid query: Syntax error"
+        }
+      ]
+    },
+    {
+      "name": "QueriesCompatibilityTest::test_method_unknown_to_7x_keeps_the_parse_prefix",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Limit",
+            "args": {},
+            "as": "o896"
+          },
+          "bind": "s1545",
+          "expect": {
+            "$value": "Validator\\Query\\Limit",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Offset",
+            "args": {},
+            "as": "o897"
+          },
+          "bind": "s1546",
+          "expect": {
+            "$value": "Validator\\Query\\Offset",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Cursor",
+            "args": {},
+            "as": "o898"
+          },
+          "bind": "s1547",
+          "expect": {
+            "$value": "Validator\\Query\\Cursor",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Queries\\Base",
+            "args": {
+              "validators": [
+                {
+                  "$obj": "o896"
+                },
+                {
+                  "$obj": "o897"
+                },
+                {
+                  "$obj": "o898"
+                }
+              ]
+            },
+            "as": "o899"
+          },
+          "bind": "s1548",
+          "expect": {
+            "$value": "Validator\\Queries\\Base",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o899"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "{\"method\":\"count\",\"attribute\":\"name\",\"values\":[]}"
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o899"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid query: Invalid query method: count"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o899"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "{\"method\":\"jsonContains\",\"attribute\":\"name\",\"values\":[\"a\"]}"
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o899"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid query: Invalid query method: jsonContains"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o899"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "{\"method\":\"and\",\"values\":[{\"method\":\"equal\",\"attribute\":\"name\",\"values\":[\"a\"]},{\"method\":\"equal\",\"attribute\":\"name\",\"values\":[\"b\"]}]}"
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o899"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid query method: equal"
+        }
+      ]
+    },
+    {
+      "name": "QueriesCompatibilityTest::test_raw_is_an_invalid_method",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "name",
+                "key": "name",
+                "type": "string",
+                "size": 128,
+                "array": false
+              }
+            },
+            "as": "o900"
+          },
+          "bind": "s1555",
+          "expect": {
+            "$document": {
+              "$id": "name",
+              "key": "name",
+              "type": "string",
+              "size": 128,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "age",
+                "key": "age",
+                "type": "integer",
+                "size": 4,
+                "array": false
+              }
+            },
+            "as": "o901"
+          },
+          "bind": "s1556",
+          "expect": {
+            "$document": {
+              "$id": "age",
+              "key": "age",
+              "type": "integer",
+              "size": 4,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "tags",
+                "key": "tags",
+                "type": "string",
+                "size": 64,
+                "array": true
+              }
+            },
+            "as": "o902"
+          },
+          "bind": "s1557",
+          "expect": {
+            "$document": {
+              "$id": "tags",
+              "key": "tags",
+              "type": "string",
+              "size": 64,
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Limits",
+            "args": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            },
+            "as": "o903"
+          },
+          "bind": "s1558",
+          "expect": {
+            "$value": "Adapter\\Limits",
+            "fields": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Profile",
+            "args": {
+              "limits": {
+                "$obj": "o903"
+              },
+              "capabilities": [
+                {
+                  "$enum": "Capability::DefinedAttributes"
+                },
+                {
+                  "$enum": "Capability::OrderRandom"
+                }
+              ],
+              "features": [],
+              "sharedTables": false,
+              "migrating": false
+            },
+            "as": "o904"
+          },
+          "bind": "s1559",
+          "expect": {
+            "$value": "Adapter\\Profile",
+            "fields": {
+              "limits": {
+                "$value": "Adapter\\Limits",
+                "fields": {
+                  "string": 0,
+                  "varchar": 0,
+                  "integer": 0,
+                  "bigInteger": 0,
+                  "attributes": 0,
+                  "indexes": 0,
+                  "defaultAttributes": 0,
+                  "defaultIndexes": 0,
+                  "indexLength": 0,
+                  "uidLength": 36,
+                  "documentSize": 0,
+                  "minDateTime": {
+                    "$datetime": "0000-01-01T00:00:00.000000+00:00"
+                  },
+                  "maxDateTime": {
+                    "$datetime": "9999-12-31T00:00:00.000000+00:00"
+                  },
+                  "idType": {
+                    "$enum": "Query\\Schema\\ColumnType::Integer"
+                  },
+                  "keywords": [],
+                  "internalIndexKeys": []
+                }
+              },
+              "capabilities": [
+                {
+                  "$enum": "Capability::DefinedAttributes"
+                },
+                {
+                  "$enum": "Capability::OrderRandom"
+                }
+              ],
+              "features": [],
+              "sharedTables": false,
+              "migrating": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Queries\\Documents",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o900"
+                },
+                {
+                  "$obj": "o901"
+                },
+                {
+                  "$obj": "o902"
+                }
+              ],
+              "indexes": [],
+              "profile": {
+                "$obj": "o904"
+              }
+            },
+            "as": "o905"
+          },
+          "bind": "s1560",
+          "expect": {
+            "$value": "Validator\\Queries\\Documents",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o905"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "{\"method\":\"raw\",\"values\":[\"1=1\"]}"
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o905"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid query: Invalid query method: raw"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "parse",
+            "args": {
+              "query": "{\"method\":\"or\",\"values\":[{\"method\":\"raw\",\"values\":[\"1=1\"]},{\"method\":\"equal\",\"attribute\":\"name\",\"values\":[\"a\"]}]}"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query method: raw"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "QueriesCompatibilityTest::test_tenant_passes_select_validation_without_shared_tables",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "name",
+                "key": "name",
+                "type": "string",
+                "size": 128,
+                "array": false
+              }
+            },
+            "as": "o906"
+          },
+          "bind": "s1564",
+          "expect": {
+            "$document": {
+              "$id": "name",
+              "key": "name",
+              "type": "string",
+              "size": 128,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "age",
+                "key": "age",
+                "type": "integer",
+                "size": 4,
+                "array": false
+              }
+            },
+            "as": "o907"
+          },
+          "bind": "s1565",
+          "expect": {
+            "$document": {
+              "$id": "age",
+              "key": "age",
+              "type": "integer",
+              "size": 4,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "tags",
+                "key": "tags",
+                "type": "string",
+                "size": 64,
+                "array": true
+              }
+            },
+            "as": "o908"
+          },
+          "bind": "s1566",
+          "expect": {
+            "$document": {
+              "$id": "tags",
+              "key": "tags",
+              "type": "string",
+              "size": 64,
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Limits",
+            "args": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            },
+            "as": "o909"
+          },
+          "bind": "s1567",
+          "expect": {
+            "$value": "Adapter\\Limits",
+            "fields": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Profile",
+            "args": {
+              "limits": {
+                "$obj": "o909"
+              },
+              "capabilities": [
+                {
+                  "$enum": "Capability::DefinedAttributes"
+                },
+                {
+                  "$enum": "Capability::OrderRandom"
+                }
+              ],
+              "features": [],
+              "sharedTables": false,
+              "migrating": false
+            },
+            "as": "o910"
+          },
+          "bind": "s1568",
+          "expect": {
+            "$value": "Adapter\\Profile",
+            "fields": {
+              "limits": {
+                "$value": "Adapter\\Limits",
+                "fields": {
+                  "string": 0,
+                  "varchar": 0,
+                  "integer": 0,
+                  "bigInteger": 0,
+                  "attributes": 0,
+                  "indexes": 0,
+                  "defaultAttributes": 0,
+                  "defaultIndexes": 0,
+                  "indexLength": 0,
+                  "uidLength": 36,
+                  "documentSize": 0,
+                  "minDateTime": {
+                    "$datetime": "0000-01-01T00:00:00.000000+00:00"
+                  },
+                  "maxDateTime": {
+                    "$datetime": "9999-12-31T00:00:00.000000+00:00"
+                  },
+                  "idType": {
+                    "$enum": "Query\\Schema\\ColumnType::Integer"
+                  },
+                  "keywords": [],
+                  "internalIndexKeys": []
+                }
+              },
+              "capabilities": [
+                {
+                  "$enum": "Capability::DefinedAttributes"
+                },
+                {
+                  "$enum": "Capability::OrderRandom"
+                }
+              ],
+              "features": [],
+              "sharedTables": false,
+              "migrating": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Queries\\Documents",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o906"
+                },
+                {
+                  "$obj": "o907"
+                },
+                {
+                  "$obj": "o908"
+                }
+              ],
+              "indexes": [],
+              "profile": {
+                "$obj": "o910"
+              }
+            },
+            "as": "o911"
+          },
+          "bind": "s1569",
+          "expect": {
+            "$value": "Validator\\Queries\\Documents",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o911"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "{\"method\":\"select\",\"values\":[\"$tenant\",\"name\"]}"
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "name",
+                "key": "name",
+                "type": "string",
+                "size": 128,
+                "array": false
+              }
+            },
+            "as": "o912"
+          },
+          "bind": "s1571",
+          "expect": {
+            "$document": {
+              "$id": "name",
+              "key": "name",
+              "type": "string",
+              "size": 128,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "age",
+                "key": "age",
+                "type": "integer",
+                "size": 4,
+                "array": false
+              }
+            },
+            "as": "o913"
+          },
+          "bind": "s1572",
+          "expect": {
+            "$document": {
+              "$id": "age",
+              "key": "age",
+              "type": "integer",
+              "size": 4,
+              "array": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "tags",
+                "key": "tags",
+                "type": "string",
+                "size": 64,
+                "array": true
+              }
+            },
+            "as": "o914"
+          },
+          "bind": "s1573",
+          "expect": {
+            "$document": {
+              "$id": "tags",
+              "key": "tags",
+              "type": "string",
+              "size": 64,
+              "array": true
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Limits",
+            "args": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            },
+            "as": "o915"
+          },
+          "bind": "s1574",
+          "expect": {
+            "$value": "Adapter\\Limits",
+            "fields": {
+              "string": 0,
+              "varchar": 0,
+              "integer": 0,
+              "bigInteger": 0,
+              "attributes": 0,
+              "indexes": 0,
+              "defaultAttributes": 0,
+              "defaultIndexes": 0,
+              "indexLength": 0,
+              "uidLength": 36,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "0000-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T00:00:00.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Profile",
+            "args": {
+              "limits": {
+                "$obj": "o915"
+              },
+              "capabilities": [
+                {
+                  "$enum": "Capability::DefinedAttributes"
+                },
+                {
+                  "$enum": "Capability::OrderRandom"
+                }
+              ],
+              "features": [],
+              "sharedTables": true,
+              "migrating": false
+            },
+            "as": "o916"
+          },
+          "bind": "s1575",
+          "expect": {
+            "$value": "Adapter\\Profile",
+            "fields": {
+              "limits": {
+                "$value": "Adapter\\Limits",
+                "fields": {
+                  "string": 0,
+                  "varchar": 0,
+                  "integer": 0,
+                  "bigInteger": 0,
+                  "attributes": 0,
+                  "indexes": 0,
+                  "defaultAttributes": 0,
+                  "defaultIndexes": 0,
+                  "indexLength": 0,
+                  "uidLength": 36,
+                  "documentSize": 0,
+                  "minDateTime": {
+                    "$datetime": "0000-01-01T00:00:00.000000+00:00"
+                  },
+                  "maxDateTime": {
+                    "$datetime": "9999-12-31T00:00:00.000000+00:00"
+                  },
+                  "idType": {
+                    "$enum": "Query\\Schema\\ColumnType::Integer"
+                  },
+                  "keywords": [],
+                  "internalIndexKeys": []
+                }
+              },
+              "capabilities": [
+                {
+                  "$enum": "Capability::DefinedAttributes"
+                },
+                {
+                  "$enum": "Capability::OrderRandom"
+                }
+              ],
+              "features": [],
+              "sharedTables": true,
+              "migrating": false
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Queries\\Documents",
+            "args": {
+              "attributes": [
+                {
+                  "$obj": "o912"
+                },
+                {
+                  "$obj": "o913"
+                },
+                {
+                  "$obj": "o914"
+                }
+              ],
+              "indexes": [],
+              "profile": {
+                "$obj": "o916"
+              }
+            },
+            "as": "o917"
+          },
+          "bind": "s1576",
+          "expect": {
+            "$value": "Validator\\Queries\\Documents",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o917"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "{\"method\":\"select\",\"values\":[\"$tenant\"]}"
+              ]
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "QueriesCompatibilityTest::test_uid_description_names_every_character_it_accepts",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\UID",
+            "args": {},
+            "as": "o918"
+          },
+          "bind": "s1578",
+          "expect": {
+            "$value": "Validator\\UID",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o918"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "a.b-c_d"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o918"
+            },
+            "method": "isValid",
+            "args": {
+              "value": ".abc"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o918"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "-abc"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o918"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "_abc"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o918"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a leading period, hyphen, or underscore"
+        }
+      ]
+    }
+  ]
+}

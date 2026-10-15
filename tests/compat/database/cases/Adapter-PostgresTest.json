@@ -6,67 +6,121 @@
       "steps": [
         {
           "op": "adapter.open",
+          "args": {},
           "bind": "a",
           "expect": {
             "$handle": "*"
           }
         },
         {
-          "op": "adapter.before",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "event": "*",
-            "name": "capture"
+            "method": "addTransform",
+            "args": {
+              "name": "capture",
+              "transform": {
+                "$hook": "Transform",
+                "table": "",
+                "event": "*",
+                "append": "",
+                "as": "transform_capture"
+              }
+            }
           },
-          "expect": null
+          "expect": {
+            "$adapter": "Postgres"
+          }
         },
         {
-          "op": "adapter.create",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
+            },
+            "method": "create",
+            "args": {
+              "name": "${ns}"
             }
           },
           "expect": true
         },
         {
-          "op": "adapter.create_collection",
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": 64,
+                "signed": true,
+                "array": false,
+                "required": true
+              }
+            },
+            "as": "a394"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "title",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "name": "permsPlan",
-            "attributes": [
-              {
-                "$document": {
-                  "$id": "title",
-                  "type": "string",
-                  "size": 64,
-                  "required": true,
-                  "signed": true,
-                  "array": false
+            "method": "createCollection",
+            "args": {
+              "collection": "permsPlan",
+              "attributes": [
+                {
+                  "$obj": "a394"
                 }
-              }
-            ]
+              ]
+            }
           },
           "expect": true
         },
         {
-          "op": "adapter.create_document",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "collection": "permsPlan",
-            "document": {
-              "$document": {
-                "$id": "visible",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "title": "visible"
+            "method": "createDocument",
+            "args": {
+              "collection": {
+                "$id": "permsPlan"
+              },
+              "document": {
+                "$document": {
+                  "$id": "visible",
+                  "$permissions": [
+                    "read(\"any\")"
+                  ],
+                  "title": "visible"
+                }
               }
             }
           },
@@ -82,19 +136,24 @@
           }
         },
         {
-          "op": "adapter.create_document",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "collection": "permsPlan",
-            "document": {
-              "$document": {
-                "$id": "hidden",
-                "$permissions": [
-                  "read(\"user:nobody\")"
-                ],
-                "title": "hidden"
+            "method": "createDocument",
+            "args": {
+              "collection": {
+                "$id": "permsPlan"
+              },
+              "document": {
+                "$document": {
+                  "$id": "hidden",
+                  "$permissions": [
+                    "read(\"user:nobody\")"
+                  ],
+                  "title": "hidden"
+                }
               }
             }
           },
@@ -110,54 +169,74 @@
           }
         },
         {
-          "op": "adapter.driver_query",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "sql": "SELECT pg_stat_force_next_flush()"
+            "method": "rawQuery",
+            "args": {
+              "query": "SELECT pg_stat_force_next_flush()"
+            }
           },
           "expect": [
             {
-              "pg_stat_force_next_flush": ""
+              "$document": {
+                "pg_stat_force_next_flush": ""
+              }
             }
           ]
         },
         {
-          "op": "adapter.driver_query",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "sql": "SELECT pg_stat_clear_snapshot()"
+            "method": "rawQuery",
+            "args": {
+              "query": "SELECT pg_stat_clear_snapshot()"
+            }
           },
           "expect": [
             {
-              "pg_stat_clear_snapshot": ""
+              "$document": {
+                "pg_stat_clear_snapshot": ""
+              }
             }
           ]
         },
         {
-          "op": "adapter.driver_query",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "sql": "SELECT COALESCE(SUM(seq_scan + COALESCE(idx_scan, 0)), 0) AS scans FROM pg_stat_user_tables WHERE schemaname = '${ns}' AND relname = 'ns_permsPlan_perms'"
+            "method": "rawQuery",
+            "args": {
+              "query": "SELECT COALESCE(SUM(seq_scan + COALESCE(idx_scan, 0)), 0) AS scans FROM pg_stat_user_tables WHERE schemaname = '${ns}' AND relname = 'ns_permsPlan_perms'"
+            }
           },
           "expect": [
             {
-              "scans": "3"
+              "$document": {
+                "scans": "3"
+              }
             }
           ]
         },
         {
-          "op": "adapter.find",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "collection": "permsPlan"
+            "method": "find",
+            "args": {
+              "collection": {
+                "$id": "permsPlan"
+              }
+            }
           },
           "expect": [
             {
@@ -171,98 +250,145 @@
                   "read(\"any\")"
                 ]
               }
+            },
+            {
+              "$document": {
+                "title": "hidden",
+                "$id": "hidden",
+                "$sequence": "2",
+                "$createdAt": null,
+                "$updatedAt": null,
+                "$permissions": [
+                  "read(\"user:nobody\")"
+                ]
+              }
             }
           ]
         },
         {
-          "op": "adapter.driver_query",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "sql": "SELECT pg_stat_force_next_flush()"
+            "method": "rawQuery",
+            "args": {
+              "query": "SELECT pg_stat_force_next_flush()"
+            }
           },
           "expect": [
             {
-              "pg_stat_force_next_flush": ""
+              "$document": {
+                "pg_stat_force_next_flush": ""
+              }
             }
           ]
         },
         {
-          "op": "adapter.driver_query",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "sql": "SELECT pg_stat_clear_snapshot()"
+            "method": "rawQuery",
+            "args": {
+              "query": "SELECT pg_stat_clear_snapshot()"
+            }
           },
           "expect": [
             {
-              "pg_stat_clear_snapshot": ""
+              "$document": {
+                "pg_stat_clear_snapshot": ""
+              }
             }
           ]
         },
         {
-          "op": "adapter.driver_query",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "sql": "SELECT COALESCE(SUM(seq_scan + COALESCE(idx_scan, 0)), 0) AS scans FROM pg_stat_user_tables WHERE schemaname = '${ns}' AND relname = 'ns_permsPlan_perms'"
+            "method": "rawQuery",
+            "args": {
+              "query": "SELECT COALESCE(SUM(seq_scan + COALESCE(idx_scan, 0)), 0) AS scans FROM pg_stat_user_tables WHERE schemaname = '${ns}' AND relname = 'ns_permsPlan_perms'"
+            }
           },
           "expect": [
             {
-              "scans": "3"
+              "$document": {
+                "scans": "3"
+              }
             }
           ]
         },
         {
-          "op": "adapter.captured",
-          "args": {
-            "adapter": {
-              "$ref": "a"
-            }
-          },
+          "op": "db.log",
+          "args": {},
           "expect": [
-            [
-              "*",
-              "CREATE SCHEMA \"${ns}\""
-            ],
-            [
-              "*",
-              "\n            CREATE TABLE \"${ns}\".\"ns_permsPlan\" (\n                _id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n                _uid VARCHAR(255) NOT NULL,\n                \n                \"_createdAt\" TIMESTAMP(3) DEFAULT NULL,\n                \"_updatedAt\" TIMESTAMP(3) DEFAULT NULL,\n                \"title\" VARCHAR(64), \n                _permissions JSONB DEFAULT NULL\n            );\n        \n\t\t\t\tCREATE UNIQUE INDEX \"ns_permsPlan_uid\" ON \"${ns}\".\"ns_permsPlan\" (\"_uid\" COLLATE utf8_ci_ai);\n            \tCREATE INDEX \"ns_permsPlan_created\" ON \"${ns}\".\"ns_permsPlan\" (\"_createdAt\");\n            \tCREATE INDEX \"ns_permsPlan_updated\" ON \"${ns}\".\"ns_permsPlan\" (\"_updatedAt\");\n            \tCREATE INDEX \"ns_permsPlan_permissions\" ON \"${ns}\".\"ns_permsPlan\" USING gin (_permissions);\n\t\t\t"
-            ],
-            [
-              "*",
-              "\n            CREATE TABLE \"${ns}\".\"ns_permsPlan_perms\" (\n                _id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n                _tenant INTEGER DEFAULT NULL,\n                _type VARCHAR(12) NOT NULL,\n                _permission VARCHAR(255) NOT NULL,\n                _document VARCHAR(255) NOT NULL\n            );\n        \n                CREATE UNIQUE INDEX \"ns_permsPlan_ukey\" \n                    ON \"${ns}\".\"ns_permsPlan_perms\" USING btree (_document COLLATE utf8_ci_ai,_type,_permission);\n                CREATE INDEX \"ns_permsPlan_permission\" \n                    ON \"${ns}\".\"ns_permsPlan_perms\" USING btree (_permission,_type); \n            "
-            ],
-            [
-              "*",
-              "\n\t\t\tINSERT INTO \"${ns}\".\"ns_permsPlan\" (\"title\", \"_createdAt\", \"_updatedAt\", \"_permissions\",  \"_uid\")\n\t\t\tVALUES (:key_0, :key_1, :key_2, :key_3,  :_uid)\n\t\t"
-            ],
-            [
-              "*",
-              "\n\t\t\t\tINSERT INTO \"${ns}\".\"ns_permsPlan_perms\" (_type, _permission, _document )\n\t\t\t\tVALUES ('read', 'any', :_uid )\n\t\t\t"
-            ],
-            [
-              "*",
-              "\n\t\t\tINSERT INTO \"${ns}\".\"ns_permsPlan\" (\"title\", \"_createdAt\", \"_updatedAt\", \"_permissions\",  \"_uid\")\n\t\t\tVALUES (:key_0, :key_1, :key_2, :key_3,  :_uid)\n\t\t"
-            ],
-            [
-              "*",
-              "\n\t\t\t\tINSERT INTO \"${ns}\".\"ns_permsPlan_perms\" (_type, _permission, _document )\n\t\t\t\tVALUES ('read', 'user:nobody', :_uid )\n\t\t\t"
-            ],
-            [
-              "*",
-              "\n            SELECT \"main\".*\n            FROM \"${ns}\".\"ns_permsPlan\" AS \"main\"\n            WHERE (\"main\".\"_permissions\" @> '[\"read(\\\"any\\\")\"]'::jsonb)\n            \n            LIMIT :limit;\n        "
-            ]
+            {
+              "transform": "database_list",
+              "query": "SELECT \"schema_name\" FROM information_schema.schemata WHERE \"schema_name\" = ?"
+            },
+            {
+              "transform": "database_create",
+              "query": "CREATE SCHEMA \"${ns}\""
+            },
+            {
+              "transform": "database_create",
+              "query": "CREATE EXTENSION IF NOT EXISTS \"postgis\""
+            },
+            {
+              "transform": "database_create",
+              "query": "CREATE EXTENSION IF NOT EXISTS \"vector\""
+            },
+            {
+              "transform": "database_create",
+              "query": "CREATE EXTENSION IF NOT EXISTS \"pg_trgm\""
+            },
+            {
+              "transform": "database_create",
+              "query": "CREATE COLLATION IF NOT EXISTS \"utf8_ci_ai\" (provider = 'icu', locale = 'und-u-ks-level1', deterministic = false)"
+            },
+            {
+              "transform": "collection_create",
+              "query": "CREATE TABLE \"${ns}\".\"ns_permsPlan\" (\"_id\" BIGINT GENERATED BY DEFAULT AS IDENTITY NOT NULL, \"_uid\" VARCHAR(255) NOT NULL, \"_createdAt\" TIMESTAMP(3) NULL DEFAULT NULL, \"_updatedAt\" TIMESTAMP(3) NULL DEFAULT NULL, \"title\" VARCHAR(64) NULL, \"_permissions\" JSONB NULL DEFAULT NULL, PRIMARY KEY (\"_id\")); CREATE UNIQUE INDEX \"ns_permsPlan_uid\" ON \"${ns}\".\"ns_permsPlan\" (\"_uid\" COLLATE utf8_ci_ai); CREATE INDEX \"ns_permsPlan_created\" ON \"${ns}\".\"ns_permsPlan\" (\"_createdAt\"); CREATE INDEX \"ns_permsPlan_updated\" ON \"${ns}\".\"ns_permsPlan\" (\"_updatedAt\"); CREATE INDEX \"ns_permsPlan_permissions\" ON \"${ns}\".\"ns_permsPlan\" USING GIN (\"_permissions\")"
+            },
+            {
+              "transform": "collection_create",
+              "query": "CREATE TABLE \"${ns}\".\"ns_permsPlan_perms\" (\"_id\" BIGINT GENERATED BY DEFAULT AS IDENTITY NOT NULL, \"_tenant\" INTEGER NULL DEFAULT NULL, \"_type\" VARCHAR(12) NOT NULL, \"_permission\" VARCHAR(255) NOT NULL, \"_document\" VARCHAR(255) NOT NULL, PRIMARY KEY (\"_id\")); CREATE UNIQUE INDEX \"ns_permsPlan_ukey\" ON \"${ns}\".\"ns_permsPlan_perms\" USING BTREE (\"_document\" COLLATE utf8_ci_ai, \"_type\", \"_permission\"); CREATE INDEX \"ns_permsPlan_permission\" ON \"${ns}\".\"ns_permsPlan_perms\" USING BTREE (\"_permission\", \"_type\")"
+            },
+            {
+              "transform": "document_create",
+              "query": "INSERT INTO \"${ns}\".\"ns_permsPlan\" (\"_uid\", \"title\", \"_createdAt\", \"_updatedAt\", \"_permissions\") VALUES (?, ?, ?, ?, ?)"
+            },
+            {
+              "transform": "permissions_create",
+              "query": "INSERT INTO \"${ns}\".\"ns_permsPlan_perms\" (\"_document\", \"_type\", \"_permission\") VALUES (?, ?, ?)"
+            },
+            {
+              "transform": "document_create",
+              "query": "INSERT INTO \"${ns}\".\"ns_permsPlan\" (\"_uid\", \"title\", \"_createdAt\", \"_updatedAt\", \"_permissions\") VALUES (?, ?, ?, ?, ?)"
+            },
+            {
+              "transform": "permissions_create",
+              "query": "INSERT INTO \"${ns}\".\"ns_permsPlan_perms\" (\"_document\", \"_type\", \"_permission\") VALUES (?, ?, ?)"
+            },
+            {
+              "transform": "document_find",
+              "query": "SELECT * FROM \"${ns}\".\"ns_permsPlan\" AS \"table_main\" LIMIT ?"
+            }
           ]
         },
         {
-          "op": "adapter.delete",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
+            },
+            "method": "delete",
+            "args": {
+              "name": "${ns}"
             }
           },
           "expect": true
@@ -274,727 +400,817 @@
       "steps": [
         {
           "op": "adapter.open",
+          "args": {},
           "bind": "a",
           "expect": {
             "$handle": "*"
           }
         },
         {
-          "op": "adapter.before",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "event": "*",
-            "name": "capture"
+            "method": "addTransform",
+            "args": {
+              "name": "capture",
+              "transform": {
+                "$hook": "Transform",
+                "table": "",
+                "event": "*",
+                "append": "",
+                "as": "transform_capture"
+              }
+            }
           },
-          "expect": null
+          "expect": {
+            "$adapter": "Postgres"
+          }
         },
         {
-          "op": "adapter.create",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
+            },
+            "method": "create",
+            "args": {
+              "name": "${ns}"
             }
           },
           "expect": true
         },
         {
-          "op": "adapter.create_collection",
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "embedding",
+                "key": "embedding",
+                "type": "vector",
+                "size": 3,
+                "signed": true,
+                "array": false,
+                "required": true
+              }
+            },
+            "as": "a395"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "embedding",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Vector"
+              },
+              "size": 3,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "vector"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "name": "vectorPlan",
-            "attributes": [
-              {
-                "$document": {
-                  "$id": "embedding",
-                  "type": "vector",
-                  "size": 3,
-                  "required": true,
-                  "signed": true,
-                  "array": false
+            "method": "createCollection",
+            "args": {
+              "collection": "vectorPlan",
+              "attributes": [
+                {
+                  "$obj": "a395"
                 }
-              }
-            ]
+              ]
+            }
           },
           "expect": true
         },
         {
-          "op": "adapter.create_index",
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "idx_cosine",
+                "key": "idx_cosine",
+                "type": "hnsw_cosine",
+                "attributes": [
+                  "embedding"
+                ]
+              }
+            },
+            "as": "i396"
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "idx_cosine",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::HnswCosine"
+              },
+              "attributes": [
+                "embedding"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "collection": "vectorPlan",
-            "id": "idx_cosine",
-            "type": "hnsw_cosine",
-            "attributes": [
-              "embedding"
-            ]
+            "method": "createIndex",
+            "args": {
+              "collection": "vectorPlan",
+              "index": {
+                "$obj": "i396"
+              }
+            }
           },
           "expect": true
         },
         {
-          "op": "adapter.create_documents",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "collection": "vectorPlan",
-            "documents": [
-              {
-                "$document": {
-                  "$id": "v0",
-                  "$permissions": [
-                    "read(\"any\")"
-                  ],
-                  "embedding": [
-                    0.0,
-                    1.0,
-                    0.0
-                  ]
-                }
+            "method": "createDocuments",
+            "args": {
+              "collection": {
+                "$id": "vectorPlan"
               },
-              {
-                "$document": {
-                  "$id": "v1",
-                  "$permissions": [
-                    "read(\"any\")"
-                  ],
-                  "embedding": [
-                    0.02,
-                    0.98,
-                    0.0
-                  ]
+              "documents": [
+                {
+                  "$document": {
+                    "$id": "v0",
+                    "$permissions": [
+                      "read(\"any\")"
+                    ],
+                    "embedding": [
+                      0.0,
+                      1.0,
+                      0.0
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "v1",
+                    "$permissions": [
+                      "read(\"any\")"
+                    ],
+                    "embedding": [
+                      0.02,
+                      0.98,
+                      0.0
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "v2",
+                    "$permissions": [
+                      "read(\"any\")"
+                    ],
+                    "embedding": [
+                      0.04,
+                      0.96,
+                      0.0
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "v3",
+                    "$permissions": [
+                      "read(\"any\")"
+                    ],
+                    "embedding": [
+                      0.06,
+                      0.94,
+                      0.0
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "v4",
+                    "$permissions": [
+                      "read(\"any\")"
+                    ],
+                    "embedding": [
+                      0.08,
+                      0.92,
+                      0.0
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "v5",
+                    "$permissions": [
+                      "read(\"any\")"
+                    ],
+                    "embedding": [
+                      0.1,
+                      0.9,
+                      0.0
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "v6",
+                    "$permissions": [
+                      "read(\"any\")"
+                    ],
+                    "embedding": [
+                      0.12,
+                      0.88,
+                      0.0
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "v7",
+                    "$permissions": [
+                      "read(\"any\")"
+                    ],
+                    "embedding": [
+                      0.14,
+                      0.86,
+                      0.0
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "v8",
+                    "$permissions": [
+                      "read(\"any\")"
+                    ],
+                    "embedding": [
+                      0.16,
+                      0.84,
+                      0.0
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "v9",
+                    "$permissions": [
+                      "read(\"any\")"
+                    ],
+                    "embedding": [
+                      0.18,
+                      0.8200000000000001,
+                      0.0
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "v10",
+                    "$permissions": [
+                      "read(\"any\")"
+                    ],
+                    "embedding": [
+                      0.2,
+                      0.8,
+                      0.0
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "v11",
+                    "$permissions": [
+                      "read(\"any\")"
+                    ],
+                    "embedding": [
+                      0.22,
+                      0.78,
+                      0.0
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "v12",
+                    "$permissions": [
+                      "read(\"any\")"
+                    ],
+                    "embedding": [
+                      0.24,
+                      0.76,
+                      0.0
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "v13",
+                    "$permissions": [
+                      "read(\"any\")"
+                    ],
+                    "embedding": [
+                      0.26,
+                      0.74,
+                      0.0
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "v14",
+                    "$permissions": [
+                      "read(\"any\")"
+                    ],
+                    "embedding": [
+                      0.28,
+                      0.72,
+                      0.0
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "v15",
+                    "$permissions": [
+                      "read(\"any\")"
+                    ],
+                    "embedding": [
+                      0.3,
+                      0.7,
+                      0.0
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "v16",
+                    "$permissions": [
+                      "read(\"any\")"
+                    ],
+                    "embedding": [
+                      0.32,
+                      0.6799999999999999,
+                      0.0
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "v17",
+                    "$permissions": [
+                      "read(\"any\")"
+                    ],
+                    "embedding": [
+                      0.34,
+                      0.6599999999999999,
+                      0.0
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "v18",
+                    "$permissions": [
+                      "read(\"any\")"
+                    ],
+                    "embedding": [
+                      0.36,
+                      0.64,
+                      0.0
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "v19",
+                    "$permissions": [
+                      "read(\"any\")"
+                    ],
+                    "embedding": [
+                      0.38,
+                      0.62,
+                      0.0
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "v20",
+                    "$permissions": [
+                      "read(\"any\")"
+                    ],
+                    "embedding": [
+                      0.4,
+                      0.6,
+                      0.0
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "v21",
+                    "$permissions": [
+                      "read(\"any\")"
+                    ],
+                    "embedding": [
+                      0.42,
+                      0.5800000000000001,
+                      0.0
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "v22",
+                    "$permissions": [
+                      "read(\"any\")"
+                    ],
+                    "embedding": [
+                      0.44,
+                      0.56,
+                      0.0
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "v23",
+                    "$permissions": [
+                      "read(\"any\")"
+                    ],
+                    "embedding": [
+                      0.46,
+                      0.54,
+                      0.0
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "v24",
+                    "$permissions": [
+                      "read(\"any\")"
+                    ],
+                    "embedding": [
+                      0.48,
+                      0.52,
+                      0.0
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "v25",
+                    "$permissions": [
+                      "read(\"any\")"
+                    ],
+                    "embedding": [
+                      0.5,
+                      0.5,
+                      0.0
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "v26",
+                    "$permissions": [
+                      "read(\"any\")"
+                    ],
+                    "embedding": [
+                      0.52,
+                      0.48,
+                      0.0
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "v27",
+                    "$permissions": [
+                      "read(\"any\")"
+                    ],
+                    "embedding": [
+                      0.54,
+                      0.45999999999999996,
+                      0.0
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "v28",
+                    "$permissions": [
+                      "read(\"any\")"
+                    ],
+                    "embedding": [
+                      0.56,
+                      0.43999999999999995,
+                      0.0
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "v29",
+                    "$permissions": [
+                      "read(\"any\")"
+                    ],
+                    "embedding": [
+                      0.58,
+                      0.42000000000000004,
+                      0.0
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "v30",
+                    "$permissions": [
+                      "read(\"any\")"
+                    ],
+                    "embedding": [
+                      0.6,
+                      0.4,
+                      0.0
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "v31",
+                    "$permissions": [
+                      "read(\"any\")"
+                    ],
+                    "embedding": [
+                      0.62,
+                      0.38,
+                      0.0
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "v32",
+                    "$permissions": [
+                      "read(\"any\")"
+                    ],
+                    "embedding": [
+                      0.64,
+                      0.36,
+                      0.0
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "v33",
+                    "$permissions": [
+                      "read(\"any\")"
+                    ],
+                    "embedding": [
+                      0.66,
+                      0.33999999999999997,
+                      0.0
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "v34",
+                    "$permissions": [
+                      "read(\"any\")"
+                    ],
+                    "embedding": [
+                      0.68,
+                      0.31999999999999995,
+                      0.0
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "v35",
+                    "$permissions": [
+                      "read(\"any\")"
+                    ],
+                    "embedding": [
+                      0.7,
+                      0.30000000000000004,
+                      0.0
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "v36",
+                    "$permissions": [
+                      "read(\"any\")"
+                    ],
+                    "embedding": [
+                      0.72,
+                      0.28,
+                      0.0
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "v37",
+                    "$permissions": [
+                      "read(\"any\")"
+                    ],
+                    "embedding": [
+                      0.74,
+                      0.26,
+                      0.0
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "v38",
+                    "$permissions": [
+                      "read(\"any\")"
+                    ],
+                    "embedding": [
+                      0.76,
+                      0.24,
+                      0.0
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "v39",
+                    "$permissions": [
+                      "read(\"any\")"
+                    ],
+                    "embedding": [
+                      0.78,
+                      0.21999999999999997,
+                      0.0
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "v40",
+                    "$permissions": [
+                      "read(\"any\")"
+                    ],
+                    "embedding": [
+                      0.8,
+                      0.19999999999999996,
+                      0.0
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "v41",
+                    "$permissions": [
+                      "read(\"any\")"
+                    ],
+                    "embedding": [
+                      0.82,
+                      0.18000000000000005,
+                      0.0
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "v42",
+                    "$permissions": [
+                      "read(\"any\")"
+                    ],
+                    "embedding": [
+                      0.84,
+                      0.16000000000000003,
+                      0.0
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "v43",
+                    "$permissions": [
+                      "read(\"any\")"
+                    ],
+                    "embedding": [
+                      0.86,
+                      0.14,
+                      0.0
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "v44",
+                    "$permissions": [
+                      "read(\"any\")"
+                    ],
+                    "embedding": [
+                      0.88,
+                      0.12,
+                      0.0
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "v45",
+                    "$permissions": [
+                      "read(\"any\")"
+                    ],
+                    "embedding": [
+                      0.9,
+                      0.09999999999999998,
+                      0.0
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "v46",
+                    "$permissions": [
+                      "read(\"any\")"
+                    ],
+                    "embedding": [
+                      0.92,
+                      0.07999999999999996,
+                      0.0
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "v47",
+                    "$permissions": [
+                      "read(\"any\")"
+                    ],
+                    "embedding": [
+                      0.94,
+                      0.06000000000000005,
+                      0.0
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "v48",
+                    "$permissions": [
+                      "read(\"any\")"
+                    ],
+                    "embedding": [
+                      0.96,
+                      0.040000000000000036,
+                      0.0
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "v49",
+                    "$permissions": [
+                      "read(\"any\")"
+                    ],
+                    "embedding": [
+                      0.98,
+                      0.020000000000000018,
+                      0.0
+                    ]
+                  }
                 }
-              },
-              {
-                "$document": {
-                  "$id": "v2",
-                  "$permissions": [
-                    "read(\"any\")"
-                  ],
-                  "embedding": [
-                    0.04,
-                    0.96,
-                    0.0
-                  ]
-                }
-              },
-              {
-                "$document": {
-                  "$id": "v3",
-                  "$permissions": [
-                    "read(\"any\")"
-                  ],
-                  "embedding": [
-                    0.06,
-                    0.94,
-                    0.0
-                  ]
-                }
-              },
-              {
-                "$document": {
-                  "$id": "v4",
-                  "$permissions": [
-                    "read(\"any\")"
-                  ],
-                  "embedding": [
-                    0.08,
-                    0.92,
-                    0.0
-                  ]
-                }
-              },
-              {
-                "$document": {
-                  "$id": "v5",
-                  "$permissions": [
-                    "read(\"any\")"
-                  ],
-                  "embedding": [
-                    0.1,
-                    0.9,
-                    0.0
-                  ]
-                }
-              },
-              {
-                "$document": {
-                  "$id": "v6",
-                  "$permissions": [
-                    "read(\"any\")"
-                  ],
-                  "embedding": [
-                    0.12,
-                    0.88,
-                    0.0
-                  ]
-                }
-              },
-              {
-                "$document": {
-                  "$id": "v7",
-                  "$permissions": [
-                    "read(\"any\")"
-                  ],
-                  "embedding": [
-                    0.14,
-                    0.86,
-                    0.0
-                  ]
-                }
-              },
-              {
-                "$document": {
-                  "$id": "v8",
-                  "$permissions": [
-                    "read(\"any\")"
-                  ],
-                  "embedding": [
-                    0.16,
-                    0.84,
-                    0.0
-                  ]
-                }
-              },
-              {
-                "$document": {
-                  "$id": "v9",
-                  "$permissions": [
-                    "read(\"any\")"
-                  ],
-                  "embedding": [
-                    0.18,
-                    0.8200000000000001,
-                    0.0
-                  ]
-                }
-              },
-              {
-                "$document": {
-                  "$id": "v10",
-                  "$permissions": [
-                    "read(\"any\")"
-                  ],
-                  "embedding": [
-                    0.2,
-                    0.8,
-                    0.0
-                  ]
-                }
-              },
-              {
-                "$document": {
-                  "$id": "v11",
-                  "$permissions": [
-                    "read(\"any\")"
-                  ],
-                  "embedding": [
-                    0.22,
-                    0.78,
-                    0.0
-                  ]
-                }
-              },
-              {
-                "$document": {
-                  "$id": "v12",
-                  "$permissions": [
-                    "read(\"any\")"
-                  ],
-                  "embedding": [
-                    0.24,
-                    0.76,
-                    0.0
-                  ]
-                }
-              },
-              {
-                "$document": {
-                  "$id": "v13",
-                  "$permissions": [
-                    "read(\"any\")"
-                  ],
-                  "embedding": [
-                    0.26,
-                    0.74,
-                    0.0
-                  ]
-                }
-              },
-              {
-                "$document": {
-                  "$id": "v14",
-                  "$permissions": [
-                    "read(\"any\")"
-                  ],
-                  "embedding": [
-                    0.28,
-                    0.72,
-                    0.0
-                  ]
-                }
-              },
-              {
-                "$document": {
-                  "$id": "v15",
-                  "$permissions": [
-                    "read(\"any\")"
-                  ],
-                  "embedding": [
-                    0.3,
-                    0.7,
-                    0.0
-                  ]
-                }
-              },
-              {
-                "$document": {
-                  "$id": "v16",
-                  "$permissions": [
-                    "read(\"any\")"
-                  ],
-                  "embedding": [
-                    0.32,
-                    0.6799999999999999,
-                    0.0
-                  ]
-                }
-              },
-              {
-                "$document": {
-                  "$id": "v17",
-                  "$permissions": [
-                    "read(\"any\")"
-                  ],
-                  "embedding": [
-                    0.34,
-                    0.6599999999999999,
-                    0.0
-                  ]
-                }
-              },
-              {
-                "$document": {
-                  "$id": "v18",
-                  "$permissions": [
-                    "read(\"any\")"
-                  ],
-                  "embedding": [
-                    0.36,
-                    0.64,
-                    0.0
-                  ]
-                }
-              },
-              {
-                "$document": {
-                  "$id": "v19",
-                  "$permissions": [
-                    "read(\"any\")"
-                  ],
-                  "embedding": [
-                    0.38,
-                    0.62,
-                    0.0
-                  ]
-                }
-              },
-              {
-                "$document": {
-                  "$id": "v20",
-                  "$permissions": [
-                    "read(\"any\")"
-                  ],
-                  "embedding": [
-                    0.4,
-                    0.6,
-                    0.0
-                  ]
-                }
-              },
-              {
-                "$document": {
-                  "$id": "v21",
-                  "$permissions": [
-                    "read(\"any\")"
-                  ],
-                  "embedding": [
-                    0.42,
-                    0.5800000000000001,
-                    0.0
-                  ]
-                }
-              },
-              {
-                "$document": {
-                  "$id": "v22",
-                  "$permissions": [
-                    "read(\"any\")"
-                  ],
-                  "embedding": [
-                    0.44,
-                    0.56,
-                    0.0
-                  ]
-                }
-              },
-              {
-                "$document": {
-                  "$id": "v23",
-                  "$permissions": [
-                    "read(\"any\")"
-                  ],
-                  "embedding": [
-                    0.46,
-                    0.54,
-                    0.0
-                  ]
-                }
-              },
-              {
-                "$document": {
-                  "$id": "v24",
-                  "$permissions": [
-                    "read(\"any\")"
-                  ],
-                  "embedding": [
-                    0.48,
-                    0.52,
-                    0.0
-                  ]
-                }
-              },
-              {
-                "$document": {
-                  "$id": "v25",
-                  "$permissions": [
-                    "read(\"any\")"
-                  ],
-                  "embedding": [
-                    0.5,
-                    0.5,
-                    0.0
-                  ]
-                }
-              },
-              {
-                "$document": {
-                  "$id": "v26",
-                  "$permissions": [
-                    "read(\"any\")"
-                  ],
-                  "embedding": [
-                    0.52,
-                    0.48,
-                    0.0
-                  ]
-                }
-              },
-              {
-                "$document": {
-                  "$id": "v27",
-                  "$permissions": [
-                    "read(\"any\")"
-                  ],
-                  "embedding": [
-                    0.54,
-                    0.45999999999999996,
-                    0.0
-                  ]
-                }
-              },
-              {
-                "$document": {
-                  "$id": "v28",
-                  "$permissions": [
-                    "read(\"any\")"
-                  ],
-                  "embedding": [
-                    0.56,
-                    0.43999999999999995,
-                    0.0
-                  ]
-                }
-              },
-              {
-                "$document": {
-                  "$id": "v29",
-                  "$permissions": [
-                    "read(\"any\")"
-                  ],
-                  "embedding": [
-                    0.58,
-                    0.42000000000000004,
-                    0.0
-                  ]
-                }
-              },
-              {
-                "$document": {
-                  "$id": "v30",
-                  "$permissions": [
-                    "read(\"any\")"
-                  ],
-                  "embedding": [
-                    0.6,
-                    0.4,
-                    0.0
-                  ]
-                }
-              },
-              {
-                "$document": {
-                  "$id": "v31",
-                  "$permissions": [
-                    "read(\"any\")"
-                  ],
-                  "embedding": [
-                    0.62,
-                    0.38,
-                    0.0
-                  ]
-                }
-              },
-              {
-                "$document": {
-                  "$id": "v32",
-                  "$permissions": [
-                    "read(\"any\")"
-                  ],
-                  "embedding": [
-                    0.64,
-                    0.36,
-                    0.0
-                  ]
-                }
-              },
-              {
-                "$document": {
-                  "$id": "v33",
-                  "$permissions": [
-                    "read(\"any\")"
-                  ],
-                  "embedding": [
-                    0.66,
-                    0.33999999999999997,
-                    0.0
-                  ]
-                }
-              },
-              {
-                "$document": {
-                  "$id": "v34",
-                  "$permissions": [
-                    "read(\"any\")"
-                  ],
-                  "embedding": [
-                    0.68,
-                    0.31999999999999995,
-                    0.0
-                  ]
-                }
-              },
-              {
-                "$document": {
-                  "$id": "v35",
-                  "$permissions": [
-                    "read(\"any\")"
-                  ],
-                  "embedding": [
-                    0.7,
-                    0.30000000000000004,
-                    0.0
-                  ]
-                }
-              },
-              {
-                "$document": {
-                  "$id": "v36",
-                  "$permissions": [
-                    "read(\"any\")"
-                  ],
-                  "embedding": [
-                    0.72,
-                    0.28,
-                    0.0
-                  ]
-                }
-              },
-              {
-                "$document": {
-                  "$id": "v37",
-                  "$permissions": [
-                    "read(\"any\")"
-                  ],
-                  "embedding": [
-                    0.74,
-                    0.26,
-                    0.0
-                  ]
-                }
-              },
-              {
-                "$document": {
-                  "$id": "v38",
-                  "$permissions": [
-                    "read(\"any\")"
-                  ],
-                  "embedding": [
-                    0.76,
-                    0.24,
-                    0.0
-                  ]
-                }
-              },
-              {
-                "$document": {
-                  "$id": "v39",
-                  "$permissions": [
-                    "read(\"any\")"
-                  ],
-                  "embedding": [
-                    0.78,
-                    0.21999999999999997,
-                    0.0
-                  ]
-                }
-              },
-              {
-                "$document": {
-                  "$id": "v40",
-                  "$permissions": [
-                    "read(\"any\")"
-                  ],
-                  "embedding": [
-                    0.8,
-                    0.19999999999999996,
-                    0.0
-                  ]
-                }
-              },
-              {
-                "$document": {
-                  "$id": "v41",
-                  "$permissions": [
-                    "read(\"any\")"
-                  ],
-                  "embedding": [
-                    0.82,
-                    0.18000000000000005,
-                    0.0
-                  ]
-                }
-              },
-              {
-                "$document": {
-                  "$id": "v42",
-                  "$permissions": [
-                    "read(\"any\")"
-                  ],
-                  "embedding": [
-                    0.84,
-                    0.16000000000000003,
-                    0.0
-                  ]
-                }
-              },
-              {
-                "$document": {
-                  "$id": "v43",
-                  "$permissions": [
-                    "read(\"any\")"
-                  ],
-                  "embedding": [
-                    0.86,
-                    0.14,
-                    0.0
-                  ]
-                }
-              },
-              {
-                "$document": {
-                  "$id": "v44",
-                  "$permissions": [
-                    "read(\"any\")"
-                  ],
-                  "embedding": [
-                    0.88,
-                    0.12,
-                    0.0
-                  ]
-                }
-              },
-              {
-                "$document": {
-                  "$id": "v45",
-                  "$permissions": [
-                    "read(\"any\")"
-                  ],
-                  "embedding": [
-                    0.9,
-                    0.09999999999999998,
-                    0.0
-                  ]
-                }
-              },
-              {
-                "$document": {
-                  "$id": "v46",
-                  "$permissions": [
-                    "read(\"any\")"
-                  ],
-                  "embedding": [
-                    0.92,
-                    0.07999999999999996,
-                    0.0
-                  ]
-                }
-              },
-              {
-                "$document": {
-                  "$id": "v47",
-                  "$permissions": [
-                    "read(\"any\")"
-                  ],
-                  "embedding": [
-                    0.94,
-                    0.06000000000000005,
-                    0.0
-                  ]
-                }
-              },
-              {
-                "$document": {
-                  "$id": "v48",
-                  "$permissions": [
-                    "read(\"any\")"
-                  ],
-                  "embedding": [
-                    0.96,
-                    0.040000000000000036,
-                    0.0
-                  ]
-                }
-              },
-              {
-                "$document": {
-                  "$id": "v49",
-                  "$permissions": [
-                    "read(\"any\")"
-                  ],
-                  "embedding": [
-                    0.98,
-                    0.020000000000000018,
-                    0.0
-                  ]
-                }
-              }
-            ]
+              ]
+            }
           },
           "expect": [
             {
@@ -1650,90 +1866,127 @@
           ]
         },
         {
-          "op": "adapter.set_authorization",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "status": false
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "roles": [],
+                "status": false
+              }
+            }
           },
-          "expect": null
+          "expect": {
+            "$adapter": "Postgres"
+          }
         },
         {
-          "op": "adapter.driver_query",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "sql": "SELECT pg_stat_force_next_flush()"
+            "method": "rawQuery",
+            "args": {
+              "query": "SELECT pg_stat_force_next_flush()"
+            }
           },
           "expect": [
             {
-              "pg_stat_force_next_flush": ""
+              "$document": {
+                "pg_stat_force_next_flush": ""
+              }
             }
           ]
         },
         {
-          "op": "adapter.driver_query",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "sql": "SELECT pg_stat_clear_snapshot()"
+            "method": "rawQuery",
+            "args": {
+              "query": "SELECT pg_stat_clear_snapshot()"
+            }
           },
           "expect": [
             {
-              "pg_stat_clear_snapshot": ""
+              "$document": {
+                "pg_stat_clear_snapshot": ""
+              }
             }
           ]
         },
         {
-          "op": "adapter.driver_query",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "sql": "SELECT COALESCE(SUM(idx_scan), 0) AS scans FROM pg_stat_user_indexes WHERE schemaname = '${ns}' AND indexrelname = 'ns__vectorPlan_idx_cosine'"
+            "method": "rawQuery",
+            "args": {
+              "query": "SELECT COALESCE(SUM(idx_scan), 0) AS scans FROM pg_stat_user_indexes WHERE schemaname = '${ns}' AND indexrelname = 'ns__vectorPlan_idx_cosine'"
+            }
           },
           "expect": [
             {
-              "scans": "0"
+              "$document": {
+                "scans": "0"
+              }
             }
           ]
         },
         {
-          "op": "adapter.driver_exec",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "sql": "SET enable_seqscan = off"
+            "method": "rawMutation",
+            "args": {
+              "query": "SET enable_seqscan = off"
+            }
           },
           "expect": 0
         },
         {
-          "op": "adapter.find",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "collection": "vectorPlan",
-            "queries": [
-              {
-                "$query": {
-                  "method": "vectorCosine",
-                  "attribute": "embedding",
-                  "values": [
-                    [
-                      1.0,
-                      0.0,
-                      0.0
+            "method": "find",
+            "args": {
+              "collection": {
+                "$id": "vectorPlan"
+              },
+              "queries": [
+                {
+                  "$query": {
+                    "method": "vectorCosine",
+                    "attribute": "embedding",
+                    "values": [
+                      [
+                        1.0,
+                        0.0,
+                        0.0
+                      ]
                     ]
-                  ]
+                  }
                 }
-              }
+              ],
+              "limit": 10
+            }
+          },
+          "mask": {
+            "paths": [
+              "/*/$document/$distance"
             ],
-            "limit": 10
+            "reason": "pgvector computes $distance, and its float arithmetic differs in the last digits between CPUs (SIMD); both runtimes read the same value, and the result order and documents are still compared"
           },
           "expect": [
             {
@@ -1866,101 +2119,141 @@
                 "$distance": "<masked>"
               }
             }
-          ],
-          "mask": {
-            "paths": [
-              "/*/$document/$distance"
-            ],
-            "reason": "pgvector computes $distance, and its float arithmetic differs in the last digits between CPUs (SIMD); both runtimes read the same value, and the result order and documents are still compared"
-          }
+          ]
         },
         {
-          "op": "adapter.driver_exec",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "sql": "RESET enable_seqscan"
+            "method": "rawMutation",
+            "args": {
+              "query": "RESET enable_seqscan"
+            }
           },
           "expect": 0
         },
         {
-          "op": "adapter.driver_query",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "sql": "SELECT pg_stat_force_next_flush()"
+            "method": "rawQuery",
+            "args": {
+              "query": "SELECT pg_stat_force_next_flush()"
+            }
           },
           "expect": [
             {
-              "pg_stat_force_next_flush": ""
+              "$document": {
+                "pg_stat_force_next_flush": ""
+              }
             }
           ]
         },
         {
-          "op": "adapter.driver_query",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "sql": "SELECT pg_stat_clear_snapshot()"
+            "method": "rawQuery",
+            "args": {
+              "query": "SELECT pg_stat_clear_snapshot()"
+            }
           },
           "expect": [
             {
-              "pg_stat_clear_snapshot": ""
+              "$document": {
+                "pg_stat_clear_snapshot": ""
+              }
             }
           ]
         },
         {
-          "op": "adapter.driver_query",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "sql": "SELECT COALESCE(SUM(idx_scan), 0) AS scans FROM pg_stat_user_indexes WHERE schemaname = '${ns}' AND indexrelname = 'ns__vectorPlan_idx_cosine'"
+            "method": "rawQuery",
+            "args": {
+              "query": "SELECT COALESCE(SUM(idx_scan), 0) AS scans FROM pg_stat_user_indexes WHERE schemaname = '${ns}' AND indexrelname = 'ns__vectorPlan_idx_cosine'"
+            }
           },
           "expect": [
             {
-              "scans": "1"
+              "$document": {
+                "scans": "1"
+              }
             }
           ]
         },
         {
-          "op": "adapter.captured",
-          "args": {
-            "adapter": {
-              "$ref": "a"
-            }
-          },
+          "op": "db.log",
+          "args": {},
           "expect": [
-            [
-              "*",
-              "CREATE SCHEMA \"${ns}\""
-            ],
-            [
-              "*",
-              "\n            CREATE TABLE \"${ns}\".\"ns_vectorPlan\" (\n                _id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n                _uid VARCHAR(255) NOT NULL,\n                \n                \"_createdAt\" TIMESTAMP(3) DEFAULT NULL,\n                \"_updatedAt\" TIMESTAMP(3) DEFAULT NULL,\n                \"embedding\" VECTOR(3), \n                _permissions JSONB DEFAULT NULL\n            );\n        \n\t\t\t\tCREATE UNIQUE INDEX \"ns_vectorPlan_uid\" ON \"${ns}\".\"ns_vectorPlan\" (\"_uid\" COLLATE utf8_ci_ai);\n            \tCREATE INDEX \"ns_vectorPlan_created\" ON \"${ns}\".\"ns_vectorPlan\" (\"_createdAt\");\n            \tCREATE INDEX \"ns_vectorPlan_updated\" ON \"${ns}\".\"ns_vectorPlan\" (\"_updatedAt\");\n            \tCREATE INDEX \"ns_vectorPlan_permissions\" ON \"${ns}\".\"ns_vectorPlan\" USING gin (_permissions);\n\t\t\t"
-            ],
-            [
-              "*",
-              "\n            CREATE TABLE \"${ns}\".\"ns_vectorPlan_perms\" (\n                _id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n                _tenant INTEGER DEFAULT NULL,\n                _type VARCHAR(12) NOT NULL,\n                _permission VARCHAR(255) NOT NULL,\n                _document VARCHAR(255) NOT NULL\n            );\n        \n                CREATE UNIQUE INDEX \"ns_vectorPlan_ukey\" \n                    ON \"${ns}\".\"ns_vectorPlan_perms\" USING btree (_document COLLATE utf8_ci_ai,_type,_permission);\n                CREATE INDEX \"ns_vectorPlan_permission\" \n                    ON \"${ns}\".\"ns_vectorPlan_perms\" USING btree (_permission,_type); \n            "
-            ],
-            [
-              "*",
-              "CREATE INDEX \"ns__vectorPlan_idx_cosine\" ON \"${ns}\".\"ns_vectorPlan\" USING HNSW (\"embedding\"  vector_cosine_ops)"
-            ],
-            [
-              "*",
-              "\n            SELECT \"main\".*, (\"main\".\"embedding\" <=> :vector_<id>::vector)::text AS \"_distance\"\n            FROM \"${ns}\".\"ns_vectorPlan\" AS \"main\"\n            \n            ORDER BY (\"main\".\"embedding\" <=> :vector_<id>::vector)\n            LIMIT :limit;\n        "
-            ]
+            {
+              "transform": "database_list",
+              "query": "SELECT \"schema_name\" FROM information_schema.schemata WHERE \"schema_name\" = ?"
+            },
+            {
+              "transform": "database_create",
+              "query": "CREATE SCHEMA \"${ns}\""
+            },
+            {
+              "transform": "database_create",
+              "query": "CREATE EXTENSION IF NOT EXISTS \"postgis\""
+            },
+            {
+              "transform": "database_create",
+              "query": "CREATE EXTENSION IF NOT EXISTS \"vector\""
+            },
+            {
+              "transform": "database_create",
+              "query": "CREATE EXTENSION IF NOT EXISTS \"pg_trgm\""
+            },
+            {
+              "transform": "database_create",
+              "query": "CREATE COLLATION IF NOT EXISTS \"utf8_ci_ai\" (provider = 'icu', locale = 'und-u-ks-level1', deterministic = false)"
+            },
+            {
+              "transform": "collection_create",
+              "query": "CREATE TABLE \"${ns}\".\"ns_vectorPlan\" (\"_id\" BIGINT GENERATED BY DEFAULT AS IDENTITY NOT NULL, \"_uid\" VARCHAR(255) NOT NULL, \"_createdAt\" TIMESTAMP(3) NULL DEFAULT NULL, \"_updatedAt\" TIMESTAMP(3) NULL DEFAULT NULL, \"embedding\" VECTOR(3) NULL, \"_permissions\" JSONB NULL DEFAULT NULL, PRIMARY KEY (\"_id\")); CREATE UNIQUE INDEX \"ns_vectorPlan_uid\" ON \"${ns}\".\"ns_vectorPlan\" (\"_uid\" COLLATE utf8_ci_ai); CREATE INDEX \"ns_vectorPlan_created\" ON \"${ns}\".\"ns_vectorPlan\" (\"_createdAt\"); CREATE INDEX \"ns_vectorPlan_updated\" ON \"${ns}\".\"ns_vectorPlan\" (\"_updatedAt\"); CREATE INDEX \"ns_vectorPlan_permissions\" ON \"${ns}\".\"ns_vectorPlan\" USING GIN (\"_permissions\")"
+            },
+            {
+              "transform": "collection_create",
+              "query": "CREATE TABLE \"${ns}\".\"ns_vectorPlan_perms\" (\"_id\" BIGINT GENERATED BY DEFAULT AS IDENTITY NOT NULL, \"_tenant\" INTEGER NULL DEFAULT NULL, \"_type\" VARCHAR(12) NOT NULL, \"_permission\" VARCHAR(255) NOT NULL, \"_document\" VARCHAR(255) NOT NULL, PRIMARY KEY (\"_id\")); CREATE UNIQUE INDEX \"ns_vectorPlan_ukey\" ON \"${ns}\".\"ns_vectorPlan_perms\" USING BTREE (\"_document\" COLLATE utf8_ci_ai, \"_type\", \"_permission\"); CREATE INDEX \"ns_vectorPlan_permission\" ON \"${ns}\".\"ns_vectorPlan_perms\" USING BTREE (\"_permission\", \"_type\")"
+            },
+            {
+              "transform": "index_create",
+              "query": "CREATE INDEX \"ns__vectorPlan_idx_cosine\" ON \"${ns}\".\"ns_vectorPlan\" USING HNSW (\"embedding\" vector_cosine_ops)"
+            },
+            {
+              "transform": "documents_create",
+              "query": "INSERT INTO \"${ns}\".\"ns_vectorPlan\" (\"_uid\", \"_createdAt\", \"_updatedAt\", \"_permissions\", \"embedding\") VALUES (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?), (?, ?, ?, ?, ?)"
+            },
+            {
+              "transform": "permissions_create",
+              "query": "INSERT INTO \"${ns}\".\"ns_vectorPlan_perms\" (\"_document\", \"_type\", \"_permission\") VALUES (?, ?, ?), (?, ?, ?), (?, ?, ?), (?, ?, ?), (?, ?, ?), (?, ?, ?), (?, ?, ?), (?, ?, ?), (?, ?, ?), (?, ?, ?), (?, ?, ?), (?, ?, ?), (?, ?, ?), (?, ?, ?), (?, ?, ?), (?, ?, ?), (?, ?, ?), (?, ?, ?), (?, ?, ?), (?, ?, ?), (?, ?, ?), (?, ?, ?), (?, ?, ?), (?, ?, ?), (?, ?, ?), (?, ?, ?), (?, ?, ?), (?, ?, ?), (?, ?, ?), (?, ?, ?), (?, ?, ?), (?, ?, ?), (?, ?, ?), (?, ?, ?), (?, ?, ?), (?, ?, ?), (?, ?, ?), (?, ?, ?), (?, ?, ?), (?, ?, ?), (?, ?, ?), (?, ?, ?), (?, ?, ?), (?, ?, ?), (?, ?, ?), (?, ?, ?), (?, ?, ?), (?, ?, ?), (?, ?, ?), (?, ?, ?)"
+            },
+            {
+              "transform": "document_find",
+              "query": "SELECT *, (\"table_main\".\"embedding\" <=> ?::vector)::text AS \"_distance\" FROM \"${ns}\".\"ns_vectorPlan\" AS \"table_main\" WHERE \"table_main\".\"embedding\" IS NOT NULL ORDER BY (\"table_main\".\"embedding\" <=> ?::vector) LIMIT ?"
+            }
           ]
         },
         {
-          "op": "adapter.delete",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
+            },
+            "method": "delete",
+            "args": {
+              "name": "${ns}"
             }
           },
           "expect": true

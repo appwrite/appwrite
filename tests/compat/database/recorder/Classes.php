@@ -3,9 +3,11 @@
 namespace Tests\Compat\Database\Recorder;
 
 /**
- * Generates the recording subclasses (RecordingDatabase, RecordingPostgres, RecordingSQLite, RecordingMemory,
- * RecordingMariaDB, RecordingMySQL, RecordingAuthorization): every public, non-static, non-final method is
- * overridden to go through Recorder::call with the same signature.
+ * Generates the recording subclasses (RecordingDatabase, RecordingMirror, the
+ * recording adapters and RecordingAuthorization): every public, non-static,
+ * non-final method is overridden to go through Recorder::call with the same
+ * signature. RecordingProfiler wraps the Profiler a recording Database hands
+ * out, its calls recorded as `db.profiler`.
  */
 final class Classes
 {
@@ -18,16 +20,14 @@ final class Classes
             . self::subclass(\Utopia\Database\Adapter\Redis::class, 'RecordingRedis', 'adapter', [])
             . self::subclass(\Utopia\Database\Mirror::class, 'RecordingMirror', 'database', ['getAdapter', 'getAuthorization'])
             . self::subclass(\Utopia\Database\Adapter\SQLite::class, 'RecordingSQLite', 'adapter', [])
+            . self::subclass(\Tests\Compat\Database\Fixture\EmulatedSQLite::class, 'RecordingEmulatedSQLite', 'adapter', [])
             . self::subclass(\Utopia\Database\Adapter\Memory::class, 'RecordingMemory', 'adapter', [])
             . self::subclass(\Utopia\Database\Adapter\MariaDB::class, 'RecordingMariaDB', 'adapter', [])
             . self::subclass(\Utopia\Database\Adapter\MySQL::class, 'RecordingMySQL', 'adapter', [])
             . self::subclass(\Utopia\Database\Adapter\Mongo::class, 'RecordingMongo', 'adapter', [])
-            . self::subclass(\Utopia\Database\Validator\Authorization::class, 'RecordingAuthorization', 'authorization', ['isValid', 'getDescription', 'isArray', 'getType'])
+            . self::subclass(\Utopia\Database\Validator\Authorization::class, 'RecordingAuthorization', 'authorization', ['isValid', 'getDescription', 'isArray', 'getType', 'restore'])
+            . self::proxy(\Utopia\Database\Profiler::class, 'RecordingProfiler', 'profiler')
             . <<<'PHP'
-                /**
-                 * A Database the tests construct themselves (`new Database(...)`
-                 * in their source is rewritten to this): recorded as a peer.
-                 */
                 /**
                  * A Memory adapter the tests construct themselves (`new
                  * Memory()` in their source is rewritten to this): a detached
@@ -42,6 +42,10 @@ final class Classes
                     }
                 }
 
+                /**
+                 * A Database the tests construct themselves (`new Database(...)`
+                 * in their source is rewritten to this): recorded as a peer.
+                 */
                 class PeerDatabase extends RecordingDatabase
                 {
                     public ?int $opened = null;
@@ -54,7 +58,7 @@ final class Classes
                         } finally {
                             Recorder::$depth--;
                         }
-                        Recorder::peer($this, $adapter, $cache);
+                        Recorder::peer($this, $adapter, $cache, $filters);
                     }
                 }
                 PHP;
@@ -96,6 +100,31 @@ final class Classes
         return $out . "}\n";
     }
 
+    /**
+     * A subclass of `$parent` wrapping an instance of it: every public,
+     * non-static method goes to the wrapped one through Recorder::call
+     * (returning the wrapper where the wrapped one returns itself).
+     *
+     * @param class-string $parent
+     */
+    private static function proxy(string $parent, string $name, string $kind): string
+    {
+        $out = "class {$name} extends \\{$parent}\n{\n    public function __construct(public readonly \\{$parent} \$inner)\n    {\n    }\n";
+        foreach ((new \ReflectionClass($parent))->getMethods(\ReflectionMethod::IS_PUBLIC) as $method) {
+            $m = $method->getName();
+            if ($method->isConstructor() || $method->isStatic() || $method->isFinal() || str_starts_with($m, '__')) {
+                continue;
+            }
+            $params = implode(', ', array_map(self::parameter(...), $method->getParameters()));
+            $returns = $method->hasReturnType() ? ': ' . self::type($method->getReturnType(), $parent) : '';
+            $void = $method->hasReturnType() && \in_array((string) $method->getReturnType(), ['void', 'never'], true);
+            $call = "Recorder::call(\$this, '{$kind}', '{$m}', \\func_get_args(), fn (...\$x) => (\$r = \$this->inner->{$m}(...\$x)) === \$this->inner ? \$this : \$r)";
+            $out .= "    public function {$m}({$params}){$returns}\n    {\n        " . ($void ? "{$call};" : "return {$call};") . "\n    }\n";
+        }
+
+        return $out . "}\n";
+    }
+
     private static function parameter(\ReflectionParameter $p): string
     {
         $parent = $p->getDeclaringClass()?->getName() ?? '';
@@ -115,7 +144,8 @@ final class Classes
                 }
                 $out .= ' = \\' . ltrim($constant, '\\');
             } else {
-                $out .= ' = ' . var_export($p->getDefaultValue(), true);
+                $default = $p->getDefaultValue();
+                $out .= ' = ' . ($default instanceof \UnitEnum ? '\\' . $default::class . '::' . $default->name : var_export($default, true));
             }
         }
 
@@ -128,7 +158,7 @@ final class Classes
             return '';
         }
         if ($type instanceof \ReflectionUnionType) {
-            return implode('|', array_map(fn ($t) => self::type($t, $self), $type->getTypes()));
+            return implode('|', array_map(fn ($t) => $t instanceof \ReflectionIntersectionType ? '(' . self::type($t, $self) . ')' : self::type($t, $self), $type->getTypes()));
         }
         if ($type instanceof \ReflectionIntersectionType) {
             return implode('&', array_map(fn ($t) => self::type($t, $self), $type->getTypes()));

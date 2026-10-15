@@ -20,26 +20,40 @@ use Utopia\Cache\Codec\Json;
 use Utopia\Database\Adapter;
 use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Adapter\Memory as MemoryAdapter;
+use Utopia\Database\Adapter\Mongo;
 use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Adapter\Pool;
 use Utopia\Database\Adapter\Postgres;
+use Utopia\Database\Adapter\ReadWritePool;
 use Utopia\Database\Adapter\Redis as RedisAdapter;
 use Utopia\Database\Adapter\SQLite;
+use Utopia\Database\Cache\Query as QueryCache;
+use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Filter\Registry;
 use Utopia\Database\Mirror;
-use Utopia\Database\Mirroring\Filter as MirroringFilter;
+use Utopia\Database\Mirror\Failure;
+use Utopia\Database\Mirror\Filter as MirrorFilter;
 use Utopia\Database\PDO;
+use Utopia\Database\Profiler;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Structure;
 use Utopia\Pools\Adapter\Stack;
 use Utopia\Pools\Pool as UtopiaPool;
-use Utopia\Validator\Range;
+use Utopia\Query\Builder\Statement;
 
-// The custom document types of the e2e suite (TestUser, TestPost), declared
-// next to the trait that uses them.
-require_once \dirname(__DIR__, 4) . '/vendor/utopia-php/database/tests/e2e/Adapter/Scopes/CustomDocumentTypeTests.php';
+require_once \dirname(__DIR__) . '/Fixtures.php';
+require_once \dirname(__DIR__) . '/Objects.php';
+
+// The custom document types of the e2e suite (Support\User, Support\Post).
+foreach (['User', 'Post'] as $support) {
+    $file = \dirname(__DIR__, 4) . "/vendor/utopia-php/database/tests/e2e/Adapter/Support/{$support}.php";
+    if (is_file($file) && !class_exists('Tests\\E2E\\Adapter\\Support\\' . $support, false)) {
+        require_once $file;
+    }
+}
 
 /**
  * One invocation of a callback an operation passed to the library: the
@@ -59,21 +73,18 @@ final class Invocation
 }
 
 /**
- * What a session's databases share: the current database, each database's
- * PDO (for `db.sql`), and the log fixtures write to (`db.log`).
- */
-/**
- * The connection pool of a `db.open` with `pool`: what its connections'
- * `init` opened (`db.pool`).
+ * The connection pool of a `db.open` with `pool`, which `pool.of` shares.
  */
 final class PoolFixture
 {
-    public int $opened = 0;
-
-    /** @var UtopiaPool<Postgres>|null */
+    /** @var UtopiaPool<Adapter>|null */
     public ?UtopiaPool $pool = null;
 }
 
+/**
+ * What a session's databases share: the current database, each database's
+ * PDO (for `db.sql`), and the log fixtures write to (`db.log`).
+ */
 final class CoreState
 {
     public ?Database $db = null;
@@ -100,8 +111,21 @@ final class CoreState
 
 final class Core
 {
-    /** The filter fixtures (Core::filter), registered by every `db.open`. */
-    public const FILTERS = ['encrypt', 'subQueryProbe', 'operator_double_decode'];
+    /**
+     * PDO attributes of the connections db.open makes (7.x's
+     * SQL::getPDOAttributes(), which 8.x leaves to the caller).
+     */
+    public const PDO_ATTRIBUTES = [
+        \PDO::ATTR_TIMEOUT => 3,
+        \PDO::ATTR_PERSISTENT => true,
+        \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
+        \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
+        \PDO::ATTR_EMULATE_PREPARES => true,
+        \PDO::ATTR_STRINGIFY_FETCHES => true,
+    ];
+
+    /** The hooks a database opens with unless `hooks` says otherwise (the e2e Base's setUp). */
+    public const DEFAULT_HOOKS = ['Relationships', 'Permissions'];
 
     /** @var array<string, callable(array<string, mixed>, Session): mixed> operations returning PHP values */
     public static array $raw = [];
@@ -121,7 +145,25 @@ final class Core
 
     public static function enter(Session $s): void
     {
+        self::$states ??= new \WeakMap();
+        if (!isset(self::$states[$s])) {
+            self::fresh();
+        }
         self::$current = $s;
+    }
+
+    /**
+     * A case starts with the library's process-wide registries as a fresh
+     * process has them (the built-in filters, no formats) plus the canonical
+     * filter fixtures: what an earlier case registered or overrode (a unit
+     * test replacing the built-in `datetime` filter) does not leak into it.
+     */
+    private static function fresh(): void
+    {
+        (new \ReflectionProperty(Database::class, 'filters'))->setValue(null, []);
+        (new \ReflectionProperty(Database::class, 'defaultFiltersRegistered'))->setValue(null, false);
+        (new \ReflectionProperty(Structure::class, 'formats'))->setValue(null, []);
+        self::filters();
     }
 
     /**
@@ -156,32 +198,35 @@ final class Core
     }
 
     /**
-     * `db.open`: a Database on PostgreSQL service `database-postgres`, in
-     * schema `database` (default: the case namespace); with `engine`
-     * `sqlite`, on SQLite file `/tmp/compat-fs/${ns}/<file>` (default
-     * `database.sqlite`; `emulate_mysql` sets `setEmulateMySQL`); with
-     * `engine` `memory`, on the in-memory adapter.
+     * Registers the canonical global filter fixtures (Database::addFilter).
+     * They are process-wide and cache keys carry every registered filter's
+     * signature: registering them all as a database opens keeps a case's
+     * keys independent of the cases its driver ran before it.
+     */
+    public static function filters(): void
+    {
+        foreach (FilterFixtures::CANONICAL as $name) {
+            $filter = FilterFixtures::get($name);
+            Database::addFilter($name, $filter['encode'], $filter['decode']);
+        }
+    }
+
+    /**
+     * `db.open`: see the README (`database`: the core vocabulary).
      *
      * @param array<string, mixed> $a
      * @return array{'$handle': string}
      */
     public static function open(array $a, Session $s): array
     {
-        $known = ['namespace', 'database', 'shared_tables', 'tenant', 'tenant_per_document', 'cache', 'create', 'roles', 'adapter', 'filters', 'pool', 'mirror', 'redis', 'engine', 'file', 'emulate_mysql', 'detached', 'driver', 'schemaless'];
+        $known = ['namespace', 'database', 'shared_tables', 'tenant', 'tenant_per_document', 'cache', 'create', 'roles', 'adapter', 'filters', 'pool', 'mirror', 'redis', 'engine', 'file', 'emulate_mysql', 'detached', 'driver', 'schemaless', 'hooks'];
         foreach (array_keys($a) as $key) {
             if (!\in_array($key, $known, true)) {
                 throw new Fault("db.open: unknown argument `{$key}`");
             }
         }
         $state = self::state($s);
-        // The fixture filters are process-wide (Database::$filters) and cache
-        // keys carry every registered filter's signature: registering them all
-        // as a database opens keeps a case's keys independent of the cases the
-        // driver ran before it.
-        foreach (self::FILTERS as $name) {
-            $filter = self::filter($name);
-            Database::addFilter($name, $filter['encode'], $filter['decode']);
-        }
+        self::filters();
         if (isset($a['adapter'])) {
             $peer = $s->get($a['adapter']);
             if (!$peer instanceof Database) {
@@ -191,11 +236,18 @@ final class Core
             $pdo = $state->pdos[$peer] ?? null;
             $poolFixture = $state->pools[$peer] ?? null;
         } elseif (isset($a['pool'])) {
-            // A Pool adapter over PostgreSQL connections, with a connection
+            // A Pool adapter over connections of `driver`, with a connection
             // of its own for `db.sql`.
-            $poolFixture = self::pool((array) $a['pool'], $s);
-            $adapter = new Pool($poolFixture->pool);
-            $pdo = ($a['pool']['unreachable'] ?? false) ? null : self::pdo($s);
+            $spec = (array) $a['pool'];
+            $driver = (string) ($a['driver'] ?? 'postgres');
+            $poolFixture = self::pool($spec, $driver, $s);
+            if (isset($spec['read'])) {
+                $read = self::pool((array) $spec['read'], $driver, $s);
+                $adapter = new ReadWritePool($poolFixture->pool, $read->pool);
+            } else {
+                $adapter = new Pool($poolFixture->pool);
+            }
+            $pdo = ($spec['unreachable'] ?? false) ? null : self::connect($driver, $s)[1];
         } elseif ($a['redis'] ?? false) {
             // The Redis adapter, on compat Redis database
             // `database-redis-adapter` (keys carry the case namespace).
@@ -204,20 +256,9 @@ final class Core
             $poolFixture = null;
         } elseif (($a['engine'] ?? 'postgres') === 'mongo') {
             // MongoDB service `database-mongo`: the client's database is the
-            // one every collection lives in (the adapter's setDatabase()
-            // only names databases to drop), `database` (default: the case
+            // one every collection lives in, `database` (default: the case
             // namespace).
-            $url = parse_url($s->service('database-mongo'));
-            $client = new \Utopia\Mongo\Client(
-                (string) ($a['database'] ?? $s->ns),
-                (string) ($url['host'] ?? ''),
-                (int) ($url['port'] ?? 27017),
-                urldecode($url['user'] ?? ''),
-                urldecode($url['pass'] ?? ''),
-                false,
-            );
-            $adapter = new \Utopia\Database\Adapter\Mongo($client);
-            $adapter->setSupportForAttributes(!($a['schemaless'] ?? false));
+            $adapter = new Mongo(self::mongo($s, (string) ($a['database'] ?? $s->ns)));
             $pdo = null;
             $poolFixture = null;
         } else {
@@ -230,19 +271,22 @@ final class Core
         // A database of its own starts on an empty private Redis cache, as
         // the e2e suites flush theirs; a peer shares it.
         $cache = self::cache($a['cache'] ?? 'memory', $s, fresh: !$peer);
-        // Instance filters: name => the fixture it runs.
-        $filters = [];
-        foreach ((array) ($a['filters'] ?? []) as $name => $fixture) {
-            $filters[(string) $name] = self::filter((string) $fixture);
-        }
+        // Instance filters: Filter\Codec fixtures.
+        $codecs = array_map(Codecs::make(...), Values::list($a['filters'] ?? []));
         $db = isset($a['mirror'])
             ? self::mirror((array) $a['mirror'], $adapter, $cache, $pdo, $s)
-            : new Database($adapter, $cache, $filters);
+            : new Database($adapter, $cache, $codecs);
         $authorization = new Authorization();
         foreach (Values::list($a['roles'] ?? ['any']) as $role) {
             $authorization->addRole((string) $role);
         }
         $db->setAuthorization($authorization);
+        if ($a['schemaless'] ?? false) {
+            $db->setSchemaless(true);
+        }
+        foreach (Values::list($a['hooks'] ?? self::DEFAULT_HOOKS) as $hook) {
+            $db->addHook(Hooks::make($hook));
+        }
         if (!$peer) {
             $db->setDatabase((string) ($a['database'] ?? $s->ns));
         }
@@ -275,18 +319,35 @@ final class Core
     }
 
     /**
+     * A client of MongoDB service `database-mongo` on database `$database`.
+     */
+    public static function mongo(Session $s, string $database): \Utopia\Mongo\Client
+    {
+        $url = parse_url($s->service('database-mongo'));
+        $client = new \Utopia\Mongo\Client(
+            $database,
+            (string) ($url['host'] ?? ''),
+            (int) ($url['port'] ?? 27017),
+            urldecode($url['user'] ?? ''),
+            urldecode($url['pass'] ?? ''),
+            false,
+        );
+        $client->connect();
+
+        return $client;
+    }
+
+    /**
      * The adapter (and its PDO) `db.open` builds for `driver`: `postgres`
      * (service `database-postgres`), `mariadb` (`database-mariadb`) or
-     * `mysql` (`database-mysql`), with the library's PDO attributes.
+     * `mysql` (`database-mysql`), with Core::PDO_ATTRIBUTES.
      *
      * @return array{Adapter, PDO}
      */
     public static function connect(string $driver, Session $s): array
     {
         if ($driver === 'postgres') {
-            $url = parse_url($s->service('database-postgres'));
-            $dsn = 'pgsql:host=' . ($url['host'] ?? '') . ';port=' . ($url['port'] ?? 5432) . ';dbname=' . ltrim($url['path'] ?? '', '/');
-            $pdo = new PDO($dsn, urldecode($url['user'] ?? ''), urldecode($url['pass'] ?? ''), Postgres::getPDOAttributes());
+            $pdo = self::pdo($s);
 
             return [new Postgres($pdo), $pdo];
         }
@@ -295,7 +356,7 @@ final class Core
         }
         $url = parse_url($s->service($driver === 'mariadb' ? 'database-mariadb' : 'database-mysql'));
         $dsn = 'mysql:host=' . ($url['host'] ?? '') . ';port=' . ($url['port'] ?? 3306) . ';charset=utf8mb4';
-        $pdo = new PDO($dsn, urldecode($url['user'] ?? ''), urldecode($url['pass'] ?? ''), MariaDB::getPDOAttributes());
+        $pdo = new PDO($dsn, urldecode($url['user'] ?? ''), urldecode($url['pass'] ?? ''), self::PDO_ATTRIBUTES);
 
         return [$driver === 'mariadb' ? new MariaDB($pdo) : new MySQL($pdo), $pdo];
     }
@@ -321,15 +382,14 @@ final class Core
                 if ($file === '' || str_contains($file, '/')) {
                     throw new Fault('db.open: `file` is a file name');
                 }
-                $pdo = new PDO('sqlite:' . $dir . '/' . $file, null, null, SQLite::getPDOAttributes());
-                $adapter = new SQLite($pdo);
-                $adapter->setEmulateMySQL((bool) ($a['emulate_mysql'] ?? false));
+                $pdo = new PDO('sqlite:' . $dir . '/' . $file, null, null, self::PDO_ATTRIBUTES);
+                $adapter = ($a['emulate_mysql'] ?? false) ? new Fixture\EmulatedSQLite($pdo) : new SQLite($pdo);
 
                 return [$adapter, $pdo];
             case 'memory':
                 return [new MemoryAdapter(), null];
             default:
-                throw new Fault('db.open: `engine` must be "postgres", "sqlite" or "memory"');
+                throw new Fault('db.open: `engine` must be "postgres", "sqlite", "memory" or "mongo"');
         }
     }
 
@@ -337,7 +397,7 @@ final class Core
      * A Mirror (`db.open` with `mirror`): `$adapter` and `$cache` make its
      * source; a destination on PostgreSQL service `database-postgres-mirror`
      * with cache `cache` (default `redis-mirror`, flushed) unless
-     * `"destination": false`; `filters` names Mirroring filter fixtures.
+     * `"destination": false`; `filters` names Mirror\Filter fixtures.
      *
      * @param array<string, mixed> $spec
      */
@@ -354,7 +414,7 @@ final class Core
             $destination = new Database(new Postgres($destinationPdo), self::cache($spec['cache'] ?? 'redis-mirror', $s, fresh: true));
             $state->pdos[$destination] = $destinationPdo;
         }
-        $filters = array_map(fn ($name) => self::mirroringFilter((string) $name), Values::list($spec['filters'] ?? []));
+        $filters = array_map(fn ($name) => self::mirrorFilter((string) $name), Values::list($spec['filters'] ?? []));
         $mirror = new Mirror($source, $destination, $filters);
         $state->mirrors[$mirror] = ['source' => $source, 'destination' => $destination];
 
@@ -362,14 +422,14 @@ final class Core
     }
 
     /**
-     * A Mirroring filter fixture by name: `log` logs each hook it runs
-     * (`{"mirroring": <hook>, "collection", ...}`).
+     * A Mirror\Filter fixture by name: `log` logs each hook it runs
+     * (`{"mirror_filter": <hook>, "collection", ...}`).
      */
-    public static function mirroringFilter(string $name): MirroringFilter
+    public static function mirrorFilter(string $name): MirrorFilter
     {
         return match ($name) {
-            'log' => new LogMirroringFilter(),
-            default => throw new Fault("no mirroring filter fixture `{$name}`"),
+            'log' => new Fixture\LogMirrorFilter(),
+            default => throw new Fault("no mirror filter fixture `{$name}`"),
         };
     }
 
@@ -381,19 +441,19 @@ final class Core
         $url = parse_url($s->service($service));
         $dsn = 'pgsql:host=' . ($url['host'] ?? '') . ';port=' . ($url['port'] ?? 5432) . ';dbname=' . ltrim($url['path'] ?? '', '/');
 
-        return new PDO($dsn, urldecode($url['user'] ?? ''), urldecode($url['pass'] ?? ''), Postgres::getPDOAttributes());
+        return new PDO($dsn, urldecode($url['user'] ?? ''), urldecode($url['pass'] ?? ''), self::PDO_ATTRIBUTES);
     }
 
     /**
      * The pool of a `db.open` with `pool`: `{"size": n}` (default 1) new
-     * PostgreSQL connections on demand, from a Stack, waiting 0 s; with
+     * connections of `driver` on demand, from a Stack, waiting 0 s; with
      * `"unreachable": true` every connection attempt fails as a refused
      * connection does; `{"of": <database handle>}` the pool of another Pool
      * database.
      *
      * @param array<string, mixed> $spec
      */
-    public static function pool(array $spec, Session $s): PoolFixture
+    public static function pool(array $spec, string $driver, Session $s): PoolFixture
     {
         if (isset($spec['of'])) {
             $peer = $s->get($spec['of']);
@@ -403,50 +463,15 @@ final class Core
         }
         $fixture = new PoolFixture();
         $unreachable = (bool) ($spec['unreachable'] ?? false);
-        $fixture->pool = new UtopiaPool(new Stack(), 'postgres', (int) ($spec['size'] ?? 1), function () use ($fixture, $unreachable, $s) {
-            $fixture->opened++;
+        $fixture->pool = new UtopiaPool(new Stack(), $driver, (int) ($spec['size'] ?? 1), function () use ($fixture, $unreachable, $driver, $s) {
             if ($unreachable) {
                 throw new \RuntimeException('SQLSTATE[HY000] [2002] Connection refused');
             }
 
-            return new Postgres(self::pdo($s));
+            return self::connect($driver, $s)[0];
         }, timeout: 0.0);
 
         return $fixture;
-    }
-
-    /**
-     * `db.pool`: the pool of a Pool database, seen from outside its adapter:
-     * `opened` (connections its `init` opened), `timeout` (`getTimeout()` of
-     * the connection a raw checkout gets), `count` (idle connections),
-     * `clear` (clearTimeouts() on that connection), `pinned_timeout`
-     * (`getTimeout()` of the connection a transaction pinned, null without).
-     */
-    public static function poolCall(Database $db, string $method, Session $s): mixed
-    {
-        $fixture = self::state($s)->pools[$db] ?? throw new Fault('db.pool: not a Pool database');
-
-        return match ($method) {
-            'opened' => $fixture->opened,
-            'timeout' => $fixture->pool?->use(fn (\Utopia\Database\Adapter $adapter) => $adapter->getTimeout()),
-            'count' => $fixture->pool?->count(),
-            // Resets the connection a raw checkout gets, as a pool shared
-            // with other handles may hand it over.
-            'clear' => $fixture->pool?->use(fn (\Utopia\Database\Adapter $adapter) => $adapter->clearTimeouts()),
-            // The timeout of the connection a transaction pinned (Pool::pin()).
-            'pinned_timeout' => (fn () => $this->pin()?->getTimeout())->call(self::poolAdapter($db)),
-            default => throw new Fault("db.pool: no method `{$method}`"),
-        };
-    }
-
-    /**
-     * The Pool adapter of a database, whose protected pin() db.pool reads.
-     */
-    private static function poolAdapter(Database $db): Pool
-    {
-        $adapter = $db->getAdapter();
-
-        return $adapter instanceof Pool ? $adapter : throw new Fault('db.pool: not a Pool database');
     }
 
     /**
@@ -472,6 +497,12 @@ final class Core
         }
         if ($kind === 'none') {
             return new Cache(new NoneCache());
+        }
+        if ($kind === 'unreachable') {
+            // A Redis cache whose server is gone: every command fails, no retries.
+            Fixture\UnreachableRedisCommands::declare();
+
+            return new Cache((new RedisCache(new Fixture\UnreachableRedis()))->setMaxRetries(0));
         }
         $kind = (string) $kind;
         $igbinary = str_ends_with($kind, '-igbinary');
@@ -530,8 +561,8 @@ final class Core
     }
 
     /**
-     * Calls `$method` of `$target` with named arguments decoded for its
-     * parameters, and encodes the result. Callbacks passed as `{"steps": [...]}`
+     * Calls `$method` of `$target` (`__construct` of a class: builds it) with
+     * named arguments decoded for its parameters, and encodes the result. Callbacks passed as `{"steps": [...]}`
      * (or `true` for one without steps) make the result
      * `{"result": ..., "calls": {"<param>": [{"args": [...], "steps": [...]}]}}`.
      *
@@ -555,12 +586,12 @@ final class Core
         foreach ($reflection->getParameters() as $p) {
             $params[$p->getName()] = $p;
         }
-        foreach ($a as $key => $value) {
+        foreach (Objects::resolve($a, $s) as $key => $value) {
             if ($key === 'db') {
                 continue;
             }
             $p = $params[$key] ?? throw new Fault("{$class}::{$method} has no parameter `\${$key}`");
-            if (self::accepts($p, 'callable') && $value !== null) {
+            if ((self::accepts($p, 'callable') || self::accepts($p, 'Closure')) && $value !== null) {
                 $hasCallbacks = true;
                 $calls[$key] = [];
                 $named[$key] = self::callback($s, $value, $calls[$key]);
@@ -573,9 +604,11 @@ final class Core
                 throw new Fault("{$class}::{$method}: missing `{$name}`");
             }
         }
-        $result = \is_object($target) && !$reflection->isStatic()
-            ? $target->{$method}(...$named)
-            : $class::{$method}(...$named);
+        $result = match (true) {
+            $reflection->isConstructor() => new $class(...$named),
+            \is_object($target) && !$reflection->isStatic() => $target->{$method}(...$named),
+            default => $class::{$method}(...$named),
+        };
         if ($result instanceof \Generator) {
             $result = iterator_to_array($result, false);
         }
@@ -586,16 +619,25 @@ final class Core
         return new Called($result, $calls);
     }
 
-    private static function accepts(\ReflectionParameter $p, string $type): bool
+    /**
+     * The class names a parameter's type accepts.
+     *
+     * @return list<string>
+     */
+    private static function types(\ReflectionParameter $p): array
     {
         $t = $p->getType();
-        $names = match (true) {
+
+        return match (true) {
             $t instanceof \ReflectionNamedType => [$t->getName()],
-            $t instanceof \ReflectionUnionType => array_map(fn ($n) => (string) $n, $t->getTypes()),
+            $t instanceof \ReflectionUnionType => array_map(fn ($n) => $n instanceof \ReflectionNamedType ? $n->getName() : (string) $n, $t->getTypes()),
             default => [],
         };
+    }
 
-        return \in_array($type, $names, true);
+    private static function accepts(\ReflectionParameter $p, string $type): bool
+    {
+        return \in_array($type, self::types($p), true);
     }
 
     /**
@@ -604,31 +646,71 @@ final class Core
      */
     private static function documentList(\ReflectionParameter $p): bool
     {
-        $doc = (string) $p->getDeclaringFunction()->getDocComment();
+        $doc = str_replace("\t", ' ', (string) $p->getDeclaringFunction()->getDocComment());
+        while (str_contains($doc, '  ')) {
+            $doc = str_replace('  ', ' ', $doc);
+        }
+        foreach (['array<Document>', 'list<Document>', 'array<Document>|null', 'list<Document>|null', 'array<int, Document>'] as $type) {
+            if (str_contains($doc, $type . ' $' . $p->getName())) {
+                return true;
+            }
+        }
 
-        return str_contains($doc, 'array<Document> $' . $p->getName())
-            || str_contains($doc, 'array<Document>|null $' . $p->getName());
+        return false;
     }
 
-    private static function argument(\ReflectionParameter $p, mixed $value, Session $s): mixed
+    /**
+     * An argument decoded for its parameter. See the README for each rule.
+     */
+    public static function argument(\ReflectionParameter $p, mixed $value, Session $s): mixed
     {
         $value = self::tags($value);
         if ($value === null) {
             return null;
         }
-        if (self::accepts($p, Document::class)) {
+        $types = self::types($p);
+        // A PDO: {"$pdo": {"dsn", "wrapper"?, "username"?, "password"?, "options"?}}.
+        if (\is_array($value) && \count($value) === 1 && \is_array($value['$pdo'] ?? null)) {
+            return self::pdoOf($value['$pdo']);
+        }
+        // An exception: {"$throwable": {"class", "message", "code"?, "errorInfo"?, "previous"?}}.
+        if (\is_array($value) && \count($value) === 1 && \is_array($value['$throwable'] ?? null)) {
+            return self::throwable($value['$throwable']);
+        }
+        // An object already (a stored `$obj`): as it is, when the parameter takes it.
+        if (\is_object($value) && !$value instanceof \stdClass) {
+            foreach ($types as $type) {
+                if ($type === 'mixed' || $type === 'object' || is_a($value, $type)) {
+                    return $value;
+                }
+            }
+        }
+        if (\in_array(Collection::class, $types, true) && !\in_array(Document::class, $types, true)) {
+            $value = Values::decode($value);
+            if ($value instanceof Collection) {
+                return $value;
+            }
+
+            return Collection::fromDocument($value instanceof Document ? $value : Values::document($value));
+        }
+        if (\in_array(Document::class, $types, true)) {
             return Values::document($value);
         }
-        if (self::accepts($p, Query::class)) {
+        if (\in_array(\Utopia\Query\Query::class, $types, true) || \in_array(Query::class, $types, true)) {
             return Values::queries([$value])[0];
         }
-        if (self::accepts($p, \DateTime::class)) {
+        if (\in_array(\DateTime::class, $types, true)) {
+            $value = Values::decode($value);
+
             return $value instanceof \DateTime ? $value : new \DateTime((string) $value);
         }
-        if (self::accepts($p, Cache::class)) {
+        if (\in_array(Cache::class, $types, true)) {
             return self::cache($value, $s);
         }
-        if (self::accepts($p, Authorization::class)) {
+        if (\in_array(QueryCache::class, $types, true)) {
+            return self::queryCache($value, $s);
+        }
+        if (\in_array(Authorization::class, $types, true)) {
             if (isset($value['$handle'])) {
                 // Another database's (shared) Authorization.
                 $db = $s->get($value);
@@ -642,25 +724,131 @@ final class Core
             foreach (Values::list($value['roles'] ?? []) as $role) {
                 $authorization->addRole((string) $role);
             }
+            if (\array_key_exists('status', $value)) {
+                $authorization->setStatus((bool) $value['status']);
+            }
 
             return $authorization;
         }
-        if ($p->getName() === 'queries' && self::accepts($p, 'array')) {
+        if (array_filter($types, static fn (string $type) => (interface_exists($type) || class_exists($type)) && is_a($type, \Utopia\Query\Hook::class, true)) !== []) {
+            // A hook (addHook), or with `string` also a class name (removeHook).
+            if (\is_string($value) && \in_array('string', $types, true)) {
+                return Hooks::className($value);
+            }
+            $hook = Hooks::make($value);
+            Objects::store($s, \is_array($value) ? $value['as'] ?? null : null, $hook);
+
+            return $hook;
+        }
+        if (\in_array(\Utopia\Database\Filter\Codec::class, $types, true)) {
+            $codec = Codecs::make($value);
+            Objects::store($s, \is_array($value) ? $value['as'] ?? null : null, $codec);
+
+            return $codec;
+        }
+        // The codecs a Database is built with.
+        if ($p->getName() === 'filters' && $p->getDeclaringClass()?->getName() === Database::class && $p->getDeclaringFunction()->getName() === '__construct') {
+            return array_map(fn ($codec) => \is_object($codec) ? $codec : Codecs::make($codec), Values::list(Objects::resolve($value, $s)));
+        }
+        if (\in_array(Registry::class, $types, true)) {
+            $registry = new Registry();
+            foreach (Values::list($value) as $codec) {
+                $registry->register(Codecs::make($codec));
+            }
+
+            return $registry;
+        }
+        if (\in_array(Statement::class, $types, true)) {
+            // A raw statement: a Query\Builder\Statement value, or {"query", "bindings"}.
+            $statement = Values::decode($value);
+
+            return $statement instanceof Statement ? $statement : new Statement((string) ($value['query'] ?? ''), Values::decodeArray($value['bindings'] ?? []));
+        }
+        if ($p->getName() === 'queries' && \in_array('array', $types, true)) {
             return Values::queries($value);
         }
-        if (self::accepts($p, 'array') && self::documentList($p)) {
+        if (\in_array('array', $types, true) && self::documentList($p)) {
             return Values::documents($value);
         }
-        if (self::accepts($p, Adapter::class) || self::accepts($p, Database::class)) {
+        if (\in_array(Adapter::class, $types, true) || \in_array(Database::class, $types, true)) {
             $db = $s->get($value);
             if (!$db instanceof Database) {
                 throw new Fault("`\${$p->getName()}` takes a database handle");
             }
 
-            return self::accepts($p, Database::class) ? $db : $db->getAdapter();
+            return \in_array(Database::class, $types, true) ? $db : $db->getAdapter();
+        }
+        foreach ($types as $type) {
+            // An enum parameter takes a `$enum` tag or a backed value.
+            if (enum_exists($type) && \is_subclass_of($type, \BackedEnum::class) && (\is_string($value) || \is_int($value))) {
+                return $type::from($value);
+            }
+        }
+        if (\in_array('string', $types, true) && \is_string($value) && $p->getName() === 'name' && $p->getDeclaringFunction()->getName() === 'removeTransform') {
+            return Hooks::className($value);
         }
 
         return Values::decode($value);
+    }
+
+    /**
+     * An exception argument: `class` (any Throwable, `Exception` by default)
+     * with `message`, `code` (a string code, such as an SQLSTATE, is set as
+     * PDO sets it), a PDOException's `errorInfo`, and a `previous` one.
+     *
+     * @param array<string, mixed> $spec
+     */
+    public static function throwable(array $spec): \Throwable
+    {
+        $class = (string) ($spec['class'] ?? \Exception::class);
+        if (!is_a($class, \Throwable::class, true)) {
+            throw new Fault("{$class} is not a Throwable");
+        }
+        $previous = isset($spec['previous']) ? self::throwable((array) $spec['previous']) : null;
+        $error = new $class((string) ($spec['message'] ?? ''), 0, $previous);
+        if (\array_key_exists('code', $spec)) {
+            (new \ReflectionProperty(\Exception::class, 'code'))->setValue($error, $spec['code']);
+        }
+        if ($error instanceof \PDOException && \array_key_exists('errorInfo', $spec)) {
+            $error->errorInfo = Values::list($spec['errorInfo']);
+        }
+
+        return $error;
+    }
+
+    /**
+     * A PDO a unit test built: `dsn` (an in-memory SQLite one), as a
+     * Utopia\Database\PDO with `wrapper`, with `username`, `password` and
+     * `options`.
+     *
+     * @param array<string, mixed> $spec
+     */
+    public static function pdoOf(array $spec): \PDO|PDO
+    {
+        $dsn = (string) ($spec['dsn'] ?? '');
+        $username = isset($spec['username']) ? (string) $spec['username'] : null;
+        $password = isset($spec['password']) ? (string) $spec['password'] : null;
+        $options = Values::decodeArray($spec['options'] ?? []);
+
+        return ($spec['wrapper'] ?? false) ? new PDO($dsn, $username, $password, $options) : new \PDO($dsn, $username, $password, $options);
+    }
+
+    /**
+     * A query cache (setQueryCache): `{"cache": <cache kind or "database">,
+     * "slots"?: n}`; `"database"` is the database's own cache.
+     */
+    private static function queryCache(mixed $value, Session $s): QueryCache
+    {
+        if (!\is_array($value)) {
+            throw new Fault('a query cache is {"cache": <kind>|"database", "slots"?: n}');
+        }
+        $kind = $value['cache'] ?? 'database';
+        $cache = $kind === 'database' ? (self::state($s)->db ?? throw new Fault('no database'))->getCache() : self::cache($kind, $s);
+
+        $queryCache = isset($value['slots']) ? new QueryCache($cache, (int) $value['slots']) : new QueryCache($cache);
+        Objects::store($s, $value['as'] ?? null, $queryCache);
+
+        return $queryCache;
     }
 
     /**
@@ -708,9 +896,8 @@ final class Core
 
         return function (mixed ...$args) use ($s, $steps, &$calls) {
             // Encoded as the callback receives them: the library may change a
-            // document after the call (iterate() encodes its last document in
-            // place as the next page's cursor), which a Rust callback, given
-            // its own copy, never sees.
+            // document after the call, which a Rust callback, given its own
+            // copy, never sees.
             $invocation = new Invocation(array_map(self::result(...), array_values($args)));
             $calls[] = $invocation;
 
@@ -821,9 +1008,25 @@ final class Core
     }
 
     /**
+     * The library class an object is an instance of (the nearest ancestor in
+     * Utopia\Database), as a short name: fixture subclasses report their
+     * library class.
+     */
+    public static function libraryClass(object $value): string
+    {
+        for ($class = new \ReflectionClass($value); $class !== false; $class = $class->getParentClass()) {
+            if (str_starts_with($class->getName(), 'Utopia\\Database\\')) {
+                return $class->getShortName();
+            }
+        }
+
+        return (new \ReflectionClass($value))->getShortName();
+    }
+
+    /**
      * A library value as it crosses the wire: Values tags, plus the objects a
-     * Database hands out (itself for fluent setters, its adapter, cache and
-     * authorization) as markers, generators as lists and DateTimes as tags.
+     * Database hands out (itself for fluent setters, its adapter, cache,
+     * authorization, profiler and builders) as markers, generators as lists.
      */
     public static function result(mixed $value): mixed
     {
@@ -839,18 +1042,57 @@ final class Core
                 ),
             ],
             $value instanceof Database => ['$database' => true],
-            $value instanceof MirroringFilter => ['$filter' => true],
-            $value instanceof Adapter => ['$adapter' => (new \ReflectionClass($value))->getShortName()],
+            $value instanceof MirrorFilter => ['$filter' => true],
+            $value instanceof Adapter => ['$adapter' => self::libraryClass($value)],
             $value instanceof Cache => ['$cache' => true],
+            $value instanceof QueryCache => ['$queryCache' => true],
             $value instanceof Authorization => ['$authorization' => true],
-            $value instanceof \DateTimeInterface => ['$datetime' => $value->format('Y-m-d\TH:i:s.uP')],
+            $value instanceof Profiler => ['$profiler' => true],
+            $value instanceof Registry => ['$registry' => array_keys($value->signatures())],
+            $value instanceof \Utopia\Database\Filter\Codec => ['$codec' => true],
+            $value instanceof \Utopia\Query\Builder => ['$builder' => true],
+            $value instanceof \Utopia\Query\Schema => ['$schema' => true],
+            $value instanceof \Utopia\Query\Hook && !$value instanceof \Utopia\Database\Query => ['$hook' => self::libraryClass($value)],
             $value instanceof \Generator => self::result(iterator_to_array($value, false)),
-            $value instanceof \Closure => ['$closure' => true],
-            // onError callbacks receive the exception.
-            $value instanceof \Throwable => ['$error' => ['class' => $value::class, 'message' => $value->getMessage()]],
             \is_array($value) => array_map(self::result(...), $value),
             default => Values::encode($value),
         };
+    }
+
+    /**
+     * Operations from functions returning PHP values: each also takes `as`
+     * (its raw result stored for `{"$obj": <name>}`), is registered for the
+     * callback step interpreter (Core::run), and returns its result encoded.
+     *
+     * @param array<string, callable(array<string, mixed>, Session): mixed> $raw
+     * @return array<string, callable(array<string, mixed>, Session): mixed>
+     */
+    public static function operations(array $raw): array
+    {
+        $raw = array_map(
+            fn (callable $fn) => function (array $a, Session $s) use ($fn) {
+                if (!isset($a['as'])) {
+                    return $fn($a, $s);
+                }
+                $as = $a['as'];
+                unset($a['as']);
+                $result = $fn($a, $s);
+                Objects::store($s, $as, $result instanceof Called ? $result->result : $result);
+
+                return $result;
+            },
+            $raw,
+        );
+        self::$raw = $raw + self::$raw;
+
+        return array_map(
+            fn (callable $fn) => function (array $a, Session $s) use ($fn) {
+                self::enter($s);
+
+                return self::result($fn($a, $s));
+            },
+            $raw,
+        );
     }
 
     /**
@@ -864,80 +1106,6 @@ final class Core
         }
 
         return $out;
-    }
-
-    /**
-     * The named filters of the e2e suite (Database::addFilter), ported from
-     * the tests: methods of FilterFixtures, so their signatures (which cache
-     * keys carry) are `Class::method` rather than a closure's `file:line`,
-     * which every edit of this file would move.
-     *
-     * @return array{encode: callable, decode: callable}
-     */
-    public static function filter(string $name): array
-    {
-        $prefix = match ($name) {
-            'encrypt' => 'encrypt',
-            'subQueryProbe' => 'subQueryProbe',
-            'operator_double_decode' => 'operatorDoubleDecode',
-            default => throw new Fault("no filter fixture `{$name}`"),
-        };
-
-        return ['encode' => [FilterFixtures::class, "{$prefix}Encode"], 'decode' => [FilterFixtures::class, "{$prefix}Decode"]];
-    }
-
-    /**
-     * The named Structure formats of the e2e suite (Structure::addFormat).
-     *
-     * @return array{callback: callable, type: string}
-     */
-    public static function format(string $name): array
-    {
-        return match ($name) {
-            // AttributeTests::testUpdateAttributeFormat / testUpdateAttributeStructure
-            'priceRange', 'priceRangeNew' => [
-                'callback' => fn ($attribute) => new Range($attribute['formatOptions']['min'], $attribute['formatOptions']['max']),
-                'type' => Database::VAR_INTEGER,
-            ],
-            default => throw new Fault("no format fixture `{$name}`"),
-        };
-    }
-
-    /**
-     * A query transformation (Database::before) from its description:
-     * `{"append": "<sql>"}` appends to the statement; every result is logged
-     * (`{"transform", "name", "sql"}`).
-     */
-    public static function transform(string $event, string $name, mixed $spec): ?callable
-    {
-        if ($spec === null) {
-            return null;
-        }
-        if (!\is_array($spec)) {
-            throw new Fault('a transformation is null or {"append": "..."}');
-        }
-        $append = (string) ($spec['append'] ?? '');
-
-        return function (string $sql) use ($event, $name, $append) {
-            $sql .= $append;
-            Core::log(['transform' => $event, 'name' => $name, 'sql' => $sql]);
-
-            return $sql;
-        };
-    }
-
-    /**
-     * A listener (Database::on) logging each event: `{"event", "listener", "data"}`.
-     */
-    public static function listener(string $name, mixed $spec): ?callable
-    {
-        if ($spec === null || $spec === false) {
-            return null;
-        }
-
-        return function (string $event, mixed $data = null) use ($name) {
-            Core::log(['event' => $event, 'listener' => $name, 'data' => Core::result($data)]);
-        };
     }
 
     /**
@@ -965,205 +1133,6 @@ final class Core
         $statement = $pdo->query($sql);
 
         return $statement === false ? [] : $statement->fetchAll(\PDO::FETCH_ASSOC);
-    }
-}
-
-/**
- * The filter fixtures of the e2e suite (Core::filter). Each call is logged
- * (`{"filter", "call"}`) for `db.log`.
- */
-final class FilterFixtures
-{
-    // AttributeTests::testEncryptAttributes
-    public static function encryptEncode(mixed $value): mixed
-    {
-        Core::log(['filter' => 'encrypt', 'call' => 'encode']);
-
-        return json_encode(['data' => base64_encode($value), 'method' => 'base64', 'version' => 'v1']);
-    }
-
-    public static function encryptDecode(mixed $value): mixed
-    {
-        Core::log(['filter' => 'encrypt', 'call' => 'decode']);
-        if (\is_null($value)) {
-            return null;
-        }
-        $value = json_decode($value, true);
-
-        return base64_decode($value['data']);
-    }
-
-    // AttributeTests::testFilterNotAppliedWhenAttributeNotSelected
-    public static function subQueryProbeEncode(mixed $value): mixed
-    {
-        Core::log(['filter' => 'subQueryProbe', 'call' => 'encode']);
-
-        return null;
-    }
-
-    public static function subQueryProbeDecode(mixed $value): mixed
-    {
-        Core::log(['filter' => 'subQueryProbe', 'call' => 'decode']);
-
-        return ['fanned', 'out'];
-    }
-
-    // OperatorTests::testOperatorDoesNotDoubleDecode...
-    public static function operatorDoubleDecodeEncode(mixed $value): mixed
-    {
-        Core::log(['filter' => 'operator_double_decode', 'call' => 'encode']);
-
-        return json_encode(['data' => base64_encode((string) $value)]);
-    }
-
-    public static function operatorDoubleDecodeDecode(mixed $value): mixed
-    {
-        Core::log(['filter' => 'operator_double_decode', 'call' => 'decode']);
-        if (\is_null($value)) {
-            return null;
-        }
-        $decoded = json_decode($value, true);
-
-        return base64_decode($decoded['data']);
-    }
-}
-
-/**
- * The Mirroring filter fixture `log` (Core::mirroringFilter): logs each hook
- * it runs and passes its input through.
- */
-final class LogMirroringFilter extends MirroringFilter
-{
-    /**
-     * @param array<string, mixed> $extra
-     */
-    private static function hook(string $name, string $collection, array $extra = []): void
-    {
-        Core::log(['mirroring' => $name, 'collection' => $collection, ...$extra]);
-    }
-
-    public function beforeCreateCollection(Database $source, Database $destination, string $collectionId, ?Document $collection = null): ?Document
-    {
-        self::hook('beforeCreateCollection', $collectionId);
-
-        return $collection;
-    }
-
-    public function beforeUpdateCollection(Database $source, Database $destination, string $collectionId, ?Document $collection = null): ?Document
-    {
-        self::hook('beforeUpdateCollection', $collectionId);
-
-        return $collection;
-    }
-
-    public function beforeDeleteCollection(Database $source, Database $destination, string $collectionId): void
-    {
-        self::hook('beforeDeleteCollection', $collectionId);
-    }
-
-    public function beforeCreateAttribute(Database $source, Database $destination, string $collectionId, string $attributeId, ?Document $attribute = null): ?Document
-    {
-        self::hook('beforeCreateAttribute', $collectionId, ['attribute' => $attributeId, 'document' => Core::result($attribute)]);
-
-        return $attribute;
-    }
-
-    public function beforeUpdateAttribute(Database $source, Database $destination, string $collectionId, string $attributeId, ?Document $attribute = null): ?Document
-    {
-        self::hook('beforeUpdateAttribute', $collectionId, ['attribute' => $attributeId]);
-
-        return $attribute;
-    }
-
-    public function beforeDeleteAttribute(Database $source, Database $destination, string $collectionId, string $attributeId): void
-    {
-        self::hook('beforeDeleteAttribute', $collectionId, ['attribute' => $attributeId]);
-    }
-
-    public function beforeCreateIndex(Database $source, Database $destination, string $collectionId, string $indexId, ?Document $index = null): ?Document
-    {
-        self::hook('beforeCreateIndex', $collectionId, ['index' => $indexId, 'document' => Core::result($index)]);
-
-        return $index;
-    }
-
-    public function beforeDeleteIndex(Database $source, Database $destination, string $collectionId, string $indexId): void
-    {
-        self::hook('beforeDeleteIndex', $collectionId, ['index' => $indexId]);
-    }
-
-    public function beforeCreateDocument(Database $source, Database $destination, string $collectionId, Document $document): Document
-    {
-        self::hook('beforeCreateDocument', $collectionId, ['document' => Core::result($document)]);
-
-        return $document;
-    }
-
-    public function afterCreateDocument(Database $source, Database $destination, string $collectionId, Document $document): Document
-    {
-        self::hook('afterCreateDocument', $collectionId, ['id' => $document->getId()]);
-
-        return $document;
-    }
-
-    public function beforeUpdateDocument(Database $source, Database $destination, string $collectionId, Document $document): Document
-    {
-        self::hook('beforeUpdateDocument', $collectionId, ['document' => Core::result($document)]);
-
-        return $document;
-    }
-
-    public function afterUpdateDocument(Database $source, Database $destination, string $collectionId, Document $document): Document
-    {
-        self::hook('afterUpdateDocument', $collectionId, ['id' => $document->getId()]);
-
-        return $document;
-    }
-
-    public function beforeUpdateDocuments(Database $source, Database $destination, string $collectionId, Document $updates, array $queries): Document
-    {
-        self::hook('beforeUpdateDocuments', $collectionId, ['updates' => Core::result($updates), 'queries' => \count($queries)]);
-
-        return $updates;
-    }
-
-    public function afterUpdateDocuments(Database $source, Database $destination, string $collectionId, Document $updates, array $queries): void
-    {
-        self::hook('afterUpdateDocuments', $collectionId, ['queries' => \count($queries)]);
-    }
-
-    public function beforeDeleteDocument(Database $source, Database $destination, string $collectionId, string $documentId): void
-    {
-        self::hook('beforeDeleteDocument', $collectionId, ['id' => $documentId]);
-    }
-
-    public function afterDeleteDocument(Database $source, Database $destination, string $collectionId, string $documentId): void
-    {
-        self::hook('afterDeleteDocument', $collectionId, ['id' => $documentId]);
-    }
-
-    public function beforeDeleteDocuments(Database $source, Database $destination, string $collectionId, array $queries): void
-    {
-        self::hook('beforeDeleteDocuments', $collectionId, ['queries' => \count($queries)]);
-    }
-
-    public function afterDeleteDocuments(Database $source, Database $destination, string $collectionId, array $queries): void
-    {
-        self::hook('afterDeleteDocuments', $collectionId, ['queries' => \count($queries)]);
-    }
-
-    public function beforeCreateOrUpdateDocument(Database $source, Database $destination, string $collectionId, Document $document): Document
-    {
-        self::hook('beforeCreateOrUpdateDocument', $collectionId, ['document' => Core::result($document)]);
-
-        return $document;
-    }
-
-    public function afterCreateOrUpdateDocument(Database $source, Database $destination, string $collectionId, Document $document): Document
-    {
-        self::hook('afterCreateOrUpdateDocument', $collectionId, ['id' => $document->getId()]);
-
-        return $document;
     }
 }
 
@@ -1212,11 +1181,11 @@ $raw = [
             throw new Fault('database.on_error: not a mirror');
         }
         $name = (string) ($a['name'] ?? 'error');
-        $db->onError(function (string $action, \Throwable $error) use ($name) {
-            Core::log(['mirror' => $action, 'callback' => $name, 'error' => Core::result($error)]);
+        $db->onError(function (Failure $failure) use ($name) {
+            Core::log(['mirror' => $failure->method, 'callback' => $name, 'event' => $failure->event?->value, 'error' => Values::encode($failure->error)]);
         });
 
-        return;
+        return ['$database' => true];
     },
     'db.redis' => function (array $a, Session $s) {
         // A raw command on the Redis adapter's database (keys naming the
@@ -1229,20 +1198,16 @@ $raw = [
 
         return;
     },
-    'db.pool' => fn (array $a, Session $s) => Core::poolCall(Core::db($a, $s), (string) ($a['method'] ?? ''), $s),
     'db.cache' => fn (array $a, Session $s) => Core::cacheCall(Core::db($a, $s)->getCache(), (string) ($a['method'] ?? ''), (array) ($a['args'] ?? [])),
-    // What MemoryTest reads of a Memory adapter by reflection: its `$data`.
-    'db.memory_data' => static function (array $a, Session $s) {
-        $adapter = Core::db($a, $s)->getAdapter();
-        if (!$adapter instanceof MemoryAdapter) {
-            throw new Fault('db.memory_data: not a Memory adapter');
-        }
+    // The database's Profiler (setProfiling(true) made it): a method of it.
+    'db.profiler' => static function (array $a, Session $s) {
+        $profiler = Core::db($a, $s)->getProfiler() ?? throw new Fault('db.profiler: the database is not profiling');
 
-        return (new \ReflectionProperty(MemoryAdapter::class, 'data'))->getValue($adapter);
+        return Core::invoke($profiler, (string) ($a['method'] ?? ''), (array) ($a['args'] ?? []), $s);
     },
     'db.add_format' => function (array $a, Session $s) {
         $name = (string) ($a['name'] ?? '');
-        $format = Core::format($name);
+        $format = Formats::get($name);
         Structure::addFormat($name, $format['callback'], $format['type']);
 
         return true;
@@ -1252,42 +1217,35 @@ $raw = [
         // `fixture` registers another fixture's callables under the name:
         // a new signature for it, until the next `db.open` registers the
         // canonical ones again.
-        $filter = Core::filter((string) ($a['fixture'] ?? $name));
+        $filter = FilterFixtures::get((string) ($a['fixture'] ?? $name));
         Database::addFilter($name, $filter['encode'], $filter['decode']);
 
         return;
     },
-    'database.on' => fn (array $a, Session $s) => Core::db($a, $s)->on((string) ($a['event'] ?? ''), (string) ($a['name'] ?? ''), Core::listener((string) ($a['name'] ?? ''), $a['callback'] ?? null)),
-    'database.before' => fn (array $a, Session $s) => Core::db($a, $s)->before((string) ($a['event'] ?? ''), (string) ($a['name'] ?? ''), Core::transform((string) ($a['event'] ?? ''), (string) ($a['name'] ?? ''), $a['callback'] ?? null)),
 ];
 
 // database.<snake_case>: every other public method of Database (and those
 // Mirror adds), by reflection.
 foreach ([...(new \ReflectionClass(Database::class))->getMethods(\ReflectionMethod::IS_PUBLIC), ...(new \ReflectionClass(Mirror::class))->getMethods(\ReflectionMethod::IS_PUBLIC)] as $method) {
-    if ($method->isStatic() || $method->isConstructor() || !\in_array($method->getDeclaringClass()->getName(), [Database::class, Mirror::class], true)) {
+    if ($method->isStatic() || $method->isConstructor() || str_starts_with($method->getName(), '__')) {
         continue;
     }
     $name = $method->getName();
     $op = 'database.' . Core::snake($name);
     $raw[$op] ??= fn (array $a, Session $s) => Core::invoke(Core::db($a, $s), $name, $a, $s);
 }
+// The static ones that take no code: collectionDefinition, internalAttributesFor.
+foreach (['collectionDefinition', 'internalAttributesFor'] as $name) {
+    $raw['database.' . Core::snake($name)] = fn (array $a, Session $s) => Core::invoke(Database::class, $name, $a, $s);
+}
 
 // db.authorization.<snake_case>: the database's Authorization.
 foreach ((new \ReflectionClass(Authorization::class))->getMethods(\ReflectionMethod::IS_PUBLIC) as $method) {
-    if ($method->isStatic() || $method->isConstructor()) {
+    if ($method->isStatic() || $method->isConstructor() || str_starts_with($method->getName(), '__')) {
         continue;
     }
     $name = $method->getName();
     $raw['db.authorization.' . Core::snake($name)] = fn (array $a, Session $s) => Core::invoke(Core::db($a, $s)->getAuthorization(), $name, $a, $s);
 }
 
-Core::$raw = $raw;
-
-return array_map(
-    fn (callable $fn) => function (array $a, Session $s) use ($fn) {
-        Core::enter($s);
-
-        return Core::result($fn($a, $s));
-    },
-    $raw,
-);
+return Core::operations($raw);

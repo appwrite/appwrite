@@ -1,0 +1,781 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Model/IntegerWidthTest.php"
+  ],
+  "cases": [
+    {
+      "name": "IntegerWidthTest::testSizes",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$enum": "IntegerWidth::Bits32"
+            },
+            "method": "size",
+            "args": {}
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$enum": "IntegerWidth::Bits64"
+            },
+            "method": "size",
+            "args": {}
+          },
+          "expect": 8
+        }
+      ]
+    },
+    {
+      "name": "IntegerWidthTest::testEnginesOnlyDistinguishSizesOfEightAndAbove#none",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "IntegerWidth",
+            "method": "fromSize",
+            "args": {
+              "size": null
+            }
+          },
+          "expect": {
+            "$enum": "IntegerWidth::Bits32"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "key": "count",
+                "type": "integer",
+                "size": null
+              }
+            },
+            "as": "o4259"
+          },
+          "bind": "s6415",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "count",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4259"
+            },
+            "method": "width",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "IntegerWidth::Bits32"
+          }
+        }
+      ]
+    },
+    {
+      "name": "IntegerWidthTest::testEnginesOnlyDistinguishSizesOfEightAndAbove#zero",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "IntegerWidth",
+            "method": "fromSize",
+            "args": {
+              "size": 0
+            }
+          },
+          "expect": {
+            "$enum": "IntegerWidth::Bits32"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "key": "count",
+                "type": "integer",
+                "size": 0
+              }
+            },
+            "as": "o4260"
+          },
+          "bind": "s6418",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "count",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4260"
+            },
+            "method": "width",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "IntegerWidth::Bits32"
+          }
+        }
+      ]
+    },
+    {
+      "name": "IntegerWidthTest::testEnginesOnlyDistinguishSizesOfEightAndAbove#four",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "IntegerWidth",
+            "method": "fromSize",
+            "args": {
+              "size": 4
+            }
+          },
+          "expect": {
+            "$enum": "IntegerWidth::Bits32"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "key": "count",
+                "type": "integer",
+                "size": 4
+              }
+            },
+            "as": "o4261"
+          },
+          "bind": "s6421",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "count",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4261"
+            },
+            "method": "width",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "IntegerWidth::Bits32"
+          }
+        }
+      ]
+    },
+    {
+      "name": "IntegerWidthTest::testEnginesOnlyDistinguishSizesOfEightAndAbove#seven",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "IntegerWidth",
+            "method": "fromSize",
+            "args": {
+              "size": 7
+            }
+          },
+          "expect": {
+            "$enum": "IntegerWidth::Bits32"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "key": "count",
+                "type": "integer",
+                "size": 7
+              }
+            },
+            "as": "o4262"
+          },
+          "bind": "s6424",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "count",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4262"
+            },
+            "method": "width",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "IntegerWidth::Bits32"
+          }
+        }
+      ]
+    },
+    {
+      "name": "IntegerWidthTest::testEnginesOnlyDistinguishSizesOfEightAndAbove#eight",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "IntegerWidth",
+            "method": "fromSize",
+            "args": {
+              "size": 8
+            }
+          },
+          "expect": {
+            "$enum": "IntegerWidth::Bits64"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "key": "count",
+                "type": "integer",
+                "size": 8
+              }
+            },
+            "as": "o4263"
+          },
+          "bind": "s6427",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "count",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": 8,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4263"
+            },
+            "method": "width",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "IntegerWidth::Bits64"
+          }
+        }
+      ]
+    },
+    {
+      "name": "IntegerWidthTest::testEnginesOnlyDistinguishSizesOfEightAndAbove#sixteen",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "IntegerWidth",
+            "method": "fromSize",
+            "args": {
+              "size": 16
+            }
+          },
+          "expect": {
+            "$enum": "IntegerWidth::Bits64"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "key": "count",
+                "type": "integer",
+                "size": 16
+              }
+            },
+            "as": "o4264"
+          },
+          "bind": "s6430",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "count",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": 8,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4264"
+            },
+            "method": "width",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "IntegerWidth::Bits64"
+          }
+        }
+      ]
+    },
+    {
+      "name": "IntegerWidthTest::testEachWidthRoundTripsThroughItsSize",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "IntegerWidth",
+            "method": "cases",
+            "args": {}
+          },
+          "expect": [
+            {
+              "$enum": "IntegerWidth::Bits32"
+            },
+            {
+              "$enum": "IntegerWidth::Bits64"
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$enum": "IntegerWidth::Bits32"
+            },
+            "method": "size",
+            "args": {}
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "IntegerWidth",
+            "method": "fromSize",
+            "args": {
+              "size": null
+            }
+          },
+          "expect": {
+            "$enum": "IntegerWidth::Bits32"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$enum": "IntegerWidth::Bits64"
+            },
+            "method": "size",
+            "args": {}
+          },
+          "expect": 8
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "IntegerWidth",
+            "method": "fromSize",
+            "args": {
+              "size": 8
+            }
+          },
+          "expect": {
+            "$enum": "IntegerWidth::Bits64"
+          }
+        }
+      ]
+    },
+    {
+      "name": "IntegerWidthTest::testIntegerFactoryWidthSurvivesStorage",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "IntegerWidth",
+            "method": "cases",
+            "args": {}
+          },
+          "expect": [
+            {
+              "$enum": "IntegerWidth::Bits32"
+            },
+            {
+              "$enum": "IntegerWidth::Bits64"
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "count",
+              "width": {
+                "$enum": "IntegerWidth::Bits32"
+              }
+            },
+            "as": "o4265"
+          },
+          "bind": "s6438",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "count",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4265"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4266"
+          },
+          "bind": "s6439",
+          "expect": {
+            "$document": {
+              "$id": "count",
+              "key": "count",
+              "type": "integer",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$enum": "IntegerWidth::Bits32"
+            },
+            "method": "size",
+            "args": {}
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4266"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "size"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromDocument",
+            "args": {
+              "document": {
+                "$obj": "o4266"
+              }
+            },
+            "as": "o4267"
+          },
+          "bind": "s6442",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "count",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4267"
+            },
+            "method": "width",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "IntegerWidth::Bits32"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "count",
+              "width": {
+                "$enum": "IntegerWidth::Bits64"
+              }
+            },
+            "as": "o4268"
+          },
+          "bind": "s6444",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "count",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": 8,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4268"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4269"
+          },
+          "bind": "s6445",
+          "expect": {
+            "$document": {
+              "$id": "count",
+              "key": "count",
+              "type": "integer",
+              "size": 8,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$enum": "IntegerWidth::Bits64"
+            },
+            "method": "size",
+            "args": {}
+          },
+          "expect": 8
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4269"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "size"
+            }
+          },
+          "expect": 8
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromDocument",
+            "args": {
+              "document": {
+                "$obj": "o4269"
+              }
+            },
+            "as": "o4270"
+          },
+          "bind": "s6448",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "count",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": 8,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4270"
+            },
+            "method": "width",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "IntegerWidth::Bits64"
+          }
+        }
+      ]
+    }
+  ]
+}

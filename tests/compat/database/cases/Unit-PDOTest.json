@@ -1,0 +1,33 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/PDOTest.php"
+  ],
+  "cases": [
+    {
+      "name": "PDOTest::testARefusedStatementCarriesTheLostConnection",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Connection",
+            "method": "hasError",
+            "args": {
+              "e": {
+                "$throwable": {
+                  "class": "PDOException",
+                  "message": "The transaction was lost with the connection: roll it back before running another statement",
+                  "previous": {
+                    "class": "PDOException",
+                    "message": "SQLSTATE[HY000]: General error: 2006 MySQL server has gone away"
+                  }
+                }
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    }
+  ]
+}

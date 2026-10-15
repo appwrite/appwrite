@@ -236,10 +236,11 @@
                 {
                   "op": "database.with_preserve_sequence",
                   "args": {
+                    "preserve": true,
                     "callback": {
                       "steps": [
                         {
-                          "op": "database.get_preserve_sequence",
+                          "op": "database.is_preserving_sequence",
                           "args": {},
                           "return": true
                         }
@@ -352,9 +353,9 @@
             ]
           },
           "expect": [
-            "default-cache-compat-database-postgres:badname::collection:movies",
-            "default-cache-compat-database-postgres:badname::collection:movies:alien",
-            "default-cache-compat-database-postgres:badname::collection:movies:alien:247b5c68124675377dc56fda2828594b"
+            "default-cache-compat-database-postgres:${ns}:badname::collection:movies",
+            "default-cache-compat-database-postgres:${ns}:badname::collection:movies:alien",
+            "default-cache-compat-database-postgres:${ns}:badname::collection:movies:alien:bb698fd3e139490f8e8c6dfd14558864"
           ]
         },
         {
@@ -363,7 +364,7 @@
             "collectionId": "movies"
           },
           "expect": [
-            "default-cache-compat-database-postgres:badname::collection:movies",
+            "default-cache-compat-database-postgres:${ns}:badname::collection:movies",
             ""
           ]
         },
@@ -381,14 +382,16 @@
             "documentId": "alien"
           },
           "expect": [
-            "default-cache-compat-database-postgres:badname::collection:movies",
-            "default-cache-compat-database-postgres:badname::collection:movies:alien",
-            "default-cache-compat-database-postgres:badname::collection:movies:alien:902ba0becfb8b628a5c40d3185600afe"
+            "default-cache-compat-database-postgres:${ns}:badname::collection:movies",
+            "default-cache-compat-database-postgres:${ns}:badname::collection:movies:alien",
+            "default-cache-compat-database-postgres:${ns}:badname::collection:movies:alien:9371b642d53dc3ad1b18e28390376332"
           ]
         },
         {
-          "op": "database.disable_filters",
-          "args": {},
+          "op": "database.set_filtering",
+          "args": {
+            "filtering": false
+          },
           "expect": {
             "$database": true
           }
@@ -400,14 +403,16 @@
             "documentId": "alien"
           },
           "expect": [
-            "default-cache-compat-database-postgres:badname::collection:movies",
-            "default-cache-compat-database-postgres:badname::collection:movies:alien",
-            "default-cache-compat-database-postgres:badname::collection:movies:alien:2bade45ce35ff1760455ea095375d607"
+            "default-cache-compat-database-postgres:${ns}:badname::collection:movies",
+            "default-cache-compat-database-postgres:${ns}:badname::collection:movies:alien",
+            "default-cache-compat-database-postgres:${ns}:badname::collection:movies:alien:b52a1f96d155b9af411db71288bb4269"
           ]
         },
         {
-          "op": "database.enable_filters",
-          "args": {},
+          "op": "database.set_filtering",
+          "args": {
+            "filtering": true
+          },
           "expect": {
             "$database": true
           }
@@ -433,9 +438,9 @@
           },
           "expect": {
             "result": [
-              "default-cache-compat-database-postgres:badname::collection:movies",
-              "default-cache-compat-database-postgres:badname::collection:movies:alien",
-              "default-cache-compat-database-postgres:badname::collection:movies:alien:6a88424e387814cef12a5d9883fc7b73"
+              "default-cache-compat-database-postgres:${ns}:badname::collection:movies",
+              "default-cache-compat-database-postgres:${ns}:badname::collection:movies:alien",
+              "default-cache-compat-database-postgres:${ns}:badname::collection:movies:alien:9e6e1d4fcd3cc91abd5c162ffc813ef1"
             ],
             "calls": {
               "callback": [
@@ -443,9 +448,9 @@
                   "args": [],
                   "steps": [
                     [
-                      "default-cache-compat-database-postgres:badname::collection:movies",
-                      "default-cache-compat-database-postgres:badname::collection:movies:alien",
-                      "default-cache-compat-database-postgres:badname::collection:movies:alien:6a88424e387814cef12a5d9883fc7b73"
+                      "default-cache-compat-database-postgres:${ns}:badname::collection:movies",
+                      "default-cache-compat-database-postgres:${ns}:badname::collection:movies:alien",
+                      "default-cache-compat-database-postgres:${ns}:badname::collection:movies:alien:9e6e1d4fcd3cc91abd5c162ffc813ef1"
                     ]
                   ]
                 }
@@ -454,11 +459,49 @@
           }
         },
         {
-          "op": "database.on",
+          "op": "database.add_hook",
           "args": {
-            "event": "*",
-            "name": "log",
-            "callback": true
+            "hook": {
+              "$hook": "Log",
+              "name": "log",
+              "events": [
+                "database_list",
+                "database_create",
+                "database_update",
+                "database_delete",
+                "collection_list",
+                "collection_create",
+                "collection_update",
+                "collection_read",
+                "collection_delete",
+                "document_find",
+                "document_aggregate",
+                "document_purge",
+                "document_create",
+                "documents_create",
+                "document_read",
+                "document_update",
+                "documents_update",
+                "document_upsert",
+                "documents_upsert",
+                "document_delete",
+                "documents_delete",
+                "document_count",
+                "document_sum",
+                "document_increase",
+                "document_decrease",
+                "attribute_create",
+                "attributes_create",
+                "attribute_update",
+                "attribute_rename",
+                "attribute_delete",
+                "index_rename",
+                "index_create",
+                "indexes_create",
+                "index_delete"
+              ],
+              "as": "hook_log"
+            }
           },
           "expect": {
             "$database": true
@@ -470,7 +513,7 @@
           "expect": []
         },
         {
-          "op": "database.exists",
+          "op": "database.collection_exists",
           "args": {
             "collection": "_metadata"
           },
@@ -481,21 +524,27 @@
           "args": {},
           "expect": [
             {
-              "event": "database_list",
-              "listener": "log",
-              "data": []
+              "hook": "log",
+              "event": {
+                "$value": "Event\\Database\\Listed",
+                "fields": {
+                  "event": {
+                    "$enum": "Event::DatabaseList"
+                  },
+                  "databases": []
+                }
+              }
             }
           ]
         },
         {
           "op": "database.get_collection",
           "args": {
-            "id": "_metadata"
+            "collection": "_metadata"
           },
           "expect": {
             "$document": {
               "$id": "_metadata",
-              "$collection": "_metadata",
               "name": "collections",
               "attributes": [
                 {
@@ -505,8 +554,11 @@
                     "type": "string",
                     "size": 256,
                     "required": true,
+                    "default": null,
                     "signed": true,
                     "array": false,
+                    "format": null,
+                    "formatOptions": [],
                     "filters": []
                   }
                 },
@@ -517,8 +569,11 @@
                     "type": "string",
                     "size": 1000000,
                     "required": false,
+                    "default": null,
                     "signed": true,
                     "array": false,
+                    "format": null,
+                    "formatOptions": [],
                     "filters": [
                       "json"
                     ]
@@ -531,8 +586,11 @@
                     "type": "string",
                     "size": 1000000,
                     "required": false,
+                    "default": null,
                     "signed": true,
                     "array": false,
+                    "format": null,
+                    "formatOptions": [],
                     "filters": [
                       "json"
                     ]
@@ -545,14 +603,20 @@
                     "type": "boolean",
                     "size": 0,
                     "required": true,
+                    "default": null,
                     "signed": true,
                     "array": false,
+                    "format": null,
+                    "formatOptions": [],
                     "filters": []
                   }
                 }
               ],
-              "indexes": []
-            }
+              "indexes": [],
+              "documentSecurity": false,
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
           }
         },
         {
@@ -560,68 +624,90 @@
           "args": {},
           "expect": [
             {
-              "event": "collection_read",
-              "listener": "log",
-              "data": {
-                "$document": {
-                  "$id": "_metadata",
-                  "$collection": "_metadata",
-                  "name": "collections",
-                  "attributes": [
-                    {
-                      "$document": {
-                        "$id": "name",
-                        "key": "name",
-                        "type": "string",
-                        "size": 256,
-                        "required": true,
-                        "signed": true,
-                        "array": false,
-                        "filters": []
-                      }
+              "hook": "log",
+              "event": {
+                "$value": "Event\\Collection\\Read",
+                "fields": {
+                  "event": {
+                    "$enum": "Event::CollectionRead"
+                  },
+                  "collection": "_metadata",
+                  "definition": {
+                    "$document": {
+                      "$id": "_metadata",
+                      "name": "collections",
+                      "attributes": [
+                        {
+                          "$document": {
+                            "$id": "name",
+                            "key": "name",
+                            "type": "string",
+                            "size": 256,
+                            "required": true,
+                            "default": null,
+                            "signed": true,
+                            "array": false,
+                            "format": null,
+                            "formatOptions": [],
+                            "filters": []
+                          }
+                        },
+                        {
+                          "$document": {
+                            "$id": "attributes",
+                            "key": "attributes",
+                            "type": "string",
+                            "size": 1000000,
+                            "required": false,
+                            "default": null,
+                            "signed": true,
+                            "array": false,
+                            "format": null,
+                            "formatOptions": [],
+                            "filters": [
+                              "json"
+                            ]
+                          }
+                        },
+                        {
+                          "$document": {
+                            "$id": "indexes",
+                            "key": "indexes",
+                            "type": "string",
+                            "size": 1000000,
+                            "required": false,
+                            "default": null,
+                            "signed": true,
+                            "array": false,
+                            "format": null,
+                            "formatOptions": [],
+                            "filters": [
+                              "json"
+                            ]
+                          }
+                        },
+                        {
+                          "$document": {
+                            "$id": "documentSecurity",
+                            "key": "documentSecurity",
+                            "type": "boolean",
+                            "size": 0,
+                            "required": true,
+                            "default": null,
+                            "signed": true,
+                            "array": false,
+                            "format": null,
+                            "formatOptions": [],
+                            "filters": []
+                          }
+                        }
+                      ],
+                      "indexes": [],
+                      "documentSecurity": false,
+                      "$collection": "_metadata"
                     },
-                    {
-                      "$document": {
-                        "$id": "attributes",
-                        "key": "attributes",
-                        "type": "string",
-                        "size": 1000000,
-                        "required": false,
-                        "signed": true,
-                        "array": false,
-                        "filters": [
-                          "json"
-                        ]
-                      }
-                    },
-                    {
-                      "$document": {
-                        "$id": "indexes",
-                        "key": "indexes",
-                        "type": "string",
-                        "size": 1000000,
-                        "required": false,
-                        "signed": true,
-                        "array": false,
-                        "filters": [
-                          "json"
-                        ]
-                      }
-                    },
-                    {
-                      "$document": {
-                        "$id": "documentSecurity",
-                        "key": "documentSecurity",
-                        "type": "boolean",
-                        "size": 0,
-                        "required": true,
-                        "signed": true,
-                        "array": false,
-                        "filters": []
-                      }
-                    }
-                  ],
-                  "indexes": []
+                    "$class": "Collection"
+                  }
                 }
               }
             }

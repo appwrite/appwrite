@@ -1,0 +1,2069 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/QuerySerializationTest.php"
+  ],
+  "cases": [
+    {
+      "name": "QuerySerializationTest::testParseRejectsANestedQueryWhoseValuesAreNotAList#and with a string",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "parse",
+            "args": {
+              "query": "{\"method\":\"and\",\"values\":\"x\"}"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query values. Must be an array, got string"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "QuerySerializationTest::testParseRejectsANestedQueryWhoseValuesAreNotAList#or with a number",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "parse",
+            "args": {
+              "query": "{\"method\":\"or\",\"values\":5}"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query values. Must be an array, got integer"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "QuerySerializationTest::testParseRejectsANestedQueryWhoseValuesAreNotAList#elemMatch with an object",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "parse",
+            "args": {
+              "query": "{\"method\":\"elemMatch\",\"attribute\":\"items\",\"values\":{\"method\":\"equal\"}}"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Syntax error"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "QuerySerializationTest::testParseDecodesStringChildrenOfANestedQuery",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "parse",
+            "args": {
+              "query": "{\"method\":\"and\",\"values\":[\"{\\\"method\\\":\\\"equal\\\",\\\"attribute\\\":\\\"a\\\",\\\"values\\\":[1]}\",{\"method\":\"equal\",\"attribute\":\"b\",\"values\":[2]}]}"
+            },
+            "as": "o1212"
+          },
+          "bind": "s5070",
+          "expect": {
+            "$query": {
+              "method": "and",
+              "attribute": "",
+              "values": [
+                {
+                  "$query": {
+                    "method": "equal",
+                    "attribute": "a",
+                    "values": [
+                      1
+                    ]
+                  }
+                },
+                {
+                  "$query": {
+                    "method": "equal",
+                    "attribute": "b",
+                    "values": [
+                      2
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1212"
+            },
+            "method": "getValues",
+            "args": {}
+          },
+          "expect": [
+            {
+              "$query": {
+                "method": "equal",
+                "attribute": "a",
+                "values": [
+                  1
+                ]
+              }
+            },
+            {
+              "$query": {
+                "method": "equal",
+                "attribute": "b",
+                "values": [
+                  2
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$query": {
+                "method": "equal",
+                "attribute": "a",
+                "values": [
+                  1
+                ]
+              }
+            },
+            "method": "getAttribute",
+            "args": {}
+          },
+          "expect": "a"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$query": {
+                "method": "equal",
+                "attribute": "b",
+                "values": [
+                  2
+                ]
+              }
+            },
+            "method": "getAttribute",
+            "args": {}
+          },
+          "expect": "b"
+        }
+      ]
+    },
+    {
+      "name": "QuerySerializationTest::testToArrayRejectsANonQueryChild#or with a string",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "a",
+              "values": [
+                "x"
+              ]
+            },
+            "as": "o1213"
+          },
+          "bind": "s5074",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "a",
+              "values": [
+                "x"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query",
+            "args": {
+              "method": {
+                "$enum": "Query\\Method::Or"
+              },
+              "attribute": "",
+              "values": [
+                {
+                  "$obj": "o1213"
+                },
+                "x"
+              ]
+            },
+            "as": "o1214"
+          },
+          "bind": "s5075",
+          "expect": {
+            "$query": {
+              "method": "or",
+              "attribute": "",
+              "values": [
+                {
+                  "$query": {
+                    "method": "equal",
+                    "attribute": "a",
+                    "values": [
+                      "x"
+                    ]
+                  }
+                },
+                "x"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1214"
+            },
+            "method": "toArray",
+            "args": {}
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid child query in or at index 1: expected Query, got string"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "QuerySerializationTest::testToArrayRejectsANonQueryChild#and with an array",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "a",
+              "values": [
+                "x"
+              ]
+            },
+            "as": "o1215"
+          },
+          "bind": "s5077",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "a",
+              "values": [
+                "x"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query",
+            "args": {
+              "method": {
+                "$enum": "Query\\Method::And"
+              },
+              "attribute": "",
+              "values": [
+                {
+                  "$obj": "o1215"
+                },
+                {
+                  "method": "equal"
+                }
+              ]
+            },
+            "as": "o1216"
+          },
+          "bind": "s5078",
+          "expect": {
+            "$query": {
+              "method": "and",
+              "attribute": "",
+              "values": [
+                {
+                  "$query": {
+                    "method": "equal",
+                    "attribute": "a",
+                    "values": [
+                      "x"
+                    ]
+                  }
+                },
+                {
+                  "method": "equal"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1216"
+            },
+            "method": "toArray",
+            "args": {}
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid child query in and at index 1: expected Query, got array"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "QuerySerializationTest::testToArrayRejectsANonQueryChild#having with an integer",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "a",
+              "values": [
+                "x"
+              ]
+            },
+            "as": "o1217"
+          },
+          "bind": "s5080",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "a",
+              "values": [
+                "x"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query",
+            "args": {
+              "method": {
+                "$enum": "Query\\Method::Having"
+              },
+              "attribute": "",
+              "values": [
+                {
+                  "$obj": "o1217"
+                },
+                7
+              ]
+            },
+            "as": "o1218"
+          },
+          "bind": "s5081",
+          "expect": {
+            "$query": {
+              "method": "having",
+              "attribute": "",
+              "values": [
+                {
+                  "$query": {
+                    "method": "equal",
+                    "attribute": "a",
+                    "values": [
+                      "x"
+                    ]
+                  }
+                },
+                7
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1218"
+            },
+            "method": "toArray",
+            "args": {}
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid child query in having at index 1: expected Query, got int"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "QuerySerializationTest::testToStringRejectsANonQueryChild",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "a",
+              "values": [
+                "x"
+              ]
+            },
+            "as": "o1219"
+          },
+          "bind": "s5083",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "a",
+              "values": [
+                "x"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query",
+            "args": {
+              "method": {
+                "$enum": "Query\\Method::Or"
+              },
+              "attribute": "",
+              "values": [
+                {
+                  "$obj": "o1219"
+                },
+                "x"
+              ]
+            },
+            "as": "o1220"
+          },
+          "bind": "s5084",
+          "expect": {
+            "$query": {
+              "method": "or",
+              "attribute": "",
+              "values": [
+                {
+                  "$query": {
+                    "method": "equal",
+                    "attribute": "a",
+                    "values": [
+                      "x"
+                    ]
+                  }
+                },
+                "x"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1220"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid child query in or at index 1: expected Query, got string"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "QuerySerializationTest::testJoinToArrayWritesTheAliasAndEveryOnCondition",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "on",
+            "args": {
+              "left": "$id",
+              "right": "ord.user"
+            },
+            "as": "o1221"
+          },
+          "bind": "s5086",
+          "expect": {
+            "$query": {
+              "method": "on",
+              "attribute": "",
+              "values": [
+                "$id",
+                "=",
+                "ord.user"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "ord.status",
+              "values": [
+                "paid"
+              ]
+            },
+            "as": "o1222"
+          },
+          "bind": "s5087",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "ord.status",
+              "values": [
+                "paid"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "leftJoin",
+            "args": {
+              "collection": "orders",
+              "alias": "ord",
+              "on": [
+                {
+                  "$obj": "o1221"
+                },
+                {
+                  "$obj": "o1222"
+                }
+              ]
+            },
+            "as": "o1223"
+          },
+          "bind": "s5088",
+          "expect": {
+            "$query": {
+              "method": "leftJoin",
+              "attribute": "orders",
+              "values": [
+                {
+                  "$query": {
+                    "method": "on",
+                    "attribute": "",
+                    "values": [
+                      "$id",
+                      "=",
+                      "ord.user"
+                    ]
+                  }
+                },
+                {
+                  "$query": {
+                    "method": "equal",
+                    "attribute": "ord.status",
+                    "values": [
+                      "paid"
+                    ]
+                  }
+                }
+              ],
+              "alias": "ord"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1223"
+            },
+            "method": "toArray",
+            "args": {}
+          },
+          "expect": {
+            "method": "leftJoin",
+            "attribute": "orders",
+            "alias": "ord",
+            "values": [
+              {
+                "method": "on",
+                "values": [
+                  "$id",
+                  "=",
+                  "ord.user"
+                ]
+              },
+              {
+                "method": "equal",
+                "attribute": "ord.status",
+                "values": [
+                  "paid"
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "QuerySerializationTest::testParsedJoinKeepsItsAliasAndOnConditions",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "on",
+            "args": {
+              "left": "$id",
+              "right": "ord.user",
+              "operator": "!="
+            },
+            "as": "o1224"
+          },
+          "bind": "s5090",
+          "expect": {
+            "$query": {
+              "method": "on",
+              "attribute": "",
+              "values": [
+                "$id",
+                "!=",
+                "ord.user"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "ord.status",
+              "values": [
+                "paid"
+              ]
+            },
+            "as": "o1225"
+          },
+          "bind": "s5091",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "ord.status",
+              "values": [
+                "paid"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "leftJoin",
+            "args": {
+              "collection": "orders",
+              "alias": "ord",
+              "on": [
+                {
+                  "$obj": "o1224"
+                },
+                {
+                  "$obj": "o1225"
+                }
+              ]
+            },
+            "as": "o1226"
+          },
+          "bind": "s5092",
+          "expect": {
+            "$query": {
+              "method": "leftJoin",
+              "attribute": "orders",
+              "values": [
+                {
+                  "$query": {
+                    "method": "on",
+                    "attribute": "",
+                    "values": [
+                      "$id",
+                      "!=",
+                      "ord.user"
+                    ]
+                  }
+                },
+                {
+                  "$query": {
+                    "method": "equal",
+                    "attribute": "ord.status",
+                    "values": [
+                      "paid"
+                    ]
+                  }
+                }
+              ],
+              "alias": "ord"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1226"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "{\"method\":\"leftJoin\",\"attribute\":\"orders\",\"alias\":\"ord\",\"values\":[{\"method\":\"on\",\"values\":[\"$id\",\"!=\",\"ord.user\"]},{\"method\":\"equal\",\"attribute\":\"ord.status\",\"values\":[\"paid\"]}]}"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "parse",
+            "args": {
+              "query": "{\"method\":\"leftJoin\",\"attribute\":\"orders\",\"alias\":\"ord\",\"values\":[{\"method\":\"on\",\"values\":[\"$id\",\"!=\",\"ord.user\"]},{\"method\":\"equal\",\"attribute\":\"ord.status\",\"values\":[\"paid\"]}]}"
+            },
+            "as": "o1227"
+          },
+          "bind": "s5094",
+          "expect": {
+            "$query": {
+              "method": "leftJoin",
+              "attribute": "orders",
+              "values": [
+                {
+                  "$query": {
+                    "method": "on",
+                    "attribute": "",
+                    "values": [
+                      "$id",
+                      "!=",
+                      "ord.user"
+                    ]
+                  }
+                },
+                {
+                  "$query": {
+                    "method": "equal",
+                    "attribute": "ord.status",
+                    "values": [
+                      "paid"
+                    ]
+                  }
+                }
+              ],
+              "alias": "ord"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1227"
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "Query\\Method::LeftJoin"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1227"
+            },
+            "method": "getAttribute",
+            "args": {}
+          },
+          "expect": "orders"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1227"
+            },
+            "method": "getAlias",
+            "args": {}
+          },
+          "expect": "ord"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1227"
+            },
+            "method": "getJoinOnQueries",
+            "args": {}
+          },
+          "expect": [
+            {
+              "$query": {
+                "method": "on",
+                "attribute": "",
+                "values": [
+                  "$id",
+                  "!=",
+                  "ord.user"
+                ]
+              }
+            },
+            {
+              "$query": {
+                "method": "equal",
+                "attribute": "ord.status",
+                "values": [
+                  "paid"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$query": {
+                "method": "on",
+                "attribute": "",
+                "values": [
+                  "$id",
+                  "!=",
+                  "ord.user"
+                ]
+              }
+            },
+            "method": "getValues",
+            "args": {}
+          },
+          "expect": [
+            "$id",
+            "!=",
+            "ord.user"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$query": {
+                "method": "equal",
+                "attribute": "ord.status",
+                "values": [
+                  "paid"
+                ]
+              }
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "Query\\Method::Equal"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1226"
+            },
+            "method": "toArray",
+            "args": {}
+          },
+          "expect": {
+            "method": "leftJoin",
+            "attribute": "orders",
+            "alias": "ord",
+            "values": [
+              {
+                "method": "on",
+                "values": [
+                  "$id",
+                  "!=",
+                  "ord.user"
+                ]
+              },
+              {
+                "method": "equal",
+                "attribute": "ord.status",
+                "values": [
+                  "paid"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1227"
+            },
+            "method": "toArray",
+            "args": {}
+          },
+          "expect": {
+            "method": "leftJoin",
+            "attribute": "orders",
+            "alias": "ord",
+            "values": [
+              {
+                "method": "on",
+                "values": [
+                  "$id",
+                  "!=",
+                  "ord.user"
+                ]
+              },
+              {
+                "method": "equal",
+                "attribute": "ord.status",
+                "values": [
+                  "paid"
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "QuerySerializationTest::testParsedCrossJoinKeepsItsAlias",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "regions",
+              "alias": "r"
+            },
+            "as": "o1228"
+          },
+          "bind": "s5103",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "regions",
+              "values": [],
+              "alias": "r"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1228"
+            },
+            "method": "toArray",
+            "args": {}
+          },
+          "expect": {
+            "method": "crossJoin",
+            "attribute": "regions",
+            "alias": "r",
+            "values": []
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "parseQuery",
+            "args": {
+              "query": {
+                "method": "crossJoin",
+                "attribute": "regions",
+                "alias": "r",
+                "values": []
+              }
+            },
+            "as": "o1229"
+          },
+          "bind": "s5105",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "regions",
+              "values": [],
+              "alias": "r"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1229"
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "Query\\Method::CrossJoin"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1229"
+            },
+            "method": "getAlias",
+            "args": {}
+          },
+          "expect": "r"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1229"
+            },
+            "method": "getValues",
+            "args": {}
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "QuerySerializationTest::testParsedColumnFormJoinBecomesAnOnCondition",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "parseQuery",
+            "args": {
+              "query": {
+                "method": "join",
+                "attribute": "orders",
+                "values": [
+                  "$id",
+                  ">",
+                  "ord.total",
+                  "ord"
+                ]
+              }
+            },
+            "as": "o1230"
+          },
+          "bind": "s5109",
+          "expect": {
+            "$query": {
+              "method": "join",
+              "attribute": "orders",
+              "values": [
+                {
+                  "$query": {
+                    "method": "on",
+                    "attribute": "",
+                    "values": [
+                      "$id",
+                      ">",
+                      "ord.total"
+                    ]
+                  }
+                }
+              ],
+              "alias": "ord"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1230"
+            },
+            "method": "getAlias",
+            "args": {}
+          },
+          "expect": "ord"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "on",
+            "args": {
+              "left": "$id",
+              "right": "ord.total",
+              "operator": ">"
+            },
+            "as": "o1231"
+          },
+          "bind": "s5111",
+          "expect": {
+            "$query": {
+              "method": "on",
+              "attribute": "",
+              "values": [
+                "$id",
+                ">",
+                "ord.total"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "join",
+            "args": {
+              "collection": "orders",
+              "alias": "ord",
+              "on": [
+                {
+                  "$obj": "o1231"
+                }
+              ]
+            },
+            "as": "o1232"
+          },
+          "bind": "s5112",
+          "expect": {
+            "$query": {
+              "method": "join",
+              "attribute": "orders",
+              "values": [
+                {
+                  "$query": {
+                    "method": "on",
+                    "attribute": "",
+                    "values": [
+                      "$id",
+                      ">",
+                      "ord.total"
+                    ]
+                  }
+                }
+              ],
+              "alias": "ord"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1232"
+            },
+            "method": "toArray",
+            "args": {}
+          },
+          "expect": {
+            "method": "join",
+            "attribute": "orders",
+            "alias": "ord",
+            "values": [
+              {
+                "method": "on",
+                "values": [
+                  "$id",
+                  ">",
+                  "ord.total"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1230"
+            },
+            "method": "toArray",
+            "args": {}
+          },
+          "expect": {
+            "method": "join",
+            "attribute": "orders",
+            "alias": "ord",
+            "values": [
+              {
+                "method": "on",
+                "values": [
+                  "$id",
+                  ">",
+                  "ord.total"
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "QuerySerializationTest::testParsedJoinWithoutAnAliasIsAQueryException",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "parseQuery",
+            "args": {
+              "query": {
+                "method": "join",
+                "attribute": "orders",
+                "values": [
+                  {
+                    "method": "on",
+                    "values": [
+                      "$id",
+                      "=",
+                      "user"
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Join alias is required: join orders"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "QuerySerializationTest::testParsedAggregateKeepsItsAlias#alias property",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "parseQuery",
+            "args": {
+              "query": {
+                "method": "sum",
+                "attribute": "price",
+                "alias": "revenue",
+                "values": []
+              }
+            },
+            "as": "o1235"
+          },
+          "bind": "s5120",
+          "expect": {
+            "$query": {
+              "method": "sum",
+              "attribute": "price",
+              "values": [],
+              "alias": "revenue"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1235"
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "Query\\Method::Sum"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1235"
+            },
+            "method": "getAttribute",
+            "args": {}
+          },
+          "expect": "price"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1235"
+            },
+            "method": "getAlias",
+            "args": {}
+          },
+          "expect": "revenue"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1235"
+            },
+            "method": "getValues",
+            "args": {}
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "QuerySerializationTest::testParsedAggregateKeepsItsAlias#legacy alias value",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "parseQuery",
+            "args": {
+              "query": {
+                "method": "sum",
+                "attribute": "price",
+                "values": [
+                  "revenue"
+                ]
+              }
+            },
+            "as": "o1236"
+          },
+          "bind": "s5125",
+          "expect": {
+            "$query": {
+              "method": "sum",
+              "attribute": "price",
+              "values": [],
+              "alias": "revenue"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1236"
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "Query\\Method::Sum"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1236"
+            },
+            "method": "getAttribute",
+            "args": {}
+          },
+          "expect": "price"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1236"
+            },
+            "method": "getAlias",
+            "args": {}
+          },
+          "expect": "revenue"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1236"
+            },
+            "method": "getValues",
+            "args": {}
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "QuerySerializationTest::testParsedAggregateKeepsItsAlias#no alias",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "parseQuery",
+            "args": {
+              "query": {
+                "method": "sum",
+                "attribute": "price",
+                "values": []
+              }
+            },
+            "as": "o1237"
+          },
+          "bind": "s5130",
+          "expect": {
+            "$query": {
+              "method": "sum",
+              "attribute": "price",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1237"
+            },
+            "method": "getMethod",
+            "args": {}
+          },
+          "expect": {
+            "$enum": "Query\\Method::Sum"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1237"
+            },
+            "method": "getAttribute",
+            "args": {}
+          },
+          "expect": "price"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1237"
+            },
+            "method": "getAlias",
+            "args": {}
+          },
+          "expect": ""
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1237"
+            },
+            "method": "getValues",
+            "args": {}
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "QuerySerializationTest::testDocumentCursorSerialisesToItsId",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "doc1"
+              }
+            },
+            "as": "o1238"
+          },
+          "bind": "s5135",
+          "expect": {
+            "$document": {
+              "$id": "doc1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "cursorAfter",
+            "args": {
+              "value": {
+                "$obj": "o1238"
+              }
+            },
+            "as": "o1239"
+          },
+          "bind": "s5136",
+          "expect": {
+            "$query": {
+              "method": "cursorAfter",
+              "attribute": "",
+              "values": [
+                {
+                  "$document": {
+                    "$id": "doc1"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1239"
+            },
+            "method": "toArray",
+            "args": {}
+          },
+          "expect": {
+            "method": "cursorAfter",
+            "values": [
+              "doc1"
+            ]
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Cursor",
+            "args": {},
+            "as": "o1240"
+          },
+          "bind": "s5138",
+          "expect": {
+            "$value": "Validator\\Query\\Cursor",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1240"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1239"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "QuerySerializationTest::testArrayCursorIsRefusedByTheCursorValidator",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "cursorBefore",
+            "args": {
+              "value": {
+                "$id": "doc1"
+              }
+            },
+            "as": "o1241"
+          },
+          "bind": "s5140",
+          "expect": {
+            "$query": {
+              "method": "cursorBefore",
+              "attribute": "",
+              "values": [
+                {
+                  "$id": "doc1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Cursor",
+            "args": {},
+            "as": "o1242"
+          },
+          "bind": "s5141",
+          "expect": {
+            "$value": "Validator\\Query\\Cursor",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1242"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1241"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1242"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid cursor: UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a leading period, hyphen, or underscore"
+        }
+      ]
+    },
+    {
+      "name": "QuerySerializationTest::testIsSpatialAttributeFollowsTheAttributeType#point",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "shape",
+              "values": [
+                "x"
+              ]
+            },
+            "as": "o1243"
+          },
+          "bind": "s5144",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "shape",
+              "values": [
+                "x"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1243"
+            },
+            "method": "setAttributeType",
+            "args": {
+              "type": "point"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1243"
+            },
+            "method": "isSpatialAttribute",
+            "args": {}
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "QuerySerializationTest::testIsSpatialAttributeFollowsTheAttributeType#linestring",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "shape",
+              "values": [
+                "x"
+              ]
+            },
+            "as": "o1244"
+          },
+          "bind": "s5147",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "shape",
+              "values": [
+                "x"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1244"
+            },
+            "method": "setAttributeType",
+            "args": {
+              "type": "linestring"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1244"
+            },
+            "method": "isSpatialAttribute",
+            "args": {}
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "QuerySerializationTest::testIsSpatialAttributeFollowsTheAttributeType#polygon",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "shape",
+              "values": [
+                "x"
+              ]
+            },
+            "as": "o1245"
+          },
+          "bind": "s5150",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "shape",
+              "values": [
+                "x"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1245"
+            },
+            "method": "setAttributeType",
+            "args": {
+              "type": "polygon"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1245"
+            },
+            "method": "isSpatialAttribute",
+            "args": {}
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "QuerySerializationTest::testIsSpatialAttributeFollowsTheAttributeType#string",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "shape",
+              "values": [
+                "x"
+              ]
+            },
+            "as": "o1246"
+          },
+          "bind": "s5153",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "shape",
+              "values": [
+                "x"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1246"
+            },
+            "method": "setAttributeType",
+            "args": {
+              "type": "string"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1246"
+            },
+            "method": "isSpatialAttribute",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "QuerySerializationTest::testIsSpatialAttributeFollowsTheAttributeType#vector",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "shape",
+              "values": [
+                "x"
+              ]
+            },
+            "as": "o1247"
+          },
+          "bind": "s5156",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "shape",
+              "values": [
+                "x"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1247"
+            },
+            "method": "setAttributeType",
+            "args": {
+              "type": "vector"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1247"
+            },
+            "method": "isSpatialAttribute",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "QuerySerializationTest::testIsSpatialAttributeFollowsTheAttributeType#unset",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "shape",
+              "values": [
+                "x"
+              ]
+            },
+            "as": "o1248"
+          },
+          "bind": "s5159",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "shape",
+              "values": [
+                "x"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1248"
+            },
+            "method": "setAttributeType",
+            "args": {
+              "type": ""
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1248"
+            },
+            "method": "isSpatialAttribute",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "QuerySerializationTest::testIsSpatialAttributeFollowsTheAttributeType#unknown",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "shape",
+              "values": [
+                "x"
+              ]
+            },
+            "as": "o1249"
+          },
+          "bind": "s5162",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "shape",
+              "values": [
+                "x"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1249"
+            },
+            "method": "setAttributeType",
+            "args": {
+              "type": "circle"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1249"
+            },
+            "method": "isSpatialAttribute",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    }
+  ]
+}

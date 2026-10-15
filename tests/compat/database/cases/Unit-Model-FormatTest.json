@@ -1,0 +1,426 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Model/FormatTest.php"
+  ],
+  "cases": [
+    {
+      "name": "FormatTest::testHoldsNameAndOptions",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Format",
+            "args": {
+              "name": "intRange",
+              "options": {
+                "min": 1,
+                "max": 10
+              }
+            },
+            "as": "o4089"
+          },
+          "expect": {
+            "$value": "Format",
+            "fields": {
+              "name": "intRange",
+              "options": {
+                "min": 1,
+                "max": 10
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "FormatTest::testOptionsDefaultToEmpty",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Format",
+            "args": {
+              "name": "email"
+            },
+            "as": "o4090"
+          },
+          "expect": {
+            "$value": "Format",
+            "fields": {
+              "name": "email",
+              "options": []
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "FormatTest::testEmptyNameIsRejected",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Format",
+            "args": {
+              "name": ""
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Format name must not be empty"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "FormatTest::testPersistsAsFormatAndFormatOptions",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Format",
+            "args": {
+              "name": "intRange",
+              "options": {
+                "min": 1
+              }
+            },
+            "as": "o4091"
+          },
+          "bind": "s6181",
+          "expect": {
+            "$value": "Format",
+            "fields": {
+              "name": "intRange",
+              "options": {
+                "min": 1
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "range",
+              "format": {
+                "$obj": "o4091"
+              }
+            },
+            "as": "o4092"
+          },
+          "bind": "s6182",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "range",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": {
+                "$value": "Format",
+                "fields": {
+                  "name": "intRange",
+                  "options": {
+                    "min": 1
+                  }
+                }
+              },
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4092"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4093"
+          },
+          "bind": "s6183",
+          "expect": {
+            "$document": {
+              "$id": "range",
+              "key": "range",
+              "type": "integer",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": "intRange",
+              "formatOptions": {
+                "min": 1
+              },
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4093"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "format"
+            }
+          },
+          "expect": "intRange"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4093"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "formatOptions"
+            }
+          },
+          "expect": {
+            "min": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "FormatTest::testNoFormatPersistsAsNullWithEmptyOptions",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "name"
+            },
+            "as": "o4094"
+          },
+          "bind": "s6186",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 255,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4094"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4095"
+          },
+          "bind": "s6187",
+          "expect": {
+            "$document": {
+              "$id": "name",
+              "key": "name",
+              "type": "string",
+              "size": 255,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4095"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "format"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4095"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "formatOptions"
+            }
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "FormatTest::testOptionsWithoutAFormatNameAreDropped",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "key": "name",
+                "type": "string",
+                "format": null,
+                "formatOptions": {
+                  "min": 1
+                }
+              }
+            },
+            "as": "o4096"
+          },
+          "bind": "s6190",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4096"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o4097"
+          },
+          "bind": "s6191",
+          "expect": {
+            "$document": {
+              "$id": "name",
+              "key": "name",
+              "type": "string",
+              "size": 0,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4097"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "formatOptions"
+            }
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "FormatTest::testNonArrayOptionsHydrateAsEmpty",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "key": "name",
+                "type": "string",
+                "format": "email",
+                "formatOptions": "invalid"
+              }
+            },
+            "as": "o4098"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": {
+                "$value": "Format",
+                "fields": {
+                  "name": "email",
+                  "options": []
+                }
+              },
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

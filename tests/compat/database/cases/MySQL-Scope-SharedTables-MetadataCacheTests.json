@@ -1,0 +1,2363 @@
+{
+    "source": [
+        "vendor/utopia-php/database/tests/e2e/Adapter/Scopes/MetadataCacheTests.php",
+        "vendor/utopia-php/database/tests/e2e/Adapter/SharedTables/MySQLTest.php"
+    ],
+    "cases": [
+        {
+            "name": "MetadataCacheTests::testCreateAttributeIsVisibleToTheNextRead",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql",
+                        "namespace": "",
+                        "shared_tables": true,
+                        "tenant": 999
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "db.authorization.clean_roles",
+                    "args": {}
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "any"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "users"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "user:x"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "joinedSeal"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "supports",
+                        "args": {
+                            "capability": {
+                                "$enum": "Capability::DefinedAttributes"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "metacreateattrdf7e4217",
+                                "name": "metacreateattrdf7e4217",
+                                "attributes": [
+                                    {
+                                        "$id": "name",
+                                        "key": "name",
+                                        "type": "string",
+                                        "size": 128,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "create(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "metacreateattrdf7e4217",
+                        "document": {
+                            "$document": {
+                                "$id": "warm",
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "create(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ],
+                                "name": "warm"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "metacreateattrdf7e4217",
+                        "id": "warm"
+                    }
+                },
+                {
+                    "op": "database.create_attribute",
+                    "args": {
+                        "collection": "metacreateattrdf7e4217",
+                        "attribute": {
+                            "$value": "Attribute",
+                            "fields": {
+                                "key": "nickname",
+                                "type": {
+                                    "$enum": "Query\\Schema\\ColumnType::String"
+                                },
+                                "size": 128,
+                                "required": false,
+                                "default": null,
+                                "signed": true,
+                                "array": false,
+                                "format": null,
+                                "filters": [],
+                                "relationship": null,
+                                "side": null
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_collection",
+                    "args": {
+                        "collection": "metacreateattrdf7e4217"
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "metacreateattrdf7e4217",
+                        "document": {
+                            "$document": {
+                                "$id": "after",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ],
+                                "name": "after",
+                                "nickname": "nick"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "metacreateattrdf7e4217",
+                        "id": "after"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "MetadataCacheTests::testDeleteAttributeIsVisibleToTheNextRead",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql",
+                        "namespace": "",
+                        "shared_tables": true,
+                        "tenant": 999
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "db.authorization.clean_roles",
+                    "args": {}
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "any"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "users"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "user:x"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "joinedSeal"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "supports",
+                        "args": {
+                            "capability": {
+                                "$enum": "Capability::DefinedAttributes"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "metadelattrdf811bb0",
+                                "name": "metadelattrdf811bb0",
+                                "attributes": [
+                                    {
+                                        "$id": "name",
+                                        "key": "name",
+                                        "type": "string",
+                                        "size": 128,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "create(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "metadelattrdf811bb0",
+                        "document": {
+                            "$document": {
+                                "$id": "warm",
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "create(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ],
+                                "name": "warm"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "metadelattrdf811bb0",
+                        "id": "warm"
+                    }
+                },
+                {
+                    "op": "database.create_attribute",
+                    "args": {
+                        "collection": "metadelattrdf811bb0",
+                        "attribute": {
+                            "$value": "Attribute",
+                            "fields": {
+                                "key": "doomed",
+                                "type": {
+                                    "$enum": "Query\\Schema\\ColumnType::String"
+                                },
+                                "size": 128,
+                                "required": false,
+                                "default": null,
+                                "signed": true,
+                                "array": false,
+                                "format": null,
+                                "filters": [],
+                                "relationship": null,
+                                "side": null
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_collection",
+                    "args": {
+                        "collection": "metadelattrdf811bb0"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "metadelattrdf811bb0",
+                        "id": "warm"
+                    }
+                },
+                {
+                    "op": "database.delete_attribute",
+                    "args": {
+                        "collection": "metadelattrdf811bb0",
+                        "key": "doomed"
+                    }
+                },
+                {
+                    "op": "database.get_collection",
+                    "args": {
+                        "collection": "metadelattrdf811bb0"
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "metadelattrdf811bb0",
+                        "document": {
+                            "$document": {
+                                "$id": "orphan",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ],
+                                "name": "orphan",
+                                "doomed": "value"
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "MetadataCacheTests::testUpdateAttributeIsVisibleToTheNextRead",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql",
+                        "namespace": "",
+                        "shared_tables": true,
+                        "tenant": 999
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "db.authorization.clean_roles",
+                    "args": {}
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "any"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "users"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "user:x"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "joinedSeal"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "supports",
+                        "args": {
+                            "capability": {
+                                "$enum": "Capability::DefinedAttributes"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "supports",
+                        "args": {
+                            "capability": {
+                                "$enum": "Capability::AttributeResizing"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "metaupdattrdf821b0a",
+                                "name": "metaupdattrdf821b0a",
+                                "attributes": [
+                                    {
+                                        "$id": "name",
+                                        "key": "name",
+                                        "type": "string",
+                                        "size": 128,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "create(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "metaupdattrdf821b0a",
+                        "document": {
+                            "$document": {
+                                "$id": "warm",
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "create(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ],
+                                "name": "warm"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "metaupdattrdf821b0a",
+                        "id": "warm"
+                    }
+                },
+                {
+                    "op": "database.update_attribute",
+                    "args": {
+                        "collection": "metaupdattrdf821b0a",
+                        "key": "name",
+                        "update": {
+                            "$value": "Attribute\\Update",
+                            "fields": {
+                                "type": null,
+                                "size": 2048,
+                                "required": null,
+                                "default": {
+                                    "$enum": "Unchanged::Value"
+                                },
+                                "signed": null,
+                                "array": null,
+                                "format": {
+                                    "$enum": "Unchanged::Value"
+                                },
+                                "filters": null,
+                                "key": null
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_collection",
+                    "args": {
+                        "collection": "metaupdattrdf821b0a"
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "metaupdattrdf821b0a",
+                        "document": {
+                            "$document": {
+                                "$id": "long",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ],
+                                "name": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "metaupdattrdf821b0a",
+                        "id": "long"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "MetadataCacheTests::testRenameAttributeIsVisibleToTheNextRead",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql",
+                        "namespace": "",
+                        "shared_tables": true,
+                        "tenant": 999
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "db.authorization.clean_roles",
+                    "args": {}
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "any"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "users"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "user:x"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "joinedSeal"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "supports",
+                        "args": {
+                            "capability": {
+                                "$enum": "Capability::DefinedAttributes"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "metarenattrdf82e3aa",
+                                "name": "metarenattrdf82e3aa",
+                                "attributes": [
+                                    {
+                                        "$id": "name",
+                                        "key": "name",
+                                        "type": "string",
+                                        "size": 128,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "create(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "metarenattrdf82e3aa",
+                        "document": {
+                            "$document": {
+                                "$id": "warm",
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "create(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ],
+                                "name": "warm"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "metarenattrdf82e3aa",
+                        "id": "warm"
+                    }
+                },
+                {
+                    "op": "database.rename_attribute",
+                    "args": {
+                        "collection": "metarenattrdf82e3aa",
+                        "old": "name",
+                        "new": "label"
+                    }
+                },
+                {
+                    "op": "database.get_collection",
+                    "args": {
+                        "collection": "metarenattrdf82e3aa"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "metarenattrdf82e3aa",
+                        "id": "warm"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "MetadataCacheTests::testCreateIndexIsVisibleToTheNextRead",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql",
+                        "namespace": "",
+                        "shared_tables": true,
+                        "tenant": 999
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "db.authorization.clean_roles",
+                    "args": {}
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "any"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "users"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "user:x"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "joinedSeal"
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "metacreateidxdf83a450",
+                                "name": "metacreateidxdf83a450",
+                                "attributes": [
+                                    {
+                                        "$id": "name",
+                                        "key": "name",
+                                        "type": "string",
+                                        "size": 128,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "create(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "metacreateidxdf83a450",
+                        "document": {
+                            "$document": {
+                                "$id": "warm",
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "create(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ],
+                                "name": "warm"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "metacreateidxdf83a450",
+                        "id": "warm"
+                    }
+                },
+                {
+                    "op": "database.create_index",
+                    "args": {
+                        "collection": "metacreateidxdf83a450",
+                        "index": {
+                            "$value": "Index",
+                            "fields": {
+                                "key": "byName",
+                                "type": {
+                                    "$enum": "Query\\Schema\\IndexType::Key"
+                                },
+                                "attributes": [
+                                    "name"
+                                ],
+                                "lengths": [
+                                    128
+                                ],
+                                "orders": [],
+                                "ttl": null
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_collection",
+                    "args": {
+                        "collection": "metacreateidxdf83a450"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "MetadataCacheTests::testDeleteIndexIsVisibleToTheNextRead",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql",
+                        "namespace": "",
+                        "shared_tables": true,
+                        "tenant": 999
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "db.authorization.clean_roles",
+                    "args": {}
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "any"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "users"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "user:x"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "joinedSeal"
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "metadelidxdf848418",
+                                "name": "metadelidxdf848418",
+                                "attributes": [
+                                    {
+                                        "$id": "name",
+                                        "key": "name",
+                                        "type": "string",
+                                        "size": 128,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "create(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "metadelidxdf848418",
+                        "document": {
+                            "$document": {
+                                "$id": "warm",
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "create(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ],
+                                "name": "warm"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "metadelidxdf848418",
+                        "id": "warm"
+                    }
+                },
+                {
+                    "op": "database.create_index",
+                    "args": {
+                        "collection": "metadelidxdf848418",
+                        "index": {
+                            "$value": "Index",
+                            "fields": {
+                                "key": "byName",
+                                "type": {
+                                    "$enum": "Query\\Schema\\IndexType::Key"
+                                },
+                                "attributes": [
+                                    "name"
+                                ],
+                                "lengths": [
+                                    128
+                                ],
+                                "orders": [],
+                                "ttl": null
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_collection",
+                    "args": {
+                        "collection": "metadelidxdf848418"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "metadelidxdf848418",
+                        "id": "warm"
+                    }
+                },
+                {
+                    "op": "database.delete_index",
+                    "args": {
+                        "collection": "metadelidxdf848418",
+                        "key": "byName"
+                    }
+                },
+                {
+                    "op": "database.get_collection",
+                    "args": {
+                        "collection": "metadelidxdf848418"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "MetadataCacheTests::testUpdateCollectionIsVisibleToTheNextRead",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql",
+                        "namespace": "",
+                        "shared_tables": true,
+                        "tenant": 999
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "db.authorization.clean_roles",
+                    "args": {}
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "any"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "users"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "user:x"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "joinedSeal"
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "metaupdcolldf867303",
+                                "name": "metaupdcolldf867303",
+                                "attributes": [
+                                    {
+                                        "$id": "name",
+                                        "key": "name",
+                                        "type": "string",
+                                        "size": 128,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "create(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "metaupdcolldf867303",
+                        "document": {
+                            "$document": {
+                                "$id": "warm",
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "create(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ],
+                                "name": "warm"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "metaupdcolldf867303",
+                        "id": "warm"
+                    }
+                },
+                {
+                    "op": "database.get_collection",
+                    "args": {
+                        "collection": "metaupdcolldf867303"
+                    }
+                },
+                {
+                    "op": "database.update_collection",
+                    "args": {
+                        "collection": "metaupdcolldf867303",
+                        "update": {
+                            "$value": "Collection\\Update",
+                            "fields": {
+                                "permissions": [
+                                    "read(\"any\")"
+                                ],
+                                "documentSecurity": true
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_collection",
+                    "args": {
+                        "collection": "metaupdcolldf867303"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "MetadataCacheTests::testDeleteCollectionIsVisibleToTheNextRead",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql",
+                        "namespace": "",
+                        "shared_tables": true,
+                        "tenant": 999
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "db.authorization.clean_roles",
+                    "args": {}
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "any"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "users"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "user:x"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "joinedSeal"
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "metadelcolldf876ef7",
+                                "name": "metadelcolldf876ef7",
+                                "attributes": [
+                                    {
+                                        "$id": "name",
+                                        "key": "name",
+                                        "type": "string",
+                                        "size": 128,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "create(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "metadelcolldf876ef7",
+                        "document": {
+                            "$document": {
+                                "$id": "warm",
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "create(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ],
+                                "name": "warm"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "metadelcolldf876ef7",
+                        "id": "warm"
+                    }
+                },
+                {
+                    "op": "database.delete_collection",
+                    "args": {
+                        "collection": "metadelcolldf876ef7"
+                    }
+                },
+                {
+                    "op": "database.find_collection",
+                    "args": {
+                        "collection": "metadelcolldf876ef7"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "metadelcolldf876ef7",
+                        "id": "warm"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "MetadataCacheTests::testCreateRelationshipIsVisibleToTheNextRead",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql",
+                        "namespace": "",
+                        "shared_tables": true,
+                        "tenant": 999
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "db.authorization.clean_roles",
+                    "args": {}
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "any"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "users"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "user:x"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "joinedSeal"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "hasFeature",
+                        "args": {
+                            "feature": "Utopia\\Database\\Adapter\\Feature\\Relationships"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "metarelparentdf88dabe",
+                                "name": "metarelparentdf88dabe",
+                                "attributes": [
+                                    {
+                                        "$id": "name",
+                                        "key": "name",
+                                        "type": "string",
+                                        "size": 128,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "create(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "metarelparentdf88dabe",
+                        "document": {
+                            "$document": {
+                                "$id": "warm",
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "create(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ],
+                                "name": "warm"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "metarelparentdf88dabe",
+                        "id": "warm"
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "metarelchilddf899073",
+                                "name": "metarelchilddf899073",
+                                "attributes": [
+                                    {
+                                        "$id": "name",
+                                        "key": "name",
+                                        "type": "string",
+                                        "size": 128,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "create(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "metarelchilddf899073",
+                        "document": {
+                            "$document": {
+                                "$id": "warm",
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "create(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ],
+                                "name": "warm"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "metarelchilddf899073",
+                        "id": "warm"
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "metarelparentdf88dabe",
+                        "relationship": {
+                            "$value": "Relationship",
+                            "fields": {
+                                "relatedCollection": "metarelchilddf899073",
+                                "type": {
+                                    "$enum": "RelationshipType::OneToOne"
+                                },
+                                "twoWay": false,
+                                "key": "child",
+                                "twoWayKey": null,
+                                "onDelete": {
+                                    "$enum": "RelationshipDeleteAction::Restrict"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_collection",
+                    "args": {
+                        "collection": "metarelparentdf88dabe"
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "metarelparentdf88dabe",
+                        "document": {
+                            "$document": {
+                                "$id": "linked",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ],
+                                "name": "linked",
+                                "child": {
+                                    "$id": "linkedchild",
+                                    "$permissions": [
+                                        "read(\"any\")"
+                                    ],
+                                    "name": "linkedchild"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "metarelparentdf88dabe",
+                        "id": "linked"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "MetadataCacheTests::testDeleteRelationshipIsVisibleToTheNextRead",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql",
+                        "namespace": "",
+                        "shared_tables": true,
+                        "tenant": 999
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "db.authorization.clean_roles",
+                    "args": {}
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "any"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "users"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "user:x"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "joinedSeal"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "hasFeature",
+                        "args": {
+                            "feature": "Utopia\\Database\\Adapter\\Feature\\Relationships"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "metaunrelparentdf8b47f3",
+                                "name": "metaunrelparentdf8b47f3",
+                                "attributes": [
+                                    {
+                                        "$id": "name",
+                                        "key": "name",
+                                        "type": "string",
+                                        "size": 128,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "create(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "metaunrelparentdf8b47f3",
+                        "document": {
+                            "$document": {
+                                "$id": "warm",
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "create(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ],
+                                "name": "warm"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "metaunrelparentdf8b47f3",
+                        "id": "warm"
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "metaunrelchilddf8c25b9",
+                                "name": "metaunrelchilddf8c25b9",
+                                "attributes": [
+                                    {
+                                        "$id": "name",
+                                        "key": "name",
+                                        "type": "string",
+                                        "size": 128,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "create(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "metaunrelchilddf8c25b9",
+                        "document": {
+                            "$document": {
+                                "$id": "warm",
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "create(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ],
+                                "name": "warm"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "metaunrelchilddf8c25b9",
+                        "id": "warm"
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "metaunrelparentdf8b47f3",
+                        "relationship": {
+                            "$value": "Relationship",
+                            "fields": {
+                                "relatedCollection": "metaunrelchilddf8c25b9",
+                                "type": {
+                                    "$enum": "RelationshipType::OneToOne"
+                                },
+                                "twoWay": true,
+                                "key": "child",
+                                "twoWayKey": "parent",
+                                "onDelete": {
+                                    "$enum": "RelationshipDeleteAction::Restrict"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "metaunrelparentdf8b47f3",
+                        "id": "warm"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "metaunrelchilddf8c25b9",
+                        "id": "warm"
+                    }
+                },
+                {
+                    "op": "database.delete_relationship",
+                    "args": {
+                        "collection": "metaunrelparentdf8b47f3",
+                        "key": "child"
+                    }
+                },
+                {
+                    "op": "database.get_collection",
+                    "args": {
+                        "collection": "metaunrelparentdf8b47f3"
+                    }
+                },
+                {
+                    "op": "database.get_collection",
+                    "args": {
+                        "collection": "metaunrelchilddf8c25b9"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "MetadataCacheTests::testCollectionDefinitionsAreScopedToTheirDatabase",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql",
+                        "namespace": "",
+                        "shared_tables": true,
+                        "tenant": 999
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "db.authorization.clean_roles",
+                    "args": {}
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "any"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "users"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "user:x"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "joinedSeal"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "supports",
+                        "args": {
+                            "capability": {
+                                "$enum": "Capability::Schemas"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_database",
+                    "args": {}
+                },
+                {
+                    "op": "database.set_database",
+                    "args": {
+                        "name": "${ns}_scopedonedf90053b"
+                    }
+                },
+                {
+                    "op": "database.create",
+                    "args": {}
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "scoped",
+                                "name": "scoped",
+                                "attributes": [
+                                    {
+                                        "$id": "first",
+                                        "key": "first",
+                                        "type": "string",
+                                        "size": 128,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "create(\"any\")",
+                                    "read(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.set_database",
+                    "args": {
+                        "name": "${ns}_scopedtwodf90053b"
+                    }
+                },
+                {
+                    "op": "database.create",
+                    "args": {}
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "scoped",
+                                "name": "scoped",
+                                "attributes": [
+                                    {
+                                        "$id": "second",
+                                        "key": "second",
+                                        "type": "string",
+                                        "size": 128,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "create(\"any\")",
+                                    "read(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_collection",
+                    "args": {
+                        "collection": "scoped"
+                    }
+                },
+                {
+                    "op": "database.set_database",
+                    "args": {
+                        "name": "${ns}_scopedonedf90053b"
+                    }
+                },
+                {
+                    "op": "database.get_collection",
+                    "args": {
+                        "collection": "scoped"
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "scoped",
+                        "document": {
+                            "$document": {
+                                "$id": "row",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ],
+                                "first": "value"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "scoped",
+                        "id": "row"
+                    }
+                },
+                {
+                    "op": "database.exists",
+                    "args": {
+                        "database": "${ns}_scopedonedf90053b"
+                    }
+                },
+                {
+                    "op": "database.delete",
+                    "args": {
+                        "database": "${ns}_scopedonedf90053b"
+                    }
+                },
+                {
+                    "op": "database.exists",
+                    "args": {
+                        "database": "${ns}_scopedtwodf90053b"
+                    }
+                },
+                {
+                    "op": "database.delete",
+                    "args": {
+                        "database": "${ns}_scopedtwodf90053b"
+                    }
+                },
+                {
+                    "op": "database.set_database",
+                    "args": {
+                        "name": "${ns}"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "MetadataCacheTests::testRolledBackCollectionUpdateNeverReachesTheNextRead",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql",
+                        "namespace": "",
+                        "shared_tables": true,
+                        "tenant": 999
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "db.authorization.clean_roles",
+                    "args": {}
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "any"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "users"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "user:x"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "joinedSeal"
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "collection": {
+                            "$document": {
+                                "$id": "metarollbackdf932955",
+                                "name": "metarollbackdf932955",
+                                "attributes": [
+                                    {
+                                        "$id": "name",
+                                        "key": "name",
+                                        "type": "string",
+                                        "size": 128,
+                                        "required": false,
+                                        "default": null,
+                                        "signed": true,
+                                        "array": false,
+                                        "format": null,
+                                        "formatOptions": [],
+                                        "filters": []
+                                    }
+                                ],
+                                "indexes": [],
+                                "documentSecurity": false,
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "create(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            },
+                            "$class": "Collection"
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "metarollbackdf932955",
+                        "document": {
+                            "$document": {
+                                "$id": "warm",
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "create(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ],
+                                "name": "warm"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "metarollbackdf932955",
+                        "id": "warm"
+                    }
+                },
+                {
+                    "op": "database.with_transaction",
+                    "args": {
+                        "callback": {
+                            "steps": [
+                                {
+                                    "op": "database.update_collection",
+                                    "args": {
+                                        "collection": "metarollbackdf932955",
+                                        "update": {
+                                            "$value": "Collection\\Update",
+                                            "fields": {
+                                                "permissions": [
+                                                    "read(\"any\")"
+                                                ],
+                                                "documentSecurity": true
+                                            }
+                                        }
+                                    }
+                                },
+                                {
+                                    "op": "database.get_collection",
+                                    "args": {
+                                        "collection": "metarollbackdf932955"
+                                    }
+                                },
+                                {
+                                    "op": "$throw",
+                                    "args": {
+                                        "class": "RuntimeException",
+                                        "message": "rollback"
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_collection",
+                    "args": {
+                        "collection": "metarollbackdf932955"
+                    }
+                },
+                {
+                    "op": "database.update_collection",
+                    "args": {
+                        "collection": "metarollbackdf932955",
+                        "update": {
+                            "$value": "Collection\\Update",
+                            "fields": {
+                                "permissions": [
+                                    "read(\"any\")"
+                                ],
+                                "documentSecurity": true
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_collection",
+                    "args": {
+                        "collection": "metarollbackdf932955"
+                    }
+                }
+            ]
+        }
+    ]
+}

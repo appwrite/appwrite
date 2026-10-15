@@ -1,0 +1,724 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Validator/SpatialTest.php"
+  ],
+  "cases": [
+    {
+      "name": "SpatialTest::test_valid_point",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Spatial",
+            "args": {
+              "spatialType": "point"
+            },
+            "as": "o4347"
+          },
+          "bind": "s6837",
+          "expect": {
+            "$value": "Validator\\Spatial",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4347"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                10,
+                20
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4347"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                0,
+                0
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4347"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                -180.0,
+                90.0
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4347"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                10
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4347"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                10,
+                "a"
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4347"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                [
+                  10,
+                  20
+                ]
+              ]
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "SpatialTest::test_valid_line_string",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Spatial",
+            "args": {
+              "spatialType": "linestring"
+            },
+            "as": "o4348"
+          },
+          "bind": "s6844",
+          "expect": {
+            "$value": "Validator\\Spatial",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4348"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  1,
+                  1
+                ]
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4348"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                [
+                  10,
+                  10
+                ],
+                [
+                  20,
+                  20
+                ],
+                [
+                  30,
+                  30
+                ]
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4348"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                [
+                  10,
+                  10
+                ]
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4348"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                [
+                  10,
+                  10
+                ],
+                [
+                  20
+                ]
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4348"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                [
+                  10,
+                  10
+                ],
+                [
+                  "x",
+                  "y"
+                ]
+              ]
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "SpatialTest::test_valid_polygon",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Spatial",
+            "args": {
+              "spatialType": "polygon"
+            },
+            "as": "o4349"
+          },
+          "bind": "s6850",
+          "expect": {
+            "$value": "Validator\\Spatial",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4349"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  1
+                ],
+                [
+                  1,
+                  1
+                ],
+                [
+                  1,
+                  0
+                ],
+                [
+                  0,
+                  0
+                ]
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4349"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                [
+                  [
+                    0,
+                    0
+                  ],
+                  [
+                    0,
+                    4
+                  ],
+                  [
+                    4,
+                    4
+                  ],
+                  [
+                    4,
+                    0
+                  ],
+                  [
+                    0,
+                    0
+                  ]
+                ],
+                [
+                  [
+                    1,
+                    1
+                  ],
+                  [
+                    1,
+                    2
+                  ],
+                  [
+                    2,
+                    2
+                  ],
+                  [
+                    2,
+                    1
+                  ],
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4349"
+            },
+            "method": "isValid",
+            "args": {
+              "value": []
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4349"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  1,
+                  1
+                ],
+                [
+                  2,
+                  2
+                ]
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4349"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                [
+                  [
+                    0,
+                    0
+                  ],
+                  [
+                    1,
+                    1
+                  ],
+                  [
+                    1,
+                    0
+                  ]
+                ]
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4349"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                [
+                  [
+                    0,
+                    0
+                  ],
+                  [
+                    1,
+                    1
+                  ],
+                  [
+                    1,
+                    "a"
+                  ],
+                  [
+                    0,
+                    0
+                  ]
+                ]
+              ]
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "SpatialTest::test_wkt_strings",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\Spatial",
+            "method": "isWktString",
+            "args": {
+              "value": "POINT(1 2)"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\Spatial",
+            "method": "isWktString",
+            "args": {
+              "value": "LINESTRING(0 0,1 1)"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\Spatial",
+            "method": "isWktString",
+            "args": {
+              "value": "POLYGON((0 0,1 0,1 1,0 1,0 0))"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\Spatial",
+            "method": "isWktString",
+            "args": {
+              "value": "CIRCLE(0 0,1)"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Validator\\Spatial",
+            "method": "isWktString",
+            "args": {
+              "value": "POINT1(1 2)"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "SpatialTest::test_invalid_coordinate",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Spatial",
+            "args": {
+              "spatialType": "point"
+            },
+            "as": "o4350"
+          },
+          "bind": "s6862",
+          "expect": {
+            "$value": "Validator\\Spatial",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4350"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                200,
+                10
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4350"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Value must be a valid point: Longitude (x) must be between -180 and 180, got 200"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Spatial",
+            "args": {
+              "spatialType": "point"
+            },
+            "as": "o4351"
+          },
+          "bind": "s6865",
+          "expect": {
+            "$value": "Validator\\Spatial",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4351"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                10,
+                -100
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4351"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Value must be a valid point: Latitude (y) must be between -90 and 90, got -100"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Spatial",
+            "args": {
+              "spatialType": "linestring"
+            },
+            "as": "o4352"
+          },
+          "bind": "s6868",
+          "expect": {
+            "$value": "Validator\\Spatial",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4352"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  181,
+                  45
+                ]
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4352"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Value must be a valid linestring: Invalid coordinates at point #1: Longitude (x) must be between -180 and 180, got 181"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Spatial",
+            "args": {
+              "spatialType": "polygon"
+            },
+            "as": "o4353"
+          },
+          "bind": "s6871",
+          "expect": {
+            "$value": "Validator\\Spatial",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4353"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                [
+                  [
+                    0,
+                    0
+                  ],
+                  [
+                    1,
+                    1
+                  ],
+                  [
+                    190,
+                    5
+                  ],
+                  [
+                    0,
+                    0
+                  ]
+                ]
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o4353"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Value must be a valid polygon: Invalid coordinates at point #2 in ring #0: Longitude (x) must be between -180 and 180, got 190"
+        }
+      ]
+    }
+  ]
+}

@@ -17,498 +17,2177 @@
           }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
-            "method": "getHostname"
+            "method": "hostname"
           },
           "expect": "compat-database-mongo"
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
-            "method": "getLimitForString"
-          },
-          "expect": 2147483647
-        },
-        {
-          "op": "mongo.adapter",
-          "args": {
-            "method": "getMaxVarcharLength"
-          },
-          "expect": 2147483647
-        },
-        {
-          "op": "mongo.adapter",
-          "args": {
-            "method": "getLimitForInt"
-          },
-          "expect": 4294967295
-        },
-        {
-          "op": "mongo.adapter",
-          "args": {
-            "method": "getLimitForBigInt"
-          },
-          "expect": 9223372036854775807
-        },
-        {
-          "op": "mongo.adapter",
-          "args": {
-            "method": "getLimitForAttributes"
-          },
-          "expect": 0
-        },
-        {
-          "op": "mongo.adapter",
-          "args": {
-            "method": "getLimitForIndexes"
-          },
-          "expect": 64
-        },
-        {
-          "op": "mongo.adapter",
-          "args": {
-            "method": "getMinDateTime"
+            "method": "limits",
+            "args": {}
           },
           "expect": {
-            "$datetime": "-9999-01-01T00:00:00.000000+00:00"
+            "$value": "Adapter\\Limits",
+            "fields": {
+              "string": 2147483647,
+              "varchar": 2147483647,
+              "integer": 4294967295,
+              "bigInteger": 9223372036854775807,
+              "attributes": 0,
+              "indexes": 64,
+              "defaultAttributes": 7,
+              "defaultIndexes": 6,
+              "indexLength": 1024,
+              "uidLength": 255,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "-9999-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T23:59:59.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Uuid7"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            }
           }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
-            "method": "getSupportForSchemas"
+            "method": "limits",
+            "args": {}
           },
-          "expect": false
+          "expect": {
+            "$value": "Adapter\\Limits",
+            "fields": {
+              "string": 2147483647,
+              "varchar": 2147483647,
+              "integer": 4294967295,
+              "bigInteger": 9223372036854775807,
+              "attributes": 0,
+              "indexes": 64,
+              "defaultAttributes": 7,
+              "defaultIndexes": 6,
+              "indexLength": 1024,
+              "uidLength": 255,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "-9999-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T23:59:59.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Uuid7"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            }
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
-            "method": "getSupportForIndex"
+            "method": "limits",
+            "args": {}
+          },
+          "expect": {
+            "$value": "Adapter\\Limits",
+            "fields": {
+              "string": 2147483647,
+              "varchar": 2147483647,
+              "integer": 4294967295,
+              "bigInteger": 9223372036854775807,
+              "attributes": 0,
+              "indexes": 64,
+              "defaultAttributes": 7,
+              "defaultIndexes": 6,
+              "indexLength": 1024,
+              "uidLength": 255,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "-9999-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T23:59:59.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Uuid7"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "limits",
+            "args": {}
+          },
+          "expect": {
+            "$value": "Adapter\\Limits",
+            "fields": {
+              "string": 2147483647,
+              "varchar": 2147483647,
+              "integer": 4294967295,
+              "bigInteger": 9223372036854775807,
+              "attributes": 0,
+              "indexes": 64,
+              "defaultAttributes": 7,
+              "defaultIndexes": 6,
+              "indexLength": 1024,
+              "uidLength": 255,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "-9999-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T23:59:59.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Uuid7"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "limits",
+            "args": {}
+          },
+          "expect": {
+            "$value": "Adapter\\Limits",
+            "fields": {
+              "string": 2147483647,
+              "varchar": 2147483647,
+              "integer": 4294967295,
+              "bigInteger": 9223372036854775807,
+              "attributes": 0,
+              "indexes": 64,
+              "defaultAttributes": 7,
+              "defaultIndexes": 6,
+              "indexLength": 1024,
+              "uidLength": 255,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "-9999-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T23:59:59.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Uuid7"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "limits",
+            "args": {}
+          },
+          "expect": {
+            "$value": "Adapter\\Limits",
+            "fields": {
+              "string": 2147483647,
+              "varchar": 2147483647,
+              "integer": 4294967295,
+              "bigInteger": 9223372036854775807,
+              "attributes": 0,
+              "indexes": 64,
+              "defaultAttributes": 7,
+              "defaultIndexes": 6,
+              "indexLength": 1024,
+              "uidLength": 255,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "-9999-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T23:59:59.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Uuid7"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "limits",
+            "args": {}
+          },
+          "expect": {
+            "$value": "Adapter\\Limits",
+            "fields": {
+              "string": 2147483647,
+              "varchar": 2147483647,
+              "integer": 4294967295,
+              "bigInteger": 9223372036854775807,
+              "attributes": 0,
+              "indexes": 64,
+              "defaultAttributes": 7,
+              "defaultIndexes": 6,
+              "indexLength": 1024,
+              "uidLength": 255,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "-9999-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T23:59:59.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Uuid7"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "capabilities",
+            "args": {}
+          },
+          "expect": [
+            {
+              "$enum": "Capability::IndexKey"
+            },
+            {
+              "$enum": "Capability::IndexArray"
+            },
+            {
+              "$enum": "Capability::IndexUnique"
+            },
+            {
+              "$enum": "Capability::Objects"
+            },
+            {
+              "$enum": "Capability::IndexFulltext"
+            },
+            {
+              "$enum": "Capability::IndexTtl"
+            },
+            {
+              "$enum": "Capability::Caching"
+            },
+            {
+              "$enum": "Capability::Operators"
+            },
+            {
+              "$enum": "Capability::TransactionRetries"
+            }
+          ]
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "capabilities",
+            "args": {}
+          },
+          "expect": [
+            {
+              "$enum": "Capability::IndexKey"
+            },
+            {
+              "$enum": "Capability::IndexArray"
+            },
+            {
+              "$enum": "Capability::IndexUnique"
+            },
+            {
+              "$enum": "Capability::Objects"
+            },
+            {
+              "$enum": "Capability::IndexFulltext"
+            },
+            {
+              "$enum": "Capability::IndexTtl"
+            },
+            {
+              "$enum": "Capability::Caching"
+            },
+            {
+              "$enum": "Capability::Operators"
+            },
+            {
+              "$enum": "Capability::TransactionRetries"
+            }
+          ]
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "capabilities",
+            "args": {}
+          },
+          "expect": [
+            {
+              "$enum": "Capability::IndexKey"
+            },
+            {
+              "$enum": "Capability::IndexArray"
+            },
+            {
+              "$enum": "Capability::IndexUnique"
+            },
+            {
+              "$enum": "Capability::Objects"
+            },
+            {
+              "$enum": "Capability::IndexFulltext"
+            },
+            {
+              "$enum": "Capability::IndexTtl"
+            },
+            {
+              "$enum": "Capability::Caching"
+            },
+            {
+              "$enum": "Capability::Operators"
+            },
+            {
+              "$enum": "Capability::TransactionRetries"
+            }
+          ]
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "capabilities",
+            "args": {}
+          },
+          "expect": [
+            {
+              "$enum": "Capability::IndexKey"
+            },
+            {
+              "$enum": "Capability::IndexArray"
+            },
+            {
+              "$enum": "Capability::IndexUnique"
+            },
+            {
+              "$enum": "Capability::Objects"
+            },
+            {
+              "$enum": "Capability::IndexFulltext"
+            },
+            {
+              "$enum": "Capability::IndexTtl"
+            },
+            {
+              "$enum": "Capability::Caching"
+            },
+            {
+              "$enum": "Capability::Operators"
+            },
+            {
+              "$enum": "Capability::TransactionRetries"
+            }
+          ]
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "capabilities",
+            "args": {}
+          },
+          "expect": [
+            {
+              "$enum": "Capability::IndexKey"
+            },
+            {
+              "$enum": "Capability::IndexArray"
+            },
+            {
+              "$enum": "Capability::IndexUnique"
+            },
+            {
+              "$enum": "Capability::Objects"
+            },
+            {
+              "$enum": "Capability::IndexFulltext"
+            },
+            {
+              "$enum": "Capability::IndexTtl"
+            },
+            {
+              "$enum": "Capability::Caching"
+            },
+            {
+              "$enum": "Capability::Operators"
+            },
+            {
+              "$enum": "Capability::TransactionRetries"
+            }
+          ]
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
-            "method": "getSupportForIndexArray"
+            "method": "capabilities",
+            "args": {}
           },
-          "expect": true
+          "expect": [
+            {
+              "$enum": "Capability::IndexKey"
+            },
+            {
+              "$enum": "Capability::IndexArray"
+            },
+            {
+              "$enum": "Capability::IndexUnique"
+            },
+            {
+              "$enum": "Capability::Objects"
+            },
+            {
+              "$enum": "Capability::IndexFulltext"
+            },
+            {
+              "$enum": "Capability::IndexTtl"
+            },
+            {
+              "$enum": "Capability::Caching"
+            },
+            {
+              "$enum": "Capability::Operators"
+            },
+            {
+              "$enum": "Capability::TransactionRetries"
+            }
+          ]
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
-            "method": "getSupportForInternalCasting"
+            "method": "capabilities",
+            "args": {}
           },
-          "expect": true
+          "expect": [
+            {
+              "$enum": "Capability::IndexKey"
+            },
+            {
+              "$enum": "Capability::IndexArray"
+            },
+            {
+              "$enum": "Capability::IndexUnique"
+            },
+            {
+              "$enum": "Capability::Objects"
+            },
+            {
+              "$enum": "Capability::IndexFulltext"
+            },
+            {
+              "$enum": "Capability::IndexTtl"
+            },
+            {
+              "$enum": "Capability::Caching"
+            },
+            {
+              "$enum": "Capability::Operators"
+            },
+            {
+              "$enum": "Capability::TransactionRetries"
+            }
+          ]
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
-            "method": "getSupportForUTCCasting"
+            "method": "capabilities",
+            "args": {}
           },
-          "expect": true
+          "expect": [
+            {
+              "$enum": "Capability::IndexKey"
+            },
+            {
+              "$enum": "Capability::IndexArray"
+            },
+            {
+              "$enum": "Capability::IndexUnique"
+            },
+            {
+              "$enum": "Capability::Objects"
+            },
+            {
+              "$enum": "Capability::IndexFulltext"
+            },
+            {
+              "$enum": "Capability::IndexTtl"
+            },
+            {
+              "$enum": "Capability::Caching"
+            },
+            {
+              "$enum": "Capability::Operators"
+            },
+            {
+              "$enum": "Capability::TransactionRetries"
+            }
+          ]
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes"
+            "method": "capabilities",
+            "args": {}
           },
-          "expect": true
+          "expect": [
+            {
+              "$enum": "Capability::IndexKey"
+            },
+            {
+              "$enum": "Capability::IndexArray"
+            },
+            {
+              "$enum": "Capability::IndexUnique"
+            },
+            {
+              "$enum": "Capability::Objects"
+            },
+            {
+              "$enum": "Capability::IndexFulltext"
+            },
+            {
+              "$enum": "Capability::IndexTtl"
+            },
+            {
+              "$enum": "Capability::Caching"
+            },
+            {
+              "$enum": "Capability::Operators"
+            },
+            {
+              "$enum": "Capability::TransactionRetries"
+            }
+          ]
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
-            "method": "getSupportForUniqueIndex"
+            "method": "capabilities",
+            "args": {}
           },
-          "expect": true
+          "expect": [
+            {
+              "$enum": "Capability::IndexKey"
+            },
+            {
+              "$enum": "Capability::IndexArray"
+            },
+            {
+              "$enum": "Capability::IndexUnique"
+            },
+            {
+              "$enum": "Capability::Objects"
+            },
+            {
+              "$enum": "Capability::IndexFulltext"
+            },
+            {
+              "$enum": "Capability::IndexTtl"
+            },
+            {
+              "$enum": "Capability::Caching"
+            },
+            {
+              "$enum": "Capability::Operators"
+            },
+            {
+              "$enum": "Capability::TransactionRetries"
+            }
+          ]
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
-            "method": "getSupportForFulltextIndex"
+            "method": "capabilities",
+            "args": {}
           },
-          "expect": true
+          "expect": [
+            {
+              "$enum": "Capability::IndexKey"
+            },
+            {
+              "$enum": "Capability::IndexArray"
+            },
+            {
+              "$enum": "Capability::IndexUnique"
+            },
+            {
+              "$enum": "Capability::Objects"
+            },
+            {
+              "$enum": "Capability::IndexFulltext"
+            },
+            {
+              "$enum": "Capability::IndexTtl"
+            },
+            {
+              "$enum": "Capability::Caching"
+            },
+            {
+              "$enum": "Capability::Operators"
+            },
+            {
+              "$enum": "Capability::TransactionRetries"
+            }
+          ]
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
-            "method": "getSupportForFulltextWildcardIndex"
+            "method": "capabilities",
+            "args": {}
           },
-          "expect": false
+          "expect": [
+            {
+              "$enum": "Capability::IndexKey"
+            },
+            {
+              "$enum": "Capability::IndexArray"
+            },
+            {
+              "$enum": "Capability::IndexUnique"
+            },
+            {
+              "$enum": "Capability::Objects"
+            },
+            {
+              "$enum": "Capability::IndexFulltext"
+            },
+            {
+              "$enum": "Capability::IndexTtl"
+            },
+            {
+              "$enum": "Capability::Caching"
+            },
+            {
+              "$enum": "Capability::Operators"
+            },
+            {
+              "$enum": "Capability::TransactionRetries"
+            }
+          ]
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
-            "method": "getSupportForQueryContains"
+            "method": "capabilities",
+            "args": {}
           },
-          "expect": false
+          "expect": [
+            {
+              "$enum": "Capability::IndexKey"
+            },
+            {
+              "$enum": "Capability::IndexArray"
+            },
+            {
+              "$enum": "Capability::IndexUnique"
+            },
+            {
+              "$enum": "Capability::Objects"
+            },
+            {
+              "$enum": "Capability::IndexFulltext"
+            },
+            {
+              "$enum": "Capability::IndexTtl"
+            },
+            {
+              "$enum": "Capability::Caching"
+            },
+            {
+              "$enum": "Capability::Operators"
+            },
+            {
+              "$enum": "Capability::TransactionRetries"
+            }
+          ]
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
-            "method": "getSupportForTimeouts"
+            "method": "capabilities",
+            "args": {}
           },
-          "expect": true
+          "expect": [
+            {
+              "$enum": "Capability::IndexKey"
+            },
+            {
+              "$enum": "Capability::IndexArray"
+            },
+            {
+              "$enum": "Capability::IndexUnique"
+            },
+            {
+              "$enum": "Capability::Objects"
+            },
+            {
+              "$enum": "Capability::IndexFulltext"
+            },
+            {
+              "$enum": "Capability::IndexTtl"
+            },
+            {
+              "$enum": "Capability::Caching"
+            },
+            {
+              "$enum": "Capability::Operators"
+            },
+            {
+              "$enum": "Capability::TransactionRetries"
+            }
+          ]
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
-            "method": "getSupportForRelationships"
+            "method": "capabilities",
+            "args": {}
           },
-          "expect": true
+          "expect": [
+            {
+              "$enum": "Capability::IndexKey"
+            },
+            {
+              "$enum": "Capability::IndexArray"
+            },
+            {
+              "$enum": "Capability::IndexUnique"
+            },
+            {
+              "$enum": "Capability::Objects"
+            },
+            {
+              "$enum": "Capability::IndexFulltext"
+            },
+            {
+              "$enum": "Capability::IndexTtl"
+            },
+            {
+              "$enum": "Capability::Caching"
+            },
+            {
+              "$enum": "Capability::Operators"
+            },
+            {
+              "$enum": "Capability::TransactionRetries"
+            }
+          ]
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
-            "method": "getSupportForUpdateLock"
+            "method": "capabilities",
+            "args": {}
           },
-          "expect": false
+          "expect": [
+            {
+              "$enum": "Capability::IndexKey"
+            },
+            {
+              "$enum": "Capability::IndexArray"
+            },
+            {
+              "$enum": "Capability::IndexUnique"
+            },
+            {
+              "$enum": "Capability::Objects"
+            },
+            {
+              "$enum": "Capability::IndexFulltext"
+            },
+            {
+              "$enum": "Capability::IndexTtl"
+            },
+            {
+              "$enum": "Capability::Caching"
+            },
+            {
+              "$enum": "Capability::Operators"
+            },
+            {
+              "$enum": "Capability::TransactionRetries"
+            }
+          ]
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributeResizing"
+            "method": "capabilities",
+            "args": {}
           },
-          "expect": false
+          "expect": [
+            {
+              "$enum": "Capability::IndexKey"
+            },
+            {
+              "$enum": "Capability::IndexArray"
+            },
+            {
+              "$enum": "Capability::IndexUnique"
+            },
+            {
+              "$enum": "Capability::Objects"
+            },
+            {
+              "$enum": "Capability::IndexFulltext"
+            },
+            {
+              "$enum": "Capability::IndexTtl"
+            },
+            {
+              "$enum": "Capability::Caching"
+            },
+            {
+              "$enum": "Capability::Operators"
+            },
+            {
+              "$enum": "Capability::TransactionRetries"
+            }
+          ]
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
-            "method": "getSupportForBatchOperations"
+            "method": "capabilities",
+            "args": {}
           },
-          "expect": false
+          "expect": [
+            {
+              "$enum": "Capability::IndexKey"
+            },
+            {
+              "$enum": "Capability::IndexArray"
+            },
+            {
+              "$enum": "Capability::IndexUnique"
+            },
+            {
+              "$enum": "Capability::Objects"
+            },
+            {
+              "$enum": "Capability::IndexFulltext"
+            },
+            {
+              "$enum": "Capability::IndexTtl"
+            },
+            {
+              "$enum": "Capability::Caching"
+            },
+            {
+              "$enum": "Capability::Operators"
+            },
+            {
+              "$enum": "Capability::TransactionRetries"
+            }
+          ]
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
-            "method": "getSupportForGetConnectionId"
+            "method": "capabilities",
+            "args": {}
           },
-          "expect": false
+          "expect": [
+            {
+              "$enum": "Capability::IndexKey"
+            },
+            {
+              "$enum": "Capability::IndexArray"
+            },
+            {
+              "$enum": "Capability::IndexUnique"
+            },
+            {
+              "$enum": "Capability::Objects"
+            },
+            {
+              "$enum": "Capability::IndexFulltext"
+            },
+            {
+              "$enum": "Capability::IndexTtl"
+            },
+            {
+              "$enum": "Capability::Caching"
+            },
+            {
+              "$enum": "Capability::Operators"
+            },
+            {
+              "$enum": "Capability::TransactionRetries"
+            }
+          ]
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
-            "method": "getSupportForPCRERegex"
+            "method": "capabilities",
+            "args": {}
           },
-          "expect": true
+          "expect": [
+            {
+              "$enum": "Capability::IndexKey"
+            },
+            {
+              "$enum": "Capability::IndexArray"
+            },
+            {
+              "$enum": "Capability::IndexUnique"
+            },
+            {
+              "$enum": "Capability::Objects"
+            },
+            {
+              "$enum": "Capability::IndexFulltext"
+            },
+            {
+              "$enum": "Capability::IndexTtl"
+            },
+            {
+              "$enum": "Capability::Caching"
+            },
+            {
+              "$enum": "Capability::Operators"
+            },
+            {
+              "$enum": "Capability::TransactionRetries"
+            }
+          ]
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
-            "method": "getSupportForPOSIXRegex"
+            "method": "capabilities",
+            "args": {}
           },
-          "expect": false
+          "expect": [
+            {
+              "$enum": "Capability::IndexKey"
+            },
+            {
+              "$enum": "Capability::IndexArray"
+            },
+            {
+              "$enum": "Capability::IndexUnique"
+            },
+            {
+              "$enum": "Capability::Objects"
+            },
+            {
+              "$enum": "Capability::IndexFulltext"
+            },
+            {
+              "$enum": "Capability::IndexTtl"
+            },
+            {
+              "$enum": "Capability::Caching"
+            },
+            {
+              "$enum": "Capability::Operators"
+            },
+            {
+              "$enum": "Capability::TransactionRetries"
+            }
+          ]
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
-            "method": "getSupportForCacheSkipOnFailure"
+            "method": "capabilities",
+            "args": {}
           },
-          "expect": false
+          "expect": [
+            {
+              "$enum": "Capability::IndexKey"
+            },
+            {
+              "$enum": "Capability::IndexArray"
+            },
+            {
+              "$enum": "Capability::IndexUnique"
+            },
+            {
+              "$enum": "Capability::Objects"
+            },
+            {
+              "$enum": "Capability::IndexFulltext"
+            },
+            {
+              "$enum": "Capability::IndexTtl"
+            },
+            {
+              "$enum": "Capability::Caching"
+            },
+            {
+              "$enum": "Capability::Operators"
+            },
+            {
+              "$enum": "Capability::TransactionRetries"
+            }
+          ]
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
-            "method": "getSupportForCaching"
+            "method": "capabilities",
+            "args": {}
           },
-          "expect": true
+          "expect": [
+            {
+              "$enum": "Capability::IndexKey"
+            },
+            {
+              "$enum": "Capability::IndexArray"
+            },
+            {
+              "$enum": "Capability::IndexUnique"
+            },
+            {
+              "$enum": "Capability::Objects"
+            },
+            {
+              "$enum": "Capability::IndexFulltext"
+            },
+            {
+              "$enum": "Capability::IndexTtl"
+            },
+            {
+              "$enum": "Capability::Caching"
+            },
+            {
+              "$enum": "Capability::Operators"
+            },
+            {
+              "$enum": "Capability::TransactionRetries"
+            }
+          ]
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
-            "method": "getSupportForHostname"
+            "method": "capabilities",
+            "args": {}
           },
-          "expect": true
+          "expect": [
+            {
+              "$enum": "Capability::IndexKey"
+            },
+            {
+              "$enum": "Capability::IndexArray"
+            },
+            {
+              "$enum": "Capability::IndexUnique"
+            },
+            {
+              "$enum": "Capability::Objects"
+            },
+            {
+              "$enum": "Capability::IndexFulltext"
+            },
+            {
+              "$enum": "Capability::IndexTtl"
+            },
+            {
+              "$enum": "Capability::Caching"
+            },
+            {
+              "$enum": "Capability::Operators"
+            },
+            {
+              "$enum": "Capability::TransactionRetries"
+            }
+          ]
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
-            "method": "getSupportForSchemaAttributes"
+            "method": "capabilities",
+            "args": {}
           },
-          "expect": false
+          "expect": [
+            {
+              "$enum": "Capability::IndexKey"
+            },
+            {
+              "$enum": "Capability::IndexArray"
+            },
+            {
+              "$enum": "Capability::IndexUnique"
+            },
+            {
+              "$enum": "Capability::Objects"
+            },
+            {
+              "$enum": "Capability::IndexFulltext"
+            },
+            {
+              "$enum": "Capability::IndexTtl"
+            },
+            {
+              "$enum": "Capability::Caching"
+            },
+            {
+              "$enum": "Capability::Operators"
+            },
+            {
+              "$enum": "Capability::TransactionRetries"
+            }
+          ]
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
-            "method": "getSupportForCastIndexArray"
+            "method": "capabilities",
+            "args": {}
           },
-          "expect": false
+          "expect": [
+            {
+              "$enum": "Capability::IndexKey"
+            },
+            {
+              "$enum": "Capability::IndexArray"
+            },
+            {
+              "$enum": "Capability::IndexUnique"
+            },
+            {
+              "$enum": "Capability::Objects"
+            },
+            {
+              "$enum": "Capability::IndexFulltext"
+            },
+            {
+              "$enum": "Capability::IndexTtl"
+            },
+            {
+              "$enum": "Capability::Caching"
+            },
+            {
+              "$enum": "Capability::Operators"
+            },
+            {
+              "$enum": "Capability::TransactionRetries"
+            }
+          ]
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
-            "method": "getSupportForUpserts"
+            "method": "capabilities",
+            "args": {}
           },
-          "expect": true
+          "expect": [
+            {
+              "$enum": "Capability::IndexKey"
+            },
+            {
+              "$enum": "Capability::IndexArray"
+            },
+            {
+              "$enum": "Capability::IndexUnique"
+            },
+            {
+              "$enum": "Capability::Objects"
+            },
+            {
+              "$enum": "Capability::IndexFulltext"
+            },
+            {
+              "$enum": "Capability::IndexTtl"
+            },
+            {
+              "$enum": "Capability::Caching"
+            },
+            {
+              "$enum": "Capability::Operators"
+            },
+            {
+              "$enum": "Capability::TransactionRetries"
+            }
+          ]
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
-            "method": "getSupportForUpsertOnUniqueIndex"
+            "method": "capabilities",
+            "args": {}
           },
-          "expect": false
+          "expect": [
+            {
+              "$enum": "Capability::IndexKey"
+            },
+            {
+              "$enum": "Capability::IndexArray"
+            },
+            {
+              "$enum": "Capability::IndexUnique"
+            },
+            {
+              "$enum": "Capability::Objects"
+            },
+            {
+              "$enum": "Capability::IndexFulltext"
+            },
+            {
+              "$enum": "Capability::IndexTtl"
+            },
+            {
+              "$enum": "Capability::Caching"
+            },
+            {
+              "$enum": "Capability::Operators"
+            },
+            {
+              "$enum": "Capability::TransactionRetries"
+            }
+          ]
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
-            "method": "getSupportForReconnection"
+            "method": "limits",
+            "args": {}
           },
-          "expect": false
+          "expect": {
+            "$value": "Adapter\\Limits",
+            "fields": {
+              "string": 2147483647,
+              "varchar": 2147483647,
+              "integer": 4294967295,
+              "bigInteger": 9223372036854775807,
+              "attributes": 0,
+              "indexes": 64,
+              "defaultAttributes": 7,
+              "defaultIndexes": 6,
+              "indexLength": 1024,
+              "uidLength": 255,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "-9999-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T23:59:59.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Uuid7"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            }
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
-            "method": "getSupportForBatchCreateAttributes"
+            "method": "limits",
+            "args": {}
           },
-          "expect": true
+          "expect": {
+            "$value": "Adapter\\Limits",
+            "fields": {
+              "string": 2147483647,
+              "varchar": 2147483647,
+              "integer": 4294967295,
+              "bigInteger": 9223372036854775807,
+              "attributes": 0,
+              "indexes": 64,
+              "defaultAttributes": 7,
+              "defaultIndexes": 6,
+              "indexLength": 1024,
+              "uidLength": 255,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "-9999-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T23:59:59.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Uuid7"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            }
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
-            "method": "getSupportForObject"
+            "method": "limits",
+            "args": {}
           },
-          "expect": true
+          "expect": {
+            "$value": "Adapter\\Limits",
+            "fields": {
+              "string": 2147483647,
+              "varchar": 2147483647,
+              "integer": 4294967295,
+              "bigInteger": 9223372036854775807,
+              "attributes": 0,
+              "indexes": 64,
+              "defaultAttributes": 7,
+              "defaultIndexes": 6,
+              "indexLength": 1024,
+              "uidLength": 255,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "-9999-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T23:59:59.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Uuid7"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            }
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
-            "method": "getSupportForObjectIndexes"
+            "method": "capabilities",
+            "args": {}
           },
-          "expect": false
+          "expect": [
+            {
+              "$enum": "Capability::IndexKey"
+            },
+            {
+              "$enum": "Capability::IndexArray"
+            },
+            {
+              "$enum": "Capability::IndexUnique"
+            },
+            {
+              "$enum": "Capability::Objects"
+            },
+            {
+              "$enum": "Capability::IndexFulltext"
+            },
+            {
+              "$enum": "Capability::IndexTtl"
+            },
+            {
+              "$enum": "Capability::Caching"
+            },
+            {
+              "$enum": "Capability::Operators"
+            },
+            {
+              "$enum": "Capability::TransactionRetries"
+            }
+          ]
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
-            "method": "getCountOfDefaultAttributes"
+            "method": "capabilities",
+            "args": {}
           },
-          "expect": 7
+          "expect": [
+            {
+              "$enum": "Capability::IndexKey"
+            },
+            {
+              "$enum": "Capability::IndexArray"
+            },
+            {
+              "$enum": "Capability::IndexUnique"
+            },
+            {
+              "$enum": "Capability::Objects"
+            },
+            {
+              "$enum": "Capability::IndexFulltext"
+            },
+            {
+              "$enum": "Capability::IndexTtl"
+            },
+            {
+              "$enum": "Capability::Caching"
+            },
+            {
+              "$enum": "Capability::Operators"
+            },
+            {
+              "$enum": "Capability::TransactionRetries"
+            }
+          ]
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
-            "method": "getCountOfDefaultIndexes"
+            "method": "capabilities",
+            "args": {}
           },
-          "expect": 6
+          "expect": [
+            {
+              "$enum": "Capability::IndexKey"
+            },
+            {
+              "$enum": "Capability::IndexArray"
+            },
+            {
+              "$enum": "Capability::IndexUnique"
+            },
+            {
+              "$enum": "Capability::Objects"
+            },
+            {
+              "$enum": "Capability::IndexFulltext"
+            },
+            {
+              "$enum": "Capability::IndexTtl"
+            },
+            {
+              "$enum": "Capability::Caching"
+            },
+            {
+              "$enum": "Capability::Operators"
+            },
+            {
+              "$enum": "Capability::TransactionRetries"
+            }
+          ]
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
-            "method": "getDocumentSizeLimit"
+            "method": "capabilities",
+            "args": {}
           },
-          "expect": 0
+          "expect": [
+            {
+              "$enum": "Capability::IndexKey"
+            },
+            {
+              "$enum": "Capability::IndexArray"
+            },
+            {
+              "$enum": "Capability::IndexUnique"
+            },
+            {
+              "$enum": "Capability::Objects"
+            },
+            {
+              "$enum": "Capability::IndexFulltext"
+            },
+            {
+              "$enum": "Capability::IndexTtl"
+            },
+            {
+              "$enum": "Capability::Caching"
+            },
+            {
+              "$enum": "Capability::Operators"
+            },
+            {
+              "$enum": "Capability::TransactionRetries"
+            }
+          ]
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
-            "method": "getSupportForCasting"
+            "method": "capabilities",
+            "args": {}
           },
-          "expect": false
+          "expect": [
+            {
+              "$enum": "Capability::IndexKey"
+            },
+            {
+              "$enum": "Capability::IndexArray"
+            },
+            {
+              "$enum": "Capability::IndexUnique"
+            },
+            {
+              "$enum": "Capability::Objects"
+            },
+            {
+              "$enum": "Capability::IndexFulltext"
+            },
+            {
+              "$enum": "Capability::IndexTtl"
+            },
+            {
+              "$enum": "Capability::Caching"
+            },
+            {
+              "$enum": "Capability::Operators"
+            },
+            {
+              "$enum": "Capability::TransactionRetries"
+            }
+          ]
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
-            "method": "getSupportForSpatialAttributes"
+            "method": "capabilities",
+            "args": {}
           },
-          "expect": false
+          "expect": [
+            {
+              "$enum": "Capability::IndexKey"
+            },
+            {
+              "$enum": "Capability::IndexArray"
+            },
+            {
+              "$enum": "Capability::IndexUnique"
+            },
+            {
+              "$enum": "Capability::Objects"
+            },
+            {
+              "$enum": "Capability::IndexFulltext"
+            },
+            {
+              "$enum": "Capability::IndexTtl"
+            },
+            {
+              "$enum": "Capability::Caching"
+            },
+            {
+              "$enum": "Capability::Operators"
+            },
+            {
+              "$enum": "Capability::TransactionRetries"
+            }
+          ]
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
-            "method": "getSupportForSpatialIndexNull"
+            "method": "capabilities",
+            "args": {}
           },
-          "expect": false
+          "expect": [
+            {
+              "$enum": "Capability::IndexKey"
+            },
+            {
+              "$enum": "Capability::IndexArray"
+            },
+            {
+              "$enum": "Capability::IndexUnique"
+            },
+            {
+              "$enum": "Capability::Objects"
+            },
+            {
+              "$enum": "Capability::IndexFulltext"
+            },
+            {
+              "$enum": "Capability::IndexTtl"
+            },
+            {
+              "$enum": "Capability::Caching"
+            },
+            {
+              "$enum": "Capability::Operators"
+            },
+            {
+              "$enum": "Capability::TransactionRetries"
+            }
+          ]
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
-            "method": "getSupportForOperators"
+            "method": "capabilities",
+            "args": {}
           },
-          "expect": true
+          "expect": [
+            {
+              "$enum": "Capability::IndexKey"
+            },
+            {
+              "$enum": "Capability::IndexArray"
+            },
+            {
+              "$enum": "Capability::IndexUnique"
+            },
+            {
+              "$enum": "Capability::Objects"
+            },
+            {
+              "$enum": "Capability::IndexFulltext"
+            },
+            {
+              "$enum": "Capability::IndexTtl"
+            },
+            {
+              "$enum": "Capability::Caching"
+            },
+            {
+              "$enum": "Capability::Operators"
+            },
+            {
+              "$enum": "Capability::TransactionRetries"
+            }
+          ]
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
-            "method": "getSupportForIntegerBooleans"
+            "method": "capabilities",
+            "args": {}
           },
-          "expect": false
+          "expect": [
+            {
+              "$enum": "Capability::IndexKey"
+            },
+            {
+              "$enum": "Capability::IndexArray"
+            },
+            {
+              "$enum": "Capability::IndexUnique"
+            },
+            {
+              "$enum": "Capability::Objects"
+            },
+            {
+              "$enum": "Capability::IndexFulltext"
+            },
+            {
+              "$enum": "Capability::IndexTtl"
+            },
+            {
+              "$enum": "Capability::Caching"
+            },
+            {
+              "$enum": "Capability::Operators"
+            },
+            {
+              "$enum": "Capability::TransactionRetries"
+            }
+          ]
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
-            "method": "getSupportForBoundaryInclusiveContains"
+            "method": "capabilities",
+            "args": {}
           },
-          "expect": false
+          "expect": [
+            {
+              "$enum": "Capability::IndexKey"
+            },
+            {
+              "$enum": "Capability::IndexArray"
+            },
+            {
+              "$enum": "Capability::IndexUnique"
+            },
+            {
+              "$enum": "Capability::Objects"
+            },
+            {
+              "$enum": "Capability::IndexFulltext"
+            },
+            {
+              "$enum": "Capability::IndexTtl"
+            },
+            {
+              "$enum": "Capability::Caching"
+            },
+            {
+              "$enum": "Capability::Operators"
+            },
+            {
+              "$enum": "Capability::TransactionRetries"
+            }
+          ]
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
-            "method": "getSupportForSpatialIndexOrder"
+            "method": "capabilities",
+            "args": {}
           },
-          "expect": false
+          "expect": [
+            {
+              "$enum": "Capability::IndexKey"
+            },
+            {
+              "$enum": "Capability::IndexArray"
+            },
+            {
+              "$enum": "Capability::IndexUnique"
+            },
+            {
+              "$enum": "Capability::Objects"
+            },
+            {
+              "$enum": "Capability::IndexFulltext"
+            },
+            {
+              "$enum": "Capability::IndexTtl"
+            },
+            {
+              "$enum": "Capability::Caching"
+            },
+            {
+              "$enum": "Capability::Operators"
+            },
+            {
+              "$enum": "Capability::TransactionRetries"
+            }
+          ]
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
-            "method": "getSupportForSpatialAxisOrder"
+            "method": "capabilities",
+            "args": {}
           },
-          "expect": false
+          "expect": [
+            {
+              "$enum": "Capability::IndexKey"
+            },
+            {
+              "$enum": "Capability::IndexArray"
+            },
+            {
+              "$enum": "Capability::IndexUnique"
+            },
+            {
+              "$enum": "Capability::Objects"
+            },
+            {
+              "$enum": "Capability::IndexFulltext"
+            },
+            {
+              "$enum": "Capability::IndexTtl"
+            },
+            {
+              "$enum": "Capability::Caching"
+            },
+            {
+              "$enum": "Capability::Operators"
+            },
+            {
+              "$enum": "Capability::TransactionRetries"
+            }
+          ]
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
-            "method": "getSupportForDistanceBetweenMultiDimensionGeometryInMeters"
+            "method": "capabilities",
+            "args": {}
           },
-          "expect": false
+          "expect": [
+            {
+              "$enum": "Capability::IndexKey"
+            },
+            {
+              "$enum": "Capability::IndexArray"
+            },
+            {
+              "$enum": "Capability::IndexUnique"
+            },
+            {
+              "$enum": "Capability::Objects"
+            },
+            {
+              "$enum": "Capability::IndexFulltext"
+            },
+            {
+              "$enum": "Capability::IndexTtl"
+            },
+            {
+              "$enum": "Capability::Caching"
+            },
+            {
+              "$enum": "Capability::Operators"
+            },
+            {
+              "$enum": "Capability::TransactionRetries"
+            }
+          ]
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
-            "method": "getSupportForOptionalSpatialAttributeWithExistingRows"
+            "method": "capabilities",
+            "args": {}
           },
-          "expect": false
+          "expect": [
+            {
+              "$enum": "Capability::IndexKey"
+            },
+            {
+              "$enum": "Capability::IndexArray"
+            },
+            {
+              "$enum": "Capability::IndexUnique"
+            },
+            {
+              "$enum": "Capability::Objects"
+            },
+            {
+              "$enum": "Capability::IndexFulltext"
+            },
+            {
+              "$enum": "Capability::IndexTtl"
+            },
+            {
+              "$enum": "Capability::Caching"
+            },
+            {
+              "$enum": "Capability::Operators"
+            },
+            {
+              "$enum": "Capability::TransactionRetries"
+            }
+          ]
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
-            "method": "getSupportForMultipleFulltextIndexes"
+            "method": "limits",
+            "args": {}
           },
-          "expect": false
+          "expect": {
+            "$value": "Adapter\\Limits",
+            "fields": {
+              "string": 2147483647,
+              "varchar": 2147483647,
+              "integer": 4294967295,
+              "bigInteger": 9223372036854775807,
+              "attributes": 0,
+              "indexes": 64,
+              "defaultAttributes": 7,
+              "defaultIndexes": 6,
+              "indexLength": 1024,
+              "uidLength": 255,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "-9999-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T23:59:59.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Uuid7"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            }
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
-            "method": "getSupportForIdenticalIndexes"
+            "method": "limits",
+            "args": {}
           },
-          "expect": false
+          "expect": {
+            "$value": "Adapter\\Limits",
+            "fields": {
+              "string": 2147483647,
+              "varchar": 2147483647,
+              "integer": 4294967295,
+              "bigInteger": 9223372036854775807,
+              "attributes": 0,
+              "indexes": 64,
+              "defaultAttributes": 7,
+              "defaultIndexes": 6,
+              "indexLength": 1024,
+              "uidLength": 255,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "-9999-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T23:59:59.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Uuid7"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            }
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
-            "method": "getSupportForOrderRandom"
+            "method": "limits",
+            "args": {}
           },
-          "expect": false
+          "expect": {
+            "$value": "Adapter\\Limits",
+            "fields": {
+              "string": 2147483647,
+              "varchar": 2147483647,
+              "integer": 4294967295,
+              "bigInteger": 9223372036854775807,
+              "attributes": 0,
+              "indexes": 64,
+              "defaultAttributes": 7,
+              "defaultIndexes": 6,
+              "indexLength": 1024,
+              "uidLength": 255,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "-9999-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T23:59:59.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Uuid7"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            }
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
-            "method": "getSupportForVectors"
+            "method": "limits",
+            "args": {}
           },
-          "expect": false
+          "expect": {
+            "$value": "Adapter\\Limits",
+            "fields": {
+              "string": 2147483647,
+              "varchar": 2147483647,
+              "integer": 4294967295,
+              "bigInteger": 9223372036854775807,
+              "attributes": 0,
+              "indexes": 64,
+              "defaultAttributes": 7,
+              "defaultIndexes": 6,
+              "indexLength": 1024,
+              "uidLength": 255,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "-9999-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T23:59:59.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Uuid7"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            }
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
-            "method": "getKeywords"
+            "method": "id"
           },
-          "expect": []
+          "expect": "2949"
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
-            "method": "getIdAttributeType"
+            "method": "limits",
+            "args": {}
           },
-          "expect": "uuid7"
+          "expect": {
+            "$value": "Adapter\\Limits",
+            "fields": {
+              "string": 2147483647,
+              "varchar": 2147483647,
+              "integer": 4294967295,
+              "bigInteger": 9223372036854775807,
+              "attributes": 0,
+              "indexes": 64,
+              "defaultAttributes": 7,
+              "defaultIndexes": 6,
+              "indexLength": 1024,
+              "uidLength": 255,
+              "documentSize": 0,
+              "minDateTime": {
+                "$datetime": "-9999-01-01T00:00:00.000000+00:00"
+              },
+              "maxDateTime": {
+                "$datetime": "9999-12-31T23:59:59.000000+00:00"
+              },
+              "idType": {
+                "$enum": "Query\\Schema\\ColumnType::Uuid7"
+              },
+              "keywords": [],
+              "internalIndexKeys": []
+            }
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
-            "method": "getMaxIndexLength"
+            "method": "capabilities",
+            "args": {}
           },
-          "expect": 1024
+          "expect": [
+            {
+              "$enum": "Capability::IndexKey"
+            },
+            {
+              "$enum": "Capability::IndexArray"
+            },
+            {
+              "$enum": "Capability::IndexUnique"
+            },
+            {
+              "$enum": "Capability::Objects"
+            },
+            {
+              "$enum": "Capability::IndexFulltext"
+            },
+            {
+              "$enum": "Capability::IndexTtl"
+            },
+            {
+              "$enum": "Capability::Caching"
+            },
+            {
+              "$enum": "Capability::Operators"
+            },
+            {
+              "$enum": "Capability::TransactionRetries"
+            }
+          ]
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
-            "method": "getMaxUIDLength"
+            "method": "capabilities",
+            "args": {}
           },
-          "expect": 255
+          "expect": [
+            {
+              "$enum": "Capability::IndexKey"
+            },
+            {
+              "$enum": "Capability::IndexArray"
+            },
+            {
+              "$enum": "Capability::IndexUnique"
+            },
+            {
+              "$enum": "Capability::Objects"
+            },
+            {
+              "$enum": "Capability::IndexFulltext"
+            },
+            {
+              "$enum": "Capability::IndexTtl"
+            },
+            {
+              "$enum": "Capability::Caching"
+            },
+            {
+              "$enum": "Capability::Operators"
+            },
+            {
+              "$enum": "Capability::TransactionRetries"
+            }
+          ]
         },
         {
-          "op": "mongo.adapter",
-          "args": {
-            "method": "getConnectionId"
-          },
-          "expect": "0"
-        },
-        {
-          "op": "mongo.adapter",
-          "args": {
-            "method": "getInternalIndexesKeys"
-          },
-          "expect": []
-        },
-        {
-          "op": "mongo.adapter",
-          "args": {
-            "method": "getSupportForSchemaIndexes"
-          },
-          "expect": false
-        },
-        {
-          "op": "mongo.adapter",
-          "args": {
-            "method": "getSupportForAlterLocks"
-          },
-          "expect": false
-        },
-        {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "getSupportNonUtfCharacters"
-          },
-          "expect": false
-        },
-        {
-          "op": "mongo.adapter",
-          "args": {
-            "method": "getSupportForTrigramIndex"
-          },
-          "expect": false
-        },
-        {
-          "op": "mongo.adapter",
-          "args": {
-            "method": "getSupportForTTLIndexes"
-          },
-          "expect": true
-        },
-        {
-          "op": "mongo.adapter",
-          "args": {
-            "method": "getSupportForTransactionRetries"
-          },
-          "expect": false
-        },
-        {
-          "op": "mongo.adapter",
-          "args": {
-            "method": "getSupportForNestedTransactions"
-          },
-          "expect": false
-        },
-        {
-          "op": "mongo.adapter",
-          "args": {
-            "method": "getDriver"
-          },
-          "expect": {
-            "$client": true
           }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
+          "args": {
+            "method": "capabilities",
+            "args": {}
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "capabilities",
+            "args": {}
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "capabilities",
+            "args": {}
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "capabilities",
+            "args": {}
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getDriver"
+          }
+        },
+        {
+          "op": "db.adapter",
           "args": {
             "method": "getColumnType",
             "args": {
               "type": "string",
               "size": 10
             }
-          },
-          "expect": ""
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "getCountOfAttributes",
             "args": {
@@ -555,11 +2234,10 @@
                 "indexes": []
               }
             }
-          },
-          "expect": 13
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "getCountOfIndexes",
             "args": {
@@ -606,11 +2284,10 @@
                 "indexes": []
               }
             }
-          },
-          "expect": 6
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "getAttributeWidth",
             "args": {
@@ -657,201 +2334,169 @@
                 "indexes": []
               }
             }
-          },
-          "expect": 0
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "getSchemaAttributes",
             "args": {
               "collection": "people"
             }
-          },
-          "expect": []
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "getSchemaIndexes",
             "args": {
               "collection": "people"
             }
-          },
-          "expect": []
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "getTenantQuery",
             "args": {
               "collection": "people",
               "alias": "main"
             }
-          },
-          "expect": ""
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "decodePoint",
             "args": {
               "wkb": "x"
             }
-          },
-          "expect": []
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "decodeLinestring",
             "args": {
               "wkb": "x"
             }
-          },
-          "expect": []
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "decodePolygon",
             "args": {
               "wkb": "x"
             }
-          },
-          "expect": []
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "getTenantFilters",
             "args": {
               "collection": "people"
             }
-          },
-          "expect": []
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "database.set_schemaless",
           "args": {
-            "method": "setSupportForAttributes",
+            "schemaless": true
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
             "args": {
-              "support": false
-            }
-          },
-          "expect": false
-        },
-        {
-          "op": "mongo.adapter",
-          "args": {
-            "method": "getSupportForAttributes"
-          },
-          "expect": false
-        },
-        {
-          "op": "mongo.adapter",
-          "args": {
-            "method": "setSupportForAttributes",
-            "args": {
-              "support": true
-            }
-          },
-          "expect": true
-        },
-        {
-          "op": "mongo.adapter",
-          "args": {
-            "method": "setUTCDatetime",
-            "args": {
-              "value": "2024-05-06T07:08:09.123+02:00"
-            }
-          },
-          "expect": {
-            "$bson": {
-              "$date": {
-                "$numberLong": "1714972089123"
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
               }
             }
           }
         },
         {
-          "op": "mongo.adapter",
+          "op": "database.set_schemaless",
+          "args": {
+            "schemaless": false
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "setUTCDatetime",
+            "args": {
+              "value": "2024-05-06T07:08:09.123+02:00"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
           "args": {
             "method": "setUTCDatetime",
             "args": {
               "value": "not a date"
             }
-          },
-          "expect": {
-            "$error": {
-              "class": "DateMalformedStringException",
-              "message": "Failed to parse time string (not a date) at position 0 (n): The timezone could not be found in the database"
-            }
           }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "ping"
-          },
-          "expect": true
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "reconnect"
-          },
-          "expect": null
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "create",
             "args": {
               "name": "anything"
             }
-          },
-          "expect": true
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "exists",
             "args": {
               "database": "anything"
             }
-          },
-          "expect": true
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "analyzeCollection",
             "args": {
               "collection": "people"
             }
-          },
-          "expect": false
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "setTimeout",
             "args": {
               "milliseconds": 500
             }
-          },
-          "expect": null
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "clearTimeout",
             "args": {
               "event": "*"
             }
-          },
-          "expect": null
+          }
         }
       ]
     },
@@ -872,7 +2517,7 @@
           }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "createCollection",
             "args": {
@@ -951,48 +2596,39 @@
                 }
               ]
             }
-          },
-          "expect": true
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "createCollection",
             "args": {
               "name": "people"
             }
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Duplicate",
-              "message": "Collection already exists"
-            }
           }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "exists",
             "args": {
               "database": "x",
               "collection": "people"
             }
-          },
-          "expect": true
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "exists",
             "args": {
               "database": "x",
               "collection": "nothing"
             }
-          },
-          "expect": false
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "listCollections"
           },
@@ -1004,22 +2640,10 @@
               "/3"
             ],
             "reason": "the server lists collections in no set order; the reply carries its cluster and operation times"
-          },
-          "expect": [
-            {
-              "$object": {
-                "id": 0,
-                "ns": "${ns}.$cmd.listCollections",
-                "firstBatch": "<masked>"
-              }
-            },
-            "<masked>",
-            "<masked>",
-            "<masked>"
-          ]
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "createAttribute",
             "args": {
@@ -1028,11 +2652,10 @@
               "type": "string",
               "size": 10
             }
-          },
-          "expect": true
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "createAttributes",
             "args": {
@@ -1044,11 +2667,10 @@
                 }
               ]
             }
-          },
-          "expect": true
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "createIndex",
             "args": {
@@ -1071,11 +2693,10 @@
                 "x"
               ]
             }
-          },
-          "expect": true
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "createIndex",
             "args": {
@@ -1091,11 +2712,10 @@
                 "profile.level": "object"
               }
             }
-          },
-          "expect": true
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "createIndex",
             "args": {
@@ -1108,11 +2728,10 @@
               "lengths": [],
               "orders": []
             }
-          },
-          "expect": false
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "createIndex",
             "args": {
@@ -1125,11 +2744,10 @@
               "lengths": [],
               "orders": []
             }
-          },
-          "expect": true
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "createIndex",
             "args": {
@@ -1142,16 +2760,10 @@
               "lengths": [],
               "orders": []
             }
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Mongo\\Exception",
-              "message": "E86 IndexKeySpecsConflict: An existing index has the same name as the requested index. When index names are not specified, they are auto generated and can cause conflicts. Please refer to our documentation. Requested index: { v: 2, key: { name: 1 }, name: \"by_name\", partialFilterExpression: { name: { $exists: true, $type: [ \"string\", \"number\", \"bool\", \"date\", \"object\" ] } } }, existing index: { v: 2, key: { name: -1 }, name: \"by_name\", partialFilterExpression: { name: { $exists: true, $type: \"string\" } } }"
-            }
           }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "createIndex",
             "args": {
@@ -1165,16 +2777,10 @@
               "orders": [],
               "ttl": 60
             }
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Duplicate",
-              "message": "Index already exists"
-            }
           }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "createIndex",
             "args": {
@@ -1189,43 +2795,30 @@
                 "sideways"
               ]
             }
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Unknown sort order:sideways. Must be one of ASC, DESC"
-            }
           }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "deleteIndex",
             "args": {
               "collection": "people",
               "id": "by_tags"
             }
-          },
-          "expect": true
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "deleteIndex",
             "args": {
               "collection": "people",
               "id": "by_tags"
             }
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Mongo\\Exception",
-              "message": "E27 IndexNotFound: index not found with name [by_tags]"
-            }
           }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "getSizeOfCollection",
             "args": {
@@ -1237,11 +2830,10 @@
               ""
             ],
             "reason": "storage sizes depend on the server's allocation"
-          },
-          "expect": "<masked>"
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "getSizeOfCollectionOnDisk",
             "args": {
@@ -1253,41 +2845,37 @@
               ""
             ],
             "reason": "storage sizes depend on the server's allocation"
-          },
-          "expect": "<masked>"
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "getSizeOfCollection",
             "args": {
               "collection": "nothing"
             }
-          },
-          "expect": 0
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "deleteCollection",
             "args": {
               "id": "people"
             }
-          },
-          "expect": true
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "deleteCollection",
             "args": {
               "id": "people"
             }
-          },
-          "expect": true
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "list"
           },
@@ -1298,23 +2886,16 @@
               "/3"
             ],
             "reason": "other runs' databases and the reply's times"
-          },
-          "expect": [
-            "<masked>",
-            1.0,
-            "<masked>",
-            "<masked>"
-          ]
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "delete",
             "args": {
               "name": "${ns}_other"
             }
-          },
-          "expect": true
+          }
         }
       ]
     },
@@ -1335,17 +2916,16 @@
           }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "createCollection",
             "args": {
               "name": "people"
             }
-          },
-          "expect": true
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "createDocument",
             "args": {
@@ -1410,31 +2990,10 @@
                 "$weird": 1
               }
             }
-          },
-          "expect": {
-            "$document": {
-              "$id": "ada",
-              "$permissions": [
-                "read(\"any\")",
-                "update(\"any\")"
-              ],
-              "$createdAt": "2024-01-01 00:00:00.000",
-              "$updatedAt": "2024-01-01 00:00:00.000",
-              "name": "Ada",
-              "age": 36,
-              "tags": [
-                "a",
-                "b"
-              ],
-              "profile": null,
-              "dotted.name": "x",
-              "$weird": 1,
-              "$sequence": "<uuid7>"
-            }
           }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "createDocument",
             "args": {
@@ -1490,16 +3049,10 @@
                 "$updatedAt": "2024-01-01 00:00:00.000"
               }
             }
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Duplicate",
-              "message": "Document already exists"
-            }
           }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "createDocuments",
             "args": {
@@ -1570,40 +3123,10 @@
                 }
               ]
             }
-          },
-          "expect": [
-            {
-              "$document": {
-                "name": "Grace",
-                "age": 85,
-                "$permissions": [
-                  "read(\"any\")",
-                  "update(\"any\")"
-                ],
-                "$createdAt": "2024-01-01 00:00:00.000",
-                "$updatedAt": "2024-01-01 00:00:00.000",
-                "$sequence": "<uuid7>",
-                "$id": "grace"
-              }
-            },
-            {
-              "$document": {
-                "name": "Linus",
-                "age": 54,
-                "$permissions": [
-                  "read(\"any\")",
-                  "update(\"any\")"
-                ],
-                "$createdAt": "2024-01-01 00:00:00.000",
-                "$updatedAt": "2024-01-01 00:00:00.000",
-                "$sequence": "<uuid7>",
-                "$id": "linus"
-              }
-            }
-          ]
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "createDocuments",
             "args": {
@@ -1671,16 +3194,10 @@
                 }
               ]
             }
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "All documents must have an sequence if one is set"
-            }
           }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "getDocument",
             "args": {
@@ -1728,30 +3245,10 @@
               },
               "id": "ada"
             }
-          },
-          "expect": {
-            "$document": {
-              "name": "Ada",
-              "age": 36,
-              "tags": [
-                "a",
-                "b"
-              ],
-              "$permissions": [
-                "read(\"any\")",
-                "update(\"any\")"
-              ],
-              "$createdAt": "2024-01-01 00:00:00.000",
-              "$updatedAt": "2024-01-01 00:00:00.000",
-              "dotted.name": "x",
-              "$weird": 1,
-              "$sequence": "<uuid7>",
-              "$id": "ada"
-            }
           }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "getDocument",
             "args": {
@@ -1810,23 +3307,10 @@
                 }
               ]
             }
-          },
-          "expect": {
-            "$document": {
-              "name": "Ada",
-              "$permissions": [
-                "read(\"any\")",
-                "update(\"any\")"
-              ],
-              "$createdAt": "2024-01-01 00:00:00.000",
-              "$updatedAt": "2024-01-01 00:00:00.000",
-              "$sequence": "<uuid7>",
-              "$id": "ada"
-            }
           }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "getDocument",
             "args": {
@@ -1874,13 +3358,10 @@
               },
               "id": "nobody"
             }
-          },
-          "expect": {
-            "$document": {}
           }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "getSequences",
             "args": {
@@ -1915,47 +3396,10 @@
                 }
               ]
             }
-          },
-          "expect": [
-            {
-              "$document": {
-                "$id": "ada",
-                "$permissions": [
-                  "read(\"any\")",
-                  "update(\"any\")"
-                ],
-                "$createdAt": "2024-01-01 00:00:00.000",
-                "$updatedAt": "2024-01-01 00:00:00.000",
-                "$sequence": "<uuid7>"
-              }
-            },
-            {
-              "$document": {
-                "$id": "grace",
-                "$permissions": [
-                  "read(\"any\")",
-                  "update(\"any\")"
-                ],
-                "$createdAt": "2024-01-01 00:00:00.000",
-                "$updatedAt": "2024-01-01 00:00:00.000",
-                "$sequence": "<uuid7>"
-              }
-            },
-            {
-              "$document": {
-                "$id": "nobody",
-                "$permissions": [
-                  "read(\"any\")",
-                  "update(\"any\")"
-                ],
-                "$createdAt": "2024-01-01 00:00:00.000",
-                "$updatedAt": "2024-01-01 00:00:00.000"
-              }
-            }
-          ]
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "updateDocument",
             "args": {
@@ -2008,16 +3452,10 @@
               },
               "skipPermissions": false
             }
-          },
-          "expect": {
-            "$document": {
-              "name": "Ada L.",
-              "age": 37
-            }
           }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "updateDocuments",
             "args": {
@@ -2068,11 +3506,10 @@
               },
               "documents": []
             }
-          },
-          "expect": 0
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "increaseDocumentAttribute",
             "args": {
@@ -2082,11 +3519,10 @@
               "value": 1,
               "updatedAt": "2024-02-02 00:00:00.000"
             }
-          },
-          "expect": true
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "increaseDocumentAttribute",
             "args": {
@@ -2097,11 +3533,10 @@
               "updatedAt": "2024-02-02 00:00:00.000",
               "max": 80
             }
-          },
-          "expect": true
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "increaseDocumentAttribute",
             "args": {
@@ -2113,11 +3548,10 @@
               "min": 0,
               "max": 100
             }
-          },
-          "expect": true
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "find",
             "args": {
@@ -2171,66 +3605,10 @@
                 "DESC"
               ]
             }
-          },
-          "expect": [
-            {
-              "$document": {
-                "name": "Grace",
-                "age": 85,
-                "$permissions": [
-                  "read(\"any\")",
-                  "update(\"any\")"
-                ],
-                "$createdAt": "2024-01-01 00:00:00.000",
-                "$updatedAt": {
-                  "$bson": {
-                    "$date": {
-                      "$numberLong": "1706832000000"
-                    }
-                  }
-                },
-                "$sequence": "<uuid7>",
-                "$id": "grace"
-              }
-            },
-            {
-              "$document": {
-                "name": "Linus",
-                "age": 54,
-                "$permissions": [
-                  "read(\"any\")",
-                  "update(\"any\")"
-                ],
-                "$createdAt": "2024-01-01 00:00:00.000",
-                "$updatedAt": "2024-01-01 00:00:00.000",
-                "$sequence": "<uuid7>",
-                "$id": "linus"
-              }
-            },
-            {
-              "$document": {
-                "name": "Ada L.",
-                "age": 37,
-                "tags": [
-                  "a",
-                  "b"
-                ],
-                "$permissions": [
-                  "read(\"any\")",
-                  "update(\"any\")"
-                ],
-                "$createdAt": "2024-01-01 00:00:00.000",
-                "$updatedAt": "2024-01-01 00:00:00.000",
-                "dotted.name": "x",
-                "$weird": 1,
-                "$sequence": "<uuid7>",
-                "$id": "ada"
-              }
-            }
-          ]
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "find",
             "args": {
@@ -2288,32 +3666,10 @@
                 }
               ]
             }
-          },
-          "expect": [
-            {
-              "$document": {
-                "name": "Ada L.",
-                "age": 37,
-                "tags": [
-                  "a",
-                  "b"
-                ],
-                "$permissions": [
-                  "read(\"any\")",
-                  "update(\"any\")"
-                ],
-                "$createdAt": "2024-01-01 00:00:00.000",
-                "$updatedAt": "2024-01-01 00:00:00.000",
-                "dotted.name": "x",
-                "$weird": 1,
-                "$sequence": "<uuid7>",
-                "$id": "ada"
-              }
-            }
-          ]
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "find",
             "args": {
@@ -2373,32 +3729,10 @@
               "limit": 1,
               "offset": 0
             }
-          },
-          "expect": [
-            {
-              "$document": {
-                "name": "Grace",
-                "age": 85,
-                "$permissions": [
-                  "read(\"any\")",
-                  "update(\"any\")"
-                ],
-                "$createdAt": "2024-01-01 00:00:00.000",
-                "$updatedAt": {
-                  "$bson": {
-                    "$date": {
-                      "$numberLong": "1706832000000"
-                    }
-                  }
-                },
-                "$sequence": "<uuid7>",
-                "$id": "grace"
-              }
-            }
-          ]
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "find",
             "args": {
@@ -2456,16 +3790,10 @@
                 }
               ]
             }
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Mongo\\Exception",
-              "message": "E27 IndexNotFound: text index required for $text query"
-            }
           }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "find",
             "args": {
@@ -2523,66 +3851,10 @@
               },
               "cursorDirection": "after"
             }
-          },
-          "expect": [
-            {
-              "$document": {
-                "name": "Ada L.",
-                "age": 37,
-                "tags": [
-                  "a",
-                  "b"
-                ],
-                "$permissions": [
-                  "read(\"any\")",
-                  "update(\"any\")"
-                ],
-                "$createdAt": "2024-01-01 00:00:00.000",
-                "$updatedAt": "2024-01-01 00:00:00.000",
-                "dotted.name": "x",
-                "$weird": 1,
-                "$sequence": "<uuid7>",
-                "$id": "ada"
-              }
-            },
-            {
-              "$document": {
-                "name": "Grace",
-                "age": 85,
-                "$permissions": [
-                  "read(\"any\")",
-                  "update(\"any\")"
-                ],
-                "$createdAt": "2024-01-01 00:00:00.000",
-                "$updatedAt": {
-                  "$bson": {
-                    "$date": {
-                      "$numberLong": "1706832000000"
-                    }
-                  }
-                },
-                "$sequence": "<uuid7>",
-                "$id": "grace"
-              }
-            },
-            {
-              "$document": {
-                "name": "Linus",
-                "age": 54,
-                "$permissions": [
-                  "read(\"any\")",
-                  "update(\"any\")"
-                ],
-                "$createdAt": "2024-01-01 00:00:00.000",
-                "$updatedAt": "2024-01-01 00:00:00.000",
-                "$sequence": "<uuid7>",
-                "$id": "linus"
-              }
-            }
-          ]
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "find",
             "args": {
@@ -2643,32 +3915,10 @@
               },
               "cursorDirection": "before"
             }
-          },
-          "expect": [
-            {
-              "$document": {
-                "name": "Ada L.",
-                "age": 37,
-                "tags": [
-                  "a",
-                  "b"
-                ],
-                "$permissions": [
-                  "read(\"any\")",
-                  "update(\"any\")"
-                ],
-                "$createdAt": "2024-01-01 00:00:00.000",
-                "$updatedAt": "2024-01-01 00:00:00.000",
-                "dotted.name": "x",
-                "$weird": 1,
-                "$sequence": "<uuid7>",
-                "$id": "ada"
-              }
-            }
-          ]
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "count",
             "args": {
@@ -2715,11 +3965,10 @@
                 "indexes": []
               }
             }
-          },
-          "expect": 3
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "count",
             "args": {
@@ -2767,11 +4016,10 @@
               },
               "max": 1
             }
-          },
-          "expect": 1
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "count",
             "args": {
@@ -2829,11 +4077,10 @@
                 }
               ]
             }
-          },
-          "expect": 2
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "sum",
             "args": {
@@ -2881,11 +4128,10 @@
               },
               "attribute": "age"
             }
-          },
-          "expect": 176
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "sum",
             "args": {
@@ -2934,11 +4180,10 @@
               "attribute": "age",
               "max": 1
             }
-          },
-          "expect": 37
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "castingAfter",
             "args": {
@@ -3006,25 +4251,10 @@
                 }
               }
             }
-          },
-          "expect": {
-            "$document": {
-              "age": 12,
-              "tags": [
-                "x"
-              ],
-              "born": "2024-01-02 03:04:05.678",
-              "profile": {
-                "a": {
-                  "b": 1
-                },
-                "e": {}
-              }
-            }
           }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "castingAfter",
             "args": {
@@ -3074,16 +4304,10 @@
                 "tags": "not json"
               }
             }
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to decode JSON for attribute tags: Syntax error"
-            }
           }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "castingBefore",
             "args": {
@@ -3137,29 +4361,10 @@
                 ]
               }
             }
-          },
-          "expect": {
-            "$document": {
-              "born": {
-                "$bson": {
-                  "$date": {
-                    "$numberLong": "1704164645678"
-                  }
-                }
-              },
-              "profile": {
-                "$object": {
-                  "a": 1
-                }
-              },
-              "tags": [
-                "x"
-              ]
-            }
           }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "castingBefore",
             "args": {
@@ -3209,38 +4414,30 @@
                 "born": "nonsense"
               }
             }
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid datetime value for attribute \"born\": Failed to parse time string (nonsense) at position 0 (n): The timezone could not be found in the database"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "deleteDocument",
+            "args": {
+              "collection": "people",
+              "id": "ada"
             }
           }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "deleteDocument",
             "args": {
               "collection": "people",
               "id": "ada"
             }
-          },
-          "expect": true
+          }
         },
         {
-          "op": "mongo.adapter",
-          "args": {
-            "method": "deleteDocument",
-            "args": {
-              "collection": "people",
-              "id": "ada"
-            }
-          },
-          "expect": false
-        },
-        {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "deleteDocuments",
             "args": {
@@ -3250,11 +4447,10 @@
               ],
               "permissionIds": []
             }
-          },
-          "expect": 0
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "updateAttribute",
             "args": {
@@ -3264,11 +4460,10 @@
               "size": 0,
               "newKey": "years"
             }
-          },
-          "expect": true
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "renameAttribute",
             "args": {
@@ -3276,22 +4471,20 @@
               "id": "name",
               "name": "title"
             }
-          },
-          "expect": true
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "deleteAttribute",
             "args": {
               "collection": "people",
               "id": "title"
             }
-          },
-          "expect": true
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "find",
             "args": {
@@ -3339,41 +4532,7 @@
               },
               "queries": []
             }
-          },
-          "expect": [
-            {
-              "$document": {
-                "years": 85,
-                "$permissions": [
-                  "read(\"any\")",
-                  "update(\"any\")"
-                ],
-                "$createdAt": "2024-01-01 00:00:00.000",
-                "$updatedAt": {
-                  "$bson": {
-                    "$date": {
-                      "$numberLong": "1706832000000"
-                    }
-                  }
-                },
-                "$sequence": "<uuid7>",
-                "$id": "grace"
-              }
-            },
-            {
-              "$document": {
-                "years": 54,
-                "$permissions": [
-                  "read(\"any\")",
-                  "update(\"any\")"
-                ],
-                "$createdAt": "2024-01-01 00:00:00.000",
-                "$updatedAt": "2024-01-01 00:00:00.000",
-                "$sequence": "<uuid7>",
-                "$id": "linus"
-              }
-            }
-          ]
+          }
         }
       ]
     },
@@ -3395,24 +4554,28 @@
           }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes"
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": false
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "createCollection",
             "args": {
               "name": "free"
             }
-          },
-          "expect": true
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "createDocument",
             "args": {
@@ -3438,27 +4601,10 @@
                 "plain": "text"
               }
             }
-          },
-          "expect": {
-            "$document": {
-              "$id": "one",
-              "$permissions": [
-                "read(\"any\")",
-                "update(\"any\")"
-              ],
-              "$createdAt": "2024-01-01 00:00:00.000",
-              "$updatedAt": "2024-01-01 00:00:00.000",
-              "when": "2024-01-02T03:04:05.000Z",
-              "nested": {
-                "x": 1
-              },
-              "plain": "text",
-              "$sequence": "<uuid7>"
-            }
           }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "getDocument",
             "args": {
@@ -3469,27 +4615,10 @@
               },
               "id": "one"
             }
-          },
-          "expect": {
-            "$document": {
-              "when": "2024-01-02T03:04:05.000Z",
-              "nested": {
-                "x": 1
-              },
-              "plain": "text",
-              "$permissions": [
-                "read(\"any\")",
-                "update(\"any\")"
-              ],
-              "$createdAt": "2024-01-01 00:00:00.000",
-              "$updatedAt": "2024-01-01 00:00:00.000",
-              "$sequence": "<uuid7>",
-              "$id": "one"
-            }
           }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "castingBefore",
             "args": {
@@ -3504,29 +4633,10 @@
                 "text": "plain"
               }
             }
-          },
-          "expect": {
-            "$document": {
-              "when": {
-                "$bson": {
-                  "$date": {
-                    "$numberLong": "1704164645000"
-                  }
-                }
-              },
-              "$createdAt": {
-                "$bson": {
-                  "$date": {
-                    "$numberLong": "1704164645000"
-                  }
-                }
-              },
-              "text": "plain"
-            }
           }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "find",
             "args": {
@@ -3547,8 +4657,7 @@
                 }
               ]
             }
-          },
-          "expect": []
+          }
         }
       ]
     },
@@ -3569,7 +4678,7 @@
           }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "createRelationship",
             "args": {
@@ -3580,11 +4689,10 @@
               "id": "b",
               "twoWayKey": "a"
             }
-          },
-          "expect": true
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "updateRelationship",
             "args": {
@@ -3598,11 +4706,10 @@
               "newKey": "bb",
               "newTwoWayKey": "aa"
             }
-          },
-          "expect": true
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "updateRelationship",
             "args": {
@@ -3615,16 +4722,10 @@
               "side": "parent",
               "newKey": "bb"
             }
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Collection or related collection not found"
-            }
           }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "updateRelationship",
             "args": {
@@ -3636,16 +4737,10 @@
               "twoWayKey": "a",
               "side": "parent"
             }
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Invalid relationship type"
-            }
           }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "deleteRelationship",
             "args": {
@@ -3657,11 +4752,10 @@
               "twoWayKey": "a",
               "side": "child"
             }
-          },
-          "expect": true
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "deleteRelationship",
             "args": {
@@ -3673,11 +4767,10 @@
               "twoWayKey": "a",
               "side": "parent"
             }
-          },
-          "expect": true
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "deleteRelationship",
             "args": {
@@ -3689,11 +4782,10 @@
               "twoWayKey": "a",
               "side": "child"
             }
-          },
-          "expect": true
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "deleteRelationship",
             "args": {
@@ -3705,16 +4797,10 @@
               "twoWayKey": "a",
               "side": "child"
             }
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Collection or related collection not found"
-            }
           }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "deleteRelationship",
             "args": {
@@ -3725,12 +4811,6 @@
               "key": "b",
               "twoWayKey": "a",
               "side": "child"
-            }
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Invalid relationship type"
             }
           }
         }
@@ -3753,29 +4833,92 @@
           }
         },
         {
-          "op": "database.create_collection",
+          "op": "object.call",
           "args": {
-            "id": "people",
-            "permissions": [
-              "read(\"any\")",
-              "create(\"any\")"
-            ]
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "people",
+              "permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ]
+            },
+            "as": "c74"
           },
           "expect": {
             "$document": {
               "$id": "people",
-              "$permissions": [
-                "read(\"any\")",
-                "create(\"any\")"
-              ],
               "name": "people",
               "attributes": [],
               "indexes": [],
               "documentSecurity": true,
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$obj": "c74"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "people",
+              "name": "people",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ],
               "$collection": "_metadata",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "<uuid7>"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "name",
+                "key": "name",
+                "type": "string",
+                "size": 32,
+                "required": false
+              }
+            },
+            "as": "a75"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
             }
           }
         },
@@ -3783,27 +4926,88 @@
           "op": "database.create_attribute",
           "args": {
             "collection": "people",
-            "id": "name",
-            "type": "string",
-            "size": 32,
-            "required": false
+            "attribute": {
+              "$obj": "a75"
+            }
           },
-          "expect": true
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "by_name",
+                "key": "by_name",
+                "type": "key",
+                "attributes": [
+                  "name"
+                ]
+              }
+            },
+            "as": "i76"
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
         },
         {
           "op": "database.create_index",
           "args": {
             "collection": "people",
-            "id": "by_name",
-            "type": "key",
-            "attributes": [
-              "name"
-            ]
+            "index": {
+              "$obj": "i76"
+            }
           },
-          "expect": true
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "by_name",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "name"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "renameIndex",
             "args": {
@@ -3815,7 +5019,7 @@
           "expect": true
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "renameIndex",
             "args": {
@@ -3832,63 +5036,68 @@
           }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "startTransaction"
           },
           "expect": true
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "startTransaction"
           },
           "expect": true
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "commitTransaction"
           },
           "expect": true
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "commitTransaction"
           },
-          "expect": true
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Failed to commit transaction: No active transaction"
+            }
+          }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "commitTransaction"
           },
           "expect": false
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "rollbackTransaction"
           },
           "expect": false
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "startTransaction"
           },
           "expect": true
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "rollbackTransaction"
           },
           "expect": true
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "withTransaction",
             "args": {
@@ -3909,22 +5118,14 @@
             }
           },
           "expect": {
-            "result": "done",
-            "calls": {
-              "callback": [
-                {
-                  "args": [],
-                  "steps": [
-                    true,
-                    null
-                  ]
-                }
-              ]
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Failed to commit transaction: No active transaction"
             }
           }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "withTransaction",
             "args": {
@@ -3949,7 +5150,7 @@
           }
         },
         {
-          "op": "mongo.adapter",
+          "op": "db.adapter",
           "args": {
             "method": "upsertDocuments",
             "args": {
@@ -3961,8 +5162,7 @@
               "attribute": "",
               "changes": []
             }
-          },
-          "expect": []
+          }
         }
       ]
     }

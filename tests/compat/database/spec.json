@@ -1,6 +1,6 @@
 {
   "lib": "database",
-  "description": "The full conversion of utopia-php/database 7.4: Database (collections, attributes, indexes, documents, bulk operations, upserts, increments, relationships, permissions, tenancy, caching, transactions), Document, Query, Operator, DateTime, the helpers and validators, over every adapter: PostgreSQL, MariaDB, MySQL, SQLite, the in-memory one, MongoDB, Redis, Pool and Mirror (with its Mirroring filters), and the shared Redis caches.",
+  "description": "The full conversion of utopia-php/database 8.1 (with the query and builder types of utopia-php/query it extends): Database (collections, attributes, indexes, documents, bulk operations, upserts, increments, aggregations, joins, relationships, permissions, tenancy, hooks, codecs, caching and the query cache, transactions and savepoints, the query and schema builders, profiling), the value objects (Document, Collection, Attribute, Index, Relationship, Query, Operator, the update models, events), the helpers and validators, over every adapter: PostgreSQL, MariaDB, MySQL, SQLite, the in-memory one, MongoDB, Redis, Pool and ReadWritePool, and Mirror (with its filters), and the shared Redis caches.",
   "complete": true,
   "php": {
     "src": [
@@ -23,7 +23,7 @@
   "ops": {},
   "generators": {},
   "waivers": {
-    "Utopia\\Database\\PDO::*": "PHP runtime plumbing: a PDO wrapper that reconnects; the Rust adapter owns its PostgreSQL connection (the wire protocol, adapter::postgres::wire) (reconnect behaviour is converted with Adapter::reconnect)",
+    "Utopia\\Database\\PDO::*": "PHP runtime plumbing: a PDO wrapper that reconnects; the Rust adapters own their connections (reconnect behaviour is converted with Adapter::reconnect)",
     "Utopia\\Database\\PDOStatement::*": "PHP runtime plumbing: the PDOStatement wrapper of Utopia\\Database\\PDO"
   },
   "tests_waived": {},
@@ -62,21 +62,20 @@
       "MariaDB-",
       "MySQL-",
       "Adapter-MariaDB-",
-      "Adapter-MySQL-"
+      "Adapter-MySQL-",
+      "MariaDBTest",
+      "MySQLTest"
     ],
     "sqlite": [
       "Scope-SQLite-",
       "Scope-Memory-",
-      "Adapter-SQLite",
-      "Adapter-Memory",
       "MemoryTest",
-      "EmptyDocumentTypeTest",
-      "SelectProjectionTest"
+      "SQLiteTest",
+      "Unit-"
     ],
     "mongo": [
       "Scope-Mongo-",
-      "Mongo-",
-      "MongoPermissionStringsTest"
+      "Mongo-"
     ],
     "redis": [
       "Scope-Redis-",
@@ -84,8 +83,8 @@
       "Scope-Pool-",
       "Scope-Mirror-",
       "PoolTest",
-      "PoolTimeoutTest",
       "MirrorTest",
+      "RedisTest",
       "core-Mirror",
       "core-Redis"
     ]

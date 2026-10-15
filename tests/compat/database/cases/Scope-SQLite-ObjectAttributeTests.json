@@ -22,19 +22,38 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
@@ -67,15 +86,19 @@
         {
           "op": "database.add_filter",
           "args": {
-            "name": "operator_double_decode"
+            "name": "joinedSeal"
           },
           "expect": null
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForObject",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Objects"
+              }
+            }
           },
           "expect": false
         }
@@ -99,19 +122,38 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
@@ -144,15 +186,19 @@
         {
           "op": "database.add_filter",
           "args": {
-            "name": "operator_double_decode"
+            "name": "joinedSeal"
           },
           "expect": null
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForObjectIndexes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::IndexObject"
+              }
+            }
           },
           "expect": false
         }
@@ -176,19 +222,38 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
@@ -221,15 +286,19 @@
         {
           "op": "database.add_filter",
           "args": {
-            "name": "operator_double_decode"
+            "name": "joinedSeal"
           },
           "expect": null
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForObject",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Objects"
+              }
+            }
           },
           "expect": false
         }
@@ -253,19 +322,38 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
@@ -298,15 +386,19 @@
         {
           "op": "database.add_filter",
           "args": {
-            "name": "operator_double_decode"
+            "name": "joinedSeal"
           },
           "expect": null
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForObject",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Objects"
+              }
+            }
           },
           "expect": false
         }
@@ -330,19 +422,38 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
@@ -375,15 +486,19 @@
         {
           "op": "database.add_filter",
           "args": {
-            "name": "operator_double_decode"
+            "name": "joinedSeal"
           },
           "expect": null
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForObject",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Objects"
+              }
+            }
           },
           "expect": false
         }
@@ -407,19 +522,38 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
@@ -452,15 +586,19 @@
         {
           "op": "database.add_filter",
           "args": {
-            "name": "operator_double_decode"
+            "name": "joinedSeal"
           },
           "expect": null
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForObject",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Objects"
+              }
+            }
           },
           "expect": false
         }
@@ -484,19 +622,38 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
@@ -529,15 +686,19 @@
         {
           "op": "database.add_filter",
           "args": {
-            "name": "operator_double_decode"
+            "name": "joinedSeal"
           },
           "expect": null
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForObject",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Objects"
+              }
+            }
           },
           "expect": false
         }
@@ -561,19 +722,38 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
@@ -606,15 +786,19 @@
         {
           "op": "database.add_filter",
           "args": {
-            "name": "operator_double_decode"
+            "name": "joinedSeal"
           },
           "expect": null
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForVectors",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Vectors"
+              }
+            }
           },
           "expect": false
         }
@@ -638,19 +822,38 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
@@ -683,23 +886,31 @@
         {
           "op": "database.add_filter",
           "args": {
-            "name": "operator_double_decode"
+            "name": "joinedSeal"
           },
           "expect": null
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForObjectIndexes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::IndexObject"
+              }
+            }
           },
           "expect": false
         }
@@ -723,19 +934,38 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
@@ -768,23 +998,131 @@
         {
           "op": "database.add_filter",
           "args": {
-            "name": "operator_double_decode"
+            "name": "joinedSeal"
           },
           "expect": null
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForObjectIndexes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::IndexObject"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "ObjectAttributeTests::testObjectPathKeysOutsideTheAllowedCharsAreRefused",
+      "state": [
+        "sqlite"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "sqlite",
+            "emulate_mysql": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "joinedSeal"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Objects"
+              }
+            }
           },
           "expect": false
         }
@@ -808,19 +1146,38 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
@@ -853,15 +1210,19 @@
         {
           "op": "database.add_filter",
           "args": {
-            "name": "operator_double_decode"
+            "name": "joinedSeal"
           },
           "expect": null
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForObject",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Objects"
+              }
+            }
           },
           "expect": false
         }

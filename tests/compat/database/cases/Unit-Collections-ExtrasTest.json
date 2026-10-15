@@ -1,0 +1,746 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Collections/ExtrasTest.php"
+  ],
+  "cases": [
+    {
+      "name": "ExtrasTest::testFromArrayExtrasAreKeptInStorage",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "title",
+              "size": 64
+            },
+            "as": "o451"
+          },
+          "bind": "s909",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "title",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "books",
+                "attributes": [
+                  {
+                    "$obj": "o451"
+                  }
+                ],
+                "category": "fiction"
+              }
+            },
+            "as": "o452"
+          },
+          "bind": "s910",
+          "expect": {
+            "$document": {
+              "$id": "books",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "category": "fiction",
+              "name": "books",
+              "documentSecurity": true,
+              "indexes": []
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o452"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "category"
+            }
+          },
+          "expect": "fiction"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o452"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o453"
+          },
+          "bind": "s912",
+          "expect": {
+            "$document": {
+              "$id": "books",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "category": "fiction",
+              "name": "books",
+              "documentSecurity": true,
+              "indexes": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o453"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "category"
+            }
+          },
+          "expect": "fiction"
+        }
+      ]
+    },
+    {
+      "name": "ExtrasTest::testDocumentSecurityFalseIsStored",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "books",
+              "documentSecurity": false
+            },
+            "as": "o454"
+          },
+          "bind": "s914",
+          "expect": {
+            "$document": {
+              "$id": "books",
+              "name": "books",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o454"
+            },
+            "method": "documentSecurity",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o454"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "documentSecurity"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "ExtrasTest::testDocumentSecurityFalseIsStoredWithoutAnId",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "",
+              "documentSecurity": false
+            },
+            "as": "o455"
+          },
+          "bind": "s917",
+          "expect": {
+            "$document": {
+              "$id": "",
+              "name": "",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "documentSecurity": false
+              }
+            },
+            "as": "o456"
+          },
+          "bind": "s918",
+          "expect": {
+            "$document": {
+              "documentSecurity": false,
+              "$id": "",
+              "name": "",
+              "attributes": [],
+              "indexes": []
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o455"
+            },
+            "method": "documentSecurity",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o455"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "documentSecurity"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o456"
+            },
+            "method": "documentSecurity",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o456"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "documentSecurity"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "ExtrasTest::testKnownKeysSurviveCreateCollection",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o457"
+          },
+          "bind": "s923",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o457"
+              },
+              "cache": "none"
+            },
+            "as": "o458"
+          },
+          "bind": "s924",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o458"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "extras"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o458"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "extras_u000000000019"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o458"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "title",
+              "size": 64
+            },
+            "as": "o459"
+          },
+          "bind": "s928",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "title",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "books",
+                "name": "Books",
+                "documentSecurity": false,
+                "attributes": [
+                  {
+                    "$obj": "o459"
+                  }
+                ]
+              }
+            },
+            "as": "o460"
+          },
+          "bind": "s929",
+          "expect": {
+            "$document": {
+              "$id": "books",
+              "name": "Books",
+              "documentSecurity": false,
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": []
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o458"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o460"
+              }
+            },
+            "as": "o461"
+          },
+          "expect": {
+            "$document": {
+              "$id": "books",
+              "name": "Books",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o458"
+            },
+            "method": "getCollection",
+            "args": {
+              "collection": "books"
+            },
+            "as": "o462"
+          },
+          "bind": "s931",
+          "expect": {
+            "$document": {
+              "name": "Books",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$sequence": "1",
+              "$id": "books",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o462"
+            },
+            "method": "name",
+            "args": {}
+          },
+          "expect": "Books"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o462"
+            },
+            "method": "documentSecurity",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o462"
+            },
+            "method": "attributes",
+            "args": {}
+          },
+          "expect": [
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "title",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 64,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "ExtrasTest::testUnknownExtraThrowsOnCreateCollection",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o463"
+          },
+          "bind": "s935",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o463"
+              },
+              "cache": "none"
+            },
+            "as": "o464"
+          },
+          "bind": "s936",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o464"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "extras"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o464"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "extras_u000000000020"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o464"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "books",
+              "documentSecurity": false,
+              "metadata": {
+                "category": "fiction"
+              }
+            },
+            "as": "o465"
+          },
+          "bind": "s940",
+          "expect": {
+            "$document": {
+              "$id": "books",
+              "name": "books",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false,
+              "category": "fiction"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o464"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o465"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Unknown collection keys: category"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o464"
+            },
+            "method": "findCollection",
+            "args": {
+              "collection": "books"
+            }
+          },
+          "expect": null
+        }
+      ]
+    }
+  ]
+}

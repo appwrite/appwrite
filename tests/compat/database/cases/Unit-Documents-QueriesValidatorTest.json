@@ -1,0 +1,2012 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Documents/QueriesValidatorTest.php"
+  ],
+  "cases": [
+    {
+      "name": "QueriesValidatorTest::testANarrowReadBuildsNoDocumentsValidator",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o1151"
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "title",
+              "size": 64
+            },
+            "as": "o1152"
+          },
+          "bind": "s1995",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "title",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "year"
+            },
+            "as": "o1153"
+          },
+          "bind": "s1996",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "year",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o1154"
+          },
+          "bind": "s1997",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o1154"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o1155"
+          },
+          "bind": "s1999",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o1155"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o1156"
+          },
+          "bind": "s2001",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o1156"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "books",
+              "attributes": [
+                {
+                  "$obj": "o1152"
+                },
+                {
+                  "$obj": "o1153"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ]
+            },
+            "as": "o1157"
+          },
+          "expect": {
+            "$document": {
+              "$id": "books",
+              "name": "books",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "year",
+                    "key": "year",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "dune",
+                "title": "Dune",
+                "year": 6
+              }
+            },
+            "as": "o1158"
+          },
+          "expect": {
+            "$document": {
+              "$id": "dune",
+              "title": "Dune",
+              "year": 6
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "title",
+              "values": [
+                "Dune"
+              ]
+            },
+            "as": "o1159"
+          },
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "title",
+              "values": [
+                "Dune"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "greaterThan",
+            "args": {
+              "attribute": "year",
+              "value": 1
+            },
+            "as": "o1160"
+          },
+          "expect": {
+            "$query": {
+              "method": "greaterThan",
+              "attribute": "year",
+              "values": [
+                1
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "title",
+              "values": [
+                "Dune"
+              ]
+            },
+            "as": "o1161"
+          },
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "title",
+              "values": [
+                "Dune"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "orderDesc",
+            "args": {
+              "attribute": "year"
+            },
+            "as": "o1162"
+          },
+          "expect": {
+            "$query": {
+              "method": "orderDesc",
+              "attribute": "year",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "limit",
+            "args": {
+              "value": 5
+            },
+            "as": "o1163"
+          },
+          "expect": {
+            "$query": {
+              "method": "limit",
+              "attribute": "",
+              "values": [
+                5
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "offset",
+            "args": {
+              "value": 0
+            },
+            "as": "o1164"
+          },
+          "expect": {
+            "$query": {
+              "method": "offset",
+              "attribute": "",
+              "values": [
+                0
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "QueriesValidatorTest::testAnyOtherReadStillUsesTheDocumentsValidator",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o1165"
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "title",
+              "size": 64
+            },
+            "as": "o1166"
+          },
+          "bind": "s2012",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "title",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "year"
+            },
+            "as": "o1167"
+          },
+          "bind": "s2013",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "year",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o1168"
+          },
+          "bind": "s2014",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o1168"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o1169"
+          },
+          "bind": "s2016",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o1169"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o1170"
+          },
+          "bind": "s2018",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o1170"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "books",
+              "attributes": [
+                {
+                  "$obj": "o1166"
+                },
+                {
+                  "$obj": "o1167"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ]
+            },
+            "as": "o1171"
+          },
+          "expect": {
+            "$document": {
+              "$id": "books",
+              "name": "books",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "year",
+                    "key": "year",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "dune",
+                "title": "Dune",
+                "year": 6
+              }
+            },
+            "as": "o1172"
+          },
+          "expect": {
+            "$document": {
+              "$id": "dune",
+              "title": "Dune",
+              "year": 6
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fulltext",
+            "args": {
+              "key": "title_fulltext",
+              "attributes": [
+                "title"
+              ]
+            },
+            "as": "o1173"
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "title_fulltext",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Fulltext"
+              },
+              "attributes": [
+                "title"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "search",
+            "args": {
+              "attribute": "title",
+              "value": "Dune"
+            },
+            "as": "o1174"
+          },
+          "expect": {
+            "$query": {
+              "method": "search",
+              "attribute": "title",
+              "values": [
+                "Dune"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "select",
+            "args": {
+              "attributes": [
+                "title"
+              ]
+            },
+            "as": "o1175"
+          },
+          "expect": {
+            "$query": {
+              "method": "select",
+              "attribute": "",
+              "values": [
+                "title"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "title",
+              "values": [
+                "Dune"
+              ]
+            },
+            "as": "o1176"
+          },
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "title",
+              "values": [
+                "Dune"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "QueriesValidatorTest::testANarrowReadFollowsEverySchemaChange",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o1177"
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "title",
+              "size": 64
+            },
+            "as": "o1178"
+          },
+          "bind": "s2027",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "title",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "year"
+            },
+            "as": "o1179"
+          },
+          "bind": "s2028",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "year",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o1180"
+          },
+          "bind": "s2029",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o1180"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o1181"
+          },
+          "bind": "s2031",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o1181"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o1182"
+          },
+          "bind": "s2033",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o1182"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "books",
+              "attributes": [
+                {
+                  "$obj": "o1178"
+                },
+                {
+                  "$obj": "o1179"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ]
+            },
+            "as": "o1183"
+          },
+          "expect": {
+            "$document": {
+              "$id": "books",
+              "name": "books",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "year",
+                    "key": "year",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "dune",
+                "title": "Dune",
+                "year": 6
+              }
+            },
+            "as": "o1184"
+          },
+          "expect": {
+            "$document": {
+              "$id": "dune",
+              "title": "Dune",
+              "year": 6
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "year",
+              "values": [
+                6
+              ]
+            },
+            "as": "o1185"
+          },
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "year",
+              "values": [
+                6
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Attribute\\Update",
+            "args": {
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 8
+            },
+            "as": "o1186"
+          },
+          "expect": {
+            "$value": "Attribute\\Update",
+            "fields": {
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 8,
+              "required": null,
+              "default": {
+                "$enum": "Unchanged::Value"
+              },
+              "signed": null,
+              "array": null,
+              "format": {
+                "$enum": "Unchanged::Value"
+              },
+              "filters": null,
+              "key": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "year",
+              "values": [
+                "six"
+              ]
+            },
+            "as": "o1187"
+          },
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "year",
+              "values": [
+                "six"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "year",
+              "values": [
+                "six"
+              ]
+            },
+            "as": "o1188"
+          },
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "year",
+              "values": [
+                "six"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "published",
+              "values": [
+                "six"
+              ]
+            },
+            "as": "o1189"
+          },
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "published",
+              "values": [
+                "six"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Attribute\\Update",
+            "args": {
+              "filters": [
+                "encrypt"
+              ]
+            },
+            "as": "o1190"
+          },
+          "expect": {
+            "$value": "Attribute\\Update",
+            "fields": {
+              "type": null,
+              "size": null,
+              "required": null,
+              "default": {
+                "$enum": "Unchanged::Value"
+              },
+              "signed": null,
+              "array": null,
+              "format": {
+                "$enum": "Unchanged::Value"
+              },
+              "filters": [
+                "encrypt"
+              ],
+              "key": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "published",
+              "values": [
+                "six"
+              ]
+            },
+            "as": "o1191"
+          },
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "published",
+              "values": [
+                "six"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "published",
+              "values": [
+                "six"
+              ]
+            },
+            "as": "o1192"
+          },
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "published",
+              "values": [
+                "six"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "published"
+            },
+            "as": "o1193"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "published",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "published",
+              "values": [
+                6
+              ]
+            },
+            "as": "o1194"
+          },
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "published",
+              "values": [
+                6
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "published",
+              "values": [
+                "six"
+              ]
+            },
+            "as": "o1195"
+          },
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "published",
+              "values": [
+                "six"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "QueriesValidatorTest::testAnIndexChangeReachesTheListsThatNeedAnIndex",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o1196"
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "title",
+              "size": 64
+            },
+            "as": "o1197"
+          },
+          "bind": "s2049",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "title",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "year"
+            },
+            "as": "o1198"
+          },
+          "bind": "s2050",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "year",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o1199"
+          },
+          "bind": "s2051",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o1199"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o1200"
+          },
+          "bind": "s2053",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o1200"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o1201"
+          },
+          "bind": "s2055",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o1201"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "books",
+              "attributes": [
+                {
+                  "$obj": "o1197"
+                },
+                {
+                  "$obj": "o1198"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ]
+            },
+            "as": "o1202"
+          },
+          "expect": {
+            "$document": {
+              "$id": "books",
+              "name": "books",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "year",
+                    "key": "year",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "dune",
+                "title": "Dune",
+                "year": 6
+              }
+            },
+            "as": "o1203"
+          },
+          "expect": {
+            "$document": {
+              "$id": "dune",
+              "title": "Dune",
+              "year": 6
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "search",
+            "args": {
+              "attribute": "title",
+              "value": "Dune"
+            },
+            "as": "o1204"
+          },
+          "expect": {
+            "$query": {
+              "method": "search",
+              "attribute": "title",
+              "values": [
+                "Dune"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fulltext",
+            "args": {
+              "key": "title_fulltext",
+              "attributes": [
+                "title"
+              ]
+            },
+            "as": "o1205"
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "title_fulltext",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Fulltext"
+              },
+              "attributes": [
+                "title"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "QueriesValidatorTest::testEachTenantIsJudgedByItsOwnCollection",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o1231"
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "title",
+              "size": 64
+            },
+            "as": "o1232"
+          },
+          "bind": "s2105",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "title",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "year"
+            },
+            "as": "o1233"
+          },
+          "bind": "s2106",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "year",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o1234"
+          },
+          "bind": "s2107",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o1234"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o1235"
+          },
+          "bind": "s2109",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o1235"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o1236"
+          },
+          "bind": "s2111",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o1236"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "books",
+              "attributes": [
+                {
+                  "$obj": "o1232"
+                },
+                {
+                  "$obj": "o1233"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ]
+            },
+            "as": "o1237"
+          },
+          "expect": {
+            "$document": {
+              "$id": "books",
+              "name": "books",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "year",
+                    "key": "year",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "dune",
+                "title": "Dune",
+                "year": 6
+              }
+            },
+            "as": "o1238"
+          },
+          "expect": {
+            "$document": {
+              "$id": "dune",
+              "title": "Dune",
+              "year": 6
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "year",
+              "values": [
+                6
+              ]
+            },
+            "as": "o1239"
+          },
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "year",
+              "values": [
+                6
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "title",
+              "size": 64
+            },
+            "as": "o1240"
+          },
+          "bind": "s2116",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "title",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 64,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "year",
+              "size": 8
+            },
+            "as": "o1241"
+          },
+          "bind": "s2117",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "year",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 8,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o1242"
+          },
+          "bind": "s2118",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o1242"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o1243"
+          },
+          "bind": "s2120",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o1243"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "books",
+              "attributes": [
+                {
+                  "$obj": "o1240"
+                },
+                {
+                  "$obj": "o1241"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "as": "o1244"
+          },
+          "expect": {
+            "$document": {
+              "$id": "books",
+              "name": "books",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "year",
+                    "key": "year",
+                    "type": "string",
+                    "size": 8,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        }
+      ]
+    }
+  ]
+}
