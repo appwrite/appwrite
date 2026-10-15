@@ -81,7 +81,7 @@ export function getInitTicketShareRouteMetaTags(params: {
       }
     }
     return tag
-  })]
+  })] as unknown as Array<Record<string, string>>
 }
 
 export function getInitTicketShareRouteHead(params: {
