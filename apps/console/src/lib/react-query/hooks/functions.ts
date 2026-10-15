@@ -852,6 +852,8 @@ export function functionDomainsQueryOptions(
   filterQueries?: string[],
 ) {
   const hasFilters = filterQueries !== undefined && filterQueries.length > 0
+  // The email domains flag adds a protocol filter, so toggling it must refetch.
+  const emailDomains = isFeatureEnabled('functionEmailDomains')
   return queryOptions({
     queryKey: [
       'proxy-rules',
@@ -862,6 +864,7 @@ export function functionDomainsQueryOptions(
       limit,
       search,
       ...(hasFilters ? [filterQueries] : []),
+      ...(emailDomains ? ['email-domains'] : []),
     ],
     queryFn: () =>
       fetchFunctionDomains(
