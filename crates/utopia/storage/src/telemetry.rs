@@ -24,7 +24,7 @@ const BOUNDARIES: &[f64] = &[0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.
 /// use utopia_storage::{Device, Local, Telemetry};
 /// use utopia_telemetry::{Kind, MemoryTelemetry};
 ///
-/// # tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap().block_on(async {
+/// # utopia_async::run(async {
 /// let telemetry = Arc::new(MemoryTelemetry::new());
 /// let device = Telemetry::new(&telemetry, Arc::new(Local::new("/tmp")));
 /// device.exists("/tmp/missing.txt").await?;

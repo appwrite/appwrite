@@ -5,7 +5,7 @@ use std::sync::Arc;
 use async_trait::async_trait;
 use php_std::json::{Flags, encode};
 use php_std::{Array, Value};
-use tokio::io::AsyncWriteExt;
+use utopia_async::io::AsyncWriteExt;
 use utopia_storage::{Device, Local};
 
 use crate::destination::{Callback, Destination};
@@ -112,8 +112,8 @@ pub(crate) async fn temp_local(prefix: &str) -> Result<Local> {
     let dir = std::env::temp_dir();
     let root =
         format!("{}/{prefix}{}", dir.to_string_lossy().trim_end_matches('/'), php_std::system::uniqid("", false));
-    if tokio::fs::metadata(&root).await.is_err() {
-        let mut b = tokio::fs::DirBuilder::new();
+    if utopia_async::fs::metadata(&root).await.is_err() {
+        let mut b = utopia_async::fs::DirBuilder::new();
         b.recursive(true);
         #[cfg(unix)]
         b.mode(0o755);
@@ -187,7 +187,7 @@ impl Json {
 }
 
 async fn append(path: &str, bytes: &[u8]) -> Result<()> {
-    let mut f = tokio::fs::OpenOptions::new()
+    let mut f = utopia_async::fs::OpenOptions::new()
         .append(true)
         .create(true)
         .open(path)

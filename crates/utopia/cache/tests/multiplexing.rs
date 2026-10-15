@@ -12,9 +12,9 @@ use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::time::Duration;
 
 use php_std::types::Value;
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio::net::TcpListener;
-use tokio::sync::Notify;
+use utopia_async::io::{AsyncReadExt, AsyncWriteExt};
+use utopia_async::net::TcpListener;
+use utopia_async::sync::Notify;
 use utopia_cache::resp::{self, Reply};
 use utopia_cache::{Adapter, Error, Multiplexing, MultiplexingOptions};
 
@@ -35,12 +35,12 @@ impl Server {
         let resumed = Arc::new(Notify::new());
         let data: Arc<std::sync::Mutex<HashMap<Vec<u8>, Vec<u8>>>> = Arc::default();
         let (c, s, r) = (connections.clone(), stalled.clone(), resumed.clone());
-        tokio::spawn(async move {
+        utopia_async::spawn(async move {
             loop {
                 let Ok((mut socket, _)) = listener.accept().await else { return };
                 c.fetch_add(1, Ordering::SeqCst);
                 let (s, r, data) = (s.clone(), r.clone(), data.clone());
-                tokio::spawn(async move {
+                utopia_async::spawn(async move {
                     let mut buffer = Vec::new();
                     let mut chunk = [0u8; 4096];
                     loop {
@@ -102,7 +102,7 @@ fn value(s: &str) -> Value {
     Value::from(s)
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn deadline_throws_timeout_rather_than_connection_failure() {
     let server = Server::start().await;
     let cache = server.adapter(0.05, 5.0).await;
@@ -116,7 +116,7 @@ async fn deadline_throws_timeout_rather_than_connection_failure() {
     assert!(error.to_string().contains("Timed out waiting for Redis response"));
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn abandoned_reply_is_not_handed_to_the_next_caller() {
     let server = Server::start().await;
     let cache = server.adapter(0.05, 5.0).await;
@@ -126,13 +126,13 @@ async fn abandoned_reply_is_not_handed_to_the_next_caller() {
     server.pause();
     assert!(matches!(cache.load("first", 60, "first").await, Err(Error::Timeout(_))));
     server.resume();
-    tokio::time::sleep(Duration::from_millis(300)).await;
+    utopia_async::sleep(Duration::from_millis(300)).await;
 
     assert_eq!(cache.load("second", 60, "second").await.unwrap(), Some(value("second-value")));
     assert_eq!(cache.load("first", 60, "first").await.unwrap(), Some(value("first-value")));
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn a_stall_costs_the_waiting_callers_and_no_reconnect() {
     let server = Server::start().await;
     let cache = Arc::new(server.adapter(0.05, 5.0).await);
@@ -143,7 +143,7 @@ async fn a_stall_costs_the_waiting_callers_and_no_reconnect() {
     let mut callers = Vec::new();
     for _ in 0..8 {
         let cache = cache.clone();
-        callers.push(tokio::spawn(async move { cache.load("survives", 60, "survives").await }));
+        callers.push(utopia_async::spawn(async move { cache.load("survives", 60, "survives").await }));
     }
     let mut timeouts = 0;
     for caller in callers {
@@ -152,7 +152,7 @@ async fn a_stall_costs_the_waiting_callers_and_no_reconnect() {
         }
     }
     server.resume();
-    tokio::time::sleep(Duration::from_millis(300)).await;
+    utopia_async::sleep(Duration::from_millis(300)).await;
 
     assert_eq!(timeouts, 8, "every caller waiting on the stalled server expires");
     assert_eq!(cache.load("survives", 60, "survives").await.unwrap(), Some(value("survives-value")));
@@ -160,7 +160,7 @@ async fn a_stall_costs_the_waiting_callers_and_no_reconnect() {
     assert_eq!(server.connections.load(Ordering::SeqCst), before, "a stall must not rebuild the connection");
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn silence_beyond_the_liveness_timeout_tears_the_connection_down() {
     let server = Server::start().await;
     let cache = server.adapter(0.05, 0.3).await;
@@ -183,17 +183,17 @@ async fn silence_beyond_the_liveness_timeout_tears_the_connection_down() {
 
     let torn = torn.expect("a silent connection is declared dead");
     assert!(torn.to_string().contains("idle for"), "{torn}");
-    tokio::time::sleep(Duration::from_millis(300)).await;
+    utopia_async::sleep(Duration::from_millis(300)).await;
     assert_eq!(cache.load("liveness", 60, "liveness").await.unwrap(), Some(value("liveness-value")));
     assert_eq!(server.connections.load(Ordering::SeqCst), 2, "the next caller reconnects");
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn idle_gap_is_not_mistaken_for_a_dead_connection() {
     let server = Server::start().await;
     let cache = server.adapter(0.1, 0.3).await;
     cache.save("gap", &value("value"), "gap", 0).await.unwrap();
-    tokio::time::sleep(Duration::from_millis(500)).await;
+    utopia_async::sleep(Duration::from_millis(500)).await;
 
     server.pause();
     let error = cache.load("gap", 60, "gap").await.unwrap_err();
@@ -203,7 +203,7 @@ async fn idle_gap_is_not_mistaken_for_a_dead_connection() {
     assert_eq!(cache.load("gap", 60, "gap").await.unwrap(), Some(value("value")));
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn invalid_options_are_rejected() {
     let mut options = MultiplexingOptions::new("127.0.0.1", 1);
     options.read_timeout = 1.0;
@@ -213,7 +213,7 @@ async fn invalid_options_are_rejected() {
     assert_eq!(error.php_class(), "InvalidArgumentException");
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn a_closed_connection_is_rebuilt_by_the_next_call() {
     let server = Server::start().await;
     let cache = server.adapter(0.25, 5.0).await;
@@ -223,7 +223,7 @@ async fn a_closed_connection_is_rebuilt_by_the_next_call() {
     assert_eq!(server.connections.load(Ordering::SeqCst), 2);
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn pending_depth_goes_up_and_down_with_each_command() {
     use utopia_cache::telemetry::{Kind, MemoryTelemetry, Number};
 

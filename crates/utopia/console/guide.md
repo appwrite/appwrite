@@ -58,7 +58,7 @@ try {
 `execute` passes the input, collects both outputs, reports progress, and kills a command that outlives its timeout (status 1).
 
 ```
-# tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap().block_on(async {
+# utopia_async::run(async {
 use std::time::Duration;
 use utopia_console::{execute, Command};
 

@@ -507,8 +507,8 @@ mod tests {
         assert_send_sync::<Database>();
     }
 
-    /// The futures of the main entry points must stay `Send` (tokio spawns
-    /// them): this fails to compile when an implementation holds a
+    /// The futures of the main entry points must stay `Send` (a multi-threaded
+    /// runtime moves them between threads): this fails to compile when an implementation holds a
     /// non-`Send` value (such as the settings guard) across an await.
     #[allow(dead_code, unreachable_code, clippy::diverging_sub_expression)]
     fn futures_are_send(db: &Database) {

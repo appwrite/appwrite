@@ -41,7 +41,7 @@ mysql_async = { workspace = true, optional = true }
 php-std.workspace = true
 rusqlite = { workspace = true, optional = true }
 serde_json.workspace = true
-tokio = { workspace = true, features = ["sync", "time", "rt", "net", "io-util"] }
+utopia-async.workspace = true
 tracing.workspace = true
 utopia-cache.workspace = true
 utopia-pools = { workspace = true, optional = true }
@@ -52,7 +52,6 @@ xxhash-rust.workspace = true
 
 [dev-dependencies]
 indexmap.workspace = true
-tokio = { workspace = true, features = ["sync", "time", "rt", "macros", "rt-multi-thread"] }
 
 [package.metadata.utopia]
 category = "data"

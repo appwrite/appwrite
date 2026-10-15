@@ -2,7 +2,7 @@
 //! `PoolTimeoutTest.php`, `Adapter/PoolSyncTest.php`,
 //! `Adapter/PoolDelegationTest.php`, `Adapter/PoolHostnameTest.php`,
 //! `Adapter/PoolCapabilityTest.php`, `Adapter/PoolCoroutineTransactionTest.php`
-//! (coroutines as tokio tasks, children started with `inherit`), the pool
+//! (coroutines as tasks, children started with `inherit`), the pool
 //! parts of `Adapter/LimitsTest.php` and `Adapter/FeatureContractTest.php`,
 //! and `Adapter/ReadWritePoolTest.php`'s routing. PHP stubs the
 //! `Utopia\Pools\Pool` and the pooled adapters; here a real pool hands out
@@ -142,7 +142,7 @@ impl Transform for Same {
 
 // PoolTest
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_delegate_replaces_stateful_write_hook_on_reused_adapter() {
     let probe = Arc::new(Probe::new("memory"));
     probe.add_write_hook(Arc::new(Tenancy::new("old_tenant_column")));
@@ -155,7 +155,7 @@ async fn test_delegate_replaces_stateful_write_hook_on_reused_adapter() {
     assert_eq!(probe.tenant_hook().unwrap().column(), "new_tenant_column");
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_transaction_replaces_stateful_write_hook_on_reused_adapter() {
     let probe = Arc::new(Probe::new("memory"));
     probe.add_write_hook(Arc::new(NoHook));
@@ -170,7 +170,7 @@ async fn test_transaction_replaces_stateful_write_hook_on_reused_adapter() {
     assert_eq!(probe.tenant_hook().unwrap().column(), "new_tenant_column");
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_delegate_and_transaction_remove_a_write_hook_removed_from_the_pool() {
     let probe = Arc::new(Probe::new("memory"));
     let pool = pool(&probe);
@@ -191,7 +191,7 @@ async fn test_delegate_and_transaction_remove_a_write_hook_removed_from_the_pool
     assert!(probe.write_hooks().is_empty());
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_pinned_adapter_resyncs_tenant_and_database_before_delegated_call() {
     let probe = Arc::new(Probe::new("memory"));
     probe.set_database("old_db");
@@ -216,13 +216,13 @@ async fn test_pinned_adapter_resyncs_tenant_and_database_before_delegated_call()
     .unwrap();
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_memory_pool_delegates_without_requiring_timeouts() {
     let probe = Arc::new(Probe::new("memory"));
     assert!(pool(&probe).list().await.unwrap().is_empty());
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_defined_attributes_support_propagates_across_borrowed_adapters() {
     let first = Arc::new(Probe::new("first").schemaless());
     let second = Arc::new(Probe::new("second").schemaless());
@@ -238,7 +238,7 @@ async fn test_defined_attributes_support_propagates_across_borrowed_adapters() {
     assert!(second.supports(Capability::DefinedAttributes));
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_memory_pool_set_timeout_refuses_when_the_timeout_would_be_applied() {
     let probe = Arc::new(Probe::new("memory"));
     let pool = pool(&probe);
@@ -250,7 +250,7 @@ async fn test_memory_pool_set_timeout_refuses_when_the_timeout_would_be_applied(
     assert_eq!(error.message(), "Adapter does not support timeouts");
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_missing_feature_throws() {
     let probe = Arc::new(Probe::new("memory"));
     let pool = pool(&probe);
@@ -262,7 +262,7 @@ async fn test_missing_feature_throws() {
     assert_eq!(error.message(), "Adapter does not support upserts");
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_timeout_raised_while_pinned_reaches_the_pinned_connection() {
     let probe = Arc::new(Probe::new("memory").timeouts());
     let pool = pool(&probe);
@@ -279,7 +279,7 @@ async fn test_timeout_raised_while_pinned_reaches_the_pinned_connection() {
     .unwrap();
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_borrowed_and_pinned_adapters_do_not_keep_the_profiler() {
     let probe = Arc::new(Probe::new("memory"));
     let pool = pool(&probe);
@@ -300,7 +300,7 @@ async fn test_borrowed_and_pinned_adapters_do_not_keep_the_profiler() {
 
 // PoolTimeoutTest
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_set_timeout_does_not_open_a_connection() {
     let opened = Arc::new(AtomicUsize::new(0));
     let counter = opened.clone();
@@ -315,7 +315,7 @@ async fn test_set_timeout_does_not_open_a_connection() {
     assert_eq!(pool.timeout(Event::All), 300_000);
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_timeout_is_applied_to_every_checkout() {
     let probe = Arc::new(Probe::new("memory").timeouts());
     let pool = pool(&probe);
@@ -327,7 +327,7 @@ async fn test_timeout_is_applied_to_every_checkout() {
     assert_eq!(probe.recorded_timeouts(), [(Event::All, 300_000)]);
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_cleared_timeout_is_cleared_on_every_checkout() {
     let probe = Arc::new(Probe::new("memory").timeouts());
     let pool = pool(&probe);
@@ -340,7 +340,7 @@ async fn test_cleared_timeout_is_cleared_on_every_checkout() {
     assert_eq!(pool.timeout(Event::All), 0);
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_per_event_timeout_reaches_the_connection() {
     let probe = Arc::new(Probe::new("memory").timeouts());
     let pool = pool(&probe);
@@ -351,7 +351,7 @@ async fn test_per_event_timeout_reaches_the_connection() {
     assert_eq!(probe.timeout(Event::DocumentFind), 300_000);
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_clearing_one_event_leaves_the_global_timeout_in_place() {
     let probe = Arc::new(Probe::new("memory").timeouts());
     let pool = pool(&probe);
@@ -363,7 +363,7 @@ async fn test_clearing_one_event_leaves_the_global_timeout_in_place() {
     assert_eq!(pool.timeout(Event::All), 300_000);
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_handle_with_no_timeout_resets_the_connection_it_is_given() {
     let probe = Arc::new(Probe::new("memory").timeouts());
     let (connections, _) = connections(&probe);
@@ -379,7 +379,7 @@ async fn test_handle_with_no_timeout_resets_the_connection_it_is_given() {
     assert_eq!(probe.timeout(Event::All), 0);
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_clearing_every_timeout_drops_per_event_entries_too() {
     let probe = Arc::new(Probe::new("memory").timeouts());
     let pool = pool(&probe);
@@ -391,7 +391,7 @@ async fn test_clearing_every_timeout_drops_per_event_entries_too() {
     assert_eq!(pool.timeout(Event::All), 0);
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_timeout_changed_inside_a_transaction_reaches_the_pinned_connection() {
     let probe = Arc::new(Probe::new("memory").timeouts());
     let pool = pool(&probe);
@@ -408,7 +408,7 @@ async fn test_timeout_changed_inside_a_transaction_reaches_the_pinned_connection
     assert!(cleared.is_empty());
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_zero_is_held_as_no_timeout() {
     let probe = Arc::new(Probe::new("memory").timeouts());
     let pool = pool(&probe);
@@ -526,7 +526,7 @@ fn changes(second: &Arc<dyn Transform>, other: &Arc<Profiler>, first: &Arc<dyn T
     ]
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_borrowed_pinned_and_later_calls_see_the_change() {
     let second: Arc<dyn Transform> = Arc::new(Same);
     let other = Arc::new(Profiler::new());
@@ -584,7 +584,7 @@ async fn test_borrowed_pinned_and_later_calls_see_the_change() {
     }
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_a_connections_own_change_does_not_reach_the_next_call() {
     let other = Arc::new(Profiler::new());
     let second: Arc<dyn Transform> = Arc::new(Same);
@@ -654,7 +654,7 @@ async fn test_a_connections_own_change_does_not_reach_the_next_call() {
 
 // PoolDelegationTest
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_each_missing_feature_names_itself() {
     let probe = Arc::new(Probe::new("memory"));
     let pool = pool(&probe);
@@ -699,7 +699,7 @@ async fn test_each_missing_feature_names_itself() {
     );
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_metadata_entries_reach_the_borrowed_adapter() {
     let probe = Arc::new(Probe::new("memory"));
     probe.set_metadata("stale", Value::Str("entry".into()));
@@ -709,7 +709,7 @@ async fn test_metadata_entries_reach_the_borrowed_adapter() {
     assert_eq!(probe.metadata(), [("request".to_owned(), Value::Str("r-1".into()))]);
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_direct_transaction_calls_reach_the_borrowed_adapter() {
     let probe = Arc::new(Probe::new("memory"));
     let pool = pool(&probe);
@@ -729,7 +729,7 @@ async fn test_direct_transaction_calls_reach_the_borrowed_adapter() {
 
 // PoolHostnameTest
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_the_hostname_is_the_pooled_adapters_unless_the_pool_has_one() {
     let pool = pool(&Arc::new(Probe::new("x").hostname("db-1")));
     assert_eq!(pool.hostname().await.unwrap(), "db-1");
@@ -739,7 +739,7 @@ async fn test_the_hostname_is_the_pooled_adapters_unless_the_pool_has_one() {
     assert_eq!(pool.hostname().await.unwrap(), "db-1");
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_a_read_write_pool_follows_the_hostname_set_after_it_answered() {
     let write = Arc::new(Probe::new("write").hostname("db-1"));
     let read = Arc::new(Probe::new("read").hostname("replica-1"));
@@ -757,7 +757,7 @@ fn checkouts(probe: &Probe) -> usize {
     probe.checkouts.load(Ordering::SeqCst)
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_a_capability_question_on_a_cold_pool_checks_out_once() {
     let probe = Arc::new(Probe::new("memory"));
     let pool = pool(&probe);
@@ -767,7 +767,7 @@ async fn test_a_capability_question_on_a_cold_pool_checks_out_once() {
     assert_eq!(checkouts(&probe), 1);
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_every_handle_over_one_pool_shares_the_answers() {
     let probe = Arc::new(Probe::new("memory"));
     let (connections, down) = connections(&probe);
@@ -780,7 +780,7 @@ async fn test_every_handle_over_one_pool_shares_the_answers() {
     assert_eq!(checkouts(&probe), before);
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_features_are_asked_once_per_feature() {
     let probe = Arc::new(Probe::new("memory"));
     let (connections, down) = connections(&probe);
@@ -794,7 +794,7 @@ async fn test_features_are_asked_once_per_feature() {
     assert_eq!(checkouts(&probe), 2);
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_defined_attributes_always_asks_a_connection_with_a_mode_of_its_own() {
     let probe = Arc::new(Probe::new("mongo").schemaless());
     let pool = pool(&probe);
@@ -811,7 +811,7 @@ async fn test_defined_attributes_always_asks_a_connection_with_a_mode_of_its_own
     );
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_defined_attributes_is_asked_once_per_mode_the_handle_set() {
     let probe = Arc::new(Probe::new("mongo").schemaless());
     let (connections, _) = connections(&probe);
@@ -843,7 +843,7 @@ async fn test_defined_attributes_is_asked_once_per_mode_the_handle_set() {
     assert_eq!(checkouts(&probe) - base, 0, "Handles over one pool share the answer of each mode");
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_setting_the_schema_mode_on_a_pool_of_schema_enforcing_adapters_leaves_them_enforcing_it() {
     let probe = Arc::new(Probe::new("memory"));
     let (connections, down) = connections(&probe);
@@ -858,7 +858,7 @@ async fn test_setting_the_schema_mode_on_a_pool_of_schema_enforcing_adapters_lea
     assert!(!Schemaless::is_schemaless(&pool), "a pool of schema-enforcing adapters has no schemaless mode");
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_a_failed_first_checkout_answers_nothing_and_the_next_one_fills_the_answers() {
     let probe = Arc::new(Probe::new("memory"));
     let (connections, down) = connections(&probe);
@@ -876,7 +876,7 @@ async fn test_a_failed_first_checkout_answers_nothing_and_the_next_one_fills_the
 
 // FeatureContractTest, LimitsTest (pool parts)
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_memory_pool_has_feature_delegates_to_inner_adapter() {
     let pool = handle(
         connections_of("plain", 1, || Arc::new(utopia_database::adapter::memory::Memory::new()) as Arc<dyn Adapter>).0,
@@ -887,7 +887,7 @@ async fn test_memory_pool_has_feature_delegates_to_inner_adapter() {
     assert!(pool.upserts().is_none());
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_pool_answers_for_timeouts_without_a_connection() {
     let probe = Arc::new(Probe::new("x"));
     let (connections, down) = connections(&probe);
@@ -898,7 +898,7 @@ async fn test_pool_answers_for_timeouts_without_a_connection() {
     assert_eq!(checkouts(&probe), 0);
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_a_pool_answers_with_the_limits_of_the_adapter_it_borrows() {
     let probe = Arc::new(Probe::new("memory"));
     let pool = pool(&probe);
@@ -916,7 +916,7 @@ async fn test_a_pool_answers_with_the_limits_of_the_adapter_it_borrows() {
 
 // PoolCoroutineTransactionTest, with tasks
 
-#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+#[utopia_async::test(threads = 4)]
 async fn test_a_sibling_runs_outside_another_tasks_transaction() {
     let made = Arc::new(Mutex::new(Vec::<Arc<Probe>>::new()));
     let record = made.clone();
@@ -926,12 +926,12 @@ async fn test_a_sibling_runs_outside_another_tasks_transaction() {
         probe as Arc<dyn Adapter>
     });
     let pool = Arc::new(handle(connections));
-    let (entered_tx, entered_rx) = tokio::sync::oneshot::channel::<()>();
-    let (release_tx, release_rx) = tokio::sync::oneshot::channel::<()>();
+    let (entered_tx, entered_rx) = utopia_async::sync::oneshot::channel::<()>();
+    let (release_tx, release_rx) = utopia_async::sync::oneshot::channel::<()>();
 
     let owner = {
         let pool = pool.clone();
-        tokio::spawn(async move {
+        utopia_async::spawn(async move {
             let mut entered = Some(entered_tx);
             let mut release = Some(release_rx);
             with_transaction(&*pool, || {
@@ -957,11 +957,11 @@ async fn test_a_sibling_runs_outside_another_tasks_transaction() {
     entered_rx.await.unwrap();
     let sibling = {
         let pool = pool.clone();
-        tokio::spawn(async move {
+        utopia_async::spawn(async move {
             let outside = pool.in_transaction();
             pool.ping().await.unwrap();
             let nested = with_transaction(&*pool, || async { Ok(pool.in_transaction()) }).await.unwrap();
-            (outside, nested, tokio::task::id())
+            (outside, nested, utopia_async::task::id().expect("inside a task"))
         })
     };
     let (sibling_outside, sibling_nested, sibling_task) = sibling.await.unwrap();
@@ -979,7 +979,7 @@ async fn test_a_sibling_runs_outside_another_tasks_transaction() {
     assert!(!pool.in_transaction());
 }
 
-#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+#[utopia_async::test(threads = 4)]
 async fn test_a_task_started_inside_a_transaction_runs_in_it() {
     let probe = Arc::new(Probe::new("memory"));
     let pool = Arc::new(pool(&probe));
@@ -987,7 +987,7 @@ async fn test_a_task_started_inside_a_transaction_runs_in_it() {
         let pool = pool.clone();
         async move {
             let inner = pool.clone();
-            Ok(tokio::spawn(inherit(async move { inner.in_transaction() })).await.unwrap())
+            Ok(utopia_async::spawn(inherit(async move { inner.in_transaction() })).await.unwrap())
         }
     })
     .await
@@ -996,7 +996,7 @@ async fn test_a_task_started_inside_a_transaction_runs_in_it() {
     assert!(!pool.in_transaction());
 }
 
-#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+#[utopia_async::test(threads = 4)]
 async fn test_tasks_on_the_pinned_connection_keep_their_own_tenant() {
     let probe = Arc::new(Probe::new("memory"));
     let pool = Arc::new(pool(&probe));
@@ -1007,8 +1007,8 @@ async fn test_tasks_on_the_pinned_connection_keep_their_own_tenant() {
                 let pool = pool.clone();
                 let probe = probe.clone();
                 async move {
-                    let (paused_tx, paused_rx) = tokio::sync::oneshot::channel::<()>();
-                    let (resume_tx, resume_rx) = tokio::sync::oneshot::channel::<()>();
+                    let (paused_tx, paused_rx) = utopia_async::sync::oneshot::channel::<()>();
+                    let (resume_tx, resume_rx) = utopia_async::sync::oneshot::channel::<()>();
                     let paused = Mutex::new(Some((paused_tx, resume_rx)));
                     probe.pause_next_ping(move || {
                         let (paused_tx, resume_rx) = paused.lock().unwrap().take().unwrap();
@@ -1019,7 +1019,7 @@ async fn test_tasks_on_the_pinned_connection_keep_their_own_tenant() {
                     });
                     let child = {
                         let pool = pool.clone();
-                        tokio::spawn(inherit(async move {
+                        utopia_async::spawn(inherit(async move {
                             pool.state().tenant().with(Value::Int(2), pool.ping()).await.unwrap();
                         }))
                     };
@@ -1049,7 +1049,7 @@ fn read_write() -> (ReadWritePool<Backing>, Arc<Probe>, Arc<Probe>) {
     (pool, write, read)
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_read_methods_route_to_the_read_pool() {
     let (pool, write, read) = read_write();
     let c = collection("posts");
@@ -1099,7 +1099,7 @@ async fn test_read_methods_route_to_the_read_pool() {
     assert!(write.calls().is_empty(), "no read reaches the write pool: {:?}", write.calls());
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_writes_route_to_the_write_pool_and_make_reads_sticky() {
     let (pool, write, read) = read_write();
     pool.set_sticky(true).set_sticky_duration(5000);
@@ -1111,12 +1111,12 @@ async fn test_writes_route_to_the_write_pool_and_make_reads_sticky() {
     assert!(!pool.served_by_replica());
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_sticky_duration_expiry_and_disabled_stickiness_route_reads_normally() {
     let (pool, write, read) = read_write();
     pool.set_sticky_duration(1);
     pool.create_collection("posts", &[], &[]).await.unwrap();
-    tokio::time::sleep(Duration::from_millis(5)).await;
+    utopia_async::sleep(Duration::from_millis(5)).await;
     pool.ping().await.unwrap();
     assert!(read.calls().contains(&"ping"));
     assert!(pool.served_by_replica());
@@ -1130,7 +1130,7 @@ async fn test_sticky_duration_expiry_and_disabled_stickiness_route_reads_normall
     let _ = write;
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_reads_that_decide_a_write_and_reads_after_a_transaction_go_to_the_primary() {
     let (pool, write, read) = read_write();
     let c = collection("posts");
@@ -1153,7 +1153,7 @@ async fn test_reads_that_decide_a_write_and_reads_after_a_transaction_go_to_the_
     );
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_the_read_replica_receives_the_write_hooks_and_clears_a_stale_timeout() {
     let write = Arc::new(Probe::new("write"));
     let read = Arc::new(Probe::new("read").timeouts());

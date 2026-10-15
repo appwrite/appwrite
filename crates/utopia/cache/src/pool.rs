@@ -27,7 +27,7 @@ fn pool_error(e: utopia_pools::Error) -> Error {
 /// use php_std::types::Value;
 /// use utopia_cache::{Adapter, Memory, Pool};
 ///
-/// # tokio::runtime::Runtime::new()?.block_on(async {
+/// # utopia_async::Runtime::new()?.block_on(async {
 /// let memories = utopia_pools::Pool::new(
 ///     utopia_pools::Stack::new(),
 ///     "cache",

@@ -16,7 +16,7 @@ This library is maintained by the [Appwrite team](https://appwrite.io).
 utopia-abuse = { git = "https://github.com/utopia-rs/abuse" }
 ```
 
-A rate limit caps how often a client may do something: sign in, send a message, call an endpoint. This library counts requests per key (an IP, a user, an endpoint, or all three) and says, for each one, whether it is over the limit, how many requests are left and when the count resets. It has three ways of counting: fixed windows (`TimeLimit`), sliding windows (`SlidingWindow`) and token buckets (`TokenBucket`), each over a store: Redis, a Redis Cluster, a pool of connections, a document store, or nothing at all. Stores are async, so the examples run them on a Tokio runtime. This guide covers the common tasks.
+A rate limit caps how often a client may do something: sign in, send a message, call an endpoint. This library counts requests per key (an IP, a user, an endpoint, or all three) and says, for each one, whether it is over the limit, how many requests are left and when the count resets. It has three ways of counting: fixed windows (`TimeLimit`), sliding windows (`SlidingWindow`) and token buckets (`TokenBucket`), each over a store: Redis, a Redis Cluster, a pool of connections, a document store, or nothing at all. Stores are async, so the examples run them with `utopia_async::run`. This guide covers the common tasks.
 
 ## Limit requests per window
 
@@ -25,7 +25,7 @@ A `TimeLimit` allows `limit` requests in each window of `seconds`, windows align
 ```rust
 use utopia_abuse::{TimeLimit, time_limit};
 
-tokio::runtime::Builder::new_current_thread().build()?.block_on(async {
+utopia_async::Builder::current_thread().build()?.block_on(async {
     let store = time_limit::Database::new(time_limit::Memory::new());
     store.setup().await?;
     let limit = TimeLimit::new("login:{email}", 2, 60, store)?;
@@ -61,7 +61,7 @@ Every check answers a `Verdict`: whether the request is limited, the limit, the 
 ```rust
 use utopia_abuse::{TimeLimit, time_limit};
 
-tokio::runtime::Builder::new_current_thread().build()?.block_on(async {
+utopia_async::Builder::current_thread().build()?.block_on(async {
     let limit = TimeLimit::new("ip:{ip}", 60, 3600, time_limit::None)?;
     let verdict = limit.check_at(1_700_000_000).await?;
 
@@ -82,7 +82,7 @@ The Redis stores keep one counter per key and window, `abuse__<key>__<window sta
 ```rust
 use utopia_abuse::{Adapter, TimeLimit, time_limit};
 
-tokio::runtime::Builder::new_current_thread().enable_all().build()?.block_on(async {
+utopia_async::run(async {
     let conn = redis::Client::open("redis://localhost:6379")?.get_connection_manager().await?;
     let limit = TimeLimit::new("guide:{ip}", 2, 60, time_limit::Redis::new(conn))?.with_param("{ip}", "203.0.113.7");
 
@@ -101,7 +101,7 @@ A fixed window lets a client spend its whole limit at the end of one window and 
 ```rust
 use utopia_abuse::{SlidingWindow, sliding_window};
 
-tokio::runtime::Builder::new_current_thread().build()?.block_on(async {
+utopia_async::Builder::current_thread().build()?.block_on(async {
     let limit = SlidingWindow::new("ip:{ip}", 100, 60, sliding_window::None)?;
     let verdict = limit.check_at(1_700_000_000).await?;
 
@@ -117,7 +117,7 @@ A `TokenBucket` holds up to `tokens` tokens and refills at `refill_rate` a secon
 ```rust
 use utopia_abuse::{TokenBucket, token_bucket};
 
-tokio::runtime::Builder::new_current_thread().build()?.block_on(async {
+utopia_async::Builder::current_thread().build()?.block_on(async {
     let limit = TokenBucket::new("ip:{ip}", 10, 0.5, token_bucket::None)?;
     let verdict = limit.check_at(1_700_000_000.0).await?;
 
@@ -142,7 +142,7 @@ impl Client for Google {
     }
 }
 
-tokio::runtime::Builder::new_current_thread().build()?.block_on(async {
+utopia_async::Builder::current_thread().build()?.block_on(async {
     let recaptcha = ReCaptcha::with_client("site-secret", Google);
     assert!(recaptcha.verify("token", "203.0.113.7", 0.5).await?);
     assert!(!recaptcha.verify("token", "203.0.113.7", 0.9).await?);

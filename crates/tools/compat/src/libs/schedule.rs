@@ -108,7 +108,7 @@ pub async fn bench(name: &str, session: &mut Session) -> Result<crate::bench::Be
             };
             prepare.await.map_err(|e| Fault::new(e.to_string()))?;
             let _ = session;
-            let scheduler = Rc::new(tokio::sync::Mutex::new(scheduler));
+            let scheduler = Rc::new(utopia_async::sync::Mutex::new(scheduler));
             Bench::future(move || {
                 let (scheduler, clock) = (scheduler.clone(), clock.clone());
                 async move {

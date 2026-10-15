@@ -21,8 +21,8 @@ use postgres_protocol::authentication::md5_hash;
 use postgres_protocol::authentication::sasl::{ChannelBinding, SCRAM_SHA_256, ScramSha256};
 use postgres_protocol::message::backend::Message;
 use postgres_protocol::message::frontend;
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio::net::TcpStream;
+use utopia_async::io::{AsyncReadExt, AsyncWriteExt};
+use utopia_async::net::TcpStream;
 
 /// Where and as whom to connect.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -194,14 +194,14 @@ impl Wire {
     /// failing with libpq's message.
     pub(crate) async fn connect(config: &Config, timeout: Duration) -> Result<Wire, String> {
         let host = config.host.as_str();
-        let addrs: Vec<SocketAddr> = match tokio::net::lookup_host((host, config.port)).await {
+        let addrs: Vec<SocketAddr> = match utopia_async::net::lookup_host((host, config.port)).await {
             Ok(a) => a.collect(),
             Err(_) => Vec::new(),
         };
         let Some(addr) = addrs.first().copied() else {
             return Err(format!("could not translate host name \"{host}\" to address: Name does not resolve"));
         };
-        let stream = match tokio::time::timeout(timeout, TcpStream::connect(addr)).await {
+        let stream = match utopia_async::timeout(timeout, TcpStream::connect(addr)).await {
             Err(_) => return Err(connect_failure(config, addr, "timeout expired")),
             Ok(Err(e)) if e.kind() == io::ErrorKind::ConnectionRefused => {
                 return Err(connect_failure(
@@ -222,7 +222,7 @@ impl Wire {
             pid: 0,
             broken: false,
         };
-        match tokio::time::timeout(timeout, wire.startup(config)).await {
+        match utopia_async::timeout(timeout, wire.startup(config)).await {
             Err(_) => Err(connect_failure(config, addr, "timeout expired")),
             Ok(Err(Startup::Server(message))) => Err(connect_failure(config, addr, message.trim_end())),
             Ok(Err(Startup::Io(e))) => Err(connect_failure(config, addr, &e.to_string())),

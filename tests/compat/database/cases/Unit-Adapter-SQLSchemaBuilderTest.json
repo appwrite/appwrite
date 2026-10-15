@@ -1,240 +1,58 @@
 {
-  "source": [
-    "vendor/utopia-php/database/tests/unit/Adapter/SQLSchemaBuilderTest.php"
-  ],
-  "cases": [
-    {
-      "name": "SQLSchemaBuilderTest::testATableBuiltThroughTheSchemaBuilderIsCreatedFilledReadAndDropped",
-      "state": [],
-      "steps": [
+    "source": [
+        "vendor/utopia-php/database/tests/unit/Adapter/SQLSchemaBuilderTest.php"
+    ],
+    "cases": [
         {
-          "op": "object.new",
-          "args": {
-            "class": "Adapter\\SQLite",
-            "args": {
-              "pdo": {
-                "$pdo": {
-                  "dsn": "sqlite::memory:"
+            "name": "SQLSchemaBuilderTest::testTheSchemaBuilderIsRefusedWithoutAQueryBuilder",
+            "state": [],
+            "steps": [
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Adapter\\Memory",
+                        "args": {},
+                        "as": "o27"
+                    },
+                    "bind": "s45",
+                    "expect": {
+                        "$adapter": "Memory"
+                    }
+                },
+                {
+                    "op": "object.new",
+                    "args": {
+                        "class": "Database",
+                        "args": {
+                            "adapter": {
+                                "$obj": "o27"
+                            },
+                            "cache": "none"
+                        },
+                        "as": "o28"
+                    },
+                    "bind": "s46",
+                    "expect": {
+                        "$database": true
+                    }
+                },
+                {
+                    "op": "object.call",
+                    "args": {
+                        "this": {
+                            "$obj": "o28"
+                        },
+                        "method": "schema",
+                        "args": {}
+                    },
+                    "expect": {
+                        "$error": {
+                            "class": "Utopia\\Database\\Exception",
+                            "message": "Schema builder is not supported by this adapter"
+                        }
+                    }
                 }
-              }
-            },
-            "as": "o22"
-          },
-          "bind": "s36",
-          "expect": {
-            "$adapter": "SQLite"
-          }
-        },
-        {
-          "op": "object.new",
-          "args": {
-            "class": "Database",
-            "args": {
-              "adapter": {
-                "$obj": "o22"
-              },
-              "cache": "none"
-            },
-            "as": "o23"
-          },
-          "bind": "s37",
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o23"
-            },
-            "method": "setDatabase",
-            "args": {
-              "name": "schema_builder"
-            }
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o23"
-            },
-            "method": "setNamespace",
-            "args": {
-              "namespace": "schema_builder"
-            }
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "object.new",
-          "args": {
-            "class": "Validator\\Authorization",
-            "args": {},
-            "as": "o24"
-          },
-          "bind": "s40",
-          "expect": {
-            "$authorization": true
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o23"
-            },
-            "method": "setAuthorization",
-            "args": {
-              "authorization": {
-                "$obj": "o24"
-              }
-            }
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o23"
-            },
-            "method": "create",
-            "args": {}
-          },
-          "expect": true
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o23"
-            },
-            "method": "getAuthorization",
-            "args": {}
-          },
-          "expect": {
-            "$authorization": true
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o24"
-            },
-            "method": "skip",
-            "args": {
-              "callback": {
-                "steps": [
-                  {
-                    "op": "object.call",
-                    "args": {
-                      "this": {
-                        "$obj": "o23"
-                      },
-                      "method": "schema",
-                      "args": {},
-                      "as": "o25"
-                    }
-                  },
-                  {
-                    "op": "object.call",
-                    "args": {
-                      "this": {
-                        "$obj": "o25"
-                      },
-                      "method": "table",
-                      "args": {
-                        "name": "schema_builder_raw_items"
-                      },
-                      "as": "o26"
-                    }
-                  },
-                  {
-                    "op": "object.call",
-                    "args": {
-                      "this": {
-                        "$obj": "o26"
-                      },
-                      "method": "integer",
-                      "args": {
-                        "name": "value"
-                      }
-                    }
-                  }
-                ]
-              }
-            }
-          },
-          "bind": "s44",
-          "expect": {
-            "$error": {
-              "class": "Error",
-              "message": "Maximum call stack size of 8339456 bytes (zend.max_allowed_stack_size - zend.reserved_stack_size) reached. Infinite recursion?"
-            }
-          }
+            ]
         }
-      ]
-    },
-    {
-      "name": "SQLSchemaBuilderTest::testTheSchemaBuilderIsRefusedWithoutAQueryBuilder",
-      "state": [],
-      "steps": [
-        {
-          "op": "object.new",
-          "args": {
-            "class": "Adapter\\Memory",
-            "args": {},
-            "as": "o27"
-          },
-          "bind": "s45",
-          "expect": {
-            "$adapter": "Memory"
-          }
-        },
-        {
-          "op": "object.new",
-          "args": {
-            "class": "Database",
-            "args": {
-              "adapter": {
-                "$obj": "o27"
-              },
-              "cache": "none"
-            },
-            "as": "o28"
-          },
-          "bind": "s46",
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "object.call",
-          "args": {
-            "this": {
-              "$obj": "o28"
-            },
-            "method": "schema",
-            "args": {}
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Schema builder is not supported by this adapter"
-            }
-          }
-        }
-      ]
-    }
-  ]
+    ]
 }

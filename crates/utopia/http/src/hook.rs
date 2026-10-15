@@ -30,6 +30,25 @@ pub type Resource = Arc<dyn Any + Send + Sync>;
 /// future.
 pub type Action = Arc<dyn for<'a> Fn(Scope<'a>) -> BoxFuture<'a, Result<()>> + Send + Sync>;
 
+/// What a callback returns: nothing when it cannot fail, or a [`Result`]
+/// when it uses `?`, whose error goes to the error hooks.
+pub trait IntoResult {
+    /// The callback's outcome as a [`Result`].
+    fn into_result(self) -> Result<()>;
+}
+
+impl IntoResult for () {
+    fn into_result(self) -> Result<()> {
+        Ok(())
+    }
+}
+
+impl IntoResult for Result<()> {
+    fn into_result(self) -> Result<()> {
+        self
+    }
+}
+
 /// An async closure over a call's [`Scope`] whose future is `Send`:
 /// `async |scope| { .. }`, as [`action`] takes it.
 ///
@@ -38,23 +57,27 @@ pub type Action = Arc<dyn for<'a> Fn(Scope<'a>) -> BoxFuture<'a, Result<()>> + S
 /// a resource and inject it instead.
 pub trait Callback<'a>: Fn(Scope<'a>) -> <Self as Callback<'a>>::Future {
     /// The future the closure returns.
-    type Future: Future<Output = Result<()>> + Send + 'a;
+    type Future: Future<Output: IntoResult> + Send + 'a;
 }
 
 impl<'a, F, Fut> Callback<'a> for F
 where
     F: Fn(Scope<'a>) -> Fut,
-    Fut: Future<Output = Result<()>> + Send + 'a,
+    Fut: Future<Output: IntoResult> + Send + 'a,
 {
     type Future = Fut;
 }
 
 /// Wraps an async closure into an [`Action`].
-pub fn action<F>(f: F) -> Action
+pub fn action<F, R>(f: F) -> Action
 where
-    F: for<'a> Callback<'a> + AsyncFn(Scope<'_>) -> Result<()> + Send + Sync + 'static,
+    F: for<'a> Callback<'a> + AsyncFn(Scope<'_>) -> R + Send + Sync + 'static,
+    R: IntoResult,
 {
-    Arc::new(move |scope| Box::pin(f(scope)))
+    Arc::new(move |scope| {
+        let future = f(scope);
+        Box::pin(async move { future.await.into_result() })
+    })
 }
 
 /// A container of resources by name, falling back to a parent container.
@@ -353,9 +376,10 @@ impl Hook {
     /// [`Scope`].
     ///
     /// PHP: `action($callback)`.
-    pub fn action<F>(&mut self, f: F) -> &mut Self
+    pub fn action<F, R>(&mut self, f: F) -> &mut Self
     where
-        F: for<'a> Callback<'a> + AsyncFn(Scope<'_>) -> Result<()> + Send + Sync + 'static,
+        F: for<'a> Callback<'a> + AsyncFn(Scope<'_>) -> R + Send + Sync + 'static,
+        R: IntoResult,
     {
         self.action = Some(action(f));
         self

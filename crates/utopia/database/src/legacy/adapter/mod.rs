@@ -225,7 +225,7 @@ where
             return Err(action);
         }
         if attempt < retries {
-            tokio::time::sleep(std::time::Duration::from_micros(50_000 * (attempt as u64 + 1))).await;
+            utopia_async::sleep(std::time::Duration::from_micros(50_000 * (attempt as u64 + 1))).await;
             continue;
         }
         return Err(if adapter.rethrows_rollback_failure() { rollback.unwrap_or(action) } else { action });

@@ -20,8 +20,8 @@ use base64::engine::general_purpose::STANDARD as BASE64;
 use indexmap::IndexMap;
 use php_std::Value as P;
 use serde_json::{Map, Value, json};
-use tokio::io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader};
-use tokio::net::{TcpListener, TcpStream};
+use utopia_async::io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader};
+use utopia_async::net::{TcpListener, TcpStream};
 use utopia_client::{Anywhere, Client as HttpClient, Http as Transfer};
 use utopia_messaging::chat::DiscordWebhook;
 use utopia_messaging::email::{self, Mailgun, Resend, Sendgrid, Ses, Smtp};
@@ -1177,7 +1177,7 @@ impl Adapter for Scripted {
 /// twin of packages/messaging/tests/Support/smtp-server.php).
 struct SmtpServer {
     port: u16,
-    commands: tokio::sync::Mutex<Option<tokio::task::JoinHandle<Vec<String>>>>,
+    commands: utopia_async::sync::Mutex<Option<utopia_async::JoinHandle<Vec<String>>>>,
     done: Mutex<Option<Vec<String>>>,
 }
 
@@ -1185,10 +1185,10 @@ impl SmtpServer {
     async fn start(replies: Vec<String>) -> Result<SmtpServer, Fault> {
         let listener = TcpListener::bind("127.0.0.1:0").await.map_err(|e| Fault::new(e.to_string()))?;
         let port = listener.local_addr().map_err(|e| Fault::new(e.to_string()))?.port();
-        let task = tokio::spawn(async move {
+        let task = utopia_async::spawn(async move {
             let mut commands = Vec::new();
             let mut replies: VecDeque<String> = replies.into();
-            let Ok(Ok((stream, _))) = tokio::time::timeout(Duration::from_secs(10), listener.accept()).await else {
+            let Ok(Ok((stream, _))) = utopia_async::timeout(Duration::from_secs(10), listener.accept()).await else {
                 return commands;
             };
             let (read, mut write) = stream.into_split();
@@ -1198,7 +1198,7 @@ impl SmtpServer {
             }
             while !replies.is_empty() {
                 let mut line = String::new();
-                match tokio::time::timeout(Duration::from_secs(10), reader.read_line(&mut line)).await {
+                match utopia_async::timeout(Duration::from_secs(10), reader.read_line(&mut line)).await {
                     Ok(Ok(n)) if n > 0 => {}
                     _ => break,
                 }
@@ -1219,13 +1219,16 @@ impl SmtpServer {
             }
             commands
         });
-        Ok(SmtpServer { port, commands: tokio::sync::Mutex::new(Some(task)), done: Mutex::new(None) })
+        Ok(SmtpServer { port, commands: utopia_async::sync::Mutex::new(Some(task)), done: Mutex::new(None) })
     }
 
     async fn commands(&self) -> Vec<String> {
         if let Some(task) = self.commands.lock().await.take() {
-            let commands =
-                tokio::time::timeout(Duration::from_secs(15), task).await.ok().and_then(Result::ok).unwrap_or_default();
+            let commands = utopia_async::timeout(Duration::from_secs(15), task)
+                .await
+                .ok()
+                .and_then(Result::ok)
+                .unwrap_or_default();
             *self.done.lock().unwrap() = Some(commands);
         }
         self.done.lock().unwrap().clone().unwrap_or_default()

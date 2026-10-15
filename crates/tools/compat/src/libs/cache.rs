@@ -593,7 +593,7 @@ pub async fn call(op: &str, args: &Json, session: &mut Session) -> OpResult {
         "filesystem.new" => new(session, Arc::new(Filesystem::new(a.str("path")?))),
         "filesystem.path" => Outcome::ok(Filesystem::new(a.str("path")?).path(a.str("key")?).display().to_string()),
         "filesystem.stream" => {
-            use tokio::io::AsyncReadExt;
+            use utopia_async::io::AsyncReadExt;
             match Filesystem::new(a.str("path")?).open(a.str("key")?, a.i64("ttl")?).await {
                 Ok(Some(mut file)) => {
                     let mut contents = Vec::new();
@@ -934,7 +934,7 @@ pub async fn call(op: &str, args: &Json, session: &mut Session) -> OpResult {
             Outcome::Ok(Json::Array(results))
         }
         "sleep" => {
-            tokio::time::sleep(std::time::Duration::from_secs_f64(a.f64("seconds")?)).await;
+            utopia_async::sleep(std::time::Duration::from_secs_f64(a.f64("seconds")?)).await;
             Outcome::Ok(Json::Null)
         }
         other => {
@@ -1069,7 +1069,7 @@ async fn multiplexing(session: &Session, a: &Args<'_>) -> Result<Json, Fault> {
         let sa = Args(&args);
         match op {
             "sleep" => {
-                tokio::time::sleep(std::time::Duration::from_secs_f64(sa.f64("seconds")?)).await;
+                utopia_async::sleep(std::time::Duration::from_secs_f64(sa.f64("seconds")?)).await;
                 results.push(Json::Null);
             }
             "load_equals" => {
@@ -1085,7 +1085,7 @@ async fn multiplexing(session: &Session, a: &Args<'_>) -> Result<Json, Fault> {
                 for i in 0..sa.i64("count")? {
                     let cache = cache.clone();
                     let key = format!("{}{i}", sa.str("prefix")?);
-                    tasks.push(tokio::spawn(async move {
+                    tasks.push(utopia_async::spawn(async move {
                         let mut value = php_std::types::Array::new();
                         value.set("i".into(), Value::Int(i));
                         value.set("text".into(), Value::from(format!("café 🚀 row {i}").as_str()));

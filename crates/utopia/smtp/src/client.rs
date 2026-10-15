@@ -4,7 +4,7 @@ use std::borrow::Cow;
 use std::time::{Duration, Instant};
 
 use indexmap::IndexMap;
-use tokio::io::AsyncReadExt;
+use utopia_async::io::AsyncReadExt;
 
 use crate::auth::Authenticator;
 use crate::mime::encoding;
@@ -372,7 +372,7 @@ impl<T: Transport> Client<T> {
                 let mut block = Vec::new();
                 for segment in message.segments() {
                     if let Segment::File(path) = segment {
-                        let mut file = tokio::fs::File::open(path).await.map_err(|_| unreadable(path))?;
+                        let mut file = utopia_async::fs::File::open(path).await.map_err(|_| unreadable(path))?;
                         loop {
                             block.resize(BLOCK, 0);
                             let mut filled = 0;

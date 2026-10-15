@@ -18,7 +18,7 @@
 //! use utopia_database::adapter::memory::Memory;
 //! use utopia_database::Database;
 //!
-//! tokio::runtime::Builder::new_current_thread().build()?.block_on(async {
+//! utopia_async::Builder::current_thread().build()?.block_on(async {
 //!     let db = Database::new(Arc::new(Memory::new()), Arc::new(Cache::from_dyn(Arc::new(NoCache))));
 //!     db.set_database("audit");
 //!     db.create(None).await?;

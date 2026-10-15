@@ -247,13 +247,10 @@ pub enum Callback {
 impl Callback {
     /// An HTTP callback: `Callback::http(async |scope| { .. })`, as
     /// [`utopia_http::action`] takes it.
-    pub fn http<F>(f: F) -> Self
+    pub fn http<F, R>(f: F) -> Self
     where
-        F: for<'a> utopia_http::Callback<'a>
-            + AsyncFn(utopia_http::Scope<'_>) -> utopia_http::Result<()>
-            + Send
-            + Sync
-            + 'static,
+        F: for<'a> utopia_http::Callback<'a> + AsyncFn(utopia_http::Scope<'_>) -> R + Send + Sync + 'static,
+        R: utopia_http::IntoResult,
     {
         Callback::Http(utopia_http::action(f))
     }
@@ -263,7 +260,7 @@ impl Callback {
     pub fn task<F, Fut>(f: F) -> Self
     where
         F: Fn(utopia_servers::Arguments) -> Fut + Send + Sync + 'static,
-        Fut: Future<Output = Result<(), utopia_servers::Error>> + Send + 'static,
+        Fut: Future<Output: utopia_servers::IntoResult> + Send + 'static,
     {
         Callback::Task(utopia_servers::action(f))
     }
@@ -273,7 +270,7 @@ impl Callback {
     pub fn worker<F, Fut>(f: F) -> Self
     where
         F: Fn(utopia_queue::hook::Scope) -> Fut + Send + Sync + 'static,
-        Fut: Future<Output = utopia_queue::Result<()>> + Send + 'static,
+        Fut: Future<Output: utopia_queue::hook::IntoResult> + Send + 'static,
     {
         Callback::Worker(utopia_queue::hook::action(f))
     }

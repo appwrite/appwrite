@@ -120,7 +120,7 @@ let path = std::env::temp_dir().join("utopia-locale-guide-hi-IN.json");
 std::fs::write(&path, r#"{"hello": "Namaste", "world": "Duniya"}"#)?;
 
 let mut languages = Languages::new();
-let runtime = tokio::runtime::Builder::new_current_thread().build()?;
+let runtime = utopia_async::Builder::current_thread().build()?;
 runtime.block_on(languages.load("hi-IN", &path))?;
 languages.insert_json("en-US", br#"{"hello": "Hello"}"#)?;
 

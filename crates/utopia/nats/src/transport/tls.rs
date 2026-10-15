@@ -45,7 +45,7 @@ impl Transport for TlsTransport {
         let tcp = dial(host, port, timeout)
             .await
             .map_err(|e| Error::Connection(format!("Failed to connect to {address}: {e}")))?;
-        let tls = match tokio::time::timeout(timeout, handshake(tcp, host, &self.options)).await {
+        let tls = match utopia_async::timeout(timeout, handshake(tcp, host, &self.options)).await {
             Ok(Ok(tls)) => tls,
             Ok(Err(e)) => return Err(Error::Connection(format!("Failed to connect to {address}: [0] {e}"))),
             Err(_) => {

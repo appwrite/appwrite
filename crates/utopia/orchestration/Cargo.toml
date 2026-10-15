@@ -12,14 +12,11 @@ publish.workspace = true
 bytes.workspace = true
 http-body-util.workspace = true
 hyper = { workspace = true, features = ["client", "http1"] }
-hyper-util = { workspace = true, features = ["tokio"] }
 php-std.workspace = true
 thiserror.workspace = true
-tokio = { workspace = true, features = ["net", "time"] }
+utopia-async = { workspace = true, features = ["hyper"] }
 utopia-console.workspace = true
 
-[dev-dependencies]
-tokio = { workspace = true, features = ["rt-multi-thread", "macros", "net", "time"] }
 
 [package.metadata.utopia]
 category = "integrations"

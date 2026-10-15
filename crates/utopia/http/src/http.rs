@@ -14,7 +14,7 @@ use serde_json::Value;
 use crate::compression::Compression;
 use crate::error::{Error, Result};
 use crate::files::Files;
-use crate::hook::{BoxFuture, Callback, Hook, Resources, Route, Scope};
+use crate::hook::{BoxFuture, Callback, Hook, IntoResult, Resources, Route, Scope};
 use crate::params::Params;
 use crate::request::Request;
 use crate::response::Response;
@@ -157,9 +157,10 @@ impl RouteBuilder<'_> {
     /// [`Scope`].
     ///
     /// PHP: `action($callback)`.
-    pub fn action<F>(mut self, f: F) -> Self
+    pub fn action<F, R>(mut self, f: F) -> Self
     where
-        F: for<'a> Callback<'a> + AsyncFn(Scope<'_>) -> Result<()> + Send + Sync + 'static,
+        F: for<'a> Callback<'a> + AsyncFn(Scope<'_>) -> R + Send + Sync + 'static,
+        R: IntoResult,
     {
         self.route().action(f);
         self

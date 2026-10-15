@@ -58,7 +58,7 @@ impl Database {
                     if attempt >= max_attempts {
                         break;
                     }
-                    tokio::time::sleep(std::time::Duration::from_millis(delay_ms)).await;
+                    utopia_async::sleep(std::time::Duration::from_millis(delay_ms)).await;
                     delay_ms = (delay_ms as f64 * multiplier) as u64;
                 }
             }

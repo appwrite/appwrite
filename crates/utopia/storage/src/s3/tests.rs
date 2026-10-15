@@ -9,8 +9,8 @@ use std::time::Duration;
 use async_trait::async_trait;
 use bytes::Bytes;
 use futures_util::StreamExt;
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio::net::{TcpListener, TcpStream};
+use utopia_async::io::{AsyncReadExt, AsyncWriteExt};
+use utopia_async::net::{TcpListener, TcpStream};
 
 use super::*;
 use crate::Source;
@@ -120,7 +120,7 @@ impl Client for Draining {
     }
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn an_upload_streams_its_body_and_resends_it_on_a_retry() {
     let live = Arc::new(Live::default());
     let client = Arc::new(Draining::default());
@@ -137,7 +137,7 @@ async fn an_upload_streams_its_body_and_resends_it_on_a_retry() {
     eprintln!("upload of {LARGE} bytes through a draining client: peak {} bytes in memory", live.peak());
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn a_small_upload_is_sent_from_memory() {
     let client = Arc::new(Draining::default());
     client.attempts.store(1, Ordering::SeqCst);
@@ -159,11 +159,11 @@ async fn head(socket: &mut TcpStream) -> String {
     String::from_utf8(head).unwrap()
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn the_http_client_streams_an_upload() {
     let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
     let address = listener.local_addr().unwrap();
-    let server = tokio::spawn(async move {
+    let server = utopia_async::spawn(async move {
         let (mut socket, _) = listener.accept().await.unwrap();
         let head = head(&mut socket).await.to_ascii_lowercase();
         let length: usize = head
@@ -194,14 +194,14 @@ async fn the_http_client_streams_an_upload() {
     eprintln!("upload of {LARGE} bytes through HttpClient: peak {} bytes in memory", live.peak());
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn the_http_client_streams_a_download() {
     const FIRST: usize = 1 << 20;
     const SIZE: usize = 8 << 20;
     let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
     let address = listener.local_addr().unwrap();
-    let (proceed, wait) = tokio::sync::oneshot::channel::<()>();
-    let server = tokio::spawn(async move {
+    let (proceed, wait) = utopia_async::sync::oneshot::channel::<()>();
+    let server = utopia_async::spawn(async move {
         let (mut socket, _) = listener.accept().await.unwrap();
         head(&mut socket).await;
         let data: Vec<u8> = (0..SIZE).map(pattern).collect();
@@ -213,13 +213,13 @@ async fn the_http_client_streams_a_download() {
     });
     let device = S3::new("root", "key", "secret", &format!("http://{address}/bucket"), "us-east-1").unwrap();
 
-    let mut body = tokio::time::timeout(Duration::from_secs(10), device.read("root/large.bin", 0, None, None))
+    let mut body = utopia_async::timeout(Duration::from_secs(10), device.read("root/large.bin", 0, None, None))
         .await
         .expect("read() waited for the whole response")
         .unwrap();
     let mut received = 0;
     while received < FIRST {
-        let chunk = tokio::time::timeout(Duration::from_secs(10), body.read(1 << 16)).await.unwrap().unwrap();
+        let chunk = utopia_async::timeout(Duration::from_secs(10), body.read(1 << 16)).await.unwrap().unwrap();
         assert!(!chunk.is_empty());
         assert!(chunk.iter().enumerate().all(|(i, b)| *b == pattern(received + i)));
         received += chunk.len();
@@ -232,13 +232,13 @@ async fn the_http_client_streams_a_download() {
     server.await.unwrap();
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn a_download_rewinds_from_what_it_kept() {
     // Past the 2 MiB kept in memory, so the rest is replayed from a file.
     const SIZE: usize = 8 << 20;
     let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
     let address = listener.local_addr().unwrap();
-    tokio::spawn(async move {
+    utopia_async::spawn(async move {
         let (mut socket, _) = listener.accept().await.unwrap();
         head(&mut socket).await;
         let data: Vec<u8> = (0..SIZE).map(pattern).collect();
@@ -260,11 +260,11 @@ async fn a_download_rewinds_from_what_it_kept() {
     assert!(whole.iter().enumerate().all(|(i, b)| *b == pattern(i)));
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn the_http_client_reads_a_streamed_error() {
     let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
     let address = listener.local_addr().unwrap();
-    tokio::spawn(async move {
+    utopia_async::spawn(async move {
         let (mut socket, _) = listener.accept().await.unwrap();
         head(&mut socket).await;
         let body = "<?xml version=\"1.0\"?><Error><Code>NoSuchKey</Code><Message>Gone.</Message></Error>";

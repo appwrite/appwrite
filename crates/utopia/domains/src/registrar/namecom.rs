@@ -65,7 +65,7 @@ const ERROR_MAP: [(&str, Option<i64>); 13] = [
 ///
 /// let adapter = NameCom::new("user", "token", "api.name.com", Some(Arc::new(Recorded(r#"{"authCode":"x1y2"}"#))));
 /// let registrar = Registrar::new(adapter);
-/// let code = tokio::runtime::Runtime::new()?.block_on(registrar.auth_code("example.com"))?;
+/// let code = utopia_async::Runtime::new()?.block_on(registrar.auth_code("example.com"))?;
 /// assert_eq!(code, "x1y2");
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```

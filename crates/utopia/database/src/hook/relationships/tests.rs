@@ -118,11 +118,11 @@ fn skipping_relationships_in_one_sibling_leaves_the_other_enabled() {
     block_on(async {
         let (db, hook) = attached(StubAdapter::new());
         let inside = db.skip_relationships(async {
-            tokio::task::yield_now().await;
+            utopia_async::yield_now().await;
             hook.is_enabled()
         });
         let sibling = async {
-            tokio::task::yield_now().await;
+            utopia_async::yield_now().await;
             hook.is_enabled()
         };
         let (inside, sibling) = futures_util::join!(inside, sibling);

@@ -750,7 +750,7 @@ async fn open(config: &Config) -> Result<Conn> {
         .max_allowed_packet(Some(1 << 30))
         .wait_timeout(Some(28800));
     let connecting = Conn::new(opts);
-    match tokio::time::timeout(std::time::Duration::from_secs(3), connecting).await {
+    match utopia_async::timeout(std::time::Duration::from_secs(3), connecting).await {
         Ok(Ok(conn)) => Ok(conn),
         Ok(Err(e)) => Err(connection_error(config, &e)),
         Err(_) => Err(Error::new(

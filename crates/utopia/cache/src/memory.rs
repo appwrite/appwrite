@@ -16,7 +16,7 @@ use crate::adapter::{Adapter, blank, coerce, empty, now};
 /// use php_std::types::Value;
 /// use utopia_cache::{Adapter, Memory};
 ///
-/// # tokio::runtime::Runtime::new()?.block_on(async {
+/// # utopia_async::Runtime::new()?.block_on(async {
 /// let memory = Memory::new();
 /// memory.save("greeting", &Value::from("hello"), "", 0).await?;
 /// assert_eq!(memory.load("greeting", 60, "").await?, Some(Value::from("hello")));

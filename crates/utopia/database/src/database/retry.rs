@@ -50,7 +50,7 @@ impl Database {
                     if attempt >= attempts {
                         break;
                     }
-                    tokio::time::sleep(Duration::from_millis(delay)).await;
+                    utopia_async::sleep(Duration::from_millis(delay)).await;
                     delay *= 2;
                 }
             }

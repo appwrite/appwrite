@@ -20,13 +20,35 @@ pub type Resource = Arc<dyn Any + Send + Sync>;
 /// A hook's callback.
 pub type Action = Arc<dyn Fn(Scope) -> BoxFuture<'static, Result<()>> + Send + Sync>;
 
+/// What a callback returns: nothing when it cannot fail, or a [`Result`]
+/// when it uses `?`, whose error goes to the error hooks.
+pub trait IntoResult {
+    /// The callback's outcome as a [`Result`].
+    fn into_result(self) -> Result<()>;
+}
+
+impl IntoResult for () {
+    fn into_result(self) -> Result<()> {
+        Ok(())
+    }
+}
+
+impl IntoResult for Result<()> {
+    fn into_result(self) -> Result<()> {
+        self
+    }
+}
+
 /// Wraps an async closure over a job's [`Scope`] into an [`Action`].
 pub fn action<F, Fut>(f: F) -> Action
 where
     F: Fn(Scope) -> Fut + Send + Sync + 'static,
-    Fut: std::future::Future<Output = Result<()>> + Send + 'static,
+    Fut: std::future::Future<Output: IntoResult> + Send + 'static,
 {
-    Arc::new(move |scope| Box::pin(f(scope)))
+    Arc::new(move |scope| {
+        let future = f(scope);
+        Box::pin(async move { future.await.into_result() })
+    })
 }
 
 /// Builds a param's validator from its injected resources.
@@ -152,7 +174,6 @@ impl Scope {
 /// let mut hook = Hook::new();
 /// hook.groups(&["emails"]).inject("message").action(|scope| async move {
 ///     let _message = scope.message();
-///     Ok(())
 /// });
 /// assert_eq!(hook.group_names(), ["emails"]);
 /// ```
@@ -257,7 +278,7 @@ impl Hook {
     pub fn action<F, Fut>(&mut self, f: F) -> &mut Self
     where
         F: Fn(Scope) -> Fut + Send + Sync + 'static,
-        Fut: std::future::Future<Output = Result<()>> + Send + 'static,
+        Fut: std::future::Future<Output: IntoResult> + Send + 'static,
     {
         self.action = Some(action(f));
         self

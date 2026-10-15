@@ -625,7 +625,7 @@ async fn verify_password(user: &User, password: &str) -> Result<bool> {
     };
     let stored = user.password.clone().unwrap_or_default();
     let password = password.to_owned();
-    tokio::task::spawn_blocking(move || {
+    utopia_async::spawn_blocking(move || {
         let Ok(hash) = utopia_auth::proofs::Password::create_hash(&kind, &options) else { return false };
         hash.verify(password.as_bytes(), stored.as_bytes()).unwrap_or(false)
     })

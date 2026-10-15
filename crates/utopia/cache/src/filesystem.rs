@@ -21,7 +21,7 @@ use crate::{Error, Result};
 /// use utopia_cache::{Adapter, Filesystem};
 ///
 /// # let dir = std::env::temp_dir().join(format!("utopia-cache-doc-{}", std::process::id()));
-/// # tokio::runtime::Runtime::new()?.block_on(async {
+/// # utopia_async::Runtime::new()?.block_on(async {
 /// let cache = Filesystem::new(&dir);
 /// cache.save("notes/today", &Value::from("hello"), "", 0).await?;
 /// assert_eq!(cache.load("notes/today", 60, "").await?, Some(Value::from("hello")));
@@ -71,17 +71,17 @@ impl Filesystem {
     /// The file of a fresh entry, opened for reading: the streaming load.
     ///
     /// PHP: `new Filesystem($path, streaming: true)`.
-    pub async fn open(&self, key: &str, ttl: i64) -> Result<Option<tokio::fs::File>> {
+    pub async fn open(&self, key: &str, ttl: i64) -> Result<Option<utopia_async::fs::File>> {
         let file = self.path(key);
         if !fresh_file(&file, ttl).await {
             return Ok(Option::None);
         }
-        Ok(tokio::fs::File::open(&file).await.ok())
+        Ok(utopia_async::fs::File::open(&file).await.ok())
     }
 }
 
 async fn fresh_file(file: &Path, ttl: i64) -> bool {
-    match tokio::fs::metadata(file).await {
+    match utopia_async::fs::metadata(file).await {
         Ok(meta) => fresh(mtime(&meta), ttl, now()),
         Err(_) => false,
     }
@@ -118,7 +118,7 @@ impl Adapter for Filesystem {
             if !fresh_file(&file, ttl).await {
                 return Ok(Option::None);
             }
-            Ok(match tokio::fs::read(&file).await {
+            Ok(match utopia_async::fs::read(&file).await {
                 Ok(bytes) => Some(Value::Str(Str::from(bytes))),
                 // A directory reads as an empty string.
                 Err(_) if file.is_dir() => Some(Value::Str(Str::from(""))),
@@ -134,13 +134,13 @@ impl Adapter for Filesystem {
         async move {
             let Some((bytes, error)) = bytes? else { return Ok(false) };
             if let Some(dir) = file.parent()
-                && tokio::fs::metadata(dir).await.is_err()
-                && tokio::fs::create_dir_all(dir).await.is_err()
-                && tokio::fs::metadata(dir).await.is_err()
+                && utopia_async::fs::metadata(dir).await.is_err()
+                && utopia_async::fs::create_dir_all(dir).await.is_err()
+                && utopia_async::fs::metadata(dir).await.is_err()
             {
                 return Err(Error::Exception(format!("Can't create directory {}", dir.display())));
             }
-            let written = match tokio::fs::write(&file, &bytes).await {
+            let written = match utopia_async::fs::write(&file, &bytes).await {
                 Ok(()) => !bytes.is_empty(),
                 Err(_) => false,
             };
@@ -154,7 +154,7 @@ impl Adapter for Filesystem {
     fn touch(&self, key: &str, _hash: &str) -> impl Future<Output = Result<bool>> + Send {
         let file = self.path(key);
         async move {
-            let touched = tokio::task::spawn_blocking(move || {
+            let touched = utopia_async::spawn_blocking(move || {
                 let now = SystemTime::now();
                 std::fs::File::open(&file)
                     .and_then(|f| f.set_times(std::fs::FileTimes::new().set_accessed(now).set_modified(now)))
@@ -173,22 +173,22 @@ impl Adapter for Filesystem {
     fn purge(&self, key: &str, _hash: &str) -> impl Future<Output = Result<bool>> + Send {
         let file = self.path(key);
         async move {
-            if tokio::fs::symlink_metadata(&file).await.is_err() {
+            if utopia_async::fs::symlink_metadata(&file).await.is_err() {
                 return Ok(false);
             }
-            Ok(tokio::fs::remove_file(&file).await.is_ok())
+            Ok(utopia_async::fs::remove_file(&file).await.is_ok())
         }
     }
 
     fn flush(&self) -> impl Future<Output = Result<bool>> + Send {
         let root = self.root.clone();
-        async move { tokio::task::spawn_blocking(move || delete_directory(&root)).await.unwrap_or(Ok(false)) }
+        async move { utopia_async::spawn_blocking(move || delete_directory(&root)).await.unwrap_or(Ok(false)) }
     }
 
     fn ping(&self) -> impl Future<Output = Result<bool>> + Send {
         let root = self.root.clone();
         async move {
-            Ok(tokio::task::spawn_blocking(move || {
+            Ok(utopia_async::spawn_blocking(move || {
                 root.exists()
                     && rustix::fs::access(&root, rustix::fs::Access::WRITE_OK).is_ok()
                     && rustix::fs::access(&root, rustix::fs::Access::READ_OK).is_ok()
@@ -200,7 +200,7 @@ impl Adapter for Filesystem {
 
     fn size(&self) -> impl Future<Output = Result<i64>> + Send {
         let root = self.root.clone();
-        async move { Ok(tokio::task::spawn_blocking(move || directory_size(&root)).await.unwrap_or(0)) }
+        async move { Ok(utopia_async::spawn_blocking(move || directory_size(&root)).await.unwrap_or(0)) }
     }
 
     fn name(&self, _key: Option<&str>) -> &str {

@@ -1060,7 +1060,7 @@
     {
       "symbol": "Utopia\\Cache\\Adapter\\Redis\\Multiplexing::__construct",
       "php": "`$idleGrace` bounds how long the reader coroutine stays parked on an idle connection before retiring (a Swoole worker cannot exit while it waits).",
-      "reason": "The Rust reader is a parked tokio task that costs nothing idle; it lives as long as the connection. idleGrace is validated the same way."
+      "reason": "The Rust reader is a parked task that costs nothing idle; it lives as long as the connection. idleGrace is validated the same way."
     }
   ],
   "bench": {

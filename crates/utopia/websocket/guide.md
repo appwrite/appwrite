@@ -1,15 +1,15 @@
-A WebSocket server keeps many long-lived connections open and pushes messages to them. This library puts the server behind one `Server` type: you register hooks for its events (start, a connection opening, a message, a connection closing, a plain HTTP request), and from any hook you send to one or many connections or close one. The `Tokio` adapter serves on the network; the `Memory` adapter runs in process, for tests. A `Client` connects to any WebSocket server. This guide covers the common tasks.
+A WebSocket server keeps many long-lived connections open and pushes messages to them. This library puts the server behind one `Server` type: you register hooks for its events (start, a connection opening, a message, a connection closing, a plain HTTP request), and from any hook you send to one or many connections or close one. The `Network` adapter serves on the network; the `Memory` adapter runs in process, for tests. A `Client` connects to any WebSocket server. This guide covers the common tasks.
 
 ## Serve WebSockets and talk to them
 
-Create a `Tokio` adapter for a host and port, wrap it in a `Server`, register hooks and start it. A hook that sends keeps a clone of the server. Here the server runs on a free port in the background, and a `Client` connects to it, sends `ping` and reads the reply.
+Create a `Network` adapter for a host and port, wrap it in a `Server`, register hooks and start it. A hook that sends keeps a clone of the server. Here the server runs on a free port in the background, and a `Client` connects to it, sends `ping` and reads the reply.
 
 ```
 use utopia_websocket::client::{Client, Options};
-use utopia_websocket::{Server, Tokio};
+use utopia_websocket::{Server, Network};
 
-tokio::runtime::Runtime::new()?.block_on(async {
-    let adapter = Tokio::new("127.0.0.1", 0, 5.0)?;
+utopia_async::Runtime::new()?.block_on(async {
+    let adapter = Network::new("127.0.0.1", 0, 5.0)?;
     let server = Server::new(adapter.clone());
     let replies = server.clone();
     server.on_message(move |connection, message| {
@@ -19,7 +19,7 @@ tokio::runtime::Runtime::new()?.block_on(async {
     });
 
     let running = server.clone();
-    let task = tokio::spawn(async move { running.start().await });
+    let task = utopia_async::spawn(async move { running.start().await });
     let addr = adapter.listening().await;
 
     let mut client = Client::new(&format!("ws://{addr}"), Options::default())?;
@@ -127,14 +127,14 @@ $server->error(function (\Throwable $error, string $stage) {
 A client that stops reading fills its connection's buffer. Each send waits at most the send timeout (5 seconds by default) for the buffer to drain; after that the connection is reset, its queued messages are dropped and the close hook runs, so one stalled client cannot hold memory or delay the others.
 
 ```
-use utopia_websocket::{Adapter, Tokio};
+use utopia_websocket::{Adapter, Network};
 
-let adapter = Tokio::new("0.0.0.0", 8080, 1.0)?;
+let adapter = Network::new("0.0.0.0", 8080, 1.0)?;
 adapter.set_package_max_length(1024 * 1024);
 adapter.set_worker_number(1);
 assert_eq!(adapter.config().send_timeout, 1.0);
 
-let invalid = Tokio::new("0.0.0.0", 8080, 0.0).err().unwrap();
+let invalid = Network::new("0.0.0.0", 8080, 0.0).err().unwrap();
 assert_eq!(invalid.to_string(), "Send timeout must be a finite positive number of seconds");
 # Ok::<(), utopia_websocket::Error>(())
 ```
@@ -160,7 +160,7 @@ client
     .on_error(|error| eprintln!("{error}"))
     .on_close(|| println!("closed"));
 
-let refused = tokio::runtime::Runtime::new()?.block_on(client.connect()).unwrap_err();
+let refused = utopia_async::Runtime::new()?.block_on(client.connect()).unwrap_err();
 assert_eq!(refused.to_string(), "WebSocket connection failed: 111 - Connection refused");
 # Ok::<(), Box<dyn std::error::Error>>(())
 ```

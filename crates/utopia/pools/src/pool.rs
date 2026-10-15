@@ -152,7 +152,7 @@ impl<T, A: Adapter<T>> Drop for Reservation<'_, T, A> {
 /// ```
 /// use utopia_pools::{Pool, Stack};
 ///
-/// # tokio::runtime::Builder::new_current_thread().enable_all().build()?.block_on(async {
+/// # utopia_async::run(async {
 /// let pool = Pool::new(Stack::new(), "cache", 2, || async { Ok::<_, std::io::Error>("x".to_owned()) }, 0.0)?;
 /// assert_eq!(pool.count(), 2);
 ///

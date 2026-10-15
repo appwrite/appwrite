@@ -345,7 +345,7 @@ impl Client {
     /// connection failed: 111 - Connection refused`).
     ///
     /// PHP: `connect()`.
-    #[cfg(feature = "tokio")]
+    #[cfg(feature = "network")]
     pub async fn connect(&mut self) -> Result<(), Error> {
         match crate::net::connect(&self.host, self.port, &self.path, &self.headers, self.timeout).await {
             Ok(transport) => {

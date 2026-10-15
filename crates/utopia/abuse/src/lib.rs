@@ -16,7 +16,7 @@
 //! ```
 //! use utopia_abuse::{Adapter, TimeLimit, time_limit};
 //!
-//! # tokio::runtime::Builder::new_current_thread().build()?.block_on(async {
+//! # utopia_async::Builder::current_thread().build()?.block_on(async {
 //! // Two requests per hour for each IP; None keeps no counts.
 //! let limit = TimeLimit::new("ip:{ip}", 2, 3600, time_limit::None)?.with_param("{ip}", "203.0.113.7");
 //! assert_eq!(limit.key(), "ip:203.0.113.7");

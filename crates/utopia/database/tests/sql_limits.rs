@@ -26,7 +26,7 @@ mod limits_test {
         (Engine::Sqlite, "1000-01-01 00:00:00"),
     ];
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_sql_adapters_share_inno_db_limits() {
         for (engine, min_date_time) in ENGINES {
             let limits = adapter(engine).await.limits();
@@ -56,7 +56,7 @@ mod limits_test {
         }
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_a_shared_table_spends_a_byte_of_each_index_key_on_the_tenant() {
         for (engine, _) in ENGINES {
             let adapter = adapter(engine).await;
@@ -67,7 +67,7 @@ mod limits_test {
         }
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_setting_shared_tables_to_their_current_value_keeps_the_limits() {
         let adapter = adapter(Engine::MariaDb).await;
         let limits = adapter.limits();
@@ -77,7 +77,7 @@ mod limits_test {
         assert_eq!(adapter.limits().index_length, limits.index_length - 1);
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn test_sqlite_reserves_its_own_keywords() {
         let mariadb = adapter(Engine::MariaDb).await.limits().keywords.clone();
         let sqlite = adapter(Engine::Sqlite).await.limits().keywords.clone();

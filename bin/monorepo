@@ -1095,11 +1095,11 @@ function expand_workspace_dep(string $name, array $overrides, array $workspace, 
  * without this repository's workspace. Sibling Utopia crates become git
  * dependencies on github.com/utopia-rs/<name>.
  */
-function materialize_cargo_toml(string $toml, string $workspaceToml, string $package): string
+function materialize_cargo_toml(string $toml, string $workspaceToml, string $package, ?string $expected = null): string
 {
     $workspace = parse_workspace_toml($workspaceToml);
     $crateVersion = $workspace['package']['version'] ?? '0.1.0';
-    $expected = crate_package_name($package);
+    $expected ??= crate_package_name($package);
     $lines = explode("\n", $toml);
     $out = [];
     $dotted = null;
@@ -1210,6 +1210,17 @@ function materialize_crate_tree(string $commit, string $prefix, string $tree): s
     $materialized = materialize_cargo_toml($toml, $workspace, $package);
     $blob = sh('printf %s ' . escapeshellarg($materialized) . ' | git hash-object -w --stdin');
     $tree = replace_tree_file($tree, 'Cargo.toml', $blob);
+
+    // A crate's own proc-macro crate (`macros/`, a path dependency of the
+    // crate) inherits the workspace too, and ships in the same mirror.
+    exec("git cat-file -e {$commit}:{$prefix}/macros/Cargo.toml 2>/dev/null", $_, $noMacros);
+    if ($noMacros === 0) {
+        $nested = sh("git show {$commit}:{$prefix}/macros/Cargo.toml");
+        preg_match('/^name\s*=\s*"([^"]+)"/m', $nested, $name) === 1 || fail("{$prefix}/macros/Cargo.toml has no name");
+        $nestedBlob = sh('printf %s ' . escapeshellarg(materialize_cargo_toml($nested, $workspace, $package, $name[1])) . ' | git hash-object -w --stdin');
+        $macros = sh("git rev-parse {$commit}:{$prefix}/macros");
+        $tree = replace_tree_file($tree, 'macros', replace_tree_file($macros, 'Cargo.toml', $nestedBlob));
+    }
 
     // The source here keeps the repository's license; a mirror is published under the workspace's
     // `mirror-license` when the commit has one: its LICENSE and its README's License section with it.
@@ -1513,6 +1524,46 @@ function validate_crates(): int
         foreach ($problems as $problem) {
             out("{$directory}: {$problem}");
             $failures++;
+        }
+    }
+
+    return $failures + validate_engine();
+}
+
+/**
+ * Every crate reaches the async engine through utopia-async
+ * (crates/utopia/async), the one crate that may depend on tokio, so the
+ * engine can be switched there: no other manifest lists `tokio`, and no
+ * other source names `tokio::`. Drivers that bring tokio themselves
+ * (redis, mongodb, tokio-postgres, ...) and I/O-trait crates (tokio-rustls,
+ * tokio-tungstenite) are not tokio.
+ */
+function validate_engine(): int
+{
+    $failures = 0;
+    $engine = 'crates/utopia/async';
+    foreach (glob('crates/*/*/Cargo.toml') ?: [] as $manifest) {
+        $directory = dirname($manifest);
+        if ($directory === $engine) {
+            continue;
+        }
+        foreach (explode("\n", file_get_contents($manifest)) as $line) {
+            $line = trim($line);
+            if (str_starts_with($line, 'tokio =') || str_starts_with($line, 'tokio.workspace')) {
+                out("{$manifest}: depends on tokio; use utopia-async");
+                $failures++;
+            }
+        }
+        $sources = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directory, FilesystemIterator::SKIP_DOTS));
+        foreach ($sources as $source) {
+            if ($source->getExtension() !== 'rs' || str_contains($source->getPathname(), '/target/')) {
+                continue;
+            }
+            $text = file_get_contents($source->getPathname());
+            if (str_contains($text, 'tokio::')) {
+                out("{$source->getPathname()}: names tokio::; use utopia_async");
+                $failures++;
+            }
         }
     }
 

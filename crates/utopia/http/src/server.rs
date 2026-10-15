@@ -21,9 +21,9 @@ use http_body_util::{BodyExt, Limited};
 use hyper::body::Incoming;
 use hyper::server::conn::http1;
 use hyper::service::service_fn;
-use hyper_util::rt::{TokioIo, TokioTimer};
-use tokio::net::TcpListener;
-use tokio::sync::watch;
+use utopia_async::hyper::{Io, Timer};
+use utopia_async::net::TcpListener;
+use utopia_async::sync::watch;
 
 use crate::http::Http;
 use crate::response::{Body, Stream, head_response};
@@ -75,9 +75,9 @@ impl Handler for App {
     fn respond(self: &Arc<Self>, request: Request) -> impl Future<Output = http::Response<Body>> + Send {
         let http = self.0.clone();
         async move {
-            let (head_tx, head_rx) = tokio::sync::oneshot::channel();
-            let (body_tx, mut body_rx) = tokio::sync::mpsc::unbounded_channel::<Bytes>();
-            tokio::spawn(async move {
+            let (head_tx, head_rx) = utopia_async::sync::oneshot::channel();
+            let (body_tx, mut body_rx) = utopia_async::sync::mpsc::unbounded_channel::<Bytes>();
+            utopia_async::spawn(async move {
                 let context = http.context();
                 let mut response = Response::new();
                 response.attach(Stream { head: Some(head_tx), body: Some(body_tx) });
@@ -295,15 +295,15 @@ where
     let (stop_tx, stop_rx) = watch::channel(false);
     let options = Arc::new(options);
     let in_flight = Arc::new(AtomicUsize::new(0));
-    tokio::pin!(shutdown);
+    utopia_async::pin!(shutdown);
 
     loop {
-        let (stream, remote) = tokio::select! {
+        let (stream, remote) = utopia_async::select! {
             accepted = listener.accept() => match accepted {
                 Ok(pair) => pair,
                 Err(err) => {
                     tracing::warn!(%err, "accept failed");
-                    tokio::time::sleep(Duration::from_millis(10)).await;
+                    utopia_async::sleep(Duration::from_millis(10)).await;
                     continue;
                 }
             },
@@ -314,7 +314,7 @@ where
         let options = options.clone();
         let in_flight = in_flight.clone();
         let mut stop = stop_rx.clone();
-        tokio::spawn(async move {
+        utopia_async::spawn(async move {
             let keep_alive = options.keep_alive;
             let header_read_timeout = options.header_read_timeout;
             let service = service_fn(move |req: hyper::Request<Incoming>| {
@@ -326,11 +326,11 @@ where
             let conn = http1::Builder::new()
                 .keep_alive(keep_alive)
                 .title_case_headers(true)
-                .timer(TokioTimer::new())
+                .timer(Timer)
                 .header_read_timeout(header_read_timeout)
-                .serve_connection(TokioIo::new(stream), service);
-            tokio::pin!(conn);
-            tokio::select! {
+                .serve_connection(Io::new(stream), service);
+            utopia_async::pin!(conn);
+            utopia_async::select! {
                 result = conn.as_mut() => {
                     if let Err(err) = result {
                         tracing::debug!(%err, "connection closed with error");
@@ -346,9 +346,9 @@ where
 
     let _ = stop_tx.send(true);
     // Drain: wait for in-flight requests, up to the grace period.
-    let deadline = tokio::time::Instant::now() + options.shutdown_grace;
-    while in_flight.load(Ordering::SeqCst) > 0 && tokio::time::Instant::now() < deadline {
-        tokio::time::sleep(Duration::from_millis(20)).await;
+    let deadline = std::time::Instant::now() + options.shutdown_grace;
+    while in_flight.load(Ordering::SeqCst) > 0 && std::time::Instant::now() < deadline {
+        utopia_async::sleep(Duration::from_millis(20)).await;
     }
     Ok(())
 }

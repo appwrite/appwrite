@@ -11,7 +11,7 @@ use crate::{Adapter, Connection, Error, Pool, Resource};
 /// ```
 /// use utopia_pools::{Group, Pool, Stack};
 ///
-/// # tokio::runtime::Builder::new_current_thread().enable_all().build()?.block_on(async {
+/// # utopia_async::run(async {
 /// let make = |name: &str, value: &'static str| {
 ///     Pool::new(Stack::new(), name, 1, move || async move { Ok::<_, std::io::Error>(value) }, 0.0)
 /// };

@@ -656,13 +656,13 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
             let value = a.bytes("value")?;
             let hash = hash_of(session, &a)?.boxed_clone();
             let out =
-                tokio::task::spawn_blocking(move || hash.hash(&value)).await.map_err(|e| Fault::new(e.to_string()))?;
+                utopia_async::spawn_blocking(move || hash.hash(&value)).await.map_err(|e| Fault::new(e.to_string()))?;
             bytes(tri!(out))
         }
         "hash.verify" => {
             let (value, stored) = (a.bytes("value")?, a.bytes("hash_value")?);
             let hash = hash_of(session, &a)?.boxed_clone();
-            let out = tokio::task::spawn_blocking(move || hash.verify(&value, &stored))
+            let out = utopia_async::spawn_blocking(move || hash.verify(&value, &stored))
                 .await
                 .map_err(|e| Fault::new(e.to_string()))?;
             Outcome::ok(tri!(out))
@@ -673,7 +673,7 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
             tri!(utopia_auth::proofs::set_options(hash.as_mut(), &array(a.opt("options"))));
             let value = a.bytes("value")?;
             let stored = opt_bytes(&a, "hash_value")?;
-            let out = tokio::task::spawn_blocking(move || match stored {
+            let out = utopia_async::spawn_blocking(move || match stored {
                 Some(stored) => hash.verify(&value, &stored).map(Value::Bool),
                 None => hash.hash(&value).map(|h| bytes_value(&h)),
             })
@@ -712,13 +712,13 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
             let value = a.bytes("value")?;
             let hash = session.get::<AnyProof>(a.value("proof")?)?.proof().hasher().boxed_clone();
             let out =
-                tokio::task::spawn_blocking(move || hash.hash(&value)).await.map_err(|e| Fault::new(e.to_string()))?;
+                utopia_async::spawn_blocking(move || hash.hash(&value)).await.map_err(|e| Fault::new(e.to_string()))?;
             bytes(tri!(out))
         }
         "proof.verify" => {
             let (value, stored) = (a.bytes("value")?, a.bytes("hash_value")?);
             let hash = session.get::<AnyProof>(a.value("proof")?)?.proof().hasher().boxed_clone();
-            let out = tokio::task::spawn_blocking(move || hash.verify(&value, &stored))
+            let out = utopia_async::spawn_blocking(move || hash.verify(&value, &stored))
                 .await
                 .map_err(|e| Fault::new(e.to_string()))?;
             Outcome::ok(tri!(out))
@@ -942,7 +942,7 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
         "issuer.generate_key_pair" => {
             let bits = a.opt_i64("bits")?.unwrap_or(2048);
             let pair = tri!(
-                tokio::task::spawn_blocking(move || generate_key_pair(bits))
+                utopia_async::spawn_blocking(move || generate_key_pair(bits))
                     .await
                     .map_err(|e| Fault::new(e.to_string()))?
             );

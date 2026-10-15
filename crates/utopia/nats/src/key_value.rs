@@ -172,7 +172,7 @@ pub type InitCallback = Box<dyn FnMut() -> Result<(), CallbackError> + Send>;
 /// A key-value bucket.
 ///
 /// ```
-/// # tokio::runtime::Builder::new_current_thread().enable_all().build()?.block_on(async {
+/// # utopia_async::run(async {
 /// use utopia_nats::key_value::KeyValueConfig;
 /// # let options = utopia_nats::ConnectionOptions { connect_timeout: std::time::Duration::from_millis(200),
 /// #     ..utopia_nats::ConnectionOptions::new([std::env::var("NATS_URL").unwrap_or("nats://127.0.0.1:4222".into())]) };

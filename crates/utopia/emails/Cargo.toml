@@ -17,7 +17,7 @@ utopia-validators.workspace = true
 # The emails-import task (src/bin), as PHP's import.php requires utopia-php/cli,
 # utopia-php/console and an HTTP client (dev requirements of the PHP package).
 indexmap.workspace = true
-tokio = { workspace = true, features = ["rt"] }
+utopia-async.workspace = true
 utopia-cli.workspace = true
 utopia-client.workspace = true
 utopia-console.workspace = true

@@ -85,7 +85,7 @@ fn casting_collection() -> Collection {
     .unwrap()
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn cast_after_casts_collection_and_internal_attributes() {
     let adapter = casting_adapter(true).await;
     let collection = Collection::from_document(&crate::common::doc(
@@ -124,7 +124,7 @@ async fn cast_after_casts_collection_and_internal_attributes() {
     }
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn cast_after_normalises_permissions_written_past_set_attribute() {
     let mut document = crate::common::doc(r#"{"$id":"movie1"}"#);
     document.put("$permissions", val(r#"["read(\"any\")","read(\"any\")","update(\"any\")"]"#));
@@ -268,7 +268,7 @@ fn casting_documents() -> Vec<(&'static str, Document, Array, Array)> {
     ]
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn cast_after_casts_a_batch_as_it_casts_one_document() {
     let collection = casting_collection();
     let one = casting_adapter(false).await;
@@ -286,7 +286,7 @@ async fn cast_after_casts_a_batch_as_it_casts_one_document() {
     assert!(many.cast_after(&collection, vec![]).unwrap().is_empty());
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn cast_after_casts_by_attribute_type_with_defined_attributes() {
     let collection = casting_collection();
     let adapter = casting_adapter(true).await;
@@ -295,7 +295,7 @@ async fn cast_after_casts_by_attribute_type_with_defined_attributes() {
     }
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn cast_after_refuses_a_stored_attribute_of_an_unknown_type() {
     let mut definition = casting_collection().to_document();
     definition
@@ -313,7 +313,7 @@ async fn cast_after_refuses_a_stored_attribute_of_an_unknown_type() {
     assert_error(result, Kind::Structure, "Unknown attribute type: no such type");
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn found_records_turn_nested_objects_into_arrays() {
     let fake = Fake::new();
     fake.on("find", |_| {
@@ -358,7 +358,7 @@ async fn found_records_turn_nested_objects_into_arrays() {
     assert_eq!(found[0].array_copy(), expected);
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn projection_skips_internal_attributes() {
     let fake = Fake::new();
     fake.on("find", |_| Ok(empty_batch()));
@@ -386,7 +386,7 @@ async fn projection_skips_internal_attributes() {
 
 // ---- MongoAttributesSupportTest
 
-#[tokio::test]
+#[utopia_async::test]
 async fn defined_attributes_follows_the_schemaless_mode() {
     let adapter = Mongo::with_driver(Fake::new()).await.unwrap();
     let schemaless = adapter.schemaless().unwrap();

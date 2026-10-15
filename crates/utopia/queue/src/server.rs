@@ -57,7 +57,6 @@ struct Registered {
 /// let mut server = Server::new(Adapter::new(broker, 1, Runtime::Workers));
 /// server.job("emails", 4, None)?.inject("message").action(|scope| async move {
 ///     let _message = scope.message();
-///     Ok(())
 /// });
 /// std::sync::Arc::new(server).start().await?;
 /// # Ok(()) }

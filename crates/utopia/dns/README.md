@@ -16,7 +16,7 @@ This library is maintained by the [Appwrite team](https://appwrite.io).
 utopia-dns = { git = "https://github.com/utopia-rs/dns" }
 ```
 
-A DNS server receives small binary packets, decodes a question, finds the records that answer it and sends an encoded response back, over UDP, TCP or HTTPS. This library covers each step: the message codec, zones and zone files, resolvers, a server on Tokio, a client, and validators for what users type into DNS settings. This guide covers the common tasks.
+A DNS server receives small binary packets, decodes a question, finds the records that answer it and sends an encoded response back, over UDP, TCP or HTTPS. This library covers each step: the message codec, zones and zone files, resolvers, a server on Network, a client, and validators for what users type into DNS settings. This guide covers the common tasks.
 
 ## Encode and decode messages
 
@@ -78,7 +78,7 @@ assert!(file.starts_with(b"$ORIGIN example.com.\n$TTL 3600\n"));
 
 ## Serve
 
-A `Server` answers with a resolver; the Tokio adapter listens on UDP, TCP and DNS over HTTPS. `Handler::handle` is what the adapter calls for each packet, so a server can be tried without sockets.
+A `Server` answers with a resolver; the `Network` adapter listens on UDP, TCP and DNS over HTTPS. `Handler::handle` is what the adapter calls for each packet, so a server can be tried without sockets.
 
 ```rust
 use utopia_dns::message::{Message, Question, Record};

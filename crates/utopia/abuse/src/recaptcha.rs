@@ -37,10 +37,8 @@ pub trait Client: Send + Sync {
     fn send<'a>(&'a self, request: Request) -> BoxFuture<'a, Result<Vec<u8>>>;
 }
 
-type Hyper = hyper_util::client::legacy::Client<
-    hyper_rustls::HttpsConnector<hyper_util::client::legacy::connect::HttpConnector>,
-    Full<Bytes>,
->;
+type Hyper =
+    hyper_util::client::legacy::Client<hyper_rustls::HttpsConnector<utopia_async::hyper::Connector>, Full<Bytes>>;
 
 /// The default [`Client`]: HTTPS with the WebPKI roots.
 ///
@@ -60,7 +58,7 @@ impl std::fmt::Debug for HttpClient {
 impl HttpClient {
     /// A client over HTTPS (and plain HTTP).
     pub fn new() -> Result<Self> {
-        let mut http = hyper_util::client::legacy::connect::HttpConnector::new();
+        let mut http = utopia_async::hyper::Connector::new();
         http.enforce_http(false);
         let https = hyper_rustls::HttpsConnectorBuilder::new()
             .with_provider_and_webpki_roots(rustls::crypto::ring::default_provider())
@@ -68,7 +66,7 @@ impl HttpClient {
             .https_or_http()
             .enable_http1()
             .wrap_connector(http);
-        let inner = hyper_util::client::legacy::Client::builder(hyper_util::rt::TokioExecutor::new()).build(https);
+        let inner = hyper_util::client::legacy::Client::builder(utopia_async::hyper::Executor).build(https);
         Ok(HttpClient { inner })
     }
 }
@@ -106,7 +104,7 @@ impl Client for HttpClient {
 ///     }
 /// }
 ///
-/// # tokio::runtime::Builder::new_current_thread().build()?.block_on(async {
+/// # utopia_async::Builder::current_thread().build()?.block_on(async {
 /// let recaptcha = ReCaptcha::with_client("secret", Google);
 /// assert!(recaptcha.verify("token", "203.0.113.7", 0.5).await?);
 /// assert!(!recaptcha.verify("token", "203.0.113.7", 0.95).await?);

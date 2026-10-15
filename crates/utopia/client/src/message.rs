@@ -163,7 +163,7 @@ impl Body {
         match self {
             Body::Empty => Some(0),
             Body::Bytes(b) => Some(b.len() as u64),
-            Body::File(path) => tokio::fs::metadata(path).await.ok().map(|m| m.len()),
+            Body::File(path) => utopia_async::fs::metadata(path).await.ok().map(|m| m.len()),
         }
     }
 }

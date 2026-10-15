@@ -31,9 +31,9 @@ use std::path::Path;
 use std::time::Duration;
 
 use serde_json::{Map, Value, json};
-use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
-use tokio::net::TcpStream;
-use tokio::sync::mpsc;
+use utopia_async::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+use utopia_async::net::TcpStream;
+use utopia_async::sync::mpsc;
 use utopia_client::{Anywhere, Client, Http, Request};
 
 /// Where the runtimes and the stack's services are, from the environment.
@@ -1559,7 +1559,7 @@ impl Monitor {
         let mut stream = TcpStream::connect(address).await.map_err(|e| format!("redis {address}: {e}"))?;
         stream.write_all(b"MONITOR\r\n").await.map_err(|e| e.to_string())?;
         let (tx, rx) = mpsc::unbounded_channel();
-        tokio::spawn(async move {
+        utopia_async::spawn(async move {
             let mut reader = BufReader::new(stream);
             let mut line = String::new();
             loop {
@@ -1586,9 +1586,9 @@ impl Monitor {
         let _: Option<String> =
             redis::cmd("GET").arg(&key).query_async(&mut self.marker).await.map_err(|e| e.to_string())?;
         let mut out = Vec::new();
-        let deadline = tokio::time::Instant::now() + Duration::from_secs(10);
+        let deadline = std::time::Instant::now() + Duration::from_secs(10);
         loop {
-            let next = tokio::time::timeout_at(deadline, self.lines.recv()).await;
+            let next = utopia_async::time::timeout_at(deadline, self.lines.recv()).await;
             match next {
                 Ok(Some((client, args))) => {
                     if args.len() == 2 && args[0].eq_ignore_ascii_case("GET") && args[1] == key {
@@ -2242,7 +2242,7 @@ async fn record(
     let (method, url, headers, body) = request(scenario, twin, other, console, &prepared);
     let reply = api.send(&method, &url, &headers, body.as_ref()).await?;
     // Work after the response (Rust's shutdown jobs) lands within this.
-    tokio::time::sleep(Duration::from_millis(150)).await;
+    utopia_async::sleep(Duration::from_millis(150)).await;
     let commands = monitor.until_marker(&format!("{}:{}:end", scenario.n, twin.runtime)).await?;
     let after = tables(db, &twin.prefix).await?;
 
@@ -2424,12 +2424,12 @@ fn short(v: &Value) -> String {
 /// returns the summary, with every difference.
 pub fn run(_root: &Path, filter: Option<&str>, verbose: bool) -> Result<Value, String> {
     let stack = Stack::from_env()?;
-    let runtime = tokio::runtime::Builder::new_current_thread().enable_all().build().map_err(|e| e.to_string())?;
+    let runtime = utopia_async::Builder::current_thread().build().map_err(|e| e.to_string())?;
     runtime.block_on(async move {
         let api = Api::new();
         let (db, connection) =
             tokio_postgres::connect(&stack.postgres, tokio_postgres::NoTls).await.map_err(|e| format!("postgres: {e}"))?;
-        tokio::spawn(connection);
+        utopia_async::spawn(connection);
         let console = console(&api, &stack).await?;
         // Twins an interrupted run left behind.
         let query = json!({"method": "startsWith", "attribute": "$id", "values": [prefix()]}).to_string();

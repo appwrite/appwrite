@@ -7,8 +7,8 @@ use std::time::Duration;
 use rustls::client::danger::{HandshakeSignatureValid, ServerCertVerified, ServerCertVerifier};
 use rustls::pki_types::{CertificateDer, ServerName, UnixTime};
 use rustls::{DigitallySignedStruct, SignatureScheme};
-use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
-use tokio::net::TcpStream;
+use utopia_async::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
+use utopia_async::net::TcpStream;
 
 use crate::Error;
 
@@ -186,7 +186,7 @@ impl Client {
     async fn open(&self) -> Result<Box<dyn Stream>, (i64, String)> {
         let wait = self.wait();
         let host = String::from_utf8_lossy(&self.host).into_owned();
-        let lookup = tokio::time::timeout(wait, tokio::net::lookup_host((host.as_str(), self.port))).await;
+        let lookup = utopia_async::timeout(wait, utopia_async::net::lookup_host((host.as_str(), self.port))).await;
         let addr = match lookup {
             Ok(Ok(mut addrs)) => addrs.next(),
             Ok(Err(_)) => None,
@@ -195,7 +195,7 @@ impl Client {
         let Some(addr) = addr else {
             return Err((704, "DNS Lookup resolve failed".into()));
         };
-        let stream = match tokio::time::timeout(wait, TcpStream::connect(addr)).await {
+        let stream = match utopia_async::timeout(wait, TcpStream::connect(addr)).await {
             Ok(Ok(stream)) => stream,
             Ok(Err(e)) => return Err(errno(&e)),
             Err(_) => return Err((TIMED_OUT, "Connection timed out".into())),
@@ -213,7 +213,7 @@ impl Client {
         let name = ServerName::try_from(host.clone())
             .unwrap_or_else(|_| ServerName::try_from("localhost").expect("a valid name"));
         let connector = tokio_rustls::TlsConnector::from(Arc::new(config));
-        match tokio::time::timeout(wait, connector.connect(name, stream)).await {
+        match utopia_async::timeout(wait, connector.connect(name, stream)).await {
             Ok(Ok(stream)) => Ok(Box::new(stream)),
             Ok(Err(e)) => Err(errno(&e)),
             Err(_) => Err((TIMED_OUT, "Connection timed out".into())),
@@ -391,7 +391,7 @@ impl Client {
     /// Reads one whole packet (framed by its fixed header).
     async fn read(&mut self) -> Read {
         let wait = self.wait();
-        let deadline = tokio::time::Instant::now() + wait;
+        let deadline = std::time::Instant::now() + wait;
         loop {
             if let Some(length) = whole(&self.buffer) {
                 return Read::Packet(self.buffer.drain(..length).collect());
@@ -400,7 +400,7 @@ impl Client {
                 return Read::Closed;
             };
             let mut chunk = [0u8; 8192];
-            match tokio::time::timeout_at(deadline, stream.read(&mut chunk)).await {
+            match utopia_async::time::timeout_at(deadline, stream.read(&mut chunk)).await {
                 Err(_) => return Read::TimedOut,
                 Ok(Ok(0)) => return Read::Closed,
                 Ok(Ok(n)) => self.buffer.extend_from_slice(&chunk[..n]),

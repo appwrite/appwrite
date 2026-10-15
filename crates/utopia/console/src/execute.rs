@@ -3,7 +3,7 @@
 use std::process::Stdio;
 use std::time::{Duration, Instant};
 
-use tokio::io::{AsyncRead, AsyncReadExt, AsyncWriteExt};
+use utopia_async::io::{AsyncRead, AsyncReadExt, AsyncWriteExt};
 
 use crate::{Command, Error};
 
@@ -84,7 +84,7 @@ pub struct Output {
 /// whole seconds (`time()`), so PHP kills up to a second later.
 ///
 /// ```
-/// # tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap().block_on(async {
+/// # utopia_async::run(async {
 /// use utopia_console::{execute, Command};
 ///
 /// let sort = Command::new("sort")?;
@@ -128,7 +128,7 @@ pub async fn execute<'a>(
 
     let mut input = child.stdin.take();
     let data = stdin.to_vec();
-    let writer = tokio::spawn(async move {
+    let writer = utopia_async::spawn(async move {
         if let Some(input) = input.as_mut() {
             let _ = input.write_all(&data).await;
             let _ = input.shutdown().await;
@@ -144,11 +144,11 @@ pub async fn execute<'a>(
     let status = loop {
         let deadline = async {
             match timeout {
-                Some(t) => tokio::time::sleep(t.saturating_sub(start.elapsed())).await,
+                Some(t) => utopia_async::sleep(t.saturating_sub(start.elapsed())).await,
                 None => std::future::pending().await,
             }
         };
-        tokio::select! {
+        utopia_async::select! {
             n = read(&mut out, &mut obuf) => match n {
                 Some(n) => collect(&obuf[..n], &mut output.stdout, on_progress.as_mut()),
                 None => out = None,
@@ -178,17 +178,17 @@ pub async fn execute<'a>(
     Ok(output)
 }
 
-fn argv<'a>(mut words: impl Iterator<Item = &'a str>) -> Result<tokio::process::Command, Error> {
+fn argv<'a>(mut words: impl Iterator<Item = &'a str>) -> Result<utopia_async::process::Command, Error> {
     let program = words
         .next()
         .ok_or_else(|| Error::Value("proc_open(): Argument #1 ($command) must have at least one element".to_owned()))?;
-    let mut command = tokio::process::Command::new(program);
+    let mut command = utopia_async::process::Command::new(program);
     command.args(words);
     Ok(command)
 }
 
-fn shell(line: &str) -> tokio::process::Command {
-    let mut command = tokio::process::Command::new("/bin/sh");
+fn shell(line: &str) -> utopia_async::process::Command {
+    let mut command = utopia_async::process::Command::new("/bin/sh");
     command.arg("-c").arg(format!("( {line} ) 3>/dev/null"));
     command
 }
@@ -213,7 +213,7 @@ async fn drain<R: AsyncRead + Unpin>(
     mut progress: Option<&mut Progress<'_>>,
 ) {
     let Some(p) = pipe.as_mut() else { return };
-    while let Ok(Ok(n)) = tokio::time::timeout(Duration::from_millis(10), p.read(buf)).await {
+    while let Ok(Ok(n)) = utopia_async::timeout(Duration::from_millis(10), p.read(buf)).await {
         if n == 0 {
             break;
         }

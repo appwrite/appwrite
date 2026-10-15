@@ -189,10 +189,10 @@ impl Languages {
     ///
     /// PHP: `Locale::setLanguageFromJSON($name, $path)`.
     pub async fn load(&mut self, name: impl Into<String>, path: &Path) -> Result<(), Error> {
-        if self.exceptions && tokio::fs::metadata(path).await.is_err() {
+        if self.exceptions && utopia_async::fs::metadata(path).await.is_err() {
             return Err(Error::Exception("Translation file not found.".into()));
         }
-        let content = tokio::fs::read(path).await.unwrap_or_default();
+        let content = utopia_async::fs::read(path).await.unwrap_or_default();
         self.insert_json(name, &content)
     }
 

@@ -28,7 +28,6 @@ use utopia_http::{Bytes, Http, Request, Response};
 let mut http = Http::new("UTC");
 http.get("/hello")?.inject("response").action(async |scope| {
     scope.response.text("Hello, World!");
-    Ok(())
 });
 
 let request = Request::new("GET", "/hello", [], Bytes::new());
@@ -59,7 +58,6 @@ http.get("/users/:userId")?
         let fields = scope.param("fields").and_then(Value::as_str).unwrap_or_default();
         let text = format!("{user}: {fields}");
         scope.response.text(&text);
-        Ok(())
     });
 
 let mut bodies = Vec::new();
@@ -92,7 +90,6 @@ http.get("/files")?
         let order = scope.param("order").and_then(Value::as_str).unwrap_or_default();
         let text = format!("{limit} {order}");
         scope.response.text(&text);
-        Ok(())
     });
 http.error().inject("error").inject("response").action(async |scope| {
     let error = scope.error().expect("error hooks receive the error");
@@ -168,7 +165,6 @@ http.get("/session")?.inject("request").inject("response").action(async |scope| 
         ..Cookie::default()
     });
     scope.response.text(&agent);
-    Ok(())
 });
 
 let request = Request::new("GET", "/session", [("User-Agent", "curl/8.0")], Bytes::new());
@@ -196,19 +192,15 @@ http.resources().set("log", log.clone());
 
 http.init().inject("log").action(async |scope| {
     scope.resource::<Log>("log").unwrap().lock().unwrap().push("init");
-    Ok(())
 });
 http.init().groups(&["api"]).inject("log").action(async |scope| {
     scope.resource::<Log>("log").unwrap().lock().unwrap().push("api init");
-    Ok(())
 });
 http.shutdown().inject("log").action(async |scope| {
     scope.resource::<Log>("log").unwrap().lock().unwrap().push("shutdown");
-    Ok(())
 });
 http.get("/v1/users")?.groups(&["api"]).inject("log").action(async |scope| {
     scope.resource::<Log>("log").unwrap().lock().unwrap().push("action");
-    Ok(())
 });
 
 let request = Request::new("GET", "/v1/users", [], Bytes::new());
@@ -273,7 +265,6 @@ http.get("/greet/:name")?
         let name = scope.param("name").and_then(Value::as_str).unwrap_or_default();
         let text = format!("{greeting}, {name}! ({locale})");
         scope.response.text(&text);
-        Ok(())
     });
 
 let context = http.context();
@@ -302,14 +293,12 @@ let mut route = http
     .action(async |scope| {
         let user = scope.param("userId").and_then(Value::as_str).unwrap_or_default().to_owned();
         scope.response.text(&user);
-        Ok(())
     });
 route.alias("/members/:userId")?;
 
 http.routes(&["GET", "POST"], "/oauth/userinfo")?.inject("request").inject("response").action(async |scope| {
     let method = scope.request.method().to_owned();
     scope.response.text(&method);
-    Ok(())
 });
 
 let mut bodies = Vec::new();

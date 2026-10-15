@@ -1,4 +1,4 @@
-A circuit breaker sits in front of a dependency (a database, a cache, another service) and stops calling it while it keeps failing, so callers get a fallback at once instead of waiting on errors, and the dependency gets room to recover. This library judges a dependency on the share of recent calls that failed, lets a few probes through after a cool-down, and can share its verdict between processes. The breaker is async, so the examples run it on a Tokio runtime. This guide covers the common tasks.
+A circuit breaker sits in front of a dependency (a database, a cache, another service) and stops calling it while it keeps failing, so callers get a fallback at once instead of waiting on errors, and the dependency gets room to recover. This library judges a dependency on the share of recent calls that failed, lets a few probes through after a cool-down, and can share its verdict between processes. The breaker is async, so the examples run it with `utopia_async::run`. This guide covers the common tasks.
 
 ## Guard a call
 
@@ -9,7 +9,7 @@ use utopia_circuit_breaker::{CircuitBreaker, Options};
 
 let breaker = CircuitBreaker::new(Options::default())?;
 
-let value = tokio::runtime::Builder::new_current_thread().enable_all().build()?.block_on(async {
+let value = utopia_async::run(async {
     breaker.call(|| "cached copy", async { Ok::<_, &str>("fresh value") }).await
 })?;
 
@@ -34,7 +34,7 @@ use utopia_circuit_breaker::{CircuitBreaker, Options, State};
 
 let breaker = CircuitBreaker::new(Options { window: 60, failure_ratio: 0.5, minimum_throughput: 4, ..Options::default() })?;
 
-tokio::runtime::Builder::new_current_thread().enable_all().build()?.block_on(async {
+utopia_async::run(async {
     for _ in 0..4 {
         breaker.call(|| "fallback", async { Err::<&str, _>("timeout") }).await?;
     }
@@ -66,7 +66,7 @@ use utopia_circuit_breaker::{CircuitBreaker, Options, State};
 
 let breaker = CircuitBreaker::new(Options { timeout: 0, success_threshold: 1, ..Options::default() })?;
 
-tokio::runtime::Builder::new_current_thread().enable_all().build()?.block_on(async {
+utopia_async::run(async {
     breaker.trip().await?;
     let value = breaker
         .call_with_probe(|| "fallback", async { Ok::<_, &str>("full query") }, async { Ok("ping") })
@@ -102,7 +102,7 @@ let options = Options { key: "users-api".into(), ..Options::default() };
 let first = CircuitBreaker::with_cache(options.clone(), Arc::new(Table::new(table.clone(), "breaker:")))?;
 let second = CircuitBreaker::with_cache(options, Arc::new(Table::new(table, "breaker:")))?;
 
-tokio::runtime::Builder::new_current_thread().enable_all().build()?.block_on(async {
+utopia_async::run(async {
     first.trip().await?;
     assert_eq!(second.state().await?, State::Open);
     Ok::<_, utopia_circuit_breaker::Error>(())
@@ -136,7 +136,7 @@ let telemetry = MemoryTelemetry::new();
 let breaker = CircuitBreaker::new(Options::default())?;
 breaker.set_telemetry(Arc::new(telemetry.clone()));
 
-tokio::runtime::Builder::new_current_thread().enable_all().build()?.block_on(async {
+utopia_async::run(async {
     breaker.call(|| "fallback", async { Ok::<_, &str>("ok") }).await
 })?;
 

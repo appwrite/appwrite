@@ -18,7 +18,7 @@
 
 use std::sync::Arc;
 
-use tokio::sync::oneshot;
+use utopia_async::sync::oneshot;
 use utopia_database::state::{Scoped, inherit};
 
 type Value = Arc<Scoped<&'static str>>;
@@ -57,7 +57,7 @@ fn test_an_override_is_removed_when_its_callback_throws() {
     assert_eq!(value.get(), "handle");
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_an_override_is_removed_when_its_future_fails() {
     let value = value();
     let result: Result<(), &str> = value.with("override", async { Err("failed") }).await;
@@ -66,7 +66,7 @@ async fn test_an_override_is_removed_when_its_future_fails() {
 
     // A cancelled override ends too.
     let pending = value.with("override", std::future::pending::<()>());
-    let _ = tokio::time::timeout(std::time::Duration::from_millis(1), pending).await;
+    let _ = utopia_async::timeout(std::time::Duration::from_millis(1), pending).await;
     assert_eq!(value.get(), "handle");
 }
 
@@ -78,20 +78,20 @@ fn test_values_keep_their_own_overrides() {
     assert_eq!(seen, ["override", "second"]);
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_an_override_is_seen_by_the_coroutines_it_starts_but_not_by_siblings_or_the_parent() {
     let value = value();
     let (entered_tx, entered_rx) = oneshot::channel();
     let (released_tx, released_rx) = oneshot::channel::<()>();
 
-    let owner = tokio::spawn(inherit({
+    let owner = utopia_async::spawn(inherit({
         let value = value.clone();
         async move {
             value
                 .with("override", async {
                     let child = value.clone();
-                    let seen = tokio::spawn(inherit(async move {
-                        tokio::time::sleep(std::time::Duration::from_millis(1)).await;
+                    let seen = utopia_async::spawn(inherit(async move {
+                        utopia_async::sleep(std::time::Duration::from_millis(1)).await;
                         child.get()
                     }))
                     .await
@@ -105,7 +105,7 @@ async fn test_an_override_is_seen_by_the_coroutines_it_starts_but_not_by_sibling
 
     let child = entered_rx.await.unwrap();
     let parent = value.get();
-    let sibling = tokio::spawn(inherit({
+    let sibling = utopia_async::spawn(inherit({
         let value = value.clone();
         async move { value.get() }
     }))
@@ -117,7 +117,7 @@ async fn test_an_override_is_seen_by_the_coroutines_it_starts_but_not_by_sibling
     assert_eq!((child, parent, sibling), ("override", "handle", "handle"));
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_a_write_inside_a_coroutines_override_stays_in_that_override() {
     let value = value();
     let inside = value
@@ -129,18 +129,18 @@ async fn test_a_write_inside_a_coroutines_override_stays_in_that_override() {
     assert_eq!((inside, value.get()), ("changed", "handle"));
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_a_write_in_a_coroutine_without_an_override_changes_the_handle_wide_value() {
     let value = value();
     let writer = value.clone();
-    tokio::spawn(inherit(async move { writer.set("changed") })).await.unwrap();
+    utopia_async::spawn(inherit(async move { writer.set("changed") })).await.unwrap();
     assert_eq!(value.get(), "changed");
     let writer = value.clone();
-    tokio::spawn(async move { writer.set("again") }).await.unwrap();
+    utopia_async::spawn(async move { writer.set("again") }).await.unwrap();
     assert_eq!(value.get(), "again");
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_a_write_in_a_coroutine_started_inside_an_override_stays_in_that_coroutine() {
     let value = value();
     let (child, parent, sibling) = value
@@ -148,7 +148,7 @@ async fn test_a_write_in_a_coroutine_started_inside_an_override_stays_in_that_co
             let (written_tx, written_rx) = oneshot::channel();
             let (released_tx, released_rx) = oneshot::channel::<()>();
             let writer = value.clone();
-            let child = tokio::spawn(inherit(async move {
+            let child = utopia_async::spawn(inherit(async move {
                 writer.set("child");
                 written_tx.send(writer.get()).unwrap();
                 released_rx.await.unwrap();
@@ -156,20 +156,20 @@ async fn test_a_write_in_a_coroutine_started_inside_an_override_stays_in_that_co
             let child_seen = written_rx.await.unwrap();
             let parent = value.get();
             let reader = value.clone();
-            let sibling = tokio::spawn(inherit(async move { reader.get() })).await.unwrap();
+            let sibling = utopia_async::spawn(inherit(async move { reader.get() })).await.unwrap();
             released_tx.send(()).unwrap();
             child.await.unwrap();
             (child_seen, parent, sibling)
         })
         .await;
     let reader = value.clone();
-    let unrelated = tokio::spawn(inherit(async move { reader.get() })).await.unwrap();
+    let unrelated = utopia_async::spawn(inherit(async move { reader.get() })).await.unwrap();
 
     assert_eq!((child, parent, sibling, unrelated), ("child", "override", "override", "handle"));
     assert_eq!(value.get(), "handle");
 }
 
-#[tokio::test]
+#[utopia_async::test]
 #[allow(clippy::async_yields_async)] // the override returns the child task it started
 async fn test_a_write_in_a_coroutine_started_inside_an_override_ends_with_that_override() {
     let value = value();
@@ -178,7 +178,7 @@ async fn test_a_write_in_a_coroutine_started_inside_an_override_ends_with_that_o
     let child = value
         .with("override", async {
             let writer = value.clone();
-            let child = tokio::spawn(inherit(async move {
+            let child = utopia_async::spawn(inherit(async move {
                 writer.set("child");
                 written_tx.send(()).unwrap();
                 closed_rx.await.unwrap();
@@ -193,16 +193,16 @@ async fn test_a_write_in_a_coroutine_started_inside_an_override_ends_with_that_o
     assert_eq!((after_scope, value.get()), ("handle", "handle"));
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_a_write_in_a_coroutine_started_inside_an_override_is_seen_by_the_coroutines_it_starts() {
     let value = value();
     let (grandchild, grandchild_after, child, parent) = value
         .with("override", async {
             let writer = value.clone();
-            let (grandchild, grandchild_after, child) = tokio::spawn(inherit(async move {
+            let (grandchild, grandchild_after, child) = utopia_async::spawn(inherit(async move {
                 writer.set("child");
                 let inner = writer.clone();
-                let (seen, after) = tokio::spawn(inherit(async move {
+                let (seen, after) = utopia_async::spawn(inherit(async move {
                     let seen = inner.get();
                     inner.set("grandchild");
                     (seen, inner.get())
@@ -220,8 +220,8 @@ async fn test_a_write_in_a_coroutine_started_inside_an_override_is_seen_by_the_c
     assert_eq!(value.get(), "handle");
 }
 
-fn runtime() -> tokio::runtime::Runtime {
-    tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap()
+fn runtime() -> utopia_async::Runtime {
+    utopia_async::Builder::current_thread().build().unwrap()
 }
 
 #[test]
@@ -232,7 +232,7 @@ fn test_a_write_in_a_coroutine_under_an_override_opened_outside_coroutines_stays
             let value = value.clone();
             async move {
                 let writer = value.clone();
-                let child = tokio::spawn(inherit(async move {
+                let child = utopia_async::spawn(inherit(async move {
                     writer.set("child");
                     writer.get()
                 }))
@@ -247,13 +247,13 @@ fn test_a_write_in_a_coroutine_under_an_override_opened_outside_coroutines_stays
     assert_eq!(value.get(), "handle");
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_a_null_write_in_a_coroutine_started_inside_an_override_is_kept() {
     let value: Arc<Scoped<Option<&'static str>>> = Arc::new(Scoped::new(Some("handle")));
     let seen = value
         .with(Some("override"), async {
             let writer = value.clone();
-            tokio::spawn(inherit(async move {
+            utopia_async::spawn(inherit(async move {
                 writer.set(None);
                 writer.get()
             }))
@@ -264,16 +264,16 @@ async fn test_a_null_write_in_a_coroutine_started_inside_an_override_is_kept() {
     assert_eq!(seen, None);
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_a_childs_override_leaves_its_parent_unchanged() {
     let value = value();
     let (parent, child, parent_after) = value
         .with("parent", async {
             let inner = value.clone();
-            let child = tokio::spawn(inherit(async move {
+            let child = utopia_async::spawn(inherit(async move {
                 inner
                     .with("child", async {
-                        tokio::time::sleep(std::time::Duration::from_millis(1)).await;
+                        utopia_async::sleep(std::time::Duration::from_millis(1)).await;
                         inner.get()
                     })
                     .await
@@ -292,35 +292,35 @@ fn test_an_override_opened_outside_coroutines_is_seen_inside_them() {
     let seen = value.with_sync("override", || {
         runtime().block_on(inherit({
             let value = value.clone();
-            async move { tokio::spawn(inherit(async move { value.get() })).await.unwrap() }
+            async move { utopia_async::spawn(inherit(async move { value.get() })).await.unwrap() }
         }))
     });
     assert_eq!(seen, "override");
     assert_eq!(value.get(), "handle");
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_a_task_spawned_without_inherit_starts_outside_every_override() {
     let value = value();
     let seen = value
         .with("override", async {
             let reader = value.clone();
-            tokio::spawn(async move { reader.get() }).await.unwrap()
+            utopia_async::spawn(async move { reader.get() }).await.unwrap()
         })
         .await;
     assert_eq!(seen, "handle");
 }
 
-#[tokio::test]
+#[utopia_async::test]
 async fn test_sibling_futures_do_not_see_each_others_overrides() {
     let value = value();
     let (a, b) = futures_util::join!(
         value.with("override", async {
-            tokio::task::yield_now().await;
+            utopia_async::yield_now().await;
             value.get()
         }),
         async {
-            tokio::task::yield_now().await;
+            utopia_async::yield_now().await;
             value.get()
         }
     );

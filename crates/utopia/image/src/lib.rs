@@ -23,7 +23,7 @@
 //! ```
 //!
 //! All the work is CPU-bound: in async code run it on the blocking pool
-//! (`tokio::task::spawn_blocking`), never on a runtime thread.
+//! (`utopia_async::spawn_blocking`), never on a runtime thread.
 //!
 //! The codecs are pure Rust. Next to ImageMagick, which the PHP library wraps,
 //! that means: WebP is always written lossless (no pure-Rust lossy VP8

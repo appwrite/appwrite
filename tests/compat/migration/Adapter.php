@@ -466,7 +466,7 @@ final class Adapter implements Base, Benchmarks
                     $target->setDestinations(self::destinations($s, $a['destinations']));
                 }
 
-                return null;
+                return;
             },
             'target.request' => function (array $a, Session $s) {
                 $target = $s->get($a['target']);
@@ -502,7 +502,7 @@ final class Adapter implements Base, Benchmarks
                     $client->setEndpoint(self::endpoint($s, $a['endpoint']));
                 }
 
-                return null;
+                return;
             },
             'appwrite_client.call' => function (array $a, Session $s) {
                 // The source's own client is protected: read it as DestinationsSource::sdk() does.

@@ -69,7 +69,7 @@ pub struct RawMessage {
 /// [`Error::Connection`] until the connection builds a new one.
 ///
 /// ```
-/// # tokio::runtime::Builder::new_current_thread().enable_all().build()?.block_on(async {
+/// # utopia_async::run(async {
 /// use utopia_nats::protocol::{Op, Parser};
 /// # use utopia_nats::transport::{TlsOptions, Transport};
 /// # struct Script(Vec<u8>);

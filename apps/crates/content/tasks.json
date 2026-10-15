@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-15T21:11:00Z",
+  "updated": "2026-10-15T22:19:00Z",
   "tasks": [
     {
       "id": "db83",
@@ -10,6 +10,14 @@
       "note": "main bumped utopia-php/database to 8.3.0 on 2026-10-16. Port the 8.1.3→8.3.0 changes to Rust, move the PHP harness and its recordings to 8.3.0, and update every crate that uses it."
     },
     {
+      "id": "async-compat",
+      "title": "Async: compat cases for Promise, Timer and Parallel",
+      "area": "Libraries",
+      "status": "todo",
+      "updated": "2026-10-15T23:30:00Z",
+      "note": "tests/compat/async/spec.json points at the crate but has no operations yet; write the ops and cases against utopia-php/async 0.2 to mark it complete."
+    },
+    {
       "id": "db-lanes-ci",
       "title": "Database lanes as CI runs them",
       "area": "Database 8",
@@ -18,12 +26,20 @@
       "note": "CI's Postgres lane: 786 differences. About 178 are aggregate values typed as strings in Rust where PHP returns numbers; about 25 cases cascade from PHP 8.1.3 losing a transaction under load, which the runner will retry once and log."
     },
     {
+      "id": "db8-recordings",
+      "title": "Database 8: the last recording fixes",
+      "area": "Database 8",
+      "status": "done",
+      "updated": "2026-10-15T22:19:00Z",
+      "note": "WithCacheTest re-recorded, the last connection id masked, a $sequence checked by reference, SQLSchemaBuilder dropped (its schema objects are self-referencing), and tied join rows masked by a new recorder/ties.py: 512 steps in 18 join files."
+    },
+    {
       "id": "async-adapter",
       "title": "Async engine behind an adapter (utopia-async)",
       "area": "Libraries",
-      "status": "progress",
-      "updated": "2026-10-15T20:30:00Z",
-      "note": "Tokio moves behind utopia-async: an Adapter trait (the engine contract) with a Tokio adapter, and a facade every crate uses (spawn, sleep, timeout, net, fs, process, signals, hyper glue, #[utopia_async::test]). No crate but utopia-async names tokio."
+      "status": "done",
+      "updated": "2026-10-15T23:30:00Z",
+      "note": "utopia-async (crates/utopia/async) ports utopia-php/async: Promise, Timer and Parallel over one engine Adapter (Tokio). Every other crate spawns, sleeps, connects and tests through it; bin/monorepo validate fails on a tokio dependency elsewhere. The websocket, mqtt and dns network adapters are Network now."
     },
     {
       "id": "users-ci-parity",
@@ -54,8 +70,8 @@
       "title": "Callbacks as async closures, without Box::pin",
       "area": "Libraries",
       "status": "done",
-      "updated": "2026-10-15T20:20:00Z",
-      "note": "utopia-http actions take async |scope| { .. } and platform callbacks take Callback::http, ::task and ::worker, so guides read like PHP's ->action(function () { .. }). CONVERSION.md makes it the rule."
+      "updated": "2026-10-15T22:03:00Z",
+      "note": "utopia-http actions take async |scope| { .. } and platform callbacks take Callback::http, ::task and ::worker, so guides read like PHP's ->action(function () { .. }). A callback that cannot fail returns nothing; only one that uses ? ends with Ok(()). CONVERSION.md makes it the rule."
     },
     {
       "id": "query-sync",
@@ -80,14 +96,6 @@
       "status": "progress",
       "note": "Rebuilding the local stack the way CI does, as part of reproducing CI's Users parity differences.",
       "updated": "2026-10-15T19:17:00Z"
-    },
-    {
-      "id": "db8-recordings",
-      "title": "Database 8: the last recording fixes",
-      "area": "Database 8",
-      "status": "progress",
-      "updated": "2026-10-15T19:14:00Z",
-      "note": "Re-record Unit-WithCacheTest from the committed core.php, mask the SQLite connection id and one $sequence, the SQLSchemaBuilder stack overflow, and join tie order under load."
     },
     {
       "id": "db8-mirror",

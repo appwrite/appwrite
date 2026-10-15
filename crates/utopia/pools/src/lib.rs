@@ -15,7 +15,7 @@
 //! ```
 //! use utopia_pools::{Channel, Pool};
 //!
-//! # tokio::runtime::Builder::new_current_thread().enable_all().build()?.block_on(async {
+//! # utopia_async::run(async {
 //! let pool = Pool::new(Channel::new(), "db", 4, || async { Ok::<_, std::io::Error>("connection".to_owned()) }, 1.0)?;
 //!
 //! let length = pool.with(async |connection: &String| Ok::<_, utopia_pools::Error>(connection.len())).await?;
@@ -172,7 +172,7 @@ mod tests {
         Pool::new(Channel::new(), "test", size, || async { Ok::<_, std::io::Error>("x".to_owned()) }, timeout).unwrap()
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn pops_until_exhausted_then_reports_counts() {
         let pool = pool(2, 0.0);
         let a = pool.pop().await.unwrap();
@@ -186,7 +186,7 @@ mod tests {
         assert_eq!(pool.count(), 1);
     }
 
-    #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+    #[utopia_async::test(threads = 4)]
     async fn waiters_share_the_pool_without_exceeding_it() {
         let created = Arc::new(AtomicUsize::new(0));
         let c = created.clone();
@@ -204,9 +204,9 @@ mod tests {
         let tasks: Vec<_> = (0..20)
             .map(|_| {
                 let pool = pool.clone();
-                tokio::spawn(async move {
+                utopia_async::spawn(async move {
                     pool.with(async |_: &String| {
-                        tokio::time::sleep(Duration::from_millis(5)).await;
+                        utopia_async::sleep(Duration::from_millis(5)).await;
                         Ok::<_, Error>(())
                     })
                     .await
@@ -220,21 +220,21 @@ mod tests {
         assert!(pool.is_full());
     }
 
-    #[tokio::test]
+    #[utopia_async::test]
     async fn a_pop_dropped_while_creating_frees_its_slot() {
         let pool = Pool::new(
             Channel::new(),
             "slow",
             1,
             || async {
-                tokio::time::sleep(Duration::from_millis(20)).await;
+                utopia_async::sleep(Duration::from_millis(20)).await;
                 Ok::<_, std::io::Error>("x".to_owned())
             },
             1.0,
         )
         .unwrap();
         // Dropped mid-creation (a cancelled request).
-        assert!(tokio::time::timeout(Duration::from_millis(1), pool.pop()).await.is_err());
+        assert!(utopia_async::timeout(Duration::from_millis(1), pool.pop()).await.is_err());
         assert_eq!(pool.count(), 1);
         let connection = pool.pop().await.unwrap();
         assert_eq!(connection.resource(), "x");

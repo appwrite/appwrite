@@ -12,7 +12,6 @@ const EXAMPLE = `use utopia_http::{Bytes, Http, Request, Response};
 let mut http = Http::new("UTC");
 http.get("/hello")?.inject("response").action(async |scope| {
     scope.response.text("Hello, World!");
-    Ok(())
 });
 
 let request = Request::new("GET", "/hello", [], Bytes::new());

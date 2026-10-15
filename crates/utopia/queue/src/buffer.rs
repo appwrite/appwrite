@@ -2,7 +2,7 @@
 
 use std::sync::{Arc, Mutex};
 
-use tokio::sync::oneshot;
+use utopia_async::sync::oneshot;
 
 use crate::connection::BoxFuture;
 use crate::error::{Error, Result};
@@ -37,7 +37,7 @@ impl<Req: std::marker::Send + 'static, Res: std::marker::Send + 'static> Buffer<
         if start {
             let state = self.state.clone();
             let send = self.send.clone();
-            tokio::spawn(async move {
+            utopia_async::spawn(async move {
                 loop {
                     let batch: Waiting<Req, Res> = {
                         let mut s = state.lock().unwrap_or_else(|e| e.into_inner());

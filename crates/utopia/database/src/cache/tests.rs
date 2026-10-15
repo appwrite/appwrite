@@ -18,7 +18,7 @@ use crate::relationship::{Relationship, RelationshipSide};
 use crate::value::{Array, ArrayKey, Str, Value};
 
 fn block_on<F: std::future::Future>(future: F) -> F::Output {
-    tokio::runtime::Builder::new_current_thread().enable_all().build().expect("a runtime").block_on(future)
+    utopia_async::run(future)
 }
 
 fn query_cache(cache: Arc<Cache>) -> Query {

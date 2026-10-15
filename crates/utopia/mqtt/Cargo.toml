@@ -1,6 +1,6 @@
 [package]
 name = "utopia-mqtt"
-description = "Building blocks for MQTT 5.0 and 3.1.1 brokers: the packet codec, a subscription trie, per-connection delivery state, a broker over adapters (Tokio on TCP, TLS and WebSocket; in-memory) with keep-alive timers, and a client."
+description = "Building blocks for MQTT 5.0 and 3.1.1 brokers: the packet codec, a subscription trie, per-connection delivery state, a broker over adapters (Network on TCP, TLS and WebSocket; in-memory) with keep-alive timers, and a client."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -9,11 +9,11 @@ repository = "https://github.com/utopia-rs/mqtt"
 publish.workspace = true
 
 [features]
-default = ["tokio"]
-# The network adapter (`Tokio`: TCP, TLS and WebSocket listeners), the timing
-# wheel's heartbeat and the client, on tokio, tokio-rustls and
+default = ["network"]
+# The network adapter (`Network`: TCP, TLS and WebSocket listeners), the timing
+# wheel's heartbeat and the client, on utopia-async, tokio-rustls and
 # tokio-tungstenite.
-tokio = ["dep:tokio", "dep:tokio-rustls", "dep:rustls", "dep:tokio-tungstenite", "dep:futures-util"]
+network = ["dep:utopia-async", "dep:tokio-rustls", "dep:rustls", "dep:tokio-tungstenite", "dep:futures-util"]
 
 [dependencies]
 foldhash.workspace = true
@@ -23,12 +23,12 @@ thiserror.workspace = true
 utopia-telemetry.workspace = true
 futures-util = { workspace = true, optional = true, features = ["sink"] }
 rustls = { workspace = true, optional = true }
-tokio = { workspace = true, optional = true, features = ["net", "rt", "sync", "time", "io-util", "macros"] }
+utopia-async = { workspace = true, optional = true }
 tokio-rustls = { workspace = true, optional = true }
 tokio-tungstenite = { workspace = true, optional = true }
 
 [dev-dependencies]
-tokio = { workspace = true, features = ["rt", "rt-multi-thread", "macros", "net", "time", "sync", "io-util"] }
+utopia-async.workspace = true
 
 [package.metadata.utopia]
 category = "servers"

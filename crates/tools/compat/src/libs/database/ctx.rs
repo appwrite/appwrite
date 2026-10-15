@@ -120,7 +120,7 @@ pub struct Ctx {
     /// What fixtures logged since the last `db.log`.
     pub log: Log,
     /// The fuzz programs' adapters, by driver.
-    pub fuzz: tokio::sync::Mutex<HashMap<String, Arc<dyn utopia_database::Adapter>>>,
+    pub fuzz: utopia_async::sync::Mutex<HashMap<String, Arc<dyn utopia_database::Adapter>>>,
 }
 
 /// A log fixtures append to.
@@ -164,7 +164,7 @@ impl Ctx {
                     objects: Mutex::new(HashMap::new()),
                     current: Mutex::new(None),
                     log: Arc::new(Mutex::new(Vec::new())),
-                    fuzz: tokio::sync::Mutex::new(HashMap::new()),
+                    fuzz: utopia_async::sync::Mutex::new(HashMap::new()),
                 });
                 holder.0 = Some(ctx.clone());
                 ctx

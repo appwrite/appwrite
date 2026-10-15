@@ -8,7 +8,7 @@ use std::sync::Mutex;
 
 use redis::aio::{ConnectionLike, ConnectionManager};
 use redis::{RedisError, RedisResult, Script, Value};
-use tokio::sync::{Semaphore, SemaphorePermit};
+use utopia_async::sync::{Semaphore, SemaphorePermit};
 
 use crate::{Error, Result};
 
@@ -58,7 +58,7 @@ type Factory = Box<dyn Fn() -> Pin<Box<dyn Future<Output = Result<Connection>> +
 /// ```no_run
 /// use utopia_abuse::{Connection, Stack, TimeLimit, time_limit};
 ///
-/// # tokio::runtime::Builder::new_current_thread().enable_all().build()?.block_on(async {
+/// # utopia_async::run(async {
 /// let client = redis::Client::open("redis://127.0.0.1:6379")?;
 /// let pool = Stack::new(2, move || {
 ///     let client = client.clone();

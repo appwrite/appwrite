@@ -80,7 +80,7 @@ pub struct PublishMessage {
 /// Its calls take the [`Connection`] to send on.
 ///
 /// ```
-/// # tokio::runtime::Builder::new_current_thread().enable_all().build()?.block_on(async {
+/// # utopia_async::run(async {
 /// use utopia_nats::jetstream::{PublishOptions, StorageType, StreamConfig};
 /// # let options = utopia_nats::ConnectionOptions { connect_timeout: std::time::Duration::from_millis(200),
 /// #     ..utopia_nats::ConnectionOptions::new([std::env::var("NATS_URL").unwrap_or("nats://127.0.0.1:4222".into())]) };
@@ -430,7 +430,7 @@ impl JetStream {
                         return Err(Error::NoResponders(message));
                     }
                     attempt += 1;
-                    tokio::time::sleep(Duration::from_millis(50 * attempt as u64)).await;
+                    utopia_async::sleep(Duration::from_millis(50 * attempt as u64)).await;
                 }
                 Err(error) => return Err(error),
             }

@@ -116,7 +116,7 @@ impl Transport for Scripted {
     fn close(&mut self) {}
 }
 
-# tokio::runtime::Builder::new_current_thread().build().unwrap().block_on(async {
+# utopia_async::Builder::current_thread().build().unwrap().block_on(async {
 let server = Scripted {
     replies: b"220 hi\r\n250 hello\r\n250 ok\r\n250 ok\r\n354 go\r\n250 Ok: queued as ABC\r\n".to_vec(),
     ..Scripted::default()

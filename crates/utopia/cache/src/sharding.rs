@@ -18,7 +18,7 @@ use utopia_telemetry::Telemetry;
 /// use php_std::types::Value;
 /// use utopia_cache::{Adapter, Memory, Sharding};
 ///
-/// # tokio::runtime::Runtime::new()?.block_on(async {
+/// # utopia_async::Runtime::new()?.block_on(async {
 /// let shards = Sharding::new(vec![Memory::new(), Memory::new(), Memory::new()])?;
 /// shards.save("a", &Value::from("1"), "", 0).await?;
 /// shards.save("b", &Value::from("2"), "", 0).await?;

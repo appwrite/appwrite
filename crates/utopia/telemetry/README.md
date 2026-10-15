@@ -63,7 +63,7 @@ for (pool, active) in [("db", 3), ("cache", 1)] {
         .observe(move |observer| observer.observe(Number::Int(active), &[("pool", Value::from(pool))]));
 }
 
-let observed = tokio::runtime::Builder::new_current_thread()
+let observed = utopia_async::Builder::current_thread()
     .build()?
     .block_on(telemetry.observe("pool.connection.active.count"))
     .unwrap();

@@ -965,7 +965,7 @@ impl Consumer for Memory {
             };
             if batch.is_empty() {
                 // As MemoryConsumer: an empty receive yields, like a broker wait.
-                tokio::time::sleep(std::time::Duration::from_millis(1)).await;
+                utopia_async::sleep(std::time::Duration::from_millis(1)).await;
                 return Ok(batch);
             }
             self.record(format!("receive:{}", batch.len()));
@@ -1355,7 +1355,7 @@ async fn consume(a: &Args<'_>, session: &mut Session) -> Result<Outcome, Fault> 
                 s.max = s.max.max(s.active);
             }
             if hold > 0 {
-                tokio::time::sleep(std::time::Duration::from_millis(hold as u64)).await;
+                utopia_async::sleep(std::time::Duration::from_millis(hold as u64)).await;
             }
             let pid = pid(&m);
             if let Ok(mut s) = st.lock() {
@@ -1382,8 +1382,8 @@ async fn consume(a: &Args<'_>, session: &mut Session) -> Result<Outcome, Fault> 
         }
         Box::pin(async { Ok(()) })
     });
-    let deadline = tokio::spawn(async move {
-        tokio::time::sleep(std::time::Duration::from_secs(5)).await;
+    let deadline = utopia_async::spawn(async move {
+        utopia_async::sleep(std::time::Duration::from_secs(5)).await;
         stopper.stop();
     });
     let result =

@@ -10,8 +10,8 @@ use std::rc::Rc;
 use std::time::Duration;
 
 use serde_json::{Map, Value, json};
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio::net::{TcpListener, TcpStream};
+use utopia_async::io::{AsyncReadExt, AsyncWriteExt};
+use utopia_async::net::{TcpListener, TcpStream};
 use utopia_smtp::auth::{Authenticator, Login, Plain, XOAuth2};
 use utopia_smtp::mime::{Part, encoding, header};
 use utopia_smtp::{
@@ -150,7 +150,7 @@ pub async fn bench(name: &str, session: &mut Session) -> Result<crate::bench::Be
                 .message_id("bench@example.test")
                 .build()
                 .map_err(lib)?;
-            let shared = Rc::new((tokio::sync::Mutex::new(client), message));
+            let shared = Rc::new((utopia_async::sync::Mutex::new(client), message));
             Bench::future(move || {
                 let shared = shared.clone();
                 async move {
@@ -484,7 +484,7 @@ async fn run(op: &str, a: &Value, s: &mut Session) -> R<Value> {
         }
         "listener.accept" => {
             let listener = s.get_mut::<Listener>(args.value("listener")?)?;
-            let accepted = tokio::time::timeout(Duration::from_secs(2), listener.listener.accept()).await;
+            let accepted = utopia_async::timeout(Duration::from_secs(2), listener.listener.accept()).await;
             let (peer, _) = accepted
                 .ok()
                 .and_then(Result::ok)

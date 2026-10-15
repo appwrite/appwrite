@@ -12,11 +12,9 @@ publish.workspace = true
 php-std.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true
-tokio = { workspace = true, features = ["process", "io-util", "time", "rt"] }
+utopia-async.workspace = true
 utopia-validators.workspace = true
 
-[dev-dependencies]
-tokio = { workspace = true, features = ["rt", "macros", "process", "io-util", "time"] }
 
 [package.metadata.utopia]
 category = "platform"

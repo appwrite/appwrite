@@ -4,7 +4,7 @@ use std::time::Duration;
 
 use redis::cluster::ClusterClient;
 use redis::cluster_async::ClusterConnection;
-use tokio::sync::Mutex;
+use utopia_async::sync::Mutex;
 use utopia_dsn::Dsn;
 
 use super::redis::jitter;
@@ -122,7 +122,7 @@ impl RedisCluster {
                 }
                 Err(_) => {
                     let backoff = CONNECT_MAX_BACKOFF_MS.min(CONNECT_BACKOFF_MS * (1 << (attempt - 1)));
-                    tokio::time::sleep(Duration::from_millis(jitter(backoff))).await;
+                    utopia_async::sleep(Duration::from_millis(jitter(backoff))).await;
                     attempt += 1;
                 }
             }

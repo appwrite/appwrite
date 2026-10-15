@@ -35,7 +35,7 @@ pub struct Snapshot {
     pub profiler: Option<Arc<Profiler>>,
     pub schemaless: bool,
     pub timeouts: Vec<(Event, i64)>,
-    pub task: Option<tokio::task::Id>,
+    pub task: Option<utopia_async::task::Id>,
     /// The tenant before and after the ping's pause.
     pub before: Value,
     pub after: Value,
@@ -149,7 +149,7 @@ impl Probe {
             profiler: self.profiler(),
             schemaless: self.schemaless.load(Ordering::SeqCst),
             timeouts: self.recorded_timeouts(),
-            task: tokio::task::try_id(),
+            task: utopia_async::task::id(),
             before,
             after: self.tenant(),
         }

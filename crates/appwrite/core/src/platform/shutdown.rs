@@ -205,7 +205,7 @@ pub(super) fn schedule(ctx: Context, status: StatusCode, body: Bytes, response_s
         status,
         response_size,
     };
-    tokio::spawn(job.run());
+    utopia_async::spawn(job.run());
 }
 
 fn raw(bytes: &Bytes) -> Box<RawValue> {
@@ -223,7 +223,7 @@ impl Job {
         super::guards::abuse_reset(&self.state, self.route.labels, self.status.as_u16(), &self.abuse_params).await;
         // The session limit only deletes rows and purges their cache, which
         // the work below neither reads nor orders against: it runs alongside.
-        tokio::join!(self.session_limit(), self.dispatch(&project_payload, &trimmed));
+        utopia_async::join!(self.session_limit(), self.dispatch(&project_payload, &trimmed));
     }
 
     /// The messages, purges and records of the request, in PHP's order.

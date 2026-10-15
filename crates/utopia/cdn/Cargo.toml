@@ -11,12 +11,10 @@ publish.workspace = true
 [dependencies]
 php-std.workspace = true
 thiserror.workspace = true
-tokio = { workspace = true, features = ["time"] }
+utopia-async.workspace = true
 utopia-balancer.workspace = true
 utopia-client.workspace = true
 
-[dev-dependencies]
-tokio = { workspace = true, features = ["rt-multi-thread", "macros", "time"] }
 
 [package.metadata.utopia]
 category = "integrations"

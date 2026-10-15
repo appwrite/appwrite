@@ -776,7 +776,7 @@ async fn with_transaction(c: &Shared, a: &Json, session: &mut Session) -> Result
     let fields = document(a.get("options"))?;
     let calls: std::cell::RefCell<Vec<Json>> = std::cell::RefCell::new(Vec::new());
     let client_handle = a.get("client").cloned().unwrap_or(Json::Null);
-    let session_cell = tokio::sync::Mutex::new(session);
+    let session_cell = utopia_async::sync::Mutex::new(session);
     let calls_cell = &calls;
     let result = c
         .with_transaction(

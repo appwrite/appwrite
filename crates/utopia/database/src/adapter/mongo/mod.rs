@@ -383,7 +383,7 @@ impl Mongo {
     /// `retryCommit($session, $unknown)`.
     async fn retry_commit(&self, session: &Session, unknown: Error) -> Result<()> {
         for retry in 1..=COMMIT_RETRIES {
-            tokio::time::sleep(COMMIT_RETRY_SLEEP * retry as u32).await;
+            utopia_async::sleep(COMMIT_RETRY_SLEEP * retry as u32).await;
             let concern = doc! { "writeConcern": { "w": "majority", "wtimeout": 10_000 } };
             match self.driver.commit_transaction(session, concern).await {
                 Ok(()) => return Ok(()),

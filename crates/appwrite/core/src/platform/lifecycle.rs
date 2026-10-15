@@ -763,7 +763,7 @@ fn track_key_usage(ctx: &Context, owner: KeyOwner, key: crate::database::project
     }
     let state = ctx.state.clone();
     let project = ctx.project.clone();
-    tokio::spawn(async move {
+    utopia_async::spawn(async move {
         let Ok(db) = state.databases.platform(Databases::unchecked()) else { return };
         let owner_sequence = match &owner {
             KeyOwner::Project => project.sequence.clone(),
@@ -814,7 +814,7 @@ async fn track_access(ctx: &mut Context) {
     if !ctx.project.is_console() && ctx.project.accessed_at.map(|a| a < threshold).unwrap_or(true) {
         let project = ctx.project.clone();
         let state = state.clone();
-        tokio::spawn(async move {
+        utopia_async::spawn(async move {
             let Ok(db) = state.databases.platform(Databases::unchecked()) else { return };
             let key = format!("lock:platform:projects:{}:accessedAt", project.id);
             let state2 = state.clone();

@@ -4,7 +4,7 @@
 //! wire.
 //!
 //! One [`Client`] is one connection, over a [`Transport`]: [`TcpTransport`]
-//! (tokio and rustls), or any implementation of the trait. Messages are
+//! (utopia-async and rustls), or any implementation of the trait. Messages are
 //! streamed: an attachment read from disk is encoded block by block while it
 //! is sent.
 //!

@@ -7,7 +7,7 @@ use std::time::Duration;
 use async_trait::async_trait;
 use bytes::Bytes;
 use futures_util::stream::{self, BoxStream, StreamExt, TryStreamExt};
-use tokio::sync::{Mutex, OwnedMutexGuard};
+use utopia_async::sync::{Mutex, OwnedMutexGuard};
 
 use super::retry::RetryStrategy;
 use crate::{Body, Source};
@@ -80,7 +80,7 @@ impl Request {
 /// use utopia_storage::Body;
 /// use utopia_storage::s3::Payload;
 ///
-/// # tokio::runtime::Builder::new_current_thread().build().unwrap().block_on(async {
+/// # utopia_async::Builder::current_thread().build().unwrap().block_on(async {
 /// let payload = Payload::from_body(Body::from("Hello World"));
 /// assert_eq!(&payload.bytes().await?[..], b"Hello World");
 /// assert_eq!(&payload.bytes().await?[..], b"Hello World"); // read again from the start
@@ -372,7 +372,7 @@ impl<C: Client> Retry<C> {
     async fn wait(&self, delay: Option<f64>) -> bool {
         let Some(delay) = delay else { return false };
         if delay > 0.0 {
-            tokio::time::sleep(Duration::from_secs_f64(delay)).await;
+            utopia_async::sleep(Duration::from_secs_f64(delay)).await;
         }
         true
     }
@@ -440,10 +440,7 @@ type Outgoing = http_body_util::combinators::UnsyncBoxBody<Bytes, io::Error>;
 /// PHP: `utopia-php/client` with the cURL adapter, which `S3` wraps in
 /// `Retry` with `S3\RetryStrategy` unless given a client.
 pub struct HttpClient {
-    inner: hyper_util::client::legacy::Client<
-        hyper_rustls::HttpsConnector<hyper_util::client::legacy::connect::HttpConnector>,
-        Outgoing,
-    >,
+    inner: hyper_util::client::legacy::Client<hyper_rustls::HttpsConnector<utopia_async::hyper::Connector>, Outgoing>,
 }
 
 impl Default for HttpClient {
@@ -455,7 +452,7 @@ impl Default for HttpClient {
 impl HttpClient {
     /// A client with its own connection pool.
     pub fn new() -> Self {
-        let mut http = hyper_util::client::legacy::connect::HttpConnector::new();
+        let mut http = utopia_async::hyper::Connector::new();
         http.enforce_http(false);
         http.set_keepalive(Some(Duration::from_secs(60)));
         let tls = hyper_rustls::HttpsConnectorBuilder::new()
@@ -463,7 +460,7 @@ impl HttpClient {
             .https_or_http()
             .enable_http1()
             .wrap_connector(http);
-        let inner = hyper_util::client::legacy::Client::builder(hyper_util::rt::TokioExecutor::new()).build(tls);
+        let inner = hyper_util::client::legacy::Client::builder(utopia_async::hyper::Executor).build(tls);
         HttpClient { inner }
     }
 

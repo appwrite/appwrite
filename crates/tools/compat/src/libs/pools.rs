@@ -200,7 +200,7 @@ fn init(specs: Vec<Json>) -> Init {
         let spec = specs[n.min(specs.len()) - 1].clone();
         Box::pin(async move {
             if let Some(ms) = spec["delay_ms"].as_u64() {
-                tokio::time::sleep(Duration::from_millis(ms)).await;
+                utopia_async::sleep(Duration::from_millis(ms)).await;
             }
             if let Some(message) = spec["throw"].as_str() {
                 let class = spec["class"].as_str().unwrap_or("Exception").to_owned();
@@ -296,7 +296,7 @@ async fn work(resources: Vec<&Res>, a: &Args<'_>, s: &Session) -> Result<Json, F
                 Err(_) => Json::Null,
             },
             Some("sleep") => {
-                tokio::time::sleep(Duration::from_millis(action["ms"].as_u64().unwrap_or(0))).await;
+                utopia_async::sleep(Duration::from_millis(action["ms"].as_u64().unwrap_or(0))).await;
                 Json::Null
             }
             // PoolTestScope's failing lock: a Rust pool's lock cannot fail.
@@ -723,7 +723,7 @@ async fn concurrency(a: &Args<'_>) -> Result<Json, Fault> {
     let tasks = a.i64("tasks")?.max(0) as usize;
     let hold = |i: usize| {
         let ms = if random { (1 + (i * 7919) % 5) as f64 } else { hold_ms };
-        tokio::time::sleep(Duration::from_secs_f64(ms / 1000.0))
+        utopia_async::sleep(Duration::from_secs_f64(ms / 1000.0))
     };
     let task = |i: usize| {
         let (p, mode) = (p.clone(), mode.clone());
@@ -828,7 +828,7 @@ mod waiters {
         };
         let first = pool.pop().await.expect("first");
         identities.lock().unwrap().push(*first.resource());
-        let (entered_tx, entered_rx) = tokio::sync::oneshot::channel::<()>();
+        let (entered_tx, entered_rx) = utopia_async::sync::oneshot::channel::<()>();
         let mut entered_tx = Some(entered_tx);
         let failing = async {
             pool.with(async |r: &Obj| {
@@ -836,7 +836,7 @@ mod waiters {
                 if let Some(tx) = entered_tx.take() {
                     let _ = tx.send(());
                 }
-                tokio::time::sleep(Duration::from_millis(20)).await;
+                utopia_async::sleep(Duration::from_millis(20)).await;
                 Err::<Json, _>(Failure("successor failed"))
             })
             .await
@@ -849,12 +849,12 @@ mod waiters {
             .await
         };
         let main = async {
-            tokio::task::yield_now().await;
+            utopia_async::yield_now().await;
             pool.reclaim(&first);
-            let _ = tokio::time::timeout(Duration::from_secs(1), entered_rx).await;
+            let _ = utopia_async::timeout(Duration::from_secs(1), entered_rx).await;
             sample().await
         };
-        let (a, b, snapshot) = tokio::join!(failing, replacement, main);
+        let (a, b, snapshot) = utopia_async::join!(failing, replacement, main);
         let snapshots = vec![snapshot, sample().await];
         let out: Vec<Json> = [a, b]
             .into_iter()
@@ -878,11 +878,11 @@ mod waiters {
         let (created, make) = counter();
         let pool = Pool::new(Channel::new(), "discard", 1, make, 0.5).expect("pool");
         let failing = pool.with(async |_: &Obj| {
-            tokio::time::sleep(Duration::from_millis(20)).await;
+            utopia_async::sleep(Duration::from_millis(20)).await;
             Err::<Json, _>(Failure("request failed"))
         });
         let replacement = pool.with(async |_: &Obj| Ok::<_, Failure>(json!("replacement")));
-        let (a, b) = tokio::join!(failing, replacement);
+        let (a, b) = utopia_async::join!(failing, replacement);
         let out = [a, b].into_iter().map(|r| r.unwrap_or_else(|Failure(m)| runtime(m))).collect();
         json!({ "results": results(out), "created": created.load(Ordering::SeqCst), "full": pool.is_full() })
     }
@@ -894,7 +894,7 @@ mod waiters {
             let n = c.fetch_add(1, Ordering::SeqCst) + 1;
             async move {
                 if n == 1 {
-                    tokio::time::sleep(Duration::from_millis(20)).await;
+                    utopia_async::sleep(Duration::from_millis(20)).await;
                     return Err(super::Thrown {
                         class: "RuntimeException".into(),
                         message: "connection failed".into(),
@@ -911,7 +911,7 @@ mod waiters {
                 Err(e) => json!({ "class": e.php_class(), "message": e.to_string() }),
             }
         };
-        let (a, b) = tokio::join!(one(), one());
+        let (a, b) = utopia_async::join!(one(), one());
         json!({ "results": results(vec![a, b]), "created": created.load(Ordering::SeqCst), "full": pool.is_full() })
     }
 
@@ -923,7 +923,7 @@ mod waiters {
         let started = Instant::now();
         let unblocker = async {
             for _ in 0..10 {
-                tokio::time::sleep(Duration::from_millis(10)).await;
+                utopia_async::sleep(Duration::from_millis(10)).await;
                 pool.adapter().unblock();
             }
         };
@@ -931,7 +931,7 @@ mod waiters {
             let r = pool.pop().await;
             (r, started.elapsed().as_secs_f64())
         };
-        let ((result, elapsed), ()) = tokio::join!(waiter, unblocker);
+        let ((result, elapsed), ()) = utopia_async::join!(waiter, unblocker);
         pool.reclaim(&connection);
         let failure = match result {
             Ok(_) => Json::Null,
@@ -950,7 +950,7 @@ mod waiters {
             pool.with(async |_: &Obj| {
                 let now = active.fetch_add(1, Ordering::SeqCst) + 1;
                 maximum.fetch_max(now, Ordering::SeqCst);
-                tokio::time::sleep(Duration::from_millis(2)).await;
+                utopia_async::sleep(Duration::from_millis(2)).await;
                 active.fetch_sub(1, Ordering::SeqCst);
                 Err::<(), _>(Failure("discard"))
             })

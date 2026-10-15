@@ -1,4 +1,4 @@
-A scheduler runs work at the moments its schedules name, and must never silently skip one. This library describes those moments with triggers (a cron expression, a fixed interval, a one-shot moment) and runs a loop that reads the schedules from your source of truth, selects what is due over windows that tile without gaps, and records how far it got so a restart or a standby replica carries on where it stopped. The scheduler is async, so the examples run it on a Tokio runtime; tests drive it with a clock that stands still until advanced.
+A scheduler runs work at the moments its schedules name, and must never silently skip one. This library describes those moments with triggers (a cron expression, a fixed interval, a one-shot moment) and runs a loop that reads the schedules from your source of truth, selects what is due over windows that tile without gaps, and records how far it got so a restart or a standby replica carries on where it stopped. The scheduler is async, so the examples run it with `utopia_async::run`; tests drive it with a clock that stands still until advanced.
 
 ## List the occurrences of a cron expression
 
@@ -74,7 +74,7 @@ impl Source for Functions {
     }
 }
 
-# tokio::runtime::Builder::new_current_thread().build()?.block_on(async {
+# utopia_async::Builder::current_thread().build()?.block_on(async {
 let start = DateTime::parse(b"2026-08-18 03:00:30", None, &TzInfo::utc(), Timestamp { sec: 0, usec: 0 }).unwrap();
 let clock = Arc::new(TestClock::new(&start));
 let mut scheduler = Scheduler::new(Functions, MemoryStore::new(), clock.clone(), Options::default())?;
@@ -129,7 +129,7 @@ Give every replica the same `Store` and only one of them dispatches: the claim c
 ```
 use utopia_schedule::{Claim, MemoryStore, Store};
 
-# tokio::runtime::Builder::new_current_thread().build()?.block_on(async {
+# utopia_async::Builder::current_thread().build()?.block_on(async {
 let store = MemoryStore::new();
 assert!(store.swap(None, &Claim::new("leader", 100.0, Some(1787022060.0), None)).await?);
 

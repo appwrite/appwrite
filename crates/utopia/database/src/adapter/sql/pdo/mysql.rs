@@ -74,7 +74,7 @@ impl Conn {
         let host = params.host.clone().filter(|h| !h.is_empty()).unwrap_or_else(|| "localhost".to_owned());
         let port = params.port.as_deref().map_or(3306, |p| php_std::format::str_to_int(p.as_bytes()) as u16);
         let port = if port == 0 { 3306 } else { port };
-        let resolved = tokio::net::lookup_host((host.as_str(), port)).await.map(|mut a| a.next());
+        let resolved = utopia_async::net::lookup_host((host.as_str(), port)).await.map(|mut a| a.next());
         if !matches!(resolved, Ok(Some(_))) {
             return Err(PdoError::connect(
                 "HY000",
@@ -97,7 +97,7 @@ impl Conn {
         {
             opts = opts.init(vec![format!("SET NAMES {charset}")]);
         }
-        let conn = match tokio::time::timeout(timeout, Connection::new(opts)).await {
+        let conn = match utopia_async::timeout(timeout, Connection::new(opts)).await {
             Ok(Ok(conn)) => conn,
             Ok(Err(e)) => return Err(connection_error(&e).into_error()),
             Err(_) => return Err(PdoError::connect("HY000", 2002, "Connection timed out").into_error()),

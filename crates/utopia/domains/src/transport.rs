@@ -9,8 +9,7 @@ use bytes::Bytes;
 use http_body_util::{BodyExt, Full};
 use hyper_rustls::HttpsConnector;
 use hyper_util::client::legacy::Client;
-use hyper_util::client::legacy::connect::HttpConnector;
-use hyper_util::rt::TokioExecutor;
+use utopia_async::hyper::{Connector, Executor};
 
 use crate::cache::BoxFuture;
 
@@ -145,7 +144,7 @@ impl<T: Transport + ?Sized> Transport for Arc<T> {
     }
 }
 
-type HyperClient = Client<HttpsConnector<HttpConnector>, Full<Bytes>>;
+type HyperClient = Client<HttpsConnector<Connector>, Full<Bytes>>;
 
 /// The default transport: HTTP/1.1 over TLS with the WebPKI roots, the
 /// request's timeouts, certificates verified, redirects not followed
@@ -182,7 +181,7 @@ impl HttpTransport {
         if let Some(client) = clients.get(&connect_timeout) {
             return Ok(client.clone());
         }
-        let mut http = HttpConnector::new();
+        let mut http = Connector::new();
         http.set_connect_timeout(Some(connect_timeout));
         http.enforce_http(false);
         let https = hyper_rustls::HttpsConnectorBuilder::new()
@@ -191,7 +190,7 @@ impl HttpTransport {
             .https_or_http()
             .enable_http1()
             .wrap_connector(http);
-        let client = Client::builder(TokioExecutor::new()).build(https);
+        let client = Client::builder(Executor).build(https);
         clients.insert(connect_timeout, client.clone());
         Ok(client)
     }
@@ -253,7 +252,7 @@ impl Transport for HttpTransport {
     fn send<'a>(&'a self, request: Request) -> BoxFuture<'a, Result<Response, TransportError>> {
         Box::pin(async move {
             let timeout = request.timeout;
-            match tokio::time::timeout(timeout, self.exchange(request)).await {
+            match utopia_async::timeout(timeout, self.exchange(request)).await {
                 Ok(result) => result,
                 Err(_) => {
                     Err(TransportError(format!("Operation timed out after {} milliseconds", timeout.as_millis())))

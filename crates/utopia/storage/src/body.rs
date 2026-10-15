@@ -4,7 +4,7 @@ use std::io;
 
 use async_trait::async_trait;
 use bytes::Bytes;
-use tokio::io::{AsyncRead, AsyncReadExt, AsyncSeekExt};
+use utopia_async::io::{AsyncRead, AsyncReadExt, AsyncSeekExt};
 
 /// Where a [`Body`] reads its bytes from. Implement it to stream from a
 /// source of your own.
@@ -66,7 +66,7 @@ impl Source for File {
             return Ok(Bytes::new());
         }
         let mut file = self.file.take().ok_or_else(|| io::Error::other("the file was lost by a failed read"))?;
-        let (file, result) = tokio::task::spawn_blocking(move || {
+        let (file, result) = utopia_async::spawn_blocking(move || {
             let mut buffer = Vec::with_capacity(max.min(1 << 16));
             let result = io::Read::read_to_end(&mut io::Read::take(&mut file, max as u64), &mut buffer).map(|_| buffer);
             (file, result)
@@ -92,9 +92,9 @@ impl Source for File {
     }
 }
 
-/// An open `tokio::fs::File` with an operation still in flight, which
+/// An open `utopia_async::fs::File` with an operation still in flight, which
 /// cannot become a [`File`].
-struct AsyncFile(tokio::fs::File);
+struct AsyncFile(utopia_async::fs::File);
 
 #[async_trait]
 impl Source for AsyncFile {
@@ -168,7 +168,7 @@ struct Spool {
 enum Kept {
     Memory(Vec<Bytes>),
     File {
-        file: tokio::fs::File,
+        file: utopia_async::fs::File,
         /// Where the file is positioned.
         cursor: u64,
     },
@@ -177,7 +177,7 @@ enum Kept {
 #[cfg(feature = "s3")]
 impl Spool {
     async fn keep(&mut self, chunk: &Bytes) -> io::Result<()> {
-        use tokio::io::AsyncWriteExt;
+        use utopia_async::io::AsyncWriteExt;
 
         if let Kept::Memory(chunks) = &mut self.kept {
             if self.length + chunk.len() as u64 <= SPOOL_MEMORY {
@@ -265,7 +265,7 @@ impl Source for Spool {
 /// A new temporary file, removed from its directory as soon as it is open,
 /// so it goes away with its handle.
 #[cfg(feature = "s3")]
-async fn spool_file() -> io::Result<tokio::fs::File> {
+async fn spool_file() -> io::Result<utopia_async::fs::File> {
     use std::sync::atomic::{AtomicU64, Ordering};
     static COUNTER: AtomicU64 = AtomicU64::new(0);
 
@@ -275,9 +275,9 @@ async fn spool_file() -> io::Result<tokio::fs::File> {
         let name =
             format!("utopia-storage-spool-{}-{}-{nanos}", std::process::id(), COUNTER.fetch_add(1, Ordering::Relaxed));
         let path = dir.join(name);
-        match tokio::fs::OpenOptions::new().read(true).write(true).create_new(true).open(&path).await {
+        match utopia_async::fs::OpenOptions::new().read(true).write(true).create_new(true).open(&path).await {
             Ok(file) => {
-                tokio::fs::remove_file(&path).await?;
+                utopia_async::fs::remove_file(&path).await?;
                 return Ok(file);
             }
             Err(e) if e.kind() == io::ErrorKind::AlreadyExists => continue,
@@ -299,7 +299,7 @@ async fn spool_file() -> io::Result<tokio::fs::File> {
 /// ```
 /// use utopia_storage::Body;
 ///
-/// # tokio::runtime::Builder::new_current_thread().build().unwrap().block_on(async {
+/// # utopia_async::Builder::current_thread().build().unwrap().block_on(async {
 /// let body = Body::from("Hello World");
 /// assert_eq!(&body.bytes().await?[..], b"Hello World");
 /// # Ok::<(), std::io::Error>(())
@@ -328,7 +328,7 @@ impl Body {
     /// goes back to the start of the file.
     ///
     /// PHP: `Stream::fromResource($handle)`.
-    pub fn from_file(file: tokio::fs::File) -> Self {
+    pub fn from_file(file: utopia_async::fs::File) -> Self {
         match file.try_into_std() {
             Ok(file) => Body::from_std_file(file),
             Err(file) => Body(Box::new(AsyncFile(file))),

@@ -4,7 +4,7 @@
  * The E2E fixture server (packages/websocket/tests/Fixtures/Swoole/server.php)
  * on a given port, started by Adapter.php's `e2e.run` (and `swoole.config`).
  * crates/tools/compat/src/libs/websocket.rs serves the same handlers on the
- * Rust Tokio adapter.
+ * Rust Network adapter.
  *
  * Usage: php server.php serve <port> <send timeout>
  *        php server.php config '<serialized settings>'

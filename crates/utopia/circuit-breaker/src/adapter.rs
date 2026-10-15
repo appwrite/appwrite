@@ -124,7 +124,7 @@ impl Default for SharedTable {
 /// ```
 /// use utopia_circuit_breaker::{Adapter, SharedTable, Stored, Table};
 ///
-/// # tokio::runtime::Builder::new_current_thread().build()?.block_on(async {
+/// # utopia_async::Builder::current_thread().build()?.block_on(async {
 /// let table = SharedTable::new(32, 255);
 /// let first = Table::new(table.clone(), "test:");
 /// let second = Table::new(table, "test:");

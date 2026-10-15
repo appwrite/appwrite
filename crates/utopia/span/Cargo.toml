@@ -17,17 +17,15 @@ http = ["dep:bytes", "dep:http-body-util", "dep:hyper", "dep:hyper-rustls", "dep
 getrandom.workspace = true
 php-std.workspace = true
 thiserror.workspace = true
-tokio = { workspace = true, features = ["rt", "time"] }
+utopia-async = { workspace = true, features = ["hyper"] }
 
 bytes = { workspace = true, optional = true }
 http-body-util = { workspace = true, optional = true }
 hyper = { workspace = true, features = ["client", "http1"], optional = true }
 hyper-rustls = { workspace = true, optional = true }
-hyper-util = { workspace = true, features = ["client-legacy", "http1", "tokio"], optional = true }
+hyper-util = { workspace = true, features = ["client-legacy", "http1"], optional = true }
 rustls = { workspace = true, optional = true }
 
-[dev-dependencies]
-tokio = { workspace = true, features = ["rt", "macros"] }
 
 [package.metadata.utopia]
 category = "observability"

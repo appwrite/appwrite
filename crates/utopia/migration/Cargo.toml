@@ -25,15 +25,13 @@ php-std.workspace = true
 rustix = { workspace = true, features = ["system"] }
 serde_json.workspace = true
 thiserror.workspace = true
-tokio = { workspace = true, features = ["fs", "io-util", "rt", "sync", "time"] }
+utopia-async.workspace = true
 tokio-postgres = { workspace = true, optional = true }
 utopia-client.workspace = true
 utopia-database = { workspace = true, features = ["memory"] }
 utopia-query.workspace = true
 utopia-storage.workspace = true
 
-[dev-dependencies]
-tokio = { workspace = true, features = ["rt", "rt-multi-thread", "macros"] }
 
 [package.metadata.utopia]
 category = "integrations"

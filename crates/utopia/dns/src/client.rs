@@ -3,8 +3,8 @@
 use std::net::{IpAddr, SocketAddr};
 use std::time::Duration;
 
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio::net::{TcpStream, UdpSocket};
+use utopia_async::io::{AsyncReadExt, AsyncWriteExt};
+use utopia_async::net::{TcpStream, UdpSocket};
 use utopia_validators::{Ip, IpVersion, Validator};
 
 use crate::Error;
@@ -72,7 +72,7 @@ impl Client {
             // PHP's client socket is AF_INET: an IPv6 server is a host it cannot look up.
             return Err(Error::exception("Failed to send data: No error information"));
         }
-        match tokio::time::timeout(self.timeout, socket.send_to(&packet, target)).await {
+        match utopia_async::timeout(self.timeout, socket.send_to(&packet, target)).await {
             Ok(Ok(_)) => {}
             Ok(Err(e)) => return Err(Error::exception(format!("Failed to send data: {}", strerror(&e)))),
             Err(_) => return Err(Error::exception(format!("Failed to send data: {}", TIMED_OUT.0))),
@@ -82,7 +82,7 @@ impl Client {
         // (a spoofed answer guessing the 16-bit id) is dropped and the wait
         // goes on until the same deadline. PHP's client takes whatever
         // arrives first; legitimate exchanges see no difference.
-        let deadline = tokio::time::Instant::now() + self.timeout;
+        let deadline = std::time::Instant::now() + self.timeout;
         let from_server = async {
             loop {
                 let (n, from) = socket.recv_from(&mut buffer).await?;
@@ -91,7 +91,7 @@ impl Client {
                 }
             }
         };
-        let received = match tokio::time::timeout_at(deadline, from_server).await {
+        let received = match utopia_async::time::timeout_at(deadline, from_server).await {
             Ok(Ok(n)) => n,
             Ok(Err(e)) => {
                 let (text, code) = errno(&e);
@@ -118,7 +118,7 @@ impl Client {
         let connect_error = |text: &str, code: i32| {
             Error::exception(format!("Failed to connect to {}:{} over TCP: {text} ({code})", self.server, self.port))
         };
-        let mut stream = match tokio::time::timeout(self.timeout, TcpStream::connect(target)).await {
+        let mut stream = match utopia_async::timeout(self.timeout, TcpStream::connect(target)).await {
             Ok(Ok(stream)) => stream,
             Ok(Err(e)) => {
                 let (text, code) = errno(&e);
@@ -130,7 +130,7 @@ impl Client {
         let mut frame = Vec::with_capacity(packet.len() + 2);
         frame.extend_from_slice(&(packet.len() as u16).to_be_bytes());
         frame.extend_from_slice(&packet);
-        match tokio::time::timeout(self.timeout, stream.write_all(&frame)).await {
+        match utopia_async::timeout(self.timeout, stream.write_all(&frame)).await {
             Ok(Ok(())) => {}
             _ => return Err(Error::exception("Failed to send full TCP DNS query.")),
         }
@@ -156,7 +156,7 @@ async fn read_bytes(stream: &mut TcpStream, length: usize, timeout: Duration) ->
     let mut data = vec![0u8; length];
     let mut filled = 0;
     while filled < length {
-        match tokio::time::timeout(timeout, stream.read(&mut data[filled..])).await {
+        match utopia_async::timeout(timeout, stream.read(&mut data[filled..])).await {
             Ok(Ok(0)) | Ok(Err(_)) | Err(_) => break,
             Ok(Ok(n)) => filled += n,
         }

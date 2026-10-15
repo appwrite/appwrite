@@ -38,7 +38,7 @@ fn breaker_error(e: utopia_circuit_breaker::Error) -> Error {
 /// use utopia_cache::{Adapter, CircuitBreaker, Memory};
 /// use utopia_circuit_breaker::{CircuitBreaker as Breaker, Options};
 ///
-/// # tokio::runtime::Runtime::new()?.block_on(async {
+/// # utopia_async::Runtime::new()?.block_on(async {
 /// let cache = CircuitBreaker::new(Memory::new(), Breaker::new(Options::default()).unwrap());
 /// assert!(cache.save("key", &Value::from("value"), "", 0).await?);
 /// assert_eq!(cache.load("key", 60, "").await?, Some(Value::from("value")));

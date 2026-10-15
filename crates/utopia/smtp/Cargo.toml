@@ -14,12 +14,10 @@ indexmap.workspace = true
 php-std.workspace = true
 rustls.workspace = true
 thiserror.workspace = true
-tokio = { workspace = true, features = ["fs", "io-util", "net", "time"] }
+utopia-async.workspace = true
 tokio-rustls.workspace = true
 webpki-roots.workspace = true
 
-[dev-dependencies]
-tokio = { workspace = true, features = ["rt-multi-thread", "macros", "fs", "io-util", "net", "time"] }
 
 [package.metadata.utopia]
 category = "transport"

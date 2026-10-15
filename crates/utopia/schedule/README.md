@@ -16,7 +16,7 @@ This library is maintained by the [Appwrite team](https://appwrite.io).
 utopia-schedule = { git = "https://github.com/utopia-rs/schedule" }
 ```
 
-A scheduler runs work at the moments its schedules name, and must never silently skip one. This library describes those moments with triggers (a cron expression, a fixed interval, a one-shot moment) and runs a loop that reads the schedules from your source of truth, selects what is due over windows that tile without gaps, and records how far it got so a restart or a standby replica carries on where it stopped. The scheduler is async, so the examples run it on a Tokio runtime; tests drive it with a clock that stands still until advanced.
+A scheduler runs work at the moments its schedules name, and must never silently skip one. This library describes those moments with triggers (a cron expression, a fixed interval, a one-shot moment) and runs a loop that reads the schedules from your source of truth, selects what is due over windows that tile without gaps, and records how far it got so a restart or a standby replica carries on where it stopped. The scheduler is async, so the examples run it with `utopia_async::run`; tests drive it with a clock that stands still until advanced.
 
 ## List the occurrences of a cron expression
 

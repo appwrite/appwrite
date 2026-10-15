@@ -39,7 +39,7 @@ pub type CloseHook = Arc<dyn Fn(ConnectionId) + Send + Sync>;
 /// Called with each plain HTTP request and the response to fill.
 pub type RequestHook = Arc<dyn Fn(&Request, &mut Response) + Send + Sync>;
 
-/// A WebSocket server implementation: [`Tokio`](crate::Tokio) on the
+/// A WebSocket server implementation: [`Network`](crate::Network) on the
 /// network, [`Memory`](crate::Memory) in process. [`Server`](crate::Server)
 /// drives one.
 ///

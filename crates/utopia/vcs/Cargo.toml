@@ -19,13 +19,11 @@ sha1.workspace = true
 sha2.workspace = true
 getrandom.workspace = true
 thiserror.workspace = true
-tokio = { workspace = true, features = ["fs", "rt", "time"] }
+utopia-async.workspace = true
 utopia-cache.workspace = true
 utopia-client.workspace = true
 utopia-console.workspace = true
 
-[dev-dependencies]
-tokio = { workspace = true, features = ["rt", "macros", "fs", "time"] }
 
 [package.metadata.utopia]
 category = "integrations"

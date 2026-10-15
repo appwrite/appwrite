@@ -25,7 +25,7 @@ pub(crate) struct Queued {
 /// publish). Errors surface from the connection call that sends it.
 ///
 /// ```
-/// # tokio::runtime::Builder::new_current_thread().enable_all().build()?.block_on(async {
+/// # utopia_async::run(async {
 /// # let Ok(mut connection) = utopia_nats::Connection::connect(utopia_nats::ConnectionOptions {
 /// #     connect_timeout: std::time::Duration::from_millis(200),
 /// #     ..utopia_nats::ConnectionOptions::new([std::env::var("NATS_URL").unwrap_or("nats://127.0.0.1:4222".into())])
