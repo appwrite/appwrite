@@ -8,6 +8,7 @@
 mod authorize_grants;
 mod create_returns_stored;
 mod delete_action;
+mod delete_related_update;
 mod hook;
 mod links;
 mod nested_pre_check;
@@ -212,6 +213,50 @@ pub(crate) async fn update_all(
     queries: Vec<Query>,
 ) -> Result<i64> {
     database.update_documents(collection, updates, queries, BATCH_SIZE, None).await
+}
+
+/// Records every lifecycle event (`Tests\Unit\Event\RecordingLifecycle`).
+#[derive(Default)]
+pub(crate) struct Recorder(std::sync::Mutex<Vec<crate::event::Domain>>);
+
+#[async_trait::async_trait]
+impl crate::hook::Lifecycle for Recorder {
+    async fn handle(&self, event: &crate::event::Domain) -> Result<()> {
+        self.0.lock().unwrap().push(event.clone());
+        Ok(())
+    }
+}
+
+impl Recorder {
+    /// Adds a recorder to `database`.
+    pub(crate) fn on(database: &Database) -> Arc<Recorder> {
+        let recorder = Arc::new(Recorder::default());
+        database.add_hook(Hook::lifecycle(recorder.clone())).unwrap();
+        recorder
+    }
+
+    /// The kinds of the events received (`getEvents()`).
+    pub(crate) fn events(&self) -> Vec<crate::event::Event> {
+        self.0.lock().unwrap().iter().map(crate::event::Domain::event).collect()
+    }
+
+    /// The events of `kind` received (`received()`).
+    pub(crate) fn received(&self, kind: crate::event::Event) -> Vec<crate::event::Domain> {
+        self.0.lock().unwrap().iter().filter(|e| e.event() == kind).cloned().collect()
+    }
+}
+
+/// Fails every event of one kind (`Tests\Unit\Event\FailingLifecycle`).
+pub(crate) struct Failing(pub(crate) crate::event::Event, pub(crate) Error);
+
+#[async_trait::async_trait]
+impl crate::hook::Lifecycle for Failing {
+    async fn handle(&self, event: &crate::event::Domain) -> Result<()> {
+        if event.event() == self.0 {
+            return Err(self.1.clone());
+        }
+        Ok(())
+    }
 }
 
 /// `deleteDocuments()` with the default batch.
