@@ -1316,7 +1316,8 @@ trait JoinPermissions
                 if ($this->getSupportForAttributes()) {
                     $this->assertSame(400, $result['headers']['status-code'], "{$caller} {$attempt}: a column is qualified by a join alias, never by a table name");
                 }
-                $this->assertStringNotContainsString('classified-join-data', (string) \json_encode($result['body']), "{$caller} {$attempt}");
+                $bodyWithoutEchoedRequest = \array_diff_key($result['body'], ['trace' => true]);
+                $this->assertStringNotContainsString('classified-join-data', (string) \json_encode($bodyWithoutEchoedRequest), "{$caller} {$attempt}");
             }
         }
     }
