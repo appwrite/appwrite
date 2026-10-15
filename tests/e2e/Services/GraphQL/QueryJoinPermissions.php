@@ -968,9 +968,10 @@ trait QueryJoinPermissions
         $got = $this->graphqlJoin($this->joinGetQuery(), $this->joinGetVariables($data['databaseId'], $data['dsOffSourceId'], $data['dsOffRowId'], $queries($data['dsOffDeniedId'])));
 
         if ($this->getSide() === 'client') {
+            $resource = $this->isTablesDB() ? 'Table' : 'Collection';
             foreach ([$listed, $got] as $result) {
                 $this->assertArrayHasKey('errors', $result['body']);
-                $this->assertSame('The current user is not authorized to perform the requested action.', $result['body']['errors'][0]['message'] ?? null, 'a collection without collection-level read and without document security cannot be joined');
+                $this->assertSame("{$resource} with the requested ID '{$data['dsOffDeniedId']}' could not be found.", $result['body']['errors'][0]['message'] ?? null, 'a collection without collection-level read and without document security is refused as if it did not exist');
                 $this->assertStringNotContainsString('classified-join-data', $this->joinEncodedBody($result));
             }
         } else {
