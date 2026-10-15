@@ -2,12 +2,13 @@ import { createFileRoute, getRouteApi } from '@tanstack/react-router'
 import { PageHeader } from '@/components/Page'
 import { MapView } from '@/components/Map'
 import { loadGraph } from '@/lib/docs'
+import { share } from '@/lib/share'
 
 const root = getRouteApi('__root__')
 
 export const Route = createFileRoute('/map')({
   loader: () => loadGraph(),
-  head: () => ({ meta: [{ title: 'Map · Utopia for Rust' }] }),
+  head: () => ({ meta: share({ title: 'Map', description: 'Every Utopia library and Appwrite, and how they depend on each other.' }) }),
   component: MapPage,
 })
 

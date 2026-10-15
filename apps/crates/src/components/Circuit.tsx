@@ -8,8 +8,8 @@ import { useEffect, useRef, type CSSProperties } from 'react'
  * out towards the edges, clear of the copy. It stands still under reduced motion,
  * and pauses while the hero is out of view.
  */
-const TILE = 280
-const TRACES: { d: string; via?: [number, number] }[] = [
+export const TILE = 280
+export const TRACES: { d: string; via?: [number, number] }[] = [
   { d: 'M0 40h70l20 20h60', via: [154, 60] },
   { d: 'M280 120h-70l-20-20h-36', via: [150, 100] },
   { d: 'M60 280v-70l20-20v-36', via: [80, 150] },

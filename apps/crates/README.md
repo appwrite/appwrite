@@ -10,9 +10,13 @@ The home page opens on Appwrite drawn as a circuit board (`src/components/Factor
 
 The **Map** (`/map`) draws the whole ecosystem as a chord: every library and Appwrite, grouped by category, with a ribbon between each pair that depends on one another, through Rust (Cargo manifests), PHP (`composer.json`) or both. Hover a library to see what it depends on and what depends on it, click it for its panel, search to find one; `/map#<lib>` opens it on a library, as each Dependencies page's "See it on the map" does. Switch to Categories for the same picture rolled up. Outside migration mode the map draws only the Rust crates, Appwrite and the Rust edges between them, and each Dependencies page lists only the Rust dependents; migration mode adds the PHP packages, the PHP edges and each dependent's conversion status.
 
-The **Changelog** (`/changelog`) is a dated log of the crates, the docs, and the PHP to Rust migration. Entries live in `src/lib/changelog.ts`, newest first.
+The **Changelog** (`/changelog`) is a dated log of the crates, the docs, and the PHP to Rust migration. Each entry is a Markdown file in `content/changelog/` (YAML frontmatter: `title`, `date`, optional `tag`, and comma-separated `packages` for filtering). Newest first.
 
 Outside migration mode the site reads as a plain Rust library site: everything about PHP (comparisons, benchmarks, PHP APIs and sources, conversion status) is hidden. The exception is `php-std`, a Rust crate in its own right, whose PHP functions inventory always shows. Menu items that only appear in migration mode carry the migration marking (the `nav-migration` class: the migration cards' tint and a yellow rule), set through the `migration` prop of a menu section or the `item(true)` row class in `src/components/Sidebar.tsx`; the header's Appwrite migration link carries it too.
+
+## Share cards
+
+Every page carries Open Graph and Twitter tags (`src/lib/share.ts`). The site-wide cover is `public/og.png`: the logo and the tagline, drawn by hand. Each library and category has its own card, with its category, title, crate, description and counts, rendered by `bun run og` (`scripts/og.tsx`: satori lays it out in the site's fonts from `scripts/og/fonts`, resvg rasterises it) into `public/og/`, which is not committed; `bun run build` runs it first. Image addresses are absolute, on the site's public address (`SITE` in `src/lib/share.ts`, <https://utopia-docs.appwrite.network> for now).
 
 ## Run
 

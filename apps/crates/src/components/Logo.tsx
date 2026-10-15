@@ -80,12 +80,3 @@ export function AppwriteLogo(props: SVGProps<SVGGElement>) {
     </g>
   )
 }
-
-/**
- * The favicon, as a data URI: a crate in isometric view, its lid the red square, with no
- * background (utopia-favicon.svg in the Utopia design system). Its faces follow the system
- * theme: dark ink on a light tab bar, light paper tones on a dark one.
- */
-export const FAVICON = `data:image/svg+xml,${encodeURIComponent(
-  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256"><style>.t{fill:#46433A}.l{fill:#2A2823}.r{fill:#11100D}@media (prefers-color-scheme:dark){.t{fill:#ECE8DE}.l{fill:#B8B2A5}.r{fill:#8A857A}}</style><g transform="translate(128 128) scale(1.7)"><path class="t" d="M0-72L62-36L0 0L-62-36Z"/><path class="l" d="M-62-36L0 0V72L-62 36Z"/><path class="r" d="M62-36L0 0V72L62 36Z"/><path d="M0-50L24-36L0-22L-24-36Z" fill="#FF1650"/></g></svg>',
-)}`

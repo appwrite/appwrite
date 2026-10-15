@@ -1,12 +1,13 @@
 import { createFileRoute, getRouteApi } from '@tanstack/react-router'
 import { PageHeader } from '@/components/Page'
 import { Catalog, filtersFrom, type Filters } from '@/components/Catalog'
+import { share } from '@/lib/share'
 
 const root = getRouteApi('__root__')
 
 export const Route = createFileRoute('/libraries')({
   validateSearch: filtersFrom,
-  head: () => ({ meta: [{ title: 'Libraries · Utopia for Rust' }] }),
+  head: () => ({ meta: share({ title: 'Libraries', description: 'Small, focused crates, each solving one problem, grouped by what they do.' }) }),
   component: Libraries,
 })
 

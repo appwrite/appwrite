@@ -2,6 +2,7 @@ import { Outlet, createFileRoute, notFound, useMatch } from '@tanstack/react-rou
 import { Crumbs } from '@/components/Crumbs'
 import { ContentWidth, DocAsideRow } from '@/components/Page'
 import { loadLibrary, navigation } from '@/lib/docs'
+import { share } from '@/lib/share'
 import { useMigration } from '@/lib/prefs'
 
 /** Sibling pages at the root. `$lib` must not treat these slugs as libraries. */
@@ -16,7 +17,12 @@ export const Route = createFileRoute('/$lib')({
     if (!lib) throw notFound()
     return navigation(lib)
   },
-  head: ({ loaderData }) => ({ meta: [{ title: `${loaderData?.library.title ?? 'Library'} · Utopia for Rust` }] }),
+  head: ({ loaderData, params }) => {
+    const title = loaderData?.library.title ?? 'Library'
+    const description = loaderData?.library.description ?? ''
+    // Its card, rendered at build time by scripts/og.tsx.
+    return { meta: share({ title, description, image: `/og/${params.lib}.png`, alt: `${title}: ${description}` }) }
+  },
   component: LibraryLayout,
   notFoundComponent: () => <div className="text-muted-foreground">No library by that name.</div>,
 })

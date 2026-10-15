@@ -1,6 +1,7 @@
 import { createFileRoute, getRouteApi, notFound } from '@tanstack/react-router'
 import { LayoutToggle, LibraryList, PageHeader, Section } from '@/components/Page'
 import { loadIndex, STATUS, type Status } from '@/lib/docs'
+import { share } from '@/lib/share'
 import { useMigration } from '@/lib/prefs'
 
 const root = getRouteApi('__root__')
@@ -8,9 +9,11 @@ const root = getRouteApi('__root__')
 export const Route = createFileRoute('/categories/$category')({
   loader: async ({ params }) => {
     const index = await loadIndex()
-    if (!index?.categories.some((c) => c.id === params.category)) throw notFound()
+    const category = index?.categories.find((c) => c.id === params.category)
+    if (!category) throw notFound()
+    return { title: category.title, description: category.description }
   },
-  head: ({ params }) => ({ meta: [{ title: `${params.category} · Utopia for Rust` }] }),
+  head: ({ loaderData, params }) => ({ meta: share({ title: loaderData?.title ?? params.category, description: loaderData?.description ?? '', image: `/og/categories/${params.category}.png`, alt: loaderData?.title }) }),
   component: CategoryPage,
 })
 

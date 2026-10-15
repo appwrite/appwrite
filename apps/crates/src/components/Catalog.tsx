@@ -134,7 +134,7 @@ export function Catalog({ index, filters, set }: { index: Index; filters: Filter
           ))}
         </div>
       </MigrationCard>
-      <div id="libraries" className="sticky top-14 z-10 -mx-2 grid scroll-mt-14 gap-3 border-b border-foreground bg-background px-2 py-3">
+      <div id="libraries" className="trace-rule trace-bottom sticky top-14 z-10 -mx-2 grid scroll-mt-14 gap-3 border-b border-foreground bg-background px-2 pt-3 pb-3">
         <div className="flex flex-wrap items-center gap-2">
           <label className="flex h-9 min-w-0 flex-[1_1_280px] items-center gap-2 border border-border bg-card px-3 text-muted-foreground transition-colors focus-within:border-foreground">
             <Search className="size-4 flex-none" />

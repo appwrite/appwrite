@@ -31,7 +31,7 @@ export function PageHeader({ eyebrow, title, mono, children, aside }: { eyebrow?
 
 export function Section({ id, title, children, description, number }: { id?: string; title: string; children: ReactNode; description?: ReactNode; number?: number }) {
   return (
-    <section id={id} className="trace-rule grid scroll-mt-20 gap-5 border-t border-border pt-6">
+    <section id={id} className="section grid scroll-mt-20 gap-5 [&+&]:trace-rule [&+&]:border-t [&+&]:border-border [&+&]:pt-6">
       <div className="grid gap-2">
         <h2 className="group flex items-baseline gap-3 text-[26px]">
           {number !== undefined ? <span className="font-mono text-[12px] tracking-normal text-highlight tabular-nums">{String(number).padStart(2, '0')}</span> : null}
@@ -167,7 +167,7 @@ export function LibraryList({ libs }: { libs: LibrarySummary[] }) {
   const layout = useLayout()
   if (layout === 'list') {
     return (
-      <div className="grid divide-y divide-border border-y border-border bg-card">
+      <div className="grid divide-y divide-border border border-border bg-card">
         {libs.map((lib) => (
           <LibraryRow key={lib.slug} lib={lib} />
         ))}
