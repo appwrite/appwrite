@@ -60,7 +60,7 @@ console.log(result);
 
 After logging in, the email can be verified through the account create verification route. The user doesn't need to be verified to log in, but you can restrict resource access to verified users only using permissions through the `user([USER_ID], "verified")` role.
 
-To verify the email with a 6-digit code instead of a link, follow [Verify with a code](/docs/products/auth/verify-user#verify-with-code).
+The steps below verify the email with a link. To verify it with a 6-digit code instead, follow [Verify with a code](/docs/products/auth/verify-user#verify-with-code).
 
 First, send a verification email. Specify a redirect URL which users will be redirected to. The verification secrets will be appended as query parameters to the redirect URL. In this example, the redirect URL is `https://example.com/verify`.
 
@@ -113,7 +113,7 @@ promise.then(function (response) {
 
 # Password Recovery {% #password-recovery %}
 
-Users who forget their password can reset it with a link or with a code. A link opens a password reset page in your app. A code lets the user reset the password without leaving your app, which suits mobile and desktop apps.
+Users who forget their password can reset it with a link or with a code. A link opens a password reset page on your website. A code lets the user reset the password without leaving your app, which suits mobile and desktop apps.
 
 ## Recover with a link {% #recover-with-link %}
 
@@ -231,7 +231,7 @@ val userId = token.userId
 ```
 {% /multicode %}
 
-If no active user has that email address, Appwrite sends no email but still returns a token with a random `userId`. The response to this call looks the same in both cases, so it doesn't reveal whether an account exists. Show the user the same message either way, for example "If an account exists for this email, a code is on its way."
+If no active user has that email address, Appwrite sends no email but still returns a token with a random `userId`. The response to this call looks the same in both cases. Show the user the same message either way, for example "If an account exists for this email, a code is on its way."
 
 Next, ask the user for the code from the email and a new password. Confirm the reset by passing the user ID, the code as the `secret`, and the new password.
 
@@ -269,11 +269,11 @@ val response = account.updateRecoveryOTP(
 ```
 {% /multicode %}
 
-Appwrite checks the new password against [password strength](/docs/products/auth/security#password-strength), [password dictionary](/docs/products/auth/security#password-dictionary), and [password history](/docs/products/auth/security#password-history). When the option to reject [breached passwords](/docs/products/auth/security#breached-passwords) is on, Appwrite checks that too. If the new password fails a check, the code stays valid. Ask the user for a different password and confirm again with the same code.
+Appwrite rejects a new password that fails your project's [password strength](/docs/products/auth/security#password-strength), [password dictionary](/docs/products/auth/security#password-dictionary), or [password history](/docs/products/auth/security#password-history) policy. When the option to reject [breached passwords](/docs/products/auth/security#breached-passwords) is on, Appwrite also rejects a password found in a known data breach. If the new password fails a check, the code stays valid. Ask the user for a different password. Then confirm again with the same code.
 
-A code that is wrong, has expired, or was already used fails with `user_invalid_token`. If the code was sent to an address with no active account, confirming fails with `user_not_found` instead, so show the same "invalid code" message for both errors. A successful reset doesn't create a session, so sign the user in with the new password afterwards.
+A code that is wrong, has expired, or was already used fails with `user_invalid_token`. If the email address has no active account, confirming fails with `user_not_found` instead. Show the same "invalid code" message for both errors. A successful reset doesn't create a session, so sign the user in with the new password afterwards.
 
-To add a security phrase to the email and the returned token, set `phrase` to `true` in the call that sends the code, the same way as for [email verification with a code](/docs/products/auth/verify-user#verify-with-code).
+To add a security phrase to the email and the returned token, set `phrase` to `true` in the call that sends the code. [Verify with a code](/docs/products/auth/verify-user#verify-with-code) explains how to show the phrase.
 
 # Security {% #security %}
 
