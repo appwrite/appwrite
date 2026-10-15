@@ -525,6 +525,16 @@ function install(string $package, bool $linked): array
 
     passthru("cd {$directory} && {$environment}composer update --no-interaction --prefer-dist --no-progress --ignore-platform-reqs", $code);
 
+    // A registry dependency can require another release line of a linked
+    // sibling (utopia-php/database 8 from Packagist wants validators ^1 while
+    // the checkout is 2.x): no linked combination installs, so the package
+    // is checked as a release would install it, registry-resolved.
+    if ($code !== 0 && $linked && str_contains($environment, 'COMPOSER=composer.linked.json')) {
+        out('the linked siblings cannot install together with the registry packages; running registry-resolved');
+        $environment = root_environment($package);
+        passthru("cd {$directory} && {$environment}composer update --no-interaction --prefer-dist --no-progress --ignore-platform-reqs", $code);
+    }
+
     return [$code, $environment];
 }
 
