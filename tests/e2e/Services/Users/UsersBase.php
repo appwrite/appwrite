@@ -1006,8 +1006,8 @@ trait UsersBase
             'queries' => ['{"method":"equal","attribute":"name.x","values":["a"]}'],
         ]);
 
-        if (!$this->getSupportForAttributes()) {
-            $this->assertSame(200, $response['headers']['status-code'], 'A schemaless engine reads a nested path on a plain attribute as matching nothing');
+        if ($this->getConsoleVariables()['_APP_DB_ADAPTER'] === 'mongodb') {
+            $this->assertSame(200, $response['headers']['status-code'], 'MongoDB reads a nested path on a plain attribute as matching nothing: ' . ($response['body']['message'] ?? ''));
             $this->assertSame(0, $response['body']['total']);
 
             return;
