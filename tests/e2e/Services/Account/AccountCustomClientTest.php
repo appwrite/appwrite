@@ -6142,7 +6142,8 @@ final class AccountCustomClientTest extends Scope
         $this->assertFalse($factors['body']['totp']);
 
         $totp = \OTPHP\TOTP::create($authenticator['body']['secret']);
-        $invalidOtp = $totp->now() === '000000' ? '111111' : '000000';
+        $accepted = [$totp->at(\time() - $totp->getPeriod()), $totp->now(), $totp->at(\time() + $totp->getPeriod())];
+        $invalidOtp = \current(\array_diff(['000000', '111111', '222222', '333333'], $accepted));
 
         $invalidVerification = $this->client->call(Client::METHOD_PUT, '/account/mfa/authenticators/totp', $headers, [
             'otp' => $invalidOtp,

@@ -11,11 +11,16 @@ class TOTP extends Challenge
 {
     public static function verify(Document $user, string $otp): bool
     {
+        return self::verifyAt($user, $otp, \time());
+    }
+
+    public static function verifyAt(Document $user, string $otp, int $timestamp): bool
+    {
         $authenticator = Type\TOTP::getAuthenticatorFromUser($user);
         $data = $authenticator->getAttribute('data');
         $instance = TOTPLibrary::create($data['secret']);
 
-        return $instance->now() === $otp;
+        return $instance->verify($otp, $timestamp, $instance->getPeriod() - 1);
     }
 
     public static function challenge(Document $challenge, Document $user, string $otp): bool
