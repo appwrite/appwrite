@@ -53,6 +53,8 @@ pub(crate) struct Leasable {
     state: Mutex<State>,
     plain: bool,
     lenient: bool,
+    unleased: bool,
+    json: bool,
     intercepts: RwLock<Intercepts>,
 }
 
@@ -92,6 +94,18 @@ impl Leasable {
         Arc::new(Leasable { lenient: true, ..Self::default() })
     }
 
+    /// PHP's `HashMemoryCache`: fields, no generations, a purge always
+    /// answers `true`.
+    pub(crate) fn hash_memory() -> Arc<Self> {
+        Arc::new(Leasable { unleased: true, ..Self::default() })
+    }
+
+    /// PHP's `JsonHashMemoryCache`: a [`Leasable::hash_memory`] storing each
+    /// value as its JSON.
+    pub(crate) fn json_hash_memory() -> Arc<Self> {
+        Arc::new(Leasable { unleased: true, json: true, ..Self::default() })
+    }
+
     fn state(&self) -> std::sync::MutexGuard<'_, State> {
         self.state.lock().unwrap_or_else(|e| e.into_inner())
     }
@@ -106,8 +120,13 @@ impl Leasable {
         }
         let field = self.field(key, hash);
         let mut state = self.state();
-        let data =
-            if !hash.is_empty() && state.corrupting_field_writes { Value::from("corrupted") } else { data.clone() };
+        let data = if !hash.is_empty() && state.corrupting_field_writes {
+            Value::from("corrupted")
+        } else if self.json {
+            Value::Str(php_std::Str::from(php_std::json::encode(data, php_std::json::Flags::NONE, 512).unwrap_or_default()))
+        } else {
+            data.clone()
+        };
         state.fields.entry(key.to_owned()).or_default().insert(field, (now(), data));
         true
     }
@@ -262,6 +281,9 @@ impl Adapter for Leasable {
                 let field = self.field(key, hash);
                 let state = self.state();
                 Ok(match state.fields.get(key).and_then(|f| f.get(&field)) {
+                    Some((time, Value::Str(json))) if self.json && time.saturating_add(ttl) > now() => {
+                        php_std::json::decode(json.as_bytes(), Some(true), 512, php_std::json::Flags::NONE).ok()
+                    }
                     Some((time, data)) if time.saturating_add(ttl) > now() => Some(data.clone()),
                     _ => None,
                 })
@@ -337,7 +359,7 @@ impl Adapter for Leasable {
             }
             removed
         };
-        std::future::ready(Ok(removed || self.lenient))
+        std::future::ready(Ok(removed || self.lenient || self.unleased))
     }
 
     fn flush(&self) -> impl Future<Output = Result<bool>> + Send {
@@ -364,7 +386,7 @@ impl Adapter for Leasable {
     }
 
     fn leasable(&self) -> bool {
-        !self.plain
+        !self.plain && !self.unleased
     }
 
     fn generation(&self, key: &str) -> impl Future<Output = Result<String>> + Send {

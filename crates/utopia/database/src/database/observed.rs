@@ -69,12 +69,33 @@ pub(crate) struct Observed {
     inner: Arc<dyn Adapter>,
     ops: Mutex<Vec<Op>>,
     hooks: Mutex<Vec<ObservedHook>>,
+    added: Mutex<Capabilities>,
+    removed: Mutex<Capabilities>,
 }
 
 impl Observed {
     /// `inner`, observed.
     pub(crate) fn new(inner: Arc<dyn Adapter>) -> Arc<Self> {
-        Arc::new(Observed { inner, ops: Mutex::new(Vec::new()), hooks: Mutex::new(Vec::new()) })
+        Arc::new(Observed {
+            inner,
+            ops: Mutex::new(Vec::new()),
+            hooks: Mutex::new(Vec::new()),
+            added: Mutex::new(Capabilities::EMPTY),
+            removed: Mutex::new(Capabilities::EMPTY),
+        })
+    }
+
+    /// Adds `capability` to the inner adapter's (PHP's test adapters that
+    /// override `capabilities()`).
+    pub(crate) fn add_capability(&self, capability: crate::capability::Capability) {
+        let mut added = self.added.lock().unwrap();
+        *added = added.with(capability);
+    }
+
+    /// Removes `capability` from the inner adapter's.
+    pub(crate) fn remove_capability(&self, capability: crate::capability::Capability) {
+        let mut removed = self.removed.lock().unwrap();
+        *removed = removed.with(capability);
     }
 
     /// The Memory adapter, observed.
@@ -135,7 +156,14 @@ impl Adapter for Observed {
         self.inner.as_any()
     }
     fn capabilities(&self) -> Capabilities {
-        self.inner.capabilities()
+        let mut capabilities = self.inner.capabilities();
+        for capability in self.added.lock().unwrap().iter() {
+            capabilities = capabilities.with(capability);
+        }
+        for capability in self.removed.lock().unwrap().iter() {
+            capabilities = capabilities.without(capability);
+        }
+        capabilities
     }
     fn limits(&self) -> Arc<Limits> {
         self.inner.limits()

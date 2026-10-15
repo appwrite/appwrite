@@ -25,10 +25,16 @@ pub(crate) fn unique(prefix: &str) -> String {
 /// namespace, its authorization holding the `any` role.
 pub(crate) async fn database_over(adapter: Arc<dyn Adapter>, cache: Arc<Cache>) -> Database {
     let database = Database::new(adapter, cache);
+    setup(&database).await;
+    database
+}
+
+/// Puts `database` under a fresh namespace, creates it and gives its
+/// authorization the `any` role.
+pub(crate) async fn setup(database: &Database) {
     database.set_database("utopiaTests").set_namespace(&unique("ns_"));
     database.create(None).await.expect("the database is created");
     database.authorization().add_role(&Role::any().to_string());
-    database
 }
 
 /// A database over a fresh Memory adapter caching in `cache`.
