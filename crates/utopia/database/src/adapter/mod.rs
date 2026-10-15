@@ -56,6 +56,9 @@
 //! PHP: `Utopia\Database\Adapter`, `Adapter\Limits`, `Adapter\Profile`,
 //! `Adapter\CursorBoundary`, `Adapter\Timeout`, `Adapter\Feature\*`.
 
+#[cfg(feature = "mongo")]
+pub mod mongo;
+
 use std::any::Any;
 use std::future::Future;
 use std::sync::{Arc, Mutex, MutexGuard};
@@ -807,6 +810,13 @@ pub trait Adapter: Send + Sync + 'static {
     /// Rolls the innermost transaction back.
     async fn rollback_transaction(&self) -> Result<bool>;
 
+    /// How [`with_transaction`] runs a callback on this adapter (an adapter
+    /// that overrides PHP's `withTransaction()` answers other than
+    /// [`TransactionStrategy::Savepoints`]).
+    async fn transaction_strategy(&self) -> Result<TransactionStrategy> {
+        Ok(TransactionStrategy::Savepoints)
+    }
+
     /// `inTransaction()`.
     fn in_transaction(&self) -> bool {
         self.state().lock().in_transaction > 0
@@ -1046,6 +1056,34 @@ pub trait Adapter: Send + Sync + 'static {
     }
 }
 
+/// How [`with_transaction`] runs a callback, as [`Adapter::transaction_strategy`]
+/// answers.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TransactionStrategy {
+    /// PHP's `Adapter::withTransaction()`: a transaction, or a savepoint in
+    /// one; a lost transaction is reported; only the outermost call retries.
+    Savepoints,
+    /// The callback alone, outside any transaction (an engine without
+    /// transactions, or a call nested in an open transaction on an engine
+    /// without savepoints).
+    Direct,
+    /// One transaction per attempt and no savepoints (PHP's
+    /// `Mongo::withTransaction()`): a failed attempt is rolled back (a
+    /// rollback failure ignored) and abandoned
+    /// ([`Adapter::abandon_transaction`]); a retryable failure whose chain
+    /// holds `conflict_code` runs again up to `conflict_retries` times after
+    /// a random wait of one to four `conflict_wait`s times the attempt (at
+    /// most five), any other retryable one twice, 50 ms and 100 ms apart.
+    Sessions {
+        /// The code of a write conflict.
+        conflict_code: i64,
+        /// How many times a write conflict runs again.
+        conflict_retries: u32,
+        /// The shortest wait before a write conflict runs again.
+        conflict_wait: std::time::Duration,
+    },
+}
+
 /// Runs `callback` in a transaction (`withTransaction()`): commits when it
 /// succeeds, rolls back when it fails, and runs it again after a failure
 /// [`Adapter::is_retryable`] accepts, up to twice, 50 ms and 100 ms apart.
@@ -1061,6 +1099,13 @@ where
     Fut: Future<Output = Result<T>>,
 {
     const RETRIES: u32 = 2;
+    match adapter.transaction_strategy().await? {
+        TransactionStrategy::Savepoints => {}
+        TransactionStrategy::Direct => return callback().await,
+        TransactionStrategy::Sessions { conflict_code, conflict_retries, conflict_wait } => {
+            return with_session_transaction(adapter, callback, conflict_code, conflict_retries, conflict_wait).await;
+        }
+    }
     let (depth, enclosed) = {
         let mut state = adapter.state().lock();
         let depth = state.in_transaction;
@@ -1130,6 +1175,67 @@ where
         return Err(rollback.unwrap_or(action));
     }
     Err(Error::transaction("Failed to execute transaction"))
+}
+
+/// [`TransactionStrategy::Sessions`]: PHP's `Mongo::withTransaction()` loop.
+async fn with_session_transaction<A, T, F, Fut>(
+    adapter: &A,
+    mut callback: F,
+    conflict_code: i64,
+    conflict_retries: u32,
+    conflict_wait: std::time::Duration,
+) -> Result<T>
+where
+    A: Adapter + ?Sized,
+    F: FnMut() -> Fut,
+    Fut: Future<Output = Result<T>>,
+{
+    const RETRIES: u32 = 2;
+    let conflict = |failure: &Error| {
+        let mut cause = Some(failure);
+        while let Some(c) = cause {
+            if c.code() == conflict_code {
+                return true;
+            }
+            cause = c.previous();
+        }
+        false
+    };
+    let mut attempt: u32 = 0;
+    loop {
+        let result: Result<T> = async {
+            adapter.start_transaction().await?;
+            let value = callback().await?;
+            adapter.commit_transaction().await?;
+            Ok(value)
+        }
+        .await;
+        let action = match result {
+            Ok(value) => return Ok(value),
+            Err(e) => e,
+        };
+        let _ = adapter.rollback_transaction().await;
+        adapter.abandon_transaction().await;
+        if !adapter.is_retryable(&action) {
+            return Err(action);
+        }
+        if conflict(&action) && attempt < conflict_retries {
+            let mut bytes = [0u8; 4];
+            let _ = getrandom::fill(&mut bytes);
+            let base = conflict_wait.as_micros() as u64;
+            let micros = base + u64::from(u32::from_le_bytes(bytes)) % (3 * base + 1);
+            let wait = micros * u64::from((attempt + 1).min(5));
+            tokio::time::sleep(std::time::Duration::from_micros(wait)).await;
+            attempt += 1;
+            continue;
+        }
+        if attempt < RETRIES {
+            tokio::time::sleep(std::time::Duration::from_millis(50 * u64::from(attempt + 1))).await;
+            attempt += 1;
+            continue;
+        }
+        return Err(action);
+    }
 }
 
 /// An adapter whose engine stores and returns native types, so it converts

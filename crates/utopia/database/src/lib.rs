@@ -12,10 +12,11 @@
 //! # Port status
 //!
 //! The 8.x crate is ported layer by layer. This layer is the foundation:
-//! the model, the adapter contract, the validators. The `Database` type,
-//! the hooks it implements (`Hook\Permissions`, `Hook\Relationships`), the
-//! caches, the adapters and `Mirror` follow; the 7.4 port they start from
-//! is kept, uncompiled, under `src/legacy/`.
+//! the model, the adapter contract, the validators, and the MongoDB adapter
+//! ([`adapter::mongo`], feature `mongo`). The `Database` type, the hooks it
+//! implements (`Hook\Permissions`, `Hook\Relationships`), the caches, the
+//! other adapters and `Mirror` follow; the 7.4 port they start from is
+//! kept, uncompiled, under `src/legacy/`.
 //!
 //! # PHP classes and their Rust items
 //!
@@ -47,6 +48,8 @@
 //! | `Utopia\Database\Schema\{Column, Index}` | [`schema::Column`], [`schema::Index`] |
 //! | `Utopia\Database\Adapter` | [`Adapter`], [`adapter::State`], [`adapter::with_transaction`] |
 //! | `Adapter\{Limits, Profile, CursorBoundary, Timeout}` | [`adapter::Limits`], [`adapter::Profile`], [`adapter::CursorBoundary`], [`adapter::TimeoutState`] |
+//! | `Utopia\Database\Adapter\Mongo` (feature `mongo`) | [`adapter::mongo::Mongo`], over an [`adapter::mongo::Driver`] |
+//! | `Utopia\Database\Hook\Mongo\{Read, Permission, Tenant}` | [`hook::mongo`] |
 //! | `Adapter\Feature\*` | [`adapter::Feature`], [`adapter::Casting`], [`adapter::Connection`], [`adapter::QueryBuilder`], [`adapter::RawQuery`], [`adapter::Relationships`], [`adapter::Schemaless`], [`adapter::Spatial`], [`adapter::Timeouts`], [`adapter::Upserts`] |
 //! | `Utopia\Database\Validator\*` | [`validator`] |
 //! | `Utopia\Database\Database` (constants, `internalAttributesFor()`) | [`database`] |

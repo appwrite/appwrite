@@ -18,10 +18,13 @@
 //! | `Hook\Nested` | [`Nested`] |
 //! | `Hook\Queries` | [`Queries`] |
 //! | `Hook\Attachable` | [`Attachable`] |
+//! | `Hook\Mongo\{Read, Permission, Tenant}` | [`mongo::Read`], [`mongo::Permission`], [`mongo::Tenant`] |
 //!
 //! `Hook\Permissions`, `Hook\Relationships` (with `Cascade`,
 //! `Preparation`, `PreparedCreate`) and the MongoDB hooks are implementations
 //! the database layer provides.
+
+pub mod mongo;
 
 use async_trait::async_trait;
 
