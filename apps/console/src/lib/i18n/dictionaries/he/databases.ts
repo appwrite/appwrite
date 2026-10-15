@@ -2229,4 +2229,33 @@ export const heDatabasesDictionary: Record<string, string> = {
   'Keep this database safe': 'שמרו על מסד הנתונים הזה',
   'Back up on a schedule, keep copies for as long as you need, and restore any of them when something goes wrong.':
     'גבו לפי לוח זמנים, שמרו עותקים כמה זמן שצריך, ושחזרו כל אחד מהם כשמשהו משתבש.',
+  'Add read replicas for high availability':
+    'הוספת replicas לקריאה לזמינות גבוהה',
+  'This dedicated database has no read replicas. Add at least one replica to improve failover resilience and scale read traffic.':
+    'למסד נתונים ייעודי זה אין replicas לקריאה. הוסיפו לפחות replica אחד כדי לשפר עמידות ב-failover ולעמוד בעומס קריאה.',
+  'Add replicas': 'הוספת replicas',
+  'Enable point-in-time recovery': 'הפעלת point-in-time recovery',
+  'Point-in-time recovery is off for this database. Turn it on to restore to any moment within the retention window.':
+    'Point-in-time recovery כבוי במסד נתונים זה. הפעילו אותו כדי לשחזר לכל רגע בתוך חלון השמירה.',
+  'Add a scheduled backup policy': 'הוספת מדיניות גיבוי מתוזמנת',
+  'This database has no backup policies. Add a daily backup schedule to protect against data loss.':
+    'למסד נתונים זה אין מדיניות גיבוי. הוסיפו גיבוי יומי כדי להגן מפני אובדן נתונים.',
+  'PITR retention (days)': 'שמירת PITR (ימים)',
+  'Backup retention (days)': 'שמירת גיבוי (ימים)',
+  'Add daily backup': 'הוספת גיבוי יומי',
+  'Daily backup': 'גיבוי יומי',
+  'Strengthen dedicated database resilience': 'חיזוק עמידות מסדי נתונים ייעודיים',
+  'dedicated database has no read replicas':
+    'מסד נתונים ייעודי ללא replicas לקריאה',
+  'dedicated databases have no read replicas':
+    'מסדי נתונים ייעודיים ללא replicas לקריאה',
+  'dedicated database does not have point-in-time recovery enabled':
+    'מסד נתונים ייעודי ללא point-in-time recovery מופעל',
+  'dedicated databases do not have point-in-time recovery enabled':
+    'מסדי נתונים ייעודיים ללא point-in-time recovery מופעל',
+  'Review settings': 'סקירת הגדרות',
+  'to add replicas, enable PITR, or create backup policies from the banner on each database.':
+    'כדי להוסיף replicas, להפעיל PITR, או ליצור מדיניות גיבוי מהבאנר בכל מסד נתונים.',
+  'Decrease': 'הקטנה',
+  'Increase': 'הגדלה',
 }
