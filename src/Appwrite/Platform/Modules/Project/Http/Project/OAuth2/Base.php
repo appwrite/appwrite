@@ -9,17 +9,18 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Client\Client;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\Validator;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
+use Utopia\Validator\Validator;
 use Utopia\Validator\WhiteList;
 
 abstract class Base extends Action
@@ -332,7 +333,8 @@ abstract class Base extends Action
                 ],
             ))
             ->param(static::getClientIdParamName(), null, new Nullable(new Text(256, 0)), static::getClientIdDescription(), optional: true)
-            ->param(static::getClientSecretParamName(), null, new Nullable(new Text(512, 0)), static::getClientSecretDescription(), optional: true);
+            ->param(static::getClientSecretParamName(), null, new Nullable(new Text(512, 0)), static::getClientSecretDescription(), optional: true)
+            ->param('enabled', null, new Nullable(new Boolean()), 'OAuth2 sign-in method status. Set to true to enable new session creation. Setting to true will trigger end-to-end credentials validation, and will throw if the credentials are invalid.', true);
 
         $prompt = !empty(static::getPromptValues());
         if ($prompt) {
@@ -340,12 +342,12 @@ abstract class Base extends Action
         }
 
         $this
-            ->param('enabled', null, new Nullable(new Boolean()), 'OAuth2 sign-in method status. Set to true to enable new session creation. Setting to true will trigger end-to-end credentials validation, and will throw if the credentials are invalid.', true)
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('project')
             ->inject('authorization')
             ->inject('queueForEvents')
+            ->inject('clientForOAuth2')
             ->callback($prompt ? $this->updateWithPrompt(...) : $this->action(...));
     }
 
@@ -504,6 +506,7 @@ abstract class Base extends Action
         Document $project,
         Database $dbForPlatform,
         Authorization $authorization,
+        Client $clientForOAuth2,
         ?string $clientId,
         ?string $clientSecret,
         ?bool $enabled,
@@ -566,7 +569,7 @@ abstract class Base extends Action
                 }
 
                 $providerClass = static::getProviderClass();
-                $providerInstance = new $providerClass(appId: $oAuthProviders[$appIdKey], appSecret: $oAuthProviders[$appSecretKey], callback: '', state: [], scopes: []);
+                $providerInstance = new $providerClass(client: $clientForOAuth2, appId: $oAuthProviders[$appIdKey], appSecret: $oAuthProviders[$appSecretKey], callback: '', state: [], scopes: []);
 
                 // E2E integration check
                 if (\method_exists($providerInstance, 'verifyCredentials')) {
@@ -599,9 +602,10 @@ abstract class Base extends Action
         Database $dbForPlatform,
         Document $project,
         Authorization $authorization,
-        QueueEvent $queueForEvents
+        QueueEvent $queueForEvents,
+        Client $clientForOAuth2
     ): void {
-        $project = $this->persistCredentials($project, $dbForPlatform, $authorization, $clientId, $clientSecret, $enabled);
+        $project = $this->persistCredentials($project, $dbForPlatform, $authorization, $clientForOAuth2, $clientId, $clientSecret, $enabled);
 
         $queueForEvents->setParam('providerId', static::getProviderId());
 
@@ -618,13 +622,14 @@ abstract class Base extends Action
     public function updateWithPrompt(
         ?string $clientId,
         ?string $clientSecret,
-        ?array $prompt,
         ?bool $enabled,
+        ?array $prompt,
         Response $response,
         Database $dbForPlatform,
         Document $project,
         Authorization $authorization,
-        QueueEvent $queueForEvents
+        QueueEvent $queueForEvents,
+        Client $clientForOAuth2
     ): void {
         $providerId = static::getProviderId();
         $queueForEvents->setParam('providerId', $providerId);
@@ -647,7 +652,7 @@ abstract class Base extends Action
             $encodedSecret = \json_encode($secret);
         }
 
-        $project = $this->persistCredentials($project, $dbForPlatform, $authorization, $clientId, $encodedSecret, $enabled);
+        $project = $this->persistCredentials($project, $dbForPlatform, $authorization, $clientForOAuth2, $clientId, $encodedSecret, $enabled);
 
         $response->dynamic($this->buildReadResponse($project), static::getResponseModel());
     }

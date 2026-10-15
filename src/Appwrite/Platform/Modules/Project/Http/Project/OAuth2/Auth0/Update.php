@@ -10,6 +10,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Client\Client;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
@@ -111,13 +112,14 @@ class Update extends Base
             ->param(static::getClientIdParamName(), null, new Nullable(new Text(256, 0)), static::getClientIdDescription(), optional: true)
             ->param(static::getClientSecretParamName(), null, new Nullable(new Text(512, 0)), static::getClientSecretDescription(), optional: true)
             ->param('endpoint', null, new Nullable(new Text(256, 0)), 'Domain of Auth0 instance. For example: example.us.auth0.com', optional: true)
-            ->param('prompt', null, static::getPromptValidator(), static::getPromptDescription(), optional: true, enum: static::getPromptEnum())
             ->param('enabled', null, new Nullable(new Boolean()), 'OAuth2 sign-in method status. Set to true to enable new session creation. Setting to true will trigger end-to-end credentials validation, and will throw if the credentials are invalid.', true)
+            ->param('prompt', null, static::getPromptValidator(), static::getPromptDescription(), optional: true, enum: static::getPromptEnum())
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('project')
             ->inject('authorization')
             ->inject('queueForEvents')
+            ->inject('clientForOAuth2')
             ->callback($this->handle(...));
     }
 
@@ -146,13 +148,14 @@ class Update extends Base
         ?string $clientId,
         ?string $clientSecret,
         ?string $endpoint,
-        ?array $prompt,
         ?bool $enabled,
+        ?array $prompt,
         Response $response,
         Database $dbForPlatform,
         Document $project,
         Authorization $authorization,
-        QueueEvent $queueForEvents
+        QueueEvent $queueForEvents,
+        Client $clientForOAuth2
     ): void {
         $providerId = static::getProviderId();
         $queueForEvents->setParam('providerId', $providerId);
@@ -177,7 +180,7 @@ class Update extends Base
             ]);
         }
 
-        $project = $this->persistCredentials($project, $dbForPlatform, $authorization, $clientId, $encodedSecret, $enabled);
+        $project = $this->persistCredentials($project, $dbForPlatform, $authorization, $clientForOAuth2, $clientId, $encodedSecret, $enabled);
 
         // Reuse buildReadResponse to keep PATCH/GET shapes identical and
         // guarantee the clientSecret is write-only on every response path.

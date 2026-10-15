@@ -8,6 +8,7 @@ use Appwrite\Auth\OAuth2\Bitbucket as OAuth2Bitbucket;
 use Appwrite\Auth\OAuth2\Gitea as OAuth2Gitea;
 use Appwrite\Auth\OAuth2\Github as OAuth2Github;
 use Appwrite\Auth\OAuth2\Gitlab as OAuth2Gitlab;
+use Utopia\Client\Client;
 use Utopia\System\System;
 use Utopia\VCS\Adapter\Git\Bitbucket;
 use Utopia\VCS\Adapter\Git\Gitea;
@@ -21,7 +22,7 @@ return [
         // Each provider owns its own construction quirks (Gitea calls
         // setEndpoint(), GitLab JSON-encodes its secret); Factory just
         // supplies the resolved env values, so no per-provider branching lives there.
-        'oauth2' => fn (string $clientId, string $clientSecret, string $endpoint) => new OAuth2Github($clientId, $clientSecret, ''),
+        'oauth2' => fn (Client $client, string $clientId, string $clientSecret, string $endpoint) => new OAuth2Github($client, $clientId, $clientSecret, ''),
         'variables' => [
             'appName' => ['required' => true, 'envVariable' => '_APP_VCS_GITHUB_APP_NAME'],
             'privateKey' => ['required' => true, 'envVariable' => '_APP_VCS_GITHUB_PRIVATE_KEY'],
@@ -36,8 +37,8 @@ return [
         // The browser may reach Gitea on a different host than the server-side
         // API does (e.g. both on a Docker network, Gitea published elsewhere).
         'browserEndpoint' => System::getEnv('_APP_VCS_GITEA_BROWSER_ENDPOINT', System::getEnv('_APP_VCS_GITEA_ENDPOINT', '')),
-        'oauth2' => function (string $clientId, string $clientSecret, string $endpoint) {
-            $oauth2 = new OAuth2Gitea($clientId, $clientSecret, '');
+        'oauth2' => function (Client $client, string $clientId, string $clientSecret, string $endpoint) {
+            $oauth2 = new OAuth2Gitea($client, $clientId, $clientSecret, '');
             $oauth2->setEndpoint($endpoint);
             return $oauth2;
         },
@@ -53,7 +54,7 @@ return [
         // Auth\OAuth2\Gitlab is shared with the "Sign in with GitLab" account-login
         // provider, which JSON-encodes its secret as {"clientSecret","endpoint"}
         // to support a per-project self-hosted endpoint -- match that shape here too.
-        'oauth2' => fn (string $clientId, string $clientSecret, string $endpoint) => new OAuth2Gitlab($clientId, \json_encode([
+        'oauth2' => fn (Client $client, string $clientId, string $clientSecret, string $endpoint) => new OAuth2Gitlab($client, $clientId, \json_encode([
             'clientSecret' => $clientSecret,
             'endpoint' => $endpoint,
         ]), ''),
@@ -81,7 +82,7 @@ return [
     ],
     'bitbucket' => [
         'adapter' => Bitbucket::class,
-        'oauth2' => fn (string $clientId, string $clientSecret, string $endpoint) => new OAuth2Bitbucket($clientId, $clientSecret, ''),
+        'oauth2' => fn (Client $client, string $clientId, string $clientSecret, string $endpoint) => new OAuth2Bitbucket($client, $clientId, $clientSecret, ''),
         // Only official bitbucket.org/api.bitbucket.org is supported -- fixed,
         // not configurable. Deliberately no 'endpoint' key here: unlike
         // GitLab's, Bitbucket's setEndpoint() sets the API base

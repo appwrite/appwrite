@@ -91,12 +91,6 @@ class ConsoleVariables extends Model
                 'default' => false,
                 'example' => true,
             ])
-            ->addRule('_APP_ASSISTANT_ENABLED', [
-                'type' => self::TYPE_BOOLEAN,
-                'description' => 'Defines if AI assistant is enabled.',
-                'default' => false,
-                'example' => true,
-            ])
             ->addRule('_APP_DOMAIN_SITES', [
                 'type' => self::TYPE_STRING,
                 'description' => 'A comma separated list of domains to use for site URLs.',
@@ -188,6 +182,15 @@ class ConsoleVariables extends Model
                     'description' => 'Whether the database adapter supports multiple fulltext indexes per collection.',
                     'default' => true,
                     'example' => true,
+                ]
+            )
+            ->addRule(
+                'supportForTrigramIndex',
+                [
+                    'type' => self::TYPE_BOOLEAN,
+                    'description' => 'Whether the database adapter supports trigram indexes.',
+                    'default' => false,
+                    'example' => false,
                 ]
             )
             ->addRule(

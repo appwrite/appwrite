@@ -3,6 +3,8 @@
 namespace Tests\E2E\Services\Teams;
 
 use Tests\E2E\Client;
+use Utopia\Database\Helpers\ID;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 trait TeamsBaseServer
@@ -246,6 +248,55 @@ trait TeamsBaseServer
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
+    }
+
+    public function testCreateTeamMembershipCustomId(): void
+    {
+        $teamData = $this->createTeamHelper();
+        $teamUid = $teamData['teamUid'];
+        $customId = 'member-' . uniqid();
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/teams/' . $teamUid . '/memberships', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'membershipId' => ID::custom($customId),
+            'email' => uniqid() . 'friend@localhost.test',
+            'roles' => ['developer'],
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals($customId, $response['body']['$id']);
+
+        /**
+         * Test for FAILURE
+         * A duplicate custom membership ID must not leave the invitee behind
+         */
+        $email = uniqid() . 'friend@localhost.test';
+        $response = $this->client->call(Client::METHOD_POST, '/teams/' . $teamUid . '/memberships', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'membershipId' => ID::custom($customId),
+            'email' => $email,
+            'roles' => ['developer'],
+        ]);
+
+        $this->assertEquals(409, $response['headers']['status-code']);
+        $this->assertEquals('membership_already_exists', $response['body']['type']);
+
+        $users = $this->client->call(Client::METHOD_GET, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [Query::equal('email', [$email])->toString()],
+        ]);
+
+        $this->assertEquals(200, $users['headers']['status-code']);
+        $this->assertEquals(0, $users['body']['total']);
     }
 
     public function testUpdateMembershipRoles(): void

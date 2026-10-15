@@ -1,0 +1,1610 @@
+/**
+ * Hebrew translations for the Organizations console area.
+ * Keys are the exact English source strings (English is the source of truth).
+ */
+export const heOrganizationsDictionary: Record<string, string> = {
+  'A valid transfer price is required to continue.':
+    'כדי להמשיך נדרש מחיר תקף להעברת הדומיין.',
+  "We couldn't load a transfer price. Try again to continue.":
+    'לא הצלחנו לטעון מחיר להעברת הדומיין. נסו שוב כדי להמשיך.',
+  'Transfer pricing is unavailable for this domain. Try another domain or contact support.':
+    'מחיר ההעברה אינו זמין עבור הדומיין הזה. נסו דומיין אחר או פנו לתמיכה.',
+
+  '(optional)': '(אופציונלי)',
+  ', all billable services will be paused until the next billing cycle or until you increase your limit.':
+    ', כל השירותים בתשלום יושהו עד מחזור החיוב הבא או עד שתגדילו את המגבלה.',
+  ', on': ', דרך',
+  ', or on': ', או דרך',
+  '1 year': 'שנה אחת',
+  '3rd party': 'צד שלישי',
+  '@ or subdomain': '@ או תת-דומיין',
+  "A BAA is required under HIPAA when a service provider handles Protected Health Information (PHI) on behalf of a covered entity. If your application processes, stores, or transmits health-related data of US patients, you'll need a BAA in place.":
+    'הסכם BAA נדרש לפי HIPAA כאשר ספק שירות מטפל במידע רפואי מוגן (PHI) עבור גוף מכוסה. אם האפליקציה שלכם מעבדת, מאחסנת או משדרת נתוני בריאות של מטופלים בארה"ב, תצטרכו הסכם BAA בתוקף.',
+  'A BAA is required under HIPAA when Appwrite handles Protected Health Information (PHI) for your organization. Enable it if you process, store, or transmit health data for US patients.':
+    'הסכם BAA נדרש לפי HIPAA כאשר Appwrite מטפל במידע רפואי מוגן (PHI) עבור הארגון שלכם. הפעילו אותו אם אתם מעבדים, מאחסנים או משדרים נתוני בריאות של מטופלים בארה"ב.',
+  'A DPA is a legally binding document that outlines how':
+    'הסכם DPA הוא מסמך מחייב משפטית המגדיר כיצד',
+  'A backup payment method ensures uninterrupted service if your primary method fails.':
+    'אמצעי תשלום גיבוי מבטיח שירות רציף אם אמצעי התשלום הראשי נכשל.',
+  'A card was entered in a previous attempt. Complete the details below to finish adding it.':
+    'כרטיס הוזן בניסיון קודם. השלימו את הפרטים למטה כדי לסיים את ההוספה.',
+  'A new payment method has been added to your account':
+    'אמצעי תשלום חדש נוסף לחשבון שלכם',
+  'A records map a domain to an IPv4 address, allowing browsers to find your website by translating the domain name to an IP address.':
+    'רשומות A ממפות דומיין לכתובת IPv4, ומאפשרות לדפדפנים למצוא את האתר שלכם על ידי תרגום שם הדומיין לכתובת IP.',
+  'A week of launches, live sessions, and community events. Claim your ticket to join.':
+    'שבוע של השקות, שידורים חיים ואירועי קהילה. הזמינו כרטיס כדי להצטרף.',
+  'AAAA records map a domain to an IPv6 address, providing the same function as A records but for IPv6-enabled devices.':
+    'רשומות AAAA ממפות דומיין לכתובת IPv6, ומספקות את אותה פונקציה כמו רשומות A אך למכשירים התומכים ב-IPv6.',
+  'AI & ML': 'AI ולמידת מכונה',
+  'ALIAS records are similar to CNAMEs but can be used for the root domain, allowing you to point your domain to another domain or server.':
+    'רשומות ALIAS דומות ל-CNAME אך ניתן להשתמש בהן לדומיין הראשי, כך שתוכלו להפנות את הדומיין שלכם לדומיין או לשרת אחר.',
+  'API key types': 'סוגי מפתחות API',
+  'API keys': 'מפתחות API',
+  'Account keys': 'מפתחות חשבון',
+  'Account settings': 'הגדרות חשבון',
+  'Account-level ops, CLI auth, sessions. Per-user credentials.':
+    'פעולות ברמת החשבון, אימות CLI, סשנים. פרטי גישה אישיים לכל משתמש.',
+  Abandoned: 'ננטש',
+  'Action required': 'נדרשת פעולה',
+  'Activating plan': 'מפעיל תוכנית',
+  Active: 'פעיל',
+  Add: 'הוספה',
+  'Add Domain': 'הוספת דומיין',
+  'Add a billing address for invoices and tax documents.':
+    'הוסיפו כתובת חיוב לחשבוניות ולמסמכי מס.',
+  'Add a new billing address': 'הוספת כתובת חיוב חדשה',
+  'Add a new credit card to pay for your organization.':
+    'הוסיפו כרטיס אשראי חדש לתשלום עבור הארגון שלכם.',
+  'Add a payment method to continue with a paid plan.':
+    'הוסיפו אמצעי תשלום כדי להמשיך עם תוכנית בתשלום.',
+  'Add a payment method to see your estimated total.':
+    'הוסיפו אמצעי תשלום כדי לראות את הסכום המשוער.',
+  'Add alert': 'הוספת התראה',
+  'Add another member': 'הוספת חבר נוסף',
+  'Add app': 'הוספת אפליקציה',
+  'Create app': 'יצירת אפליקציה',
+  Team: 'צוות',
+  'The app is created in your current team. Switch teams to create it in another team.':
+    'האפליקציה נוצרת בצוות הנוכחי שלכם. החליפו צוות כדי ליצור אותה בצוות אחר.',
+  'Add backup': 'הוספת גיבוי',
+  'Add billing address': 'הוספת כתובת חיוב',
+  'Add credits': 'הוספת קרדיטים',
+  'Add domain': 'הוספת דומיין',
+  'Add email and press Enter': 'הזינו אימייל והקישו Enter',
+  'Add image URL and press Enter': 'הזינו כתובת תמונה והקישו Enter',
+  'Add new address': 'הוספת כתובת חדשה',
+  'Add new card': 'הוספת כרטיס חדש',
+  'Add payment method': 'הוספת אמצעי תשלום',
+  'Add platform': 'הוספת פלטפורמה',
+  'Add post-logout URI and press Enter': 'הזינו URI לאחר התנתקות והקישו Enter',
+  'Add preset': 'הוספת תבנית',
+  'Add preset records': 'הוספת רשומות מתבנית',
+  'Add promo code': 'הוספת קוד קופון',
+  'Add redirect URI and press Enter': 'הזינו URI להפניה והקישו Enter',
+  'Add your first DNS record to get started':
+    'הוסיפו את רשומת ה-DNS הראשונה שלכם כדי להתחיל',
+  'Add your first app to share it with other organizations.':
+    'הוסיפו את האפליקציה הראשונה שלכם כדי לשתף אותה עם ארגונים אחרים.',
+  'Additional members': 'חברים נוספים',
+  'Additional projects': 'פרויקטים נוספים',
+  Address: 'כתובת',
+  'Address line 2': 'שורת כתובת 2',
+  'Adjust resources for the target plan': 'התאימו משאבים לתוכנית היעד',
+  'Alert added': 'ההתראה נוספה',
+  'Alert removed': 'ההתראה הוסרה',
+  'Alert when spending reaches': 'התראה כשההוצאה מגיעה ל',
+  'All projects': 'כל הפרויקטים',
+  'Per project': 'לפי פרויקט',
+  'Project access': 'גישה לפרויקטים',
+  Projects: 'פרויקטים',
+  projects: 'פרויקטים',
+  'Add project': 'הוספת פרויקט',
+  'Add at least one project to grant access.':
+    'יש להוסיף לפחות פרויקט אחד כדי להעניק גישה.',
+  'Remove project': 'הסרת פרויקט',
+  'Specific projects': 'פרויקטים מסוימים',
+  'All resources except team management and billing writes.':
+    'כל המשאבים מלבד ניהול הצוות ופעולות כתיבה בחיוב.',
+  'Allow OAuth2 Device Authorization Grant (RFC 8628).':
+    'אפשרו OAuth2 Device Authorization Grant (RFC 8628).',
+  Amount: 'סכום',
+  'Amount due': 'סכום לתשלום',
+  'An error occurred': 'אירעה שגיאה',
+  Analyst: 'אנליסט',
+  Analytics: 'אנליטיקה',
+  'App ID': 'מזהה אפליקציה',
+  'App created': 'האפליקציה נוצרה',
+  'App deleted': 'האפליקציה נמחקה',
+  'App logo preview': 'תצוגה מקדימה של לוגו האפליקציה',
+  'App not found': 'האפליקציה לא נמצאה',
+  'App enabled': 'האפליקציה הופעלה',
+  'App disabled': 'האפליקציה הושבתה',
+  'App status': 'סטטוס האפליקציה',
+  'App settings': 'הגדרות אפליקציה',
+  'App settings sections': 'מקטעי הגדרות אפליקציה',
+  // pragma: allowlist secret
+  'Apply Appwrite credits to your organization. Credits expire after a set period and do not roll over.':
+    'החילו קרדיטים של Appwrite על הארגון שלכם. תוקף הקרדיטים פג לאחר תקופה מוגדרת והם אינם נצברים.', // pragma: allowlist secret
+  'Apply coupon': 'החלת קופון',
+  'Approaching member limit': 'מתקרבים למגבלת החברים',
+  Apps: 'אפליקציות',
+  'Apps in ai & ml.': 'אפליקציות בקטגוריית AI ולמידת מכונה.',
+  'Apps in analytics.': 'אפליקציות בקטגוריית אנליטיקה.',
+  'Apps in authentication.': 'אפליקציות בקטגוריית אימות.',
+  'Apps in developer tools.': 'אפליקציות בקטגוריית כלי פיתוח.',
+  'Apps in messaging.': 'אפליקציות בקטגוריית הודעות.',
+  'Apps in payments.': 'אפליקציות בקטגוריית תשלומים.',
+  'Apps in storage.': 'אפליקציות בקטגוריית אחסון.',
+  'Apps published by your organization.':
+    'אפליקציות שפורסמו על ידי הארגון שלכם.',
+  'Apps will appear here when other organizations publish listings.':
+    'אפליקציות יופיעו כאן כאשר ארגונים אחרים יפרסמו אותן.',
+  'Are you sure you want to cancel the invitation for':
+    'האם אתם בטוחים שברצונכם לבטל את ההזמנה של',
+  'Are you sure you want to delete': 'האם אתם בטוחים שברצונכם למחוק את',
+  'Are you sure you want to delete this': 'האם אתם בטוחים שברצונכם למחוק רשומת',
+  'Are you sure you want to delete this domain?':
+    'האם אתם בטוחים שברצונכם למחוק את הדומיין הזה?',
+  'Are you sure you want to delete this project? This action cannot be undone.':
+    'האם אתם בטוחים שברצונכם למחוק את הפרויקט הזה? פעולה זו אינה ניתנת לביטול.',
+  'Are you sure you want to move': 'האם אתם בטוחים שברצונכם להעביר את',
+  'Are you sure you want to remove': 'האם אתם בטוחים שברצונכם להסיר את',
+  'Are you sure you want to remove the billing address from':
+    'האם אתם בטוחים שברצונכם להסיר את כתובת החיוב מ',
+  'Attachment (optional)': 'קובץ מצורף (אופציונלי)',
+  Auth: 'אימות',
+  Authentication: 'אימות',
+  'Authentication failed': 'האימות נכשל',
+  'Authorization code': 'קוד הרשאה',
+  'Authorization code is required': 'קוד הרשאה הוא שדה חובה',
+  Authorize: 'אישור',
+  'Authorize payment': 'אישור תשלום',
+  'Authorizing...': 'מאשר...',
+  'Auto renewal': 'חידוש אוטומטי',
+  'Auto renewal has been disabled': 'החידוש האוטומטי הושבת',
+  'Auto renewal has been enabled': 'החידוש האוטומטי הופעל',
+  // pragma: allowlist secret
+  'Auto renewal is available for domains registered with Appwrite.':
+    'חידוש אוטומטי זמין לדומיינים שנרשמו דרך Appwrite.', // pragma: allowlist secret
+  'Available balance': 'יתרה זמינה',
+  'Available credits': 'קרדיטים זמינים',
+  Avatars: 'אווטארים',
+  Back: 'חזרה',
+  'Back to apps': 'חזרה לאפליקציות',
+  'Back to domains': 'חזרה לדומיינים',
+  'Backup methods': 'אמצעי תשלום לגיבוי',
+  'Backup payment method updated': 'אמצעי התשלום לגיבוי עודכן',
+  'Balance:': 'יתרה:',
+  Best: 'שיא',
+  Billing: 'חיוב',
+  'Billing address': 'כתובת חיוב',
+  'Billing address has been created and set for your organization':
+    'כתובת החיוב נוצרה והוגדרה עבור הארגון שלכם',
+  'Billing address has been removed from': 'כתובת החיוב הוסרה מ',
+  'Billing address removed': 'כתובת החיוב הוסרה',
+  'Billing address updated': 'כתובת החיוב עודכנה',
+  'Billing alerts': 'התראות חיוב',
+  'Billing and payment management only.': 'ניהול חיוב ותשלומים בלבד.',
+  'Billing, team, cross-project. One key for the whole org.':
+    'חיוב, צוות, חוצה-פרויקטים. מפתח אחד לכל הארגון.',
+  Branding: 'מיתוג',
+  'Brief summary of your issue': 'סיכום קצר של הבעיה שלכם',
+  'Browse by category': 'עיון לפי קטגוריה',
+  'Browse files': 'עיון בקבצים',
+  Buckets: 'באקטים',
+  'Budget cap': 'תקרת תקציב',
+  'Budget cap (USD)': 'תקרת תקציב (USD)',
+  'Budget cap applies only to additional usage beyond your plan limits':
+    'תקרת התקציב חלה רק על שימוש נוסף מעבר למגבלות התוכנית שלכם',
+  'Budget cap disabled': 'תקרת התקציב הושבתה',
+  'Budget cap enabled': 'תקרת התקציב הופעלה',
+  'Budget cap must be greater than 0': 'תקרת התקציב חייבת להיות גדולה מ-0',
+  'Budget cap updated': 'תקרת התקציב עודכנה',
+  'Budget caps are not supported on your current plan.':
+    'תקרות תקציב אינן נתמכות בתוכנית הנוכחית שלכם.',
+  'Business associate agreement (BAA)': 'הסכם שותף עסקי (BAA)',
+  'Buy domain': 'רכישת דומיין',
+  'CAA records define which certificate authorities can issue SSL certificates for your domain. To avoid setup issues, make sure certainly.com is authorized.':
+    'רשומות CAA מגדירות אילו רשויות אישורים יכולות להנפיק אישורי SSL לדומיין שלכם. כדי להימנע מבעיות בהגדרה, ודאו ש-certainly.com מורשה.',
+  'CNAME records alias one domain name to another, allowing you to point subdomains or other domain names to an existing domain.':
+    'רשומות CNAME יוצרות כינוי משם דומיין אחד לאחר, ומאפשרות להפנות תת-דומיינים או שמות דומיין אחרים לדומיין קיים.',
+  'Calculating impact for resources to remove...':
+    'מחשב את ההשפעה של המשאבים שיוסרו...',
+  'Calculating impact for the organization that will be removed...':
+    'מחשב את ההשפעה של הארגון שיוסר...',
+  'Can modify most resources but not critical backend.':
+    'יכול לשנות את רוב המשאבים אך לא רכיבי backend קריטיים.',
+  Cancel: 'ביטול',
+  'Cancel Invitation': 'ביטול הזמנה',
+  'Cancel invitation': 'ביטול הזמנה',
+  'Card added': 'הכרטיס נוסף',
+  'Card expired': 'תוקף הכרטיס פג',
+  'Cardholder name': 'שם בעל הכרטיס',
+  Catalog: 'קטלוג',
+  Categories: 'קטגוריות',
+  Category: 'קטגוריה',
+  'Catch up on Init': 'צפו בסיכום Init',
+  'Change organization': 'החלפת ארגון',
+  'Change plan': 'שינוי תוכנית',
+  'Changes to projects and services are limited until the outstanding invoice is paid. Complete payment to restore full access.':
+    'שינויים בפרויקטים ובשירותים מוגבלים עד לתשלום החשבונית הפתוחה. השלימו את התשלום כדי להחזיר גישה מלאה.',
+  Check: 'בדקו את',
+  'Choose File': 'בחירת קובץ',
+  'Choose a PNG from the app assets bucket or upload a new one.':
+    'בחרו קובץ PNG מבאקט נכסי האפליקציה או העלו קובץ חדש.',
+  'Choose domains to keep': 'בחרו דומיינים לשמירה',
+  'Choose exactly': 'בחרו בדיוק',
+  'Choose existing address': 'בחירת כתובת קיימת',
+  'Choose existing card': 'בחירת כרטיס קיים',
+  'Choose members to keep': 'בחרו חברים לשמירה',
+  'Choose projects to keep': 'בחרו פרויקטים לשמירה',
+  'Choose the plan that best fits your needs.':
+    'בחרו את התוכנית המתאימה ביותר לצרכים שלכם.',
+  'Choose whether this domain should renew automatically before it expires.':
+    'בחרו אם הדומיין הזה יתחדש אוטומטית לפני שתוקפו יפוג.',
+  City: 'עיר',
+  'Clear search': 'ניקוי חיפוש',
+  'Click to upload or drag and drop': 'לחצו להעלאה או גררו ושחררו',
+  'Client type': 'סוג לקוח',
+  Close: 'סגירה',
+  Code: 'קוד',
+  Collapse: 'כיווץ',
+  // pragma: allowlist secret
+  'Collect Appwrite tokens and avoid lightning hazards. Endurance mini-game for debug sessions.':
+    'אספו טוקני Appwrite והתחמקו מברקים. משחק מיני של סיבולת לסשנים של דיבוג.', // pragma: allowlist secret
+  'Collect tokens and avoid lightning. Use Space, ↑, or click to jump.':
+    'אספו טוקנים והתחמקו מברקים. השתמשו ברווח, ב-↑ או בלחיצה כדי לקפוץ.',
+  'Coming soon': 'בקרוב',
+  Comment: 'הערה',
+  'Comment (optional)': 'הערה (אופציונלי)',
+  'Company (optional)': 'חברה (אופציונלי)',
+  'Compare features between plans': 'השוואת תכונות בין תוכניות',
+  'Complete registration': 'השלמת רישום',
+  'Complete the selections above to review project resources.':
+    'השלימו את הבחירות למעלה כדי לסקור את משאבי הפרויקט.',
+  Compliance: 'ציות',
+  Compute: 'מחשוב',
+  Confidential: 'חסוי',
+  'Confidential clients authenticate token exchanges with a secret. Rotate regularly and store values in a secrets manager.':
+    'לקוחות חסויים מאמתים החלפת טוקנים באמצעות סוד. בצעו רוטציה לסודות באופן קבוע ואחסנו את הערכים במנהל סודות.',
+  'Confirmation email with ticket ID. Typically within 24h during support hours.':
+    'אימייל אישור עם מזהה פנייה. בדרך כלל בתוך 24 שעות בשעות התמיכה.',
+  'Confirming payment': 'מאשר תשלום',
+  'Contact emails': 'אימיילים ליצירת קשר',
+  'Contact for price': 'צרו קשר לקבלת מחיר',
+  'Contact sales': 'צרו קשר עם צוות המכירות',
+  'Continue in the old console': 'המשך בקונסול הישן',
+  'Copied to clipboard': 'הועתק ללוח',
+  'Client ID': 'מזהה לקוח',
+  'Last used': 'שימוש אחרון',
+  'Never used': 'לא היה בשימוש',
+  Copy: 'העתקה',
+  'Copy ID': 'העתקת מזהה',
+  'Copy as JSON': 'העתקה כ-JSON',
+  'Copy code': 'העתקת קוד',
+  'Copy domain': 'העתקת דומיין',
+  'Copy endpoint': 'העתקת Endpoint',
+  'Copy link': 'העתקת קישור',
+  'Copy name': 'העתקת שם',
+  'Copy this code and submit it at your new registrar to complete the transfer out.':
+    'העתיקו את הקוד הזה והזינו אותו אצל הרשם החדש כדי להשלים את ההעברה החוצה.',
+  'Copy this value now. For security, the full secret cannot be retrieved after you close this dialog.':
+    'העתיקו את הערך הזה עכשיו. מטעמי אבטחה, לא ניתן לשחזר את הסוד המלא לאחר סגירת חלון זה.',
+  'Copy value': 'העתקת ערך',
+  Cost: 'עלות',
+  "Couldn't use this attachment": 'לא ניתן להשתמש בקובץ המצורף הזה',
+  Country: 'מדינה',
+  'Coupon applied successfully': 'הקופון הוחל בהצלחה',
+  'Coupon code': 'קוד קופון',
+  'Coupon not found. Please check the code and try again.':
+    'הקופון לא נמצא. בדקו את הקוד ונסו שוב.',
+  Create: 'יצירה',
+  'Create DNS Record': 'יצירת רשומת DNS',
+  'Create Record': 'יצירת רשומה',
+  'Create a new organization to manage your projects and organization members.':
+    'צרו ארגון חדש לניהול הפרויקטים וחברי הארגון שלכם.',
+  'Create a new project in your organization.': 'צרו פרויקט חדש בארגון שלכם.',
+  'Create a project first': 'צרו פרויקט תחילה',
+  'Create a secret for confidential OAuth flows such as authorization code with server-side token exchange.':
+    'צרו סוד לתהליכי OAuth חסויים, כמו קוד הרשאה עם החלפת טוקנים בצד השרת.',
+  'Create an OAuth2 app listing for the marketplace.':
+    'צרו דף אפליקציית OAuth2 למרקטפלייס.',
+  'Create an app to share it with other organizations on the marketplace.':
+    'צרו אפליקציה כדי לשתף אותה עם ארגונים אחרים במרקטפלייס.',
+  'Create organization': 'יצירת ארגון',
+  'Create project': 'יצירת פרויקט',
+  'Advanced security': 'אבטחה מתקדמת',
+  'Security add-on': 'תוסף אבטחה',
+  '+ more': '+ עוד',
+  'Geolocation for Firewall rules': 'מיקום עבור כללי Firewall',
+  'Geolocation for Firewall rules.': 'מיקום עבור כללי Firewall.',
+  '{price}/mo, prorated.': '{price}/חודש, חיוב יחסי.',
+  'Billed monthly, prorated.': 'חיוב חודשי, יחסי.',
+  'Geolocation for Firewall rules · {price}/mo, prorated.':
+    'מיקום עבור כללי Firewall · {price}/חודש, חיוב יחסי.',
+  'Geolocation for Firewall rules · billed monthly, prorated.':
+    'מיקום עבור כללי Firewall · חיוב חודשי, יחסי.',
+  'Optional security add-on': 'תוסף אבטחה אופציונלי',
+  'Advanced geolocation for access control': 'מיקום מתקדם לבקרת גישה',
+  'Add city, ISP, ASN, and connection context to every request for precise Firewall rules and safer regional access.':
+    'הוסיפו הקשר של עיר, ISP, ASN וסוג חיבור לכל בקשה, לכללי Firewall מדויקים וגישה אזורית בטוחה יותר.',
+  'Prorated when you enable this add-on.': 'חיוב יחסי בעת הפעלת התוסף.',
+  'Enrich every request with city, ISP, ASN, and connection context so Firewall rules can block abuse, enforce regional access, and respond to suspicious traffic with precision.':
+    'העשירו כל בקשה בהקשר של עיר, ISP, ASN וסוג חיבור, כדי שכללי Firewall יוכלו לחסום שימוש לרעה, לאכוף גישה אזורית ולהגיב לתעבורה חשודה בדיוק.',
+  '{price}/month for this project. Prorated when enabled.':
+    '{price}/חודש לפרויקט זה. חיוב יחסי בעת ההפעלה.',
+  'Billed monthly for this project, prorated when enabled.':
+    'חיוב חודשי לפרויקט זה, בחיוב יחסי בעת ההפעלה.',
+  'Project was created, but the security add-on could not be enabled. Enable Premium Geo DB in project settings.':
+    'הפרויקט נוצר, אך לא ניתן היה להפעיל את תוסף האבטחה. ניתן להפעיל Premium Geo DB בהגדרות הפרויקט.',
+  'Enabling Premium Geo DB...': 'מפעילים את Premium Geo DB...',
+  'Create secret': 'יצירת סוד',
+  'Create your first domain to get started':
+    'צרו את הדומיין הראשון שלכם כדי להתחיל',
+  'Create your first project to get started':
+    'צרו את הפרויקט הראשון שלכם כדי להתחיל',
+  Created: 'נוצר',
+  Contacts: 'אנשי קשר',
+  'Credit History': 'היסטוריית קרדיטים',
+  'Credit expiration': 'תפוגת קרדיט',
+  'Credit expires': 'הקרדיט פג בתאריך',
+  'Credit has been added to': 'הקרדיט נוסף לארגון',
+  'Credit has been added to your organization': 'הקרדיט נוסף לארגון שלכם',
+  Credits: 'קרדיטים',
+  'Credits applied': 'הקרדיטים הוחלו',
+  'Credits expire': 'הקרדיטים פגים בתאריך',
+  'Credits expire on the date shown for each code. Unused credits do not roll over after that date.':
+    'תוקף הקרדיטים פג בתאריך המוצג לכל קוד. קרדיטים שלא נוצלו אינם נצברים לאחר תאריך זה.',
+  Current: 'נוכחי',
+  'Current Plan': 'תוכנית נוכחית',
+  'Current billing cycle': 'מחזור חיוב נוכחי',
+  'Current plan': 'תוכנית נוכחית',
+  'Custom plan': 'תוכנית מותאמת אישית',
+  'Custom plans for teams that need negotiated limits, compliance, premium support, and tailored billing.':
+    'תוכניות מותאמות אישית לצוותים שזקוקים למגבלות מוסכמות, ציות, תמיכה פרימיום וחיוב מותאם.',
+  'DNS changes can take up to 48 hours to propagate. Confirm the records below at your DNS provider, wait a bit, then try again.':
+    'שינויי DNS יכולים לקחת עד 48 שעות להתפשט. ודאו שהרשומות למטה מוגדרות אצל ספק ה-DNS, המתינו מעט, ונסו שוב.',
+  'DNS Records': 'רשומות DNS',
+  'DNS record': 'רשומת DNS',
+  'DNS record created successfully': 'רשומת ה-DNS נוצרה בהצלחה',
+  'DNS record deleted successfully': 'רשומת ה-DNS נמחקה בהצלחה',
+  'DNS record updated successfully': 'רשומת ה-DNS עודכנה בהצלחה',
+  'DNS records': 'רשומות DNS',
+  'DNS records from': 'רשומות DNS מתוך',
+  'Data deletion': 'מחיקת נתונים',
+  'Data processing agreement (DPA)': 'הסכם עיבוד נתונים (DPA)',
+  Databases: 'מסדי נתונים',
+  'Databases, storage, users, functions. One project per key.':
+    'מסדי נתונים, אחסון, משתמשים, פונקציות. פרויקט אחד לכל מפתח.',
+  'Dedicated databases': 'מסדי נתונים ייעודיים',
+  Delete: 'מחיקה',
+  'Delete DNS Record': 'מחיקת רשומת DNS',
+  'Delete DNS records': 'מחיקת רשומות DNS',
+  'Delete Domain': 'מחיקת דומיין',
+  'Delete Domains': 'מחיקת דומיינים',
+  'Delete OAuth secret': 'מחיקת סוד OAuth',
+  'Delete app': 'מחיקת אפליקציה',
+  'Delete domain': 'מחיקת דומיין',
+  'Delete organization': 'מחיקת ארגון',
+  'Delete project': 'מחיקת פרויקט',
+  Deleted: 'נמחק',
+  'Deleting members': 'מסיר חברים',
+  'Deleting organization': 'מוחק ארגון',
+  'Deleting projects': 'מוחק פרויקטים',
+  'Deleting resources': 'מוחק משאבים',
+  // pragma: allowlist secret
+  'Describe your issue or question in detail. Include any relevant context (e.g. project, SDK version, error messages) so we can help faster.':
+    'תארו את הבעיה או השאלה שלכם בפירוט. כללו הקשר רלוונטי (למשל פרויקט, גרסת SDK, הודעות שגיאה) כדי שנוכל לעזור מהר יותר.',
+  Description: 'תיאור',
+  Details: 'פרטים',
+  Developer: 'מפתח',
+  'Developer tools': 'כלי פיתוח',
+  'Device flow': 'Device flow',
+  Disabled: 'מושבת',
+  Discount: 'הנחה',
+  Discover: 'גילוי',
+  Docs: 'דוקומנטציה',
+  'Docs, status, and community': 'דוקומנטציה, סטטוס וקהילה',
+  Documentation: 'דוקומנטציה',
+  Domain: 'דומיין',
+  'Domain limit reached': 'הגעתם למגבלת הדומיינים',
+  'Domain name': 'שם דומיין',
+  'Domain name does not match': 'שם הדומיין אינו תואם',
+  'Domain not found': 'הדומיין לא נמצא',
+  'Domain not verified': 'הדומיין לא אומת',
+  'Domain not verified yet': 'הדומיין עדיין לא אומת',
+  'Domain transfer in progress': 'העברת דומיין בתהליך',
+  'Domain transfer started': 'העברת הדומיין החלה',
+  'Domain transfers usually take 5-7 days. ICANN allows the old registrar up to 5 days to release the domain, with .com and .net sometimes taking 1-2 extra days to finalize.':
+    'העברות דומיין נמשכות בדרך כלל 5-7 ימים. ICANN מאפשר לרשם הקודם עד 5 ימים לשחרר את הדומיין, וסיומות .com ו-.net עשויות לקחת 1-2 ימים נוספים להשלמה.',
+  'Domain verification failed. Please check your domain settings or try again later.':
+    'אימות הדומיין נכשל. בדקו את הגדרות הדומיין או נסו שוב מאוחר יותר.',
+  'Domain verification successful': 'אימות הדומיין הצליח',
+  Domains: 'דומיינים',
+  Done: 'סיום',
+  'Downgrade impact': 'השפעת השנמוך',
+  'Downgrade to Free': 'שנמוך ל-Free',
+  'Downgrade to Free is temporarily unavailable here. Continue in the old console.':
+    'שנמוך לתוכנית Free אינו זמין כאן כרגע. המשיכו בקונסול הישן.',
+  Downgraded: 'שונמך',
+  'Downgrading to Free Plan': 'שנמוך לתוכנית Free',
+  'Downgrading your plan': 'משנמך את התוכנית שלכם',
+  'Download DPA': 'הורדת DPA',
+  'Download invoice': 'הורדת חשבונית',
+  'Download the DPA, review it with your legal team, sign it, and send a copy to':
+    'הורידו את ה-DPA, עברו עליו עם הצוות המשפטי שלכם, חתמו עליו ושלחו עותק אל',
+  Draft: 'טיוטה',
+  'Drag to reorder': 'גררו לשינוי סדר',
+  'Due Date': 'תאריך יעד',
+  'Duplicate email': 'אימייל כפול',
+  Editor: 'עורך',
+  Email: 'אימייל',
+  'Email is required': 'אימייל הוא שדה חובה',
+  'Enable auto renewal': 'הפעלת חידוש אוטומטי',
+  'Enable budget cap': 'הפעלת תקרת תקציב',
+  'Enable budget cap to configure billing alerts.':
+    'הפעילו תקרת תקציב כדי להגדיר התראות חיוב.',
+  'Enable budget cap to prevent unexpected charges from additional usage beyond your plan limits.':
+    'הפעילו תקרת תקציב כדי למנוע חיובים בלתי צפויים משימוש נוסף מעבר למגבלות התוכנית שלכם.',
+  'Enable budget cap to prevent unexpected charges from additional usage beyond your plan limits. Your services will automatically pause when the spending limit is reached.':
+    'הפעילו תקרת תקציב כדי למנוע חיובים בלתי צפויים משימוש נוסף מעבר למגבלות התוכנית שלכם. השירותים שלכם יושהו אוטומטית כאשר תגיעו למגבלת ההוצאה.',
+  Enabled: 'מופעל',
+  'Enter a coupon code to update your estimated total. Applied credits expire after a set period and do not roll over.':
+    'הזינו קוד קופון לעדכון הסכום המשוער. קרדיטים שהוחלו פגים לאחר תקופה מוגדרת ואינם נצברים.',
+  'Enter a full domain name (e.g. example.com)':
+    'הזינו שם דומיין מלא (למשל example.com)',
+  'Enter coupon code': 'הזינו קוד קופון',
+  'Enter domain name': 'הזינו שם דומיין',
+  'Enter organization name': 'הזינו שם ארגון',
+  'Enter project name': 'הזינו שם פרויקט',
+  'Enter street address': 'הזינו כתובת רחוב',
+  'Enter tax ID (e.g., VAT, GST, EIN)':
+    'הזינו מספר זיהוי מס (למשל VAT, GST, EIN)',
+  'Enter tax identification number': 'הזינו מספר זיהוי מס',
+  'Enter the domain name without protocol (e.g., example.com)':
+    'הזינו את שם הדומיין ללא פרוטוקול (למשל example.com)',
+  'Enter the domain name you want to add to your organization.':
+    'הזינו את שם הדומיין שברצונכם להוסיף לארגון שלכם.',
+  'Enter your card details to add a new payment method.':
+    'הזינו את פרטי הכרטיס שלכם להוספת אמצעי תשלום חדש.',
+  'Enter your full domain name to load a price quote.':
+    'הזינו את שם הדומיין המלא שלכם לקבלת הצעת מחיר.',
+  Enterprise: 'אנטרפרייז',
+  'Estimate, subject to change based on usage':
+    'הערכה, עשויה להשתנות בהתאם לשימוש',
+  'Usage-based estimate; updates may take up to 4 hours.':
+    'הערכה על בסיס שימוש; העדכון עשוי לקחת עד 4 שעות.',
+  'Estimated fees from the registry before you pay.':
+    'עמלות משוערות מהמרשם לפני התשלום.',
+  'Estimated total': 'סכום משוער',
+  Expired: 'פג תוקף',
+  Expires: 'בתוקף עד',
+  'Expires soon': 'יפוג בקרוב',
+  'Expiring soon': 'יפוג בקרוב',
+  'Expiry date': 'תאריך תפוגה',
+  Explore: 'סקירה',
+  'Explore all apps available in the marketplace.':
+    'גלו את כל האפליקציות הזמינות במרקטפלייס.',
+  Export: 'ייצוא',
+  Failed: 'נכשל',
+  'Failed to add alert': 'הוספת ההתראה נכשלה',
+  'Failed to add credit': 'הוספת הקרדיט נכשלה',
+  'Failed to add payment method': 'הוספת אמצעי התשלום נכשלה',
+  'Failed to authorize payment': 'אישור התשלום נכשל',
+  'Failed to complete purchase': 'השלמת הרכישה נכשלה',
+  'Failed to complete transfer': 'השלמת ההעברה נכשלה',
+  'Failed to create OAuth secret': 'יצירת סוד ה-OAuth נכשלה',
+  'Failed to create app': 'יצירת האפליקציה נכשלה',
+  'Failed to create organization': 'יצירת הארגון נכשלה',
+  'Failed to create project': 'יצירת הפרויקט נכשלה',
+  'Failed to delete OAuth secret': 'מחיקת סוד ה-OAuth נכשלה',
+  'Failed to delete app': 'מחיקת האפליקציה נכשלה',
+  'Failed to delete domain': 'מחיקת הדומיין נכשלה',
+  'Failed to delete domains': 'מחיקת הדומיינים נכשלה',
+  'Failed to delete organization': 'מחיקת הארגון נכשלה',
+  'Failed to delete project': 'מחיקת הפרויקט נכשלה',
+  'Failed to download invoice': 'הורדת החשבונית נכשלה',
+  'Failed to initialize payment form': 'אתחול טופס התשלום נכשל',
+  'Failed to invite': 'ההזמנה נכשלה עבור',
+  'Failed to invite members': 'הזמנת החברים נכשלה',
+  'Failed to load credits': 'טעינת הקרדיטים נכשלה',
+  'Failed to load domain price': 'טעינת מחיר הדומיין נכשלה',
+  'Failed to load domain prices. Please try again.':
+    'טעינת מחירי הדומיינים נכשלה. נסו שוב.',
+  'Failed to load invoices': 'טעינת החשבוניות נכשלה',
+  'Failed to load logo files': 'טעינת קובצי הלוגו נכשלה',
+  'Failed to load members': 'טעינת החברים נכשלה',
+  'Failed to load page': 'טעינת הדף נכשלה',
+  'Failed to load projects': 'טעינת הפרויקטים נכשלה',
+  'Failed to load regions': 'טעינת האזורים נכשלה',
+  'Failed to mount payment form. Please try again.':
+    'טעינת טופס התשלום נכשלה. נסו שוב.',
+  'Failed to read file. Please try again.': 'קריאת הקובץ נכשלה. נסו שוב.',
+  'Failed to remove alert': 'הסרת ההתראה נכשלה',
+  'Failed to remove billing address': 'הסרת כתובת החיוב נכשלה',
+  'Failed to remove member': 'הסרת החבר נכשלה',
+  'Failed to remove payment method': 'הסרת אמצעי התשלום נכשלה',
+  'Failed to reorder pinned projects': 'שינוי סדר הפרויקטים המוצמדים נכשל',
+  'Failed to resend invitation': 'שליחת ההזמנה מחדש נכשלה',
+  'Failed to retry payment': 'ניסיון התשלום מחדש נכשל',
+  'Failed to start installation': 'התחלת ההתקנה נכשלה',
+  'Failed to start transfer out': 'התחלת ההעברה החוצה נכשלה',
+  'Failed to transfer domain': 'העברת הדומיין נכשלה',
+  'Failed to update auto renewal': 'עדכון החידוש האוטומטי נכשל',
+  'Failed to update backup payment method': 'עדכון אמצעי התשלום לגיבוי נכשל',
+  'Failed to update billing address': 'עדכון כתובת החיוב נכשל',
+  'Failed to update budget cap': 'עדכון תקרת התקציב נכשל',
+  'Failed to update organization name': 'עדכון שם הארגון נכשל',
+  'Failed to update payment method': 'עדכון אמצעי התשלום נכשל',
+  'Failed to update pinned projects': 'עדכון הפרויקטים המוצמדים נכשל',
+  'Failed to update plan': 'עדכון התוכנית נכשל',
+  'Failed to update role': 'עדכון התפקיד נכשל',
+  'Failed to update tax ID': 'עדכון מספר זיהוי המס נכשל',
+  'Failed to upload logo': 'העלאת הלוגו נכשלה',
+  'Failed to validate payment': 'אימות התשלום נכשל',
+  'Failed to view invoice': 'הצגת החשבונית נכשלה',
+  'Browse official apps, or explore by category.':
+    'עיינו באפליקציות רשמיות או חקרו לפי קטגוריה.',
+  'Featured apps, popular integrations, and browse by category.':
+    'אפליקציות מומלצות, אינטגרציות פופולריות ועיון לפי קטגוריה.',
+  Feedback: 'משוב',
+  'File must be': 'הקובץ חייב להיות',
+  'File selected:': 'קובץ נבחר:',
+  'File size must be less than': 'גודל הקובץ חייב להיות קטן מ',
+  'Final score:': 'ניקוד סופי:',
+  'Find integrations grouped by what they help you build.':
+    'מצאו אינטגרציות מקובצות לפי מה שהן עוזרות לכם לבנות.',
+  'Finishing up': 'מסיים',
+  'First and last name are required': 'שם פרטי ושם משפחה הם שדות חובה',
+  'First name': 'שם פרטי',
+  'For business accounts, enter your tax identification number':
+    'לחשבונות עסקיים, הזינו את מספר זיהוי המס שלכם',
+  'For more details on our plans, visit our':
+    'לפרטים נוספים על התוכניות שלנו, בקרו ב',
+  'From your current registrar': 'מהרשם הנוכחי שלכם',
+  'Full control over all aspects including team and billing.':
+    'שליטה מלאה בכל ההיבטים כולל צוות וחיוב.',
+  'Full description for the listing page': 'תיאור מלא לדף האפליקציה במרקטפלייס',
+  'Full hostname and the auth code your registrar provided.':
+    'שם מארח מלא וקוד ההרשאה שסיפק הרשם שלכם.',
+  Functions: 'פונקציות',
+  General: 'כללי',
+  'Generate an authorization code to move this domain to a different registrar. You will provide this code at the receiving registrar.':
+    'צרו קוד הרשאה כדי להעביר את הדומיין הזה לרשם אחר. את הקוד תזינו אצל הרשם הקולט.',
+  'Generate code': 'יצירת קוד',
+  'Generated by Appwrite': 'נוצר על ידי Appwrite', // pragma: allowlist secret
+  'Get dedicated support and SLAs for your organization.':
+    'קבלו תמיכה ייעודית והסכמי SLA עבור הארגון שלכם.',
+  'Get notified when your spending reaches certain thresholds of your budget.':
+    'קבלו התראה כשההוצאה שלכם מגיעה לספים מסוימים מהתקציב.',
+  'Get transfer code': 'קבלת קוד העברה',
+  'Go to next page': 'לדף הבא',
+  'Go to previous page': 'לדף הקודם',
+  'HTTPS records define which service or endpoint handles secure HTTPS traffic for your domain, typically used in SSL/TLS configurations.':
+    'רשומות HTTPS מגדירות איזה שירות או נקודת קצה מטפלים בתעבורת HTTPS מאובטחת עבור הדומיין שלכם, בדרך כלל בשימוש בהגדרות SSL/TLS.',
+  'Healthcare providers, health plans, healthcare clearinghouses, and their business associates building HIPAA-compliant applications.':
+    'ספקי בריאות, תוכניות בריאות, מסלקות בריאות ושותפיהם העסקיים שבונים אפליקציות תואמות HIPAA.',
+  'Hide code': 'הסתרת קוד',
+  Homepage: 'דף הבית',
+  'Homepage URL': 'כתובת דף הבית',
+  'Homepage:': 'דף הבית:',
+  'How users can get help with your app during OAuth2 consent.':
+    'כיצד משתמשים יכולים לקבל עזרה בנוגע לאפליקציה שלכם במהלך תהליך ההסכמה של OAuth2.',
+  'Image URLs': 'כתובות תמונות',
+  'Image uploaded': 'התמונה הועלתה',
+  Images: 'תמונות',
+  'Images uploaded': 'התמונות הועלו',
+  'Add image': 'הוספת תמונה',
+  'Remove image': 'הסרת תמונה',
+  'Consent screen image': 'תמונת מסך הסכמה',
+  'Marketplace image': 'תמונת Marketplace',
+  'Optional screenshots shown on the OAuth2 consent screen.':
+    'צילומי מסך אופציונליים שמוצגים במסך ההסכמה של OAuth2.',
+  'Optional screenshots shown on the marketplace listing.':
+    'צילומי מסך אופציונליים שמוצגים ברישום בשוק האפליקציות.',
+  'You can add up to 12 images.': 'אפשר להוסיף עד 12 תמונות.',
+  'Failed to upload image': 'העלאת התמונה נכשלה',
+  'Add tag and press Enter': 'הוסיפו תגית ולחצו Enter',
+  'Optional labels shown on the OAuth2 consent screen.':
+    'תוויות אופציונליות שמוצגות במסך ההסכמה של OAuth2.',
+  'Optional labels for marketplace discovery.':
+    'תוויות אופציונליות לגילוי בשוק האפליקציות.',
+  'Only PNG, JPEG, or WebP images are supported':
+    'נתמכות רק תמונות PNG, JPEG או WebP',
+  'Upload image': 'העלאת תמונה',
+  Tags: 'תגיות',
+  Import: 'ייבוא',
+  'Import Zone File': 'ייבוא קובץ Zone',
+  'Import zone file': 'ייבוא קובץ Zone',
+  'Init week has ended. Explore every launch and session replay.':
+    'שבוע Init הסתיים. גלו כל השקה וצפו בהקלטות המפגשים.',
+  'Initial term': 'תקופה ראשונית',
+  'Install app': 'התקנת אפליקציה',
+  'Invalid Selection': 'בחירה לא תקינה',
+  'Invalid email address': 'כתובת אימייל לא תקינה',
+  'Invalid payment method response': 'התקבלה תגובה לא תקינה מאמצעי התשלום',
+  'Invitation cancelled successfully': 'ההזמנה בוטלה בהצלחה',
+  'Invitation resent successfully': 'ההזמנה נשלחה מחדש בהצלחה',
+  Invite: 'הזמנה',
+  'Invite Members': 'הזמנת חברים',
+  'Invite member': 'הזמנת חבר',
+  'Invite organization members to collaborate on your projects':
+    'הזמינו חברי ארגון לשיתוף פעולה בפרויקטים שלכם',
+  "Invite organization members to your organization. They'll receive an email invitation to join.":
+    'הזמינו חברי ארגון לארגון שלכם. הם יקבלו הזמנה באימייל להצטרפות.',
+  Invited: 'הוזמן',
+  'Inviting...': 'מזמין...',
+  Invoice: 'חשבונית',
+  Joined: 'הצטרפות',
+  Keep: 'שמירת',
+  'Keys apply at different levels. Each key has its own permissions (scopes) to control access.':
+    'מפתחות חלים ברמות שונות. לכל מפתח יש הרשאות (scopes) משלו לשליטה בגישה.',
+  'Last name': 'שם משפחה',
+  'Launch week is live. Follow daily drops, live sessions, and giveaways.':
+    'שבוע ההשקות בשידור חי. עקבו אחרי השקות יומיות, מפגשים חיים והגרלות.',
+  'Learn more': 'למדו עוד',
+  'Learn more about DNS settings': 'מידע נוסף על הגדרות DNS',
+  'Learn more about migration': 'מידע נוסף על העברה',
+  'Leave blank to auto-generate': 'השאירו ריק ליצירה אוטומטית',
+  Legal: 'משפטי',
+  'Lightning Collector': 'אספן ברקים',
+  'Lightning Collector game arena': 'זירת המשחק אספן ברקים',
+  Live: 'Live',
+  'Loading address...': 'טוען כתובת...',
+  'Loading credits...': 'טוען קרדיטים...',
+  'Loading domains...': 'טוען דומיינים...',
+  'Loading files…': 'טוען קבצים…',
+  'Loading invoices...': 'טוען חשבוניות...',
+  'Loading members...': 'טוען חברים...',
+  'Loading organization resources...': 'טוען משאבי ארגון...',
+  'Loading organizations...': 'טוען ארגונים...',
+  'Loading payment form...': 'טוען טופס תשלום...',
+  'Loading payment methods...': 'טוען אמצעי תשלום...',
+  'Loading plan details...': 'טוען פרטי תוכנית...',
+  'Loading plans...': 'טוען תוכניות...',
+  'Loading platforms': 'טוען פלטפורמות',
+  'Loading price for': 'טוען מחיר עבור',
+  'Loading projects...': 'טוען פרויקטים...',
+  'Loading request usage': 'טוען נתוני שימוש בבקשות',
+  'Loading resources...': 'טוען משאבים...',
+  'Loading summary...': 'טוען סיכום...',
+  'Loading...': 'טוען...',
+  Logo: 'לוגו',
+  'Logo uploaded': 'הלוגו הועלה',
+  'Lower numbers have higher priority':
+    'מספרים נמוכים יותר מקבלים עדיפות גבוהה יותר',
+  'MB or less': 'MB לכל היותר',
+  MFA: 'MFA',
+  'MX records specify mail servers responsible for receiving emails for a domain, helping route email traffic to the correct mail server.':
+    'רשומות MX מציינות שרתי דואר האחראים לקבלת אימיילים עבור דומיין, ועוזרות לנתב תעבורת אימייל לשרת הדואר הנכון.',
+  'Manage addresses in account settings': 'ניהול כתובות בהגדרות החשבון',
+  'Many enterprise customers and regulated industries require SOC 2 compliance from their vendors. Access to our SOC 2 report is available on Enterprise plans.':
+    'לקוחות ארגוניים רבים ותעשיות מפוקחות דורשים ציות ל-SOC 2 מהספקים שלהם. גישה לדוח ה-SOC 2 שלנו זמינה בתוכניות Enterprise.',
+  Marketplace: 'מרקטפלייס',
+  'Marketplace is empty': 'המרקטפלייס ריק',
+  'Marketplace navigation': 'ניווט מרקטפלייס',
+  'Marketplace section': 'מקטע מרקטפלייס',
+  'Max size:': 'גודל מרבי:',
+  Member: 'חבר',
+  'Member limit reached': 'הגעתם למגבלת החברים',
+  'Member limit reached for your plan.': 'הגעתם למגבלת החברים בתוכנית שלכם.',
+  'Member removed successfully': 'החבר הוסר בהצלחה',
+  Members: 'חברים',
+  'Members who are not part of the destination organization must be invited to gain access to this domain.':
+    'חברים שאינם חלק מארגון היעד יצטרכו לקבל הזמנה כדי לקבל גישה לדומיין הזה.',
+  Message: 'הודעה',
+  Messaging: 'הודעות',
+  'Monthly Charges for Extra Organization Members':
+    'חיובים חודשיים עבור חברי ארגון נוספים',
+  'Mon–Fri': "ב'-ו'",
+  More: 'עוד',
+  'More apps': 'אפליקציות נוספות',
+  Move: 'העברה',
+  'Move to': 'העברה אל',
+  'Multi-factor authentication enabled': 'אימות רב-שלבי מופעל',
+  'Multi-factor authentication not enabled': 'אימות רב-שלבי לא מופעל',
+  'My Organization': 'הארגון שלי',
+  'My apps': 'האפליקציות שלי',
+  'My integration': 'האינטגרציה שלי',
+  "NS records define the authoritative DNS servers for a domain, directing queries to the servers that manage the domain's DNS settings.":
+    'רשומות NS מגדירות את שרתי ה-DNS המוסמכים עבור דומיין, ומפנות שאילתות לשרתים שמנהלים את הגדרות ה-DNS של הדומיין.',
+  Name: 'שם',
+  'Name and descriptions shown on the marketplace listing and OAuth2 consent screen.':
+    'השם והתיאורים המוצגים בדף האפליקציה במרקטפלייס ובמסך ההסכמה של OAuth2.',
+  'Name is required': 'שם הוא שדה חובה',
+  'Name must be no longer than': 'השם חייב להיות באורך של עד',
+  Nameserver: 'שרת שמות',
+  Nameservers: 'שרתי שמות',
+  'Nameservers updated. Please wait for DNS propagation.':
+    'שרתי השמות עודכנו. המתינו להפצת ה-DNS.',
+  'Need 24/7 or enterprise support?': 'זקוקים לתמיכה 24/7 או לתמיכה ארגונית?',
+  'Need compliance, custom SLAs, or volume pricing?':
+    'זקוקים לציות, הסכמי SLA מותאמים או תמחור לפי היקף?',
+  Network: 'רשת',
+  'Never embed OAuth secrets in mobile apps, SPAs, or public repositories. Use environment variables such as':
+    'לעולם אל תטמיעו סודות OAuth באפליקציות מובייל, ב-SPA או ב-repos ציבוריים. השתמשו במשתני סביבה כגון',
+  Next: 'הבא',
+  'Next page': 'הדף הבא',
+  'Next payment of': 'התשלום הבא בסך',
+  'Next projects page': 'דף הפרויקטים הבא',
+  No: 'לא',
+  'No DNS records': 'אין רשומות DNS',
+  'No OAuth secrets': 'אין סודות OAuth',
+  'No additional apps in the catalog yet.':
+    'אין עדיין אפליקציות נוספות בקטלוג.',
+  'No apps in this section': 'אין אפליקציות במקטע זה',
+  'No apps match your search': 'אין אפליקציות התואמות לחיפוש שלכם',
+  'No apps published yet': 'לא פורסמו עדיין אפליקציות',
+  'No apps yet': 'אין עדיין אפליקציות',
+  'No backup payment method': 'אין אמצעי תשלום לגיבוי',
+  'No billing address on file': 'אין כתובת חיוב שמורה',
+  'No billing addresses on file.': 'אין כתובות חיוב שמורות.',
+  'No billing alerts configured': 'לא הוגדרו התראות חיוב',
+  'No domains yet': 'אין עדיין דומיינים',
+  'No files match your search': 'אין קבצים התואמים לחיפוש שלכם',
+  'No invoices': 'אין חשבוניות',
+  'No invoices yet. Once you have made a payment, your invoices will appear here.':
+    'אין עדיין חשבוניות. לאחר שתבצעו תשלום, החשבוניות שלכם יופיעו כאן.',
+  'No items match your search.': 'אין פריטים התואמים לחיפוש שלכם.',
+  'No logo files yet': 'אין עדיין קובצי לוגו',
+  'No members found': 'לא נמצאו חברים',
+  'No other organizations available': 'אין ארגונים אחרים זמינים',
+  'No payment method available. Please add a payment method first.':
+    'אין אמצעי תשלום זמין. הוסיפו אמצעי תשלום תחילה.',
+  'No payment method on file': 'אין אמצעי תשלום שמור',
+  'No payment methods available': 'אין אמצעי תשלום זמינים',
+  'No plans available. Please try refreshing the page.':
+    'אין תוכניות זמינות. נסו לרענן את הדף.',
+  'No projects to review. Confirm your member and domain selections above, then continue.':
+    'אין פרויקטים לסקירה. אשרו את בחירת החברים והדומיינים למעלה, ואז המשיכו.',
+  'No projects yet': 'אין עדיין פרויקטים',
+  'No projects, members, domains, or resources will be deleted.':
+    'לא יימחקו פרויקטים, חברים, דומיינים או משאבים.',
+  'No records match your filters': 'אין רשומות התואמות למסננים שלכם',
+  'No regions available': 'אין אזורים זמינים',
+  'No resource types match your search.':
+    'אין סוגי משאבים התואמים לחיפוש שלכם.',
+  None: 'ללא',
+  'Not transferrable': 'לא ניתן להעברה',
+  'OAuth apps': 'אפליקציות OAuth',
+  'OAuth client': 'לקוח OAuth',
+  'OAuth secret created': 'סוד ה-OAuth נוצר',
+  'OAuth secret deleted': 'סוד ה-OAuth נמחק',
+  'OAuth secrets': 'סודות OAuth',
+  'OAuth2 apps published by your organization to the marketplace.':
+    'אפליקציות OAuth2 שפורסמו על ידי הארגון שלכם למרקטפלייס.',
+  Official: 'רשמי',
+  'We invite app makers to contact us and get your integrations published.':
+    'אנחנו מזמינים יוצרי אפליקציות לפנות אלינו ולפרסם את האינטגרציות שלהם.',
+  'Add your first app to get started.':
+    'הוסיפו את האפליקציה הראשונה שלכם כדי להתחיל.',
+  Offline: 'לא מקוון',
+  'One line summary': 'תקציר בשורה אחת',
+  'One-time display': 'תצוגה חד-פעמית',
+  Online: 'מקוון',
+  'Only PNG logos are supported': 'רק קובצי לוגו בפורמט PNG נתמכים',
+  'Only one free organization is allowed per account.':
+    'מותר ארגון חינמי אחד בלבד לכל חשבון.',
+  'Only one free organization per account.': 'ארגון חינמי אחד בלבד לכל חשבון.',
+  Open: 'פתיחה',
+  'Open in new tab': 'פתיחה בכרטיסייה חדשה',
+  'Open in new window': 'פתיחה בחלון חדש',
+  'Optional comment': 'הערה אופציונלית',
+  Or: 'או',
+  'Or add a new address': 'או הוסיפו כתובת חדשה',
+  'Or add a new card': 'או הוסיפו כרטיס חדש',
+  'Order summary': 'סיכום הזמנה',
+  'Org keys': 'מפתחות ארגון',
+  'Organization ID': 'מזהה ארגון',
+  'Organization being downgraded': 'הארגון בתהליך שנמוך',
+  'Organization created successfully': 'הארגון נוצר בהצלחה',
+  'Organization credits': 'קרדיטים של הארגון',
+  'Organization deleted successfully': 'הארגון נמחק בהצלחה',
+  'Organization is required': 'ארגון הוא שדה חובה',
+  'Organization name': 'שם הארגון',
+  'Organization name updated successfully': 'שם הארגון עודכן בהצלחה',
+  'Partners keys': 'מפתחות שותפים',
+  'Authenticate Console APIs from your backend. Create and manage projects, members, and domains across this organization.':
+    'אמתו קריאות Console API מהבקאנד שלכם. צרו ונהלו פרויקטים, חברים ודומיינים בכל הארגון.',
+  'Project keys vs Partners keys': 'מפתחות פרויקט מול מפתחות שותפים',
+  'Partners keys cannot access data inside a project. For databases, storage, users, and functions, create a project key instead.':
+    'מפתחות שותפים לא יכולים לגשת לנתונים בתוך פרויקט. למסדי נתונים, אחסון, משתמשים ופונקציות, צרו מפתח פרויקט.',
+  'Open a project, go to API keys in the project sidebar, and create a key with the scopes your backend needs.':
+    'פתחו פרויקט, עברו למפתחות API בסרגל הצד של הפרויקט, וצרו מפתח עם היקפי הגישה שהבקאנד שלכם צריך.',
+  'No Partners keys yet': 'אין עדיין מפתחות שותפים',
+  'Create your first Partners key to authenticate Console APIs from your backend.':
+    'צרו את מפתח השותפים הראשון שלכם כדי לאמת קריאות Console API מהבקאנד.',
+  'Learn more about Partners key scopes':
+    'למידע נוסף על היקפי גישה של מפתחות שותפים',
+  'Create Partners key': 'יצירת מפתח שותפים',
+  'Create a Partners key for Console automation':
+    'צרו מפתח שותפים לאוטומציה של Console',
+  'Partners keys for partner platforms': 'מפתחות שותפים לפלטפורמות שותפים',
+  'Organization-level keys will be manageable here once available. Meanwhile, use project keys for server-side access.':
+    'מפתחות ברמת הארגון יהיו ניתנים לניהול כאן כשיהיו זמינים. בינתיים, השתמשו במפתחות פרויקט לגישה בצד השרת.',
+  Overview: 'סקירה כללית',
+  Owner: 'בעלים',
+  Page: 'דף',
+  Partners: 'שותפים',
+  Paused: 'מושהה',
+  Locked: 'נעול',
+  'Pay and register': 'תשלום ורישום',
+  Payment: 'תשלום',
+  'Payment authorized': 'התשלום אושר',
+  'Payment authorization required': 'נדרש אישור תשלום',
+  'Payment confirmed': 'התשלום אושר',
+  'Payment confirmed successfully': 'התשלום אושר בהצלחה',
+  'Payment has been successfully processed': 'התשלום עובד בהצלחה',
+  'Payment failed': 'התשלום נכשל',
+  'Payment failed - organization has restricted access':
+    'התשלום נכשל, לארגון יש גישה מוגבלת',
+  'Payment form not ready. Please try again.':
+    'טופס התשלום אינו מוכן. נסו שוב.',
+  'Payment history': 'היסטוריית תשלומים',
+  'Payment method': 'אמצעי תשלום',
+  'Payment method failed': 'אמצעי התשלום נכשל',
+  'Payment method has been added to your organization':
+    'אמצעי התשלום נוסף לארגון שלכם',
+  'Payment method removed': 'אמצעי התשלום הוסר',
+  'Payment method required': 'נדרש אמצעי תשלום',
+  'Payment methods': 'אמצעי תשלום',
+  'Payment retry initiated': 'ניסיון תשלום חוזר החל',
+  Payments: 'תשלומים',
+  Pending: 'ממתין',
+  'Pending admin approval': 'ממתין לאישור מנהל',
+  'Pending owner approval': 'ממתין לאישור בעלים',
+  'Pending registry': 'ממתין למרשם',
+  'Permanently delete this app and revoke all associated tokens. This action cannot be undone.':
+    'מחקו לצמיתות את האפליקציה הזו ובטלו את כל הטוקנים המשויכים. פעולה זו אינה ניתנת לביטול.',
+  'Permanently delete this domain and all associated DNS records.':
+    'מחקו לצמיתות את הדומיין הזה ואת כל רשומות ה-DNS המשויכות.',
+  'Permanently delete this organization and all associated data. This action cannot be undone.':
+    'מחקו לצמיתות את הארגון הזה ואת כל הנתונים המשויכים. פעולה זו אינה ניתנת לביטול.',
+  'Phone (E.164)': 'טלפון (E.164)',
+  'Phone is required (E.164, e.g. +15551234567)':
+    'טלפון הוא שדה חובה (E.164, למשל +15551234567)',
+  Pin: 'הצמדה',
+  'Pin project': 'הצמדת פרויקט',
+  Pinned: 'מוצמד',
+  'Plan Changes Restricted': 'שינויי תוכנית מוגבלים',
+  'Plan changes are not available for self-service. Please contact support to change your plan.':
+    'שינויי תוכנית אינם זמינים בשירות עצמי. צרו קשר עם התמיכה כדי לשנות את התוכנית שלכם.',
+  'Plan comparison': 'השוואת תוכניות',
+  'Plan downgrade scheduled': 'שנמוך התוכנית תוזמן',
+  'Plan updated successfully': 'התוכנית עודכנה בהצלחה',
+  Platforms: 'פלטפורמות',
+  'Play again': 'משחק חוזר',
+  'Please enter a cardholder name': 'הזינו שם בעל כרטיס',
+  'Please enter a coupon code': 'הזינו קוד קופון',
+  'Please enter a promo code': 'הזינו קוד קופון',
+  'Please fill in all required fields': 'מלאו את כל שדות החובה',
+  'Please select': 'בחרו',
+  'Please select a .txt file': 'בחרו קובץ .txt',
+  'Please select a region': 'בחרו אזור',
+  'Please select a state': 'בחרו מדינה/מחוז',
+  'Please select exactly': 'בחרו בדיוק',
+  'Please share anything that influenced your decision to downgrade...':
+    'שתפו כל דבר שהשפיע על ההחלטה שלכם לשנמך...',
+  'Please try again.': 'נסו שוב.',
+  'Policy links shown on the OAuth2 consent screen.':
+    'קישורי מדיניות המוצגים במסך ההסכמה של OAuth2.',
+  'Popular integrations from the marketplace catalog.':
+    'אינטגרציות פופולריות מקטלוג המרקטפלייס.',
+  Port: 'פורט',
+  'Post-logout redirect URIs': 'כתובות URI להפניה לאחר התנתקות',
+  'Postal code': 'מיקוד',
+  Premium: 'פרימיום',
+  'Preparing your organization dashboard.': 'מכין את לוח הבקרה של הארגון שלכם.',
+  Preset: 'Preset',
+  Previous: 'הקודם',
+  'Previous page': 'הדף הקודם',
+  'Previous projects page': 'דף הפרויקטים הקודם',
+  'Pricing is confirmed when you submit payment.':
+    'המחיר מאושר בעת ביצוע התשלום.',
+  'Pricing is confirmed when you submit payment. Premium and specialty names may require manual review from the registry.':
+    'המחיר מאושר בעת ביצוע התשלום. שמות פרימיום ושמות מיוחדים עשויים לדרוש בדיקה ידנית של המרשם.',
+  Primary: 'ראשי',
+  'Primary payment method updated': 'אמצעי התשלום הראשי עודכן',
+  Priority: 'עדיפות',
+  'Priority for SRV record': 'עדיפות לרשומת SRV',
+  'Privacy policy': 'מדיניות פרטיות',
+  Project: 'פרויקט',
+  'Project (optional)': 'פרויקט (אופציונלי)',
+  'Project ID': 'מזהה פרויקט',
+  'Project breakdown': 'פירוט לפי פרויקט',
+  'Project created successfully': 'הפרויקט נוצר בהצלחה',
+  'Project keys': 'מפתחות פרויקט',
+  'Project pinned': 'הפרויקט הוצמד',
+  'Project unpinned': 'הצמדת הפרויקט בוטלה',
+  'Projects that will be deleted:': 'פרויקטים שיימחקו:',
+  'Promo code': 'קוד קופון',
+  Public: 'ציבורי',
+  'Public client': 'לקוח ציבורי',
+  'Public clients require PKCE. Confidential clients use a client secret.':
+    'לקוחות ציבוריים דורשים PKCE. לקוחות חסויים משתמשים בסוד לקוח.',
+  'Public clients use PKCE and do not require OAuth secrets. Switch to a confidential client on the OAuth client tab if you need server-side secret authentication.':
+    'לקוחות ציבוריים משתמשים ב-PKCE ואינם דורשים סודות OAuth. עברו ללקוח חסוי בלשונית לקוח OAuth אם אתם זקוקים לאימות סוד בצד השרת.',
+  'Marketplace page': 'דף המרקטפלייס',
+  'Public listing page for this app in the marketplace.':
+    'דף הרישום הציבורי של האפליקציה במרקטפלייס.',
+  'Control whether this app can be used to authorize users.':
+    'קבעו האם ניתן להשתמש באפליקציה לאימות משתמשים.',
+  'Published apps from other organizations will appear here.':
+    'אפליקציות שפורסמו על ידי ארגונים אחרים יופיעו כאן.',
+  'Publisher guidelines': 'הנחיות למפרסמים',
+  'Purchase could not be completed': 'לא ניתן היה להשלים את הרכישה',
+  'Purchase could not be completed. Please try again.':
+    'לא ניתן היה להשלים את הרכישה. נסו שוב.',
+  'Read-only access across all resources.': 'גישת קריאה בלבד לכל המשאבים.',
+  'Ready to start': 'מוכן להתחלה',
+  Realtime: 'Realtime',
+  Recap: 'סיכום',
+  'Rewatch sessions and explore every launch from Init week.':
+    'צפו שוב במפגשים ובכל ההשקות משבוע Init.',
+  Recommended: 'מומלץ',
+  'Recurring Charge': 'חיוב חוזר',
+  'Redirect URIs': 'כתובות URI להפניה',
+  'Redirect URIs and client type for OAuth2 and OpenID Connect.':
+    'כתובות URI להפניה וסוג לקוח עבור OAuth2 ו-OpenID Connect.',
+  Region: 'אזור',
+  'Registrant contact': 'פרטי בעל הדומיין',
+  'Registrant details must match your domain registry requirements.':
+    'פרטי בעל הדומיין חייבים להתאים לדרישות מרשם הדומיינים.',
+  Registrar: 'רשם',
+  Registration: 'רישום',
+  'Registry transfer': 'העברה במרשם',
+  Remaining: 'נותר',
+  Remove: 'הסרה',
+  'Remove billing address': 'הסרת כתובת חיוב',
+  'Remove coupon': 'הסרת קופון',
+  'Remove from Team': 'הסרה מהארגון',
+  'Remove from team': 'הסרה מהארגון',
+  'Removing members that are not kept for the target plan.':
+    'מסיר חברים שלא נשמרו עבור תוכנית היעד.',
+  'Removing projects that are not kept for the target plan.':
+    'מסיר פרויקטים שלא נשמרו עבור תוכנית היעד.',
+  'Removing resources that are not kept for the target plan.':
+    'מסיר משאבים שלא נשמרו עבור תוכנית היעד.',
+  'Removing the organization you chose not to keep.':
+    'מסיר את הארגון שבחרתם לא לשמור.',
+  Renewal: 'חידוש',
+  'Renewal price': 'מחיר חידוש',
+  Replace: 'החלפה',
+  'Replace billing address': 'החלפת כתובת חיוב',
+  'Replace the existing billing address for your organization.':
+    'החליפו את כתובת החיוב הקיימת של הארגון שלכם.',
+  'Replace with an existing card': 'החלפה בכרטיס קיים',
+  'Reply to the confirmation email to add more context or attachments.':
+    'השיבו לאימייל האישור כדי להוסיף הקשר או קבצים מצורפים.',
+  'Request a transfer into this organization using the authorization code from your current registrar. Registry fees are shown in the summary as you type the domain name.':
+    'בקשו העברה לארגון הזה באמצעות קוד ההרשאה מהרשם הנוכחי שלכם. עמלות המרשם מוצגות בסיכום בזמן הקלדת שם הדומיין.',
+  Requests: 'בקשות',
+  Resend: 'שליחה מחדש',
+  'Resending...': 'שולח מחדש...',
+  Resources: 'משאבים',
+  'Resources by project': 'משאבים לפי פרויקט',
+  'Resources in all projects': 'משאבים בכל הפרויקטים',
+  'Resources in kept projects': 'משאבים בפרויקטים שנשמרו',
+  'Resources removed to fit the target plan limits.':
+    'משאבים שהוסרו כדי להתאים למגבלות תוכנית היעד.',
+  Restart: 'התחלה מחדש',
+  Retry: 'ניסיון חוזר',
+  'Retry Verification': 'אימות מחדש',
+  'Retry payment': 'ניסיון תשלום חוזר',
+  'Retry your payment to avoid service interruptions with your projects.':
+    'נסו שוב את התשלום כדי למנוע הפרעות בשירות בפרויקטים שלכם.',
+  'Retry verification': 'אימות מחדש',
+  'Retrying...': 'מנסה שוב...',
+  'Review charges before you complete payment.':
+    'סקרו את החיובים לפני השלמת התשלום.',
+  Role: 'תפקיד',
+  'Role updated successfully': 'התפקיד עודכן בהצלחה',
+  'Run ended': 'הריצה הסתיימה',
+  "SOC 2 Type II is an auditing standard that verifies a service provider's security controls over an extended period. It demonstrates that":
+    'SOC 2 Type II הוא תקן ביקורת המאמת את בקרות האבטחה של ספק שירות לאורך תקופה ממושכת. הוא מוכיח כי',
+  'SOC 2 type II report': 'דוח SOC 2 Type II',
+  'SRV records specify the location (hostname and port number) of servers for specific services, directing traffic to particular servers based on service types.':
+    'רשומות SRV מציינות את המיקום (שם מארח ומספר פורט) של שרתים עבור שירותים ספציפיים, ומנתבות תעבורה לשרתים מסוימים לפי סוגי שירות.',
+  Save: 'שמירה',
+  Score: 'ניקוד',
+  Search: 'חיפוש',
+  'Search app settings...': 'חיפוש בהגדרות האפליקציה',
+  'Search apps...': 'חיפוש אפליקציות...',
+  'Search domains...': 'חיפוש דומיינים...',
+  'Search files': 'חיפוש קבצים',
+  'Search members...': 'חיפוש חברים...',
+  'Search projects...': 'חיפוש פרויקטים...',
+  'Search resource types...': 'חיפוש סוגי משאבים...',
+  'Secret ID': 'מזהה סוד',
+  'Secret value': 'ערך הסוד',
+  'Securing your subscription with your payment method.':
+    'מסדיר את המנוי שלכם באמצעות אמצעי התשלום.',
+  Select: 'בחרו',
+  'Select a billing address': 'בחרו כתובת חיוב',
+  'Select a country': 'בחרו מדינה',
+  'Select a payment method': 'בחרו אמצעי תשלום',
+  'Select a plan': 'בחרו תוכנית',
+  'Select a plan to see comparison': 'בחרו תוכנית לצפייה בהשוואה',
+  'Select a plan to see summary': 'בחרו תוכנית לצפייה בסיכום',
+  'Select a project to view resources.': 'בחרו פרויקט לצפייה במשאבים.',
+  'Select a region': 'בחרו אזור',
+  'Select a resource type to review items.': 'בחרו סוג משאב לסקירת פריטים.',
+  'Select a state': 'בחרו מדינה/מחוז',
+  'Select an email provider preset to automatically add the required DNS records.':
+    'בחרו תבנית ספק אימייל להוספה אוטומטית של רשומות ה-DNS הנדרשות.',
+  'Select an organization to invite members.': 'בחרו ארגון להזמנת חברים.',
+  'Select an organization you own to move this domain.':
+    'בחרו ארגון שבבעלותכם להעברת הדומיין הזה.',
+  'Select app logo': 'בחירת לוגו אפליקציה',
+  'Select billing address': 'בחירת כתובת חיוב',
+  'Select destination': 'בחירת יעד',
+  'Select logo': 'בחירת לוגו',
+  'Select payment method': 'בחירת אמצעי תשלום',
+  'Select plan': 'בחירת תוכנית',
+  'Select projects above to review their resources.':
+    'בחרו פרויקטים למעלה כדי לסקור את המשאבים שלהם.',
+  'Select projects to keep': 'בחרו פרויקטים לשמירה',
+  'Select role': 'בחירת תפקיד',
+  'Select threshold': 'בחירת סף',
+  'Selected Plan': 'תוכנית נבחרת',
+  'Selected:': 'נבחרו:',
+  Selection: 'בחירה',
+  'Served by Appwrite': 'מוגש על ידי Appwrite', // pragma: allowlist secret
+  'Server-side only': 'צד שרת בלבד',
+  'Set a monthly spending limit': 'הגדירו מגבלת הוצאה חודשית',
+  'Set as default payment method': 'הגדירו כאמצעי התשלום הראשי',
+  'Setting up your organization': 'מגדיר את הארגון שלכם',
+  Settings: 'הגדרות',
+  'Short description': 'תיאור קצר',
+  'Short summary for listings and consent':
+    'תקציר קצר לדף האפליקציה ולמסך ההסכמה',
+  'Show code': 'הצגת קוד',
+  'Show less': 'הצגת פחות',
+  Showing: 'מציג',
+  Sites: 'אתרים',
+  Slug: 'מזהה כתובת (slug)',
+  'Space or ↑ to jump · R to restart · click arena to jump':
+    'רווח או ↑ לקפיצה · R להתחלה מחדש · לחצו על הזירה לקפיצה',
+  'Space or ↑ to jump · R to restart · tap arena to jump':
+    'רווח או ↑ לקפיצה · R להתחלה מחדש · הקישו על הזירה לקפיצה',
+  'Start another run to beat your best.':
+    'התחילו ריצה נוספת כדי לשבור את השיא שלכם.',
+  'Start run': 'התחלת ריצה',
+  'Start transfer': 'התחלת העברה',
+  State: 'מדינה/מחוז',
+  Status: 'סטטוס',
+  Storage: 'אחסון',
+  'Store this secret in your deployment environment before continuing. Active sessions using a deleted secret will fail token refresh immediately.':
+    'אחסנו את הסוד הזה בסביבת הפריסה שלכם לפני שתמשיכו. סשנים פעילים שמשתמשים בסוד שנמחק ייכשלו מיד ברענון טוקנים.',
+  'Street address': 'כתובת רחוב',
+  'Stripe payment processing is not configured. Please ensure VITE_STRIPE_PUBLISHABLE_KEY is set in your environment.':
+    'עיבוד תשלומים של Stripe אינו מוגדר. ודאו ש-VITE_STRIPE_PUBLISHABLE_KEY מוגדר בסביבה שלכם.',
+  Subject: 'נושא',
+  'Subject and message are required.': 'נושא והודעה הם שדות חובה.',
+  'Submit ticket': 'שליחת פנייה',
+  'Successfully added': 'נוספו בהצלחה',
+  'Successfully deleted': 'נמחקו בהצלחה',
+  'Successfully invited': 'הוזמנו בהצלחה',
+  Summary: 'סיכום',
+  'Summary of everything that will be deleted when you change plan.':
+    'סיכום של כל מה שיימחק בעת שינוי התוכנית.',
+  Support: 'תמיכה',
+  'Support hours': 'שעות תמיכה',
+  'Support page': 'דף תמיכה',
+  'Switch organization': 'החלפת ארגון',
+  'TXT records store arbitrary text data in DNS, commonly used for verification purposes, such as domain ownership or email security settings.':
+    'רשומות TXT מאחסנות נתוני טקסט חופשי ב-DNS, ומשמשות בדרך כלל לצורכי אימות, כמו בעלות על דומיין או הגדרות אבטחת אימייל.',
+  Tagline: 'סלוגן',
+  Taken: 'תפוס',
+  'Tax ID': 'מספר זיהוי מס',
+  'Tax ID (Optional)': 'מספר זיהוי מס (אופציונלי)',
+  'Tax ID updated': 'מספר זיהוי המס עודכן',
+  'Temporarily available in the old console': 'זמין זמנית בקונסול הישן',
+  'Team ID is required': 'מזהה צוות הוא שדה חובה',
+  'Terms of service': 'תנאי שירות',
+  'The address will remain on your account; only the link to this organization will be removed.':
+    'הכתובת תישאר בחשבון שלכם; רק הקישור לארגון הזה יוסר.',
+  'The card was declined or authentication was cancelled. Please try again or use a different card.':
+    'הכרטיס נדחה או שהאימות בוטל. נסו שוב או השתמשו בכרטיס אחר.',
+  'The target plan allows': 'תוכנית היעד מאפשרת',
+  'There are no billing addresses on your account. Add one below.':
+    'אין כתובות חיוב בחשבון שלכם. הוסיפו אחת למטה.',
+  'They will not be able to join the organization.':
+    'הם לא יוכלו להצטרף לארגון.',
+  'This action cannot be undone.': 'פעולה זו אינה ניתנת לביטול.',
+  'This app is enabled and can authorize users.':
+    'האפליקציה מופעלת ויכולה לאמת משתמשים.',
+  'This app is disabled and cannot authorize users.':
+    'האפליקציה מושבתת ואינה יכולה לאמת משתמשים.',
+  'This app may have been deleted or you do not have access.':
+    'ייתכן שהאפליקציה נמחקה או שאין לכם גישה.',
+  'This entire organization will be deleted, including all of its projects and resources.':
+    'כל הארגון הזה יימחק, כולל כל הפרויקטים והמשאבים שלו.',
+  'Downgrading to the Free plan is temporarily unavailable here while we refine the experience. You can complete this change in the old console.':
+    'שנמוך לתוכנית Free אינו זמין כאן כרגע בזמן שאנחנו משפרים את החוויה. אפשר להשלים את השינוי בקונסול הישן.',
+  'This invoice is missing authentication details.':
+    'בחשבונית זו חסרים פרטי אימות.',
+  'This name is listed as premium. Final transfer pricing is confirmed when you submit payment.':
+    'השם הזה רשום כפרימיום. מחיר ההעברה הסופי מאושר בעת ביצוע התשלום.',
+  'This organization has no projects.': 'לארגון הזה אין פרויקטים.',
+  'This usually takes a few seconds. Please keep this window open.':
+    'זה בדרך כלל לוקח כמה שניות. השאירו את החלון הזה פתוח.',
+  'This usually takes a few seconds to a couple of minutes. Please keep this window open.':
+    'זה בדרך כלל לוקח בין כמה שניות לכמה דקות. השאירו את החלון הזה פתוח.',
+  'This will add': 'פעולה זו תוסיף',
+  'This will generate a transfer authorization code for your domain. Keep it private until you use it at the receiving registrar.':
+    'פעולה זו תיצור קוד הרשאה להעברת הדומיין שלכם. שמרו אותו בסוד עד לשימוש אצל הרשם הקולט.',
+  'Ticket submitted': 'הפנייה נשלחה',
+  'Tickets can be submitted anytime; we reply during support hours.':
+    'ניתן לשלוח פניות בכל עת; אנו משיבים בשעות התמיכה.',
+  'Time to live in seconds (default: 3600)':
+    'זמן החיים (TTL) בשניות (ברירת מחדל: 3600)',
+  'To remove this card, replace it with another payment method on your account first. Once a new primary card is set, you can remove this one.':
+    'כדי להסיר את הכרטיס הזה, החליפו אותו תחילה באמצעי תשלום אחר בחשבון שלכם. לאחר הגדרת כרטיס ראשי חדש, תוכלו להסיר את הכרטיס הזה.',
+  'Token refresh and authorization flows using this secret will stop working immediately. This cannot be undone.':
+    'רענון טוקנים ותהליכי הרשאה שמשתמשים בסוד הזה יפסיקו לעבוד מיד. פעולה זו אינה ניתנת לביטול.',
+  Total: 'סה"כ',
+  'Total due': 'סה"כ לתשלום',
+  'Total due now': 'סה"כ לתשלום כעת',
+  'Total due today': 'סה"כ לתשלום היום',
+  'Total impact': 'השפעה כוללת',
+  Transfer: 'העברה',
+  'Transfer an existing domain': 'העברת דומיין קיים',
+  'Transfer authorization code generated': 'קוד ההרשאה להעברה נוצר',
+  'Transfer cancelled': 'ההעברה בוטלה',
+  'Transfer completed': 'ההעברה הושלמה',
+  'Transfer could not be completed': 'לא ניתן היה להשלים את ההעברה',
+  'Transfer could not be completed. Please try again.':
+    'לא ניתן היה להשלים את ההעברה. נסו שוב.',
+  'Transfer domain in': 'העברת דומיין אל Appwrite', // pragma: allowlist secret
+  'Transfer fees are charged to the selected payment method.':
+    'עמלות ההעברה נגבות מאמצעי התשלום שנבחר.',
+  'Transfer in': 'העברה אל Appwrite', // pragma: allowlist secret
+  'Transfer in progress': 'העברה בתהליך',
+  'Transfer payment confirmed': 'תשלום ההעברה אושר',
+  'Transfer summary': 'סיכום העברה',
+  'Transfer to another registrar': 'העברה לרשם אחר',
+  'Transfer unavailable': 'העברה אינה זמינה',
+  Transferrable: 'ניתן להעברה',
+  'Try adjusting or clearing filters to see more records':
+    'נסו לשנות או לנקות מסננים כדי לראות רשומות נוספות',
+  'Try adjusting or clearing your search.':
+    'נסו לשנות או לנקות את החיפוש שלכם.',
+  'Try again': 'נסו שוב',
+  Type: 'סוג',
+  'Type at least 2 characters to see suggestions':
+    'הקלידו לפחות 2 תווים לקבלת הצעות',
+  'URLs shown on the OAuth2 consent screen.':
+    'כתובות URL המוצגות במסך ההסכמה של OAuth2.',
+  'Unable to load estimation': 'לא ניתן לטעון את ההערכה',
+  'Unable to load estimation.': 'לא ניתן לטעון את ההערכה.',
+  Unavailable: 'לא זמין',
+  'Unit, floor, etc.': "דירה, קומה וכו'",
+  'Unknown Project': 'פרויקט לא ידוע',
+  'Unknown error': 'שגיאה לא ידועה',
+  Unlimited: 'ללא הגבלה',
+  'Unnamed app': 'אפליקציה ללא שם',
+  Unpin: 'ביטול הצמדה',
+  'Unpin project': 'ביטול הצמדת פרויקט',
+  'Unselected domains will be deleted.': 'דומיינים שלא נבחרו יימחקו.',
+  'Unselected members will be removed from the organization.':
+    'חברים שלא נבחרו יוסרו מהארגון.',
+  'Unselected projects and everything in them will be deleted.':
+    'פרויקטים שלא נבחרו וכל מה שבתוכם יימחקו.',
+  Unverified: 'לא מאומת',
+  Update: 'עדכון',
+  'Update DNS Record': 'עדכון רשומת DNS',
+  'Update Record': 'עדכון רשומה',
+  'Update Role': 'עדכון תפקיד',
+  'Update role': 'עדכון תפקיד',
+  'Update the nameservers of your domain':
+    'עדכנו את שרתי השמות של הדומיין שלכם',
+  'Update the role for': 'עדכון התפקיד של',
+  // pragma: allowlist secret
+  "Update your domain's nameservers to point to Appwrite":
+    'עדכנו את שרתי השמות של הדומיין שלכם כך שיצביעו על Appwrite', // pragma: allowlist secret
+  "Update your organization's display name. This will be visible to all organization members.":
+    'עדכנו את שם התצוגה של הארגון שלכם. הוא יהיה גלוי לכל חברי הארגון.',
+  'Updating plan': 'מעדכן תוכנית',
+  'Updating your plan': 'מעדכן את התוכנית שלכם',
+  Upgrade: 'שדרוג',
+  'Upgrade to add credits.': 'שדרגו כדי להוסיף קרדיטים.',
+  'Upload PNG': 'העלאת PNG',
+  'Upload a DNS zone file (.txt format) to import DNS records. Maximum file size is 5MB.':
+    'העלו קובץ DNS zone (בפורמט txt.) לייבוא רשומות DNS. גודל הקובץ המרבי הוא 5MB.',
+  'Upload a PNG logo for the OAuth2 consent screen.':
+    'העלו לוגו PNG למסך ההסכמה של OAuth2.',
+  'Upload a PNG logo for the consent screen and marketplace.':
+    'העלו לוגו PNG למסך ההסכמה ולשוק האפליקציות.',
+  'Upload a PNG logo to get started.': 'העלו לוגו PNG כדי להתחיל.',
+  Usage: 'שימוש',
+  'Usage details': 'פרטי שימוש',
+  'Usage unavailable': 'נתוני שימוש אינם זמינים',
+  'Use @ for the root domain, or enter a subdomain (e.g., www, mail)':
+    'השתמשו ב-@ עבור הדומיין הראשי, או הזינו תת-דומיין (למשל www, mail)',
+  'Use an existing card or add a new one for this organization.':
+    'השתמשו בכרטיס קיים או הוסיפו חדש עבור הארגון הזה.',
+  'Use as primary': 'הגדרה כראשי',
+  'Use existing address': 'שימוש בכתובת קיימת',
+  'Use existing card': 'שימוש בכרטיס קיים',
+  // pragma: allowlist secret
+  'Use this ID when integrating with the Appwrite API, webhooks, or SDKs. Support may also ask for this ID when assisting with issues.':
+    'השתמשו במזהה הזה בעת אינטגרציה עם Appwrite API, webhooks או ערכות SDK. גם התמיכה עשויה לבקש את המזהה הזה בעת טיפול בבעיות.', // pragma: allowlist secret
+  'Use this address': 'שימוש בכתובת הזו',
+  'Used for registry contact and invoicing.':
+    'משמש כפרטי הקשר במרשם ולהנפקת חשבוניות.',
+  'Used in the public listing URL': 'משמש בכתובת הציבורית של דף האפליקציה',
+  Value: 'ערך',
+  Verified: 'מאומת',
+  Verify: 'אימות',
+  'View all apps': 'צפייה בכל האפליקציות',
+  'View charges breakdown': 'צפייה בפירוט החיובים',
+  'View detailed pricing': 'צפייה בתמחור מפורט',
+  'View invoice': 'צפייה בחשבונית',
+  'View members': 'צפייה בחברים',
+  'View project': 'צפייה בפרויקט',
+  'View recap': 'צפייה בסיכום',
+  // pragma: allowlist secret
+  'We could not confirm Appwrite nameservers for this domain yet. DNS changes can take up to 48 hours to propagate. Confirm the nameservers below at your registrar, wait a bit, then try again.':
+    'עדיין לא הצלחנו לאשר שרתי שמות של Appwrite עבור הדומיין הזה. שינויי DNS יכולים לקחת עד 48 שעות להתפשט. ודאו אצל הרשם שהשרתים למטה מוגדרים, המתינו מעט, ונסו שוב.', // pragma: allowlist secret
+  "We couldn't load a quote for this domain. You can still continue - the amount due is confirmed when you complete payment.":
+    'לא הצלחנו לטעון הצעת מחיר לדומיין הזה. עדיין אפשר להמשיך, הסכום לתשלום מאושר בעת השלמת התשלום.',
+  'We typically respond within 24 hours during support hours (Mon–Fri).':
+    "אנו משיבים בדרך כלל בתוך 24 שעות בשעות התמיכה (ב'-ו').",
+  "We'll countersign and return a fully executed copy within 5 business days.":
+    'אנו נחתום ונחזיר עותק חתום במלואו בתוך 5 ימי עסקים.',
+  "We're having a temporary issue with the support portal, and our engineering team are aware. In the meantime, please reach out at":
+    'יש לנו תקלה זמנית בפורטל התמיכה, וצוות ההנדסה שלנו מודע לכך. בינתיים, פנו אלינו בכתובת',
+  "We're sorry - we couldn't submit your support request":
+    'מצטערים, לא הצלחנו לשלוח את בקשת התמיכה שלכם',
+  "We've received your request and will get back to you as soon as we can.":
+    'קיבלנו את הבקשה שלכם ונחזור אליכם בהקדם האפשרי.',
+  Weight: 'משקל',
+  'What happens next': 'מה קורה בהמשך',
+  "What wasn't working for you? Please share anything that influenced your decision to downgrade. This feedback helps us improve the platform.":
+    'מה לא עבד עבורכם? שתפו כל דבר שהשפיע על ההחלטה שלכם לשנמך. המשוב הזה עוזר לנו לשפר את הפלטפורמה.',
+  'When to reach out': 'מתי לפנות אלינו',
+  'When you renew after the initial term': 'בעת חידוש לאחר התקופה הראשונית',
+  'When your additional usage spending (beyond plan limits) reaches':
+    'כשההוצאה על שימוש נוסף (מעבר למגבלות התוכנית) מגיעה ל',
+  'Who needs this:': 'למי זה נחוץ:',
+  'Who should reach out': 'מי צריך לפנות',
+  'Why it matters:': 'למה זה חשוב:',
+  'Will delete': 'יימחק',
+  You: 'אתם',
+  'You are on a custom plan. To change your plan, contact your customer success manager or':
+    'אתם בתוכנית מותאמת אישית. לשינוי התוכנית, פנו למנהל הצלחת הלקוח שלכם או',
+  "You don't have any credits. Credits can be used to offset your monthly charges.":
+    'אין לכם קרדיטים. ניתן להשתמש בקרדיטים לקיזוז החיובים החודשיים שלכם.',
+  "You don't have permission to create projects.":
+    'אין לכם הרשאה ליצור פרויקטים.',
+  "You don't have permission to invite members.": 'אין לכם הרשאה להזמין חברים.',
+  "You don't have permission to manage members.": 'אין לכם הרשאה לנהל חברים.',
+  'You have': 'יש לכם',
+  'You have reached your member limit.': 'הגעתם למגבלת החברים שלכם.',
+  'You will be charged': 'תחויבו בסך',
+  'You will be charged for each organization member beyond the plan limit.':
+    'תחויבו עבור כל חבר ארגון מעבר למגבלת התוכנית.',
+  'You will lose access to premium features and organization members beyond the free limit will be removed.':
+    'תאבדו גישה לתכונות פרימיום, וחברי ארגון מעבר למגבלה החינמית יוסרו.',
+  "You'll pay": 'תשלמו',
+  "You've reached the limit for projects on your plan":
+    'הגעתם למגבלת הפרויקטים בתוכנית שלכם',
+  "You've reached the limit of": 'הגעתם למגבלה של',
+  'Your apps': 'האפליקציות שלכם',
+  'Your billing address has been updated': 'כתובת החיוב שלכם עודכנה',
+  'Your current plan includes up to': 'התוכנית הנוכחית שלכם כוללת עד',
+  "Your default payment method has failed and you don't have a backup method. Please add a new payment method to continue using our services.":
+    'אמצעי התשלום שהוגדר כברירת מחדל נכשל ואין לכם אמצעי גיבוי. הוסיפו אמצעי תשלום חדש כדי להמשיך להשתמש בשירותים שלנו.',
+  'Your feedback': 'המשוב שלכם',
+  'Your last payment attempt failed. Please update your payment method and try again.':
+    'ניסיון התשלום האחרון שלכם נכשל. עדכנו את אמצעי התשלום ונסו שוב.',
+  'Your card issuer needs you to confirm this payment. Use Authorize on the invoice in payment history.':
+    'מנפיק הכרטיס צריך שתאשרו את התשלום הזה. אשרו את החשבונית בהיסטוריית התשלומים.',
+  "Your plan will change at the end of your current billing period. You'll keep access to your current plan features until then.":
+    'התוכנית שלכם תשתנה בסוף תקופת החיוב הנוכחית. עד אז תשמרו על גישה לתכונות התוכנית הנוכחית.',
+  'Your plan changes immediately.': 'התוכנית שלכם תשתנה מיד.',
+  'Your support ticket has been submitted': 'פניית התמיכה שלכם נשלחה',
+  'Your transfer code': 'קוד ההעברה שלכם',
+  'Zone File': 'קובץ Zone',
+  'Zone file downloaded': 'קובץ ה-Zone הורד',
+  'Zone file imported successfully': 'קובץ ה-Zone יובא בהצלחה',
+  active: 'פעילים',
+  'after redemption and do not roll over.': 'לאחר המימוש ואינם נצברים.',
+  'and all its DNS records?': 'ואת כל רשומות ה-DNS שלו?',
+  'and all its projects, databases, and files? This action cannot be undone.':
+    'ואת כל הפרויקטים, מסדי הנתונים והקבצים שלו? פעולה זו אינה ניתנת לביטול.',
+  'and all its resources will be deleted.': 'וכל המשאבים שלו יימחקו.',
+  'and revoke all associated tokens? This action cannot be undone.':
+    'ולבטל את כל הטוקנים המשויכים? פעולה זו אינה ניתנת לביטול.',
+  app: 'אפליקציה',
+  apps: 'אפליקציות',
+  by: 'מאת',
+  characters: 'תווים',
+  'contact support': 'פנו לתמיכה',
+  day: 'יום',
+  days: 'ימים',
+  domain: 'דומיין',
+  domains: 'דומיינים',
+  'e.g. mycompany or mycompany.com': 'למשל mycompany או mycompany.com',
+  'entire organization deleted': 'כל הארגון נמחק',
+  every: 'כל',
+  files: 'קבצים',
+  for: 'עבור',
+  'for a confirmation email with your ticket reference.':
+    'לקבלת אימייל אישור עם מספר הפנייה שלכם.',
+  'from the team? They will lose access to all organization resources.':
+    'מהארגון? הגישה לכל משאבי הארגון תיחסם עבורו.',
+  'has been created': 'נוצר',
+  'has been deleted': 'נמחק',
+  'has been transferred to': 'הועבר אל',
+  'has been verified': 'אומת',
+  'in this project.': 'בפרויקט הזה.',
+  invoices: 'חשבוניות',
+  'is not available': 'אינו זמין',
+  'is on a paid plan with recurring billing. Your primary payment method must remain on file while subscription charges are active.':
+    'נמצא בתוכנית בתשלום עם חיוב מתחדש. אמצעי התשלום הראשי שלכם חייב להישאר שמור כל עוד חיובי המנוי פעילים.',
+  'is taken': 'תפוס',
+  items: 'פריטים',
+  'maintains rigorous security practices for data protection, availability, and confidentiality.':
+    'מקיימת נהלי אבטחה קפדניים להגנת נתונים, זמינות וסודיות.',
+  member: 'חבר',
+  'member slot': 'מקום לחבר',
+  'member slots': 'מקומות לחברים',
+  members: 'חברים',
+  month: 'חודש',
+  'more platforms': 'פלטפורמות נוספות',
+  "now. Then you'll be charged": 'כעת. לאחר מכן תחויבו בסך',
+  of: 'מתוך',
+  'of budget': 'מהתקציב',
+  'over limit': 'מעבר למגבלה',
+  page: 'דף',
+  'per month': 'לחודש',
+  'per month for each organization member beyond the plan limit.':
+    'לחודש עבור כל חבר ארגון מעבר למגבלת התוכנית.',
+  plan: 'תוכנית',
+  'plan (base)': 'תוכנית (בסיס)',
+  'pricing page': 'דף התמחור',
+  "processes personal data on your behalf. It's required for GDPR compliance when handling EU residents' data.":
+    'מעבדת נתונים אישיים בשמכם. הוא נדרש לציות ל-GDPR בעת טיפול בנתוני תושבי האיחוד האירופי.',
+  project: 'פרויקט',
+  'projects, but the selected plan allows only':
+    'פרויקטים, אך התוכנית שנבחרה מאפשרת רק',
+  record: 'רשומה',
+  'record for': 'עבור',
+  records: 'רשומות',
+  'registered successfully': 'נרשם בהצלחה',
+  'remaining.': 'נותרו.',
+  removed: 'הוסרו',
+  requests: 'בקשות',
+  resource: 'משאב',
+  resources: 'משאבים',
+  selected: 'נבחרו',
+  'the selected organization': 'הארגון שנבחר',
+  'this app': 'האפליקציה הזו',
+  'this member': 'החבר הזה',
+  threshold: 'סף',
+  to: 'אל',
+  'to buy another domain.': 'כדי לרכוש דומיין נוסף.',
+  'to confirm': 'לאישור',
+  'to continue.': 'כדי להמשיך.',
+  'to delete': 'למחיקה',
+  'to invite more members.': 'כדי להזמין חברים נוספים.',
+  'to keep': 'לשמירה',
+  'to keep.': 'לשמירה.',
+  // pragma: allowlist secret
+  'to point to Appwrite. It may take up to 48 hours for DNS changes to propagate.':
+    'כך שיצביעו על Appwrite. הפצת שינויי DNS עשויה לקחת עד 48 שעות.', // pragma: allowlist secret
+  'to register another domain.': 'כדי לרשום דומיין נוסף.',
+  'to transfer another domain.': 'כדי להעביר דומיין נוסף.',
+  'to unlock more capacity.': 'כדי לפתוח קיבולת נוספת.',
+  used: 'בשימוש',
+  'will be deleted': 'יימחקו',
+  'will lose access': 'יאבדו גישה',
+  'will occur on': 'יתבצע בתאריך',
+  years: 'שנים',
+  'your organization': 'הארגון שלכם',
+  'Creating organization': 'יוצר ארגון',
+  'Preparing downgrade': 'מכין שנמוך',
+  'Setting up your workspace and billing profile.':
+    'מגדיר את סביבת העבודה ופרופיל החיוב שלכם.',
+  'Organizations with compliance or procurement requirements':
+    'ארגונים עם דרישות ציות או רכש',
+  'Companies needing annual contracts, custom SLAs, or dedicated support':
+    'חברות שזקוקות לחוזים שנתיים, הסכמי SLA מותאמים או תמיכה ייעודית',
+  'Teams that need custom resource limits or volume pricing':
+    'צוותים שזקוקים למגבלות משאבים מותאמות או לתמחור לפי היקף',
+  'When you need SOC 2, BAA, 24/7 support, or a success manager':
+    'כשאתם זקוקים ל-SOC 2, ל-BAA, לתמיכה 24/7 או למנהל הצלחה',
+  'During vendor review, security assessment, or enterprise procurement':
+    'במהלך סקירת ספקים, הערכת אבטחה או רכש ארגוני',
+  'When pay-as-you-go plans do not meet your support or billing needs':
+    'כשתוכניות תשלום לפי שימוש אינן עונות על צורכי התמיכה או החיוב שלכם',
+  'Payment setup did not complete': 'הגדרת התשלום לא הושלמה',
+  'BAA is not available on your current plan. Upgrade your plan to enable it.':
+    'BAA אינו זמין בתוכנית הנוכחית שלכם. שדרגו את התוכנית כדי להפעיל אותו.',
+  'BAA is not available on your current plan.':
+    'BAA אינו זמין בתוכנית הנוכחית שלכם.',
+  'BAA is enabled for your organization ({price}/month).':
+    'BAA מופעל בארגון שלכם ({price}/חודש).',
+  'BAA will be removed at the end of your current billing cycle.':
+    'BAA יוסר בסוף מחזור החיוב הנוכחי שלכם.',
+  'Keep BAA': 'שמירת BAA',
+  'Disable BAA': 'השבתת BAA',
+  'Enable BAA': 'הפעלת BAA',
+  'Enable BAA for your organization. This addon costs {price}/month, prorated for your current billing cycle.':
+    'הפעילו BAA עבור הארגון שלכם. התוסף עולה {price}/חודש, בחיוב יחסי למחזור הנוכחי.',
+  'BAA addon has been enabled': 'תוסף BAA הופעל',
+  'BAA addon is already active for your organization':
+    'תוסף BAA כבר פעיל בארגון שלכם',
+  'BAA addon has been re-enabled': 'תוסף BAA הופעל מחדש',
+  'BAA addon will be removed at the end of your current billing cycle':
+    'תוסף BAA יוסר בסוף מחזור החיוב הנוכחי',
+  'Unable to verify BAA addon status. Please retry.':
+    'לא ניתן לאמת את סטטוס תוסף BAA. נסו שוב.',
+  'HIPAA BAA': 'HIPAA BAA',
+  'By clicking Accept & Enable, the monthly addon amount will be added to your subscription and your payment method will be charged the prorated amount immediately for the remaining days in your billing cycle.':
+    'בלחיצה על אישור והפעלה, הסכום החודשי של התוסף יתווסף למנוי שלכם ואמצעי התשלום יחויב מיד בסכום היחסי עבור הימים שנותרו במחזור החיוב.',
+  'By clicking Accept & Enable, you confirm acceptance of the Business Associate Agreement and related terms.':
+    'בלחיצה על אישור והפעלה, אתם מאשרים את הסכם השותף העסקי ואת התנאים הנלווים.',
+  "Your action confirms acceptance of Appwrite's Business Associate Agreement and related terms.":
+    'פעולה זו מאשרת את הסכמתכם להסכם השותף העסקי של Appwrite ולתנאים הנלווים.',
+  'View BAA': 'צפייה ב-BAA',
+  'Accept & Enable': 'אישור והפעלה',
+  'Are you sure you want to disable the BAA addon? The addon will remain active until the end of your current billing cycle and will not be renewed.':
+    'האם אתם בטוחים שברצונכם להשבית את תוסף BAA? התוסף יישאר פעיל עד סוף מחזור החיוב הנוכחי ולא יחודש.',
+  Addons: 'תוספים',
+  'Premium Geo DB': 'Premium Geo DB',
+  'Dedicated DB compute credit': 'זיכוי חישוב למסד נתונים ייעודי',
+  'Organization resources': 'משאבי הארגון',
+  'Project resources': 'משאבי פרויקט',
+  'Compare organization usage with the selected plan. Mark extras to delete. Only selected items are removed after you confirm.':
+    'השוו את השימוש בארגון לתוכנית שנבחרה. סמנו עודפים למחיקה. רק הפריטים שנבחרו יימחקו אחרי האישור.',
+  'Compare each remaining project with the selected plan. Mark extras to delete. Only selected items are removed after you confirm.':
+    'השוו כל פרויקט שנותר לתוכנית שנבחרה. סמנו עודפים למחיקה. רק הפריטים שנבחרו יימחקו אחרי האישור.',
+  'Mark the extras you want to remove. Only selected items are deleted after you confirm.':
+    'סמנו את העודפים שברצונכם להסיר. רק הפריטים שנבחרו יימחקו אחרי האישור.',
+  'The selected plan allows': 'התוכנית שנבחרה מאפשרת',
+  'Still over the plan limit.': 'עדיין מעל מגבלת התוכנית.',
+  'Delete at least': 'מחקו לפחות',
+  'to fit the selected plan.': 'כדי להתאים לתוכנית שנבחרה.',
+  'Delete selected projects': 'מחיקת הפרויקטים שנבחרו',
+  'Delete selected members': 'מחיקת החברים שנבחרו',
+  'Delete selected domains': 'מחיקת הדומיינים שנבחרו',
+  'Only the selected items will be deleted.': 'רק הפריטים שנבחרו יימחקו.',
+  'Finish deleting project resources that exceed the selected plan.':
+    'סיימו למחוק משאבי פרויקט שחורגים מהתוכנית שנבחרה.',
+  'Checking whether the plan can be changed...':
+    'בודקים אם אפשר לשנות את התוכנית...',
+  'This plan change is unavailable. Please contact support.':
+    'לא ניתן לבצע את שינוי התוכנית הזה. פנו לתמיכה.',
+  'Could not change plan. Remaining usage still exceeds the selected plan.':
+    'לא ניתן לשנות תוכנית. השימוש שנותר עדיין חורג מהתוכנית שנבחרה.',
+  'Remaining extras that still exceed the selected plan. Nothing else is deleted.':
+    'עודפים שנותרו וחורגים מהתוכנית שנבחרה. שום דבר אחר לא יימחק.',
+  'Usage fits the selected plan. No further deletions are required.':
+    'השימוש מתאים לתוכנית שנבחרה. אין צורך במחיקות נוספות.',
+  'Calculating remaining extras...': 'מחשבים עודפים שנותרו...',
+  'Extras still over the selected plan. Delete only the items you mark.':
+    'עודפים שעדיין מעל התוכנית שנבחרה. מחקו רק את הפריטים שסימנתם.',
+  'still over limit': 'עדיין מעל המגבלה',
+  'Mark extras to delete in each project. Only selected items are removed after you confirm.':
+    'סמנו עודפים למחיקה בכל פרויקט. רק הפריטים שנבחרו יוסרו אחרי האישור.',
+  'Over limit': 'מעל המגבלה',
+  Marked: 'מסומן',
+  'This resource type fits the selected plan.':
+    'סוג המשאב הזה מתאים לתוכנית שנבחרה.',
+  'Confirm selection': 'אישור הבחירה',
+  'marked for deletion': 'מסומנים למחיקה',
+  'Edit selection': 'עריכת הבחירה',
+  'Will be deleted': 'פריטים שיימחקו',
+  'and all its resources': 'וכל המשאבים שלו',
+  'Removing the items you marked for deletion.':
+    'מוחקים את הפריטים שסימנתם למחיקה.',
+  'Choose which organization to delete': 'בחרו איזה ארגון למחוק',
+  'Choose which organization to delete.': 'בחרו איזה ארגון למחוק.',
+  'You may hit limits on the selected plan':
+    'ייתכן שתגיעו למגבלות בתוכנית שנבחרה',
+  'Your usage in the last 30 days was above these limits. This is a rolling window, not your billing cycle.':
+    'השימוש שלכם ב-30 הימים האחרונים היה מעל המגבלות האלה. זהו חלון מתגלגל, לא מחזור החיוב שלכם.',
+  'Going over a plan limit can block the affected projects until the next billing cycle.':
+    'חריגה ממגבלת התוכנית עלולה לחסום את הפרויקטים המושפעים עד מחזור החיוב הבא.',
+  '1 organization marked for deletion': 'ארגון אחד מסומן למחיקה',
+  'Confirm which organization to delete.': 'אשרו איזה ארגון למחוק.',
+  'Confirm plan change': 'אישור שינוי התוכנית',
+  'Confirm organization deletion': 'אישור מחיקת הארגון',
+  'Your organization moves to the {plan} plan immediately.':
+    'הארגון שלכם יעבור מיד לתוכנית {plan}.',
+  'Delete and change plan': 'מחיקה ושינוי תוכנית',
+  'Confirm which projects to delete first. The projects you keep are then checked against the selected plan.':
+    'אשרו קודם אילו פרויקטים למחוק. הפרויקטים שתשאירו ייבדקו אז מול התוכנית שנבחרה.',
+  'Could not load': 'לא ניתן לטעון',
+  'for this project.': 'עבור הפרויקט הזה.',
+  'Some project resources could not be loaded. Reload and try again.':
+    'חלק ממשאבי הפרויקט לא נטענו. רעננו ונסו שוב.',
+  'Addons not available on the selected plan':
+    'תוספים שאינם זמינים בתוכנית שנבחרה',
+  'These addons will be disabled as part of this plan change. You do not need to turn them off first.':
+    'התוספים האלה יבוטלו כחלק משינוי התוכנית. אין צורך לכבות אותם מראש.',
+  'They are removed immediately.': 'הם יוסרו מיד.',
+  'What changes in the projects you are keeping':
+    'מה משתנה בפרויקטים שאתם שומרים',
+  'These changes happen on their own when your plan changes. There is nothing to select or clean up first.':
+    'השינויים האלה מתרחשים מעצמם כשהתוכנית משתנה. אין מה לבחור או לנקות מראש.',
+  'Backups stop running': 'הגיבויים מפסיקים לפעול',
+  'These backup policies are turned off immediately and stop creating backups. The policies are not deleted, but the selected plan has no Backups screen, so you will not be able to see or manage them.':
+    'מדיניות הגיבוי הזו תכובה מיד ותפסיק ליצור גיבויים. המדיניות לא נמחקת, אבל בתוכנית שנבחרה אין מסך גיבויים, כך שלא תוכלו לראות או לנהל אותה.',
+  'Dedicated databases are spun down': 'מסדי נתונים ייעודיים מושבתים',
+  'The selected plan does not include dedicated databases, so these are spun down when your plan changes. Your data is preserved, but the database stops serving requests and cannot be started again, even if you move back to a plan that includes them.':
+    'התוכנית שנבחרה אינה כוללת מסדי נתונים ייעודיים, ולכן הם מושבתים כשהתוכנית משתנה. הנתונים נשמרים, אבל מסד הנתונים מפסיק לשרת בקשות ולא ניתן להפעיל אותו מחדש, גם אם תחזרו לתוכנית שכוללת אותם.',
+  'The following is deleted as soon as you confirm.':
+    'הפריטים הבאים יימחקו מיד עם האישור.',
+  'Deleted data cannot be recovered.': 'לא ניתן לשחזר נתונים שנמחקו.',
+  'Could not load which backup policies stop running when your plan changes.':
+    'לא ניתן היה לטעון אילו מדיניות גיבוי יפסיקו לפעול כשהתוכנית תשתנה.',
+  'Could not load which dedicated databases are spun down when your plan changes.':
+    'לא ניתן היה לטעון אילו מסדי נתונים ייעודיים יושבתו כשהתוכנית תשתנה.',
+  'Organizations that install this app grant it the scopes below. Users return to the redirect URL after installing or updating the installation.': 'ארגונים שמתקינים את האפליקציה מעניקים לה את הרשאות הגישה שלמטה. משתמשים חוזרים לכתובת ההפניה אחרי התקנה או עדכון של ההתקנה.',
+  'Installation settings updated': 'הגדרות ההתקנה עודכנו',
+  'No installation scopes are available.': 'אין הרשאות גישה להתקנה זמינות.',
+  'Choose a new plan': 'בחירת תוכנית חדשה',
+  'Plans could not be loaded. Refresh and try again.':
+    'לא ניתן לטעון את התוכניות. רעננו ונסו שוב.',
+  'day left': 'יום נותר',
+  'days left': 'ימים נותרו',
+  'Production resources for the projects you want to keep.':
+    'משאבי פרודקשן לפרויקטים שאתם רוצים להמשיך.',
+  'Daily backups, email support, and more': 'גיבוי יומי, תמיכה באימייל ועוד',
+  'Congratulations on graduating from the Appwrite Education program!':
+    'מזל טוב על הסיום של Appwrite Education program!',
+  'You are about to graduate from the Appwrite Education program!':
+    'אתם עומדים לסיים את Appwrite Education program!',
+  'We hope it helped you learn, build, and bring your first projects to life on Appwrite Cloud.':
+    'אנחנו מקווים שהתוכנית עזרה לכם ללמוד, לבנות ולהוציא לפועל את הפרויקטים הראשונים שלכם על Appwrite Cloud.',
+  'We hope it has helped you learn, build, and bring your first projects to life on Appwrite Cloud.':
+    'אנחנו מקווים שהתוכנית עוזרת לכם ללמוד, לבנות ולהוציא לפועל את הפרויקטים הראשונים שלכם על Appwrite Cloud.',
+  'Your organization is now disabled until you choose a new plan.':
+    'הארגון שלכם מושבת עכשיו עד שתבחרו תוכנית חדשה.',
+  'Your projects and data are still here for now, but they will be deleted if you don’t choose a plan.':
+    'הפרויקטים והנתונים שלכם עדיין כאן בינתיים, אבל הם יימחקו אם לא תבחרו תוכנית.',
+  'Choose a new plan to keep your projects and data.':
+    'בחרו תוכנית חדשה כדי לשמור על הפרויקטים והנתונים שלכם.',
+  'When the Education plan ends, your organization will be disabled and its projects will later be deleted. Pick a plan now and everything stays exactly where you left it.':
+    'כשתוכנית Education תסתיים, הארגון שלכם יושבת והפרויקטים שבו יימחקו בהמשך. בחרו תוכנית עכשיו והכול יישאר בדיוק איפה שהשארתם.',
+  'Create a project': 'יצירת פרויקט',
+  'Name it and pick the region closest to your users. Each project keeps its data, keys, and settings apart.':
+    'תנו לו שם ובחרו את האזור הקרוב ביותר למשתמשים שלכם. כל פרויקט שומר על הנתונים, המפתחות וההגדרות שלו בנפרד.',
+  'Add a web, mobile, or server platform and install an SDK. Your first request takes a few lines of code.':
+    'הוסיפו פלטפורמת ווב, מובייל או שרת והתקינו SDK. הבקשה הראשונה דורשת רק כמה שורות קוד.',
+  'Build with every product': 'בנייה עם כל המוצרים',
+  'Auth, Databases, Storage, Functions, Messaging, and Sites are ready in every project, no setup required.':
+    'אימות, מסדי נתונים, אחסון, פונקציות, הודעות ואתרים זמינים בכל פרויקט, בלי הגדרות נוספות.',
+  'Create your first project': 'יצירת הפרויקט הראשון שלכם',
+  'A project is the backend for one app: its users, data, files, and code, hosted in the region you choose.':
+    'פרויקט הוא ה-backend של אפליקציה אחת: המשתמשים, הנתונים, הקבצים והקוד שלה, מתארחים באזור שתבחרו.',
+  'Bring or buy a domain': 'הוספה או רכישה של דומיין',
+  'Add a domain you already own, transfer it in, or buy a new one without leaving the console.':
+    'הוסיפו דומיין שכבר בבעלותכם, העבירו אותו ל-Appwrite או רכשו דומיין חדש בלי לצאת מהקונסול.',
+  'Manage DNS in one place': 'ניהול DNS במקום אחד',
+  'Point your nameservers to Appwrite, then add records or apply presets for email and verification.':
+    'הפנו את שרתי השמות ל-Appwrite, ואז הוסיפו רשומות או החילו תבניות מוכנות לאימייל ולאימות.',
+  'Connect it everywhere': 'חיבור לכל מקום',
+  'Use the domain and its subdomains for sites, functions, and project APIs across the organization.':
+    'השתמשו בדומיין ובתתי-הדומיינים שלו עבור אתרים, פונקציות ו-APIs של פרויקטים בכל הארגון.',
+  'Your domains, managed by Appwrite': 'הדומיינים שלכם, בניהול Appwrite',
+  'Register, transfer, and manage domains for your whole organization. Configure DNS once and connect it to your sites, functions, and APIs.':
+    'רשמו, העבירו ונהלו דומיינים לכל הארגון. הגדירו DNS פעם אחת וחברו אותו לאתרים, לפונקציות ול-APIs שלכם.',
+  'Create your app': 'יצירת האפליקציה',
+  'Add a name, logo, and redirect URIs so users recognize your app on the consent screen.':
+    'הוסיפו שם, לוגו וכתובות הפניה כדי שהמשתמשים יזהו את האפליקציה שלכם במסך ההסכמה.',
+  'Request scoped access': 'בקשת גישה מוגבלת בהרשאות',
+  'Users pick the projects and organizations your app can reach, and can revoke access at any time.':
+    'המשתמשים בוחרים לאילו פרויקטים וארגונים האפליקציה שלכם תוכל לגשת, ויכולים לבטל את הגישה בכל עת.',
+  'Publish to the marketplace': 'פרסום במרקטפלייס',
+  'List the app so teams across Appwrite can discover it and connect it to their projects.':
+    'פרסמו את האפליקציה כדי שצוותים ב-Appwrite יוכלו לגלות אותה ולחבר אותה לפרויקטים שלהם.',
+  'Build on top of Appwrite': 'בנו על גבי Appwrite',
+  'Create OAuth2 apps that let Appwrite users connect their projects with consent-based, scoped access instead of pasted API keys. Publish them to the marketplace for every organization to find.':
+    'צרו אפליקציות OAuth2 שמאפשרות למשתמשי Appwrite לחבר את הפרויקטים שלהם עם גישה מבוססת הסכמה ומוגבלת בהרשאות, במקום מפתחות API שמודבקים ידנית. פרסמו אותן במרקטפלייס כדי שכל ארגון יוכל למצוא אותן.',
+}

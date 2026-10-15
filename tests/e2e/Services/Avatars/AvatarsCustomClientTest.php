@@ -70,43 +70,8 @@ final class AvatarsCustomClientTest extends Scope
          * claim rather than calling getUserPhoto(), so assert it lands on the
          * identity and wins the avatar chain exactly like the browser flow.
          */
-        $this->enableMockProvider();
-
         $projectId = $this->getProject()['$id'];
-
-        $token = $this->client->call(Client::METHOD_GET, '/mock/tests/general/oauth2/id-token', [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], [
-            'claims' => \json_encode([
-                'iss' => 'https://localhost/v1/mock',
-                'aud' => '1',
-                'iat' => \time(),
-                'exp' => \time() + 3600,
-                'sub' => 'idtoken-photo-' . \uniqid('', true),
-                'email' => 'idtoken.photo.' . \uniqid('', true) . '@localhost.test',
-                'email_verified' => true,
-                'picture' => 'http://localhost/v1/mock/tests/general/oauth2/photo',
-            ]),
-            'header' => '',
-        ]);
-
-        $this->assertEquals(200, $token['headers']['status-code']);
-
-        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/id-token', [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], [
-            'provider' => 'mock',
-            'idToken' => $token['body']['token'],
-        ]);
-
-        $this->assertEquals(201, $response['headers']['status-code']);
-
-        $session = $response['cookies']['a_session_' . $projectId] ?? '';
-        $this->assertNotEmpty($session);
+        $session = $this->createIdTokenSession();
 
         $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', [
             'origin' => 'http://localhost',
@@ -341,6 +306,56 @@ final class AvatarsCustomClientTest extends Scope
     }
 
     /**
+     * Enable the mock OAuth2 provider on the project and sign in with a native
+     * ID token whose `picture` claim points at the mock photo, returning the
+     * session secret. Unlike the browser flow, every call signs in a fresh
+     * user, so a test may change that user's photo without touching the
+     * account other tests share.
+     */
+    private function createIdTokenSession(): string
+    {
+        $this->enableMockProvider();
+
+        $projectId = $this->getProject()['$id'];
+
+        $token = $this->client->call(Client::METHOD_GET, '/mock/tests/general/oauth2/id-token', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'claims' => \json_encode([
+                'iss' => 'https://localhost/v1/mock',
+                'aud' => '1',
+                'iat' => \time(),
+                'exp' => \time() + 3600,
+                'sub' => 'idtoken-photo-' . \uniqid('', true),
+                'email' => 'idtoken.photo.' . \uniqid('', true) . '@localhost.test',
+                'email_verified' => true,
+                'picture' => 'http://localhost/v1/mock/tests/general/oauth2/photo',
+            ]),
+            'header' => '',
+        ]);
+
+        $this->assertEquals(200, $token['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/id-token', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'provider' => 'mock',
+            'idToken' => $token['body']['token'],
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $session = $response['cookies']['a_session_' . $projectId] ?? '';
+        $this->assertNotEmpty($session);
+
+        return $session;
+    }
+
+    /**
      * Enable the mock OAuth2 provider on the project under test.
      */
     private function enableMockProvider(): void
@@ -544,26 +559,56 @@ final class AvatarsCustomClientTest extends Scope
         $headers = $this->createPhotoUser();
         $red = $this->createImage('#FF0000', 'png');
 
+        // Premise: with nothing uploaded the chain ends at initials.
+        $this->assertPhotoInitials($this->getPhoto($headers));
+
+        /**
+         * Test for SUCCESS — with no photo to delete, the placeholder still
+         * becomes the photo and shadows the initials
+         */
+        $response = $this->client->call(Client::METHOD_DELETE, '/avatars/photo', $headers);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+        $this->assertPhotoFallback($this->getPhoto($headers));
+
+        /**
+         * Test for SUCCESS — deleting an uploaded photo replaces it with the
+         * placeholder
+         */
         $response = $this->uploadPhoto($headers, $red, 'photo.png');
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertSamePhoto($red, $this->getPhoto($headers));
 
+        $response = $this->client->call(Client::METHOD_DELETE, '/avatars/photo', $headers);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+        $this->assertPhotoFallback($this->getPhoto($headers));
+
         /**
-         * Test for SUCCESS — deleting falls back to the default chain
+         * Test for SUCCESS — deleting again keeps the placeholder
          */
         $response = $this->client->call(Client::METHOD_DELETE, '/avatars/photo', $headers);
 
         $this->assertEquals(204, $response['headers']['status-code']);
-        $this->assertPhotoInitials($this->getPhoto($headers));
+        $this->assertPhotoFallback($this->getPhoto($headers));
 
         /**
-         * Test for SUCCESS — deleting again is a no-op
+         * Test for SUCCESS — the placeholder is served at the requested size,
+         * like any other stored photo
          */
-        $response = $this->client->call(Client::METHOD_DELETE, '/avatars/photo', $headers);
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', $headers, [
+            'width' => 100,
+            'height' => 100,
+        ]);
 
-        $this->assertEquals(204, $response['headers']['status-code']);
-        $this->assertPhotoInitials($this->getPhoto($headers));
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertPhotoFallback($response['body']);
+
+        $image = new \Imagick();
+        $image->readImageBlob($response['body']);
+
+        $this->assertSame([100, 100], [$image->getImageWidth(), $image->getImageHeight()]);
 
         /**
          * Test for SUCCESS — a photo can be set again after deletion
@@ -574,130 +619,27 @@ final class AvatarsCustomClientTest extends Scope
         $this->assertSamePhoto($red, $this->getPhoto($headers));
     }
 
-    /**
-     * A user of its own, so a photo never leaks into tests that expect the default chain.
-     *
-     * @return array<string, string>
-     */
-    private function createPhotoUser(): array
+    public function testDeletePhotoOverridesIdentityPhoto(): void
     {
-        $projectId = $this->getProject()['$id'];
-        $email = \uniqid('photo-', true) . '@localhost.test';
-
-        $user = $this->client->call(Client::METHOD_POST, '/account', [
+        /**
+         * Test for SUCCESS — the placeholder shadows the OAuth2 identity photo
+         *
+         * Deleting stores the placeholder as the user's own photo, so it wins
+         * the chain the way an upload does — the identity photo never comes
+         * back on its own.
+         */
+        $headers = [
             'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], [
-            'userId' => ID::unique(),
-            'email' => $email,
-            'password' => 'password',
-            'name' => 'User Name',
-        ]);
-
-        $this->assertEquals(201, $user['headers']['status-code']);
-
-        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], [
-            'email' => $email,
-            'password' => 'password',
-        ]);
-
-        $this->assertEquals(201, $session['headers']['status-code']);
-
-        return [
-            'origin' => 'http://localhost',
-            'x-appwrite-project' => $projectId,
-            'cookie' => 'a_session_' . $projectId . '=' . $session['cookies']['a_session_' . $projectId],
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $this->createIdTokenSession(),
         ];
-    }
 
-    /**
-     * Random pixels don't compress, so the PNG size follows the dimensions.
-     */
-    private function createNoiseImage(int $width, int $height): string
-    {
-        $image = new \Imagick();
-        $image->newImage($width, $height, '#808080');
-        $image->addNoiseImage(\Imagick::NOISE_RANDOM);
-        $image->setImageDepth(8);
-        $image->setImageFormat('png24');
+        // Premise: the identity photo wins.
+        $this->assertOAuth2Photo($this->getPhoto($headers));
 
-        return $image->getImageBlob();
-    }
+        $response = $this->client->call(Client::METHOD_DELETE, '/avatars/photo', $headers);
 
-    private function createImage(string $color, string $format): string
-    {
-        $image = new \Imagick();
-        $image->newImage(64, 64, $color);
-        $image->setImageFormat($format);
-        $image->setImageCompressionQuality(100);
-
-        if ($format === 'webp') {
-            $image->setOption('webp:lossless', 'true');
-        }
-
-        return $image->getImageBlob();
-    }
-
-    /**
-     * @param array<string, string> $headers
-     * @param array<string, string> $extra
-     * @return array<string, mixed>
-     */
-    private function uploadPhoto(array $headers, string $contents, string $filename, array $extra = []): array
-    {
-        return $this->client->call(Client::METHOD_PUT, '/avatars/photo', \array_merge($headers, [
-            'content-type' => 'multipart/form-data',
-        ], $extra), [
-            'file' => new \CURLFile('data://application/octet-stream;base64,' . \base64_encode($contents), 'application/octet-stream', $filename),
-        ]);
-    }
-
-    /**
-     * @param array<string, string> $headers
-     */
-    private function getPhoto(array $headers): string
-    {
-        $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', $headers, [
-            'width' => 0,
-            'height' => 0,
-        ]);
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-
-        return $response['body'];
-    }
-
-    /**
-     * Tolerance is the largest difference allowed per colour channel, for lossy formats.
-     */
-    private function assertSamePhoto(string $expected, string $actual, int $tolerance = 0): void
-    {
-        $expectedImage = new \Imagick();
-        $expectedImage->readImageBlob($expected);
-        $actualImage = new \Imagick();
-        $actualImage->readImageBlob($actual);
-
-        $width = $expectedImage->getImageWidth();
-        $height = $expectedImage->getImageHeight();
-
-        $this->assertSame([$width, $height], [$actualImage->getImageWidth(), $actualImage->getImageHeight()]);
-
-        foreach ([[0, 0], [$width - 1, $height - 1], [\intdiv($width, 2), \intdiv($height, 2)], [\intdiv($width, 3), \intdiv($height, 5)]] as [$x, $y]) {
-            $expectedColor = $expectedImage->getImagePixelColor($x, $y)->getColor();
-            $actualColor = $actualImage->getImagePixelColor($x, $y)->getColor();
-
-            foreach (['r', 'g', 'b'] as $channel) {
-                $this->assertLessThanOrEqual(
-                    $tolerance,
-                    \abs($expectedColor[$channel] - $actualColor[$channel]),
-                    "Pixel at {$x},{$y} differs from the uploaded photo."
-                );
-            }
-        }
+        $this->assertEquals(204, $response['headers']['status-code']);
+        $this->assertPhotoFallback($this->getPhoto($headers));
     }
 }

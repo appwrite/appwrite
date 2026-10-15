@@ -1,0 +1,191 @@
+---
+layout: article
+title: FastAPI
+description: Use FastAPI and SQLAlchemy 2.x with an Appwrite native PostgreSQL database. Configure the async asyncpg engine, pass TLS through connect_args, inject a session per request, and run Alembic migrations against the direct database port.
+---
+
+An Appwrite native PostgreSQL database is a standard PostgreSQL engine, so [FastAPI](https://fastapi.tiangolo.com/) with [SQLAlchemy](https://docs.sqlalchemy.org/) and an async driver works against it with no Appwrite-specific configuration. You point `create_async_engine` at the connection string from the [connections](/docs/products/databases/postgresql/connections) page and use the SQLAlchemy ORM, the FastAPI dependency system, and Alembic exactly as you would against any self-hosted PostgreSQL server.
+
+{% info title="Before you start" %}
+You'll need a native PostgreSQL database in a `ready` state and its credentials. See [native PostgreSQL databases](/docs/products/databases/postgresql) to create one and [connections](/docs/products/databases/postgresql/connections) to retrieve the connection string. The primary user is `admin`, and the database name is generated for each database.
+{% /info %}
+
+# Install dependencies {% #install %}
+
+```bash
+pip install "fastapi[standard]" "sqlalchemy[asyncio]" asyncpg alembic
+```
+
+# Set the connection string {% #connection-string %}
+
+Copy the connection string from the Console **Credentials** dialog, or fetch it with the [API](/docs/products/databases/postgresql/connections#credentials). Put it in your environment, never commit it. SQLAlchemy's asyncpg dialect uses the `postgresql+asyncpg://` scheme, so swap the leading `postgresql://` for it:
+
+```env
+DATABASE_URL="postgresql+asyncpg://admin:<password>@db-<hash>.<region>.appwrite.center:5432/<database>"
+```
+
+The string Appwrite returns ends with `?sslmode=require`. Drop that query parameter for asyncpg, asyncpg does not read `sslmode` from the URL. TLS is configured through `connect_args` instead, shown below.
+
+This guide uses the [asyncpg](https://magicstack.github.io/asyncpg/current/) driver; the same patterns apply to the async `postgresql+psycopg` dialect by changing the URL scheme.
+
+# Create the async engine {% #engine %}
+
+The edge proxy terminates TLS for every native PostgreSQL database, so encryption is mandatory. asyncpg's `ssl` argument accepts the libpq-style strings (`require`, `verify-ca`, `verify-full`), `True`, or an `ssl.SSLContext`. Pass it through `connect_args`:
+
+```python
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+
+engine = create_async_engine(
+    settings.database_url,
+    connect_args={"ssl": "require"},
+    pool_size=10,
+    max_overflow=5,
+    pool_pre_ping=True,
+)
+
+SessionLocal = async_sessionmaker(engine, expire_on_commit=False)
+```
+
+`ssl="require"` encrypts the connection without validating the certificate chain. For full verification, pass `ssl="verify-full"` instead; the server certificate is signed by a well-known public CA, so validation succeeds against the system trust store without a custom CA bundle, see the [Network](/docs/products/databases/postgresql/network-security) page.
+
+# Define a model {% #model %}
+
+```python
+from datetime import datetime
+
+from sqlalchemy import func
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+
+class Base(DeclarativeBase):
+    pass
+
+class User(Base):
+    __tablename__ = "users"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    email: Mapped[str] = mapped_column(unique=True)
+    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
+```
+
+# Inject a session per request {% #session %}
+
+FastAPI's dependency system gives each request its own `AsyncSession` and closes it when the request finishes. Define a dependency that yields a session, then annotate path operations with it:
+
+```python
+from typing import Annotated
+
+from fastapi import Depends, FastAPI
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+app = FastAPI()
+
+async def get_session():
+    async with SessionLocal() as session:
+        yield session
+
+SessionDep = Annotated[AsyncSession, Depends(get_session)]
+
+@app.post("/users")
+async def create_user(email: str, session: SessionDep):
+    user = User(email=email)
+    session.add(user)
+    await session.commit()
+    await session.refresh(user)
+    return user
+
+@app.get("/users")
+async def list_users(session: SessionDep):
+    result = await session.scalars(select(User).order_by(User.created_at.desc()))
+    return result.all()
+```
+
+Create the engine once at module scope and reuse it for the whole process, the pool lives inside it. Don't open a new engine per request.
+
+# Run migrations {% #migrate %}
+
+Generate Alembic's async scaffold, which opens the connection asynchronously and hands a sync connection to the migration context:
+
+```bash
+alembic init -t async migrations
+```
+
+Point `target_metadata` at `Base.metadata` in `migrations/env.py`, then autogenerate and apply:
+
+```bash
+alembic revision --autogenerate -m "init"
+alembic upgrade head
+```
+
+Run migrations against the **direct** engine port (`5432`), not the pooler. DDL needs a real session-level connection, and Alembic's async template already uses a `NullPool`, so a fresh connection is opened and closed per run. The primary `admin` user owns the default database and can run schema changes. Narrower [database roles](/docs/products/databases/postgresql/connections#roles) should only receive the privileges your application needs.
+
+# Pool sizing {% #sizing %}
+
+A long-running `uvicorn` server holds a SQLAlchemy pool for its lifetime, so connect to the **direct** engine port (`5432`) with a sized pool. Keep `pool_size` × the number of server processes under the connection limit of your [specification](/docs/products/databases/postgresql#specifications), and let `max_overflow` absorb short bursts:
+
+```python
+engine = create_async_engine(
+    settings.database_url,
+    connect_args={"ssl": "require"},
+    pool_size=10,
+    max_overflow=5,
+)
+```
+
+When the same app runs on a serverless platform (for example an Appwrite [function](/docs/products/functions)) where each invocation is a fresh instance, that fans out into far more backend connections than the engine allows. Route runtime traffic through the [connection pooler](/docs/products/databases/postgresql/connection-pooling) on port `6432` instead, and size the pool small per instance:
+
+```env
+DATABASE_URL="postgresql+asyncpg://admin:<password>@db-<hash>.<region>.appwrite.center:6432/<database>"
+```
+
+# Disable prepared statements on the transaction pooler {% #prepared-statements %}
+
+The pooler defaults to **transaction mode**, which does not keep a backend connection across statements. asyncpg relies on server-side prepared statements, which transaction mode cannot support, so turn the caches off. This needs **two** settings: asyncpg's own `statement_cache_size` in `connect_args` and SQLAlchemy's dialect-level `prepared_statement_cache_size` in the connection URL:
+
+```env
+DATABASE_URL="postgresql+asyncpg://admin:<password>@db-<hash>.<region>.appwrite.center:6432/<database>?prepared_statement_cache_size=0"
+```
+
+And in the engine setup:
+
+```python
+from sqlalchemy import NullPool
+
+engine = create_async_engine(
+    settings.database_url,
+    connect_args={"ssl": "require", "statement_cache_size": 0},
+    poolclass=NullPool,
+)
+```
+
+`statement_cache_size=0` disables asyncpg's prepared statement cache, and `prepared_statement_cache_size=0` disables the dialect's own per-connection statement cache. Use `NullPool` so SQLAlchemy doesn't keep its own pool on top of the pooler's.
+
+If your application relies on prepared statements, advisory locks, `LISTEN`/`NOTIFY`, or temporary tables, switch the pooler to **session mode** instead and keep statement caching on, see the [pooler](/docs/products/databases/postgresql/connection-pooling#modes) page for the trade-offs.
+
+# Use a branch for previews and CI {% #branches %}
+
+[Branches](/docs/products/databases/postgresql/branches) are instant, isolated copies of a database with their own hostname and connection string. They're ideal for running migrations against throwaway data in a pull-request preview or an integration-test job:
+
+1. Create a branch from the API and read its `connectionString`.
+2. Rewrite the scheme to `postgresql+asyncpg://` and export it as `DATABASE_URL`.
+3. Run `alembic upgrade head` against the branch's direct port, then your test suite.
+4. Delete the branch when the job finishes.
+
+Because a branch starts from a storage snapshot, the schema and data match the source database at branch time, so migrations run against realistic data without touching production.
+
+# Related {% #related %}
+
+{% cards %}
+{% cards_item href="/docs/products/databases/postgresql/connections" title="Connections" %}
+Retrieve credentials, rotate the password, and create scoped database roles.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/postgresql/connection-pooling" title="Connection pooler" %}
+Pool modes, ports, and read/write splitting for serverless workloads.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/postgresql/branches" title="Branches" %}
+Ephemeral database copies for preview environments and CI.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/postgresql/network-security" title="Network" %}
+TLS modes, certificate verification, mTLS, and IP allowlists.
+{% /cards_item %}
+{% /cards %}

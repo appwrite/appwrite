@@ -22,7 +22,7 @@ script.php
 <?php
 require_once './vendor/autoload.php';
 
-use Utopia\Console;
+use Utopia\Console\Console;
 use Utopia\CLI\CLI;
 use Utopia\CLI\Adapters\Generic;
 use Utopia\Validator\Wildcard;
@@ -54,7 +54,7 @@ There are three types of hooks, init hooks, shutdown hooks and error hooks. Init
 require_once __DIR__ . '/../../vendor/autoload.php';
 
 use Utopia\CLI\CLI;
-use Utopia\Console;
+use Utopia\Console\Console;
 use Utopia\Validator\Wildcard;
 
 CLI::setResource('res1', function() {

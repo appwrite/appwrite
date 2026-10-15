@@ -589,6 +589,31 @@ final class VCSGitHubConsoleClientTest extends Scope
         $this->assertEquals(400, $repositoryBranches['headers']['status-code']);
     }
 
+    public function testListTotal(): void
+    {
+        $installationId = $this->setupInstallation();
+        $headers = array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        $lists = [
+            ['/vcs/github/installations/' . $installationId . '/providerRepositories', ['type' => 'runtime'], 'runtimeProviderRepositories'],
+            ['/vcs/github/installations/' . $installationId . '/providerRepositories/' . $this->providerRepositoryId . '/branches', [], 'branches'],
+            ['/vcs/installations/' . $installationId . '/namespaces', [], 'namespaces'],
+        ];
+
+        foreach ($lists as [$path, $params, $key]) {
+            $response = $this->client->call(Client::METHOD_GET, $path, $headers, $params + ['total' => true]);
+            $this->assertEquals(200, $response['headers']['status-code'], $path);
+            $this->assertGreaterThan(0, $response['body']['total'], $path);
+
+            $response = $this->client->call(Client::METHOD_GET, $path, $headers, $params + ['total' => false]);
+            $this->assertEquals(200, $response['headers']['status-code'], $path);
+            $this->assertEquals(0, $response['body']['total'], $path);
+            $this->assertNotEmpty($response['body'][$key], $path);
+        }
+    }
+
     public function testCreateFunctionUsingVCS(): void
     {
         $installationId = $this->setupInstallation();

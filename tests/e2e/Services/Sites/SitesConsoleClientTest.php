@@ -9,8 +9,8 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideConsole;
-use Utopia\Command;
-use Utopia\Console;
+use Utopia\Console\Command;
+use Utopia\Console\Console;
 use Utopia\Database\Helpers\ID;
 
 final class SitesConsoleClientTest extends Scope
@@ -206,5 +206,10 @@ final class SitesConsoleClientTest extends Scope
         });
 
         $this->cleanupSite($siteId);
+    }
+
+    public function testTemplateDeploymentIsManagedFromTheConsole(): void
+    {
+        $this->assertTemplateDeploymentIsManageable();
     }
 }

@@ -21,6 +21,7 @@ use Appwrite\Utopia\Response;
 use Utopia\Balancer\Algorithm\First;
 use Utopia\Balancer\Balancer;
 use Utopia\Balancer\Option;
+use Utopia\Client\Client;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Image\Image;
@@ -80,6 +81,7 @@ class Get extends Action
             ->inject('user')
             ->inject('dbForProject')
             ->inject('deviceForFiles')
+            ->inject('clientForAvatars')
             ->callback($this->action(...));
     }
 
@@ -96,7 +98,9 @@ class Get extends Action
         Document $user,
         Database $dbForProject,
         Device $deviceForFiles,
+        Client $clientForAvatars,
     ): void {
+        $client = $clientForAvatars;
         $emailHash = \strtolower($emailHash);
 
         // An explicit emailHash or name already identifies who is being
@@ -159,12 +163,12 @@ class Get extends Action
         }
 
         if ($profile->getId() !== '') {
-            $providers[] = new OAuth2($dbForProject);
+            $providers[] = new OAuth2($dbForProject, $client);
         }
 
         if ($profile->getAttribute('emailHash', '') !== '') {
-            $providers[] = new Gravatar();
-            $providers[] = new Libavatar();
+            $providers[] = new Gravatar($client);
+            $providers[] = new Libavatar($client);
         }
 
         if ($profile->getAttribute('name', '') !== '') {

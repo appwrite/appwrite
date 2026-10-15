@@ -946,12 +946,12 @@ final class RealtimeCustomClientQueryTestWithMessage extends Scope
     }
 
     /**
-     * Open a console connection (root session) in message mode and subscribe to a
-     * `console.tail.<projectId>` channel with optional filter queries.
+     * Open a console connection (root session, or a console JWT when given) in message
+     * mode and subscribe to a `console.tail.<projectId>` channel with optional filter queries.
      *
      * @param array<int,string> $queries
      */
-    private function openConsoleTail(string $targetProjectId, array $queries = [], string $subscriptionId = 'tail-1'): WebSocketClient
+    private function openConsoleTail(string $targetProjectId, array $queries = [], string $subscriptionId = 'tail-1', ?string $jwt = null): WebSocketClient
     {
         $queryString = \http_build_query(['project' => 'console']);
         $client = new WebSocketClient(
@@ -959,7 +959,9 @@ final class RealtimeCustomClientQueryTestWithMessage extends Scope
             [
                 'headers' => [
                     'origin' => 'http://localhost',
-                    'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+                    ...($jwt === null
+                        ? ['cookie' => 'a_session_console=' . $this->getRoot()['session']]
+                        : ['x-appwrite-jwt' => $jwt]),
                 ],
                 'timeout' => 10,
             ]
@@ -1040,6 +1042,68 @@ final class RealtimeCustomClientQueryTestWithMessage extends Scope
         $this->assertArrayNotHasKey('bucketId', $match);
 
         $client->close();
+    }
+
+    public function testConsoleTailEndsWithJwt(): void
+    {
+        ['databaseId' => $databaseId, 'collectionId' => $collectionId] = $this->setupTailCollection();
+        $projectId = $this->getProject()['$id'];
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/jwts', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ], [
+            'duration' => 2,
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $jwt = $response['body']['jwt'];
+
+        $client = $this->openConsoleTail($projectId, jwt: $jwt);
+
+        // Expiry fires no event; wait until the HTTP API refuses the JWT.
+        $this->assertEventually(function () use ($jwt) {
+            $response = $this->client->call(Client::METHOD_GET, '/account', [
+                'origin' => 'http://localhost',
+                'x-appwrite-project' => 'console',
+                'x-appwrite-jwt' => $jwt,
+            ]);
+            $this->assertEquals(401, $response['headers']['status-code']);
+        });
+
+        $document = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'documentId' => ID::unique(),
+            'data' => ['name' => 'Spiderman'],
+        ]);
+        $this->assertEquals(201, $document['headers']['status-code']);
+
+        /**
+         * Test for FAILURE - no tail frames after expiry, then a 401 and the socket closes
+         */
+        $frames = [];
+        while ($client->isConnected() && \count($frames) < 10) {
+            try {
+                $frames[] = \json_decode($client->receive(), true);
+            } catch (TimeoutException) {
+                $this->fail('Timed out waiting for the server to close the socket. Frames: ' . \json_encode($frames));
+            } catch (ConnectionException) {
+                // Socket closed by the server
+                break;
+            }
+        }
+
+        $this->assertFalse($client->isConnected(), 'Server did not close the socket. Frames: ' . \json_encode($frames));
+        foreach ($frames as $frame) {
+            $this->assertNotEquals('console.tail', $frame['data']['events'][0] ?? null, 'Tail delivered after expiry: ' . \json_encode($frames));
+        }
+        $last = \end($frames);
+        $this->assertEquals('error', $last['type'] ?? null);
+        $this->assertEquals(401, $last['data']['code'] ?? null);
     }
 
     public function testConsoleTailServerSideFilter(): void

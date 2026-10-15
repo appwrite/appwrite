@@ -12,9 +12,9 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use Utopia\Command;
 use Utopia\Config\Config;
-use Utopia\Console;
+use Utopia\Console\Command;
+use Utopia\Console\Console;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
@@ -2595,6 +2595,34 @@ final class SitesCustomServerTest extends Scope
         $this->assertArrayHasKey('outputDirectory', $framework['adapters'][0]);
     }
 
+    public function testListFrameworksAndSpecificationsTotal(): void
+    {
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ];
+
+        $frameworks = $this->client->call(Client::METHOD_GET, '/sites/frameworks', $headers, ['total' => true]);
+        $this->assertEquals(200, $frameworks['headers']['status-code']);
+        $this->assertCount($frameworks['body']['total'], $frameworks['body']['frameworks']);
+        $this->assertGreaterThan(0, $frameworks['body']['total']);
+
+        $frameworks = $this->client->call(Client::METHOD_GET, '/sites/frameworks', $headers, ['total' => false]);
+        $this->assertEquals(200, $frameworks['headers']['status-code']);
+        $this->assertEquals(0, $frameworks['body']['total']);
+        $this->assertNotEmpty($frameworks['body']['frameworks']);
+
+        $specifications = $this->listSpecifications(['total' => true]);
+        $this->assertEquals(200, $specifications['headers']['status-code']);
+        $this->assertCount($specifications['body']['total'], $specifications['body']['specifications']);
+        $this->assertGreaterThan(0, $specifications['body']['total']);
+
+        $specifications = $this->listSpecifications(['total' => false]);
+        $this->assertEquals(200, $specifications['headers']['status-code']);
+        $this->assertEquals(0, $specifications['body']['total']);
+        $this->assertNotEmpty($specifications['body']['specifications']);
+    }
+
     public function testGetFrameworksHidesStartCommand(): void
     {
         $frameworks = $this->client->call(Client::METHOD_GET, '/sites/frameworks', array_merge([
@@ -3928,5 +3956,10 @@ final class SitesCustomServerTest extends Scope
         $this->assertEquals(0, $deployments['body']['total']);
 
         $this->cleanupSite($siteId);
+    }
+
+    public function testTemplateDeploymentIsManagedWithAProjectKey(): void
+    {
+        $this->assertTemplateDeploymentIsManageable();
     }
 }
