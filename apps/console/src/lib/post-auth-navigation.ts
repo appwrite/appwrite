@@ -11,15 +11,21 @@ import {
 } from '@/lib/organization-overview-prefetch'
 import { isHttpNotFoundError } from '@/lib/utils/error-formatting'
 import { EDUCATION_JOIN_PATH } from '@/lib/education/paths'
+import { isZeroAccount } from '@/lib/zero/session'
 
 /**
  * Cloud (and any profile with userVerification) requires a verified console
  * email before org/project APIs. Unverified sessions must stay on /verify-email.
  */
 export function requiresConsoleEmailVerification(
-  account: Pick<Models.User, 'emailVerification'> | null | undefined,
+  account:
+    | (Pick<Models.User, 'emailVerification'> & { labels?: string[] })
+    | null
+    | undefined,
 ): boolean {
   if (!account) return false
+  // The anonymous owner of a Zero project has no email; claiming verifies one.
+  if (isZeroAccount(account)) return false
   return (
     getActiveProfileFeatures().userVerification && !account.emailVerification
   )
@@ -152,6 +158,11 @@ export async function prefetchPostAuthDestination(
 ): Promise<void> {
   // Authorizing an OAuth2 app: skip org provisioning/prefetch entirely.
   if (isOAuth2FlowRedirect(redirect)) return
+  // Claiming a Zero project can hand the account its free organization, which
+  // a provisioned personal organization would take instead.
+  if (redirect && normalizeRedirectPathname(redirect).startsWith('/zero/')) {
+    return
+  }
   // Education enrollment provisions its own organization after verifying GitHub.
   if (redirect && normalizeRedirectPathname(redirect) === EDUCATION_JOIN_PATH) {
     return

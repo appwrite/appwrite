@@ -28,6 +28,8 @@ export const ANALYTICS_ACTIONS = {
   'upgrade-clicked': 'Upgrade Clicked',
   'auth-sign-in': 'Sign In Clicked',
   'auth-sign-up': 'Sign Up Clicked',
+  'zero-start': 'Zero Start Clicked',
+  'zero-claim': 'Zero Claim Clicked',
   'header-console': 'Header Console Clicked',
   'header-home': 'Header Home Clicked',
   'header-docs': 'Header Docs Clicked',

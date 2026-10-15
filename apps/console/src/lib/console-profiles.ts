@@ -107,6 +107,8 @@ export type ConsoleProfileFeatures = {
   functionEmail: boolean
   /** Custom inbound email (SMTP) domains on the function Domains tab. */
   functionEmailDomains: boolean
+  /** "Start without an account" on sign-in and sign-up, which hands out a claimable project. */
+  zero: boolean
 }
 
 /** Short labels for debug UI (profile comparison, etc.). */
@@ -151,6 +153,7 @@ export const CONSOLE_PROFILE_FEATURE_LABELS: Record<
   appwritePush: 'Appwrite push',
   functionEmail: 'Function email trigger',
   functionEmailDomains: 'Function email domains',
+  zero: 'Start without an account',
 }
 
 export type ConsoleProfile = {
@@ -209,6 +212,8 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       // Off until launch; enable from Debug → Feature flags.
       functionEmail: false,
       functionEmailDomains: false,
+      // Off until the API hands out Zero projects; enable from Debug → Feature flags.
+      zero: false,
     },
   },
   'self-hosted': {
@@ -253,6 +258,7 @@ export const CONSOLE_PROFILES: Record<ConsoleProfileId, ConsoleProfile> = {
       appwritePush: false,
       functionEmail: false,
       functionEmailDomains: false,
+      zero: false,
     },
   },
 }

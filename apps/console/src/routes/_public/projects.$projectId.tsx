@@ -48,6 +48,7 @@ import {
 import { consoleVariablesQueryOptions } from '@/lib/react-query/hooks/console-variables'
 import { ErrorComponent } from '@/components/error/Component'
 import { ConsoleImpersonationBanner } from '@/components/global/shared/ConsoleImpersonationBanner'
+import { ZeroBanner } from '@/components/global/shared/ZeroBanner'
 import { PostgresPromoBanner } from '@/components/global/shared/PostgresPromoBanner'
 import { reportConsoleAccess } from '@/lib/appwrite/console-access'
 import {
@@ -178,6 +179,7 @@ function ProjectAccessErrorView({
       <div className="sticky top-0 z-[110] flex shrink-0 flex-col bg-background">
         <CloudStatusBanner />
         <ConsoleImpersonationBanner />
+        <ZeroBanner />
       </div>
       <main className="min-h-0 flex-1 overflow-y-auto">
         <ErrorComponent error={error} info={undefined} reset={reset} />

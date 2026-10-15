@@ -94,6 +94,7 @@ import { Route as AuthAuthMagicUrlRouteImport } from './routes/_auth/auth.magic-
 import { Route as AuthEducationJoinRouteImport } from './routes/_auth/education.join'
 import { Route as AuthOauth2ConsentRouteImport } from './routes/_auth/oauth2.consent'
 import { Route as AuthOauth2DeviceRouteImport } from './routes/_auth/oauth2.device'
+import { Route as AuthZeroZeroIdRouteImport } from './routes/_auth/zero.$zeroId'
 import { Route as MarketingAlternativeToCompetitorRouteImport } from './routes/_marketing/alternative-to.$competitor'
 import { Route as MarketingBlogIndexRouteImport } from './routes/_marketing/blog.index'
 import { Route as MarketingBlogPageRouteImport } from './routes/_marketing/blog.$page'
@@ -893,6 +894,11 @@ const AuthOauth2ConsentRoute = AuthOauth2ConsentRouteImport.update({
 const AuthOauth2DeviceRoute = AuthOauth2DeviceRouteImport.update({
   id: '/oauth2/device',
   path: '/oauth2/device',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthZeroZeroIdRoute = AuthZeroZeroIdRouteImport.update({
+  id: '/zero/$zeroId',
+  path: '/zero/$zeroId',
   getParentRoute: () => AuthRoute,
 } as any)
 const MarketingAlternativeToCompetitorRoute =
@@ -3430,6 +3436,7 @@ export interface FileRoutesByFullPath {
   '/education/join': typeof AuthEducationJoinRoute
   '/oauth2/consent': typeof AuthOauth2ConsentRoute
   '/oauth2/device': typeof AuthOauth2DeviceRoute
+  '/zero/$zeroId': typeof AuthZeroZeroIdRoute
   '/alternative-to/$competitor': typeof MarketingAlternativeToCompetitorRoute
   '/blog/$page': typeof MarketingBlogPageRoute
   '/init/$ticketId': typeof MarketingInitTicketIdRoute
@@ -3885,6 +3892,7 @@ export interface FileRoutesByTo {
   '/education/join': typeof AuthEducationJoinRoute
   '/oauth2/consent': typeof AuthOauth2ConsentRoute
   '/oauth2/device': typeof AuthOauth2DeviceRoute
+  '/zero/$zeroId': typeof AuthZeroZeroIdRoute
   '/alternative-to/$competitor': typeof MarketingAlternativeToCompetitorRoute
   '/blog/$page': typeof MarketingBlogPageRoute
   '/init/$ticketId': typeof MarketingInitTicketIdRoute
@@ -4300,6 +4308,7 @@ export interface FileRoutesById {
   '/_auth/education/join': typeof AuthEducationJoinRoute
   '/_auth/oauth2/consent': typeof AuthOauth2ConsentRoute
   '/_auth/oauth2/device': typeof AuthOauth2DeviceRoute
+  '/_auth/zero/$zeroId': typeof AuthZeroZeroIdRoute
   '/_marketing/alternative-to/$competitor': typeof MarketingAlternativeToCompetitorRoute
   '/_marketing/blog/$page': typeof MarketingBlogPageRoute
   '/_marketing/init/$ticketId': typeof MarketingInitTicketIdRoute
@@ -4761,6 +4770,7 @@ export interface FileRouteTypes {
     | '/education/join'
     | '/oauth2/consent'
     | '/oauth2/device'
+    | '/zero/$zeroId'
     | '/alternative-to/$competitor'
     | '/blog/$page'
     | '/init/$ticketId'
@@ -5216,6 +5226,7 @@ export interface FileRouteTypes {
     | '/education/join'
     | '/oauth2/consent'
     | '/oauth2/device'
+    | '/zero/$zeroId'
     | '/alternative-to/$competitor'
     | '/blog/$page'
     | '/init/$ticketId'
@@ -5630,6 +5641,7 @@ export interface FileRouteTypes {
     | '/_auth/education/join'
     | '/_auth/oauth2/consent'
     | '/_auth/oauth2/device'
+    | '/_auth/zero/$zeroId'
     | '/_marketing/alternative-to/$competitor'
     | '/_marketing/blog/$page'
     | '/_marketing/init/$ticketId'
@@ -6648,6 +6660,13 @@ declare module '@tanstack/react-router' {
       path: '/oauth2/device'
       fullPath: '/oauth2/device'
       preLoaderRoute: typeof AuthOauth2DeviceRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/zero/$zeroId': {
+      id: '/_auth/zero/$zeroId'
+      path: '/zero/$zeroId'
+      fullPath: '/zero/$zeroId'
+      preLoaderRoute: typeof AuthZeroZeroIdRouteImport
       parentRoute: typeof AuthRoute
     }
     '/_marketing/alternative-to/$competitor': {
@@ -9297,6 +9316,7 @@ interface AuthRouteChildren {
   AuthEducationJoinRoute: typeof AuthEducationJoinRoute
   AuthOauth2ConsentRoute: typeof AuthOauth2ConsentRoute
   AuthOauth2DeviceRoute: typeof AuthOauth2DeviceRoute
+  AuthZeroZeroIdRoute: typeof AuthZeroZeroIdRoute
   AuthAgentMcpCallbackRoute: typeof AuthAgentMcpCallbackRoute
   AuthAssistantMcpCallbackRoute: typeof AuthAssistantMcpCallbackRoute
   AuthAuthOauth2FailureRoute: typeof AuthAuthOauth2FailureRoute
@@ -9315,6 +9335,7 @@ const AuthRouteChildren: AuthRouteChildren = {
   AuthEducationJoinRoute: AuthEducationJoinRoute,
   AuthOauth2ConsentRoute: AuthOauth2ConsentRoute,
   AuthOauth2DeviceRoute: AuthOauth2DeviceRoute,
+  AuthZeroZeroIdRoute: AuthZeroZeroIdRoute,
   AuthAgentMcpCallbackRoute: AuthAgentMcpCallbackRoute,
   AuthAssistantMcpCallbackRoute: AuthAssistantMcpCallbackRoute,
   AuthAuthOauth2FailureRoute: AuthAuthOauth2FailureRoute,

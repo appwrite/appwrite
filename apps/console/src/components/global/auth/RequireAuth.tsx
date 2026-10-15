@@ -50,6 +50,8 @@ export function isOptionalAuthPage(pathname: string): boolean {
   if (pathname === '/oauth2/consent') return true
   // Native SDK OAuth relays open in a browser with no console session.
   if (pathname.startsWith('/auth/oauth2/')) return true
+  // Zero claim links are opened by whoever an agent handed them to.
+  if (pathname.startsWith('/zero/')) return true
   const features = getActiveProfileFeatures()
   if (pathname === '/init' || pathname.startsWith('/init/')) {
     return isInitSurfaceEnabled()
