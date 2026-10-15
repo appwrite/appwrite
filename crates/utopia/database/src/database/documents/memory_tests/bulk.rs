@@ -286,7 +286,7 @@ fn bulk_writes_work_through_batches_smaller_than_the_input() {
 
 const MINORS: &str = "minors";
 
-fn wrapped() -> Arc<dyn crate::filter::Codec> {
+pub(super) fn wrapped() -> Arc<dyn crate::filter::Codec> {
     Arc::new(Callback::new(
         "wrapped",
         |value| {

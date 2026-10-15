@@ -3,9 +3,13 @@
 //! engine). Tests PHP runs on SQLite only, where the behaviour does not
 //! depend on the engine, run here on Memory too.
 
+mod authorize;
 mod bulk;
+mod bulk_more;
+mod ids;
 mod integer_rounding;
 mod numeric;
+mod toggles;
 
 use crate::error::{Kind, Result};
 use crate::value::{Str, Value};
