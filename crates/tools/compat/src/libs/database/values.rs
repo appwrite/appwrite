@@ -545,9 +545,7 @@ pub fn decode_relationship(f: &Fields<'_>) -> R<Relationship> {
         two_way: f.bool("twoWay")?,
         key: f.opt_string("key")?,
         two_way_key: f.opt_string("twoWayKey")?,
-        on_delete: f
-            .enum_("onDelete")?
-            .unwrap_or(utopia_database::relationship::RelationshipDeleteAction::Restrict),
+        on_delete: f.enum_("onDelete")?.unwrap_or(utopia_database::relationship::RelationshipDeleteAction::Restrict),
     })
 }
 
@@ -581,14 +579,15 @@ pub fn decode_attribute(f: &Fields<'_>) -> R<Attribute> {
 /// An `Index` from its tag's fields.
 pub fn decode_index(f: &Fields<'_>) -> R<Index> {
     let lengths = match f.value("lengths")? {
-        Value::Array(a) => a.values().map(|v| if matches!(v, Value::Null) { None } else { Some(value::to_long(v)) }).collect(),
+        Value::Array(a) => {
+            a.values().map(|v| if matches!(v, Value::Null) { None } else { Some(value::to_long(v)) }).collect()
+        }
         _ => Vec::new(),
     };
     let orders = match f.raw("orders") {
-        Some(Json::Array(items)) => items
-            .iter()
-            .map(|j| if j.is_null() { Ok(None) } else { enum_of(j).map(Some) })
-            .collect::<R<Vec<_>>>()?,
+        Some(Json::Array(items)) => {
+            items.iter().map(|j| if j.is_null() { Ok(None) } else { enum_of(j).map(Some) }).collect::<R<Vec<_>>>()?
+        }
         _ => Vec::new(),
     };
     Ok(Index {

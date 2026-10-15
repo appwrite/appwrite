@@ -68,31 +68,22 @@ pub fn parse_url(url: &str) -> Url {
         Some((h, p)) => (h, p.parse().ok()),
         None => (host_port, None),
     };
-    Url {
-        user: decode_percent(user),
-        pass: decode_percent(pass),
-        host: host.to_owned(),
-        port,
-        path: path.to_owned(),
-    }
+    Url { user: decode_percent(user), pass: decode_percent(pass), host: host.to_owned(), port, path: path.to_owned() }
 }
 
 /// This runtime's URL of a service, and PHP's host of it.
 fn endpoints(cx: &Ctx, service: &str) -> R<(Url, String)> {
     let url = parse_url(&cx.service(service)?);
-    let php_host = cx.service(&format!("{service}@php")).map(|u| parse_url(&u).host).unwrap_or_else(|_| url.host.clone());
+    let php_host =
+        cx.service(&format!("{service}@php")).map(|u| parse_url(&u).host).unwrap_or_else(|_| url.host.clone());
     Ok((url, php_host))
 }
 
 /// The PDO DSN of a PostgreSQL service (`Core::pdo`).
 fn pgsql_dsn(cx: &Ctx, service: &str) -> R<(String, Url)> {
     let (url, php_host) = endpoints(cx, service)?;
-    let dsn = format!(
-        "pgsql:host={php_host};hostaddr={};port={};dbname={}",
-        url.host,
-        url.port.unwrap_or(5432),
-        url.path
-    );
+    let dsn =
+        format!("pgsql:host={php_host};hostaddr={};port={};dbname={}", url.host, url.port.unwrap_or(5432), url.path);
     Ok((dsn, url))
 }
 
@@ -109,8 +100,11 @@ pub async fn connect(cx: &Ctx, driver: &str) -> R<Arc<Sql>> {
     match driver {
         "postgres" => postgres(cx, "database-postgres").await,
         "mariadb" | "mysql" => {
-            let (service, engine) =
-                if driver == "mariadb" { ("database-mariadb", Engine::MariaDb) } else { ("database-mysql", Engine::MySql) };
+            let (service, engine) = if driver == "mariadb" {
+                ("database-mariadb", Engine::MariaDb)
+            } else {
+                ("database-mysql", Engine::MySql)
+            };
             let (dsn, url) = mysql_dsn(cx, service)?;
             Ok(Arc::new(Sql::connect(engine, &dsn, Some(&url.user), Some(&url.pass)).await?))
         }
@@ -157,7 +151,8 @@ const REDIS_CACHES: &[(&str, &str)] = &[
 /// A connection to a compat Redis service, its database selected.
 pub async fn redis(cx: &Ctx, service: &str) -> R<redis::aio::ConnectionManager> {
     let url = cx.service(service)?;
-    let client = redis::Client::open(url.as_str()).map_err(|e| crate::adapter::Fault::new(format!("{service}: {e}")))?;
+    let client =
+        redis::Client::open(url.as_str()).map_err(|e| crate::adapter::Fault::new(format!("{service}: {e}")))?;
     Ok(client.get_connection_manager().await.map_err(|e| crate::adapter::Fault::new(format!("{service}: {e}")))?)
 }
 
@@ -308,7 +303,8 @@ pub async fn open(a: &Args) -> R<Obj> {
     let mut sql = None;
     let mut pool_fixture = None;
     let adapter: Arc<dyn Adapter> = if let Some(peer) = a.raw("adapter").filter(|j| !j.is_null()) {
-        let peer = cx.db_of(peer).map_err(|_| crate::adapter::Fault::new("db.open: `adapter` is not a database handle"))?;
+        let peer =
+            cx.db_of(peer).map_err(|_| crate::adapter::Fault::new("db.open: `adapter` is not a database handle"))?;
         sql = peer.sql.clone();
         pool_fixture = peer.pool.clone();
         peer.database.adapter().clone()
@@ -354,11 +350,13 @@ pub async fn open(a: &Args) -> R<Obj> {
     let cache = cache(cx, &a.string_or("cache", "memory")?, !peer).await?;
     let codecs = match a.raw("filters") {
         None | Some(Json::Null) => Vec::new(),
-        Some(list) => {
-            super::codec::list(list)?.into_iter().map(|c| fixtures::make_codec(c).map(|c| c.0)).collect::<R<Vec<_>>>()?
-        }
+        Some(list) => super::codec::list(list)?
+            .into_iter()
+            .map(|c| fixtures::make_codec(c).map(|c| c.0))
+            .collect::<R<Vec<_>>>()?,
     };
-    let db = if codecs.is_empty() { Database::new(adapter, cache) } else { Database::with_filters(adapter, cache, codecs)? };
+    let db =
+        if codecs.is_empty() { Database::new(adapter, cache) } else { Database::with_filters(adapter, cache, codecs)? };
     let authorization = Authorization::new(true);
     for role in a.opt_strings("roles")?.unwrap_or_else(|| vec!["any".to_owned()]) {
         authorization.add_role(&role);

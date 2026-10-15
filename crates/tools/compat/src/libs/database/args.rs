@@ -432,9 +432,7 @@ pub fn decode_value(cx: &Ctx, json: &Json) -> R<Value> {
     if let Some(obj) = stored_obj(cx, json)? {
         return match obj.into_result() {
             Obj::Value(v) => Ok(v),
-            Obj::List(items) => {
-                Ok(Value::Array(items.into_iter().map(|o| obj_value(o)).collect::<R<Array>>()?))
-            }
+            Obj::List(items) => Ok(Value::Array(items.into_iter().map(|o| obj_value(o)).collect::<R<Array>>()?)),
             other => fault(format!("a stored {} is not a value", other.class().unwrap_or("object"))),
         };
     }

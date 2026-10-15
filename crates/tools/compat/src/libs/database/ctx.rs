@@ -230,7 +230,9 @@ impl Ctx {
     /// (`Core::db`).
     pub fn db(&self, args: &Json) -> R<Db> {
         match args.get("db") {
-            Some(h) if !h.is_null() => self.db_of(h).map_err(|_| Fail::Fault(Fault::new("`db` is not a database handle"))),
+            Some(h) if !h.is_null() => {
+                self.db_of(h).map_err(|_| Fail::Fault(Fault::new("`db` is not a database handle")))
+            }
             _ => match lock(&self.current).as_ref() {
                 Some(db) => Ok(db.clone()),
                 None => fault("no database: run `db.open` first"),

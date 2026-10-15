@@ -73,6 +73,34 @@ pub fn dispatch<'a>(op: &'a str, json: &'a Json, cx: &'a Arc<Ctx>) -> BoxFuture<
     })
 }
 
+#[cfg(test)]
+mod size_probe {
+    #[test]
+    fn future_sizes() {
+        let mut session = crate::adapter::Session::default();
+        let cx = super::ctx::Ctx::enter(&mut session);
+        let json = serde_json::json!({});
+        let a = super::args::Args::new(&cx, &json).unwrap();
+        let db = utopia_database::Database::new(
+            std::sync::Arc::new(utopia_database::adapter::memory::Memory::new()),
+            std::sync::Arc::new(utopia_cache::Cache::from_dyn(std::sync::Arc::new(utopia_cache::Memory::new()))),
+        );
+        eprintln!("database::invoke {}", std::mem::size_of_val(&super::database::invoke(&db, "x", &a)));
+        eprintln!("core::call {}", std::mem::size_of_val(&super::core::call("x", &json, &a)));
+        eprintln!("objects::call {}", std::mem::size_of_val(&super::objects::call("x", &a)));
+        eprintln!("adapter::invoke {}", std::mem::size_of_val(&super::adapter::invoke(db.adapter(), "x", &a)));
+        eprintln!("find {}", std::mem::size_of_val(&db.find("x", vec![], utopia_database::PermissionType::Read)));
+        eprintln!("create_documents {}", std::mem::size_of_val(&db.create_documents("x", vec![], 1, None)));
+        eprintln!(
+            "create_collection {}",
+            std::mem::size_of_val(&db.create_collection(
+                utopia_database::Collection::from_document(&utopia_database::Document::empty()).unwrap()
+            ))
+        );
+        eprintln!("upsert_documents {}", std::mem::size_of_val(&db.upsert_documents("x", vec![], 1, None, None)));
+    }
+}
+
 /// Runs one benchmark.
 pub async fn bench(name: &str, session: &mut Session) -> Result<crate::bench::Bench, crate::adapter::Fault> {
     benches::bench(name, session).await

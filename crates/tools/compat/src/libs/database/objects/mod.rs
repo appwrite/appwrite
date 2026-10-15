@@ -70,7 +70,9 @@ pub async fn call(op: &str, a: &Args) -> R<Obj> {
 /// `object.call` on `this`: a stored object (changed in place, as PHP's
 /// objects are references) or a value tag decoded afresh.
 pub async fn call_on(this: &Json, method: &str, a: &Args) -> R<Obj> {
-    if let Some(name) = this.get("$obj").and_then(Json::as_str).filter(|_| this.as_object().is_some_and(|o| o.len() == 1)) {
+    if let Some(name) =
+        this.get("$obj").and_then(Json::as_str).filter(|_| this.as_object().is_some_and(|o| o.len() == 1))
+    {
         let mut target = a.cx.stored(name)?.into_result();
         let result = invoke(&mut target, method, a).await;
         a.cx.store(name, target);
@@ -85,7 +87,11 @@ pub async fn construct(class: &str, a: &Args) -> R<Obj> {
     if class == "Database" {
         return new_database(a).await;
     }
-    if class.starts_with("Adapter\\") && !class.starts_with("Adapter\\SQL\\") && class != "Adapter\\Limits" && class != "Adapter\\Profile" {
+    if class.starts_with("Adapter\\")
+        && !class.starts_with("Adapter\\SQL\\")
+        && class != "Adapter\\Limits"
+        && class != "Adapter\\Profile"
+    {
         if let Some(obj) = super::adapter::construct(class, a).await? {
             return Ok(obj);
         }
@@ -145,6 +151,12 @@ pub async fn invoke(this: &mut Obj, method: &str, a: &Args) -> R<Obj> {
     if let Some(adapter) = this.downcast_ref::<AdapterObj>() {
         let adapter = adapter.0.clone();
         return super::adapter::invoke(&adapter, method, a).await;
+    }
+    if let Some(auth) = this.downcast_ref::<super::database::AuthorizationObj>() {
+        let auth = auth.0.clone();
+        if let Some(obj) = super::core::authorization(&auth, method, a).await? {
+            return Ok(obj);
+        }
     }
     if let Some(obj) = document::invoke(this, method, a).await? {
         return Ok(obj);

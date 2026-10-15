@@ -138,7 +138,8 @@ fn b64_decode(text: &Value, strict: bool) -> Value {
         Value::Str(s) => s.as_bytes().to_vec(),
         other => value::to_text(other).into_bytes(),
     };
-    let cleaned: Vec<u8> = if strict { bytes } else { bytes.into_iter().filter(|b| !b.is_ascii_whitespace()).collect() };
+    let cleaned: Vec<u8> =
+        if strict { bytes } else { bytes.into_iter().filter(|b| !b.is_ascii_whitespace()).collect() };
     match BASE64.decode(&cleaned) {
         Ok(out) => Value::Str(Str::from(out)),
         Err(_) => Value::Bool(false),
@@ -191,7 +192,9 @@ impl Filter for FixtureFilter {
                 json_encode(&pairs(&[("data", b64_bytes(&value))]))
             }
             "joinedSeal" => match &value {
-                Value::Str(_) => json_encode(&pairs(&[("data", b64_bytes(&value)), ("method", Value::Str(Str::from("base64")))])),
+                Value::Str(_) => {
+                    json_encode(&pairs(&[("data", b64_bytes(&value)), ("method", Value::Str(Str::from("base64")))]))
+                }
                 _ => value,
             },
             _ => value,
@@ -273,7 +276,9 @@ pub struct CallbackFilter {
 #[async_trait]
 impl Filter for CallbackFilter {
     async fn encode(&self, value: Value, document: &Document, _database: &Database) -> utopia_database::Result<Value> {
-        self.encode.value(vec![codec::encode(&value), codec::encode_document(document), json!({"$database": true})]).await
+        self.encode
+            .value(vec![codec::encode(&value), codec::encode_document(document), json!({"$database": true})])
+            .await
     }
 
     async fn decode(
@@ -350,7 +355,11 @@ pub fn add_format(name: &str) -> R<()> {
             Arc::new(|attribute: &Array| {
                 let options = options_of(attribute);
                 let (min, max) = (numeric_or_zero(options.get_str("min")), numeric_or_zero(options.get_str("max")));
-                Box::new(Range::with_format(utopia_validators::php::Number::Float(min), utopia_validators::php::Number::Float(max), Type::Float)) as Box<dyn utopia_validators::Validator>
+                Box::new(Range::with_format(
+                    utopia_validators::php::Number::Float(min),
+                    utopia_validators::php::Number::Float(max),
+                    Type::Float,
+                )) as Box<dyn utopia_validators::Validator>
             }),
             ColumnType::Integer,
         ),
@@ -372,9 +381,10 @@ pub fn add_format(name: &str) -> R<()> {
             }),
             ColumnType::String,
         ),
-        "testformat" => {
-            (Arc::new(|_: &Array| Box::new(Text::new(100)) as Box<dyn utopia_validators::Validator>), ColumnType::Integer)
-        }
+        "testformat" => (
+            Arc::new(|_: &Array| Box::new(Text::new(100)) as Box<dyn utopia_validators::Validator>),
+            ColumnType::Integer,
+        ),
         "updateAttributeIntegerOnly" => {
             (Arc::new(|_: &Array| Box::new(Text::new(0)) as Box<dyn utopia_validators::Validator>), ColumnType::Integer)
         }
@@ -460,10 +470,9 @@ pub fn make_hook(spec: &Json) -> R<HookObj> {
             ))),
             class: "Relationships",
         },
-        "Permissions" => HookObj {
-            hook: Hook::write(Arc::new(utopia_database::hook::Permissions::new())),
-            class: "Permissions",
-        },
+        "Permissions" => {
+            HookObj { hook: Hook::write(Arc::new(utopia_database::hook::Permissions::new())), class: "Permissions" }
+        }
         "Tenancy" => HookObj {
             hook: Hook::write(Arc::new(match text("column") {
                 Some(c) => Tenancy::new(c),
@@ -474,10 +483,7 @@ pub fn make_hook(spec: &Json) -> R<HookObj> {
         "Log" => {
             let events = match params.get("events") {
                 Some(list) => Some(
-                    codec::list(list)?
-                        .into_iter()
-                        .map(|e| values::enum_of::<Event>(e))
-                        .collect::<R<Vec<Event>>>()?,
+                    codec::list(list)?.into_iter().map(|e| values::enum_of::<Event>(e)).collect::<R<Vec<Event>>>()?,
                 ),
                 None => None,
             };
@@ -513,7 +519,10 @@ pub fn make_hook(spec: &Json) -> R<HookObj> {
         },
         "Queries" => HookObj {
             hook: Hook::queries(Arc::new(QueriesHook {
-                limit: params.get("limit").map(|v| codec::decode(v).map(|v| value::to_long(&v)).unwrap_or(25)).unwrap_or(25),
+                limit: params
+                    .get("limit")
+                    .map(|v| codec::decode(v).map(|v| value::to_long(&v)).unwrap_or(25))
+                    .unwrap_or(25),
             })),
             class: "QueriesHook",
         },

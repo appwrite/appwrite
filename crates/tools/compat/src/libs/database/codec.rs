@@ -127,7 +127,9 @@ pub fn full_class(name: &str) -> String {
 
 /// The tag name of a class (`Values::shortName`): `None` outside the library.
 pub fn short_class(class: &str) -> Option<&str> {
-    class.strip_prefix("Utopia\\Database\\").or_else(|| class.strip_prefix("Utopia\\").filter(|c| c.starts_with("Query\\")))
+    class
+        .strip_prefix("Utopia\\Database\\")
+        .or_else(|| class.strip_prefix("Utopia\\").filter(|c| c.starts_with("Query\\")))
 }
 
 /// `new Query(method, attribute, values, alias)` from a `$query` tag.

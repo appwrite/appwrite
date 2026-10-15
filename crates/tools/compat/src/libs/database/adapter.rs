@@ -63,7 +63,11 @@ pub async fn call(op: &str, a: &Args) -> R<Obj> {
                 Ok(adapter) => adapter,
                 Err(e) => return Err(Fail::Error(e)),
             };
-            if op == "mongo.fuzz_find" { fuzz_find(&*adapter, a).await } else { fuzz_roundtrip(&*adapter, a, true).await }
+            if op == "mongo.fuzz_find" {
+                fuzz_find(&*adapter, a).await
+            } else {
+                fuzz_roundtrip(&*adapter, a, true).await
+            }
         }
         _ => fault(format!("database: unknown operation `{op}`")),
     }
@@ -173,9 +177,7 @@ async fn call_method(adapter: &Arc<dyn Adapter>, method: &str, a: &Args, calls: 
     Ok(match method {
         // ----- Profile -----
         "supports" => adapter.supports(capability(a, "capability")?).into_obj(),
-        "capabilities" => {
-            Obj::List(adapter.capabilities().iter().map(enums::obj).collect())
-        }
+        "capabilities" => Obj::List(adapter.capabilities().iter().map(enums::obj).collect()),
         "limits" => object(LimitsObj(adapter.limits())),
         "hasFeature" => adapter.has_feature(feature(&s("feature")?)?).into_obj(),
         // ----- Settings -----
@@ -339,7 +341,12 @@ async fn call_method(adapter: &Arc<dyn Adapter>, method: &str, a: &Args, calls: 
             ok(adapter.create_documents(&collection(a, "collection")?, a.documents("documents")?).await)?
         }
         "getDocument" => ok(adapter
-            .get_document(&collection(a, "collection")?, &s("id")?, a.queries("queries")?, a.bool_or("forUpdate", false)?)
+            .get_document(
+                &collection(a, "collection")?,
+                &s("id")?,
+                a.queries("queries")?,
+                a.bool_or("forUpdate", false)?,
+            )
             .await)?,
         "updateDocument" => ok(adapter
             .update_document(
@@ -374,9 +381,7 @@ async fn call_method(adapter: &Arc<dyn Adapter>, method: &str, a: &Args, calls: 
                 Value::Array(arr) => arr.into_iter().map(|(_, v)| v).collect(),
                 _ => Vec::new(),
             };
-            ok(adapter
-                .delete_documents(&collection(a, "collection")?, sequences, a.strings("permissionIds")?)
-                .await)?
+            ok(adapter.delete_documents(&collection(a, "collection")?, sequences, a.strings("permissionIds")?).await)?
         }
         "find" => ok(adapter.find(&collection(a, "collection")?, a.queries("queries")?, find_options(a)?).await)?,
         "count" => ok(adapter.count(&collection(a, "collection")?, a.queries("queries")?, a.opt_int("max")?).await)?,
@@ -430,7 +435,9 @@ async fn call_method(adapter: &Arc<dyn Adapter>, method: &str, a: &Args, calls: 
         },
         "getTimeout" => match adapter.timeouts() {
             Some(t) => t
-                .timeout(a.enum_::<utopia_database::event::Event>("event")?.unwrap_or(utopia_database::event::Event::All))
+                .timeout(
+                    a.enum_::<utopia_database::event::Event>("event")?.unwrap_or(utopia_database::event::Event::All),
+                )
                 .into_obj(),
             None => return fault("the adapter has no timeouts"),
         },
@@ -675,12 +682,7 @@ async fn fuzz_roundtrip(adapter: &dyn Adapter, a: &Args, objects: bool) -> R<Obj
         Err(e) => Err(e),
     };
     let read = adapter.get_document(&rt, "rt", Vec::new(), false).await.map(|d| codec::encode_document(&d));
-    let query = Query::new(
-        utopia_query::Method::Equal,
-        "t",
-        [value::to_query(&value)].into_iter().collect(),
-        "",
-    );
+    let query = Query::new(utopia_query::Method::Equal, "t", [value::to_query(&value)].into_iter().collect(), "");
     let found = adapter.find(&rt, vec![query], Find::default()).await.map(|d| codec::encode_documents(&d));
     let deleted = adapter.delete_document(&rt, "rt").await.map(Json::Bool);
     Ok(Obj::Value(codec::decode(&Json::Array(vec![out(created), out(read), out(found), out(deleted)]))?))

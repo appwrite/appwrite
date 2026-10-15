@@ -69,8 +69,12 @@ pub async fn call(op: &str, json: &Json, a: &Args) -> R<Obj> {
                 .map_err(|e| crate::adapter::Fault::new(format!("db.redis: {e}")))?;
             return Ok(Obj::null());
         }
-        "db.mirror" | "database.on_error" | "database.get_source" | "database.get_destination"
-        | "database.create_upgrades" | "database.await_replications" => {
+        "db.mirror"
+        | "database.on_error"
+        | "database.get_source"
+        | "database.get_destination"
+        | "database.create_upgrades"
+        | "database.await_replications" => {
             return fault(format!("{op}: Mirror is not ported to the Rust database 8 crate (src/legacy)"));
         }
         "db.adapter" => {
@@ -93,14 +97,100 @@ pub async fn call(op: &str, json: &Json, a: &Args) -> R<Obj> {
     }
     if let Some(method) = op.strip_prefix("db.authorization.") {
         let db = cx.db(json)?;
-        let mut this = object(AuthorizationObj(db.database.authorization()));
-        return objects::invoke(&mut this, &camel(method), a).await;
+        let method = camel(method);
+        return match authorization(&db.database.authorization(), &method, a).await? {
+            Some(obj) => Ok(obj),
+            None => fault(format!("Validator\\Authorization has no method `{method}`")),
+        };
     }
     if let Some(method) = op.strip_prefix("database.") {
         let db = cx.db(json)?;
         return database::invoke(&db.database, &camel(method), a).await;
     }
     fault(format!("database: unknown operation `{op}`"))
+}
+
+/// `Validator\Authorization`'s instance methods (`db.authorization.*`, and
+/// `object.call` on an authorization). `None` for a method it has not.
+pub async fn authorization(
+    auth: &std::sync::Arc<utopia_database::Authorization>,
+    method: &str,
+    a: &Args,
+) -> R<Option<Obj>> {
+    let this = || object(AuthorizationObj(auth.clone()));
+    let calls = super::calls::Calls::new(&a.cx);
+    let result: R<Obj> = async {
+        Ok(match method {
+            "getDescription" => auth.description().into_obj(),
+            "isValid" => match a.obj("value")? {
+                Some(obj) => match obj.downcast_ref::<database::InputObj>() {
+                    Some(input) => auth.is_valid(&input.0).into_obj(),
+                    None => utopia_validators::Validator::is_valid(&**auth, &Json::Null).into_obj(),
+                },
+                None => utopia_validators::Validator::is_valid(&**auth, &Json::Null).into_obj(),
+            },
+            "addRole" => {
+                auth.add_role(&a.string("role")?);
+                this()
+            }
+            "removeRole" => {
+                auth.remove_role(&a.string("role")?);
+                this()
+            }
+            "getRoles" => auth.roles().into_obj(),
+            "cleanRoles" => {
+                auth.clean_roles();
+                this()
+            }
+            "hasRole" => auth.has_role(&a.string("role")?).into_obj(),
+            "setStatus" => {
+                auth.set_status(a.bool("status")?);
+                this()
+            }
+            "getStatus" => auth.status().into_obj(),
+            "enable" => {
+                auth.enable();
+                this()
+            }
+            "disable" => {
+                auth.disable();
+                this()
+            }
+            "reset" => {
+                auth.reset();
+                Obj::null()
+            }
+            "isArray" => false.into_obj(),
+            "getType" => "array".into_obj(),
+            "skip" => {
+                let cb = calls.required("callback", a.raw("callback"))?;
+                returned(auth.skip(cb.invoke(Vec::new())).await)?
+            }
+            "withRoles" => {
+                let cb = calls.required("callback", a.raw("callback"))?;
+                let roles = a.strings("roles")?;
+                returned(auth.with_roles(&roles, cb.invoke(Vec::new())).await)?
+            }
+            "restore" => {
+                let cb = calls.required("callback", a.raw("callback"))?;
+                let roles = a.strings("roles")?;
+                returned(auth.restore(a.bool("status")?, &roles, cb.invoke(Vec::new())).await)?
+            }
+            _ => return Ok(Obj::Enum(super::obj::EnumCase { class: String::new(), case: String::new() })),
+        })
+    }
+    .await;
+    match result {
+        Ok(Obj::Enum(e)) if e.class.is_empty() => Ok(None),
+        other => calls.finish(other).map(Some),
+    }
+}
+
+fn returned(r: Result<Option<Obj>, utopia_database::Error>) -> R<Obj> {
+    match r {
+        Ok(v) => Ok(v.unwrap_or_else(Obj::null)),
+        Err(e) => Err(super::ctx::Fail::Error(e)),
+    }
 }
 
 /// `db.sql`: a statement on the database's own connection, in its schema
