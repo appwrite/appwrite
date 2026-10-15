@@ -11,6 +11,7 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Usage\Context;
 use Appwrite\Usage\Operations;
+use Appwrite\Utopia\Database\Documents\Aggregate;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
@@ -156,7 +157,7 @@ class XList extends Action
             $parsed = Query::groupByType($queries);
             $find = match (true) {
                 $parsed->isAggregation() => fn (): array => \array_map(
-                    static fn (array $row): Document => new Document($row),
+                    static fn (array $row): Aggregate => new Aggregate($row),
                     $dbForDatabases->aggregate($collectionTableId, $queries),
                 ),
                 $parsed->selections !== [] => fn (): array => $dbForDatabases->find($collectionTableId, $queries),
@@ -184,7 +185,7 @@ class XList extends Action
                 }
 
                 if (\is_array($cachedDocuments)) {
-                    $documents = \array_map(fn (array $document): Document => new Document($document), $cachedDocuments);
+                    $documents = \array_map(fn (array $document): Document => $parsed->isAggregation() ? new Aggregate($document) : new Document($document), $cachedDocuments);
                     $documentsCacheHit = true;
 
                     try {

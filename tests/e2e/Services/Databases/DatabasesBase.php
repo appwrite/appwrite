@@ -5,6 +5,7 @@ namespace Tests\E2E\Services\Databases;
 use Appwrite\Extend\Exception;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\SchemaPolling;
+use Tests\E2E\Services\Databases\Queries\AggregateShape;
 use Tests\E2E\Services\Databases\Queries\DottedPaths;
 use Tests\E2E\Services\Databases\Queries\JoinCombos;
 use Tests\E2E\Services\Databases\Queries\JoinOperators;
@@ -34,6 +35,7 @@ trait DatabasesBase
 {
     use DatabasesUrlHelpers;
     use SchemaPolling;
+    use AggregateShape;
     use JoinTypes;
     use JoinOperators;
     use JoinPermissions;
