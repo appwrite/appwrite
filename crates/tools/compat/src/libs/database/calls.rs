@@ -11,7 +11,7 @@
 //! ```
 
 use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, Weak};
 
 use serde_json::{Map, Value as Json, json};
 use utopia_database::{Error, Kind};
@@ -36,14 +36,16 @@ struct Record {
 /// recorded.
 #[derive(Clone)]
 pub struct Calls {
-    cx: Arc<Ctx>,
+    /// Held weakly: callbacks live on in hooks and listeners the session
+    /// keeps, and must not keep the session (and its connections) alive.
+    cx: Weak<Ctx>,
     record: Arc<Mutex<Record>>,
 }
 
 impl Calls {
     /// Callbacks running their steps on `cx`.
     pub fn new(cx: &Arc<Ctx>) -> Self {
-        Self { cx: cx.clone(), record: Arc::new(Mutex::new(Record { callbacks: Vec::new(), fault: None })) }
+        Self { cx: Arc::downgrade(cx), record: Arc::new(Mutex::new(Record { callbacks: Vec::new(), fault: None })) }
     }
 
     /// The callback for parameter `name` from its argument: `None` for an
@@ -139,6 +141,9 @@ impl Cb {
                 invocation.steps.push(result);
             }
         };
+        let Some(cx) = calls.cx.upgrade() else {
+            return Err(calls.fail(Fault::new("a callback ran after its session ended")));
+        };
         let mut locals: HashMap<String, Json> = HashMap::new();
         let mut returned = None;
         for step in self.steps.iter() {
@@ -161,8 +166,8 @@ impl Cb {
             }
             if op == "$return" {
                 push(Json::Null);
-                let value = args::tags(step_args.get("value").unwrap_or(&Json::Null))
-                    .and_then(|j| args::decode_obj(&calls.cx, &j));
+                let value =
+                    args::tags(step_args.get("value").unwrap_or(&Json::Null)).and_then(|j| args::decode_obj(&cx, &j));
                 match value {
                     Ok(v) => returned = Some(v),
                     Err(Fail::Fault(f)) => return Err(calls.fail(f)),
@@ -174,7 +179,7 @@ impl Cb {
                 }
                 continue;
             }
-            match super::dispatch(op, &step_args, &calls.cx).await {
+            match super::dispatch(op, &step_args, &cx).await {
                 Err(Fail::Fault(f)) => return Err(calls.fail(f)),
                 Err(fail) => {
                     let (class, message) = fail.class_and_message().unwrap_or_default();

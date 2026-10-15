@@ -210,7 +210,9 @@ fn pool(cx: &Arc<Ctx>, spec: &Args, driver: &str) -> R<Arc<PoolFixture>> {
     }
     let unreachable = spec.bool_or("unreachable", false)?;
     let size = usize::try_from(spec.int_or("size", 1)?).unwrap_or(0);
-    let (cx, driver) = (cx.clone(), driver.to_owned());
+    // The pool lives in the session it would otherwise keep alive (and its
+    // connections open after the case): it holds the session weakly.
+    let (cx, driver) = (Arc::downgrade(cx), driver.to_owned());
     let pool = utopia_pools::Pool::new(
         utopia_pools::Stack::new(),
         &driver.clone(),
@@ -221,6 +223,9 @@ fn pool(cx: &Arc<Ctx>, spec: &Args, driver: &str) -> R<Arc<PoolFixture>> {
                 if unreachable {
                     return Err(Error::new(Kind::Runtime, "SQLSTATE[HY000] [2002] Connection refused"));
                 }
+                let Some(cx) = cx.upgrade() else {
+                    return Err(Error::new(Kind::Runtime, "the session ended"));
+                };
                 let adapter: Arc<dyn Adapter> = match connect(&cx, &driver).await {
                     Ok(a) => a,
                     Err(Fail::Error(e)) => return Err(e),
