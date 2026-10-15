@@ -568,6 +568,7 @@ impl super::Filter for Global {
 
 #[test]
 fn a_registered_codec_shadows_a_global_filter_only_on_its_handle() {
+    let _filters = super::fixtures::global_filters();
     block_on(async {
         // A name of its own: the global filters are shared by every test.
         let name = "reversedShadowing";
@@ -575,6 +576,7 @@ fn a_registered_codec_shadows_a_global_filter_only_on_its_handle() {
         db.set_filters(registry(Arc::new(Reversed(name))));
         let other = types(None, Vec::new());
         Database::add_filter(name, Arc::new(Global));
+        let _restore = super::Finally::new(|| super::filters::remove_global_filter(name));
         let decoded = db.decode(&notes(name), doc(vec![("body", string("olleh"))]), &[]).await.unwrap();
         assert_eq!(decoded.get("body"), Some(&string("hello")));
         let decoded = other.decode(&notes(name), doc(vec![("body", string("olleh"))]), &[]).await.unwrap();
@@ -584,6 +586,7 @@ fn a_registered_codec_shadows_a_global_filter_only_on_its_handle() {
 
 #[test]
 fn cache_keys_follow_the_codecs_of_a_handle() {
+    let _filters = super::fixtures::global_filters();
     block_on(async {
         let plain = types(None, Vec::new());
         let before = hash(&plain).await;
@@ -618,6 +621,7 @@ fn cache_keys_follow_the_codecs_of_a_handle() {
 
 #[test]
 fn set_filters_replaces_the_constructor_filters() {
+    let _filters = super::fixtures::global_filters();
     block_on(async {
         let db = types(None, vec![Arc::new(Callback::new("reversed", Ok, Ok))]);
         db.set_filters(registry(Arc::new(Reversed("reversed"))));
@@ -626,5 +630,310 @@ fn set_filters_replaces_the_constructor_filters() {
         let decoded = db.decode(&notes("reversed"), doc(vec![("body", string("olleh"))]), &[]).await.unwrap();
         assert_eq!(decoded.get("body"), Some(&string("hello")));
         assert_eq!(hash(&registry_only).await, hash(&db).await);
+    });
+}
+
+// ---- CoreMinorsTest --------------------------------------------------------
+// PHP runs most of these on SQLite subclasses; here a Spy over Memory
+// intercepts the same engine calls. The cases that read the engine's schema
+// back (`getSchemaIndexes()`), and the relationship deletion whose
+// interception sits on the relationships feature, stay deferred.
+
+/// `configure()`: a created database over `adapter`, `any` role added.
+async fn configured(adapter: Arc<dyn Adapter>) -> Database {
+    let db = Database::new(adapter, no_cache());
+    db.set_database("core_minors").set_namespace(&super::fixtures::unique("core_minors"));
+    db.authorization().add_role("any");
+    db.create(None).await.unwrap();
+    db
+}
+
+fn logs() -> Collection {
+    Collection::create("logs", "logs", Vec::new(), Vec::new(), None, true, Array::new()).unwrap()
+}
+
+/// A database whose metadata writes inside their transaction fail with
+/// `failure` once armed, counting them (`metadataFailing(..., inTransaction:
+/// true)`).
+async fn metadata_failing(failure: crate::error::Error) -> (Database, Arc<std::sync::Mutex<usize>>, Arc<std::sync::atomic::AtomicBool>) {
+    let spy = super::spy::Spy::memory();
+    let db = configured(spy.clone()).await;
+    db.create_collection(logs()).await.unwrap();
+    let writes = Arc::new(std::sync::Mutex::new(0usize));
+    let armed = Arc::new(std::sync::atomic::AtomicBool::new(true));
+    let (counted, on) = (writes.clone(), armed.clone());
+    spy.intercept(move |seen| {
+        if on.load(std::sync::atomic::Ordering::SeqCst)
+            && seen.stage == super::spy::Stage::Before
+            && seen.method == "updateDocument"
+            && seen.name == Some(super::METADATA)
+        {
+            *counted.lock().unwrap() += 1;
+            return Err(failure.clone());
+        }
+        Ok(())
+    });
+    (db, writes, armed)
+}
+
+#[test]
+fn deterministic_failures_are_not_retried() {
+    block_on(async {
+        for kind in [
+            Kind::Authorization,
+            Kind::Character,
+            Kind::Duplicate,
+            Kind::Limit,
+            Kind::NotFound,
+            Kind::Order,
+            Kind::Query,
+            Kind::Relationship,
+            Kind::Restricted,
+            Kind::Structure,
+            Kind::Type,
+            Kind::Conflict,
+            Kind::Dependency,
+            Kind::Index,
+            Kind::Operator,
+            Kind::Timeout,
+            Kind::Truncate,
+            Kind::Mismatch,
+            Kind::Unique,
+            Kind::Refused,
+        ] {
+            let failure = crate::error::Error::new(kind, "deterministic");
+            let (db, writes, _) = metadata_failing(failure).await;
+            let err = db.create_attribute("logs", Attribute::integer("count")).await.unwrap_err();
+            assert!(err.is_a(Kind::Database), "{kind:?}: {err:?}");
+            let cause = if err.kind() == kind { Some(&err) } else { err.previous() };
+            assert_eq!(cause.map(|c| (c.kind(), c.message())), Some((kind, "deterministic")), "{kind:?}: {err:?}");
+            assert_eq!(*writes.lock().unwrap(), 1, "{kind:?}: a deterministic failure is not retried");
+        }
+    });
+}
+
+#[test]
+fn a_failure_the_transaction_does_not_retry_is_retried_by_the_schema_call() {
+    block_on(async {
+        let failure = crate::error::Error::new(Kind::Runtime, "cache unavailable");
+        let (db, writes, _) = metadata_failing(failure).await;
+        let err = db.create_attribute("logs", Attribute::integer("count")).await.unwrap_err();
+        assert!(err.is_a(Kind::Database), "{err:?}");
+        assert_eq!(err.previous().map(|c| c.message()), Some("cache unavailable"), "{err:?}");
+        assert_eq!(*writes.lock().unwrap(), 3, "the schema call retries a failure its transaction did not");
+    });
+}
+
+/// A database whose outermost transactions fail to begin with a lock
+/// conflict while armed, counting each such attempt (`contendedDatabase()`).
+async fn contended() -> (Database, Arc<std::sync::Mutex<usize>>, Arc<std::sync::atomic::AtomicBool>) {
+    let spy = super::spy::Spy::memory();
+    let db = configured(spy.clone()).await;
+    let begins = Arc::new(std::sync::Mutex::new(0usize));
+    let armed = Arc::new(std::sync::atomic::AtomicBool::new(false));
+    let (counted, on, inner) = (begins.clone(), armed.clone(), spy.inner().clone());
+    spy.intercept(move |seen| {
+        if seen.stage == super::spy::Stage::Before
+            && seen.method == "startTransaction"
+            && !inner.in_transaction()
+            && on.load(std::sync::atomic::Ordering::SeqCst)
+        {
+            *counted.lock().unwrap() += 1;
+            return Err(crate::error::Error::new(Kind::Contention, "Database is locked"));
+        }
+        Ok(())
+    });
+    (db, begins, armed)
+}
+
+const TRANSACTION_ATTEMPTS: usize = 3;
+
+#[test]
+fn a_contended_metadata_write_runs_only_its_transactions_attempts() {
+    block_on(async {
+        let (db, begins, armed) = contended().await;
+        db.create_collection(logs()).await.unwrap();
+        armed.store(true, std::sync::atomic::Ordering::SeqCst);
+        let err = db.create_attribute("logs", Attribute::integer("count")).await.unwrap_err();
+        armed.store(false, std::sync::atomic::Ordering::SeqCst);
+        assert!(err.is_a(Kind::Database), "{err:?}");
+        let contention = if err.kind() == Kind::Contention { Some(&err) } else { err.previous() };
+        assert_eq!(contention.map(|c| c.kind()), Some(Kind::Contention), "{err:?}");
+        assert_eq!(*begins.lock().unwrap(), TRANSACTION_ATTEMPTS);
+    });
+}
+
+#[test]
+fn a_contended_relationship_definition_runs_only_its_transactions_attempts() {
+    block_on(async {
+        let (db, begins, armed) = contended().await;
+        db.create_collection(Collection::create("profiles", "profiles", Vec::new(), Vec::new(), None, true, Array::new()).unwrap())
+            .await
+            .unwrap();
+        db.create_collection(Collection::create("accounts", "accounts", Vec::new(), Vec::new(), None, true, Array::new()).unwrap())
+            .await
+            .unwrap();
+        armed.store(true, std::sync::atomic::Ordering::SeqCst);
+        let relationship =
+            crate::relationship::Relationship::one_to_one("accounts").two_way(true).key("account").two_way_key("profile");
+        let err = db.create_relationship("profiles", relationship).await.unwrap_err();
+        armed.store(false, std::sync::atomic::Ordering::SeqCst);
+        assert!(err.is_a(Kind::Database), "{err:?}");
+        let contention = if err.kind() == Kind::Contention { Some(&err) } else { err.previous() };
+        assert_eq!(contention.map(|c| c.kind()), Some(Kind::Contention), "{err:?}");
+        assert_eq!(*begins.lock().unwrap(), TRANSACTION_ATTEMPTS);
+        let profiles = db.get_collection("profiles").await.unwrap();
+        assert!(profiles.attributes().unwrap().is_empty(), "the failed relationship is rolled back");
+    });
+}
+
+#[test]
+fn type_mismatch_messages_say_bigint() {
+    block_on(async {
+        let db = configured(Arc::new(Memory::new())).await;
+        db.create_collection(
+            Collection::create("logs", "logs", vec![Attribute::big_integer("total")], Vec::new(), None, true, Array::new())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+        let update = crate::attribute::Update {
+            default: crate::attribute::Patch::Set(string("many")),
+            ..Default::default()
+        };
+        let err = db.update_attribute("logs", "total", update).await.unwrap_err();
+        assert!(err.is_a(Kind::Database), "{err:?}");
+        assert_eq!(err.message(), "Default value many is not a valid integer string for type bigint");
+    });
+}
+
+#[test]
+fn every_unique_violation_uses_one_message() {
+    block_on(async {
+        let db = configured(Arc::new(Memory::new())).await;
+        db.create_collection(
+            Collection::create(
+                "users",
+                "users",
+                vec![Attribute::string("email", 64)],
+                vec![crate::index::Index::unique("by_email", ["email"], Vec::new(), Vec::new()).unwrap()],
+                Some(any(&["create", "read", "update"])),
+                false,
+                Array::new(),
+            )
+            .unwrap(),
+        )
+        .await
+        .unwrap();
+        let user = |id: &str, email: &str| doc(vec![("$id", string(id)), ("email", string(email))]);
+        db.create_document("users", user("first", "a@example.com")).await.unwrap();
+        db.create_document("users", user("second", "b@example.com")).await.unwrap();
+
+        let errors = vec![
+            ("create", db.create_document("users", user("third", "a@example.com")).await.unwrap_err()),
+            (
+                "create many",
+                db.create_documents(
+                    "users",
+                    vec![user("fourth", "c@example.com"), user("fifth", "c@example.com")],
+                    super::BATCH_SIZE,
+                    None,
+                )
+                .await
+                .unwrap_err(),
+            ),
+            (
+                "update",
+                db.update_document("users", "second", doc(vec![("email", string("a@example.com"))])).await.unwrap_err(),
+            ),
+            (
+                "update many into one value",
+                db.update_documents("users", doc(vec![("email", string("d@example.com"))]), Vec::new(), super::BATCH_SIZE, None)
+                    .await
+                    .unwrap_err(),
+            ),
+            (
+                "update many into a stored value",
+                db.update_documents(
+                    "users",
+                    doc(vec![("email", string("a@example.com"))]),
+                    vec![Query::equal("$id", ["second"])],
+                    super::BATCH_SIZE,
+                    None,
+                )
+                .await
+                .unwrap_err(),
+            ),
+        ];
+        for (name, error) in errors {
+            assert_eq!(error.kind(), Kind::Unique, "{name}: {error:?}");
+            assert_eq!(error.message(), crate::error::UNIQUE_MESSAGE, "{name}");
+        }
+    });
+}
+
+#[test]
+fn a_stored_object_value_does_not_block_an_update_of_another_attribute() {
+    block_on(async {
+        let db = configured(Arc::new(Memory::new())).await;
+        db.create_collection(definition(
+            "items",
+            vec![Attribute::string("title", 64), Attribute::object("meta")],
+            any(&["create", "read", "update"]),
+            false,
+        ))
+        .await
+        .unwrap();
+        let pair = || list([Value::Int(1), Value::Int(2)]);
+        db.skip_validation(db.create_document(
+            "items",
+            doc(vec![("$id", string("stored")), ("title", string("first")), ("meta", pair())]),
+        ))
+        .await
+        .unwrap();
+
+        let renamed = db.update_document("items", "stored", doc(vec![("title", string("renamed"))])).await.unwrap();
+        assert_eq!(renamed.get("title"), Some(&string("renamed")));
+        assert_eq!(renamed.get("meta"), Some(&pair()));
+
+        let mut stored = db.get_document("items", "stored", Vec::new(), false).await.unwrap();
+        stored.put("title", string("again"));
+        let returned = db.update_document("items", "stored", stored).await.unwrap();
+        assert_eq!(returned.get("title"), Some(&string("again")), "a stored value passed back unchanged does not block the update");
+
+        let err = db
+            .update_document("items", "stored", doc(vec![("meta", list([Value::Int(3), Value::Int(4)]))]))
+            .await
+            .unwrap_err();
+        assert_eq!(err.kind(), Kind::Structure, "a list written as an object is still rejected");
+        assert_eq!(db.get_document("items", "stored", Vec::new(), false).await.unwrap().get("meta"), Some(&pair()));
+    });
+}
+
+#[test]
+fn an_associative_vector_is_rejected_naming_its_attribute() {
+    block_on(async {
+        let spy = super::spy::Spy::memory();
+        spy.support(Capability::Vectors);
+        let db = configured(spy).await;
+        db.create_collection(definition("embeddings", Vec::new(), any(&["create", "read"]), true)).await.unwrap();
+        db.create_attribute("embeddings", Attribute::vector("embedding", 3)).await.unwrap();
+        let collection = db.get_collection("embeddings").await.unwrap();
+        let filters = collection
+            .attributes()
+            .unwrap()
+            .iter()
+            .find(|a| a.key == "embedding")
+            .map(|a| a.filters.clone())
+            .unwrap_or_default();
+        assert!(filters.iter().any(|f| f == ColumnType::Vector.as_str()), "createAttribute() adds the vector filter");
+
+        let vector = Value::Array(assoc(vec![("x", Value::Float(1.0)), ("y", Value::Float(0.0)), ("z", Value::Float(0.0))]));
+        let err = db.create_document("embeddings", doc(vec![("embedding", vector)])).await.unwrap_err();
+        assert_eq!(err.kind(), Kind::Structure);
+        assert_eq!(
+            err.message(),
+            "Invalid document structure: Attribute \"embedding\" has invalid type. Value must be an array of 3 numeric values"
+        );
     });
 }

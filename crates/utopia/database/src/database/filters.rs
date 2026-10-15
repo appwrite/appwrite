@@ -83,6 +83,13 @@ pub(crate) fn register_default_filters() {
     }
 }
 
+/// Removes the global filter `name` (tests restore the registry as PHP's
+/// `FilterRegistry::restore()` does).
+#[cfg(test)]
+pub(crate) fn remove_global_filter(name: &str) {
+    REGISTRY.write().unwrap_or_else(|e| e.into_inner()).filters.retain(|(n, _, _)| n != name);
+}
+
 impl Database {
     /// Registers `filter` as `name` for every database, replacing one of the
     /// same name in its place (`addFilter()`, static). A database's own

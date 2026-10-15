@@ -291,21 +291,22 @@ fn a_malformed_selection_is_refused_as_a_query_error() {
 // ---- SelectFilterSkipTest --------------------------------------------------
 
 /// `subQueryProbeUnit`: decodes to `['fanned', 'out']`, counting its calls.
+/// PHP registers it globally; it is the handle's own codec here, so no other
+/// test sees it.
 struct Probe(Arc<Mutex<usize>>);
 
-#[async_trait]
-impl super::super::Filter for Probe {
-    async fn encode(&self, _value: Value, _document: &Document, _database: &Database) -> Result<Value> {
+impl crate::filter::Codec for Probe {
+    fn name(&self) -> &str {
+        "subQueryProbeUnit"
+    }
+
+    fn encode(&self, _value: Value) -> Result<Value> {
         Ok(Value::Null)
     }
 
-    async fn decode(&self, _value: Value, _document: &Document, _database: &Database, _attribute: &str) -> Result<Value> {
+    fn decode(&self, _value: Value) -> Result<Value> {
         *self.0.lock().unwrap() += 1;
         Ok(crate::value::list([string("fanned"), string("out")]))
-    }
-
-    fn signature(&self) -> String {
-        "probe:probe".to_owned()
     }
 }
 
@@ -313,8 +314,10 @@ impl super::super::Filter for Probe {
 fn a_filter_is_not_applied_when_its_attribute_is_not_selected() {
     block_on(async {
         let calls = Arc::new(Mutex::new(0usize));
-        Database::add_filter("subQueryProbeUnit", Arc::new(Probe(calls.clone())));
-        let db = created(Arc::new(Memory::new()), memory_cache(), "utopiaTests", "select_filter", false).await;
+        let db = Database::with_filters(Arc::new(Memory::new()), memory_cache(), vec![Arc::new(Probe(calls.clone()))])
+            .unwrap();
+        db.set_database("utopiaTests").set_namespace(&super::super::fixtures::unique("select_filter"));
+        db.create(None).await.unwrap();
         db.create_collection(
             Collection::create("filterSelect", "filterSelect", Vec::new(), Vec::new(), None, true, Default::default())
                 .unwrap(),

@@ -25,6 +25,13 @@ use crate::role::Role;
 use crate::validator::authorization::Authorization;
 use crate::value::{Array, Value, string};
 
+/// Serializes the tests that register global filters (PHP's static
+/// `$filters`) with the tests that read the cache keys those filters change.
+pub(crate) fn global_filters() -> std::sync::MutexGuard<'static, ()> {
+    static LOCK: Mutex<()> = Mutex::new(());
+    LOCK.lock().unwrap_or_else(|e| e.into_inner())
+}
+
 /// `HookFixture::COLLECTION`.
 pub(crate) const POSTS: &str = "posts";
 
