@@ -579,6 +579,9 @@ final class StorageCustomServerTest extends Scope
 
     public function testStripMetadataOnUpload(): void
     {
+        /**
+         * Test for SUCCESS
+         */
         $photo = $this->createTaggedPhoto(64, 48);
         $text = \tempnam(\sys_get_temp_dir(), 'strip-text-');
         \file_put_contents($text, 'GPSLatitude 37.7749 is just text here');
@@ -615,10 +618,40 @@ final class StorageCustomServerTest extends Scope
 
         \unlink($photo);
         \unlink($text);
+
+        /**
+         * Test for FAILURE
+         */
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', $headers, [
+            'bucketId' => Id::unique(),
+            'name' => 'Strip Metadata Invalid',
+            'stripMetadata' => 'invalid',
+        ]);
+        $this->assertSame(400, $bucket['headers']['status-code']);
+        $this->assertSame(Exception::GENERAL_ARGUMENT_INVALID, $bucket['body']['type']);
+
+        $bucket = $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $stripBucket, $headers, [
+            'name' => 'Strip Metadata Invalid',
+            'stripMetadata' => 'invalid',
+        ]);
+        $this->assertSame(400, $bucket['headers']['status-code']);
+        $this->assertSame(Exception::GENERAL_ARGUMENT_INVALID, $bucket['body']['type']);
+
+        $bucket = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $stripBucket, $headers);
+        $this->assertSame(200, $bucket['headers']['status-code']);
+        $this->assertTrue($bucket['body']['stripMetadata']);
     }
 
     public function testStripMetadataOnChunkedUpload(): void
     {
+        /**
+         * Test for SUCCESS
+         */
         // Random noise compresses poorly, so this JPEG is large enough to upload in chunks.
         $photo = $this->createTaggedPhoto(1800, 1800, noise: true);
         $totalSize = \filesize($photo);
