@@ -1,0 +1,35 @@
+rules:
+  - id: php.appwrite.unsafe-dynamic-code
+    message: >
+      Dynamic code or object construction from data: eval, create_function,
+      assert on a string, extract(), single-argument parse_str(), or
+      unserialize() without ['allowed_classes' => false]. Decode with
+      json_decode() and map fields explicitly instead.
+    languages: [php]
+    severity: ERROR
+    metadata:
+      category: correctness
+      technology: [php]
+    paths:
+      include:
+        - "**/src/Appwrite/**"
+        - "**/app/controllers/**"
+        - "**/app/init/**"
+    pattern-either:
+      - pattern: eval(...)
+      - pattern: create_function(...)
+      - pattern: \create_function(...)
+      - pattern: assert("...", ...)
+      - pattern: \assert("...", ...)
+      - pattern: extract(...)
+      - pattern: \extract(...)
+      - pattern: parse_str($INPUT)
+      - pattern: \parse_str($INPUT)
+      - pattern: unserialize($DATA)
+      - pattern: \unserialize($DATA)
+      - patterns:
+          - pattern-either:
+              - pattern: unserialize($DATA, $OPTIONS)
+              - pattern: \unserialize($DATA, $OPTIONS)
+          - pattern-not: "unserialize($DATA, ['allowed_classes' => false])"
+          - pattern-not: '\unserialize($DATA, [''allowed_classes'' => false])'

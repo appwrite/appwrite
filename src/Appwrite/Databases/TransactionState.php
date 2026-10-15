@@ -2,12 +2,14 @@
 
 namespace Appwrite\Databases;
 
+use Appwrite\Utopia\Database\Documents\User;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception;
 use Utopia\Database\Exception\Timeout;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Query\Method;
 
 /**
  * Service for managing transaction state and providing transaction-aware document operations
@@ -25,12 +27,14 @@ class TransactionState
      * @var callable(Document $database): Database
      */
     private mixed $getDatabasesDB;
+    private User $user;
 
-    public function __construct(Database $dbForProject, Authorization $authorization, callable $getDatabasesDB)
+    public function __construct(Database $dbForProject, Authorization $authorization, callable $getDatabasesDB, User $user)
     {
         $this->dbForProject = $dbForProject;
         $this->authorization = $authorization;
         $this->getDatabasesDB = $getDatabasesDB;
+        $this->user = $user;
     }
 
 
@@ -110,48 +114,66 @@ class TransactionState
         array $queries = []
     ): array {
         $dbForDatabases = ($this->getDatabasesDB)($database);
-        // If no transaction, use normal database retrieval
         if ($transactionId === null) {
             return $dbForDatabases->find($collectionId, $queries);
         }
 
-        $state = $this->getTransactionState($transactionId);
-        $committedDocs = $dbForDatabases->find($collectionId, $queries);
-        $documentMap = [];
+        $this->assertNotAggregated($queries);
 
-        // Build map of committed documents
-        foreach ($committedDocs as $doc) {
-            $documentMap[$doc->getId()] = $doc;
-        }
+        $staged = $this->getTransactionState($transactionId)[$collectionId] ?? [];
+        $documents = [];
+        $committed = [];
 
-        // Apply transaction state changes
-        if (isset($state[$collectionId])) {
-            foreach ($state[$collectionId] as $docId => $docState) {
-                if (!$docState['exists']) {
-                    // Document was deleted, remove from results
-                    unset($documentMap[$docId]);
-                } elseif ($docState['action'] === 'create') {
-                    // Document was created, add to results with projection
-                    $documentMap[$docId] = $this->applyProjection($docState['document'], $queries);
-                } elseif ($docState['action'] === 'update' || $docState['action'] === 'upsert') {
-                    if (isset($documentMap[$docId])) {
-                        // Update existing document
-                        foreach ($docState['document']->getAttributes() as $key => $value) {
-                            if ($key !== '$id') {
-                                $documentMap[$docId]->setAttribute($key, $value);
-                            }
-                        }
-                        // Reapply projection in case transaction added new fields
-                        $documentMap[$docId] = $this->applyProjection($documentMap[$docId], $queries);
-                    } elseif ($docState['action'] === 'upsert') {
-                        // Upsert created a new document, apply projection
-                        $documentMap[$docId] = $this->applyProjection($docState['document'], $queries);
-                    }
-                }
+        foreach ($dbForDatabases->find($collectionId, $queries) as $row) {
+            $id = $row->getId();
+            $document = $this->overlay($row, $staged[$id] ?? null, !isset($committed[$id]), $queries);
+            $committed[$id] = true;
+            if ($document !== null) {
+                $documents[] = $document;
             }
         }
 
-        return array_values($documentMap);
+        foreach ($staged as $id => $docState) {
+            if (isset($committed[$id]) || !$docState['exists']) {
+                continue;
+            }
+            if ($docState['action'] === 'create' || $docState['action'] === 'upsert') {
+                $documents[] = $this->applyProjection($docState['document'], $queries);
+            }
+        }
+
+        return $documents;
+    }
+
+    /**
+     * A join returns one row per joined row, all carrying the main document's $id: the staged state of
+     * that $id applies to every one of them, and a staged create takes the place of the first.
+     *
+     * @param array<string, mixed>|null $docState
+     * @param array<Query> $queries
+     */
+    private function overlay(Document $row, ?array $docState, bool $first, array $queries): ?Document
+    {
+        if ($docState === null) {
+            return $row;
+        }
+        if (!$docState['exists']) {
+            return null;
+        }
+        if ($docState['action'] === 'create') {
+            return $first ? $this->applyProjection($docState['document'], $queries) : null;
+        }
+        if ($docState['action'] !== 'update' && $docState['action'] !== 'upsert') {
+            return $row;
+        }
+
+        foreach ($docState['document']->getAttributes() as $key => $value) {
+            if ($key !== '$id') {
+                $row->setAttribute($key, $value);
+            }
+        }
+
+        return $this->applyProjection($row, $queries);
     }
 
     /**
@@ -177,16 +199,18 @@ class TransactionState
             return $dbForDatabases->count($collectionId, $queries, APP_LIMIT_COUNT);
         }
 
+        $this->assertNotAggregated($queries);
+
         $state = $this->getTransactionState($transactionId);
         $baseCount = $dbForDatabases->count($collectionId, $queries, APP_LIMIT_COUNT);
 
         if (!isset($state[$collectionId])) {
             return $baseCount;
         }
-        $committedDocs = $dbForDatabases->find($collectionId, $queries);
-        $committedDocIds = [];
-        foreach ($committedDocs as $doc) {
-            $committedDocIds[$doc->getId()] = true;
+        $committedRows = [];
+        foreach ($dbForDatabases->find($collectionId, $queries) as $row) {
+            $id = $row->getId();
+            $committedRows[$id] = ($committedRows[$id] ?? 0) + 1;
         }
 
         $adjustedCount = $baseCount;
@@ -195,21 +219,19 @@ class TransactionState
 
         foreach ($state[$collectionId] as $docId => $docState) {
             if (!$docState['exists']) {
-                if (isset($committedDocIds[$docId])) {
-                    $adjustedCount--;
-                }
+                $adjustedCount -= $committedRows[$docId] ?? 0;
             } elseif ($docState['action'] === 'create') {
                 if ($this->documentMatchesFilters($docState['document'], $filters)) {
                     $adjustedCount++;
                 }
             } elseif ($docState['action'] === 'update' || $docState['action'] === 'upsert') {
-                $wasInResults = isset($committedDocIds[$docId]);
+                $wasInResults = isset($committedRows[$docId]);
                 $nowMatches = $this->documentMatchesFilters($docState['document'], $filters);
 
                 if (!$wasInResults && $nowMatches && $docState['action'] === 'upsert') {
                     $adjustedCount++;
                 } elseif ($wasInResults && !$nowMatches) {
-                    $adjustedCount--;
+                    $adjustedCount -= $committedRows[$docId];
                 } elseif (!$wasInResults && $nowMatches) {
                     // Update shouldn't add a new doc, but upsert might have
                     if ($docState['action'] === 'upsert') {
@@ -220,6 +242,19 @@ class TransactionState
         }
 
         return max(0, $adjustedCount);
+    }
+
+    /**
+     * Staged changes overlay documents by ID, and an aggregated row has none to overlay.
+     *
+     * @param array<Query> $queries
+     * @throws Exception\Query
+     */
+    private function assertNotAggregated(array $queries): void
+    {
+        if (Query::groupByType($queries)->isAggregation()) {
+            throw new Exception\Query("Aggregate and groupBy queries cannot read a transaction's uncommitted changes. Run them outside the transaction.");
+        }
     }
 
     /**
@@ -328,6 +363,54 @@ class TransactionState
     }
 
     /**
+     * The staged view of a transaction for a permission pre-check (Database::authorizeCreate() and
+     * authorizeUpdate()): given a collection identifier and a document ID, an empty document when the staged writes
+     * delete it, the document as they leave it, read without the caller's permissions, or null when they leave it
+     * as stored. $pending are operations of the same request, staged before the one being checked and not stored yet.
+     *
+     * @param array<Document> $pending
+     * @return callable(string, string): ?Document
+     */
+    public function stagedView(Document $database, Document $transaction, array $pending = []): callable
+    {
+        $state = null;
+
+        return function (string $collection, string $id) use ($database, $transaction, $pending, &$state): ?Document {
+            $state ??= $this->replay([
+                ...$this->authorization->skip(fn (): array => $this->dbForProject->find('transactionLogs', [
+                    Query::equal('transactionInternalId', [$transaction->getSequence()]),
+                    Query::orderAsc(),
+                    Query::limit(PHP_INT_MAX),
+                ])),
+                ...$pending,
+            ]);
+
+            $staged = $state[$collection][$id] ?? null;
+            if ($staged === null) {
+                return null;
+            }
+            if (!$staged['exists']) {
+                return new Document();
+            }
+            if ($staged['action'] === 'create') {
+                return new Document($staged['document']->getArrayCopy());
+            }
+
+            $stored = $this->authorization->skip(fn (): Document => ($this->getDatabasesDB)($database)->getDocument($collection, $id));
+            if ($stored->isEmpty()) {
+                return new Document($staged['document']->getArrayCopy());
+            }
+            foreach ($staged['document']->getAttributes() as $key => $value) {
+                if ($key !== '$id') {
+                    $stored->setAttribute($key, $value);
+                }
+            }
+
+            return $stored;
+        };
+    }
+
+    /**
      * Get the current state of a transaction by replaying its operations
      *
      * @param string $transactionId Transaction ID
@@ -338,7 +421,12 @@ class TransactionState
      */
     private function getTransactionState(string $transactionId): array
     {
-        $transaction = $this->authorization->skip(fn () => $this->dbForProject->getDocument('transactions', $transactionId));
+        $roles = $this->authorization->getRoles();
+
+        // Staged operations are only visible to the transaction owner, API keys and privileged users.
+        $transaction = ($this->user->isKey($roles) || $this->user->isPrivileged($roles))
+            ? $this->authorization->skip(fn () => $this->dbForProject->getDocument('transactions', $transactionId))
+            : $this->dbForProject->getDocument('transactions', $transactionId);
         if ($transaction->isEmpty() || $transaction->getAttribute('status') !== 'pending') {
             return [];
         }
@@ -349,6 +437,17 @@ class TransactionState
             Query::limit(PHP_INT_MAX)
         ]));
 
+        return $this->replay($operations);
+    }
+
+    /**
+     * The state staged operations leave, keyed by collection and document ID.
+     *
+     * @param iterable<Document|array<string, mixed>> $operations
+     * @return array<string, array<string, array<string, mixed>>>
+     */
+    private function replay(iterable $operations): array
+    {
         $state = [];
 
         foreach ($operations as $operation) {
@@ -558,8 +657,12 @@ class TransactionState
         }
 
         $selections = [];
+        $aliases = [];
         foreach ($queries as $query) {
-            if ($query->getMethod() === Query::TYPE_SELECT) {
+            $method = $query->getMethod();
+            if ($method->isJoin()) {
+                $aliases[$query->getAlias()] = true;
+            } elseif ($method === Method::Select) {
                 $values = $query->getValues();
                 foreach ($values as $value) {
                     // Skip relationship selections (containing '.')
@@ -593,6 +696,13 @@ class TransactionState
             }
         }
 
+        foreach ($doc as $key => $value) {
+            $dot = \strpos((string) $key, '.');
+            if ($dot !== false && isset($aliases[\substr((string) $key, 0, $dot)])) {
+                $projected->setAttribute((string) $key, $value);
+            }
+        }
+
         return $projected;
     }
 
@@ -608,13 +718,13 @@ class TransactionState
         foreach ($queries as $query) {
             $method = $query->getMethod();
             if (!\in_array($method, [
-                Query::TYPE_LIMIT,
-                Query::TYPE_OFFSET,
-                Query::TYPE_CURSOR_AFTER,
-                Query::TYPE_CURSOR_BEFORE,
-                Query::TYPE_SELECT,
-                Query::TYPE_ORDER_ASC,
-                Query::TYPE_ORDER_DESC
+                Method::Limit,
+                Method::Offset,
+                Method::CursorAfter,
+                Method::CursorBefore,
+                Method::Select,
+                Method::OrderAsc,
+                Method::OrderDesc
             ])) {
                 $filters[] = $query;
             }
@@ -641,19 +751,19 @@ class TransactionState
             $docValue = $doc->getAttribute($attribute);
 
             switch ($filter->getMethod()) {
-                case Query::TYPE_EQUAL:
+                case Method::Equal:
                     if (!\in_array($docValue, $values)) {
                         return false;
                     }
                     break;
 
-                case Query::TYPE_NOT_EQUAL:
+                case Method::NotEqual:
                     if (\in_array($docValue, $values)) {
                         return false;
                     }
                     break;
 
-                case Query::TYPE_CONTAINS:
+                case Method::Contains:
                     $matches = false;
                     foreach ($values as $value) {
                         if (\is_array($docValue) && \in_array($value, $docValue)) {
@@ -666,7 +776,7 @@ class TransactionState
                     }
                     break;
 
-                case Query::TYPE_STARTS_WITH:
+                case Method::StartsWith:
                     $matches = false;
                     foreach ($values as $value) {
                         if (\is_string($docValue) && \str_starts_with($docValue, $value)) {
@@ -679,7 +789,7 @@ class TransactionState
                     }
                     break;
 
-                case Query::TYPE_ENDS_WITH:
+                case Method::EndsWith:
                     $matches = false;
                     foreach ($values as $value) {
                         if (\is_string($docValue) && \str_ends_with($docValue, $value)) {
@@ -692,43 +802,43 @@ class TransactionState
                     }
                     break;
 
-                case Query::TYPE_GREATER:
+                case Method::GreaterThan:
                     if (!($docValue > $values[0])) {
                         return false;
                     }
                     break;
 
-                case Query::TYPE_GREATER_EQUAL:
+                case Method::GreaterThanEqual:
                     if (!($docValue >= $values[0])) {
                         return false;
                     }
                     break;
 
-                case Query::TYPE_LESSER:
+                case Method::LessThan:
                     if (!($docValue < $values[0])) {
                         return false;
                     }
                     break;
 
-                case Query::TYPE_LESSER_EQUAL:
+                case Method::LessThanEqual:
                     if (!($docValue <= $values[0])) {
                         return false;
                     }
                     break;
 
-                case Query::TYPE_IS_NULL:
+                case Method::IsNull:
                     if (!\is_null($docValue)) {
                         return false;
                     }
                     break;
 
-                case Query::TYPE_IS_NOT_NULL:
+                case Method::IsNotNull:
                     if (\is_null($docValue)) {
                         return false;
                     }
                     break;
 
-                case Query::TYPE_BETWEEN:
+                case Method::Between:
                     if (!($docValue >= $values[0] && $docValue <= $values[1])) {
                         return false;
                     }

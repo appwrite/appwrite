@@ -1177,25 +1177,33 @@ class ClickHouse extends SQL
     ];
 
     /**
-     * Setup ClickHouse table structure.
-     *
-     * Creates:
-     * 1. Events table (MergeTree) with event-specific columns
-     * 2. Events daily table (SummingMergeTree) for pre-aggregation
-     * 3. Events daily materialized view
-     * 4. Gauges table (MergeTree) with simple schema
-     * 5. Per-dim projections on the events / gauges base tables
+     * Migrate the schema, then apply (or strip) the retention TTL on the
+     * events and events_daily tables.
      *
      * @throws Exception
      */
     public function setup(): void
     {
-        $this->setOperationContext('setup()');
+        $this->migrate();
 
-        // Create database if not exists
+        $this->setOperationContext('setup()');
+        $this->applyRetention($this->getEventsTableName());
+        $this->applyRetention($this->getEventsDailyTableName());
+    }
+
+    /**
+     * Create the database, tables, daily materialized view and projections,
+     * and add the columns and skip indexes an existing table lacks. Every
+     * statement is idempotent, and the retention TTL is left as it is.
+     *
+     * @throws Exception
+     */
+    public function migrate(): void
+    {
+        $this->setOperationContext('migrate()');
+
         $escapedDatabase = $this->escapeIdentifier($this->database);
-        $createDbSql = "CREATE DATABASE IF NOT EXISTS {$escapedDatabase}";
-        $this->query($createDbSql);
+        $this->query("CREATE DATABASE IF NOT EXISTS {$escapedDatabase}");
 
         $this->createTable(
             $this->getEventsTableName(),
@@ -1205,11 +1213,7 @@ class ClickHouse extends SQL
 
         $this->ensureEventDimColumns();
 
-        $this->applyRetention($this->getEventsTableName());
-
         $this->createDailyTable();
-
-        $this->applyRetention($this->getEventsDailyTableName());
 
         $this->createDailyMaterializedView();
 
@@ -1369,11 +1373,43 @@ class ClickHouse extends SQL
     private function ensureGaugeDimColumns(): void
     {
         $this->ensureDimColumns($this->getGaugesTableName(), Metric::GAUGE_COLUMNS, 'gauge');
+        $this->ensureIndexes($this->getGaugesTableName(), $this->getGaugeIndexes());
     }
 
     private function ensureEventDimColumns(): void
     {
         $this->ensureDimColumns($this->getEventsTableName(), Metric::EVENT_COLUMNS, 'event');
+        $this->ensureIndexes($this->getEventsTableName(), $this->getEventIndexes());
+    }
+
+    /**
+     * Adds the skip indexes a table created before them lacks, such as the
+     * events ordinal index. Parts written before stay unindexed until merged.
+     *
+     * @param array<array<string, mixed>> $indexes
+     */
+    private function ensureIndexes(string $tableName, array $indexes): void
+    {
+        $escapedTable = $this->escapeIdentifier($this->database)
+            . '.' . $this->escapeIdentifier($tableName);
+
+        $adds = [];
+        foreach ($indexes as $index) {
+            /** @var string $indexName */
+            $indexName = $index['$id'];
+            /** @var array<string> $attributes */
+            $attributes = $index['attributes'];
+            $indexType = is_string($index['indexType'] ?? null) ? $index['indexType'] : 'bloom_filter';
+            $adds[] = 'ADD INDEX IF NOT EXISTS ' . $this->escapeIdentifier($indexName)
+                . ' (' . implode(', ', array_map($this->escapeIdentifier(...), $attributes)) . ')'
+                . " TYPE {$indexType} GRANULARITY 1";
+        }
+
+        if ($adds === []) {
+            return;
+        }
+
+        $this->query("ALTER TABLE {$escapedTable} " . implode(', ', $adds));
     }
 
     /**
@@ -1936,7 +1972,7 @@ class ClickHouse extends SQL
             'timeZone', 'weatherCode',
             // sdk identity
             'sdk', 'sdkVersion',
-            // gauge replica ordinal
+            // replica ordinal (events and gauges)
             'ordinal',
         ];
 
@@ -2488,7 +2524,7 @@ class ClickHouse extends SQL
         }
 
         if ($samples !== [] && $expectedStart != $range->intervalEnd) {
-            $last = $samples[array_key_last($samples)];
+            $last = array_last($samples);
             $discontinuities[] = $last->sequence;
         }
 

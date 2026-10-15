@@ -6,7 +6,7 @@ use Appwrite\Execution\Store;
 use Appwrite\Logs\Store as RuntimeLogStore;
 use Appwrite\Platform\Action;
 use Appwrite\Usage\Connection;
-use Utopia\Console;
+use Utopia\Console\Console;
 
 class UsageSetup extends Action
 {

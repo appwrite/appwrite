@@ -2,19 +2,26 @@
 
 namespace Utopia\Abuse\Tests\E2E\Appwrite;
 
+use Appwrite\AppwriteException;
 use Appwrite\Client;
 use Appwrite\Models\ColumnIndex;
 use Appwrite\Services\TablesDB as TablesDBService;
-use Utopia\Abuse\Abuse;
-use Utopia\Abuse\Adapters\TimeLimit;
-use Utopia\Abuse\Adapters\TimeLimit\Appwrite\TablesDB;
+use LogicException;
+use Override;
+use Throwable;
+use Utopia\Abuse\Adapter\TimeLimit;
+use Utopia\Abuse\Adapter\TimeLimit\Appwrite\TablesDB;
 use Utopia\Abuse\Tests\E2E\Base;
 
 class TablesDBTest extends Base
 {
-    protected static Client $client;
-    protected static string $databaseId;
+    protected static ?Client $client = null;
+    protected static ?string $databaseId = null;
 
+    /** @var array<string, TablesDBService> */
+    private static array $owned = [];
+
+    #[Override]
     public static function setUpBeforeClass(): void
     {
         if (isset(self::$client)) {
@@ -25,24 +32,50 @@ class TablesDBTest extends Base
             self::markTestSkipped('Set APPWRITE_ENDPOINT, APPWRITE_PROJECT_ID and APPWRITE_API_KEY to a disposable Appwrite project.');
         }
 
-        self::initialiseDatabase();
+        try {
+            self::initialiseDatabase();
+        } catch (Throwable $failure) {
+            try {
+                self::clean(setup: $failure);
+            } finally {
+                self::$client = null;
+                self::$databaseId = null;
+            }
+            throw $failure;
+        }
     }
 
     private static function initialiseDatabase(): void
     {
-        self::$databaseId = 'abuse-cicd-' . \uniqid();
         self::$client = new Client()
             ->setEndpoint(\getenv('APPWRITE_ENDPOINT') ?: '')
             ->setProject(\getenv('APPWRITE_PROJECT_ID') ?: '')
             ->setKey(\getenv('APPWRITE_API_KEY') ?: '');
 
-        $adapter = new TablesDB('', 1, 1, self::$client, self::$databaseId);
+        $databaseId = 'abuse-' . \bin2hex(\random_bytes(12));
+        $service = new TablesDBService(self::client());
+        $service->create($databaseId, TablesDB::DATABASE_NAME);
+        self::$owned[$databaseId] = $service;
+        self::$databaseId = $databaseId;
+
+        $adapter = new TablesDB('', 1, 1, self::client(), self::database());
         $adapter->setup();
     }
 
+    #[Override]
     public function getAdapter(string $key, int $limit, int $seconds): TimeLimit
     {
-        return new TablesDB($key, $limit, $seconds, self::$client, self::$databaseId);
+        return new TablesDB($key, $limit, $seconds, self::client(), self::database());
+    }
+
+    private static function client(): Client
+    {
+        return self::$client ?? throw new LogicException('Fixture client is not initialized');
+    }
+
+    private static function database(): string
+    {
+        return self::$databaseId ?? throw new LogicException('Fixture database is not initialized');
     }
 
     /**
@@ -51,9 +84,9 @@ class TablesDBTest extends Base
      */
     public function testSetupCreatesSchema(): void
     {
-        $tablesDB = new TablesDBService(self::$client);
+        $tablesDB = new TablesDBService(self::client());
 
-        $columns = $this->columnsByKey($tablesDB->listColumns(self::$databaseId, TablesDB::TABLE_ID)->columns);
+        $columns = $this->columnsByKey($tablesDB->listColumns(self::database(), TablesDB::TABLE_ID)->columns);
 
         $this->assertCount(3, $columns);
 
@@ -66,10 +99,10 @@ class TablesDBTest extends Base
 
         $this->assertSame('integer', $columns['count']['type']);
         $this->assertTrue($columns['count']['required']);
-        $this->assertEquals(0, $columns['count']['min']);
-        $this->assertEquals(PHP_INT_MAX, $columns['count']['max']);
+        $this->assertSame(0, $columns['count']['min']);
+        $this->assertSame(PHP_INT_MAX, $columns['count']['max']);
 
-        $indexes = $this->indexesByKey($tablesDB->listIndexes(self::$databaseId, TablesDB::TABLE_ID)->indexes);
+        $indexes = $this->indexesByKey($tablesDB->listIndexes(self::database(), TablesDB::TABLE_ID)->indexes);
 
         $this->assertCount(2, $indexes);
 
@@ -87,15 +120,17 @@ class TablesDBTest extends Base
      */
     public function testSetupRepairsPartiallyCreatedTable(): void
     {
-        $databaseId = 'abuse-cicd-repair-' . \uniqid();
-        $tablesDB = new TablesDBService(self::$client);
+        $databaseId = 'abuse-' . \bin2hex(\random_bytes(12));
+        $tablesDB = new TablesDBService(self::client());
 
         $tablesDB->create($databaseId, TablesDB::DATABASE_NAME);
+        self::$owned[$databaseId] = $tablesDB;
 
+        $failure = null;
         try {
             $tablesDB->createTable($databaseId, TablesDB::TABLE_ID, TablesDB::TABLE_NAME);
 
-            $adapter = new TablesDB('repair-{{ip}}', 2, 60, self::$client, $databaseId);
+            $adapter = new TablesDB('repair-{{ip}}', 2, 60, self::client(), $databaseId);
             $adapter->setup();
 
             $columns = $this->columnsByKey($tablesDB->listColumns($databaseId, TablesDB::TABLE_ID)->columns);
@@ -110,13 +145,15 @@ class TablesDBTest extends Base
             $this->assertArrayHasKey('unique1', $indexes);
             $this->assertArrayHasKey('index2', $indexes);
 
-            $adapter->setParam('{{ip}}', '0.0.0.20');
-            $abuse = new Abuse($adapter);
-            $this->assertSame($abuse->check(), false);
-            $this->assertSame($abuse->check(), false);
-            $this->assertSame($abuse->check(), true);
+            $adapter = $adapter->withParams(['{{ip}}' => '0.0.0.20']);
+            $this->assertFalse($adapter->check()->limited);
+            $this->assertFalse($adapter->check()->limited);
+            $this->assertTrue($adapter->check()->limited);
+        } catch (Throwable $error) {
+            $failure = $error;
+            throw $error;
         } finally {
-            $tablesDB->delete($databaseId);
+            self::clean($databaseId, $failure);
         }
     }
 
@@ -125,13 +162,13 @@ class TablesDBTest extends Base
      */
     public function testSetupIsIdempotent(): void
     {
-        $adapter = new TablesDB('', 1, 1, self::$client, self::$databaseId);
+        $adapter = new TablesDB('', 1, 1, self::client(), self::database());
         $adapter->setup();
 
-        $tablesDB = new TablesDBService(self::$client);
+        $tablesDB = new TablesDBService(self::client());
 
-        $this->assertCount(3, $tablesDB->listColumns(self::$databaseId, TablesDB::TABLE_ID)->columns);
-        $this->assertCount(2, $tablesDB->listIndexes(self::$databaseId, TablesDB::TABLE_ID)->indexes);
+        $this->assertCount(3, $tablesDB->listColumns(self::database(), TablesDB::TABLE_ID)->columns);
+        $this->assertCount(2, $tablesDB->listIndexes(self::database(), TablesDB::TABLE_ID)->indexes);
     }
 
     /**
@@ -139,7 +176,7 @@ class TablesDBTest extends Base
      * to hydrate the union of column types into.
      *
      * @param  array<mixed>  $columns
-     * @return array<string, array<string, mixed>>
+     * @return array<string, array<mixed>>
      */
     private function columnsByKey(array $columns): array
     {
@@ -178,7 +215,39 @@ class TablesDBTest extends Base
         return $byKey;
     }
 
+    #[Override]
     public static function tearDownAfterClass(): void
     {
+        try {
+            self::clean();
+        } finally {
+            self::$client = null;
+            self::$databaseId = null;
+        }
+    }
+
+    private static function clean(?string $databaseId = null, ?Throwable $setup = null): void
+    {
+        $failure = null;
+        foreach (self::$owned as $id => $service) {
+            if ($databaseId !== null && $id !== $databaseId) {
+                continue;
+            }
+            try {
+                $service->delete($id);
+            } catch (AppwriteException $error) {
+                if ($error->getCode() !== 404) {
+                    $failure ??= $error;
+                    continue;
+                }
+            } catch (Throwable $error) {
+                $failure ??= $error;
+                continue;
+            }
+            unset(self::$owned[$id]);
+        }
+        if ($failure !== null) {
+            throw $setup === null ? $failure : new Cleanup($setup, $failure);
+        }
     }
 }

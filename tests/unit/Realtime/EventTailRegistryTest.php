@@ -56,7 +56,7 @@ final class EventTailRegistryTest extends TestCase
     /** @param array<int,\Utopia\Database\Query> $queries */
     private function compile(array $queries): array
     {
-        return RuntimeQuery::compile($queries);
+        return RuntimeQuery::prepare($queries);
     }
 
     // ---- Realtime::toTailMetadata ----
@@ -413,6 +413,20 @@ final class EventTailRegistryTest extends TestCase
         $sent = [];
         $registry->flush($this->server($sent));
         $this->assertCount(0, $sent);
+    }
+
+    public function testGetConnections(): void
+    {
+        $registry = new EventTailRegistry(rate: 100);
+        $this->assertSame([], $registry->getConnections());
+
+        $registry->add(7, 'sub-a', 'projX', $this->compile([]), 0.0);
+        $registry->add(7, 'sub-b', 'projY', $this->compile([]), 0.0);
+        $registry->add(8, 'sub-a', 'projX', $this->compile([]), 0.0);
+        $this->assertEqualsCanonicalizing([7, 8], $registry->getConnections());
+
+        $registry->removeConnection(7);
+        $this->assertSame([8], $registry->getConnections());
     }
 
     public function testRemoveSingleSubscription(): void

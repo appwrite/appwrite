@@ -104,6 +104,11 @@ class Exception extends \Exception
     public const string USER_MORE_FACTORS_REQUIRED = 'user_more_factors_required';
     public const string USER_AUTHENTICATOR_NOT_FOUND = 'user_authenticator_not_found';
     public const string USER_AUTHENTICATOR_ALREADY_VERIFIED = 'user_authenticator_already_verified';
+    public const string USER_REAUTHENTICATION_REQUIRED = 'user_reauthentication_required';
+    public const string USER_PASSKEY_NOT_FOUND = 'user_passkey_not_found';
+    public const string USER_PASSKEY_ALREADY_EXISTS = 'user_passkey_already_exists';
+    public const string USER_PASSKEY_LIMIT_EXCEEDED = 'user_passkey_limit_exceeded';
+    public const string USER_PASSKEY_INVALID = 'user_passkey_invalid';
     public const string USER_RECOVERY_CODES_ALREADY_EXISTS = 'user_recovery_codes_already_exists';
     public const string USER_RECOVERY_CODES_NOT_FOUND = 'user_recovery_codes_not_found';
     public const string USER_CHALLENGE_REQUIRED = 'user_challenge_required';
@@ -142,6 +147,7 @@ class Exception extends \Exception
 
     /** Membership */
     public const string MEMBERSHIP_NOT_FOUND = 'membership_not_found';
+    public const string MEMBERSHIP_ALREADY_EXISTS = 'membership_already_exists';
     public const string MEMBERSHIP_ALREADY_CONFIRMED = 'membership_already_confirmed';
     public const string MEMBERSHIP_DELETION_PROHIBITED = 'membership_deletion_prohibited';
     public const string MEMBERSHIP_DOWNGRADE_PROHIBITED = 'membership_downgrade_prohibited';
@@ -223,6 +229,7 @@ class Exception extends \Exception
     public const string DATABASE_ALREADY_EXISTS = 'database_already_exists';
     public const string DATABASE_TIMEOUT = 'database_timeout';
     public const string DATABASE_QUERY_ORDER_NULL = 'database_query_order_null';
+    public const string DATABASE_QUERY_OUT_OF_RANGE = 'database_query_out_of_range';
 
     /** Collections */
     public const string COLLECTION_NOT_FOUND = 'collection_not_found';

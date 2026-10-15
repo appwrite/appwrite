@@ -5,60 +5,19 @@ declare(strict_types=1);
 namespace Tests\Unit\Network;
 
 use Appwrite\Extend\Exception;
+use Appwrite\Network\Validator\PublicHostname;
+use Appwrite\Network\Validator\PublicURL;
 use Appwrite\Platform\Modules\Avatars\Http\Favicon\Get;
-use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use Utopia\Client\Destinations\PublicInternet;
 use Utopia\Psr7\Response;
 use Utopia\Psr7\Stream;
 
 final class FetcherTest extends TestCase
 {
-    public function testAssertSafeAcceptsPublicIpLiteral(): void
-    {
-        // Should not throw
-        TestableGet::assertSafe('http://1.1.1.1/');
-        TestableGet::assertSafe('https://8.8.8.8/path');
-        $this->expectNotToPerformAssertions();
-    }
-
-    #[DataProvider('unsafeUrls')]
-    public function testAssertSafeRejectsUnsafeUrls(string $url, string $reasonFragment): void
-    {
-        try {
-            TestableGet::assertSafe($url);
-            $this->fail("Expected Exception for {$url}");
-        } catch (Exception $e) {
-            $this->assertSame(Exception::AVATAR_REMOTE_URL_FAILED, $e->getType());
-            $this->assertStringContainsString(
-                $reasonFragment,
-                $e->getMessage(),
-                "Wrong rejection reason for {$url}"
-            );
-        }
-    }
-
-    public static function unsafeUrls(): \Iterator
-    {
-        yield 'loopback v4' => ['http://127.0.0.1/iam', 'private or reserved'];
-        yield 'loopback v6' => ['http://[::1]/iam', 'private or reserved'];
-        yield 'link-local imds' => ['http://169.254.169.254/latest/', 'private or reserved'];
-        yield 'private rfc1918 a' => ['http://10.0.0.5/secret', 'private or reserved'];
-        yield 'private rfc1918 b' => ['http://192.168.1.1/admin', 'private or reserved'];
-        yield 'private rfc1918 c' => ['http://172.16.0.1/x', 'private or reserved'];
-        yield 'cgnat' => ['http://100.64.0.1/x', 'private or reserved'];
-        yield 'ipv4-mapped loopback' => ['http://[::ffff:127.0.0.1]/x', 'private or reserved'];
-        yield '6to4 imds' => ['http://[2002:a9fe:a9fe::]/x', 'private or reserved'];
-        yield 'file scheme' => ['file:///etc/passwd', "Scheme 'file' is not allowed"];
-        yield 'gopher scheme' => ['gopher://attacker/x', "Scheme 'gopher' is not allowed"];
-        yield 'ftp scheme' => ['ftp://internal/file', "Scheme 'ftp' is not allowed"];
-        yield 'no scheme' => ['example.com/path', "Scheme '' is not allowed"];
-        yield 'malformed no host' => ['http:///path', 'Malformed URL'];
-        yield 'unknown psl' => ['http://not-a-real-tld.notreal/x', 'not a known public domain'];
-    }
-
     public function testFetchFollowsPublicRedirect(): void
     {
         $client = $this->scriptedClient([
@@ -169,7 +128,7 @@ final class FetcherTest extends TestCase
             $this->fail('Expected Exception');
         } catch (Exception $e) {
             $this->assertSame(Exception::AVATAR_REMOTE_URL_FAILED, $e->getType());
-            $this->assertStringContainsString("Scheme 'file'", $e->getMessage());
+            $this->assertStringContainsString('valid URL', $e->getMessage());
             $this->assertSame(1, $client->callCount);
         }
     }
@@ -230,13 +189,8 @@ class TestableGet extends Get
     {
     }
 
-    public static function assertSafe(string $url): void
-    {
-        parent::assertSafeUrl($url);
-    }
-
     public function fetchForTest(string $url, ClientInterface $client): ResponseInterface
     {
-        return $this->safeFetch($url, 'test', $client);
+        return $this->safeFetch($url, 'test', new PublicURL(new PublicHostname(new PublicInternet(), new FixedLookup())), $client);
     }
 }

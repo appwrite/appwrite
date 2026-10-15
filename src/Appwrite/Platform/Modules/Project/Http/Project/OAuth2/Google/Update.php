@@ -11,6 +11,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Client\Client;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
@@ -123,14 +124,15 @@ class Update extends Base
             ->param(static::getClientIdParamName(), null, new Nullable(new Text(256, 0)), static::getClientIdDescription(), optional: true)
             ->param(static::getClientSecretParamName(), null, new Nullable(new Text(512, 0)), static::getClientSecretDescription(), optional: true)
             ->param('prompt', null, static::getPromptValidator(), static::getPromptDescription(), optional: true, enum: static::getPromptEnum())
-            ->param('nativeClientIds', null, new Nullable(new ArrayList(new Text(256, 0), 20)), 'Additional OAuth2 client IDs accepted as ID token audiences for native sign-in (Android and iOS client IDs). Together with the client ID, which is always accepted, these are the only client IDs whose tokens are trusted. Pass an empty array to clear the list.', optional: true)
             ->param('enabled', null, new Nullable(new Boolean()), 'Browser-based OAuth2 sign-in status. Set to true to enable new session creation through the redirect flow. Setting to true will trigger end-to-end credentials validation, and will throw if the credentials are invalid. Has no effect on native sign-in, which is controlled by nativeEnabled only.', true)
+            ->param('nativeClientIds', null, new Nullable(new ArrayList(new Text(256, 0), 20)), 'Additional OAuth2 client IDs accepted as ID token audiences for native sign-in (Android and iOS client IDs). Together with the client ID, which is always accepted, these are the only client IDs whose tokens are trusted. Pass an empty array to clear the list.', optional: true)
             ->param('nativeEnabled', null, new Nullable(new Boolean()), 'Native Google sign-in status. This is the only switch for creating sessions from ID tokens obtained on device and is independent of enabled. Needs a client ID or at least one native client ID to match tokens against, but no client secret: this method verifies a signature rather than redeeming an authorization code.', true)
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('project')
             ->inject('authorization')
             ->inject('queueForEvents')
+            ->inject('clientForOAuth2')
             ->callback($this->handle(...));
     }
 
@@ -160,14 +162,15 @@ class Update extends Base
         ?string $clientId,
         ?string $clientSecret,
         ?array $prompt,
-        ?array $nativeClientIds,
         ?bool $enabled,
+        ?array $nativeClientIds,
         ?bool $nativeEnabled,
         Response $response,
         Database $dbForPlatform,
         Document $project,
         Authorization $authorization,
-        QueueEvent $queueForEvents
+        QueueEvent $queueForEvents,
+        Client $clientForOAuth2
     ): void {
         $providerId = static::getProviderId();
         $queueForEvents->setParam('providerId', $providerId);
@@ -192,7 +195,7 @@ class Update extends Base
             'prompt' => $prompt ?? ($existing['prompt'] ?? static::getPromptDefault()),
         ]);
 
-        $project = $this->persistCredentials($project, $dbForPlatform, $authorization, $clientId, $encodedSecret, $enabled, $nativeClientIds, $nativeEnabled);
+        $project = $this->persistCredentials($project, $dbForPlatform, $authorization, $clientForOAuth2, $clientId, $encodedSecret, $enabled, $nativeClientIds, $nativeEnabled);
 
         $response->dynamic($this->buildReadResponse($project), static::getResponseModel());
     }

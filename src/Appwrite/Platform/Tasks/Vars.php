@@ -3,7 +3,7 @@
 namespace Appwrite\Platform\Tasks;
 
 use Utopia\Config\Config;
-use Utopia\Console;
+use Utopia\Console\Console;
 use Utopia\Platform\Action;
 use Utopia\System\System;
 

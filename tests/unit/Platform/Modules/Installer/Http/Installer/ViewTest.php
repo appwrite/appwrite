@@ -43,6 +43,19 @@ final class ViewTest extends TestCase
         $this->assertMatchesRegularExpression('/id="force-https"[^>]*checked/', $html);
     }
 
+    public function testPortsAcceptHostBinding(): void
+    {
+        $html = $this->render([
+            'isUpgrade' => true,
+            'defaultHttpPort' => '127.0.0.1:8080',
+            'defaultHttpsPort' => '127.0.0.1:8443',
+        ]);
+
+        $this->assertMatchesRegularExpression('/type="text"\s+id="http-port"[^>]*value="127\.0\.0\.1:8080"/', $html);
+        $this->assertMatchesRegularExpression('/type="text"\s+id="https-port"[^>]*value="127\.0\.0\.1:8443"/', $html);
+        $this->assertStringContainsString('data-default-http-port="127.0.0.1:8080"', $html);
+    }
+
     public function testUpgradeWithoutDetectedDatabaseRemainsSelectable(): void
     {
         $html = $this->render([

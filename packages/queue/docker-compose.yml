@@ -15,7 +15,7 @@ services:
       - sh
       - -c
       - |
-        printf 'requirepass secretpw\nuser worker on >workerpw ~* &* +@all\n' > /tmp/redis.conf
+        printf 'requirepass secretpw\nuser worker on >workerpw ~* &* +@all\nuser encoded on >p@ss:w/rd+ ~* &* +@all\n' > /tmp/redis.conf
         exec redis-server /tmp/redis.conf
     ports:
       - "16380:6379"

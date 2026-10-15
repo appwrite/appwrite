@@ -2,6 +2,7 @@
 
 namespace Utopia\Queue\Connection;
 
+use Utopia\DSN\DSN;
 use Utopia\Queue\Connection;
 
 class Redis implements Connection
@@ -13,6 +14,23 @@ class Redis implements Connection
 
     public function __construct(protected string $host, protected int $port = 6379, protected ?string $user = null, protected ?string $password = null, protected float $connectTimeout = -1, protected float $readTimeout = -1)
     {
+    }
+
+    /**
+     * Connect to `redis://[user]:[password]@host[:port]`. The credentials are
+     * URL-decoded; an empty user sends `AUTH <password>`, and no password sends
+     * no AUTH at all.
+     */
+    public static function fromDSN(DSN $dsn, float $connectTimeout = -1, float $readTimeout = -1): self
+    {
+        return new self(
+            $dsn->getHost(),
+            (int) ($dsn->getPort() ?? 6379),
+            $dsn->getUser(),
+            $dsn->getPassword(),
+            $connectTimeout,
+            $readTimeout,
+        );
     }
 
     private array $scripts = [];

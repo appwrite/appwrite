@@ -91,12 +91,6 @@ class ConsoleVariables extends Model
                 'default' => false,
                 'example' => true,
             ])
-            ->addRule('_APP_ASSISTANT_ENABLED', [
-                'type' => self::TYPE_BOOLEAN,
-                'description' => 'Defines if AI assistant is enabled.',
-                'default' => false,
-                'example' => true,
-            ])
             ->addRule('_APP_DOMAIN_SITES', [
                 'type' => self::TYPE_STRING,
                 'description' => 'A comma separated list of domains to use for site URLs.',
@@ -137,6 +131,15 @@ class ConsoleVariables extends Model
                 ]
             )
             ->addRule(
+                'supportForAttributes',
+                [
+                    'type' => self::TYPE_BOOLEAN,
+                    'description' => 'Whether the database adapter enforces defined attributes.',
+                    'default' => true,
+                    'example' => true,
+                ]
+            )
+            ->addRule(
                 'supportForRelationships',
                 [
                     'type' => self::TYPE_BOOLEAN,
@@ -159,6 +162,24 @@ class ConsoleVariables extends Model
                 [
                     'type' => self::TYPE_BOOLEAN,
                     'description' => 'Whether the database adapter supports spatial attributes.',
+                    'default' => true,
+                    'example' => true,
+                ]
+            )
+            ->addRule(
+                'supportForAggregations',
+                [
+                    'type' => self::TYPE_BOOLEAN,
+                    'description' => 'Whether the database adapter supports aggregation queries.',
+                    'default' => true,
+                    'example' => true,
+                ]
+            )
+            ->addRule(
+                'supportForJoins',
+                [
+                    'type' => self::TYPE_BOOLEAN,
+                    'description' => 'Whether the database adapter supports join queries.',
                     'default' => true,
                     'example' => true,
                 ]
@@ -188,6 +209,15 @@ class ConsoleVariables extends Model
                     'description' => 'Whether the database adapter supports multiple fulltext indexes per collection.',
                     'default' => true,
                     'example' => true,
+                ]
+            )
+            ->addRule(
+                'supportForTrigramIndex',
+                [
+                    'type' => self::TYPE_BOOLEAN,
+                    'description' => 'Whether the database adapter supports trigram indexes.',
+                    'default' => false,
+                    'example' => false,
                 ]
             )
             ->addRule(

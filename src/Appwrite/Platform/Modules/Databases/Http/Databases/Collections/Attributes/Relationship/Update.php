@@ -12,11 +12,13 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
+use Utopia\Database\RelationshipDeleteAction;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Platform\Enum;
+use Utopia\Query\Schema\ColumnType;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\WhiteList;
 
@@ -64,17 +66,18 @@ class Update extends Action
                     replaceWith: 'tablesDB.updateRelationshipColumn',
                 ),
             ))
-            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
-            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Collection ID.', false, ['dbForProject'])
-            ->param('key', '', fn (Database $dbForProject) => new Key(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Attribute Key.', false, ['dbForProject'])
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Database ID.', false, ['dbForProject'])
+            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'Collection ID.', false, ['dbForProject'])
+            ->param('key', '', fn (Database $dbForProject) => new Key(false, $dbForProject->getMaxUidLength()), 'Attribute Key.', false, ['dbForProject'])
             ->param('onDelete', null, new WhiteList([
-                Database::RELATION_MUTATE_CASCADE,
-                Database::RELATION_MUTATE_RESTRICT,
-                Database::RELATION_MUTATE_SET_NULL
+                RelationshipDeleteAction::Cascade->value,
+                RelationshipDeleteAction::Restrict->value,
+                RelationshipDeleteAction::SetNull->value
             ], true), 'Delete constraint. Possible values are: cascade, restrict, setNull.', true, enum: new Enum(name: 'RelationMutate'))
-            ->param('newKey', null, fn (Database $dbForProject) => new Nullable(new Key(false, $dbForProject->getAdapter()->getMaxUIDLength())), 'New Attribute Key.', true, ['dbForProject'])
+            ->param('newKey', null, fn (Database $dbForProject) => new Nullable(new Key(false, $dbForProject->getMaxUidLength())), 'New Attribute Key.', true, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('getDatabasesDB')
             ->inject('queueForEvents')
             ->inject('authorization')
             ->callback($this->action(...));
@@ -88,10 +91,11 @@ class Update extends Action
         ?string        $newKey,
         UtopiaResponse $response,
         Database       $dbForProject,
+        callable       $getDatabasesDB,
         Event          $queueForEvents,
         Authorization  $authorization
     ): void {
-        if (!$dbForProject->getAdapter()->getSupportForRelationships()) {
+        if (!$this->supportsRelationships($dbForProject->getAdapter())) {
             throw new Exception(Exception::GENERAL_FEATURE_UNSUPPORTED, 'Relationships are not supported by this database.');
         }
 
@@ -100,9 +104,10 @@ class Update extends Action
             collectionId: $collectionId,
             key: $key,
             dbForProject: $dbForProject,
+            getDatabasesDB: $getDatabasesDB,
             queueForEvents: $queueForEvents,
             authorization: $authorization,
-            type: Database::VAR_RELATIONSHIP,
+            type: ColumnType::Relationship->value,
             required: false,
             options: [
                 'onDelete' => $onDelete

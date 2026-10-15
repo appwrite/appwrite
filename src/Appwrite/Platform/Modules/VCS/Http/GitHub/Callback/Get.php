@@ -7,10 +7,12 @@ use Appwrite\Extend\Exception;
 use Appwrite\Platform\Permission as AppwritePermission;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
+use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
+use Utopia\Client\Client;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -128,7 +130,8 @@ class Get extends Action
             $accessTokenExpiry = null;
 
             if (!empty($code)) {
-                $oauth2 = new OAuth2Github(System::getEnv('_APP_VCS_GITHUB_CLIENT_ID', ''), System::getEnv('_APP_VCS_GITHUB_CLIENT_SECRET', ''), "");
+                // github.com is the operator's configured provider, not a user's choice
+                $oauth2 = new OAuth2Github(new Client(new CurlAdapter()), System::getEnv('_APP_VCS_GITHUB_CLIENT_ID', ''), System::getEnv('_APP_VCS_GITHUB_CLIENT_SECRET', ''), "");
 
                 $accessToken = $oauth2->getAccessToken($code);
                 $refreshToken = $oauth2->getRefreshToken($code);
@@ -142,7 +145,7 @@ class Get extends Action
                 $teamId = $project->getAttribute('teamId', '');
 
                 $installation = new Document([
-                    '$id' => ID::unique(),
+                    '$id' => Id::unique(),
                     '$permissions' => $this->getPermissions($teamId, $projectId),
                     'providerInstallationId' => $providerInstallationId,
                     'projectId' => $projectId,

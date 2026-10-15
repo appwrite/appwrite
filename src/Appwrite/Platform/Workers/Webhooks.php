@@ -6,11 +6,11 @@ use Appwrite\Event\Message\Notification as NotificationMessage;
 use Appwrite\Event\Message\Usage as UsageMessage;
 use Appwrite\Event\Publisher\Notification as NotificationPublisher;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
-use Appwrite\Network\Validator\PublicHostname;
+use Appwrite\Event\Redelivery;
 use Appwrite\Template\Template;
 use Appwrite\Usage\Context as UsageContext;
 use Exception;
-use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
+use Utopia\Cache\Cache;
 use Utopia\Client\Client;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -47,6 +47,8 @@ class Webhooks extends Action
             ->inject('publisherForUsage')
             ->inject('platform')
             ->inject('plan')
+            ->inject('clientForWebhooks')
+            ->inject('cache')
             ->callback($this->action(...));
     }
 
@@ -58,10 +60,12 @@ class Webhooks extends Action
      * @param UsagePublisher $publisherForUsage
      * @param array $platform
      * @param array $plan
+     * @param Client $clientForWebhooks
+     * @param Cache $cache
      * @return void
      * @throws Exception
      */
-    public function action(Message $message, Document $project, Database $dbForPlatform, NotificationPublisher $publisherForNotifications, UsagePublisher $publisherForUsage, array $platform, array $plan): void
+    public function action(Message $message, Document $project, Database $dbForPlatform, NotificationPublisher $publisherForNotifications, UsagePublisher $publisherForUsage, array $platform, array $plan, Client $clientForWebhooks, Cache $cache): void
     {
         $payload = $message->getPayload();
 
@@ -75,19 +79,46 @@ class Webhooks extends Action
 
         Span::add('project.id', $project->getId());
 
+        // A redelivery retries only the webhooks that failed. When the record of the others
+        // cannot be read they are sent to again: a receiver can drop a repeat by its delivery
+        // id, while a skipped delivery is lost. A message redriven from the dead letters starts
+        // again at attempt 0, so it re-sends to every webhook, under the same delivery id.
+        $redelivery = new Redelivery($cache, 'webhooks', $message, handledWhenUnknown: false);
+
         $errors = [];
+        $delivered = [];
         foreach ($project->getAttribute('webhooks', []) as $webhook) {
-            if (array_intersect($webhook->getAttribute('events', []), $events)) {
-                $error = $this->execute($events, $webhookPayload, $webhook, $user, $project, $dbForPlatform, $publisherForNotifications, $publisherForUsage, $platform, $plan);
-                if ($error !== null) {
-                    $errors[] = $error;
-                }
+            if ($webhook->getAttribute('enabled') !== true) {
+                continue;
+            }
+            if (!array_intersect($webhook->getAttribute('events', []), $events)) {
+                continue;
+            }
+
+            if ($redelivery->wasHandled($webhook->getId())) {
+                Span::add('webhooks.skipped_delivered', $webhook->getId());
+                continue;
+            }
+
+            $error = $this->execute($events, $webhookPayload, $webhook, $user, $project, $dbForPlatform, $publisherForNotifications, $publisherForUsage, $platform, $plan, $clientForWebhooks, $redelivery->id($webhook->getId()));
+            if ($error !== null) {
+                $errors[] = $error;
+            } else {
+                $delivered[] = $webhook->getId();
             }
         }
 
-        if (!empty($errors)) {
-            throw new Exception(\implode(" / \n\n", $errors));
+        if (empty($errors)) {
+            return;
         }
+
+        // The throw below asks the broker to deliver this event again. Record the webhooks that
+        // already accepted it, so the redelivery retries only the ones that failed. A webhook
+        // whose record is lost gets the event again under the same delivery id, which is no
+        // reason to hold back the retry the others need.
+        $redelivery->record($delivered);
+
+        throw new Exception(\implode(" / \n\n", $errors));
     }
 
     /**
@@ -101,36 +132,20 @@ class Webhooks extends Action
      * @param UsagePublisher $publisherForUsage
      * @param array $platform
      * @param array $plan
+     * @param Client $clientForWebhooks
+     * @param string $deliveryId Identifies this event to this webhook; the same on every attempt
      * @return string|null The error log if the delivery failed, otherwise null
      */
-    private function execute(array $events, string $payload, Document $webhook, Document $user, Document $project, Database $dbForPlatform, NotificationPublisher $publisherForNotifications, UsagePublisher $publisherForUsage, array $platform, array $plan): ?string
+    private function execute(array $events, string $payload, Document $webhook, Document $user, Document $project, Database $dbForPlatform, NotificationPublisher $publisherForNotifications, UsagePublisher $publisherForUsage, array $platform, array $plan, Client $clientForWebhooks, string $deliveryId): ?string
     {
-        if ($webhook->getAttribute('enabled') !== true) {
-            return null;
-        }
-
         $rawUrl = $webhook->getAttribute('url');
-        $options = [];
-
-        if (System::getEnv('_APP_ENV', 'development') === 'production') {
-            $host = \parse_url($rawUrl, PHP_URL_HOST) ?? '';
-            $hostnameValidator = new PublicHostname();
-            if (!$hostnameValidator->isValid($host)) {
-                return 'Webhook target ' . $host . ' rejected: ' . $hostnameValidator->getDescription();
-            }
-
-            // Reuse the addresses resolved above instead of resolving the host again
-            $scheme = \strtolower(\parse_url($rawUrl, PHP_URL_SCHEME) ?? '');
-            $port = \parse_url($rawUrl, PHP_URL_PORT) ?? ($scheme === 'https' ? 443 : 80);
-            $options[CURLOPT_RESOLVE] = $hostnameValidator->getResolve($port);
-        }
 
         $signatureKey = $webhook->getAttribute('signatureKey');
         $signature = base64_encode(hash_hmac('sha1', $rawUrl . $payload, $signatureKey, true));
         $httpUser = $webhook->getAttribute('httpUser');
         $httpPass = $webhook->getAttribute('httpPass');
 
-        $client = (new Client(new CurlAdapter(options: $options)))
+        $client = $clientForWebhooks
             ->withTimeout(15)
             ->withConnectTimeout(15)
             ->withSslVerification($webhook->getAttribute('security', true));
@@ -157,6 +172,7 @@ class Webhooks extends Action
                         System::getEnv('_APP_EMAIL_SECURITY', System::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY))
                     ),
                     'X-' . APP_NAME . '-Webhook-Id' => $webhook->getId(),
+                    'X-' . APP_NAME . '-Webhook-Delivery-Id' => $deliveryId,
                     'X-' . APP_NAME . '-Webhook-Events' => implode(',', $events),
                     'X-' . APP_NAME . '-Webhook-Name' => $webhook->getAttribute('name', ''),
                     'X-' . APP_NAME . '-Webhook-User-Id' => $user->getId(),

@@ -15,7 +15,7 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime as DatabaseDateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Enum;
 use Utopia\Platform\Scope\HTTP;
@@ -89,7 +89,7 @@ class Create extends Action
         // The request may run through the console project; events and audits belong to the resolved project
         $queueForEvents->setProject($project);
         $auditContext->project = $project;
-        $keyId = ID::unique();
+        $keyId = Id::unique();
 
         $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $duration, 0);
 

@@ -6,21 +6,16 @@ use Utopia\Domains\Domain;
 use Utopia\Validator\URL;
 
 /**
- * Validates an http(s) URL whose host is a known public domain (or a public
- * IP literal) that resolves only to publicly routable addresses. Used on
- * endpoints that fetch user-controlled URLs.
+ * An http(s) URL whose host is a known public domain (or an IP literal) that Appwrite may
+ * connect to on a user's behalf. Used on endpoints that fetch user-controlled URLs.
  */
 class PublicURL extends URL
 {
     private string $reason = '';
 
-    /**
-     * @var array<string>
-     */
-    private array $resolve = [];
-
-    public function __construct()
-    {
+    public function __construct(
+        private readonly PublicHostname $hostname,
+    ) {
         parent::__construct(['http', 'https']);
     }
 
@@ -32,7 +27,6 @@ class PublicURL extends URL
     public function isValid($value): bool
     {
         $this->reason = '';
-        $this->resolve = [];
 
         if (!parent::isValid($value)) {
             return false;
@@ -53,26 +47,11 @@ class PublicURL extends URL
             }
         }
 
-        $hostname = new PublicHostname();
-        if (!$hostname->isValid($host)) {
-            $this->reason = $hostname->getDescription();
+        if (!$this->hostname->isValid($host)) {
+            $this->reason = $this->hostname->getDescription();
             return false;
         }
 
-        $scheme = \strtolower(\parse_url($value, PHP_URL_SCHEME) ?? '');
-        $this->resolve = $hostname->getResolve(\parse_url($value, PHP_URL_PORT) ?? ($scheme === 'https' ? 443 : 80));
-
         return true;
-    }
-
-    /**
-     * CURLOPT_RESOLVE entries mapping the last valid URL's host to the
-     * addresses it resolved to. See PublicHostname::getResolve().
-     *
-     * @return array<string>
-     */
-    public function getResolve(): array
-    {
-        return $this->resolve;
     }
 }

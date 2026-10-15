@@ -1,0 +1,164 @@
+---
+layout: article
+title: Generate SDK
+description: Generate a type-safe SDK for your Appwrite project using the Command-Line Tool (CLI). Automatically create typed helpers based on your database schema.
+---
+
+{% partial file="cli-disclaimer.md" /%}
+
+The `generate` command creates a type-safe SDK tailored to your Appwrite project. It reads your database schema and generates typed helpers, so you can interact with your tables using auto-completed methods, resulting in a better developer experience.
+
+# Generate SDK {% #generate-sdk %}
+
+Run the following command in your project directory:
+
+```sh
+appwrite generate
+```
+
+The CLI automatically detects your project's language and generates the SDK to a `generated/appwrite/` directory.
+
+# Options {% #options %}
+
+{% table %}
+* Option
+* Description
+---
+* `-o, --output <directory>`
+* Output directory for generated files (default: `"generated"`)
+---
+* `-l, --language <language>`
+* Target language for SDK generation (supported: `typescript`)
+---
+* `--server <mode>`
+* Override server-side generation (`auto`|`true`|`false`) (default: `"auto"`)
+---
+* `-h, --help`
+* Display help for command
+---
+{% /table %}
+
+# Generated files {% #generated-files %}
+
+The generated SDK includes the following files:
+
+{% table %}
+* File
+* Description
+---
+* `types.ts`
+* Type definitions based on your database schema.
+---
+* `databases.ts`
+* Typed database helpers for querying and mutating rows.
+---
+* `index.ts`
+* Entry point that exports all generated helpers.
+---
+* `constants.ts`
+* Configuration constants such as your project endpoint and project ID. Update these values before using the SDK.
+---
+{% /table %}
+
+# Usage {% #usage %}
+
+After generating the SDK, import it into your project:
+
+```ts
+import { databases } from "./generated/appwrite";
+```
+
+Configure your SDK constants by setting the values in `./generated/appwrite/constants.ts`.
+
+Use the generated helpers to interact with your tables:
+
+```ts
+const customers = databases.use("main").use("customers");
+
+const customer = await customers.create({
+    name: "Walter O' Brian",
+    email: "walter@example.com"
+});
+```
+
+The generated helpers provide auto-completion and type checking based on your database schema, reducing errors and improving developer experience.
+
+# Examples {% #examples %}
+
+The generated SDK supports all common database operations. Below are examples across different use cases.
+
+## Get a row {% #get-row %}
+
+```ts
+const customer = await customers.get("customer-id-123");
+```
+
+## List rows with queries {% #list-rows %}
+
+The `list` method accepts a typed query builder that provides auto-completion for your table's columns.
+
+```ts
+const results = await customers.list({
+    queries: (q) => [
+        q.equal("name", "Walter O' Brian"),
+        q.orderDesc("$createdAt"),
+        q.limit(10)
+    ]
+});
+```
+
+## Update a row {% #update-row %}
+
+```ts
+await customers.update("customer-id-123", {
+    email: "walter@scorpion.com"
+});
+```
+
+## Delete a row {% #delete-row %}
+
+```ts
+await customers.delete("customer-id-123");
+```
+
+## Bulk operations {% #bulk-operations %}
+
+Create, update, or delete multiple rows at once.
+
+```ts
+await customers.createMany([
+    { name: "Walter O' Brian", email: "walter@example.com" },
+    { name: "Paige Dineen", email: "paige@example.com" }
+]);
+```
+
+```ts
+await customers.updateMany(
+    { email: "updated@example.com" },
+    {
+        queries: (q) => [q.equal("name", "Walter O' Brian")]
+    }
+);
+```
+
+```ts
+await customers.deleteMany({
+    queries: (q) => [q.equal("name", "Paige Dineen")]
+});
+```
+
+## Permissions {% #permissions %}
+
+Set row-level permissions when creating or updating rows.
+
+```ts
+await customers.create(
+    { name: "Walter O' Brian", email: "walter@example.com" },
+    {
+        permissions: (permission, role) => [
+            permission.read(role.any()),
+            permission.write(role.user("user-id-123"))
+        ]
+    }
+);
+```

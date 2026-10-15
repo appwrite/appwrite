@@ -1,29 +1,47 @@
 <?php
 
+use Appwrite\Auth\EncryptionKey;
+use Appwrite\Database\Factory as DatabaseFactory;
+use Appwrite\Event\Event as QueueEvent;
+use Appwrite\Event\Message\Usage as UsageMessage;
+use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Messaging\Adapter\Mqtt;
 use Appwrite\Mqtt\Handler;
 use Appwrite\PubSub\Adapter\Pool as PubSubPool;
-use Appwrite\Utopia\Database\Documents\User;
+use Appwrite\Usage\Context as UsageContext;
 use Swoole\Coroutine;
+use Swoole\Coroutine\Channel;
 use Swoole\Runtime;
+use Swoole\Timer;
 use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
-use Utopia\Console;
-use Utopia\Database\Adapter\Pool as DatabasePool;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\DI\Container;
-use Utopia\DSN\DSN;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Mqtt\Adapter;
 use Utopia\Mqtt\Server;
 use Utopia\Pools\Group;
+use Utopia\Queue\Broker\Pool as BrokerPool;
+use Utopia\Queue\Queue;
 use Utopia\Registry\Registry;
 use Utopia\Span\Span;
 use Utopia\System\System;
+use Utopia\Telemetry\Adapter\None as NoTelemetry;
 
 require_once __DIR__ . '/init.php';
+
+try {
+    EncryptionKey::assertProduction(
+        System::getEnv('_APP_ENV', 'production'),
+        System::getEnv('_APP_OPENSSL_KEY_V1')
+    );
+} catch (\RuntimeException $exception) {
+    Console::error($exception->getMessage());
+    exit(1);
+}
 
 require_once __DIR__ . '/init/span.php';
 
@@ -72,16 +90,10 @@ $container->set('getConsoleDB', fn () => function () use ($register, $container)
     /** @var Group $pools */
     $pools = $register->get('pools');
 
-    $adapter = new DatabasePool($pools->get('console'));
-    $database = new Database($adapter, $getCache());
-    $database
-        ->setDatabase(APP_DATABASE)
-        ->setNamespace('_console')
-        ->setMetadata('host', \gethostname())
-        ->setMetadata('project', '_console');
-    $database->setDocumentType('users', User::class);
-
-    return $ctx['dbForPlatform'] = $database;
+    return $ctx['dbForPlatform'] = (new DatabaseFactory($pools, $getCache(), new Authorization()))->platform(metadata: [
+        'host' => \gethostname(),
+        'project' => '_console',
+    ]);
 }, []);
 
 $container->set('getProjectDB', fn () => function (Document $project) use ($register, $container): Database {
@@ -106,41 +118,10 @@ $container->set('getProjectDB', fn () => function (Document $project) use ($regi
     /** @var Group $pools */
     $pools = $register->get('pools');
 
-    try {
-        $dsn = new DSN($project->getAttribute('database'));
-    } catch (\InvalidArgumentException) {
-        $dsn = new DSN('mysql://' . $project->getAttribute('database'));
-    }
-
-    $adapter = new DatabasePool($pools->get($dsn->getHost()));
-    $database = new Database($adapter, $getCache());
-
-    $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
-
-    if (\in_array($dsn->getHost(), $sharedTables)) {
-        $projectCollections = Config::getParam('collections', [])['projects'] ?? [];
-        $globalCollections = array_keys($projectCollections);
-        $globalCollections[] = 'audit';
-
-        $database
-            ->setSharedTables(true)
-            ->setGlobalCollections($globalCollections)
-            ->setTenant($project->getSequence())
-            ->setNamespace($dsn->getParam('namespace'));
-    } else {
-        $database
-            ->setSharedTables(false)
-            ->setTenant(null)
-            ->setNamespace('_' . $project->getSequence());
-    }
-
-    $database
-        ->setDatabase(APP_DATABASE)
-        ->setMetadata('host', \gethostname())
-        ->setMetadata('project', $project->getId());
-    $database->setDocumentType('users', User::class);
-
-    return $ctx['dbForProject'][$project->getSequence()] = $database;
+    return $ctx['dbForProject'][$project->getSequence()] = (new DatabaseFactory($pools, $getCache(), new Authorization()))->project($project, metadata: [
+        'host' => \gethostname(),
+        'project' => $project->getId(),
+    ]);
 }, []);
 
 $container->set('getPlanForUser', fn () => fn (Document $project, string $userId): int => (int) System::getEnv('_APP_MQTT_REPLAY_DEPTH', '5'), []);
@@ -166,6 +147,27 @@ $container->set('getRedis', fn () => function (): \Redis {
     return $ctx['redis'] = $redis;
 }, []);
 
+if (!$container->has('publisherForUsage')) {
+    $container->set('publisherForUsage', function (Group $pools): UsagePublisher {
+        $statsUsageConnection = System::getEnv('_APP_CONNECTIONS_QUEUE_STATS_USAGE', '');
+        $publisherPoolName = 'publisher';
+
+        if (!empty($statsUsageConnection)) {
+            try {
+                $pools->get('publisher_' . $statsUsageConnection);
+                $publisherPoolName = 'publisher_' . $statsUsageConnection;
+            } catch (\Throwable) {
+                // Fallback to the default publisher pool when the custom one is unavailable.
+            }
+        }
+
+        return new UsagePublisher(
+            new BrokerPool(publisher: $pools->get($publisherPoolName)),
+            new Queue(System::getEnv('_APP_STATS_USAGE_QUEUE_NAME', QueueEvent::STATS_USAGE_QUEUE_NAME)),
+        );
+    }, ['pools']);
+}
+
 // Register the CONNECT authenticator and per-SUBSCRIBE authorizer on the global container
 // (see app/init/mqtt/connection.php). The CONNECT/SUBSCRIBE handlers inject them by name,
 // resolved through the packet container that inherits from this one.
@@ -184,7 +186,7 @@ $mqtt = new Mqtt($telemetry, new PubSubPool($register->get('pools')->get('pubsub
 
 // The broker owns framing, decoding, dispatch, per-version encoding, packet ids, the QoS
 // handshake, keep-alive reaping and subscription matching. Appwrite policy lives in the Handler.
-$handler = new Handler($container, $mqtt, $container->get('getCache'), $container->get('getPlanForUser'));
+$handler = new Handler($container, $mqtt, $container->get('getCache'), $container->get('getPlanForUser'), fn (): \DateTimeImmutable => new \DateTimeImmutable());
 $server = new Server($adapter, $handler);
 $server->setTelemetry($telemetry); // broker owns connection/packet/subscription metrics
 
@@ -193,8 +195,153 @@ $server->error(fn (\Throwable $error, string $action) => Console::error("MQTT {$
 
 // Server-initiated delivery: bridge the Redis 'mqtt' firehose to this worker's local subscribers.
 // Appwrite clients never PUBLISH; messages are produced by the Messaging worker onto the channel.
-$server->onWorkerStart(function (int $workerId) use ($server, $handler, $mqtt, $register): void {
-    go(function () use ($server, $handler, $mqtt, $register): void {
+$server->onWorkerStart(function (int $workerId) use ($server, $handler, $mqtt, $register, $container, $telemetry): void {
+    if (!$telemetry instanceof NoTelemetry) {
+        // Liveness signal that is off the client path. Every other broker metric is a synchronous
+        // counter or histogram, recorded only when a client acts, so a freshly rolled worker in a
+        // quiet region exports nothing until the first CONNECT. This uptime gauge is observed on
+        // every collect, so the broker reports within one cycle of a worker starting, whatever the
+        // traffic, and resets to zero on restart. The alert that pages when the broker stops
+        // reporting reads this series, so a rollout no longer looks like an outage.
+        $workerStartedAt = microtime(true);
+        $uptime = $telemetry->createObservableGauge('mqtt.server.uptime', 's', 'Seconds since the broker worker started.');
+        $uptime->observe(fn (callable $observe) => $observe(microtime(true) - $workerStartedAt, []));
+
+        Timer::tick(60000, fn () => $telemetry->collect());
+    }
+
+    // Flush accumulated per-project usage (connections, deliveries) to the stats-usage queue.
+    Timer::tick(60000, function () use ($mqtt, $container): void {
+        $usage = $mqtt->flushUsage();
+        if ($usage === []) {
+            return;
+        }
+
+        go(function () use ($usage, $container): void {
+            try {
+                /** @var UsagePublisher $publisherForUsage */
+                $publisherForUsage = $container->get('publisherForUsage');
+                $getConsoleDB = $container->get('getConsoleDB');
+                $dbForPlatform = $getConsoleDB();
+
+                foreach ($usage as $projectId => $counts) {
+                    $project = $dbForPlatform->getAuthorization()->skip(
+                        fn () => $dbForPlatform->getDocument('projects', $projectId)
+                    );
+                    if ($project->isEmpty()) {
+                        continue;
+                    }
+
+                    $context = new UsageContext();
+                    if (($counts['connections'] ?? 0) > 0) {
+                        $context->addMetric(METRIC_MQTT_CONNECTIONS, (int) $counts['connections']);
+                    }
+                    if (($counts['delivered'] ?? 0) > 0) {
+                        $context->addMetric(METRIC_MQTT_MESSAGES_DELIVERED, (int) $counts['delivered']);
+                    }
+
+                    $publisherForUsage->enqueue(new UsageMessage(
+                        project: $project,
+                        metrics: $context->getMetrics(),
+                    ));
+                }
+            } catch (\Throwable $error) {
+                Console::warning('Failed to publish MQTT usage: ' . $error->getMessage());
+            }
+        });
+    });
+
+    // Per-action handlers for the 'mqtt' control/delivery channel. Span init/finish and the Swoole
+    // coroutine orchestration live here (the entrypoint), not in Handler, which only Span::add()s.
+    // Each takes the resolved projectId and the decoded event.
+
+    // Revoke a user's connections after they were blocked or deleted. Runs in a child coroutine so the
+    // project databases revoke() opens leave with its context instead of piling up in this subscriber.
+    $onRevoke = function (string $projectId, array $event) use ($handler): void {
+        $userId = (string) ($event['userId'] ?? '');
+
+        $revoke = function () use ($handler, $projectId, $userId): void {
+            $span = null;
+
+            try {
+                $span = Span::init('mqtt.revoke');
+                $span->set('project.id', $projectId);
+                $span->set('user.id', $userId);
+                $span->set('mqtt.is_broker', true);
+                $span->set('mqtt.disconnected', $handler->revoke($projectId, $userId));
+            } catch (\Throwable $error) {
+                $span?->setError($error);
+                Console::error('Failed to revoke MQTT connections: ' . $error->getMessage());
+            } finally {
+                $span?->finish();
+            }
+        };
+
+        $revoked = new Channel(1);
+        $started = go(function () use ($revoke, $revoked): void {
+            try {
+                $revoke();
+            } finally {
+                $revoked->push(true);
+            }
+        });
+
+        if ($started === false) {
+            Console::warning('Coroutine limit reached, revoking MQTT connections inline');
+            $revoke();
+
+            return;
+        }
+
+        $revoked->pop();
+    };
+
+    // Drop a user's live subscription to a topic after they were removed as a subscriber.
+    $onUnsubscribe = function (string $projectId, array $event) use ($server, $handler): void {
+        $userId = (string) ($event['userId'] ?? '');
+        $topic = (string) ($event['topic'] ?? '');
+
+        $span = Span::init('mqtt.unsubscribe');
+        $span->set('project.id', $projectId);
+        $span->set('user.id', $userId);
+        $span->set('mqtt.topic', $topic);
+        $span->set('mqtt.is_broker', true);
+
+        try {
+            $span->set('mqtt.unsubscribed', $handler->unsubscribe($server, $projectId, $userId, $topic));
+        } catch (\Throwable $error) {
+            $span->setError($error);
+            Console::error('Failed to unsubscribe MQTT connections: ' . $error->getMessage());
+        } finally {
+            $span->finish();
+        }
+    };
+
+    // Fan a produced message out to this worker's local subscribers of the topic.
+    $onDeliver = function (string $projectId, array $event) use ($server, $handler, $mqtt): void {
+        $topic = (string) ($event['topic'] ?? '');
+        $qos = (int) ($event['qos'] ?? 0);
+        $sequence = (int) ($event['sequence'] ?? 0);
+        $publishedAt = (float) ($event['publishedAt'] ?? 0.0);
+        $message = base64_decode((string) ($event['payload'] ?? ''));
+
+        $span = Span::init('mqtt.deliver');
+        $span->set('project.id', $projectId);
+        $span->set('mqtt.topic', $topic);
+        $span->set('mqtt.qos', $qos);
+        $span->set('mqtt.is_broker', true);
+
+        $delivered = $handler->deliver($server, $projectId, $topic, $message, $qos, $sequence, $publishedAt);
+
+        $span->set('mqtt.subscribers', $delivered);
+        if ($delivered === 0) {
+            $mqtt->messagesDropped->add(1, ['reason' => 'no_subscriber']);
+        }
+
+        $span->finish();
+    };
+
+    go(function () use ($register, $onRevoke, $onUnsubscribe, $onDeliver): void {
         $attempts = 0;
         while ($attempts < 60) {
             try {
@@ -204,32 +351,19 @@ $server->onWorkerStart(function (int $workerId) use ($server, $handler, $mqtt, $
                     $attempts = 0;
                 }
 
-                $pubsub->subscribe(['mqtt'], function (mixed $redis, string $channel, string $payload) use ($server, $handler, $mqtt): void {
+                $pubsub->subscribe(['mqtt'], function (mixed $redis, string $channel, string $payload) use ($onRevoke, $onUnsubscribe, $onDeliver): void {
                     $event = json_decode($payload, true);
                     if (!\is_array($event)) {
                         return;
                     }
 
                     $projectId = (string) ($event['project'] ?? '');
-                    $topic = (string) ($event['topic'] ?? '');
-                    $qos = (int) ($event['qos'] ?? 0);
-                    $sequence = (int) ($event['sequence'] ?? 0);
-                    $message = base64_decode((string) ($event['payload'] ?? ''));
 
-                    $span = Span::init('mqtt.deliver');
-                    $span->set('project.id', $projectId);
-                    $span->set('mqtt.topic', $topic);
-                    $span->set('mqtt.qos', $qos);
-                    $span->set('mqtt.is_broker', true);
-
-                    $delivered = $handler->deliver($server, $projectId, $topic, $message, $qos, $sequence);
-
-                    $span->set('mqtt.subscribers', $delivered);
-                    if ($delivered === 0) {
-                        $mqtt->messagesDropped->add(1, ['reason' => 'no_subscriber']);
-                    }
-
-                    $span->finish();
+                    match ($event['action'] ?? '') {
+                        Mqtt::ACTION_REVOKE => $onRevoke($projectId, $event),
+                        Mqtt::ACTION_UNSUBSCRIBE => $onUnsubscribe($projectId, $event),
+                        default => $onDeliver($projectId, $event),
+                    };
                 });
             } catch (\Throwable $error) {
                 $attempts++;

@@ -10,6 +10,7 @@ use Utopia\Config\Config;
 use Utopia\Database\Document;
 use Utopia\Http\Http;
 use Utopia\Locale\Locale;
+use Utopia\Validator\Boolean;
 
 Http::get('/v1/locale')
     ->desc('Get user locale')
@@ -62,12 +63,13 @@ Http::get('/v1/locale/codes')
             )
         ]
     ))
+    ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
-    ->action(function (Response $response) {
+    ->action(function (bool $includeTotal, Response $response) {
         $codes = Config::getParam('locale-codes');
         $response->dynamic(new Document([
             'localeCodes' => $codes,
-            'total' => count($codes),
+            'total' => $includeTotal ? count($codes) : 0,
         ]), Response::MODEL_LOCALE_CODE_LIST);
     });
 
@@ -88,9 +90,10 @@ Http::get('/v1/locale/countries')
             )
         ]
     ))
+    ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('locale')
-    ->action(function (Response $response, Locale $locale) {
+    ->action(function (bool $includeTotal, Response $response, Locale $locale) {
         $list = array_keys(Config::getParam('locale-countries')); /* @var $list array */
         $output = [];
 
@@ -105,7 +108,7 @@ Http::get('/v1/locale/countries')
             return strcmp($a->getAttribute('name'), $b->getAttribute('name'));
         });
 
-        $response->dynamic(new Document(['countries' => $output, 'total' => \count($output)]), Response::MODEL_COUNTRY_LIST);
+        $response->dynamic(new Document(['countries' => $output, 'total' => $includeTotal ? \count($output) : 0]), Response::MODEL_COUNTRY_LIST);
     });
 
 Http::get('/v1/locale/countries/eu')
@@ -125,9 +128,10 @@ Http::get('/v1/locale/countries/eu')
             )
         ]
     ))
+    ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('locale')
-    ->action(function (Response $response, Locale $locale) {
+    ->action(function (bool $includeTotal, Response $response, Locale $locale) {
         $eu = Config::getParam('locale-eu');
         $output = [];
 
@@ -144,7 +148,7 @@ Http::get('/v1/locale/countries/eu')
             return strcmp($a->getAttribute('name'), $b->getAttribute('name'));
         });
 
-        $response->dynamic(new Document(['countries' => $output, 'total' => \count($output)]), Response::MODEL_COUNTRY_LIST);
+        $response->dynamic(new Document(['countries' => $output, 'total' => $includeTotal ? \count($output) : 0]), Response::MODEL_COUNTRY_LIST);
     });
 
 Http::get('/v1/locale/countries/phones')
@@ -164,9 +168,10 @@ Http::get('/v1/locale/countries/phones')
             )
         ]
     ))
+    ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('locale')
-    ->action(function (Response $response, Locale $locale) {
+    ->action(function (bool $includeTotal, Response $response, Locale $locale) {
         $list = Config::getParam('locale-phones'); /* @var $list array */
         $output = [];
 
@@ -182,7 +187,7 @@ Http::get('/v1/locale/countries/phones')
             }
         }
 
-        $response->dynamic(new Document(['phones' => $output, 'total' => \count($output)]), Response::MODEL_PHONE_LIST);
+        $response->dynamic(new Document(['phones' => $output, 'total' => $includeTotal ? \count($output) : 0]), Response::MODEL_PHONE_LIST);
     });
 
 Http::get('/v1/locale/continents')
@@ -202,9 +207,10 @@ Http::get('/v1/locale/continents')
             )
         ]
     ))
+    ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('locale')
-    ->action(function (Response $response, Locale $locale) {
+    ->action(function (bool $includeTotal, Response $response, Locale $locale) {
         $list = array_keys(Config::getParam('locale-continents'));
         $output = [];
 
@@ -219,7 +225,7 @@ Http::get('/v1/locale/continents')
             return strcmp($a->getAttribute('name'), $b->getAttribute('name'));
         });
 
-        $response->dynamic(new Document(['continents' => $output, 'total' => \count($output)]), Response::MODEL_CONTINENT_LIST);
+        $response->dynamic(new Document(['continents' => $output, 'total' => $includeTotal ? \count($output) : 0]), Response::MODEL_CONTINENT_LIST);
     });
 
 Http::get('/v1/locale/currencies')
@@ -239,13 +245,14 @@ Http::get('/v1/locale/currencies')
             )
         ]
     ))
+    ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
-    ->action(function (Response $response) {
+    ->action(function (bool $includeTotal, Response $response) {
         $list = Config::getParam('locale-currencies');
 
         $list = array_map(fn ($node) => new Document($node), $list);
 
-        $response->dynamic(new Document(['currencies' => $list, 'total' => \count($list)]), Response::MODEL_CURRENCY_LIST);
+        $response->dynamic(new Document(['currencies' => $list, 'total' => $includeTotal ? \count($list) : 0]), Response::MODEL_CURRENCY_LIST);
     });
 
 
@@ -266,11 +273,12 @@ Http::get('/v1/locale/languages')
             )
         ]
     ))
+    ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
-    ->action(function (Response $response) {
+    ->action(function (bool $includeTotal, Response $response) {
         $list = Config::getParam('locale-languages');
 
         $list = array_map(fn ($node) => new Document($node), $list);
 
-        $response->dynamic(new Document(['languages' => $list, 'total' => \count($list)]), Response::MODEL_LANGUAGE_LIST);
+        $response->dynamic(new Document(['languages' => $list, 'total' => $includeTotal ? \count($list) : 0]), Response::MODEL_LANGUAGE_LIST);
     });

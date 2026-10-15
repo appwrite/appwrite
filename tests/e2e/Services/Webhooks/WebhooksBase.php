@@ -2,10 +2,12 @@
 
 namespace Tests\E2E\Services\Webhooks;
 
+use Appwrite\Event\Event;
 use Appwrite\Tests\Async;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\E2E\Client;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Id;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
@@ -20,8 +22,8 @@ trait WebhooksBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders());
-        $databaseId = ID::unique();
-        $tableId = ID::unique();
+        $databaseId = Id::unique();
+        $tableId = Id::unique();
         $path = "/tablesdb/{$databaseId}/tables/{$tableId}";
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', $headers, [
             'databaseId' => $databaseId, 'name' => 'Webhook rows',
@@ -35,7 +37,7 @@ trait WebhooksBase
 
         $webhooks = [];
         foreach (['tablesdb', 'databases'] as $prefix) {
-            $webhook = $this->createWebhook(ID::unique(), 'Row events', [
+            $webhook = $this->createWebhook(Id::unique(), 'Row events', [
                 "{$prefix}.{$databaseId}.tables.{$tableId}.rows.*.create",
                 "{$prefix}.{$databaseId}.tables.{$tableId}.rows.*.update",
             ], true, 'http://request-catcher-webhook:5000/', false, null, null);
@@ -43,7 +45,7 @@ trait WebhooksBase
             $webhooks[$prefix] = $webhook['body']['$id'];
         }
 
-        $rowId = ID::unique();
+        $rowId = Id::unique();
         $row = $this->client->call(Client::METHOD_POST, $path . '/rows', $headers, [
             'rowId' => $rowId, 'data' => ['value' => 'created'],
         ]);
@@ -53,6 +55,7 @@ trait WebhooksBase
         ]);
         $this->assertEquals(200, $row['headers']['status-code']);
 
+        $deliveryIds = [];
         foreach ($webhooks as $prefix => $webhookId) {
             foreach (['create' => 'created', 'update' => 'updated'] as $action => $value) {
                 $event = "{$prefix}.{$databaseId}.tables.{$tableId}.rows.{$rowId}.{$action}";
@@ -63,18 +66,83 @@ trait WebhooksBase
                 });
                 $this->assertNotEmpty($delivery, 'Missing webhook delivery: ' . $event);
                 $this->assertSame($value, $delivery['data']['value']);
+                $this->assertNotEmpty($delivery['headers']['X-Appwrite-Webhook-Delivery-Id'] ?? '');
+                $deliveryIds[] = $delivery['headers']['X-Appwrite-Webhook-Delivery-Id'];
             }
             $this->deleteWebhook($webhookId);
         }
+        // Two events, each to two webhooks: every delivery is told apart from the other three.
+        $this->assertCount(4, \array_unique($deliveryIds));
         $this->client->call(Client::METHOD_DELETE, '/tablesdb/' . $databaseId, $headers);
     }
 
     // Tests for all auth scenarios
 
+    #[Group('queueRetry')]
+    public function testRedeliveryRetriesOnlyTheWebhookThatFailed(): void
+    {
+        // Test for SUCCESS: an event that one webhook accepted and another failed is retried
+        // for the failed one only, under a delivery id of its own.
+        $userId = Id::unique();
+        $event = "users.{$userId}.create";
+
+        $healthy = $this->createWebhook(Id::unique(), 'Healthy', [$event], true, 'http://request-catcher-webhook:5000/', false, null, null);
+        $this->assertSame(201, $healthy['headers']['status-code']);
+        $healthyId = $healthy['body']['$id'];
+
+        // Nothing listens on this port, so the first delivery fails to connect.
+        $failing = $this->createWebhook(Id::unique(), 'Failing', [$event], true, 'http://request-catcher-webhook:5001/', false, null, null);
+        $this->assertSame(201, $failing['headers']['status-code']);
+        $failingId = $failing['body']['$id'];
+
+        try {
+            $user = $this->client->call(Client::METHOD_POST, '/users', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'userId' => $userId,
+                'email' => $userId . '@localhost.test',
+                'password' => 'password',
+            ]);
+            $this->assertSame(201, $user['headers']['status-code']);
+
+            // One failed attempt counted, one delivery to the webhook that accepted it.
+            $this->assertEventually(function () use ($failingId) {
+                $this->assertSame(1, $this->getWebhook($failingId)['body']['attempts']);
+            }, 15000, 500);
+            $this->assertEventually(function () use ($healthyId) {
+                $this->assertCount(1, $this->webhookDeliveries($healthyId));
+            }, 15000, 500);
+
+            // The endpoint recovers. The webhook URL only accepts allowed hosts, so the recovery
+            // is a move to the request catcher. The broker parks the failed event until retried.
+            $moved = $this->updateWebhook($failingId, 'Failing', [$event], true, 'http://request-catcher-webhook:5000/', false, null, null);
+            $this->assertSame(200, $moved['headers']['status-code']);
+
+            $this->assertEventually(function () use ($failingId) {
+                $this->retryFailedWebhooks();
+                $this->assertCount(1, $this->webhookDeliveries($failingId));
+            }, 30000, 1000);
+
+            $healthyDeliveries = $this->webhookDeliveries($healthyId);
+            $failingDeliveries = $this->webhookDeliveries($failingId);
+            $this->assertCount(1, $healthyDeliveries, 'The retry sent the event again to the webhook that had accepted it');
+
+            $healthyDeliveryId = $healthyDeliveries[0]['headers']['X-Appwrite-Webhook-Delivery-Id'] ?? '';
+            $failingDeliveryId = $failingDeliveries[0]['headers']['X-Appwrite-Webhook-Delivery-Id'] ?? '';
+            $this->assertNotEmpty($healthyDeliveryId);
+            $this->assertNotEmpty($failingDeliveryId);
+            $this->assertNotSame($healthyDeliveryId, $failingDeliveryId);
+        } finally {
+            $this->deleteWebhook($healthyId);
+            $this->deleteWebhook($failingId);
+        }
+    }
+
     public function testCreateWebhook(): void
     {
         $webhook = $this->createWebhook(
-            ID::unique(),
+            Id::unique(),
             'Test Webhook',
             ['users.*.create'],
             null,
@@ -122,7 +190,7 @@ trait WebhooksBase
     public function testCreateWebhookWithTls(): void
     {
         $webhook = $this->createWebhook(
-            ID::unique(),
+            Id::unique(),
             'Webhook With TLS',
             ['users.*.create'],
             null,
@@ -144,7 +212,7 @@ trait WebhooksBase
     public function testCreateWebhookWithHttpAuth(): void
     {
         $webhook = $this->createWebhook(
-            ID::unique(),
+            Id::unique(),
             'Webhook With HTTP Auth',
             ['users.*.create'],
             null,
@@ -167,13 +235,54 @@ trait WebhooksBase
 
         // Cleanup
         $this->deleteWebhook($webhook['body']['$id']);
+
+        $tooLongPassword = $this->createWebhook(
+            Id::unique(),
+            'Webhook With Too Long Password',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            true,
+            'username',
+            \str_repeat('p', 2049)
+        );
+        $this->assertSame(400, $tooLongPassword['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $tooLongPassword['body']['type']);
+
+        // The username column holds 255 chars, so that is the longest the API accepts.
+        $longestUsername = $this->createWebhook(
+            Id::unique(),
+            'Webhook With Longest Username',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            true,
+            \str_repeat('u', 255),
+            'password'
+        );
+        $this->assertSame(201, $longestUsername['headers']['status-code']);
+        $this->assertSame(\str_repeat('u', 255), $longestUsername['body']['authUsername']);
+        $this->deleteWebhook($longestUsername['body']['$id']);
+
+        $tooLongUsername = $this->createWebhook(
+            Id::unique(),
+            'Webhook With Too Long Username',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            true,
+            \str_repeat('u', 256),
+            'password'
+        );
+        $this->assertSame(400, $tooLongUsername['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $tooLongUsername['body']['type']);
     }
 
     public function testCreateWebhookEnabled(): void
     {
         // Create disabled webhook
         $webhook = $this->createWebhook(
-            ID::unique(),
+            Id::unique(),
             'Disabled Webhook',
             ['users.*.create'],
             false,
@@ -192,7 +301,7 @@ trait WebhooksBase
 
         // Create enabled webhook explicitly
         $webhook = $this->createWebhook(
-            ID::unique(),
+            Id::unique(),
             'Enabled Webhook',
             ['users.*.create'],
             true,
@@ -215,7 +324,7 @@ trait WebhooksBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'webhookId' => ID::unique(),
+            'webhookId' => Id::unique(),
             'name' => 'Test Webhook',
             'events' => ['users.*.create'],
             'url' => 'https://appwrite.io',
@@ -246,7 +355,7 @@ trait WebhooksBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'webhookId' => ID::unique(),
+            'webhookId' => Id::unique(),
             'events' => ['users.*.create'],
             'url' => 'https://appwrite.io',
         ]);
@@ -260,7 +369,7 @@ trait WebhooksBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'webhookId' => ID::unique(),
+            'webhookId' => Id::unique(),
             'name' => 'Test Webhook',
             'events' => ['users.*.create'],
         ]);
@@ -274,7 +383,7 @@ trait WebhooksBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'webhookId' => ID::unique(),
+            'webhookId' => Id::unique(),
             'name' => 'Test Webhook',
             'url' => 'https://appwrite.io',
         ]);
@@ -284,7 +393,7 @@ trait WebhooksBase
 
     public function testCreateWebhookDuplicateId(): void
     {
-        $webhookId = ID::unique();
+        $webhookId = Id::unique();
 
         $webhook = $this->createWebhook(
             $webhookId,
@@ -321,7 +430,7 @@ trait WebhooksBase
     public function testCreateWebhookAudit(): void
     {
         $webhook = $this->createWebhook(
-            ID::unique(),
+            Id::unique(),
             'Audit Webhook',
             ['users.*.create', 'users.*.update.email'],
             null,
@@ -344,7 +453,7 @@ trait WebhooksBase
     public function testUpdateWebhook(): void
     {
         $webhook = $this->createWebhook(
-            ID::unique(),
+            Id::unique(),
             'Original Webhook',
             ['users.*.create'],
             null,
@@ -390,7 +499,7 @@ trait WebhooksBase
     public function testUpdateWebhookWithTls(): void
     {
         $webhook = $this->createWebhook(
-            ID::unique(),
+            Id::unique(),
             'TLS Webhook',
             ['users.*.create'],
             null,
@@ -427,7 +536,7 @@ trait WebhooksBase
     public function testUpdateWebhookWithHttpAuth(): void
     {
         $webhook = $this->createWebhook(
-            ID::unique(),
+            Id::unique(),
             'HTTP Auth Webhook',
             ['users.*.create'],
             null,
@@ -463,6 +572,46 @@ trait WebhooksBase
         $this->assertEquals(200, $get['headers']['status-code']);
         $this->assertEquals('newuser', $get['body']['authUsername']);
 
+        // 4-byte characters are the worst case for the encrypted size of the longest accepted password.
+        $longest = $this->updateWebhook(
+            $webhookId,
+            'HTTP Auth Webhook',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            true,
+            \str_repeat('u', 255),
+            \str_repeat('🔑', 2048)
+        );
+        $this->assertSame(200, $longest['headers']['status-code']);
+        $this->assertSame(\str_repeat('u', 255), $longest['body']['authUsername']);
+        $this->assertSame('', $longest['body']['authPassword']);
+
+        $tooLongPassword = $this->updateWebhook(
+            $webhookId,
+            'HTTP Auth Webhook',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            true,
+            'newuser',
+            \str_repeat('p', 2049)
+        );
+        $this->assertSame(400, $tooLongPassword['headers']['status-code']);
+
+        $tooLongUsername = $this->updateWebhook(
+            $webhookId,
+            'HTTP Auth Webhook',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            true,
+            \str_repeat('u', 256),
+            null
+        );
+        $this->assertSame(400, $tooLongUsername['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $tooLongUsername['body']['type']);
+
         // Cleanup
         $this->deleteWebhook($webhookId);
     }
@@ -470,7 +619,7 @@ trait WebhooksBase
     public function testUpdateWebhookEnabled(): void
     {
         $webhook = $this->createWebhook(
-            ID::unique(),
+            Id::unique(),
             'Enabled Webhook',
             ['users.*.create'],
             true,
@@ -523,7 +672,7 @@ trait WebhooksBase
     public function testUpdateWebhookWithoutAuthentication(): void
     {
         $webhook = $this->createWebhook(
-            ID::unique(),
+            Id::unique(),
             'Auth Test Webhook',
             ['users.*.create'],
             null,
@@ -572,7 +721,7 @@ trait WebhooksBase
     public function testUpdateWebhookMissingName(): void
     {
         $webhook = $this->createWebhook(
-            ID::unique(),
+            Id::unique(),
             'Missing Name Webhook',
             ['users.*.create'],
             null,
@@ -602,7 +751,7 @@ trait WebhooksBase
     public function testUpdateWebhookMissingUrl(): void
     {
         $webhook = $this->createWebhook(
-            ID::unique(),
+            Id::unique(),
             'Missing URL Webhook',
             ['users.*.create'],
             null,
@@ -632,7 +781,7 @@ trait WebhooksBase
     public function testUpdateWebhookMissingEvents(): void
     {
         $webhook = $this->createWebhook(
-            ID::unique(),
+            Id::unique(),
             'Missing Events Webhook',
             ['users.*.create'],
             null,
@@ -680,7 +829,7 @@ trait WebhooksBase
     public function testUpdateWebhookAudit(): void
     {
         $webhook = $this->createWebhook(
-            ID::unique(),
+            Id::unique(),
             'Audit Update Webhook',
             ['users.*.create'],
             null,
@@ -724,7 +873,7 @@ trait WebhooksBase
     public function testUpdateWebhookSecret(): void
     {
         $webhook = $this->createWebhook(
-            ID::unique(),
+            Id::unique(),
             'Secret Webhook',
             ['users.*.create'],
             null,
@@ -768,7 +917,7 @@ trait WebhooksBase
     {
         // Create webhook pointing to request-catcher so deliveries are captured
         $webhook = $this->createWebhook(
-            ID::unique(),
+            Id::unique(),
             'Rotation Test Webhook',
             ['users.*.create'],
             null,
@@ -790,7 +939,7 @@ trait WebhooksBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email1,
             'password' => 'password',
             'name' => 'Rotation User 1',
@@ -829,7 +978,7 @@ trait WebhooksBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email2,
             'password' => 'password',
             'name' => 'Rotation User 2',
@@ -864,7 +1013,7 @@ trait WebhooksBase
 
         // Create webhook with a custom secret pointing to request-catcher
         $webhook = $this->createWebhook(
-            ID::unique(),
+            Id::unique(),
             'Custom Secret Webhook',
             ['users.*.create'],
             null,
@@ -885,7 +1034,7 @@ trait WebhooksBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => $email,
             'password' => 'password',
             'name' => 'Custom Secret User',
@@ -918,7 +1067,7 @@ trait WebhooksBase
     {
         // 7 chars — below minimum of 8
         $webhook = $this->createWebhook(
-            ID::unique(),
+            Id::unique(),
             'Short Secret Webhook',
             ['users.*.create'],
             null,
@@ -933,7 +1082,7 @@ trait WebhooksBase
 
         // 8 chars — exactly at minimum
         $webhook = $this->createWebhook(
-            ID::unique(),
+            Id::unique(),
             'Min Secret Webhook',
             ['users.*.create'],
             null,
@@ -956,7 +1105,7 @@ trait WebhooksBase
         // 256 chars — exactly at maximum
         $maxSecret = str_repeat('a', 256);
         $webhook = $this->createWebhook(
-            ID::unique(),
+            Id::unique(),
             'Max Secret Webhook',
             ['users.*.create'],
             null,
@@ -976,7 +1125,7 @@ trait WebhooksBase
         // 257 chars — above maximum
         $tooLongSecret = str_repeat('a', 257);
         $webhook = $this->createWebhook(
-            ID::unique(),
+            Id::unique(),
             'Too Long Secret Webhook',
             ['users.*.create'],
             null,
@@ -993,7 +1142,7 @@ trait WebhooksBase
     public function testUpdateWebhookSecretMinLength(): void
     {
         $webhook = $this->createWebhook(
-            ID::unique(),
+            Id::unique(),
             'Secret Min Update Webhook',
             ['users.*.create'],
             null,
@@ -1022,7 +1171,7 @@ trait WebhooksBase
     public function testUpdateWebhookSecretMaxLength(): void
     {
         $webhook = $this->createWebhook(
-            ID::unique(),
+            Id::unique(),
             'Secret Max Update Webhook',
             ['users.*.create'],
             null,
@@ -1054,7 +1203,7 @@ trait WebhooksBase
     {
         // Create webhook — secret IS returned on creation
         $webhook = $this->createWebhook(
-            ID::unique(),
+            Id::unique(),
             'Secret Exposure Test',
             ['users.*.create'],
             null,
@@ -1112,7 +1261,7 @@ trait WebhooksBase
     public function testWebhookAuthPasswordNotExposedInResponses(): void
     {
         $webhook = $this->createWebhook(
-            ID::unique(),
+            Id::unique(),
             'Password Exposure Test',
             ['users.*.create'],
             null,
@@ -1160,15 +1309,18 @@ trait WebhooksBase
 
     public function testUpdateWebhookKeepsAuthPasswordWhenOmitted(): void
     {
+        // The longest password the API accepts must be stored and delivered intact.
+        $password = \str_repeat('p', 2048);
+
         $webhook = $this->createWebhook(
-            ID::unique(),
+            Id::unique(),
             'Password Retention Test',
             ['users.*.create'],
             null,
             'http://request-catcher-webhook:5000/',
             false,
             'hook-user',
-            'hook-password'
+            $password
         );
 
         $this->assertSame(201, $webhook['headers']['status-code']);
@@ -1191,7 +1343,7 @@ trait WebhooksBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => uniqid() . 'retention@localhost.test',
             'password' => 'password',
             'name' => 'Retention User',
@@ -1199,7 +1351,7 @@ trait WebhooksBase
         $this->assertSame(201, $user['headers']['status-code']);
         $userId = $user['body']['$id'];
 
-        $this->assertSame('Basic ' . \base64_encode('hook-user:hook-password'), $this->getDeliveryAuthorization($webhookId, $userId));
+        $this->assertSame('Basic ' . \base64_encode('hook-user:' . $password), $this->getDeliveryAuthorization($webhookId, $userId));
 
         $this->deleteWebhook($webhookId);
     }
@@ -1207,7 +1359,7 @@ trait WebhooksBase
     public function testUpdateWebhookClearsAuthPasswordWhenUrlChanges(): void
     {
         $webhook = $this->createWebhook(
-            ID::unique(),
+            Id::unique(),
             'Password Redirect Test',
             ['users.*.create'],
             null,
@@ -1237,7 +1389,7 @@ trait WebhooksBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => uniqid() . 'redirect@localhost.test',
             'password' => 'password',
             'name' => 'Redirect User',
@@ -1252,7 +1404,7 @@ trait WebhooksBase
     public function testUpdateWebhookClearsAuthPasswordWhenTlsVerificationDisabled(): void
     {
         $webhook = $this->createWebhook(
-            ID::unique(),
+            Id::unique(),
             'Password Downgrade Test',
             ['users.*.create'],
             null,
@@ -1282,7 +1434,7 @@ trait WebhooksBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'userId' => ID::unique(),
+            'userId' => Id::unique(),
             'email' => uniqid() . 'downgrade@localhost.test',
             'password' => 'password',
             'name' => 'Downgrade User',
@@ -1316,7 +1468,7 @@ trait WebhooksBase
     public function testCreateWebhookWithPrivateDomain(): void
     {
         $webhook = $this->createWebhook(
-            ID::unique(),
+            Id::unique(),
             'Private Domain Webhook',
             ['users.*.create'],
             null,
@@ -1332,7 +1484,7 @@ trait WebhooksBase
     public function testUpdateWebhookWithPrivateDomain(): void
     {
         $webhook = $this->createWebhook(
-            ID::unique(),
+            Id::unique(),
             'Private Domain Update Webhook',
             ['users.*.create'],
             null,
@@ -1371,7 +1523,7 @@ trait WebhooksBase
     public function testCreateWebhookInvalidUrlScheme(): void
     {
         $webhook = $this->createWebhook(
-            ID::unique(),
+            Id::unique(),
             'Invalid Scheme Webhook',
             ['users.*.create'],
             null,
@@ -1382,12 +1534,25 @@ trait WebhooksBase
         );
 
         $this->assertEquals(400, $webhook['headers']['status-code']);
+
+        $tooLongUrl = $this->createWebhook(
+            Id::unique(),
+            'Too Long URL Webhook',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io/' . \str_repeat('a', 250),
+            null,
+            null,
+            null
+        );
+        $this->assertSame(400, $tooLongUrl['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $tooLongUrl['body']['type']);
     }
 
     public function testUpdateWebhookInvalidUrlScheme(): void
     {
         $webhook = $this->createWebhook(
-            ID::unique(),
+            Id::unique(),
             'Scheme Update Webhook',
             ['users.*.create'],
             null,
@@ -1428,7 +1593,7 @@ trait WebhooksBase
     public function testCreateWebhookInvalidEvents(): void
     {
         $webhook = $this->createWebhook(
-            ID::unique(),
+            Id::unique(),
             'Invalid Events Webhook',
             ['account.unknown'],
             null,
@@ -1444,7 +1609,7 @@ trait WebhooksBase
     public function testUpdateWebhookInvalidEvents(): void
     {
         $webhook = $this->createWebhook(
-            ID::unique(),
+            Id::unique(),
             'Invalid Events Update Webhook',
             ['users.*.create'],
             null,
@@ -1533,7 +1698,7 @@ trait WebhooksBase
     public function testGetWebhook(): void
     {
         $webhook = $this->createWebhook(
-            ID::unique(),
+            Id::unique(),
             'Get Test Webhook',
             ['users.*.create', 'users.*.update.email'],
             null,
@@ -1582,7 +1747,7 @@ trait WebhooksBase
     public function testGetWebhookWithoutAuthentication(): void
     {
         $webhook = $this->createWebhook(
-            ID::unique(),
+            Id::unique(),
             'Auth Get Webhook',
             ['users.*.create'],
             null,
@@ -1613,7 +1778,7 @@ trait WebhooksBase
     {
         // Create multiple webhooks
         $webhook1 = $this->createWebhook(
-            ID::unique(),
+            Id::unique(),
             'List Webhook Alpha',
             ['users.*.create'],
             true,
@@ -1625,7 +1790,7 @@ trait WebhooksBase
         $this->assertEquals(201, $webhook1['headers']['status-code']);
 
         $webhook2 = $this->createWebhook(
-            ID::unique(),
+            Id::unique(),
             'List Webhook Beta',
             ['users.*.delete'],
             false,
@@ -1637,7 +1802,7 @@ trait WebhooksBase
         $this->assertEquals(201, $webhook2['headers']['status-code']);
 
         $webhook3 = $this->createWebhook(
-            ID::unique(),
+            Id::unique(),
             'List Webhook Gamma',
             ['users.*.create', 'users.*.delete'],
             true,
@@ -1680,7 +1845,7 @@ trait WebhooksBase
     public function testListWebhooksWithLimit(): void
     {
         $webhook1 = $this->createWebhook(
-            ID::unique(),
+            Id::unique(),
             'Limit Webhook 1',
             ['users.*.create'],
             null,
@@ -1692,7 +1857,7 @@ trait WebhooksBase
         $this->assertEquals(201, $webhook1['headers']['status-code']);
 
         $webhook2 = $this->createWebhook(
-            ID::unique(),
+            Id::unique(),
             'Limit Webhook 2',
             ['users.*.create'],
             null,
@@ -1720,7 +1885,7 @@ trait WebhooksBase
     public function testListWebhooksWithOffset(): void
     {
         $webhook1 = $this->createWebhook(
-            ID::unique(),
+            Id::unique(),
             'Offset Webhook 1',
             ['users.*.create'],
             null,
@@ -1732,7 +1897,7 @@ trait WebhooksBase
         $this->assertEquals(201, $webhook1['headers']['status-code']);
 
         $webhook2 = $this->createWebhook(
-            ID::unique(),
+            Id::unique(),
             'Offset Webhook 2',
             ['users.*.create'],
             null,
@@ -1764,7 +1929,7 @@ trait WebhooksBase
     public function testListWebhooksFilterByName(): void
     {
         $webhook = $this->createWebhook(
-            ID::unique(),
+            Id::unique(),
             'UniqueFilterName-XYZ',
             ['users.*.create'],
             null,
@@ -1791,7 +1956,7 @@ trait WebhooksBase
     public function testListWebhooksFilterByEnabled(): void
     {
         $webhookEnabled = $this->createWebhook(
-            ID::unique(),
+            Id::unique(),
             'Enabled Filter Webhook',
             ['users.*.create'],
             true,
@@ -1803,7 +1968,7 @@ trait WebhooksBase
         $this->assertEquals(201, $webhookEnabled['headers']['status-code']);
 
         $webhookDisabled = $this->createWebhook(
-            ID::unique(),
+            Id::unique(),
             'Disabled Filter Webhook',
             ['users.*.create'],
             false,
@@ -1844,7 +2009,7 @@ trait WebhooksBase
     public function testListWebhooksFilterByUrl(): void
     {
         $webhook = $this->createWebhook(
-            ID::unique(),
+            Id::unique(),
             'URL Filter Webhook',
             ['users.*.create'],
             null,
@@ -1871,7 +2036,7 @@ trait WebhooksBase
     public function testListWebhooksFilterByTls(): void
     {
         $webhook = $this->createWebhook(
-            ID::unique(),
+            Id::unique(),
             'TLS Filter Webhook',
             ['users.*.create'],
             null,
@@ -1899,7 +2064,7 @@ trait WebhooksBase
     public function testListWebhooksWithoutTotal(): void
     {
         $webhook = $this->createWebhook(
-            ID::unique(),
+            Id::unique(),
             'No Total Webhook',
             ['users.*.create'],
             null,
@@ -1924,7 +2089,7 @@ trait WebhooksBase
     public function testListWebhooksCursorPagination(): void
     {
         $webhook1 = $this->createWebhook(
-            ID::unique(),
+            Id::unique(),
             'Cursor Webhook 1',
             ['users.*.create'],
             null,
@@ -1936,7 +2101,7 @@ trait WebhooksBase
         $this->assertEquals(201, $webhook1['headers']['status-code']);
 
         $webhook2 = $this->createWebhook(
-            ID::unique(),
+            Id::unique(),
             'Cursor Webhook 2',
             ['users.*.create'],
             null,
@@ -1995,7 +2160,7 @@ trait WebhooksBase
     public function testDeleteWebhook(): void
     {
         $webhook = $this->createWebhook(
-            ID::unique(),
+            Id::unique(),
             'Delete Test Webhook',
             ['users.*.create'],
             null,
@@ -2034,7 +2199,7 @@ trait WebhooksBase
     public function testDeleteWebhookWithoutAuthentication(): void
     {
         $webhook = $this->createWebhook(
-            ID::unique(),
+            Id::unique(),
             'Delete Auth Webhook',
             ['users.*.create'],
             null,
@@ -2066,7 +2231,7 @@ trait WebhooksBase
     public function testDeleteWebhookRemovedFromList(): void
     {
         $webhook = $this->createWebhook(
-            ID::unique(),
+            Id::unique(),
             'Delete List Webhook',
             ['users.*.create'],
             null,
@@ -2101,7 +2266,7 @@ trait WebhooksBase
     public function testDeleteWebhookDoubleDelete(): void
     {
         $webhook = $this->createWebhook(
-            ID::unique(),
+            Id::unique(),
             'Double Delete Webhook',
             ['users.*.create'],
             null,
@@ -2138,7 +2303,7 @@ trait WebhooksBase
 
         // Send old param names with 1.9.0 header
         $webhook = $this->client->call(Client::METHOD_POST, '/webhooks', $headers, [
-            'webhookId' => ID::unique(),
+            'webhookId' => Id::unique(),
             'name' => 'V22 Compat Create',
             'events' => ['users.*.create'],
             'url' => 'https://appwrite.io',
@@ -2175,7 +2340,7 @@ trait WebhooksBase
     public function testUpdateWebhookV22BackwardCompatRequest(): void
     {
         $webhook = $this->createWebhook(
-            ID::unique(),
+            Id::unique(),
             'V22 Compat Update',
             ['users.*.create'],
             null,
@@ -2228,7 +2393,7 @@ trait WebhooksBase
     public function testGetWebhookV22BackwardCompatResponse(): void
     {
         $webhook = $this->createWebhook(
-            ID::unique(),
+            Id::unique(),
             'V22 Compat Get',
             ['users.*.create'],
             null,
@@ -2275,7 +2440,7 @@ trait WebhooksBase
     public function testListWebhooksV22BackwardCompatResponse(): void
     {
         $webhook = $this->createWebhook(
-            ID::unique(),
+            Id::unique(),
             'V22 Compat List',
             ['users.*.create'],
             null,
@@ -2330,7 +2495,7 @@ trait WebhooksBase
     public function testUpdateWebhookSecretV22BackwardCompatResponse(): void
     {
         $webhook = $this->createWebhook(
-            ID::unique(),
+            Id::unique(),
             'V22 Compat Secret',
             ['users.*.create'],
             null,
@@ -2373,6 +2538,31 @@ trait WebhooksBase
     }
 
     // Helpers
+
+    /**
+     * Every request the webhook request catcher received from one webhook.
+     *
+     * @return list<array<string, mixed>>
+     */
+    protected function webhookDeliveries(string $webhookId): array
+    {
+        $response = @\file_get_contents('http://request-catcher-webhook:5000/__find_request__?' . \http_build_query([
+            'header_X-Appwrite-Webhook-Id' => $webhookId,
+        ]));
+        $requests = \is_string($response) ? \json_decode($response, true) : [];
+
+        return \array_map($this->decodeRequestData(...), \is_array($requests) ? $requests : []);
+    }
+
+    /**
+     * Run what an operator runs to retry the webhooks the broker parked as failed.
+     */
+    protected function retryFailedWebhooks(): void
+    {
+        // The way an operator runs it: no --limit, which must retry every failed job.
+        \exec('queue-retry --name=' . \escapeshellarg(Event::WEBHOOK_QUEUE_NAME) . ' 2>&1', $output, $exitCode);
+        $this->assertSame(0, $exitCode, \implode("\n", $output));
+    }
 
     /**
      * @param array<string>|null $queries

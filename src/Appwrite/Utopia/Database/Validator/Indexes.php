@@ -2,9 +2,9 @@
 
 namespace Appwrite\Utopia\Database\Validator;
 
-use Utopia\Database\Database;
 use Utopia\Database\Validator\Key;
-use Utopia\Validator;
+use Utopia\Query\Schema\IndexType;
+use Utopia\Validator\Validator;
 
 class Indexes extends Validator
 {
@@ -14,18 +14,19 @@ class Indexes extends Validator
      * @var array<string> Supported index types
      */
     protected array $supportedTypes = [
-        Database::INDEX_KEY,
-        Database::INDEX_FULLTEXT,
-        Database::INDEX_UNIQUE,
-        Database::INDEX_SPATIAL,
+        IndexType::Key->value,
+        IndexType::Fulltext->value,
+        IndexType::Unique->value,
+        IndexType::Spatial->value,
+        IndexType::Trigram->value,
     ];
 
     /**
      * @var array<string> Supported orders
      */
     protected array $supportedOrders = [
-        Database::ORDER_ASC,
-        Database::ORDER_DESC,
+        'ASC',
+        'DESC',
     ];
 
     /**

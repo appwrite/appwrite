@@ -17,13 +17,13 @@ use Appwrite\Usage\Connection as UsageConnection;
 use Appwrite\Usage\Context as UsageContext;
 use Executor\Executor;
 use Throwable;
-use Utopia\Abuse\Adapters\TimeLimit\Database as AbuseDatabase;
+use Utopia\Abuse\Adapter\TimeLimit\Database as AbuseDatabase;
 use Utopia\Bus\Bus;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
 use Utopia\Cdn\Certificates\Provider;
 use Utopia\Config\Config;
-use Utopia\Console;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -395,27 +395,43 @@ class Deletes extends Action
         bool $projectTables,
         array $projectCollectionIds
     ): void {
-        $dbForDatabases->foreach(
-            Database::METADATA,
-            function (Document $collection) use ($dbForDatabases, $projectTables, $projectCollectionIds) {
-                $collectionId = $collection->getId();
+        foreach ($dbForDatabases->cursor(Database::METADATA, batchSize: 25) as $collection) {
+            $collectionId = $collection->getId();
 
-                try {
-                    if ($projectTables || !\in_array($collectionId, $projectCollectionIds, true)) {
-                        $dbForDatabases->deleteCollection($collectionId);
-                        return;
-                    }
-
-                    $this->deleteByGroup(
-                        $collectionId,
-                        [Query::orderAsc()],
-                        database: $dbForDatabases
-                    );
-                } catch (Throwable $e) {
-                    Console::error('Error deleting ' . $collectionId . ' ' . $e->getMessage());
+            try {
+                if ($projectTables || !\in_array($collectionId, $projectCollectionIds, true)) {
+                    $dbForDatabases->deleteCollection($collectionId);
+                    continue;
                 }
+
+                $this->deleteByGroup(
+                    $collectionId,
+                    [Query::orderAsc()],
+                    database: $dbForDatabases
+                );
+            } catch (Throwable $e) {
+                Console::error('Error deleting ' . $collectionId . ' ' . $e->getMessage());
             }
-        );
+        }
+    }
+
+    /**
+     * Stop a deleted project's schedules, and leave removing them to the sweep.
+     *
+     * The schedulers sync from the rows whose resourceUpdatedAt moved, and a
+     * removed row never moves: its entry keeps firing from memory until the next
+     * full snapshot, minutes later, into a worker that can no longer find the
+     * project. A deactivated row reaches them on their next sync, and
+     * deleteSchedules() removes it once it is older than the retention.
+     */
+    protected function deactivateSchedules(Database $dbForPlatform, string $projectId): void
+    {
+        $dbForPlatform->updateDocuments('schedules', new Document([
+            'active' => false,
+            'resourceUpdatedAt' => DateTime::now(),
+        ]), [
+            Query::equal('projectId', [$projectId]),
+        ]);
     }
 
     /**
@@ -857,14 +873,11 @@ class Deletes extends Action
             Console::error('Failed to delete VCS comments: ' . $th->getMessage());
         }
 
-        // Delete Schedules
+        // Stop Schedules
         try {
-            $this->deleteByGroup('schedules', [
-                Query::equal('projectId', [$projectId]),
-                Query::orderAsc()
-            ], $dbForPlatform);
+            $this->deactivateSchedules($dbForPlatform, $projectId);
         } catch (Throwable $th) {
-            Console::error('Failed to delete schedules: ' . $th->getMessage());
+            Console::error('Failed to deactivate schedules: ' . $th->getMessage());
         }
 
         // Delete Notifications
@@ -907,7 +920,7 @@ class Deletes extends Action
             /**
              * Disable validation because of Cursor validation on $id underscores
              */
-            $dbForProject->disableValidation();
+            $dbForProject->setValidation(false);
 
 
             $projectCollectionIds = [
@@ -1031,7 +1044,7 @@ class Deletes extends Action
             }
 
         } finally {
-            $dbForProject->enableValidation();
+            $dbForProject->setValidation(true);
         }
     }
 
@@ -1099,6 +1112,17 @@ class Deletes extends Action
 
         // Delete tokens
         $this->deleteByGroup('tokens', [
+            Query::equal('userInternalId', [$userInternalId]),
+            Query::orderAsc()
+        ], $dbForProject);
+
+        // Delete authenticators, including passkeys, and their pending challenges
+        $this->deleteByGroup('authenticators', [
+            Query::equal('userInternalId', [$userInternalId]),
+            Query::orderAsc()
+        ], $dbForProject);
+
+        $this->deleteByGroup('challenges', [
             Query::equal('userInternalId', [$userInternalId]),
             Query::orderAsc()
         ], $dbForProject);
@@ -1693,7 +1717,7 @@ class Deletes extends Action
         $start = \microtime(true);
 
         $message = 'collection:'.$database->getNamespace().'_'.$collection;
-        if ($database->getSharedTables()) {
+        if ($database->hasSharedTables()) {
             $message .= ' Tenant:'.$database->getTenant();
         }
 
@@ -1707,7 +1731,7 @@ class Deletes extends Action
                 onNext: $callback
             );
         } catch (Throwable $th) {
-            $tenant = $database->getSharedTables() ? 'Tenant:'. $database->getTenant() : '';
+            $tenant = $database->hasSharedTables() ? 'Tenant:'. $database->getTenant() : '';
             Console::error("Failed to delete documents for {$message} :{$th->getMessage()}");
             return;
         }
@@ -1727,41 +1751,19 @@ class Deletes extends Action
     protected function listByGroup(string $collection, array $queries, Database $database, ?callable $callback = null): void
     {
         $count = 0;
-        $limit = 1000;
-        $sum = $limit;
-        $cursor = null;
-
         $start = \microtime(true);
 
-        while ($sum === $limit) {
-
-            $queries = \array_merge([Query::limit($limit)], $queries);
-
-            if ($cursor !== null) {
-                $queries[] = Query::cursorAfter($cursor);
+        foreach ($database->cursor($collection, $queries, batchSize: 1000) as $document) {
+            if ($callback !== null) {
+                $callback($document);
             }
-
-            $results = $database->find($collection, $queries);
-
-            $sum = \count($results);
-
-            if ($sum > 0) {
-                $cursor = $results[$sum - 1];
-            }
-
-            foreach ($results as $document) {
-                if (is_callable($callback)) {
-                    $callback($document);
-                }
-
-                $count++;
-            }
+            $count++;
         }
 
         $end = \microtime(true);
 
         $message = 'collection:'.$database->getNamespace().'_'.$collection;
-        if ($database->getSharedTables()) {
+        if ($database->hasSharedTables()) {
             $message .= ' Tenant:'.$database->getTenant();
         }
 
@@ -1925,8 +1927,6 @@ class Deletes extends Action
                 Query::lessThan('expiresAt', DateTime::format(new \DateTime())),
             ], onNext: function (Document $transaction) use (&$transactionInternalIds) {
                 $transactionInternalIds[] = $transaction->getSequence();
-            }, onError: function (Throwable $th) {
-                // Swallow errors to avoid breaking the cleanup process
             });
         } catch (Throwable $th) {
             Console::error("Failed to find expired transactions for project {$project->getId()}: " . $th->getMessage());
@@ -1939,9 +1939,7 @@ class Deletes extends Action
         foreach (\array_chunk($transactionInternalIds, \max(1, $dbForProject->getMaxQueryValues())) as $batch) {
             $dbForProject->deleteDocuments('transactionLogs', [
                 Query::equal('transactionInternalId', $batch),
-            ], onError: function (Throwable $th) {
-                // Swallow errors to avoid breaking the cleanup process
-            });
+            ]);
         }
     }
 
@@ -1956,17 +1954,15 @@ class Deletes extends Action
         Console::info('Delete expired push ledger messages');
 
         $dbForProject = $getProjectDB($project);
-        if ($dbForProject->getCollection('pushLedger')->isEmpty()) {
+        if ($dbForProject->findCollection('pushLedger') === null) {
             return;
         }
 
-        $expired = DateTime::addSeconds(new \DateTime(), -1 * 60 * 60 * 24 * 7);
+        $expired = DateTime::addSeconds(new \DateTime(), -APP_PUSH_LEDGER_RETENTION);
 
         $dbForProject->deleteDocuments('pushLedger', [
             Query::lessThan('$createdAt', $expired),
-        ], onError: function (Throwable $th) {
-            // Swallow errors (e.g. projects without the push ledger collection).
-        });
+        ]);
     }
 
     private function deleteExpiredPresences(Document $project, callable $getProjectDB, UsagePublisher $publisherForUsage): void
@@ -1979,9 +1975,7 @@ class Deletes extends Action
 
         $deleted = $dbForProject->deleteDocuments('presenceLogs', [
             Query::lessThan('expiresAt', $now),
-        ], onError: function (Throwable $th) {
-            // Swallow errors to avoid breaking the cleanup process
-        });
+        ]);
 
         if ($deleted > 0) {
             $usage = (new UsageContext())->addMetric(METRIC_USERS_PRESENCE, -$deleted);
