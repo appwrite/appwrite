@@ -156,21 +156,25 @@ impl Conn {
             let count = if has_rows { rows.len() as i64 } else { affected };
             let insert_id = if has_rows { 0 } else { insert_id };
             if let Some(e) = error {
+                // The failure of this query (or of reading its rows): the
+                // statement's own for the first query, met when advancing
+                // to it for a later one.
                 let e = error_of(e).into_error();
-                // A failure while reading the rows of a lone query is that
-                // query's; otherwise it is the next query's (see the
-                // module docs).
-                if sets.is_empty() && has_rows && !several(query) {
+                if sets.is_empty() {
                     drop(result);
                     self.settle();
                     return Err(e);
                 }
-                sets.push(Rowset { columns, rows, count, insert_id });
                 failure = Some(e);
                 break;
             }
             sets.push(Rowset { columns, rows, count, insert_id });
-            if result.is_empty() {
+            if result.columns().is_none() {
+                // No further result. A query failing after this one leaves
+                // its error on the connection instead: surface it.
+                if let Err(e) = result.next().await {
+                    failure = Some(error_of(e).into_error());
+                }
                 break;
             }
         }
@@ -235,26 +239,6 @@ impl Conn {
             let _ = conn.disconnect().await;
         }
     }
-}
-
-/// Whether `sql` holds more than one query: a `;` outside quotes and
-/// comments followed by more than whitespace.
-fn several(sql: &[u8]) -> bool {
-    let end = sql.iter().position(|b| *b == 0).unwrap_or(sql.len());
-    let s = &sql[..end];
-    let mut pos = 0;
-    while pos < s.len() {
-        let (token, len) = next_token(s, pos);
-        if token == Token::Text && !matches!(s[pos], b'\'' | b'"' | b'`' | b'#' | b'/' | b'-') {
-            for (i, b) in s[pos..pos + len].iter().enumerate() {
-                if *b == b';' && s[pos + i + 1..].iter().any(|c| !c.is_ascii_whitespace() && *c != b';') {
-                    return true;
-                }
-            }
-        }
-        pos += len;
-    }
-    false
 }
 
 /// `CR_SERVER_GONE_ERROR`.
@@ -526,13 +510,5 @@ mod tests {
         assert_eq!(quote(b"\xc3a"), b"'\\\xc3a'".to_vec());
         assert_eq!(quote(b"\xff\xfe"), b"'\xff\xfe'".to_vec());
         assert_eq!(quote(b"\xf0\x9f\x98\x80"), b"'\xf0\x9f\x98\x80'".to_vec());
-    }
-
-    #[test]
-    fn counts_queries() {
-        assert!(!several(b"SELECT 1"));
-        assert!(!several(b"SELECT 1;"));
-        assert!(!several(b"SELECT ';x' -- ;y\n"));
-        assert!(several(b"SELECT 1; SELECT 2"));
     }
 }

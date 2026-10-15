@@ -82,8 +82,12 @@ impl Conn {
         }
         let conn = Connection::open_with_flags(path, flags).map_err(|e| {
             let (code, message) = match e {
-                rusqlite::Error::SqliteFailure(failure, message) => {
-                    (failure.extended_code & 0xff, message.unwrap_or_else(|| failure.to_string()))
+                // `sqlite3_errmsg()` of a failed open is the code's own
+                // description (rusqlite appends the path to it).
+                rusqlite::Error::SqliteFailure(failure, _) => {
+                    let text = failure.to_string();
+                    let description = text.split_once(": ").map_or(text.as_str(), |(_, d)| d).to_owned();
+                    (failure.extended_code & 0xff, description)
                 }
                 other => (ffi::SQLITE_ERROR, other.to_string()),
             };

@@ -579,6 +579,7 @@ pub struct Pdo {
     session: Vec<(String, String)>,
     case: Case,
     fetch_mode: FetchMode,
+    #[cfg_attr(not(feature = "sqlite"), allow(dead_code))]
     regexp: bool,
     fault: Option<Error>,
 }
