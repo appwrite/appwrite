@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9cf517c6107339a4bccb793cb59f5585",
+    "content-hash": "da337e0ce491ec293df7f917d1af2aeb",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4499,7 +4499,7 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "dev-main",
+            "version": "3.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
@@ -4531,7 +4531,6 @@
                 "phpunit/phpunit": "11.*",
                 "vlucas/phpdotenv": "5.*"
             },
-            "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-4": {
@@ -4552,7 +4551,7 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/main"
+                "source": "https://github.com/utopia-php/migration/tree/3.2.0"
             },
             "time": "2026-10-15T03:57:45+00:00"
         },
@@ -7738,18 +7737,9 @@
             "time": "2026-07-03T20:44:34+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "utopia-php/migration",
-            "version": "dev-main",
-            "alias": "3.2.0",
-            "alias_normalized": "3.2.0.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": {
-        "utopia-php/migration": 20
-    },
+    "stability-flags": {},
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
