@@ -19,6 +19,15 @@
 
 ### Fixed
 
+- `migrate()` (and so `setup()`) converges dimension columns that predate
+  their current type or codec, such as a `protocol` column created as
+  `Nullable(String)` before it became `LowCardinality(Nullable(String))`, or
+  `accept` without `CODEC(ZSTD(3))`. Columns it adds now carry their codec,
+  matching a freshly created table. A type change schedules a ClickHouse
+  mutation that rewrites the column. A codec change applies to parts written
+  or merged afterwards. ClickHouse refuses to change the type of a column
+  that a skip index covers, so the column is converged before its index is
+  added.
 - `Accumulator::flush()` writes at most 1,000 entries per `addBatch()` call
   and drops each batch from the buffer as soon as it is written. Before, it
   handed the whole buffer to one `addBatch()` call, which inserts in chunks,

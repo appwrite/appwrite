@@ -319,6 +319,46 @@ class ClickHouseSchemaTest extends ClickHouseTestCase
         $this->assertStringContainsString('TTL toDateTime(time)', $this->showCreateFor($adapter, $dailyTable));
     }
 
+    public function testMigrateConvergesColumnsThatPredateTheirTypeAndCodec(): void
+    {
+        $adapter = new ClickHouseAdapter(
+            getenv('CLICKHOUSE_HOST') ?: 'clickhouse',
+            getenv('CLICKHOUSE_USER') ?: 'default',
+            getenv('CLICKHOUSE_PASSWORD') ?: 'clickhouse',
+            (int) (getenv('CLICKHOUSE_PORT') ?: 8123),
+            (bool) (getenv('CLICKHOUSE_SECURE') ?: false),
+            namespace: 'utopia_usage_schema_converge',
+            database: getenv('CLICKHOUSE_DATABASE') ?: 'default',
+            sharedTables: true,
+        );
+        $database = $this->databaseName($adapter);
+        $table = $this->resolveTableName($adapter, 'getEventsTableName');
+        $eventsTable = "`{$database}`.`{$table}`";
+        $dailyMv = "`{$database}`.`{$this->resolveTableName($adapter, 'getTableName')}_events_daily_mv`";
+
+        $this->queryRaw($adapter, "DROP TABLE IF EXISTS {$dailyMv}");
+        $this->queryRaw($adapter, "DROP TABLE IF EXISTS {$eventsTable}");
+
+        $usage = new Usage($adapter);
+        $usage->migrate();
+
+        $this->queryRaw($adapter, "ALTER TABLE {$eventsTable} DROP INDEX `index-protocol`");
+        $this->queryRaw($adapter, "ALTER TABLE {$eventsTable} MODIFY COLUMN `protocol` Nullable(String) SETTINGS mutations_sync = 2");
+        $this->queryRaw($adapter, "ALTER TABLE {$eventsTable} MODIFY COLUMN `accept` REMOVE CODEC");
+        $this->assertSame(['type' => 'Nullable(String)', 'codec' => ''], $this->columnShape($adapter, $table, 'protocol'));
+        $this->assertSame('', $this->columnShape($adapter, $table, 'accept')['codec']);
+
+        $usage->migrate();
+
+        $this->assertSame('LowCardinality(Nullable(String))', $this->columnShape($adapter, $table, 'protocol')['type']);
+        $this->assertSame('CODEC(ZSTD(3))', $this->columnShape($adapter, $table, 'accept')['codec']);
+        $this->assertStringContainsString('INDEX `index-protocol` protocol TYPE set(0)', $this->showCreateFor($adapter, $eventsTable));
+
+        $mutations = $this->mutationCount($adapter, $table);
+        $usage->migrate();
+        $this->assertSame($mutations, $this->mutationCount($adapter, $table), 'A converged table must not be altered again');
+    }
+
     public function testRetentionAppliesTtlToEventsAndDailyTables(): void
     {
         $adapter = new ClickHouseAdapter(
@@ -402,6 +442,49 @@ class ClickHouseSchemaTest extends ClickHouseTestCase
             $expected[] = "`{$column}` {$suffix}";
         }
         return $expected;
+    }
+
+    /**
+     * @return array{type: string, codec: string}
+     */
+    private function columnShape(ClickHouseAdapter $adapter, string $table, string $column): array
+    {
+        $raw = $this->queryRaw(
+            $adapter,
+            'SELECT type, compression_codec AS codec FROM system.columns WHERE database = {database:String} AND table = {table:String} AND name = {column:String} FORMAT JSON',
+            ['database' => $this->databaseName($adapter), 'table' => $table, 'column' => $column],
+        );
+        $row = $this->firstRow($raw);
+
+        return [
+            'type' => is_string($row['type'] ?? null) ? $row['type'] : '',
+            'codec' => is_string($row['codec'] ?? null) ? $row['codec'] : '',
+        ];
+    }
+
+    private function mutationCount(ClickHouseAdapter $adapter, string $table): int
+    {
+        $raw = $this->queryRaw(
+            $adapter,
+            'SELECT count() AS total FROM system.mutations WHERE database = {database:String} AND table = {table:String} FORMAT JSON',
+            ['database' => $this->databaseName($adapter), 'table' => $table],
+        );
+        $total = $this->firstRow($raw)['total'] ?? 0;
+
+        return is_numeric($total) ? (int) $total : 0;
+    }
+
+    /**
+     * @return array<mixed>
+     */
+    private function firstRow(string $raw): array
+    {
+        $json = json_decode($raw, true);
+        if (!is_array($json) || !is_array($json['data'] ?? null) || !is_array($json['data'][0] ?? null)) {
+            return [];
+        }
+
+        return $json['data'][0];
     }
 
     private function showCreateFor(ClickHouseAdapter $adapter, string $fullName): string

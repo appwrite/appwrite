@@ -1413,28 +1413,79 @@ class ClickHouse extends SQL
     }
 
     /**
+     * Add the dimension columns a table lacks, and converge the type and codec
+     * of any that predate the current definition. Converging a type schedules
+     * a ClickHouse mutation that rewrites that column; a codec change applies
+     * to parts written or merged afterwards.
+     *
      * @param array<int, string> $columns
      */
     private function ensureDimColumns(string $tableName, array $columns, string $type): void
     {
         $escapedTable = $this->escapeIdentifier($this->database)
             . '.' . $this->escapeIdentifier($tableName);
+        $existing = $this->getColumnShapes($tableName);
 
-        $adds = [];
+        $alters = [];
         foreach ($columns as $column) {
             if (in_array($column, self::BASE_KEY_COLUMNS, true)) {
                 continue;
             }
-            $adds[] = 'ADD COLUMN IF NOT EXISTS '
-                . $this->escapeIdentifier($column)
-                . ' ' . $this->getColumnType($column, $type);
+
+            $definition = $this->getColumnDefinition($column, $type);
+            if (!isset($existing[$column])) {
+                $alters[] = 'ADD COLUMN IF NOT EXISTS ' . $definition;
+                continue;
+            }
+
+            if (!$this->hasColumnShape($existing[$column], $column, $type)) {
+                $alters[] = 'MODIFY COLUMN ' . $definition;
+            }
         }
 
-        if ($adds === []) {
+        if ($alters === []) {
             return;
         }
 
-        $this->query("ALTER TABLE {$escapedTable} " . implode(', ', $adds));
+        $this->query("ALTER TABLE {$escapedTable} " . implode(', ', $alters));
+    }
+
+    /**
+     * @return array<string, array{type: string, codec: string}>
+     */
+    private function getColumnShapes(string $tableName): array
+    {
+        $rows = $this->decodeRows($this->query(
+            'SELECT name, type, compression_codec AS codec FROM system.columns '
+            . 'WHERE database = {database:String} AND table = {table:String} FORMAT JSON',
+            ['database' => $this->database, 'table' => $tableName],
+        ));
+
+        $shapes = [];
+        foreach ($rows as $row) {
+            if (!is_string($row['name'] ?? null) || !is_string($row['type'] ?? null) || !is_string($row['codec'] ?? null)) {
+                continue;
+            }
+            $shapes[$row['name']] = ['type' => $row['type'], 'codec' => $row['codec']];
+        }
+
+        return $shapes;
+    }
+
+    /**
+     * A column without a codec override keeps whatever codec it has.
+     *
+     * @param array{type: string, codec: string} $shape
+     */
+    private function hasColumnShape(array $shape, string $column, string $type): bool
+    {
+        if ($shape['type'] !== $this->getColumnType($column, $type)) {
+            return false;
+        }
+
+        $codec = $this->getColumnCodec($column);
+
+        return $codec === '' || \str_replace(' ', '', $shape['codec']) === \str_replace(' ', '', $codec);
     }
 
     /**
