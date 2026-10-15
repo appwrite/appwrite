@@ -624,9 +624,16 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Unknown format validator \"storedRange\""
+            "$document": {
+              "$id": "row",
+              "level": 50,
+              "kind": "b",
+              "note": "before",
+              "$collection": "rows",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
             }
           }
         },
@@ -710,9 +717,30 @@
             "as": "o3165"
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Format (\"storedRange\") not available for this attribute type (\"integer\")"
+            "$value": "Attribute",
+            "fields": {
+              "key": "level",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": {
+                "$value": "Format",
+                "fields": {
+                  "name": "storedRange",
+                  "options": {
+                    "min": 0,
+                    "max": 10
+                  }
+                }
+              },
+              "filters": [],
+              "relationship": null,
+              "side": null
             }
           }
         },
@@ -752,7 +780,17 @@
           },
           "bind": "s5485",
           "expect": {
-            "$document": {}
+            "$document": {
+              "level": 50,
+              "kind": "b",
+              "note": "after narrow",
+              "$sequence": "1",
+              "$id": "row",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "rows"
+            }
           }
         },
         {
@@ -766,7 +804,7 @@
               "name": "note"
             }
           },
-          "expect": null
+          "expect": "after narrow"
         },
         {
           "op": "object.call",
@@ -783,7 +821,17 @@
           },
           "bind": "s5487",
           "expect": {
-            "$document": {}
+            "$document": {
+              "level": 50,
+              "kind": "b",
+              "note": "after narrow",
+              "$sequence": "1",
+              "$id": "row",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "rows"
+            }
           }
         },
         {
@@ -797,7 +845,7 @@
               "name": "note"
             }
           },
-          "expect": null
+          "expect": "after narrow"
         },
         {
           "op": "object.call",
@@ -810,7 +858,7 @@
               "name": "level"
             }
           },
-          "expect": null
+          "expect": 50
         }
       ]
     },
@@ -1435,9 +1483,16 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Unknown format validator \"storedRange\""
+            "$document": {
+              "$id": "row",
+              "level": 50,
+              "kind": "b",
+              "note": "before",
+              "$collection": "rows",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
             }
           }
         },
@@ -1524,9 +1579,31 @@
             "as": "o3186"
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Format (\"storedEnum\") not available for this attribute type (\"string\")"
+            "$value": "Attribute",
+            "fields": {
+              "key": "kind",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 8,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": {
+                "$value": "Format",
+                "fields": {
+                  "name": "storedEnum",
+                  "options": {
+                    "elements": [
+                      "a"
+                    ]
+                  }
+                }
+              },
+              "filters": [],
+              "relationship": null,
+              "side": null
             }
           }
         },
@@ -1565,7 +1642,17 @@
             "as": "o3188"
           },
           "expect": {
-            "$document": {}
+            "$document": {
+              "level": 50,
+              "kind": "b",
+              "note": "after shrink",
+              "$sequence": "1",
+              "$id": "row",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "rows"
+            }
           }
         },
         {
@@ -1583,7 +1670,17 @@
           },
           "bind": "s5519",
           "expect": {
-            "$document": {}
+            "$document": {
+              "level": 50,
+              "kind": "b",
+              "note": "after shrink",
+              "$sequence": "1",
+              "$id": "row",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "rows"
+            }
           }
         },
         {
@@ -1597,7 +1694,7 @@
               "name": "note"
             }
           },
-          "expect": null
+          "expect": "after shrink"
         },
         {
           "op": "object.call",
@@ -1610,7 +1707,7 @@
               "name": "kind"
             }
           },
-          "expect": null
+          "expect": "b"
         }
       ]
     },
@@ -2235,9 +2332,16 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Unknown format validator \"storedRange\""
+            "$document": {
+              "$id": "row",
+              "level": 50,
+              "kind": "b",
+              "note": "before",
+              "$collection": "rows",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
             }
           }
         },
@@ -2321,9 +2425,30 @@
             "as": "o3207"
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Format (\"storedRange\") not available for this attribute type (\"integer\")"
+            "$value": "Attribute",
+            "fields": {
+              "key": "level",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": {
+                "$value": "Format",
+                "fields": {
+                  "name": "storedRange",
+                  "options": {
+                    "min": 0,
+                    "max": 10
+                  }
+                }
+              },
+              "filters": [],
+              "relationship": null,
+              "side": null
             }
           }
         },
@@ -2363,7 +2488,10 @@
             }
           },
           "expect": {
-            "$document": {}
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Invalid document structure: Attribute \"level\" has invalid format. Value must be a valid range between 0 and 10"
+            }
           }
         },
         {
@@ -2381,7 +2509,17 @@
           },
           "bind": "s5551",
           "expect": {
-            "$document": {}
+            "$document": {
+              "level": 50,
+              "kind": "b",
+              "note": "before",
+              "$sequence": "1",
+              "$id": "row",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "rows"
+            }
           }
         },
         {
@@ -2395,7 +2533,7 @@
               "name": "note"
             }
           },
-          "expect": null
+          "expect": "before"
         }
       ]
     }

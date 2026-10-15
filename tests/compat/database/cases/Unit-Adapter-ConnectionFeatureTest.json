@@ -96,7 +96,13 @@
             "method": "getConnectionId",
             "args": {}
           },
-          "expect": null
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "each runtime reaches the server under its own host name, on its own connection"
+          }
         },
         {
           "op": "object.call",
@@ -188,7 +194,13 @@
             "method": "getConnectionId",
             "args": {}
           },
-          "expect": "3134"
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "each runtime reaches the server under its own host name, on its own connection"
+          }
         },
         {
           "op": "object.call",
@@ -221,7 +233,13 @@
             "method": "getConnectionId",
             "args": {}
           },
-          "expect": "3134"
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "each runtime reaches the server under its own host name, on its own connection"
+          }
         }
       ]
     },

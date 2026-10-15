@@ -44804,9 +44804,21 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Failed to persist metadata after retries for attribute creation 'name': Failed to execute transaction: the transaction was lost before it could commit"
+            "$value": "Attribute",
+            "fields": {
+              "key": "name",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 100,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
             }
           }
         },
@@ -44999,9 +45011,22 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$id": "laptop",
+              "name": "Laptop",
+              "category": "electronics",
+              "price": 1200,
+              "stock": 50,
+              "rating": 4.5,
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "dp_agg_max_a62fdd",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
             }
           }
         },
@@ -45026,9 +45051,22 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$id": "phone",
+              "name": "Phone",
+              "category": "electronics",
+              "price": 800,
+              "stock": 100,
+              "rating": 4.2,
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "dp_agg_max_a62fdd",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
             }
           }
         },
@@ -45053,9 +45091,22 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$id": "tablet",
+              "name": "Tablet",
+              "category": "electronics",
+              "price": 500,
+              "stock": 75,
+              "rating": 3.8,
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "dp_agg_max_a62fdd",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "3"
             }
           }
         },
@@ -45080,9 +45131,22 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$id": "shirt",
+              "name": "Shirt",
+              "category": "clothing",
+              "price": 30,
+              "stock": 200,
+              "rating": 4.0,
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "dp_agg_max_a62fdd",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "4"
             }
           }
         },
@@ -45107,9 +45171,22 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$id": "pants",
+              "name": "Pants",
+              "category": "clothing",
+              "price": 50,
+              "stock": 150,
+              "rating": 3.5,
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "dp_agg_max_a62fdd",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "5"
             }
           }
         },
@@ -45134,9 +45211,22 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$id": "jacket",
+              "name": "Jacket",
+              "category": "clothing",
+              "price": 120,
+              "stock": 80,
+              "rating": 4.7,
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "dp_agg_max_a62fdd",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "6"
             }
           }
         },
@@ -45161,9 +45251,22 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$id": "novel",
+              "name": "Novel",
+              "category": "books",
+              "price": 15,
+              "stock": 300,
+              "rating": 4.8,
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "dp_agg_max_a62fdd",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "7"
             }
           }
         },
@@ -45188,9 +45291,22 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$id": "textbook",
+              "name": "Textbook",
+              "category": "books",
+              "price": 60,
+              "stock": 40,
+              "rating": 3.2,
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "dp_agg_max_a62fdd",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "8"
             }
           }
         },
@@ -45215,9 +45331,22 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\NotFound",
-              "message": "Attribute not found"
+            "$document": {
+              "$id": "comic",
+              "name": "Comic",
+              "category": "books",
+              "price": 10,
+              "stock": 500,
+              "rating": 4.1,
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "dp_agg_max_a62fdd",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "9"
             }
           }
         },
@@ -45266,7 +45395,7 @@
           },
           "expect": [
             {
-              "val": null
+              "val": "1200"
             }
           ]
         }

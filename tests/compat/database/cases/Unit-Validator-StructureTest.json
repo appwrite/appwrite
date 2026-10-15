@@ -2632,12 +2632,7 @@
               }
             }
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Unknown format validator \"email\""
-            }
-          }
+          "expect": true
         },
         {
           "op": "object.call",
@@ -2697,12 +2692,7 @@
               }
             }
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Unknown format validator \"email\""
-            }
-          }
+          "expect": true
         },
         {
           "op": "object.call",
@@ -4111,12 +4101,7 @@
               }
             }
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Unknown format validator \"email\""
-            }
-          }
+          "expect": true
         },
         {
           "op": "object.call",
@@ -4186,12 +4171,7 @@
               }
             }
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Unknown format validator \"email\""
-            }
-          }
+          "expect": true
         }
       ]
     },
@@ -5982,12 +5962,7 @@
               }
             }
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Unknown format validator \"email\""
-            }
-          }
+          "expect": true
         }
       ]
     },
@@ -7326,12 +7301,7 @@
               }
             }
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Unknown format validator \"email\""
-            }
-          }
+          "expect": true
         },
         {
           "op": "object.call",
@@ -9864,12 +9834,7 @@
               }
             }
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Unknown format validator \"email\""
-            }
-          }
+          "expect": true
         },
         {
           "op": "object.call",
@@ -9941,12 +9906,7 @@
               }
             }
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Unknown format validator \"email\""
-            }
-          }
+          "expect": true
         },
         {
           "op": "object.call",
@@ -10018,12 +9978,7 @@
               }
             }
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Unknown format validator \"email\""
-            }
-          }
+          "expect": true
         },
         {
           "op": "object.call",
@@ -12067,12 +12022,7 @@
               }
             }
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Unknown format validator \"email\""
-            }
-          }
+          "expect": false
         },
         {
           "op": "object.call",
@@ -12083,7 +12033,7 @@
             "method": "getDescription",
             "args": {}
           },
-          "expect": "Invalid document structure: General Error"
+          "expect": "Invalid document structure: Attribute \"feedback\" has invalid format. Value must be a valid email address"
         }
       ]
     },
@@ -14467,12 +14417,7 @@
               }
             }
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Unknown format validator \"email\""
-            }
-          }
+          "expect": true
         },
         {
           "op": "object.call",
@@ -14544,12 +14489,7 @@
               }
             }
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Unknown format validator \"email\""
-            }
-          }
+          "expect": true
         },
         {
           "op": "object.new",
@@ -15081,12 +15021,7 @@
               }
             }
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Unknown format validator \"email\""
-            }
-          }
+          "expect": true
         },
         {
           "op": "object.call",
@@ -15158,12 +15093,7 @@
               }
             }
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Unknown format validator \"email\""
-            }
-          }
+          "expect": true
         }
       ]
     },
@@ -15783,12 +15713,7 @@
               }
             }
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Unknown format validator \"email\""
-            }
-          }
+          "expect": true
         },
         {
           "op": "object.call",
@@ -16531,12 +16456,7 @@
               }
             }
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Unknown format validator \"email\""
-            }
-          }
+          "expect": true
         },
         {
           "op": "object.call",
@@ -17736,12 +17656,7 @@
               }
             }
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Unknown format validator \"email\""
-            }
-          }
+          "expect": true
         },
         {
           "op": "object.call",
@@ -17813,12 +17728,7 @@
               }
             }
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Unknown format validator \"email\""
-            }
-          }
+          "expect": false
         },
         {
           "op": "object.call",
@@ -17829,7 +17739,7 @@
             "method": "getDescription",
             "args": {}
           },
-          "expect": "Invalid document structure: General Error"
+          "expect": "Invalid document structure: Attribute \"varchar_field\" has invalid type. Value must be a valid string and no longer than 255 chars"
         },
         {
           "op": "object.call",
@@ -17901,12 +17811,7 @@
               }
             }
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Unknown format validator \"email\""
-            }
-          }
+          "expect": false
         },
         {
           "op": "object.call",
@@ -17917,7 +17822,7 @@
             "method": "getDescription",
             "args": {}
           },
-          "expect": "Invalid document structure: General Error"
+          "expect": "Invalid document structure: Attribute \"varchar_field\" has invalid type. Value must be a valid string and no longer than 255 chars"
         }
       ]
     },
@@ -18508,12 +18413,7 @@
               }
             }
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Unknown format validator \"email\""
-            }
-          }
+          "expect": true
         },
         {
           "op": "object.call",
@@ -18585,12 +18485,7 @@
               }
             }
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Unknown format validator \"email\""
-            }
-          }
+          "expect": true
         },
         {
           "op": "object.call",
@@ -18662,12 +18557,7 @@
               }
             }
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Unknown format validator \"email\""
-            }
-          }
+          "expect": false
         },
         {
           "op": "object.call",
@@ -18678,7 +18568,7 @@
             "method": "getDescription",
             "args": {}
           },
-          "expect": "Invalid document structure: General Error"
+          "expect": "Invalid document structure: Attribute \"text_field\" has invalid type. Value must be a valid string no longer than 65535 bytes"
         },
         {
           "op": "object.call",
@@ -18750,12 +18640,7 @@
               }
             }
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Unknown format validator \"email\""
-            }
-          }
+          "expect": false
         },
         {
           "op": "object.call",
@@ -18766,7 +18651,7 @@
             "method": "getDescription",
             "args": {}
           },
-          "expect": "Invalid document structure: General Error"
+          "expect": "Invalid document structure: Attribute \"text_field\" has invalid type. Value must be a valid string no longer than 65535 bytes"
         }
       ]
     },
@@ -19360,12 +19245,7 @@
               }
             }
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Unknown format validator \"email\""
-            }
-          }
+          "expect": true
         },
         {
           "op": "object.call",
@@ -19437,12 +19317,7 @@
               }
             }
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Unknown format validator \"email\""
-            }
-          }
+          "expect": false
         },
         {
           "op": "object.call",
@@ -19453,7 +19328,7 @@
             "method": "getDescription",
             "args": {}
           },
-          "expect": "Invalid document structure: General Error"
+          "expect": "Invalid document structure: Attribute \"mediumtext_field\" has invalid type. Value must be a valid string no longer than 16777215 bytes"
         }
       ]
     },
@@ -20502,12 +20377,7 @@
               }
             }
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Unknown format validator \"email\""
-            }
-          }
+          "expect": true
         },
         {
           "op": "object.call",
@@ -20579,12 +20449,7 @@
               }
             }
           },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception",
-              "message": "Unknown format validator \"email\""
-            }
-          }
+          "expect": false
         },
         {
           "op": "object.call",
@@ -20595,7 +20460,7 @@
             "method": "getDescription",
             "args": {}
           },
-          "expect": "Invalid document structure: General Error"
+          "expect": "Invalid document structure: Attribute \"longtext_field\" has invalid type. Value must be a valid string no longer than 4294967295 bytes"
         }
       ]
     },

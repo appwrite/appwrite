@@ -45,7 +45,7 @@ final class Rewriter extends NodeVisitorAbstract
         return str_starts_with($class, 'Utopia\\Database\\') || str_starts_with($class, 'Utopia\\Query\\');
     }
 
-    public function enterNode(Node $node)
+    public function enterNode(Node $node): null
     {
         $constants = match (true) {
             $node instanceof Node\Param => [$node->default],

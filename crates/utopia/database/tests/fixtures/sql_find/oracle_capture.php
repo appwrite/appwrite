@@ -1,4 +1,5 @@
 <?php
+
 // Records the first statement SQL::find()/count()/sum() prepares (or the
 // error raised before one) for each read of capture.json, per engine and
 // table mode. A transform records the statement and stops it, so no table
@@ -65,7 +66,9 @@ foreach ($scenarios as $scenario) {
             $adapter->setAuthorization($authorization);
             $seen = [];
             $adapter->addTransform('stop', new class ($seen) implements Transform {
-                public function __construct(private array &$seen) {}
+                public function __construct(private array &$seen)
+                {
+                }
                 public function transform(Event $event, string $query): string
                 {
                     $this->seen[] = $query;

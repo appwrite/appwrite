@@ -1,4 +1,5 @@
 <?php
+
 // The schema paths that read a collection's stored definition (getDocument() on the metadata collection):
 // MariaDB/MySQL createIndex(), SQLite deleteAttribute()/renameIndex()/fulltext deleteIndex(), Postgres shared
 // renameIndex(), and many-to-many updateRelationship()/deleteRelationship() (junction names).
@@ -53,7 +54,10 @@ foreach (['sqlite', 'postgres', 'mariadb', 'mysql'] as $engine) {
             $a->setTenant(7);
         }
         $a->addTransform('rec', $hook);
-        try { $a->delete($name); } catch (Throwable) {}
+        try {
+            $a->delete($name);
+        } catch (Throwable) {
+        }
         $a->create($name);
 
         $movieAttributes = [
@@ -125,7 +129,10 @@ foreach (['sqlite', 'postgres', 'mariadb', 'mysql'] as $engine) {
         $step('updateRelationship manyToMany', fn () => $a->updateRelationship('movies', Relationship::manyToMany('people', key: 'fans', twoWayKey: 'liked'), RelationshipSide::Parent, new Update(key: 'fans2', twoWayKey: 'liked2')));
         $step('deleteRelationship manyToMany', fn () => $a->deleteRelationship('movies', Relationship::manyToMany('people', key: 'fans2', twoWayKey: 'liked2'), RelationshipSide::Parent));
         $out[] = ['engine' => $engine, 'shared' => $shared, 'seed' => $seed, 'steps' => $steps];
-        try { $a->delete($name); } catch (Throwable) {}
+        try {
+            $a->delete($name);
+        } catch (Throwable) {
+        }
     }
 }
 echo json_encode($out, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE), "\n";

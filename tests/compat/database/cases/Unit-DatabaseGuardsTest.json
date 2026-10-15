@@ -779,7 +779,13 @@
             "method": "getConnectionId",
             "args": {}
           },
-          "expect": null
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "each runtime reaches the server under its own host name, on its own connection"
+          }
         }
       ]
     },

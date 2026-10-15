@@ -1,4 +1,5 @@
 <?php
+
 // Records every statement (query, bindings, event) the SQL adapters run for a fixed scenario,
 // per engine and table-sharing mode. Usage: php oracle.php <engine> <shared 0|1>
 require '/usr/src/code/vendor/autoload.php';
@@ -21,10 +22,14 @@ $shared = $argv[2] === '1';
 $attrs = [\PDO::ATTR_TIMEOUT => 3, \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC, \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION, \PDO::ATTR_EMULATE_PREPARES => true, \PDO::ATTR_STRINGIFY_FETCHES => true];
 $db = 'bdocs_'.$engine.($shared ? '_shared' : '');
 switch ($engine) {
-    case 'mariadb': $adapter = new MariaDB(new PDO('mysql:host=compat-database-mariadb;port=3306;charset=utf8mb4', 'root', 'password', $attrs)); break;
-    case 'mysql': $adapter = new MySQL(new PDO('mysql:host=compat-database-mysql;port=3306;charset=utf8mb4', 'root', 'password', $attrs)); break;
-    case 'postgres': $adapter = new Postgres(new PDO('pgsql:host=compat-database-postgres;port=5432', 'root', 'password', $attrs)); break;
-    case 'sqlite': $adapter = new SQLite(new PDO('sqlite::memory:', null, null, $attrs)); break;
+    case 'mariadb': $adapter = new MariaDB(new PDO('mysql:host=compat-database-mariadb;port=3306;charset=utf8mb4', 'root', 'password', $attrs));
+        break;
+    case 'mysql': $adapter = new MySQL(new PDO('mysql:host=compat-database-mysql;port=3306;charset=utf8mb4', 'root', 'password', $attrs));
+        break;
+    case 'postgres': $adapter = new Postgres(new PDO('pgsql:host=compat-database-postgres;port=5432', 'root', 'password', $attrs));
+        break;
+    case 'sqlite': $adapter = new SQLite(new PDO('sqlite::memory:', null, null, $attrs));
+        break;
 }
 $adapter->setDatabase($db);
 $adapter->setNamespace('ns');
@@ -32,8 +37,13 @@ $adapter->setSharedTables($shared);
 if ($shared) {
     $adapter->setTenant(7);
 }
-try { $adapter->delete($db); } catch (\Throwable $e) {}
-if ($engine !== 'sqlite') { $adapter->create($db); }
+try {
+    $adapter->delete($db);
+} catch (\Throwable $e) {
+}
+if ($engine !== 'sqlite') {
+    $adapter->create($db);
+}
 
 $spatial = $engine !== 'sqlite';
 $attributes = [
@@ -45,7 +55,9 @@ $attributes = [
     Attribute::string('note', 256),
     Attribute::datetime('date'),
 ];
-if ($spatial) { $attributes[] = Attribute::point('loc'); }
+if ($spatial) {
+    $attributes[] = Attribute::point('loc');
+}
 $collection = Collection::create('docs', attributes: $attributes);
 
 $profiler = (new Profiler())->enable();
@@ -53,12 +65,24 @@ $adapter->setProfiler($profiler);
 $out = [];
 $seen = 0;
 $step = function (string $name, callable $fn) use (&$out, &$seen, $profiler) {
-    try { $result = $fn(); $error = null; } catch (\Throwable $e) { $result = null; $error = get_class($e).': '.$e->getMessage(); }
+    try {
+        $result = $fn();
+        $error = null;
+    } catch (\Throwable $e) {
+        $result = null;
+        $error = get_class($e).': '.$e->getMessage();
+    }
     $logs = $profiler->getLogs();
     $norm = function ($v) use (&$norm) {
-        if ($v instanceof Document) { return $norm($v->getArrayCopy()); }
-        if (is_array($v)) { return array_map($norm, $v); }
-        if (is_string($v) && ! mb_check_encoding($v, 'UTF-8')) { return 'hex:'.bin2hex($v); }
+        if ($v instanceof Document) {
+            return $norm($v->getArrayCopy());
+        }
+        if (is_array($v)) {
+            return array_map($norm, $v);
+        }
+        if (is_string($v) && ! mb_check_encoding($v, 'UTF-8')) {
+            return 'hex:'.bin2hex($v);
+        }
         return $v;
     };
     $stmts = [];
@@ -72,7 +96,9 @@ $step = function (string $name, callable $fn) use (&$out, &$seen, $profiler) {
 $step('createCollection', fn () => $adapter->createCollection('docs', $attributes, []));
 $doc1 = new Document(['$id' => 'doc1', '$permissions' => ['read("any")', 'update("user:a/b")'], '$createdAt' => '2024-01-02 03:04:05.678', '$updatedAt' => '2024-01-02 03:04:05.678',
     'title' => 'Hello "world"', 'count' => 5, 'price' => 1.5, 'active' => true, 'tags' => ['a', 'b/c'], 'note' => 'x', 'date' => '2024-01-01 00:00:00.000']);
-if ($spatial) { $doc1['loc'] = [1.5, 2]; }
+if ($spatial) {
+    $doc1['loc'] = [1.5, 2];
+}
 $step('createDocument', fn () => $adapter->createDocument($collection, $doc1));
 $mk = fn ($id, $extra = []) => new Document(array_merge(['$id' => $id, '$permissions' => ['read("any")'], '$createdAt' => '2024-01-02 03:04:05.678', '$updatedAt' => '2024-01-02 03:04:05.678', 'title' => $id, 'count' => 1, 'price' => 0.25, 'active' => false, 'tags' => [], 'note' => null], $extra));
 $step('createDocuments', fn () => $adapter->createDocuments($collection, [$mk('doc2'), $mk('doc3', ['count' => 2])]));
@@ -86,10 +112,14 @@ $step('getSequences', fn () => $adapter->getSequences($collection, [new Document
 $cur = $adapter->getDocument($collection, 'doc1');
 $seen = count($profiler->getLogs());
 $upd = new Document(array_merge($cur->getArrayCopy(), ['title' => 'Changed', 'active' => false, 'tags' => ['z'], '$updatedAt' => '2024-02-02 00:00:00.000']));
-if ($spatial) { $upd['loc'] = [3, 4.25]; }
+if ($spatial) {
+    $upd['loc'] = [3, 4.25];
+}
 $step('updateDocument', fn () => $adapter->updateDocument($collection, 'doc1', $upd, false));
 $renamed = new Document(array_merge($cur->getArrayCopy(), ['$id' => 'doc1b', 'title' => 'Renamed']));
-if ($spatial) { $renamed['loc'] = [3, 4.25]; }
+if ($spatial) {
+    $renamed['loc'] = [3, 4.25];
+}
 $step('updateDocumentRename', fn () => $adapter->updateDocument($collection, 'doc1', $renamed, true));
 $ops = [
     'increment' => ['count', Operator::increment(2)],
@@ -123,16 +153,24 @@ foreach ($ops as $label => [$attribute, $operator]) {
     $current = $adapter->getDocument($collection, 'doc1b');
     $seen = count($profiler->getLogs());
     $d = new Document(array_merge($current->getArrayCopy(), [$attribute => $operator]));
-    if ($spatial) { $d['loc'] = [3, 4.25]; }
+    if ($spatial) {
+        $d['loc'] = [3, 4.25];
+    }
     $step('op_'.$label, fn () => $adapter->updateDocument($collection, 'doc1b', $d, true));
 }
 $step('afterOps', fn () => $adapter->getDocument($collection, 'doc1b'));
 $seqs = array_map(fn ($d) => $d->getSequence(), $adapter->getSequences($collection, [new Document(['$id' => 'doc2']), new Document(['$id' => 'doc3'])]));
 $seen = count($profiler->getLogs());
-$step('updateDocuments', fn () => $adapter->updateDocuments($collection, new Document(['note' => 'bulk', 'active' => true, 'tags' => ['m'], '$updatedAt' => '2024-03-03 00:00:00.000', '$permissions' => ['read("any")', 'delete("any")']]),
-    [new Document(['$id' => 'doc2', '$sequence' => $seqs[0]]), new Document(['$id' => 'doc3', '$sequence' => $seqs[1]])]));
-$step('updateDocumentsOperator', fn () => $adapter->updateDocuments($collection, new Document(['count' => Operator::increment(10, 50), '$updatedAt' => '2024-03-04 00:00:00.000']),
-    [new Document(['$id' => 'doc2', '$sequence' => $seqs[0]]), new Document(['$id' => 'doc3', '$sequence' => $seqs[1]])]));
+$step('updateDocuments', fn () => $adapter->updateDocuments(
+    $collection,
+    new Document(['note' => 'bulk', 'active' => true, 'tags' => ['m'], '$updatedAt' => '2024-03-03 00:00:00.000', '$permissions' => ['read("any")', 'delete("any")']]),
+    [new Document(['$id' => 'doc2', '$sequence' => $seqs[0]]), new Document(['$id' => 'doc3', '$sequence' => $seqs[1]])]
+));
+$step('updateDocumentsOperator', fn () => $adapter->updateDocuments(
+    $collection,
+    new Document(['count' => Operator::increment(10, 50), '$updatedAt' => '2024-03-04 00:00:00.000']),
+    [new Document(['$id' => 'doc2', '$sequence' => $seqs[0]]), new Document(['$id' => 'doc3', '$sequence' => $seqs[1]])]
+));
 $step('increase', fn () => $adapter->increaseDocumentAttribute($collection, 'doc2', 'count', 3, '2024-04-04 00:00:00.000'));
 $step('increaseBounded', fn () => $adapter->increaseDocumentAttribute($collection, 'doc2', 'count', -1, '2024-04-05 00:00:00.000', 0, 100));
 $step('increaseNegBounds', fn () => $adapter->increaseDocumentAttribute($collection, 'doc2', 'price', 1.5, '2024-04-05 00:00:00.000', 1, -5));

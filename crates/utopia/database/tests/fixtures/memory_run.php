@@ -1,4 +1,5 @@
 <?php
+
 // Runs the ops of a JSON scenario on Utopia\Database\Adapter\Memory, printing one line per op:
 // the op index and base64(serialize(result)), then the adapter's properties.
 require '/usr/src/code/vendor/autoload.php';
@@ -11,8 +12,8 @@ use Utopia\Database\Operator;
 use Utopia\Database\PermissionType;
 use Utopia\Database\Query;
 use Utopia\Database\Relationship;
-use Utopia\Database\RelationshipSide;
 use Utopia\Database\Relationship\Update;
+use Utopia\Database\RelationshipSide;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Query\CursorDirection;
 use Utopia\Query\OrderDirection;
@@ -68,8 +69,16 @@ foreach ($ops as $i => $op) {
             'shared' => $adapter->setSharedTables($a) && null,
             'tenant' => $adapter->setTenant($a) && null,
             'perDocument' => $adapter->setTenantPerDocument($a) && null,
-            'roles' => (function () use ($auth, $a) { $auth->cleanRoles(); foreach ($a as $r) { $auth->addRole($r); } return null; })(),
-            'authorization' => (function () use ($auth, $a) { $a ? $auth->enable() : $auth->disable(); return null; })(),
+            'roles' => (function () use ($auth, $a) {
+                $auth->cleanRoles();
+                foreach ($a as $r) {
+                    $auth->addRole($r);
+                } return;
+            })(),
+            'authorization' => (function () use ($auth, $a) {
+                $a ? $auth->enable() : $auth->disable();
+                return;
+            })(),
             'ignore' => $adapter->ignoreDuplicates(fn () => $adapter->createDocuments(coll($a[0]), array_map('doc', $a[1]))),
             'create' => $adapter->create($a),
             'update' => $adapter->update($a[0], $a[1]),

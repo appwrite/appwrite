@@ -16,9 +16,16 @@ use Utopia\Query\OrderDirection;
 final class Recorder extends Client
 {
     public array $calls = [];
-    public function __construct() {}
-    public function connect(): self { return $this; }
-    public function close(): void {}
+    public function __construct()
+    {
+    }
+    public function connect(): self
+    {
+        return $this;
+    }
+    public function close(): void
+    {
+    }
     public function find(string $collection, array $filters = [], array $options = []): stdClass
     {
         $this->calls[] = ['find', $filters, $options];
@@ -56,8 +63,14 @@ $collection = new Document(['$id' => 'c', 'attributes' => [
     ['$id' => 'a.b', 'key' => 'a.b', 'type' => 'integer'],
 ]]);
 
-$object = fn (Query $q) => (function () use ($q) { $q->setAttributeType('object'); return $q; })();
-$array = fn (Query $q) => (function () use ($q) { $q->setOnArray(true); return $q; })();
+$object = fn (Query $q) => (function () use ($q) {
+    $q->setAttributeType('object');
+    return $q;
+})();
+$array = fn (Query $q) => (function () use ($q) {
+    $q->setOnArray(true);
+    return $q;
+})();
 
 $queries = [
     'equal1' => [Query::equal('x', [1])],

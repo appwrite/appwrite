@@ -1,4 +1,5 @@
 <?php
+
 // Records the statements and results of SQL::find()/count()/sum() for the
 // scenarios of tests/fixtures/sql_find/spec.json, per engine and table mode.
 // Usage: php oracle.php spec.json out.json
@@ -24,7 +25,9 @@ class RecStmt extends PDOStatement
 {
     public static array $log = [];
     private array $bound = [];
-    protected function __construct() {}
+    protected function __construct()
+    {
+    }
     public function bindValue(int|string $param, mixed $value, int $type = PDO::PARAM_STR): bool
     {
         $this->bound[] = [$param, $value, $type];
@@ -104,7 +107,10 @@ foreach ($engines as $engine => [$class, $dsn, $user, $pass]) {
         $adapter->addWriteHook(new Permissions());
 
         if ($engine !== 'sqlite') {
-            try { $adapter->delete($database); } catch (Throwable) {}
+            try {
+                $adapter->delete($database);
+            } catch (Throwable) {
+            }
             $adapter->create($database);
         }
         RecStmt::$log = [];
