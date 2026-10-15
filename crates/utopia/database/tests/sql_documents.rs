@@ -6,7 +6,7 @@
 //! same scenario (`tests/fixtures/sql_documents/oracle.php`). The other
 //! modules port the adapter-level PHP unit tests of the area.
 
-#![cfg(any(feature = "sqlite", feature = "postgres", feature = "mariadb", feature = "mysql"))]
+#![cfg(feature = "sqlite")]
 
 use std::sync::Arc;
 

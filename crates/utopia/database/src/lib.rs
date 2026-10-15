@@ -47,6 +47,8 @@
 //! | `Utopia\Database\Schema\{Column, Index}` | [`schema::Column`], [`schema::Index`] |
 //! | `Utopia\Database\Adapter` | [`Adapter`], [`adapter::State`], [`adapter::with_transaction`] |
 //! | `Adapter\{Limits, Profile, CursorBoundary, Timeout}` | [`adapter::Limits`], [`adapter::Profile`], [`adapter::CursorBoundary`], [`adapter::TimeoutState`] |
+//! | `Utopia\Database\Builder\*` | [`builder`] (`utopia-query` builders with the database's flavor and scope) |
+//! | `Adapter\SQL`, `Adapter\{Postgres, MariaDB, MySQL, SQLite}`, `Adapter\SQL\*`, `PDO`, `PDOStatement` | [`adapter::sql`] ([`adapter::sql::Sql`], [`adapter::sql::Engine`], [`adapter::sql::pdo`]) |
 //! | `Adapter\Feature\*` | [`adapter::Feature`], [`adapter::Casting`], [`adapter::Connection`], [`adapter::QueryBuilder`], [`adapter::RawQuery`], [`adapter::Relationships`], [`adapter::Schemaless`], [`adapter::Spatial`], [`adapter::Timeouts`], [`adapter::Upserts`] |
 //! | `Utopia\Database\Validator\*` | [`validator`] |
 //! | `Utopia\Database\Database` (constants, `internalAttributesFor()`) | [`database`] |
