@@ -10,7 +10,8 @@
 //! | PHP | Rust |
 //! |---|---|
 //! | `Validator\Authorization`, `Authorization\Input` | [`authorization::Authorization`], [`authorization::Input`] |
-//! | `Validator\BigInt` | [`big_int::BigInt`] |
+//! | `Validator\BigInt` | [`big_int::BigInt`], [`big_int::Integer`], [`big_int::Operand`] |
+//! | `Validator\Operator` | [`operator::Operator`] |
 //!
 //! # State
 //!
@@ -29,6 +30,7 @@ use crate::value::{ArrayKey, Str, Value};
 
 pub mod authorization;
 pub mod big_int;
+pub mod operator;
 
 /// The message a validator reports, changed by validations (PHP's
 /// `protected string $message`).

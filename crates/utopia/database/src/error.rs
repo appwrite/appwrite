@@ -126,6 +126,9 @@ pub enum Kind {
     /// `DateMalformedStringException`: `new DateTime($value)` rejected a
     /// date string.
     DateMalformedString,
+    /// `InvalidArgumentException`: an argument PHP's SPL refuses (the
+    /// integer arithmetic of [`crate::validator::big_int::BigInt`]).
+    InvalidArgument,
 }
 
 impl Kind {
@@ -171,13 +174,14 @@ impl Kind {
             Kind::MongoUnsent => "Utopia\\Mongo\\UnsentException",
             Kind::MongoUnexpectedValue => "MongoDB\\Driver\\Exception\\UnexpectedValueException",
             Kind::DateMalformedString => "DateMalformedStringException",
+            Kind::InvalidArgument => "InvalidArgumentException",
         }
     }
 
     /// The kind of errors of the PHP class `class` (the inverse of
     /// [`Kind::php_class`]); `None` for a class no kind stands for.
     pub fn from_php_class(class: &str) -> Option<Kind> {
-        const ALL: [Kind; 39] = [
+        const ALL: [Kind; 40] = [
             Kind::Database,
             Kind::Authorization,
             Kind::Schema,
@@ -217,6 +221,7 @@ impl Kind {
             Kind::MongoUnsent,
             Kind::MongoUnexpectedValue,
             Kind::DateMalformedString,
+            Kind::InvalidArgument,
         ];
         let class = class.strip_prefix('\\').unwrap_or(class);
         ALL.into_iter().find(|k| k.php_class().eq_ignore_ascii_case(class))
@@ -254,7 +259,8 @@ impl Kind {
             | Kind::Redis
             | Kind::Mongo
             | Kind::MongoUnexpectedValue
-            | Kind::DateMalformedString => None,
+            | Kind::DateMalformedString
+            | Kind::InvalidArgument => None,
             Kind::MongoUnsent => Some(Kind::Mongo),
             _ => Some(Kind::Database),
         }

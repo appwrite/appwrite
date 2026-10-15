@@ -1,36 +1,127 @@
 //! [`Operator`]: an atomic update of one attribute (increment, array
-//! append, string concat, ...), given as an attribute value of an update.
+//! append, string concat, ...), given as an attribute value of an update,
+//! and [`OperatorType`], its methods.
 //!
 //! ```
 //! use utopia_database::{Operator, Value};
-//! use utopia_database::operator::OperatorMethod;
+//! use utopia_database::operator::OperatorType;
 //!
 //! let mut op = Operator::increment(5, Some(100.into()));
 //! op.set_attribute("score");
 //! assert_eq!(op.to_string().unwrap(), r#"{"method":"increment","attribute":"score","values":[5,100]}"#);
-//! assert_eq!(*Operator::parse(r#"{"method":"toggle"}"#).unwrap().method(), OperatorMethod::Toggle);
+//! assert_eq!(Operator::parse(r#"{"method":"toggle"}"#).unwrap().method(), OperatorType::Toggle);
 //! assert!(Operator::divide(0, None).is_err());
 //! assert!(Operator::is_operator(&Value::from(Operator::toggle())));
 //! ```
 //!
-//! PHP: `Utopia\Database\Operator`. Checking an operator against an
-//! attribute is [`crate::validator`]'s (`Validator\Operator`). PHP's
-//! `__clone` (deep copy of nested operators) is Rust's `Clone`.
+//! PHP: `Utopia\Database\Operator`, `Utopia\Database\OperatorType`.
+//! Checking an operator against an attribute is
+//! [`crate::validator::operator`]'s (`Validator\Operator`). PHP's `__clone`
+//! (a deep copy of nested operators) is Rust's `Clone`.
 
-use crate::error::{Error, Result};
-use crate::value::json_value;
-use values::Values;
+use std::borrow::Cow;
 
-mod values;
-use crate::value::{Array, ArrayKey, Ext, KeyRef, Str, Value};
+use crate::error::{Error, Kind, Result};
+use crate::macros::backed_enum;
+use crate::value::{Array, ArrayKey, Ext, KeyRef, Str, Value, json_value};
 
-/// An integer or a float (a PHP `int|float` parameter).
-#[derive(Clone, Copy, PartialEq, Debug)]
+backed_enum! {
+    /// The method of an [`Operator`].
+    ///
+    /// PHP: `Utopia\Database\OperatorType`.
+    pub enum OperatorType: "Utopia\\Database\\OperatorType" {
+        /// Adds a number.
+        Increment = "increment",
+        /// Subtracts a number.
+        Decrement = "decrement",
+        /// The remainder of a division.
+        Modulo = "modulo",
+        /// Raises to a power.
+        Power = "power",
+        /// Multiplies.
+        Multiply = "multiply",
+        /// Divides.
+        Divide = "divide",
+        /// Appends to an array.
+        ArrayAppend = "arrayAppend",
+        /// Prepends to an array.
+        ArrayPrepend = "arrayPrepend",
+        /// Inserts into an array at an index.
+        ArrayInsert = "arrayInsert",
+        /// Removes a value from an array.
+        ArrayRemove = "arrayRemove",
+        /// Removes the duplicates of an array.
+        ArrayUnique = "arrayUnique",
+        /// Keeps the elements also in the given values.
+        ArrayIntersect = "arrayIntersect",
+        /// Removes the elements in the given values.
+        ArrayDiff = "arrayDiff",
+        /// Keeps the elements meeting a condition.
+        ArrayFilter = "arrayFilter",
+        /// Appends to a string.
+        StringConcat = "stringConcat",
+        /// Replaces in a string.
+        StringReplace = "stringReplace",
+        /// Negates a boolean.
+        Toggle = "toggle",
+        /// Adds days to a date.
+        DateAddDays = "dateAddDays",
+        /// Subtracts days from a date.
+        DateSubDays = "dateSubDays",
+        /// Sets a date to now.
+        DateSetNow = "dateSetNow",
+    }
+}
+
+impl OperatorType {
+    /// `increment`, `decrement`, `multiply`, `divide`, `modulo`, `power`
+    /// (`isNumeric()`).
+    pub fn is_numeric(self) -> bool {
+        use OperatorType::*;
+        matches!(self, Increment | Decrement | Multiply | Divide | Modulo | Power)
+    }
+
+    /// The `array*` methods (`isArray()`).
+    pub fn is_array(self) -> bool {
+        use OperatorType::*;
+        matches!(
+            self,
+            ArrayAppend
+                | ArrayPrepend
+                | ArrayInsert
+                | ArrayRemove
+                | ArrayUnique
+                | ArrayIntersect
+                | ArrayDiff
+                | ArrayFilter
+        )
+    }
+
+    /// `stringConcat`, `stringReplace` (`isString()`).
+    pub fn is_string(self) -> bool {
+        matches!(self, OperatorType::StringConcat | OperatorType::StringReplace)
+    }
+
+    /// `toggle` (`isBoolean()`).
+    pub fn is_boolean(self) -> bool {
+        matches!(self, OperatorType::Toggle)
+    }
+
+    /// `dateAddDays`, `dateSubDays`, `dateSetNow` (`isDate()`).
+    pub fn is_date(self) -> bool {
+        matches!(self, OperatorType::DateAddDays | OperatorType::DateSubDays | OperatorType::DateSetNow)
+    }
+}
+
+/// An `int|float|string` argument of the numeric helpers.
+#[derive(Clone, PartialEq, Debug)]
 pub enum Number {
     /// An `int`.
     Int(i64),
     /// A `float`.
     Float(f64),
+    /// A `string` (numeric text, such as an unsigned 64-bit integer).
+    Str(Str),
 }
 
 impl From<i64> for Number {
@@ -51,101 +142,33 @@ impl From<f64> for Number {
     }
 }
 
+impl From<&str> for Number {
+    fn from(s: &str) -> Self {
+        Number::Str(Str::from(s))
+    }
+}
+
+impl From<String> for Number {
+    fn from(s: String) -> Self {
+        Number::Str(Str::from(s))
+    }
+}
+
 impl From<Number> for Value {
     fn from(n: Number) -> Self {
         match n {
             Number::Int(i) => Value::Int(i),
             Number::Float(f) => Value::Float(f),
+            Number::Str(s) => Value::Str(s),
         }
     }
 }
 
-impl Number {
-    /// PHP `$n == 0` (`0`, `0.0` and `-0.0`; not NaN).
-    fn is_zero(self) -> bool {
-        match self {
-            Number::Int(i) => i == 0,
-            Number::Float(f) => f == 0.0,
-        }
-    }
-}
-
-/// An operator method (`Operator::TYPE_*`).
-#[derive(Clone, PartialEq, Eq, Hash, Debug)]
-pub enum OperatorMethod {
-    /// `increment` (`TYPE_INCREMENT`)
-    Increment,
-    /// `decrement` (`TYPE_DECREMENT`)
-    Decrement,
-    /// `modulo` (`TYPE_MODULO`)
-    Modulo,
-    /// `power` (`TYPE_POWER`)
-    Power,
-    /// `multiply` (`TYPE_MULTIPLY`)
-    Multiply,
-    /// `divide` (`TYPE_DIVIDE`)
-    Divide,
-    /// `arrayAppend` (`TYPE_ARRAY_APPEND`)
-    ArrayAppend,
-    /// `arrayPrepend` (`TYPE_ARRAY_PREPEND`)
-    ArrayPrepend,
-    /// `arrayInsert` (`TYPE_ARRAY_INSERT`)
-    ArrayInsert,
-    /// `arrayRemove` (`TYPE_ARRAY_REMOVE`)
-    ArrayRemove,
-    /// `arrayUnique` (`TYPE_ARRAY_UNIQUE`)
-    ArrayUnique,
-    /// `arrayIntersect` (`TYPE_ARRAY_INTERSECT`)
-    ArrayIntersect,
-    /// `arrayDiff` (`TYPE_ARRAY_DIFF`)
-    ArrayDiff,
-    /// `arrayFilter` (`TYPE_ARRAY_FILTER`)
-    ArrayFilter,
-    /// `stringConcat` (`TYPE_STRING_CONCAT`)
-    StringConcat,
-    /// `stringReplace` (`TYPE_STRING_REPLACE`)
-    StringReplace,
-    /// `toggle` (`TYPE_TOGGLE`)
-    Toggle,
-    /// `dateAddDays` (`TYPE_DATE_ADD_DAYS`)
-    DateAddDays,
-    /// `dateSubDays` (`TYPE_DATE_SUB_DAYS`)
-    DateSubDays,
-    /// `dateSetNow` (`TYPE_DATE_SET_NOW`)
-    DateSetNow,
-    /// A method string PHP holds without knowing it.
-    Other(Box<str>),
-}
-
-/// Every known method, in the order of PHP's `Operator::TYPES`.
-pub const TYPES: [OperatorMethod; 20] = [
-    OperatorMethod::Increment,
-    OperatorMethod::Decrement,
-    OperatorMethod::Multiply,
-    OperatorMethod::Divide,
-    OperatorMethod::Modulo,
-    OperatorMethod::Power,
-    OperatorMethod::StringConcat,
-    OperatorMethod::StringReplace,
-    OperatorMethod::ArrayAppend,
-    OperatorMethod::ArrayPrepend,
-    OperatorMethod::ArrayInsert,
-    OperatorMethod::ArrayRemove,
-    OperatorMethod::ArrayUnique,
-    OperatorMethod::ArrayIntersect,
-    OperatorMethod::ArrayDiff,
-    OperatorMethod::ArrayFilter,
-    OperatorMethod::Toggle,
-    OperatorMethod::DateAddDays,
-    OperatorMethod::DateSubDays,
-    OperatorMethod::DateSetNow,
-];
-
-/// The most values one array operator (append, prepend, intersect, diff)
-/// may carry.
+/// The most values one array operator (append, prepend, intersect, diff,
+/// remove) may carry.
 ///
 /// PHP: `Operator::MAX_ARRAY_OPERATOR_SIZE`.
-pub const MAX_ARRAY_OPERATOR_SIZE: usize = 10000;
+pub const MAX_ARRAY_OPERATOR_SIZE: usize = 10_000;
 
 /// The conditions `arrayFilter` accepts.
 ///
@@ -153,108 +176,15 @@ pub const MAX_ARRAY_OPERATOR_SIZE: usize = 10000;
 pub const ARRAY_FILTER_CONDITIONS: [&str; 8] =
     ["equal", "notEqual", "greaterThan", "greaterThanEqual", "lessThan", "lessThanEqual", "isNull", "isNotNull"];
 
-impl OperatorMethod {
-    /// The method string (`TYPE_*`'s value).
-    pub fn as_str(&self) -> &str {
-        match self {
-            OperatorMethod::Increment => "increment",
-            OperatorMethod::Decrement => "decrement",
-            OperatorMethod::Modulo => "modulo",
-            OperatorMethod::Power => "power",
-            OperatorMethod::Multiply => "multiply",
-            OperatorMethod::Divide => "divide",
-            OperatorMethod::ArrayAppend => "arrayAppend",
-            OperatorMethod::ArrayPrepend => "arrayPrepend",
-            OperatorMethod::ArrayInsert => "arrayInsert",
-            OperatorMethod::ArrayRemove => "arrayRemove",
-            OperatorMethod::ArrayUnique => "arrayUnique",
-            OperatorMethod::ArrayIntersect => "arrayIntersect",
-            OperatorMethod::ArrayDiff => "arrayDiff",
-            OperatorMethod::ArrayFilter => "arrayFilter",
-            OperatorMethod::StringConcat => "stringConcat",
-            OperatorMethod::StringReplace => "stringReplace",
-            OperatorMethod::Toggle => "toggle",
-            OperatorMethod::DateAddDays => "dateAddDays",
-            OperatorMethod::DateSubDays => "dateSubDays",
-            OperatorMethod::DateSetNow => "dateSetNow",
-            OperatorMethod::Other(s) => s,
-        }
-    }
-
-    /// The method a string names; unknown strings are [`OperatorMethod::Other`].
-    pub fn from_name(name: &str) -> OperatorMethod {
-        TYPES.iter().find(|m| m.as_str() == name).cloned().unwrap_or_else(|| OperatorMethod::Other(name.into()))
-    }
-
-    /// Whether the method is known (not [`OperatorMethod::Other`]).
-    ///
-    /// PHP: `Operator::isMethod()`.
-    pub fn is_known(&self) -> bool {
-        !matches!(self, OperatorMethod::Other(_))
-    }
-
-    /// `increment`, `decrement`, `multiply`, `divide`, `modulo`, `power`.
-    ///
-    /// PHP: `in_array($method, Operator::NUMERIC_TYPES)`.
-    pub fn is_numeric(&self) -> bool {
-        use OperatorMethod::*;
-        matches!(self, Increment | Decrement | Multiply | Divide | Modulo | Power)
-    }
-
-    /// The `array*` methods.
-    ///
-    /// PHP: `in_array($method, Operator::ARRAY_TYPES)`.
-    pub fn is_array(&self) -> bool {
-        use OperatorMethod::*;
-        matches!(
-            self,
-            ArrayAppend
-                | ArrayPrepend
-                | ArrayInsert
-                | ArrayRemove
-                | ArrayUnique
-                | ArrayIntersect
-                | ArrayDiff
-                | ArrayFilter
-        )
-    }
-
-    /// `stringConcat`, `stringReplace`.
-    ///
-    /// PHP: `in_array($method, Operator::STRING_TYPES)`.
-    pub fn is_string(&self) -> bool {
-        matches!(self, OperatorMethod::StringConcat | OperatorMethod::StringReplace)
-    }
-
-    /// `toggle`.
-    ///
-    /// PHP: `in_array($method, Operator::BOOLEAN_TYPES)`.
-    pub fn is_boolean(&self) -> bool {
-        matches!(self, OperatorMethod::Toggle)
-    }
-
-    /// `dateAddDays`, `dateSubDays`, `dateSetNow`.
-    ///
-    /// PHP: `in_array($method, Operator::DATE_TYPES)`.
-    pub fn is_date(&self) -> bool {
-        matches!(self, OperatorMethod::DateAddDays | OperatorMethod::DateSubDays | OperatorMethod::DateSetNow)
-    }
-}
-
-impl std::fmt::Display for OperatorMethod {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(self.as_str())
-    }
-}
-
-/// One operator.
+/// One operator: a method, the attribute it updates (`""` until the
+/// update's key sets it) and its values (a PHP array, keys kept).
 ///
 /// PHP: `Utopia\Database\Operator`.
 #[derive(Clone, PartialEq, Debug)]
 pub struct Operator {
-    method: OperatorMethod,
+    method: OperatorType,
     attribute: String,
-    values: Values,
+    values: Array,
 }
 
 /// The operators and plain values of an update's data.
@@ -269,132 +199,133 @@ pub struct Extracted {
 }
 
 impl Operator {
-    /// An operator of `method` on `attribute` with `values`.
+    /// An operator of `method` on `attribute` with a list of values.
     ///
     /// PHP: `new Operator($method, $attribute, $values)` with a list.
-    pub fn new(method: OperatorMethod, attribute: impl Into<String>, values: Vec<Value>) -> Self {
-        Self { method, attribute: attribute.into(), values: Values::list(values) }
+    pub fn new(method: OperatorType, attribute: impl Into<String>, values: Vec<Value>) -> Self {
+        Self::from_array(method, attribute, Array::from_list(values))
     }
 
     /// [`Operator::new`] with any PHP array of values, keys kept.
     ///
     /// PHP: `new Operator($method, $attribute, $values)`.
-    pub fn from_array(method: OperatorMethod, attribute: impl Into<String>, values: Array) -> Self {
-        Self { method, attribute: attribute.into(), values: Values::array(values) }
+    pub fn from_array(method: OperatorType, attribute: impl Into<String>, values: Array) -> Self {
+        Self { method, attribute: attribute.into(), values }
     }
 
-    /// The method.
-    ///
-    /// PHP: `Operator::getMethod()`.
-    pub fn method(&self) -> &OperatorMethod {
-        &self.method
+    /// The method (`getMethod()`).
+    pub fn method(&self) -> OperatorType {
+        self.method
     }
 
-    /// The attribute (`""` until the update's key sets it).
-    ///
-    /// PHP: `Operator::getAttribute()`.
+    /// The attribute (`getAttribute()`).
     pub fn attribute(&self) -> &str {
         &self.attribute
     }
 
-    /// The values, in order (keys dropped; see [`Operator::values_array`]).
-    ///
-    /// PHP: `array_values($operator->getValues())`.
-    pub fn values(&self) -> &[Value] {
-        self.values.as_slice()
+    /// The values (`getValues()`): as stored, except that the numeric
+    /// string exponent of a `power` reads as its number (`'2'` is `2`).
+    pub fn values(&self) -> Cow<'_, Array> {
+        let key = ArrayKey::Int(0);
+        if self.method != OperatorType::Power {
+            return Cow::Borrowed(&self.values);
+        }
+        let Some(Value::Str(exponent)) = self.values.get(&key) else {
+            return Cow::Borrowed(&self.values);
+        };
+        let Some((number, _)) = php_std::value::numeric_bytes_ex(exponent.as_bytes()) else {
+            return Cow::Borrowed(&self.values);
+        };
+        let mut values = self.values.clone();
+        values.set(
+            key,
+            match number {
+                php_std::value::Number::Int(i) => Value::Int(i),
+                php_std::value::Number::Float(f) => Value::Float(f),
+            },
+        );
+        Cow::Owned(values)
     }
 
-    /// The values as the PHP array they are, keys included.
-    ///
-    /// PHP: `Operator::getValues()`.
-    pub fn values_array(&self) -> Array {
-        self.values.to_array()
+    /// The values as stored, without [`Operator::values`]' reading of a
+    /// `power` exponent.
+    pub fn raw_values(&self) -> &Array {
+        &self.values
     }
 
-    /// The value at key `0`; `None` when there is none or it is `null`.
-    ///
-    /// PHP: `Operator::getValue($default)`, `$this->values[0] ?? $default`.
-    pub fn value(&self) -> Option<&Value> {
-        self.values.first()
+    /// The value at key `0` of [`Operator::values`]; `None` when there is
+    /// none or it is `null` (`getValue($default)` is
+    /// `value().unwrap_or(default)`).
+    pub fn value(&self) -> Option<Value> {
+        self.values().get(&ArrayKey::Int(0)).filter(|v| !matches!(v, Value::Null)).cloned()
     }
 
-    /// Sets the method.
-    ///
-    /// PHP: `Operator::setMethod()`.
-    pub fn set_method(&mut self, method: OperatorMethod) -> &mut Self {
+    /// Sets the method (`setMethod()`).
+    pub fn set_method(&mut self, method: OperatorType) -> &mut Self {
         self.method = method;
         self
     }
 
-    /// Sets the attribute.
-    ///
-    /// PHP: `Operator::setAttribute()`.
+    /// Sets the attribute (`setAttribute()`).
     pub fn set_attribute(&mut self, attribute: impl Into<String>) -> &mut Self {
         self.attribute = attribute.into();
         self
     }
 
-    /// Sets the values to a list.
-    ///
-    /// PHP: `Operator::setValues()`.
+    /// Sets the values to a list (`setValues()`).
     pub fn set_values(&mut self, values: Vec<Value>) -> &mut Self {
-        self.values = Values::list(values);
+        self.values = Array::from_list(values);
         self
     }
 
-    /// Sets the values to any PHP array, keys kept.
-    ///
-    /// PHP: `Operator::setValues()`.
+    /// Sets the values to any PHP array, keys kept (`setValues()`).
     pub fn set_values_array(&mut self, values: Array) -> &mut Self {
-        self.values = Values::array(values);
+        self.values = values;
         self
     }
 
-    /// Sets the only value.
-    ///
-    /// PHP: `Operator::setValue()`.
+    /// Sets the only value (`setValue()`).
     pub fn set_value(&mut self, value: Value) -> &mut Self {
-        self.values = Values::list(vec![value]);
+        self.values = Array::from_list(vec![value]);
         self
     }
 
-    /// Whether `value` names a known method.
-    ///
-    /// PHP: `Operator::isMethod()`.
+    /// Whether `value` is the backing value of an [`OperatorType`]
+    /// (`Operator::isMethod()`; a case itself always is).
     pub fn is_method(value: &str) -> bool {
-        OperatorMethod::from_name(value).is_known()
+        OperatorType::try_from_value(value).is_some()
     }
 
-    /// PHP: `Operator::isNumericOperation()`.
+    /// `isNumericOperation()`.
     pub fn is_numeric_operation(&self) -> bool {
         self.method.is_numeric()
     }
 
-    /// PHP: `Operator::isArrayOperation()`.
+    /// `isArrayOperation()`.
     pub fn is_array_operation(&self) -> bool {
         self.method.is_array()
     }
 
-    /// PHP: `Operator::isStringOperation()`.
+    /// `isStringOperation()`.
     pub fn is_string_operation(&self) -> bool {
         self.method.is_string()
     }
 
-    /// PHP: `Operator::isBooleanOperation()`.
+    /// `isBooleanOperation()`.
     pub fn is_boolean_operation(&self) -> bool {
         self.method.is_boolean()
     }
 
-    /// PHP: `Operator::isDateOperation()`.
+    /// `isDateOperation()`.
     pub fn is_date_operation(&self) -> bool {
         self.method.is_date()
     }
 
     /// Parses an operator from its JSON (what [`Operator::to_string`] writes).
     ///
-    /// Fails with a [`crate::Kind::Operator`] error: `Invalid operator:
-    /// <JSON error>`, `Invalid operator. Must be an array, got <type>`, or
-    /// one of [`Operator::parse_operator`]'s.
+    /// Fails with a [`Kind::Operator`] error: `Invalid operator: <JSON
+    /// error>`, `Invalid operator. Must be an array, got <type>`, or one of
+    /// [`Operator::parse_operator`]'s.
     ///
     /// PHP: `Operator::parse()`.
     pub fn parse(operator: impl AsRef<[u8]>) -> Result<Operator> {
@@ -412,11 +343,14 @@ impl Operator {
     }
 
     /// Builds an operator from its array form (`method`, `attribute`,
-    /// `values`).
+    /// `values`; a missing or `null` entry is `''`, `''` and `[]`).
     ///
-    /// PHP: `Operator::parseOperator()`; errors ([`crate::Kind::Operator`])
-    /// in PHP's order: the method must be a string, then a known method,
-    /// the attribute a string, the values an array.
+    /// Fails with a [`Kind::Operator`] error, in PHP's order: `Invalid
+    /// operator method. Must be a string, got <type>`, `Invalid operator
+    /// method: <method>`, `Invalid operator attribute. Must be a string,
+    /// got <type>`, `Invalid operator values. Must be an array, got <type>`.
+    ///
+    /// PHP: `Operator::parseOperator()`.
     pub fn parse_operator(operator: &Array) -> Result<Operator> {
         let present = |key: &str| operator.get_str(key).filter(|v| !matches!(v, Value::Null));
         let method = match present("method") {
@@ -429,14 +363,11 @@ impl Operator {
                 )));
             }
         };
-        let method_text = String::from_utf8_lossy(method.as_bytes());
-        let method = match method.as_str() {
-            Some(name) => OperatorMethod::from_name(name),
-            None => OperatorMethod::Other(method_text.as_ref().into()),
+        let Some(method) = method.as_str().and_then(OperatorType::try_from_value) else {
+            let mut message = b"Invalid operator method: ".to_vec();
+            message.extend_from_slice(method.as_bytes());
+            return Err(Error::from_bytes(Kind::Operator, message));
         };
-        if !method.is_known() {
-            return Err(Error::operator(format!("Invalid operator method: {method_text}")));
-        }
         let attribute = match present("attribute") {
             None => String::new(),
             Some(Value::Str(s)) => String::from_utf8_lossy(s.as_bytes()).into_owned(),
@@ -460,30 +391,29 @@ impl Operator {
         Ok(Operator::from_array(method, attribute, values))
     }
 
-    /// Parses each operator of a list with [`Operator::parse`].
-    ///
-    /// PHP: `Operator::parseOperators()`.
+    /// Parses each operator of a list with [`Operator::parse`]
+    /// (`Operator::parseOperators()`).
     pub fn parse_operators<S: AsRef<[u8]>>(operators: &[S]) -> Result<Vec<Operator>> {
         operators.iter().map(Operator::parse).collect()
     }
 
-    /// The array form: `method`, `attribute` and `values` (keys kept).
-    ///
-    /// PHP: `Operator::toArray()`.
+    /// The array form: `method`, `attribute` and `values` (as stored, keys
+    /// kept) (`toArray()`).
     pub fn to_array(&self) -> Array {
-        let mut out = Array::new();
-        out.set(ArrayKey::from("method"), Value::Str(Str::from(self.method.as_str())));
+        let mut out = Array::with_capacity(3);
+        out.set(ArrayKey::from("method"), Value::Str(Str::from_static(self.method.as_str())));
         out.set(ArrayKey::from("attribute"), Value::Str(Str::from(self.attribute.as_str())));
-        out.set(ArrayKey::from("values"), Value::Array(self.values.to_array()));
+        out.set(ArrayKey::from("values"), Value::Array(self.values.clone()));
         out
     }
 
     /// The JSON of [`Operator::to_array`], as PHP's `json_encode` writes it.
     ///
-    /// Fails with a [`crate::Kind::Operator`] error `Invalid Json: <JSON
-    /// error>` when a value cannot be encoded.
+    /// Fails with a [`Kind::Operator`] error `Invalid Json: <JSON error>`
+    /// when a value cannot be encoded.
     ///
     /// PHP: `Operator::toString()`.
+    #[allow(clippy::inherent_to_string_shadow_display)]
     pub fn to_string(&self) -> Result<String> {
         php_std::json::encode(
             &json_value(&Value::Array(self.to_array())),
@@ -493,167 +423,134 @@ impl Operator {
         .map_err(|e| Error::operator(format!("Invalid Json: {}", e.message())))
     }
 
-    /// Adds `value`, up to `max`.
-    ///
-    /// PHP: `Operator::increment()` (`increment()` there is `increment(1)`).
+    /// Adds `value`, up to `max` (`Operator::increment()`; PHP's default
+    /// `value` is 1).
     pub fn increment(value: impl Into<Number>, max: Option<Number>) -> Self {
-        Self::bounded(OperatorMethod::Increment, value.into(), max)
+        Self::bounded(OperatorType::Increment, value.into(), max)
     }
 
-    /// Subtracts `value`, down to `min`.
-    ///
-    /// PHP: `Operator::decrement()` (`decrement()` there is `decrement(1)`).
+    /// Subtracts `value`, down to `min` (`Operator::decrement()`; PHP's
+    /// default `value` is 1).
     pub fn decrement(value: impl Into<Number>, min: Option<Number>) -> Self {
-        Self::bounded(OperatorMethod::Decrement, value.into(), min)
+        Self::bounded(OperatorType::Decrement, value.into(), min)
     }
 
-    /// Multiplies by `factor`, up to `max`.
-    ///
-    /// PHP: `Operator::multiply()`.
+    /// Multiplies by `factor`, up to `max` (`Operator::multiply()`).
     pub fn multiply(factor: impl Into<Number>, max: Option<Number>) -> Self {
-        Self::bounded(OperatorMethod::Multiply, factor.into(), max)
+        Self::bounded(OperatorType::Multiply, factor.into(), max)
     }
 
-    /// Divides by `divisor`, down to `min`. A zero divisor fails with a
-    /// [`crate::Kind::Operator`] error `Division by zero is not allowed`.
+    /// Divides by `divisor`, down to `min` (`Operator::divide()`).
     ///
-    /// PHP: `Operator::divide()`.
+    /// Fails with a [`Kind::Operator`] error `Division by zero is not
+    /// allowed` when `divisor == 0`.
     pub fn divide(divisor: impl Into<Number>, min: Option<Number>) -> Result<Self> {
         let divisor = divisor.into();
-        if divisor.is_zero() {
+        if is_zero(&divisor) {
             return Err(Error::operator("Division by zero is not allowed"));
         }
-        Ok(Self::bounded(OperatorMethod::Divide, divisor, min))
+        Ok(Self::bounded(OperatorType::Divide, divisor, min))
     }
 
-    /// The remainder of a division by `divisor`. A zero divisor fails with
-    /// a [`crate::Kind::Operator`] error `Modulo by zero is not allowed`.
+    /// The remainder of a division by `divisor` (`Operator::modulo()`).
     ///
-    /// PHP: `Operator::modulo()`.
+    /// Fails with a [`Kind::Operator`] error `Modulo by zero is not
+    /// allowed` when `divisor == 0`.
     pub fn modulo(divisor: impl Into<Number>) -> Result<Self> {
         let divisor = divisor.into();
-        if divisor.is_zero() {
+        if is_zero(&divisor) {
             return Err(Error::operator("Modulo by zero is not allowed"));
         }
-        Ok(Self::new(OperatorMethod::Modulo, "", vec![divisor.into()]))
+        Ok(Self::new(OperatorType::Modulo, "", vec![divisor.into()]))
     }
 
-    /// Raises to `exponent`, up to `max`.
-    ///
-    /// PHP: `Operator::power()`.
+    /// Raises to `exponent`, up to `max` (`Operator::power()`).
     pub fn power(exponent: impl Into<Number>, max: Option<Number>) -> Self {
-        Self::bounded(OperatorMethod::Power, exponent.into(), max)
+        Self::bounded(OperatorType::Power, exponent.into(), max)
     }
 
-    fn bounded(method: OperatorMethod, value: Number, bound: Option<Number>) -> Self {
+    fn bounded(method: OperatorType, value: Number, bound: Option<Number>) -> Self {
         let mut values = vec![value.into()];
         values.extend(bound.map(Value::from));
         Self::new(method, "", values)
     }
 
-    /// Appends `values` to the array.
-    ///
-    /// PHP: `Operator::arrayAppend()`.
+    /// Appends `values` to the array (`Operator::arrayAppend()`).
     pub fn array_append<V: Into<Value>>(values: impl IntoIterator<Item = V>) -> Self {
-        Self::new(OperatorMethod::ArrayAppend, "", values.into_iter().map(Into::into).collect())
+        Self::new(OperatorType::ArrayAppend, "", values.into_iter().map(Into::into).collect())
     }
 
-    /// Prepends `values` to the array.
-    ///
-    /// PHP: `Operator::arrayPrepend()`.
+    /// Prepends `values` to the array (`Operator::arrayPrepend()`).
     pub fn array_prepend<V: Into<Value>>(values: impl IntoIterator<Item = V>) -> Self {
-        Self::new(OperatorMethod::ArrayPrepend, "", values.into_iter().map(Into::into).collect())
+        Self::new(OperatorType::ArrayPrepend, "", values.into_iter().map(Into::into).collect())
     }
 
-    /// Inserts `value` at `index`.
-    ///
-    /// PHP: `Operator::arrayInsert()`.
+    /// Inserts `value` at `index` (`Operator::arrayInsert()`).
     pub fn array_insert(index: i64, value: impl Into<Value>) -> Self {
-        Self::new(OperatorMethod::ArrayInsert, "", vec![Value::Int(index), value.into()])
+        Self::new(OperatorType::ArrayInsert, "", vec![Value::Int(index), value.into()])
     }
 
-    /// Removes every element equal to `value`.
-    ///
-    /// PHP: `Operator::arrayRemove()`.
+    /// Removes every element equal to `value` (`Operator::arrayRemove()`).
     pub fn array_remove(value: impl Into<Value>) -> Self {
-        Self::new(OperatorMethod::ArrayRemove, "", vec![value.into()])
+        Self::new(OperatorType::ArrayRemove, "", vec![value.into()])
     }
 
-    /// Removes duplicates from the array.
-    ///
-    /// PHP: `Operator::arrayUnique()`.
+    /// Removes duplicates from the array (`Operator::arrayUnique()`).
     pub fn array_unique() -> Self {
-        Self::new(OperatorMethod::ArrayUnique, "", Vec::new())
+        Self::new(OperatorType::ArrayUnique, "", Vec::new())
     }
 
-    /// Keeps the elements also in `values`.
-    ///
-    /// PHP: `Operator::arrayIntersect()`.
+    /// Keeps the elements also in `values` (`Operator::arrayIntersect()`).
     pub fn array_intersect<V: Into<Value>>(values: impl IntoIterator<Item = V>) -> Self {
-        Self::new(OperatorMethod::ArrayIntersect, "", values.into_iter().map(Into::into).collect())
+        Self::new(OperatorType::ArrayIntersect, "", values.into_iter().map(Into::into).collect())
     }
 
-    /// Removes the elements in `values`.
-    ///
-    /// PHP: `Operator::arrayDiff()`.
+    /// Removes the elements in `values` (`Operator::arrayDiff()`).
     pub fn array_diff<V: Into<Value>>(values: impl IntoIterator<Item = V>) -> Self {
-        Self::new(OperatorMethod::ArrayDiff, "", values.into_iter().map(Into::into).collect())
+        Self::new(OperatorType::ArrayDiff, "", values.into_iter().map(Into::into).collect())
     }
 
     /// Keeps the elements meeting `condition` (one of
     /// [`ARRAY_FILTER_CONDITIONS`], checked by the validator) against
-    /// `value` (`null` for the null checks).
-    ///
-    /// PHP: `Operator::arrayFilter()`.
+    /// `value` (`null` for the null checks; PHP's default)
+    /// (`Operator::arrayFilter()`).
     pub fn array_filter(condition: &str, value: impl Into<Value>) -> Self {
-        Self::new(OperatorMethod::ArrayFilter, "", vec![Value::from(condition), value.into()])
+        Self::new(OperatorType::ArrayFilter, "", vec![Value::Str(Str::from(condition)), value.into()])
     }
 
-    /// Appends `value` to the string.
-    ///
-    /// PHP: `Operator::stringConcat()`.
+    /// Appends `value` to the string (`Operator::stringConcat()`).
     pub fn string_concat(value: impl Into<Value>) -> Self {
-        Self::new(OperatorMethod::StringConcat, "", vec![value.into()])
+        Self::new(OperatorType::StringConcat, "", vec![value.into()])
     }
 
-    /// Replaces `search` with `replace` in the string.
-    ///
-    /// PHP: `Operator::stringReplace()`.
+    /// Replaces `search` with `replace` in the string
+    /// (`Operator::stringReplace()`).
     pub fn string_replace(search: &str, replace: &str) -> Self {
-        Self::new(OperatorMethod::StringReplace, "", vec![Value::from(search), Value::from(replace)])
+        Self::new(OperatorType::StringReplace, "", vec![Value::Str(Str::from(search)), Value::Str(Str::from(replace))])
     }
 
-    /// Negates the boolean.
-    ///
-    /// PHP: `Operator::toggle()`.
+    /// Negates the boolean (`Operator::toggle()`).
     pub fn toggle() -> Self {
-        Self::new(OperatorMethod::Toggle, "", Vec::new())
+        Self::new(OperatorType::Toggle, "", Vec::new())
     }
 
-    /// Adds `days` days to the date (negative subtracts).
-    ///
-    /// PHP: `Operator::dateAddDays()`.
+    /// Adds `days` days to the date, negative subtracting
+    /// (`Operator::dateAddDays()`).
     pub fn date_add_days(days: i64) -> Self {
-        Self::new(OperatorMethod::DateAddDays, "", vec![Value::Int(days)])
+        Self::new(OperatorType::DateAddDays, "", vec![Value::Int(days)])
     }
 
-    /// Subtracts `days` days from the date.
-    ///
-    /// PHP: `Operator::dateSubDays()`.
+    /// Subtracts `days` days from the date (`Operator::dateSubDays()`).
     pub fn date_sub_days(days: i64) -> Self {
-        Self::new(OperatorMethod::DateSubDays, "", vec![Value::Int(days)])
+        Self::new(OperatorType::DateSubDays, "", vec![Value::Int(days)])
     }
 
-    /// Sets the date to now.
-    ///
-    /// PHP: `Operator::dateSetNow()`.
+    /// Sets the date to now (`Operator::dateSetNow()`).
     pub fn date_set_now() -> Self {
-        Self::new(OperatorMethod::DateSetNow, "", Vec::new())
+        Self::new(OperatorType::DateSetNow, "", Vec::new())
     }
 
-    /// Whether `value` is an operator.
-    ///
-    /// PHP: `Operator::isOperator()`.
+    /// Whether `value` is an operator (`Operator::isOperator()`).
     pub fn is_operator(value: &Value) -> bool {
         matches!(value, Value::Ext(Ext::Operator(_)))
     }
@@ -684,4 +581,9 @@ impl Operator {
         }
         extracted
     }
+}
+
+/// PHP `$n == 0`.
+fn is_zero(n: &Number) -> bool {
+    Value::from(n.clone()).loose_eq(&Value::Int(0))
 }
