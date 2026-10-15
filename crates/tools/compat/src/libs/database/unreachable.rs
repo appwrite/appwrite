@@ -15,6 +15,13 @@ fn gone<T>() -> Result<T> {
     Err(Error::Redis(MESSAGE.to_owned()))
 }
 
+/// What a lease script fails with: the adapter runs it through `evalSha`
+/// after `clearLastError()`, which the stub leaves to phpredis, whose
+/// client without a connection says so.
+fn lease_gone<T>() -> Result<T> {
+    Err(Error::Redis("Redis server went away".to_owned()))
+}
+
 impl Adapter for Unreachable {
     async fn load(&self, _key: &str, _ttl: i64, _hash: &str) -> Result<Option<Value>> {
         gone()
@@ -33,7 +40,7 @@ impl Adapter for Unreachable {
     }
 
     async fn purge(&self, _key: &str, _hash: &str) -> Result<bool> {
-        gone()
+        lease_gone()
     }
 
     async fn flush(&self) -> Result<bool> {
@@ -73,6 +80,6 @@ impl Adapter for Unreachable {
     }
 
     async fn save_with_lease(&self, _key: &str, _data: &Value, _hash: &str, _generation: &str) -> Result<bool> {
-        gone()
+        lease_gone()
     }
 }
