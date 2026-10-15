@@ -320,6 +320,43 @@ final class MqttServerTest extends Scope
         }
     }
 
+    public function testWildcardTopicsRejected(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        ['userId' => $userId, 'jwt' => $jwt] = $this->createUser();
+        $server = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        // Test for FAILURE: MQTT wildcard characters can't enter a topic id, so a wildcard-shaped
+        // topic (which a wildcard filter could then match) is unrepresentable. The topicId validator
+        // allows only [A-Za-z0-9_-.], rejecting + and # (and /).
+        foreach (['apps/#', 'apps/+', '#', '+'] as $topicId) {
+            $topic = $this->client->call(Client::METHOD_POST, '/messaging/topics', $server, [
+                'topicId' => $topicId,
+                'name' => 'wildcard-' . $userId,
+                'qos' => 1,
+            ]);
+            $this->assertEquals(400, $topic['headers']['status-code'], "Topic id '$topicId' must be rejected");
+        }
+
+        // A real topic the user is a subscriber of: a wildcard filter below would match it if the
+        // broker honoured wildcards for ordinary topics.
+        ['id' => $topicId] = $this->setupPushTopic($server, $userId, 'mqtt-wildcard-' . $userId);
+
+        $subscriber = new MqttSubscriber(self::BROKER_HOST, self::BROKER_PORT);
+        $this->assertSame(0, $subscriber->connect($projectId, $jwt, 'e2e-wildcard-' . $userId, cleanStart: true));
+        try {
+            // Test for FAILURE: wildcard filters are refused outright (SUBACK 0x80), independent of
+            // the subscriber list — even '#', which would otherwise match the owned topic above.
+            $this->assertSame([0x80, 0x80, 0x80], $subscriber->subscribe(['#', 'apps/#', 'apps/+']));
+        } finally {
+            $subscriber->disconnect();
+        }
+    }
+
     public function testBlockedUserOpenConnectionIsDisconnected(): void
     {
         $projectId = $this->getProject()['$id'];
