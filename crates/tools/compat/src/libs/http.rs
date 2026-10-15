@@ -8,7 +8,7 @@ use std::sync::{Arc, Mutex};
 use serde_json::{Map, Value, json};
 use utopia_http::{
     Check, Compression, Cookie, Error, Files, Hook, Http, ParamDefault, Request, Response, Route, Router, Scope,
-    TrustedHeaders, View, Wire, action, params_value,
+    TrustedHeaders, View, Wire, params_value,
 };
 use utopia_validators::Validator;
 
@@ -202,27 +202,23 @@ pub async fn bench(name: &str, _session: &mut crate::adapter::Session) -> Result
             })
         }
         "dispatch" => {
-            fn nosniff(scope: Scope<'_>) -> utopia_http::BoxFuture<'_, utopia_http::Result<()>> {
-                Box::pin(async move {
-                    scope.response.add_header("X-Content-Type-Options", "nosniff");
-                    Ok(())
-                })
+            async fn nosniff(scope: Scope<'_>) -> utopia_http::Result<()> {
+                scope.response.add_header("X-Content-Type-Options", "nosniff");
+                Ok(())
             }
-            fn document(scope: Scope<'_>) -> utopia_http::BoxFuture<'_, utopia_http::Result<()>> {
-                Box::pin(async move {
-                    let param = |key: &str| scope.param(key).cloned().unwrap_or(Value::Null);
-                    let body = json!({
-                        "$id": param("documentId"),
-                        "$collectionId": param("collectionId"),
-                        "$databaseId": param("databaseId"),
-                        "$createdAt": "2024-05-24T10:15:00.000+00:00",
-                        "$updatedAt": "2024-05-24T10:15:00.000+00:00",
-                        "$permissions": ["read(\"any\")"],
-                        "title": "Release notes",
-                        "views": 1024,
-                    });
-                    scope.response.json(&body)
-                })
+            async fn document(scope: Scope<'_>) -> utopia_http::Result<()> {
+                let param = |key: &str| scope.param(key).cloned().unwrap_or(Value::Null);
+                let body = json!({
+                    "$id": param("documentId"),
+                    "$collectionId": param("collectionId"),
+                    "$databaseId": param("databaseId"),
+                    "$createdAt": "2024-05-24T10:15:00.000+00:00",
+                    "$updatedAt": "2024-05-24T10:15:00.000+00:00",
+                    "$permissions": ["read(\"any\")"],
+                    "title": "Release notes",
+                    "views": 1024,
+                });
+                scope.response.json(&body)
             }
             let mut http = Http::new("UTC");
             http.init().groups(&["api"]).inject("response").action(nosniff);
@@ -1129,10 +1125,14 @@ fn configure(hook: &mut Hook, spec: &Value, out: &Out) -> Result<(), Fault> {
 }
 
 /// A callback running action statements (as Harness.php's hook callbacks).
+/// It borrows the statements it captured, so it builds the [`Action`]
+/// itself instead of going through `utopia_http::action`.
+///
+/// [`Action`]: utopia_http::Action
 pub(crate) fn statement_action(list: Vec<Value>, out: &Out) -> utopia_http::Action {
     let list = Arc::new(list);
     let out = out.clone();
-    action(move |mut scope| {
+    Arc::new(move |mut scope| {
         let list = list.clone();
         let out = out.clone();
         Box::pin(async move { statements(&list, &mut Env::Scope(&mut scope), &out).await })

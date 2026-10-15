@@ -30,12 +30,31 @@ pub type Resource = Arc<dyn Any + Send + Sync>;
 /// future.
 pub type Action = Arc<dyn for<'a> Fn(Scope<'a>) -> BoxFuture<'a, Result<()>> + Send + Sync>;
 
-/// Wraps an async callback into an [`Action`].
+/// An async closure over a call's [`Scope`] whose future is `Send`:
+/// `async |scope| { .. }`, as [`action`] takes it.
+///
+/// It reads what it needs from the scope's params and injections. A closure
+/// that borrows state it captured is not a `Callback`: register that state as
+/// a resource and inject it instead.
+pub trait Callback<'a>: Fn(Scope<'a>) -> <Self as Callback<'a>>::Future {
+    /// The future the closure returns.
+    type Future: Future<Output = Result<()>> + Send + 'a;
+}
+
+impl<'a, F, Fut> Callback<'a> for F
+where
+    F: Fn(Scope<'a>) -> Fut,
+    Fut: Future<Output = Result<()>> + Send + 'a,
+{
+    type Future = Fut;
+}
+
+/// Wraps an async closure into an [`Action`].
 pub fn action<F>(f: F) -> Action
 where
-    F: for<'a> Fn(Scope<'a>) -> BoxFuture<'a, Result<()>> + Send + Sync + 'static,
+    F: for<'a> Callback<'a> + AsyncFn(Scope<'_>) -> Result<()> + Send + Sync + 'static,
 {
-    Arc::new(f)
+    Arc::new(move |scope| Box::pin(f(scope)))
 }
 
 /// A container of resources by name, falling back to a parent container.
@@ -336,9 +355,9 @@ impl Hook {
     /// PHP: `action($callback)`.
     pub fn action<F>(&mut self, f: F) -> &mut Self
     where
-        F: for<'a> Fn(Scope<'a>) -> BoxFuture<'a, Result<()>> + Send + Sync + 'static,
+        F: for<'a> Callback<'a> + AsyncFn(Scope<'_>) -> Result<()> + Send + Sync + 'static,
     {
-        self.action = Some(Arc::new(f));
+        self.action = Some(action(f));
         self
     }
 

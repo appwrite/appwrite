@@ -18,13 +18,11 @@ get.set_http_method("GET")
     .label("scope", json!("teams.read"))
     .param("teamId", Param::new(json!(""), Text::new(36), "Team ID."))
     .inject("response")
-    .callback(Callback::Http(utopia_http::action(|scope| {
+    .callback(Callback::http(async |scope| {
         let id = scope.param("teamId").and_then(|v| v.as_str()).unwrap_or("").to_owned();
-        Box::pin(async move {
-            scope.response.send(format!("team {id}").as_bytes());
-            Ok(())
-        })
-    })));
+        scope.response.send(format!("team {id}").as_bytes());
+        Ok(())
+    }));
 let mut teams = Service::new(ServiceType::HTTP);
 teams.add_action("get", get);
 
@@ -84,17 +82,17 @@ use utopia_validators::Text;
 let log = Arc::new(Mutex::new(Vec::new()));
 let (l1, l2) = (log.clone(), log.clone());
 let mut init = Action::new();
-init.set_type(ActionType::INIT).callback(Callback::Task(Arc::new(move |_| {
+init.set_type(ActionType::INIT).callback(Callback::task(move |_| {
     l1.lock().unwrap().push("init".to_owned());
-    Box::pin(async { Ok(()) })
-})));
+    async { Ok(()) }
+}));
 let mut migrate = Action::new();
 migrate
     .param("project", Param::new(Value::Null, Text::new(36), "Project ID."))
-    .callback(Callback::Task(Arc::new(move |args| {
+    .callback(Callback::task(move |args| {
         l2.lock().unwrap().push(format!("migrate {}", args.value("project").and_then(Value::as_str).unwrap_or("")));
-        Box::pin(async { Ok(()) })
-    })));
+        async { Ok(()) }
+    }));
 let mut tasks = Service::new(ServiceType::TASK);
 tasks.add_action("init", init).add_action("migrate", migrate);
 
@@ -167,7 +165,7 @@ use utopia_queue::adapter::{Adapter, Runtime};
 
 let job = || {
     let mut action = Action::new();
-    action.callback(Callback::Worker(Arc::new(|_scope| Box::pin(async { Ok(()) }))));
+    action.callback(Callback::worker(|_scope| async { Ok(()) }));
     action
 };
 let mut workers = Service::new(ServiceType::WORKER);

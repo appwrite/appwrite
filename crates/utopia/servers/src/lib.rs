@@ -67,7 +67,7 @@ pub use base::{Base, MODE_TYPE_DEVELOPMENT, MODE_TYPE_PRODUCTION, MODE_TYPE_STAG
 pub use error::Error;
 pub use hook::{
     Action, Argument, Arguments, BoxFuture, Check, Default as ParamDefault, DefaultFactory, Hook, Injection, Param,
-    Resource, ValidatorFactory,
+    Resource, ValidatorFactory, action,
 };
 
 /// The getting started guide (`guide.md`), compiled and run with the doctests.

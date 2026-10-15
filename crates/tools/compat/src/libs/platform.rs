@@ -211,15 +211,15 @@ fn callback(kind: &str, spec: &Value, ctx: &Ctx) -> Callback {
         )),
         "Worker" => {
             let calls = ctx.calls.clone();
-            Callback::Worker(Arc::new(move |_scope| {
+            Callback::worker(move |_scope| {
                 calls.lock().unwrap_or_else(|e| e.into_inner()).push(json!([id, []]));
-                Box::pin(async { Ok(()) })
-            }))
+                async { Ok(()) }
+            })
         }
         _ => {
             let calls = ctx.calls.clone();
             let fail = spec.get("fail").cloned();
-            Callback::Task(Arc::new(move |args: Arguments| {
+            Callback::task(move |args: Arguments| {
                 let mut map = Map::new();
                 for (name, argument) in args.iter() {
                     let value = match argument {
@@ -241,8 +241,8 @@ fn callback(kind: &str, spec: &Value, ctx: &Ctx) -> Callback {
                         f["code"].as_i64().unwrap_or(0),
                     )
                 });
-                Box::pin(async move { failure.map_or(Ok(()), Err) })
-            }))
+                async move { failure.map_or(Ok(()), Err) }
+            })
         }
     }
 }
@@ -665,7 +665,7 @@ pub async fn call(op: &str, args: &Value, _session: &mut Session) -> OpResult {
 }
 
 pub async fn bench(name: &str, _session: &mut Session) -> Result<Bench, Fault> {
-    let noop = || Callback::Http(utopia_http::action(|_| Box::pin(async { Ok(()) })));
+    let noop = || Callback::http(async |_| Ok(()));
     Ok(match name {
         "declare" => {
             let text: Arc<dyn utopia_validators::Validator> = Arc::new(Text::new(128));

@@ -111,12 +111,10 @@ impl Init {
 /// use utopia_platform::{Action, Callback, Init, Module, Platform, Service, ServiceType};
 ///
 /// let mut root = Action::new();
-/// root.set_http_method("GET").set_http_path("/").inject("response").callback(Callback::Http(utopia_http::action(|scope| {
-///     Box::pin(async move {
-///         scope.response.send(b"Hello World!");
-///         Ok(())
-///     })
-/// })));
+/// root.set_http_method("GET").set_http_path("/").inject("response").callback(Callback::http(async |scope| {
+///     scope.response.send(b"Hello World!");
+///     Ok(())
+/// }));
 /// let mut service = Service::new(ServiceType::HTTP);
 /// service.add_action("root", root);
 ///

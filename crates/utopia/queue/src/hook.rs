@@ -20,6 +20,15 @@ pub type Resource = Arc<dyn Any + Send + Sync>;
 /// A hook's callback.
 pub type Action = Arc<dyn Fn(Scope) -> BoxFuture<'static, Result<()>> + Send + Sync>;
 
+/// Wraps an async closure over a job's [`Scope`] into an [`Action`].
+pub fn action<F, Fut>(f: F) -> Action
+where
+    F: Fn(Scope) -> Fut + Send + Sync + 'static,
+    Fut: std::future::Future<Output = Result<()>> + Send + 'static,
+{
+    Arc::new(move |scope| Box::pin(f(scope)))
+}
+
 /// Builds a param's validator from its injected resources.
 pub type ValidatorFactory = Arc<dyn Fn(&[Resource]) -> Arc<dyn Validator> + Send + Sync>;
 
@@ -250,7 +259,7 @@ impl Hook {
         F: Fn(Scope) -> Fut + Send + Sync + 'static,
         Fut: std::future::Future<Output = Result<()>> + Send + 'static,
     {
-        self.action = Some(Arc::new(move |scope| Box::pin(f(scope))));
+        self.action = Some(action(f));
         self
     }
 
