@@ -60,6 +60,9 @@ pub struct Collection {
     document: Document,
     attributes: OnceLock<Result<Vec<Attribute>>>,
     indexes: OnceLock<Result<Vec<Index>>>,
+    /// The document cache epoch the definition was read with (PHP keeps it
+    /// in a `WeakMap` keyed by the definition object); never compared.
+    cache_epoch: Option<String>,
 }
 
 impl PartialEq for Collection {
@@ -84,7 +87,12 @@ impl From<Collection> for Document {
 
 impl Collection {
     fn of(document: Document) -> Self {
-        Collection { document: document.with_class(CLASS), attributes: OnceLock::new(), indexes: OnceLock::new() }
+        Collection {
+            document: document.with_class(CLASS),
+            attributes: OnceLock::new(),
+            indexes: OnceLock::new(),
+            cache_epoch: None,
+        }
     }
 
     /// A new collection definition (`Collection::create()`): `name`
@@ -351,6 +359,18 @@ impl Collection {
             self.document_security(),
         );
         Ok(format!("{:032x}", xxhash_rust::xxh3::xxh3_128(&payload)))
+    }
+
+    /// The epoch the collection's documents may be cached under, as read
+    /// with this definition (the database's `getCollectionCacheEpoch()`).
+    pub fn cache_epoch(&self) -> Option<&str> {
+        self.cache_epoch.as_deref()
+    }
+
+    /// Records the epoch the definition was read with
+    /// (`attachCollectionCacheEpoch()`).
+    pub fn set_cache_epoch(&mut self, epoch: Option<String>) {
+        self.cache_epoch = epoch;
     }
 
     /// The name, else the id (`name()`).

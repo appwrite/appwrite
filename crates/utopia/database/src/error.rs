@@ -25,6 +25,34 @@ pub struct Error {
     raw: Option<Vec<u8>>,
     /// What a driver reported, when it did (boxed: most errors carry none).
     driver: Option<Box<Driver>>,
+    /// What the database recorded about this failure (PHP keeps it in
+    /// `WeakMap`s keyed by the exception object); never compared.
+    marks: Marks,
+}
+
+/// The facts a database records about a failure it let through: PHP's
+/// `$committedFailures`, `$transactionFailures` and `$unconfirmedCommits`
+/// `WeakMap`s of `Trait\Transactions`, carried by the error itself.
+#[derive(Debug, Clone, Copy, Default)]
+pub(crate) struct Marks(u8);
+
+impl PartialEq for Marks {
+    fn eq(&self, _: &Self) -> bool {
+        true
+    }
+}
+
+/// A fact [`Marks`] records.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(u8)]
+pub(crate) enum Mark {
+    /// Raised after its outermost transaction committed (`$committedFailures`).
+    Committed = 1,
+    /// Let through by an adapter transaction (`$transactionFailures`).
+    Transaction = 2,
+    /// The `Unconfirmed` failure of a commit, not one its callback threw
+    /// (`$unconfirmedCommits`).
+    UnconfirmedCommit = 4,
 }
 
 /// The codes a driver error carries besides the integer code.
@@ -287,7 +315,16 @@ impl Kind {
 impl Error {
     /// An error of `kind` with `message` and code `0`.
     pub fn new(kind: Kind, message: impl Into<String>) -> Self {
-        Self { kind, message: message.into(), code: 0, attribute: None, previous: None, raw: None, driver: None }
+        Self {
+            kind,
+            message: message.into(),
+            code: 0,
+            attribute: None,
+            previous: None,
+            raw: None,
+            driver: None,
+            marks: Marks(0),
+        }
     }
 
     /// An error of `kind` whose message is bytes (PHP messages are: one can
@@ -421,6 +458,23 @@ impl Error {
     /// The wrapped error (`getPrevious()`).
     pub fn previous(&self) -> Option<&Error> {
         self.previous.as_deref()
+    }
+
+    /// Records `mark` on the error.
+    pub(crate) fn mark(&mut self, mark: Mark) {
+        self.marks.0 |= mark as u8;
+    }
+
+    /// Whether the error carries `mark`.
+    pub(crate) fn is_marked(&self, mark: Mark) -> bool {
+        self.marks.0 & mark as u8 != 0
+    }
+
+    /// Removes `mark`, answering whether the error carried it.
+    pub(crate) fn take_mark(&mut self, mark: Mark) -> bool {
+        let had = self.is_marked(mark);
+        self.marks.0 &= !(mark as u8);
+        had
     }
 }
 

@@ -59,10 +59,12 @@ mod macros;
 
 pub mod adapter;
 pub mod attribute;
+pub mod cache;
 pub mod capability;
 pub mod change;
 pub mod collection;
 pub mod connection;
+#[allow(dead_code)] // until every area of the database layer lands
 pub mod database;
 pub mod datetime;
 pub mod document;
@@ -91,6 +93,7 @@ pub use attribute::Attribute;
 pub use capability::Capability;
 pub use change::Change;
 pub use collection::Collection;
+pub use database::Database;
 pub use document::Document;
 pub use error::{Error, Kind, Result};
 pub use event::Event;

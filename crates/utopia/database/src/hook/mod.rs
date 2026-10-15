@@ -19,9 +19,16 @@
 //! | `Hook\Queries` | [`Queries`] |
 //! | `Hook\Attachable` | [`Attachable`] |
 //!
-//! `Hook\Permissions`, `Hook\Relationships` (with `Cascade`,
-//! `Preparation`, `PreparedCreate`) and the MongoDB hooks are implementations
-//! the database layer provides.
+//! The implementations the database layer provides: [`Permissions`]
+//! (`Hook\Permissions`) and [`relationships::Relationships`]
+//! (`Hook\Relationships`, with `Cascade`, `Preparation` and
+//! `PreparedCreate`). The MongoDB hooks come with its adapter.
+
+pub mod permissions;
+#[allow(dead_code)] // until the relationships area lands
+pub mod relationships;
+
+pub use permissions::Permissions;
 
 use async_trait::async_trait;
 
