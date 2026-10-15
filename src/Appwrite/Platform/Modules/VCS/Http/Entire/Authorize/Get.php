@@ -92,13 +92,15 @@ class Get extends Action
         $callback = $protocol . '://' . ($platform['consoleHostname'] ?? '') . '/v1/vcs/entire/callback';
 
         // The permissions are registered on the plugin; the install page asks
-        // the user only for the project and the repositories.
+        // the user only for the project and the repositories. Entire expects
+        // an opaque state token, so the signed JSON travels base64url-encoded
+        // and the callback decodes it.
         /** @var \Utopia\VCS\Adapter\Git\Entire $vcs */
         $vcs = $vcsFactory->fromProvider('entire');
         $installUrl = $vcs->getInstallUrl(
             System::getEnv('_APP_VCS_ENTIRE_PLUGIN', ''),
             $callback,
-            \json_encode($state) ?: ''
+            \rtrim(\strtr(\base64_encode(\json_encode($state, JSON_UNESCAPED_SLASHES) ?: ''), '+/', '-_'), '=')
         );
 
         $response

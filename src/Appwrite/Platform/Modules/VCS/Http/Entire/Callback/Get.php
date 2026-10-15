@@ -61,7 +61,7 @@ class Get extends Action
         // A customer who cancels on Entire comes back with an error and the
         // state instead of a receipt
         if (!empty($error) && empty($receipt)) {
-            $cancelled = \json_decode($state, true);
+            $cancelled = \json_decode($this->decodeState($state), true);
             $redirectFailure = \is_array($cancelled) ? \strval($cancelled['failure'] ?? '') : '';
             $this->failure($response, $redirectFailure, $error === 'access_denied' ? 'The installation was not approved on Entire.' : 'Entire refused the installation: ' . $error);
             return;
@@ -92,7 +92,7 @@ class Get extends Action
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Missing state parameter. Please restart the installation from the Appwrite Console.');
         }
 
-        $state = \json_decode($state, true) ?? [];
+        $state = \json_decode($this->decodeState($state), true) ?? [];
         $projectId = $state['projectId'] ?? '';
         $redirectFailure = $state['failure'] ?? '';
 
@@ -184,6 +184,18 @@ class Get extends Action
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->addHeader('Pragma', 'no-cache')
             ->redirect($redirectSuccess);
+    }
+
+    /**
+     * The signed JSON the Authorize action put in the state. It travels
+     * base64url-encoded, since Entire expects an opaque state token; a state
+     * that is not base64url is taken as the JSON itself.
+     */
+    private function decodeState(string $state): string
+    {
+        $decoded = \base64_decode(\strtr($state, '-_', '+/'), true);
+
+        return $decoded !== false && \str_starts_with($decoded, '{') ? $decoded : $state;
     }
 
     /**
