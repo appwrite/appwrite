@@ -258,11 +258,18 @@ async fn pdo_of(a: &Args, key: &str) -> R<utopia_database::Result<Pdo>> {
     };
     let dsn = spec.get("dsn").and_then(Json::as_str).unwrap_or("sqlite::memory:");
     let text = |k: &str| spec.get(k).and_then(Json::as_str).map(str::to_owned);
-    let mut options = PdoOptions::default();
+    // A PDO without attributes fetches native numbers (PDO's default
+    // ATTR_STRINGIFY_FETCHES is off).
+    let mut options = PdoOptions { stringify_fetches: false, ..PdoOptions::default() };
     if let Some(Json::Object(attributes)) = spec.get("options") {
+        // PDO::ATTR_STRINGIFY_FETCHES (17).
+        if let Some(stringify) = attributes.get("17") {
+            options.stringify_fetches =
+                stringify.as_bool().unwrap_or(false) || stringify.as_i64().is_some_and(|v| v != 0);
+        }
         // PDO::ATTR_TIMEOUT (2) and PDO::ATTR_DEFAULT_FETCH_MODE (19); the
-        // others (persistence, error mode, emulation, stringify) are how
-        // the Rust handle always behaves.
+        // others (persistence, error mode, emulation) are how the Rust
+        // handle always behaves.
         if let Some(seconds) = attributes.get("2").and_then(Json::as_u64) {
             options.timeout = std::time::Duration::from_secs(seconds);
         }

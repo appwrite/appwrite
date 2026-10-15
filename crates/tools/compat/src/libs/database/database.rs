@@ -1078,11 +1078,16 @@ pub fn call_static(method: &str, a: &Args) -> R<Obj> {
         "collectionDefinition" => dbmod::collection_definition().into_obj(),
         "internalAttributesFor" => objects(dbmod::internal_attributes(a.bool("sharedTables")?).to_vec()),
         "addFilter" => {
-            let calls = Calls::new(&a.cx);
-            let encode = calls.required("encode", a.raw("encode"))?;
-            let decode = calls.required("decode", a.raw("decode"))?;
+            // The filter's callbacks run later, on calls of their own; this
+            // call reports them, never called yet (`{"encode": [], "decode": []}`).
+            let kept = Calls::new(&a.cx);
+            let encode = kept.required("encode", a.raw("encode"))?;
+            let decode = kept.required("decode", a.raw("decode"))?;
             Database::add_filter(&a.string("name")?, Arc::new(fixtures::CallbackFilter { encode, decode }));
-            Obj::null()
+            let reported = Calls::new(&a.cx);
+            reported.required("encode", a.raw("encode"))?;
+            reported.required("decode", a.raw("decode"))?;
+            return reported.finish(Ok(Obj::null()));
         }
         _ => return fault(format!("Database has no static method `{method}`")),
     })

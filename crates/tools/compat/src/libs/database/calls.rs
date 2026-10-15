@@ -122,13 +122,23 @@ impl Cb {
     /// `None` without one). A step's uncaught error is the callback's.
     pub async fn invoke(&self, args: Vec<Json>) -> Result<Option<Obj>, Error> {
         let calls = &self.calls;
+        // A callback called after its operation finished (one the library
+        // keeps) records nowhere: its operation reported its calls already.
         let index = {
             let mut record = lock(&calls.record);
-            let list = &mut record.callbacks[self.slot].1;
-            list.push(Invocation { args: args.clone(), steps: Vec::new() });
-            list.len() - 1
+            record.callbacks.get_mut(self.slot).map(|(_, list)| {
+                list.push(Invocation { args: args.clone(), steps: Vec::new() });
+                list.len() - 1
+            })
         };
-        let push = |result: Json| lock(&calls.record).callbacks[self.slot].1[index].steps.push(result);
+        let push = |result: Json| {
+            if let Some(index) = index
+                && let Some((_, list)) = lock(&calls.record).callbacks.get_mut(self.slot)
+                && let Some(invocation) = list.get_mut(index)
+            {
+                invocation.steps.push(result);
+            }
+        };
         let mut locals: HashMap<String, Json> = HashMap::new();
         let mut returned = None;
         for step in self.steps.iter() {
