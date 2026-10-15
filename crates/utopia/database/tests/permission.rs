@@ -64,7 +64,11 @@ fn test_input_from_roles() {
 fn test_invalid_formats() {
     assert_error(Permission::parse("read"), Kind::Database, "Invalid permission string format: \"read\".");
     assert_error(Permission::parse("read((\"any\")"), Kind::Database, "Invalid permission type: \"read(\".");
-    assert_error(Permission::parse("read(\"users/un/verified\")"), Kind::Database, "Only one dimension can be provided");
+    assert_error(
+        Permission::parse("read(\"users/un/verified\")"),
+        Kind::Database,
+        "Only one dimension can be provided",
+    );
     assert_error(Permission::parse("read(\"users/\")"), Kind::Database, "Dimension must not be empty");
 }
 

@@ -277,7 +277,8 @@ fn test_input_setters_and_getters() {
 
 #[test]
 fn test_is_valid_with_scoped_roles() {
-    for (role, other) in [("team:abc/owner", "team:abc/member"), ("label:vip", "label:premium"), ("member:abc123", "member:def456")]
+    for (role, other) in
+        [("team:abc/owner", "team:abc/member"), ("label:vip", "label:premium"), ("member:abc123", "member:def456")]
     {
         let auth = Authorization::default();
         auth.add_role(role);

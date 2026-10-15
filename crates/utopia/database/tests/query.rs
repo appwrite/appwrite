@@ -227,9 +227,8 @@ fn test_parse() {
     let q = round_trip(Query::equal("1", ["Hello /\\ World"]));
     assert_eq!((q.attribute(), values(&q)), ("1", vec![qv("Hello /\\ World")]));
 
-    let json = Query::or([Query::equal("actors", ["Brad Pitt"]), Query::equal("actors", ["Johnny Depp"])])
-        .to_json()
-        .unwrap();
+    let json =
+        Query::or([Query::equal("actors", ["Brad Pitt"]), Query::equal("actors", ["Johnny Depp"])]).to_json().unwrap();
     let q = Query::parse(&json, false).unwrap();
     assert_eq!(q.values().len(), 2);
     assert_eq!(q.method(), Method::Or);
@@ -424,10 +423,7 @@ fn test_shape() {
     assert_eq!(elem.shape().unwrap(), "elemMatch:tags(equal:name)");
 
     let deep = Query::and([
-        Query::or([
-            Query::equal("a", ["x"]),
-            Query::and([Query::equal("b", ["y"]), Query::less_than("c", 5)]),
-        ]),
+        Query::or([Query::equal("a", ["x"]), Query::and([Query::equal("b", ["y"]), Query::less_than("c", 5)])]),
         Query::greater_than("d", 10),
     ]);
     assert_eq!(deep.shape().unwrap(), "and:(greaterThan:d|or:(and:(equal:b|lessThan:c)|equal:a))");
@@ -598,8 +594,12 @@ mod common_arr {
 
 #[test]
 fn test_join_to_array_writes_the_alias_and_every_on_condition() {
-    let join = Query::left_join("orders", "ord", vec![Query::on("$id", "ord.user", "="), Query::equal("ord.status", ["paid"])])
-        .unwrap();
+    let join = Query::left_join(
+        "orders",
+        "ord",
+        vec![Query::on("$id", "ord.user", "="), Query::equal("ord.status", ["paid"])],
+    )
+    .unwrap();
     assert_eq!(
         join.to_array().unwrap(),
         qarr(arr! {
@@ -616,9 +616,12 @@ fn test_join_to_array_writes_the_alias_and_every_on_condition() {
 
 #[test]
 fn test_parsed_join_keeps_its_alias_and_on_conditions() {
-    let join =
-        Query::left_join("orders", "ord", vec![Query::on("$id", "ord.user", "!="), Query::equal("ord.status", ["paid"])])
-            .unwrap();
+    let join = Query::left_join(
+        "orders",
+        "ord",
+        vec![Query::on("$id", "ord.user", "!="), Query::equal("ord.status", ["paid"])],
+    )
+    .unwrap();
     let parsed = Query::parse(&join.to_json().unwrap(), false).unwrap();
     assert_eq!(parsed.method(), Method::LeftJoin);
     assert_eq!(parsed.attribute(), "orders");

@@ -23,12 +23,19 @@ pub struct Error {
     /// The message as PHP has it, when it is not UTF-8 (`message` is then
     /// its lossy form).
     raw: Option<Vec<u8>>,
+    /// What a driver reported, when it did (boxed: most errors carry none).
+    driver: Option<Box<Driver>>,
+}
+
+/// The codes a driver error carries besides the integer code.
+#[derive(Debug, Clone, PartialEq, Default)]
+struct Driver {
     /// The string code (a SQLSTATE such as `HY000`) the error was built
     /// with (`$state`).
     state: Option<String>,
     /// The driver's own error code of a [`Kind::Pdo`] error
     /// (`PDOException::$errorInfo[1]`, such as MySQL's `2006`).
-    driver_code: Option<i64>,
+    code: Option<i64>,
 }
 
 /// The kinds of [`Error`], one per PHP exception class.
@@ -279,16 +286,7 @@ impl Kind {
 impl Error {
     /// An error of `kind` with `message` and code `0`.
     pub fn new(kind: Kind, message: impl Into<String>) -> Self {
-        Self {
-            kind,
-            message: message.into(),
-            code: 0,
-            attribute: None,
-            previous: None,
-            raw: None,
-            state: None,
-            driver_code: None,
-        }
+        Self { kind, message: message.into(), code: 0, attribute: None, previous: None, raw: None, driver: None }
     }
 
     /// An error of `kind` whose message is bytes (PHP messages are: one can
@@ -333,28 +331,28 @@ impl Error {
     /// The same error with a string code: kept as [`Error::state`], and as
     /// the integer [`Error::string_code`] turns it into.
     pub fn with_string_code(mut self, code: &[u8]) -> Self {
-        self.state = Some(String::from_utf8_lossy(code).into_owned());
+        self.driver.get_or_insert_default().state = Some(String::from_utf8_lossy(code).into_owned());
         self.with_code(Self::string_code(code))
     }
 
     /// The string code the error was built with, such as a SQLSTATE
     /// (`$state`); `None` for an integer code.
     pub fn state(&self) -> Option<&str> {
-        self.state.as_deref()
+        self.driver.as_ref().and_then(|d| d.state.as_deref())
     }
 
     /// The same error with the driver's own error code
     /// (`PDOException::$errorInfo[1]`), which [`crate::connection::is_lost`]
     /// reads.
     pub fn with_driver_code(mut self, code: i64) -> Self {
-        self.driver_code = Some(code);
+        self.driver.get_or_insert_default().code = Some(code);
         self
     }
 
     /// The driver's own error code (`$errorInfo[1]`), when the error carries
     /// one.
     pub fn driver_code(&self) -> Option<i64> {
-        self.driver_code
+        self.driver.as_ref().and_then(|d| d.code)
     }
 
     /// The same error wrapping `previous`.

@@ -170,6 +170,7 @@ async fn test_a_write_in_a_coroutine_started_inside_an_override_stays_in_that_co
 }
 
 #[tokio::test]
+#[allow(clippy::async_yields_async)] // the override returns the child task it started
 async fn test_a_write_in_a_coroutine_started_inside_an_override_ends_with_that_override() {
     let value = value();
     let (written_tx, written_rx) = oneshot::channel();

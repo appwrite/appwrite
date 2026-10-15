@@ -108,9 +108,10 @@ fn test_from_document_reads_numeric_string_lengths_and_ttl() {
         &document! {"$id" => "by_name", "type" => "key", "attributes" => list!["name"], "lengths" => list!["32"]},
     )
     .unwrap();
-    let ttl =
-        Index::from_document(&document! {"$id" => "expiry", "type" => "ttl", "attributes" => list!["expiresAt"], "ttl" => "60"})
-            .unwrap();
+    let ttl = Index::from_document(
+        &document! {"$id" => "expiry", "type" => "ttl", "attributes" => list!["expiresAt"], "ttl" => "60"},
+    )
+    .unwrap();
     assert_eq!(key.lengths, [Some(32)]);
     assert_eq!(ttl.ttl, Some(60));
 }
@@ -130,7 +131,8 @@ fn test_from_document_reads_a_seven_x_junction_index_by_its_id() {
     .unwrap();
     assert_eq!(index.key, "_index_tags");
     let index =
-        Index::from_document(&document! {"$id" => "x", "key" => "y", "type" => "key", "attributes" => list!["a"]}).unwrap();
+        Index::from_document(&document! {"$id" => "x", "key" => "y", "type" => "key", "attributes" => list!["a"]})
+            .unwrap();
     assert_eq!(index.key, "y");
 }
 
@@ -182,7 +184,8 @@ fn test_from_document_rejects_a_ttl_index_without_a_ttl() {
 #[test]
 fn test_from_array_prefers_the_key_over_the_id() {
     let index =
-        Index::from_array(&arr! {"$id" => "old", "key" => "new", "type" => "key", "attributes" => list!["age"]}).unwrap();
+        Index::from_array(&arr! {"$id" => "old", "key" => "new", "type" => "key", "attributes" => list!["age"]})
+            .unwrap();
     assert_eq!(index.key, "new");
 }
 
@@ -201,15 +204,17 @@ fn test_hydration_rejects_malformed_stored_values() {
         (arr! {"key" => 5, "type" => "key"}, "Index key must be a string"),
         (arr! {"key" => "k", "type" => "key", "attributes" => list![1]}, "Index attributes must be strings"),
         (arr! {"key" => "k", "type" => "key", "lengths" => list!["wide"]}, "Index lengths must be integers or null"),
-        (arr! {"key" => "k", "type" => "key", "orders" => list![1]}, "Index orders must be OrderDirection cases or null"),
+        (
+            arr! {"key" => "k", "type" => "key", "orders" => list![1]},
+            "Index orders must be OrderDirection cases or null",
+        ),
     ] {
         assert_error(Index::from_array(&data), Kind::Index, message);
     }
     // Lengths and orders a type does not store are not checked.
-    let index = Index::from_array(
-        &arr! {"key" => "k", "type" => "fulltext", "lengths" => list!["wide"], "orders" => list![1]},
-    )
-    .unwrap();
+    let index =
+        Index::from_array(&arr! {"key" => "k", "type" => "fulltext", "lengths" => list!["wide"], "orders" => list![1]})
+            .unwrap();
     assert!(index.lengths.is_empty() && index.orders.is_empty());
 }
 
@@ -324,7 +329,10 @@ fn persisted_shapes() -> Vec<(Index, Array)> {
         ),
         (
             Index::unique("by_email", ["email"], vec![Some(128)], vec![None]).unwrap(),
-            with(base("by_email", "unique", list!["email"]), vec![("lengths", v(list![128])), ("orders", v(list![()]))]),
+            with(
+                base("by_email", "unique", list!["email"]),
+                vec![("lengths", v(list![128])), ("orders", v(list![()]))],
+            ),
         ),
         (Index::fulltext("search", ["title", "body"]), base("search", "fulltext", list!["title", "body"])),
         (

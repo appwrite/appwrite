@@ -280,10 +280,7 @@ fn test_get_array_copy_converts_documents_nested_in_nested_documents() {
     let document = document! {
         "child" => document! {"grandchildren" => list![document! {d::ID => "grandchild"}]},
     };
-    assert_eq!(
-        document.array_copy(),
-        arr! {"child" => arr! {"grandchildren" => list![arr! {d::ID => "grandchild"}]}}
-    );
+    assert_eq!(document.array_copy(), arr! {"child" => arr! {"grandchildren" => list![arr! {d::ID => "grandchild"}]}});
 }
 
 #[test]
@@ -439,7 +436,10 @@ fn test_drops_non_string_permissions_of_nested_documents() {
     let author = document.document("author").unwrap();
     assert_eq!(author.permissions().unwrap(), vec![Permission::read(&Role::any())]);
     assert_eq!(author.document("publisher").unwrap().permissions().unwrap(), vec![Permission::read(&Role::users(""))]);
-    assert_eq!(document.documents("comments").unwrap()[0].permissions().unwrap(), vec![Permission::delete(&Role::any())]);
+    assert_eq!(
+        document.documents("comments").unwrap()[0].permissions().unwrap(),
+        vec![Permission::delete(&Role::any())]
+    );
 }
 
 #[test]

@@ -100,7 +100,10 @@ fn relationships() -> Vec<Relationship> {
             .two_way(true)
             .two_way_key("post")
             .on_delete(RelationshipDeleteAction::Cascade),
-        Relationship::many_to_one("users").key("author").two_way_key("posts").on_delete(RelationshipDeleteAction::SetNull),
+        Relationship::many_to_one("users")
+            .key("author")
+            .two_way_key("posts")
+            .on_delete(RelationshipDeleteAction::SetNull),
         Relationship::many_to_many("tags").key("tags").two_way(true).two_way_key("posts"),
     ]
 }
@@ -140,7 +143,8 @@ fn test_seven_x_stored_options_hydrate() {
 
 #[test]
 fn test_side_is_ignored() {
-    let data = arr! {"relatedCollection" => "users", "relationType" => "manyToOne", "key" => "author", "twoWayKey" => "posts"};
+    let data =
+        arr! {"relatedCollection" => "users", "relationType" => "manyToOne", "key" => "author", "twoWayKey" => "posts"};
     let mut with_side = data.clone();
     with_side.set(ArrayKey::from(relationship::SIDE), Value::from(RelationshipSide::Child.as_str()));
     assert_same_relationship(&Relationship::from_array(&data).unwrap(), &Relationship::from_array(&with_side).unwrap());
@@ -355,7 +359,8 @@ fn test_apply_changes_every_field() {
 
 #[test]
 fn test_false_two_way_is_a_change() {
-    let u = Relationship::many_to_many("tags").two_way(true).apply(&Update { two_way: Some(false), ..Default::default() });
+    let u =
+        Relationship::many_to_many("tags").two_way(true).apply(&Update { two_way: Some(false), ..Default::default() });
     assert!(!u.two_way);
 }
 

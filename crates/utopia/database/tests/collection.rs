@@ -715,7 +715,8 @@ fn test_the_metadata_collection_is_defined() {
 
 #[test]
 fn test_the_metadata_attributes_keep_their_stored_shape() {
-    let shapes: Vec<(String, ColumnType, Option<i64>, bool, Vec<String>)> = collection_definition()
+    type Shape = (String, ColumnType, Option<i64>, bool, Vec<String>);
+    let shapes: Vec<Shape> = collection_definition()
         .attributes()
         .unwrap()
         .iter()

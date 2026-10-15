@@ -95,9 +95,8 @@ fn current() -> Frames {
 /// # }
 /// ```
 pub fn inherit<F: Future>(future: F) -> impl Future<Output = F::Output> {
-    let frames = current().map(|outer| {
-        Arc::new(Frame { link: Link::Fork { writes: Mutex::new(Vec::new()) }, outer: Some(outer) })
-    });
+    let frames = current()
+        .map(|outer| Arc::new(Frame { link: Link::Fork { writes: Mutex::new(Vec::new()) }, outer: Some(outer) }));
     FRAMES.scope(frames, future)
 }
 

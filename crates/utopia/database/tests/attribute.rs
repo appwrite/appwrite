@@ -126,7 +126,10 @@ fn test_resolved_size_uses_the_engine_maximum_for_sizeless_text() {
 fn test_resolved_size_uses_the_declared_size() {
     assert_eq!(Attribute::text("a").size(Some(500)).resolved_size(), 500);
     assert_eq!(Attribute::varchar("a", 64).resolved_size(), 64);
-    assert_eq!(Attribute::from_array(&arr! {"key" => "a", "type" => "integer", "size" => 8}).unwrap().resolved_size(), 8);
+    assert_eq!(
+        Attribute::from_array(&arr! {"key" => "a", "type" => "integer", "size" => 8}).unwrap().resolved_size(),
+        8
+    );
 }
 
 #[test]
@@ -171,7 +174,9 @@ fn test_with_filters_keeps_the_type_filter() {
     assert_eq!(Attribute::datetime("a").with_filters(none).filters, strings(&["datetime"]));
     assert_eq!(Attribute::vector("a", 3).with_filters(["encrypt"]).filters, strings(&["vector", "encrypt"]));
     assert_eq!(
-        Attribute::object("a").with_filters(["encrypt".into(), Filter::Object.into()] as [attribute_filter::Name; 2]).filters,
+        Attribute::object("a")
+            .with_filters(["encrypt".into(), Filter::Object.into()] as [attribute_filter::Name; 2])
+            .filters,
         strings(&["encrypt", "object"])
     );
 }
@@ -182,7 +187,9 @@ fn test_is_relationship_reads_the_raw_stored_type() {
     assert!(!Attribute::is_relationship_document(&document! {"type" => "string"}));
     assert!(!Attribute::is_relationship_document(&document! {"type" => "bigint"}));
     assert!(!Attribute::is_relationship_document(&Document::empty()));
-    assert!(!Attribute::is_relationship_document(&Attribute::string("relationship", LENGTH_KEY).to_document().unwrap()));
+    assert!(!Attribute::is_relationship_document(
+        &Attribute::string("relationship", LENGTH_KEY).to_document().unwrap()
+    ));
 }
 
 #[test]
@@ -735,7 +742,10 @@ fn test_format_options_may_arrive_as_document() {
 
 #[test]
 fn test_stored_size_hydrates_and_numeric_strings_are_accepted() {
-    assert_eq!(Attribute::from_array(&arr! {"key" => "count", "type" => "integer", "size" => 8}).unwrap().size, Some(8));
+    assert_eq!(
+        Attribute::from_array(&arr! {"key" => "count", "type" => "integer", "size" => 8}).unwrap().size,
+        Some(8)
+    );
     assert_eq!(
         Attribute::from_array(&arr! {"key" => "count", "type" => "integer", "size" => "8"}).unwrap().integer_width(),
         Some(IntegerWidth::Bits64)
@@ -976,8 +986,12 @@ fn legacy_shapes() -> Vec<(&'static str, Array, Attribute)> {
                     "side" => "child",
                 },
             },
-            Attribute::relationship("field", Relationship::many_to_one("users").two_way_key("posts"), RelationshipSide::Child)
-                .unwrap(),
+            Attribute::relationship(
+                "field",
+                Relationship::many_to_one("users").two_way_key("posts"),
+                RelationshipSide::Child,
+            )
+            .unwrap(),
         ),
     ]
 }
@@ -1011,8 +1025,10 @@ fn test_hydration_keeps_a_type_filter_in_its_stored_position() {
 
 #[test]
 fn test_hydration_prepends_a_missing_type_filter_ahead_of_custom_filters() {
-    let a = Attribute::from_document(&Document::new(seven_four(arr! {"type" => "point", "filters" => list!["custom"]})).unwrap())
-        .unwrap();
+    let a = Attribute::from_document(
+        &Document::new(seven_four(arr! {"type" => "point", "filters" => list!["custom"]})).unwrap(),
+    )
+    .unwrap();
     assert_eq!(a.filters, strings(&["point", "custom"]));
 }
 
@@ -1100,7 +1116,9 @@ fn test_apply_leaves_the_original_untouched() {
 
 #[test]
 fn test_null_default_clears_the_default() {
-    let a = Attribute::integer("count").default(5).apply(&Update { default: Patch::Set(Value::Null), ..Default::default() });
+    let a = Attribute::integer("count")
+        .default(5)
+        .apply(&Update { default: Patch::Set(Value::Null), ..Default::default() });
     assert_eq!(a.unwrap().default, Value::Null);
 }
 
@@ -1137,7 +1155,8 @@ fn test_empty_filters_clear_the_filters() {
 fn test_clearing_filters_keeps_the_type_filter() {
     let a = Attribute::datetime("at").apply(&Update { filters: Some(vec![]), ..Default::default() }).unwrap();
     assert_eq!(a.filters, strings(&["datetime"]));
-    let a = Attribute::point("at").apply(&Update { filters: Some(vec!["encrypt".into()]), ..Default::default() }).unwrap();
+    let a =
+        Attribute::point("at").apply(&Update { filters: Some(vec!["encrypt".into()]), ..Default::default() }).unwrap();
     assert_eq!(a.filters, strings(&["point", "encrypt"]));
 }
 
@@ -1191,7 +1210,8 @@ fn test_signed_and_array_change() {
 
 #[test]
 fn test_type_changes_to_another_attribute_type() {
-    let a = Attribute::string("body", 100).apply(&Update { kind: Some(ColumnType::Text), ..Default::default() }).unwrap();
+    let a =
+        Attribute::string("body", 100).apply(&Update { kind: Some(ColumnType::Text), ..Default::default() }).unwrap();
     assert_eq!(a.kind, ColumnType::Text);
     assert_eq!(stored_attr(&a, "type"), v("text"));
     assert_eq!(a.size, Some(100));
@@ -1221,7 +1241,11 @@ fn test_type_change_produces_what_the_target_factory_produces() {
         (&string, ColumnType::Object, Attribute::object("field")),
         (&string, ColumnType::Vector, Attribute::vector("field", 64)),
         (&integer, ColumnType::String, Attribute::string("field", 8).array(true)),
-        (&Attribute::integer("field").signed(false), ColumnType::BigInteger, Attribute::big_integer("field").signed(false)),
+        (
+            &Attribute::integer("field").signed(false),
+            ColumnType::BigInteger,
+            Attribute::big_integer("field").signed(false),
+        ),
         (&integer, ColumnType::Double, Attribute::double("field").signed(false).array(true)),
         (&integer, ColumnType::Boolean, Attribute::boolean("field").array(true)),
         (&integer, ColumnType::Id, Attribute::id("field").array(true)),
@@ -1267,7 +1291,8 @@ fn test_updates_cannot_break_the_type_invariants() {
     assert_eq!(up(Attribute::boolean("flag"), Update { size: Some(4), ..Default::default() }).size, None);
     assert_eq!(up(Attribute::integer("count"), Update { size: Some(20), ..Default::default() }).size, Some(8));
     assert_eq!(
-        up(Attribute::integer("count").width(IntegerWidth::Bits64), Update { size: Some(4), ..Default::default() }).size,
+        up(Attribute::integer("count").width(IntegerWidth::Bits64), Update { size: Some(4), ..Default::default() })
+            .size,
         None
     );
 }
@@ -1284,7 +1309,8 @@ fn test_type_outside_the_attribute_types_is_rejected() {
 #[test]
 fn test_type_cannot_become_relationship() {
     assert_error(
-        Attribute::string("author", LENGTH_KEY).apply(&Update { kind: Some(ColumnType::Relationship), ..Default::default() }),
+        Attribute::string("author", LENGTH_KEY)
+            .apply(&Update { kind: Some(ColumnType::Relationship), ..Default::default() }),
         Kind::Structure,
         "A relationship attribute cannot change type; use updateRelationship()",
     );
