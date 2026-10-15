@@ -35,6 +35,7 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
+use Utopia\Query\Schema\ColumnType;
 use Utopia\Validator\Boolean;
 
 class Update extends Action
@@ -527,6 +528,17 @@ class Update extends Action
 
                 $queueForEvents->setEvent($eventString);
 
+                // The metadata findOne above skips attribute subqueries. Use the
+                // collection loaded via getCollection() during commit, which
+                // already has the schema needed to match update event payloads.
+                $schema = $collections[$collectionId] ?? $collection;
+                $relationships = [];
+                foreach ($schema->getAttribute('attributes', []) as $attribute) {
+                    if (($attribute['type'] ?? null) === ColumnType::Relationship->value) {
+                        $relationships[] = $attribute['key'];
+                    }
+                }
+
                 // Get project and function/webhook events (cached)
                 $project = $queueForEvents->getProject();
                 $functionsEvents = $eventProcessor->getFunctionsEvents($project, $dbForProject);
@@ -546,7 +558,7 @@ class Update extends Action
                     $queueForEvents
                         ->setParam('documentId', $doc->getId())
                         ->setParam('rowId', $doc->getId())
-                        ->setPayload($payload);
+                        ->setPayload($payload, sensitive: $relationships);
 
                     // Generate events for this document operation
                     $generatedEvents = Event::generateEvents(

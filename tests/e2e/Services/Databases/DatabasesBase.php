@@ -5,13 +5,17 @@ namespace Tests\E2E\Services\Databases;
 use Appwrite\Extend\Exception;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\SchemaPolling;
+use Tests\E2E\Services\Databases\Queries\AggregateShape;
+use Tests\E2E\Services\Databases\Queries\DottedPaths;
 use Tests\E2E\Services\Databases\Queries\JoinCombos;
 use Tests\E2E\Services\Databases\Queries\JoinOperators;
 use Tests\E2E\Services\Databases\Queries\JoinPermissions;
 use Tests\E2E\Services\Databases\Queries\JoinProjection;
 use Tests\E2E\Services\Databases\Queries\JoinTypes;
 use Tests\E2E\Services\Databases\Queries\RejectedMethods;
+use Tests\E2E\Services\Databases\Queries\RejectedValues;
 use Tests\E2E\Services\Databases\Queries\StatisticalAggregates;
+use Tests\E2E\Services\Databases\Queries\Totals;
 use Tests\E2E\Traits\DatabasesUrlHelpers;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -31,6 +35,7 @@ trait DatabasesBase
 {
     use DatabasesUrlHelpers;
     use SchemaPolling;
+    use AggregateShape;
     use JoinTypes;
     use JoinOperators;
     use JoinPermissions;
@@ -38,6 +43,9 @@ trait DatabasesBase
     use JoinProjection;
     use StatisticalAggregates;
     use RejectedMethods;
+    use RejectedValues;
+    use Totals;
+    use DottedPaths;
 
     /**
      * Static caches for test data - keyed by project ID to support parallel test runs
@@ -5077,6 +5085,28 @@ trait DatabasesBase
         );
     }
 
+    public function testListDocumentsTotalAcceptsBooleanStrings(): void
+    {
+        $data = $this->setupDocuments();
+        $documentIds = $data['documentIds'];
+
+        foreach (['false' => 0, '0' => 0, 'true' => \count($documentIds), '1' => \count($documentIds)] as $total => $expected) {
+            $documents = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($data['databaseId'], $data['moviesId']), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'queries' => [
+                    Query::equal('$id', $documentIds)->toString(),
+                ],
+                'total' => (string) $total,
+            ]);
+
+            $this->assertSame(200, $documents['headers']['status-code']);
+            $this->assertCount(\count($documentIds), $documents['body'][$this->getRecordResource()]);
+            $this->assertSame($expected, $documents['body']['total'], 'total=' . $total . ' must yield a total of ' . $expected);
+        }
+    }
+
     public function testListDocumentsWithCache(): void
     {
         if (!$this->getSupportForAttributes()) {
@@ -5956,6 +5986,28 @@ trait DatabasesBase
             [$postIds['Post 3'], $postIds['Post 4']],
             \array_column($page['body'][$this->getRecordResource()], '$id'),
         );
+    }
+
+    public function testListDocumentsRejectsOrderByRelationshipWithoutColumn(): void
+    {
+        if (!$this->getSupportForRelationships()) {
+            $this->markTestSkipped('Relationships are not supported by this database adapter');
+        }
+
+        $data = $this->setupDocuments();
+
+        foreach ([Query::orderAsc('starringActors'), Query::orderDesc('starringActors')] as $order) {
+            $documents = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($data['databaseId'], $data['moviesId']), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'queries' => [$order->toString()],
+            ]);
+
+            $this->assertSame(400, $documents['headers']['status-code'], \json_encode($documents['body']));
+            $this->assertSame(Exception::GENERAL_QUERY_INVALID, $documents['body']['type']);
+            $this->assertStringContainsString('starringActors', $documents['body']['message']);
+        }
     }
 
     public function testListDocumentsLimitAndOffset(): void
@@ -14801,6 +14853,7 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(200, $result['headers']['status-code']);
+        $this->assertIsInt($result['body'][$this->getRecordResource()][0]['total']);
         $this->assertGreaterThanOrEqual(3, $result['body'][$this->getRecordResource()][0]['total']);
     }
 
@@ -14824,6 +14877,7 @@ trait DatabasesBase
 
         $this->assertEquals(200, $result['headers']['status-code']);
         $this->assertArrayHasKey('totalYears', $result['body'][$this->getRecordResource()][0]);
+        $this->assertIsInt($result['body'][$this->getRecordResource()][0]['totalYears'], 'A sum over an integer attribute is an integer');
         $this->assertGreaterThan(0, $result['body'][$this->getRecordResource()][0]['totalYears']);
     }
 
@@ -14847,6 +14901,7 @@ trait DatabasesBase
 
         $this->assertEquals(200, $result['headers']['status-code']);
         $this->assertArrayHasKey('avgYear', $result['body'][$this->getRecordResource()][0]);
+        $this->assertIsFloat($result['body'][$this->getRecordResource()][0]['avgYear']);
         $this->assertGreaterThan(1900, $result['body'][$this->getRecordResource()][0]['avgYear']);
     }
 
@@ -14872,8 +14927,8 @@ trait DatabasesBase
 
         $this->assertEquals(200, $result['headers']['status-code']);
         $row = $result['body'][$this->getRecordResource()][0];
-        $this->assertEquals(1944, $row['earliest']);
-        $this->assertEquals(2019, $row['latest']);
+        $this->assertSame(1944, $row['earliest']);
+        $this->assertSame(2019, $row['latest']);
     }
 
     public function testGroupBy(): void
@@ -14902,7 +14957,8 @@ trait DatabasesBase
         foreach ($rows as $row) {
             $this->assertArrayHasKey('title', $row);
             $this->assertArrayHasKey('total', $row);
-            $this->assertGreaterThanOrEqual(1, (int) $row['total']);
+            $this->assertIsInt($row['total']);
+            $this->assertGreaterThanOrEqual(1, $row['total']);
         }
     }
 
@@ -14932,6 +14988,7 @@ trait DatabasesBase
 
         foreach ($rows as $row) {
             $this->assertArrayHasKey('total', $row);
+            $this->assertIsInt($row['total']);
             $this->assertGreaterThanOrEqual(1, $row['total']);
         }
     }
@@ -15069,6 +15126,7 @@ trait DatabasesBase
         $this->assertEquals(200, $result['headers']['status-code']);
         $row = $result['body'][$this->getRecordResource()][0];
         $this->assertArrayHasKey('uniqueYears', $row);
+        $this->assertIsInt($row['uniqueYears']);
         $this->assertGreaterThanOrEqual(2, $row['uniqueYears']);
     }
 
@@ -15094,7 +15152,8 @@ trait DatabasesBase
         $this->assertEquals(200, $result['headers']['status-code']);
         $row = $result['body'][$this->getRecordResource()][0];
         $this->assertArrayHasKey('total', $row);
-        $this->assertGreaterThanOrEqual(2, (int) $row['total']);
+        $this->assertIsInt($row['total']);
+        $this->assertGreaterThanOrEqual(2, $row['total']);
     }
 
     /**
@@ -15307,9 +15366,9 @@ trait DatabasesBase
         $rows = $result['body'][$this->getRecordResource()];
         $this->assertCount(1, $rows);
         if ($this->getSide() === 'client') {
-            $this->assertEquals(100, $rows[0]['totalPaid']);
+            $this->assertSame(100, $rows[0]['totalPaid']);
         } else {
-            $this->assertEquals(10099, $rows[0]['totalPaid']);
+            $this->assertSame(10099, $rows[0]['totalPaid']);
         }
     }
 

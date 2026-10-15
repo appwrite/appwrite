@@ -37,7 +37,7 @@ What personal data we collect, why we collect it, and how it is used
 
 |   | Product development purposes | Marketing purposes |
 | --- | --- | --- |
-| Specific personal data we collect | - Full name<br>- Email address<br>- Phone number<br>- IP address<br>- Country<br>- User-agent (info about the browser)<br>- Phone number<br>- Usage details | - Full name<br>- Email address |
+| Specific personal data we collect | - Full name<br>- Email address<br>- Phone number<br>- IP address<br>- Country<br>- User-agent (info about the browser)<br>- Usage details | - Full name<br>- Email address |
 | The purpose of data collection | - To be able to create an account<br>- To be able to log in<br>- To be able to enjoy features available to registered users<br>- To collect Informative reason for the administrator<br>- To identify reported problems during project development<br>- To be able to log in, using two factor authentication via text message<br>- To be able to monitor errors | - To send you marketing communications and product updates |
 | Legal basis (GDPR only, if applicable) | - Processing is necessary for the performance of a contract to which the data subject is party or in order to take steps at the request of the data subject prior to entering into a contract<br>- Legitimate interest (e.g. to allow you to create an account and log-in) | - Consent |
 | Third parties with whom we share your personal data | - Resend<br>- MSG91 <br>- Activetrail (Israel only)<br>- SMS.to<br>- Sentry.io | - SendGrid |
@@ -117,14 +117,41 @@ Finally, please note that some of the abovementioned Personal Data will be used 
 
 
 
+## Google user data
+
+This section describes how we handle data we receive from your Google account when you choose to sign in to the Appwrite Console with Google. It applies in addition to the rest of this Privacy Policy, and in case of a conflict regarding Google user data, this section prevails.
+
+### What Google data we access
+When you sign in with Google, we receive from your Google account your name, email address, email verification status, profile picture, and your Google account identifier. We request only the `email`, `profile`, and `openid` OAuth scopes. We do not request access to any other Google data, such as your Gmail, Drive, Calendar, or contacts.
+
+### Google sign-in tokens
+When you sign in with Google, Google also gives us an access token and a refresh token. We store both in encrypted form with your account and your Console session. We use them only to keep your Console session active and to refresh your profile picture from Google. Tokens stored with a session are deleted when you sign out of that session, and tokens stored with your account are deleted when you delete your account. You can also revoke them at any time at [myaccount.google.com/permissions](https://myaccount.google.com/permissions), after which they stop working.
+
+### How we use it
+We use this information to create and secure your Appwrite account, to sign you in to the Console, and to display your name and profile picture in the Console.
+
+### How we share it
+We share Google user data only with the service providers that host and operate Appwrite on our behalf under contract, and where we are required to do so by law. We do not sell Google user data.
+
+### How we protect it
+Google user data is transmitted over encrypted connections and is protected by the technical and organizational measures described in the Security section above. Access is limited to personnel who need it to operate the service.
+
+### How long we keep it and how to delete it
+We keep Google user data for as long as your account exists. You can delete your account at any time from the [account settings page](https://cloud.appwrite.io/console/account) or by emailing us at privacy@appwrite.io, after which the data is deleted. You can also revoke Appwrite's access to your Google account at any time at [myaccount.google.com/permissions](https://myaccount.google.com/permissions).
+
+### Limited Use
+Appwrite's use and transfer to any other app of information received from Google APIs will adhere to the [Google API Services User Data Policy](https://developers.google.com/terms/api-services-user-data-policy), including the Limited Use requirements. We do not use Google user data to develop, improve, or train generalized artificial intelligence or machine learning models.
+
+
+
 ## Protection and retention
 How we protect and retain your personal data
 
-{% count_title title="Security" / %}
+### Security
 We have implemented appropriate technical, organizational and security measures designed to protect your Personal Data. However, please note that we cannot guarantee that the information will not be compromised as a result of unauthorized penetration to our servers. As the security of information depends in part on the security of the computer, device or network you use to communicate with us and the security you use to protect your user IDs and passwords, please make sure to take appropriate measures to protect this information.
 
-{% count_title title="Retention of your personal data" / %}
-Your Personal Data will be stored until we delete the record and we proactively delete it or you send a valid deletion request, please note that in some circumstances we may store your Personal Data for longer periods of time, for example (i) where we are required to do so in accordance with legal, regulatory, tax or accounting requirements, or (ii) for us to have an accurate record of your dealings with us in the event of any complaints or challenges, or (iii) if we reasonably believe there is a prospect of litigation relating to your Personal Data or dealings. Regaioention of cookies, you can read more in our cookie policy [/cookies](/cookies).
+### Retention of your personal data
+Your Personal Data will be stored until we delete the record and we proactively delete it or you send a valid deletion request, please note that in some circumstances we may store your Personal Data for longer periods of time, for example (i) where we are required to do so in accordance with legal, regulatory, tax or accounting requirements, or (ii) for us to have an accurate record of your dealings with us in the event of any complaints or challenges, or (iii) if we reasonably believe there is a prospect of litigation relating to your Personal Data or dealings. Regarding retention of cookies, you can read more in our cookie policy [/cookies](/cookies).
 
 
 
@@ -150,7 +177,7 @@ Where you have provided your consent to us sharing or transferring your Personal
 
 ## Transfers of personal data
 
-{% count_title title="External transfers" / %}
+### External transfers
 Where we transfer your Personal Data outside of EU/EEA (for example to third parties who provide us with services), we will generally obtain contractual commitments from them to protect your Personal Data. When Appwrite engages in such transfers of Personal Data, it relies on i) Adequacy Decisions as adopted by European Commission on the basis of Article 45 of Regulation (EU) 2016/679 (GDPR) (for example, when we access from Israel), or ii) Standard Contractual Clauses issued by the European Commission. Appwrite also continually monitors the circumstances surrounding such transfers in order to ensure that these maintain, in practice, a level of protection that is essentially equivalent to the one guaranteed by the GDPR.
 
 
@@ -158,7 +185,7 @@ Where we transfer your Personal Data outside of EU/EEA (for example to third par
 
 ## How to delete your account
 
-{% count_title title="Rights" / %}
+### Rights
 The following rights (which may be subject to certain exemptions or derogations) shall apply to certain individuals (some of which only apply to individuals protected by the GDPR)
 
 - You have a right to access Personal Data held about you. Your right of access may normally be exercised free of charge, however we reserve the right to charge an appropriate administrative fee where permitted by applicable law;
@@ -171,18 +198,14 @@ The following rights (which may be subject to certain exemptions or derogations)
 - You also have a right to request certain details of the basis on which your Personal Data is transferred outside the European Economic Area, but data transfer agreements and/or other details may need to be partially redacted for reasons of commercial confidentiality;
 - You have a right to lodge a complaint with your local data protection supervisory authority (i.e., your place of habitual residence, place or work or place of alleged infringement) at any time or before the relevant institutions in your place of residence. We ask that you please attempt to resolve any issues with us before you contact your local supervisory authority and/or relevant institution.
 
-{% count_title  / %}
-
 You can exercise your rights by contacting us at privacy@appwrite.io. You may use an authorized agent to submit a request on your behalf if you provide the authorized agent written permission signed by you. To protect your privacy, we may take steps to verify your identity before fulfilling your request. Subject to legal and other permissible considerations, we will make every reasonable effort to honor your request promptly in accordance with applicable law or inform you if we require further information in order to fulfill your request. When processing your request, we may ask you for additional information to confirm or verify your identity and for security purposes, before processing and/or honoring your request. We reserve the right to charge a fee where permitted by law, for instance, if your request is manifestly unfounded or excessive. In the event that your request would adversely affect the rights and freedoms of others (for example, would impact the duty of confidentiality we owe to others) or if we are legally entitled to deal with your request in a different way than initially requested, we will address your request to the maximum extent possible, all in accordance with applicable law. 
 
-{% count_title  / %}
 Deleting your Cloud account: Should you ever decide to delete your Cloud account, you may do so in the Console on the [account settings page](https://cloud.appwrite.io/console/account). If you terminate your account, any association between your account and Personal Data we store will no longer be accessible through your account. However, given the nature of sharing on certain services, any public activity on your account prior to deletion will remain stored on our servers and will remain accessible to the public. 
 
 
 
 ## Use by children
 We do not offer our products or services for use by children and, therefore, we do not knowingly collect Personal Data from, and/or about children under the age of eighteen (18). If you are under the age of eighteen (18), do not provide any Personal Data to us without involvement of a parent or a guardian. For the purposes of the GDPR, we do not intend to offer information society services directly to children. In the event that we become aware that you provide Personal Data in violation of applicable privacy laws, we reserve the right to delete it. If you believe that we might have any such information, please contact us at privacy@appwrite.io. 
-{%/count_section %}
 
 
 ## Third party interaction
@@ -199,8 +222,6 @@ We use log files. We use such information to analyze trends, administer the Webs
 
 
 ## Analytic tools
-
-We use log files. We use such information to analyze trends, administer the Website, track users' movement around the Website, and gather demographic information.
 
 - **Sentry** - Sentry is a monitoring software and a performance monitoring software. Sentry helps diagnose, fix, and optimize the performance of the Website. Sentry's ability to use and share information collected by Sentry is regulated by their terms of service, available at [Sentry Terms of Service](https://sentry.io/terms/), and their Privacy Policy available at [Sentry Privacy Policy](https://sentry.io/privacy/).
 - **Mixpanel** - Mixpanel is a website that collects information about use of our console. It collects information such as how often users visit this console, what pages they visit when they do so, but not PII. We use the information we get from Mixpanel to maintain and improve the Website and our products. Mixpanel’s ability to use and share information about your visits is restricted by the Terms of Service, available at [Mixpanel Terms of Use](https://mixpanel.com/legal/terms-of-use) and the Mixpanel Privacy Policy, available at [Mixpanel Privacy Policy](https://mixpanel.com/legal/privacy-policy).
@@ -225,7 +246,7 @@ We may provide paid products and/or services within the Service. In that case, w
 
 ## California Privacy Law
 
-{% count_title title="Our California Do Not Track Notice (Shine the Light)" / %}
+### Our California Do Not Track Notice (Shine the Light)
 Do Not Track (“DNT”) is a privacy preference that users can set in certain web browsers. Please note that we do not respond to or honor DNT signals or similar mechanisms transmitted by web browsers, but we may allow third parties, such as companies that provide us with analytics tools, to collect personally identifiable information about an individual consumer's online activities over time and across different web sites when a consumer uses the Services. 
 
 

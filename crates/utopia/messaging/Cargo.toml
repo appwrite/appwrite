@@ -37,4 +37,4 @@ tokio = { workspace = true, features = ["rt-multi-thread", "macros", "net", "tim
 
 [package.metadata.utopia]
 category = "integrations"
-php-sync = "52f82b9cd50d88a7f99d9914835135e36578544f"
+php-sync = "8f87278823e99568756f454f6d76a00da239b056"

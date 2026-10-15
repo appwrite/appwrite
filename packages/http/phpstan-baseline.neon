@@ -289,6 +289,12 @@ parameters:
 			path: src/Http.php
 
 		-
+			message: '#^Parameter \#1 \$param of method Utopia\\Http\\Http\:\:coerce\(\) expects array\<string, mixed\>, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Http.php
+
+		-
 			message: '#^Parameter \#1 \$param of method Utopia\\Http\\Http\:\:resolveValidator\(\) expects array\<string, mixed\>, mixed given\.$#'
 			identifier: argument.type
 			count: 1

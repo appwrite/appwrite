@@ -843,24 +843,6 @@ abstract class Base extends Action
     }
 
     /**
-     * @return array<int, string>
-     */
-    protected function completedParts(string $body): array
-    {
-        if (!\preg_match_all('/<Part>\s*<PartNumber>\s*(\d+)\s*<\/PartNumber>\s*<ETag>\s*([^<]+)\s*<\/ETag>\s*<\/Part>/i', $body, $matches, PREG_SET_ORDER)) {
-            return [];
-        }
-
-        $parts = [];
-        foreach ($matches as $match) {
-            $etag = \html_entity_decode($match[2], ENT_QUOTES | ENT_XML1, 'UTF-8');
-            $parts[(int) $match[1]] = \trim($etag, " \t\n\r\0\x0B\"");
-        }
-
-        return $parts;
-    }
-
-    /**
      * @return array{0: Document, 1: string|null}
      */
     protected function completeMultipartUpload(callable $locks, Database $dbForProject, Cache $cache, Document $project, Device $deviceForFiles, Document $bucket, array $upload, array $selected): array

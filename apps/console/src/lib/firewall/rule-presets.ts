@@ -131,7 +131,6 @@ export type FirewallRulePresetId =
   | 'rate-limit-api'
   | 'rate-limit-database-api'
   | 'deny-hosting-networks'
-  | 'deny-datacenter-networks'
 
 export type FirewallRulePresetUseCaseId =
   | 'otpAbuseProtection'
@@ -187,12 +186,12 @@ type CountryPresetDef = {
   scope: 'otp' | 'api'
 }
 
-export type PremiumNetworkDenyVariant = 'hosting' | 'datacenter'
+export type PremiumNetworkDenyVariant = 'hosting'
 
 type PremiumDenyPresetDef = {
   kind: 'premiumDeny'
   useCase: 'scrapingPrevention'
-  id: 'deny-hosting-networks' | 'deny-datacenter-networks'
+  id: 'deny-hosting-networks'
   label: string
   description: string
   requiresPremiumGeo: true
@@ -290,15 +289,6 @@ const API_FIREWALL_PRESETS: FirewallRulePresetDefinition[] = [
     description: 'Deny API requests from hosting provider networks.',
     requiresPremiumGeo: true,
     variant: 'hosting',
-  },
-  {
-    kind: 'premiumDeny',
-    useCase: 'scrapingPrevention',
-    id: 'deny-datacenter-networks',
-    label: 'Block datacenter connection traffic',
-    description: 'Deny API requests from datacenter connection types.',
-    requiresPremiumGeo: true,
-    variant: 'datacenter',
   },
 ]
 
@@ -540,13 +530,6 @@ const PREMIUM_NETWORK_DENY_CONDITIONS: Record<
   hosting: [
     attributeCondition({
       attribute: 'connectionUsageType',
-      operator: 'equal',
-      value: 'hosting',
-    }),
-  ],
-  datacenter: [
-    attributeCondition({
-      attribute: 'connectionType',
       operator: 'equal',
       value: 'hosting',
     }),

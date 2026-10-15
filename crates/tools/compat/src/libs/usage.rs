@@ -1,6 +1,6 @@
 //! Compat adapter for `usage`: maps `tests/compat/usage/spec.json` operations onto `utopia-usage`.
 
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicI64, Ordering};
 use std::sync::{Arc, Mutex};
 
 use async_trait::async_trait;
@@ -29,6 +29,7 @@ pub const OPS: &[&str] = &[
     "usage.adapter",
     "usage.health_check",
     "usage.setup",
+    "usage.migrate",
     "usage.add_batch",
     "usage.add_samples",
     "usage.sample_watermark",
@@ -98,11 +99,20 @@ pub const BENCHES: &[(&str, &str)] = &[
     ("clickhouse_total_batch", "Read routed totals of three metrics over a closed window (the daily rollup)"),
 ];
 
-/// The tests' recording adapter: every call recorded, addBatch() succeeding as told.
-#[derive(Debug, Default)]
+/// The tests' recording adapter: every call recorded, addBatch() succeeding
+/// as told, or failing once after `throw_after` more calls.
+#[derive(Debug)]
 pub struct Recording {
     succeed: AtomicBool,
+    /// Further addBatch() calls to accept before the next one fails once; -1 for never.
+    throw_after: AtomicI64,
     calls: Mutex<Vec<Json>>,
+}
+
+impl Default for Recording {
+    fn default() -> Self {
+        Recording { succeed: AtomicBool::new(false), throw_after: AtomicI64::new(-1), calls: Mutex::default() }
+    }
 }
 
 impl Recording {
@@ -132,6 +142,14 @@ impl Adapter for Recording {
     }
 
     async fn add_batch(&self, metrics: &[Entry], kind: Kind, batch_size: i64) -> utopia_usage::Result<bool> {
+        match self.throw_after.load(Ordering::Relaxed) {
+            0 => {
+                self.throw_after.store(-1, Ordering::Relaxed);
+                return Err(Error::exception("Insert failed"));
+            }
+            n if n > 0 => self.throw_after.store(n - 1, Ordering::Relaxed),
+            _ => {}
+        }
         let succeed = self.succeed.load(Ordering::Relaxed);
         self.record(json!({
             "method": "addBatch",
@@ -883,6 +901,7 @@ pub async fn call(op: &str, a: &Json, session: &mut Session) -> OpResult {
         "recording.new" => {
             let r = Recording::default();
             r.succeed.store(a.get("succeed").and_then(Json::as_bool).unwrap_or(true), Ordering::Relaxed);
+            r.throw_after.store(a.get("throw_after").and_then(Json::as_i64).unwrap_or(-1), Ordering::Relaxed);
             Outcome::ok(session.handle(AnyAdapter::Recording(Arc::new(r))))
         }
         "recording.succeed" | "recording.calls" => {
@@ -893,7 +912,17 @@ pub async fn call(op: &str, a: &Json, session: &mut Session) -> OpResult {
                 r.succeed.store(arg(a, "succeed")?.as_bool().unwrap_or(false), Ordering::Relaxed);
                 Outcome::ok(Json::Bool(true))
             } else {
-                let calls = std::mem::take(&mut *r.calls.lock().unwrap_or_else(|e| e.into_inner()));
+                let mut calls = std::mem::take(&mut *r.calls.lock().unwrap_or_else(|e| e.into_inner()));
+                // `tag`: each batch's metrics as the values of that tag.
+                if let Some(tag) = a.get("tag").and_then(Json::as_str) {
+                    for call in &mut calls {
+                        if let Some(Json::Array(metrics)) = call.get_mut("metrics") {
+                            for m in metrics.iter_mut() {
+                                *m = m.get("tags").and_then(|t| t.get(tag)).cloned().unwrap_or(Json::Null);
+                            }
+                        }
+                    }
+                }
                 Outcome::ok(Json::Array(calls))
             }
         }
@@ -905,6 +934,10 @@ pub async fn call(op: &str, a: &Json, session: &mut Session) -> OpResult {
         "usage.health_check" => Outcome::ok(encode(&Value::Array(usage(session, a)?.health_check().await))),
         "usage.setup" => {
             tri!(usage(session, a)?.setup().await);
+            Outcome::ok(Json::Null)
+        }
+        "usage.migrate" => {
+            tri!(usage(session, a)?.migrate().await);
             Outcome::ok(Json::Null)
         }
         "usage.add_samples" => {
@@ -1140,7 +1173,19 @@ pub async fn call(op: &str, a: &Json, session: &mut Session) -> OpResult {
             };
             let allow = a.get("allow_negative").and_then(Json::as_bool).unwrap_or(false);
             let acc = session.get_mut::<Accumulator>(arg(a, "accumulator")?)?;
-            tri!(acc.collect(&tenant, &metric, v, k, tags, time, allow));
+            // `repeat: n` collects n entries, tagged `resourceId` 0 to n - 1.
+            match a.get("repeat").and_then(Json::as_i64) {
+                Some(n) => {
+                    for i in 0..n {
+                        let mut tags = tags.clone();
+                        tags.set(ArrayKey::from("resourceId"), Value::from(i.to_string().as_str()));
+                        tri!(acc.collect(&tenant, &metric, v, k, tags, time.clone(), allow));
+                    }
+                }
+                None => {
+                    tri!(acc.collect(&tenant, &metric, v, k, tags, time, allow));
+                }
+            }
             Outcome::ok(Json::Bool(true))
         }
         "accumulator.flush" => {

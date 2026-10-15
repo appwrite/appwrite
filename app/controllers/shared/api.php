@@ -1049,11 +1049,6 @@ Http::shutdown()
 
         $auditUser = $auditContext->user;
         if (! empty($auditContext->resource) && ! $auditUser->isEmpty()) {
-            $pattern = $route->getLabel('audits.payload', false);
-            if (! empty($pattern)) {
-                $auditContext->payload = $responsePayload;
-            }
-
             $publisherForAudits->enqueue(AuditMessage::fromContext($auditContext));
         }
     });

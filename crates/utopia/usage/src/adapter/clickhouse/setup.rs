@@ -1,4 +1,4 @@
-//! Health, the schema (`setup()`), and the daily rollup's backfill.
+//! Health, the schema (`setup()`, `migrate()`), and the daily rollup's backfill.
 
 use php_std::ArrayKey;
 use utopia_query::schema::feature::MaterializedViews;
@@ -42,6 +42,37 @@ const GAUGE_PROJECTIONS: &[(&str, &[&str])] = &[
 ];
 
 const BASE_KEY_COLUMNS: &[&str] = &["id", "metric", "value", "time", "tenant"];
+
+/// The characters of a ClickHouse identifier in a skip index expression.
+const IDENTIFIER_CHARACTERS: &[u8] = b"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_";
+
+/// A skip index covering a drifted column, as `system.data_skipping_indices` reports it.
+struct SkipIndex {
+    name: String,
+    expression: String,
+    kind: String,
+    granularity: i64,
+}
+
+/// An existing column: its name, type and compression codec.
+struct Shape {
+    name: Vec<u8>,
+    ty: Vec<u8>,
+    codec: Vec<u8>,
+}
+
+/// The identifiers in a skip index expression: each maximal run of
+/// identifier characters.
+///
+/// PHP: `getIdentifiers()` (private).
+fn identifiers(expression: &[u8]) -> Vec<&[u8]> {
+    expression.split(|b| !IDENTIFIER_CHARACTERS.contains(b)).filter(|part| !part.is_empty()).collect()
+}
+
+/// `str_replace(' ', '', $codec)`.
+fn without_spaces(codec: &[u8]) -> Vec<u8> {
+    codec.iter().copied().filter(|b| *b != b' ').collect()
+}
 
 const LOW_CARDINALITY: &[&str] = &[
     "country",
@@ -125,6 +156,8 @@ pub(super) fn column_type(id: &str, kind: Kind) -> Result<String> {
 }
 
 /// The `CODEC(...)` of column `id`, or empty.
+///
+/// PHP: `getColumnCodec()` (private).
 fn codec(id: &str) -> &'static str {
     if id == "time" {
         "CODEC(Delta(4), LZ4)"
@@ -141,6 +174,19 @@ fn codec_parts(id: &str) -> Vec<&'static str> {
         return Vec::new();
     }
     codec["CODEC(".len()..codec.len() - 1].split(',').map(str::trim).collect()
+}
+
+/// Whether an existing column has the type and codec of attribute `id` of
+/// `kind`'s table. A column without a codec override keeps whatever codec
+/// it has.
+///
+/// PHP: `hasColumnShape()` (private).
+fn has_column_shape(shape: &Shape, id: &str, kind: Kind) -> Result<bool> {
+    if shape.ty != column_type(id, kind)?.as_bytes() {
+        return Ok(false);
+    }
+    let expected = codec(id);
+    Ok(expected.is_empty() || without_spaces(&shape.codec) == without_spaces(expected.as_bytes()))
 }
 
 /// `` `id` Type [CODEC(...)] ``.
@@ -198,16 +244,32 @@ impl<A: utopia_client::Adapter> ClickHouse<A> {
         result
     }
 
+    /// Migrates the schema, then applies (or strips) the retention TTL on
+    /// the events and daily tables.
+    ///
+    /// PHP: `setup()`.
     pub(super) async fn create(&self) -> Result<()> {
+        self.migrate_schema().await?;
+
         self.set_context("setup()");
+        self.apply_retention(&self.events_table()).await?;
+        self.apply_retention(&self.daily_table()).await
+    }
+
+    /// Creates the database, tables, daily materialized view and
+    /// projections, and adds the columns and skip indexes an existing table
+    /// lacks, converging drifted column types and codecs. A table created
+    /// here gets the retention TTL; an existing table keeps its own.
+    ///
+    /// PHP: `migrate()`.
+    pub(super) async fn migrate_schema(&self) -> Result<()> {
+        self.set_context("migrate()");
         self.query(&format!("CREATE DATABASE IF NOT EXISTS {}", escape(&self.config.database)), &[]).await?;
 
         self.create_table(&self.events_table(), Kind::Event, Kind::Event.indexes()).await?;
         self.ensure_dim_columns(&self.events_table(), Kind::Event).await?;
         self.ensure_indexes(&self.events_table(), Kind::Event.indexes()).await?;
-        self.apply_retention(&self.events_table()).await?;
         self.create_daily_table().await?;
-        self.apply_retention(&self.daily_table()).await?;
         self.create_daily_view().await?;
         self.create_table(&self.gauges_table(), Kind::Gauge, Kind::Gauge.indexes()).await?;
         self.ensure_dim_columns(&self.gauges_table(), Kind::Gauge).await?;
@@ -280,13 +342,28 @@ impl<A: utopia_client::Adapter> ClickHouse<A> {
         Ok(())
     }
 
+    /// The retention TTL on a table this adapter creates, when one is configured.
+    ///
+    /// PHP: `declareRetention()` (private).
+    fn declare_retention(&self, table: &mut utopia_query::schema::Table<Schema>) -> Result<()> {
+        if let Some(expression) = self.retention_expression() {
+            table.ttl(&expression)?;
+        }
+        Ok(())
+    }
+
+    /// `toDateTime(time) + INTERVAL <days> DAY`.
+    ///
+    /// PHP: `getRetentionExpression()` (private).
+    fn retention_expression(&self) -> Option<String> {
+        self.config.retention.map(|days| format!("toDateTime(time) + INTERVAL {days} DAY"))
+    }
+
     async fn apply_retention(&self, table: &str) -> Result<()> {
         let reference = self.reference(table);
-        if let Some(days) = self.config.retention {
+        if let Some(expression) = self.retention_expression() {
             self.query(
-                &format!(
-                    "ALTER TABLE {reference} MODIFY TTL toDateTime(time) + INTERVAL {days} DAY SETTINGS materialize_ttl_after_modify = 0"
-                ),
+                &format!("ALTER TABLE {reference} MODIFY TTL {expression} SETTINGS materialize_ttl_after_modify = 0"),
                 &[],
             )
             .await?;
@@ -314,19 +391,149 @@ impl<A: utopia_client::Adapter> ClickHouse<A> {
         Ok(())
     }
 
+    /// Adds the dimension columns a table lacks, and converges the type and
+    /// codec of any that predate the current definition. Converging a type
+    /// schedules a ClickHouse mutation that rewrites that column; a codec
+    /// change applies to parts written or merged afterwards.
+    ///
+    /// PHP: `ensureDimColumns()` (private).
     async fn ensure_dim_columns(&self, table: &str, kind: Kind) -> Result<()> {
+        let existing = self.column_shapes(table).await?;
         let mut adds = Vec::new();
+        let mut modifies = Vec::new();
+        let mut drifted = Vec::new();
         for column in kind.columns() {
             if BASE_KEY_COLUMNS.contains(column) {
                 continue;
             }
-            adds.push(format!("ADD COLUMN IF NOT EXISTS {} {}", escape(column), column_type(column, kind)?));
+            let definition = column_definition(column, kind)?;
+            match existing.iter().find(|shape| shape.name == column.as_bytes()) {
+                None => adds.push(format!("ADD COLUMN IF NOT EXISTS {definition}")),
+                Some(shape) if !has_column_shape(shape, column, kind)? => {
+                    modifies.push(format!("MODIFY COLUMN {definition}"));
+                    drifted.push(*column);
+                }
+                Some(_) => {}
+            }
         }
-        if adds.is_empty() {
+        if !adds.is_empty() {
+            self.query(&format!("ALTER TABLE {} {}", self.reference(table), adds.join(", ")), &[]).await?;
+        }
+        if modifies.is_empty() {
             return Ok(());
         }
-        self.query(&format!("ALTER TABLE {} {}", self.reference(table), adds.join(", ")), &[]).await?;
+        self.modify_columns(table, &drifted, &modifies).await
+    }
+
+    /// ClickHouse refuses to change a column a skip index covers, so the
+    /// covering indexes are dropped, the columns modified, and the same
+    /// indexes added and materialized again. An interrupted run leaves the
+    /// columns drifted or the indexes missing, and the next run picks up
+    /// from there.
+    ///
+    /// PHP: `modifyColumns()` (private).
+    async fn modify_columns(&self, table: &str, columns: &[&str], modifies: &[String]) -> Result<()> {
+        let reference = self.reference(table);
+        let indexes = self.skip_indexes_covering(table, columns).await?;
+        let alter = |clauses: Vec<String>| format!("ALTER TABLE {reference} {}", clauses.join(", "));
+
+        if !indexes.is_empty() {
+            let drops = indexes.iter().map(|i| format!("DROP INDEX IF EXISTS {}", escape(&i.name))).collect();
+            self.query(&alter(drops), &[]).await?;
+        }
+
+        self.query(&alter(modifies.to_vec()), &[]).await?;
+
+        if indexes.is_empty() {
+            return Ok(());
+        }
+
+        let adds = indexes
+            .iter()
+            .map(|i| {
+                format!(
+                    "ADD INDEX IF NOT EXISTS {} ({}) TYPE {} GRANULARITY {}",
+                    escape(&i.name),
+                    i.expression,
+                    i.kind,
+                    i.granularity
+                )
+            })
+            .collect();
+        self.query(&alter(adds), &[]).await?;
+        let materializes = indexes.iter().map(|i| format!("MATERIALIZE INDEX {}", escape(&i.name))).collect();
+        self.query(&alter(materializes), &[]).await?;
         Ok(())
+    }
+
+    /// The skip indexes of `table` whose expression names one of `columns`.
+    ///
+    /// PHP: `getSkipIndexesCovering()` (private).
+    async fn skip_indexes_covering(&self, table: &str, columns: &[&str]) -> Result<Vec<SkipIndex>> {
+        let body = self
+            .query(
+                "SELECT name, expr, type_full, granularity FROM system.data_skipping_indices WHERE database = {database:String} AND table = {table:String} FORMAT JSON",
+                &self.table_bindings(table),
+            )
+            .await?;
+        let text = |s: &php_std::Str| String::from_utf8_lossy(s.as_bytes()).into_owned();
+        let mut indexes = Vec::new();
+        for row in decode_rows(&body) {
+            let (Value::Str(name), Value::Str(expression), Value::Str(kind)) =
+                (field(&row, "name"), field(&row, "expr"), field(&row, "type_full"))
+            else {
+                continue;
+            };
+            if !identifiers(expression.as_bytes()).iter().any(|id| columns.iter().any(|c| c.as_bytes() == *id)) {
+                continue;
+            }
+            let granularity = match field(&row, "granularity") {
+                Value::Null => 1,
+                v => php::to_int(v),
+            };
+            indexes.push(SkipIndex {
+                name: text(name),
+                expression: text(expression),
+                kind: text(kind),
+                granularity: if granularity == 0 { 1 } else { granularity },
+            });
+        }
+        Ok(indexes)
+    }
+
+    /// The columns of `table`, by name.
+    ///
+    /// PHP: `getColumnShapes()` (private).
+    async fn column_shapes(&self, table: &str) -> Result<Vec<Shape>> {
+        let body = self
+            .query(
+                "SELECT name, type, compression_codec AS codec FROM system.columns WHERE database = {database:String} AND table = {table:String} FORMAT JSON",
+                &self.table_bindings(table),
+            )
+            .await?;
+        let mut shapes: Vec<Shape> = Vec::new();
+        for row in decode_rows(&body) {
+            let (Value::Str(name), Value::Str(ty), Value::Str(codec)) =
+                (field(&row, "name"), field(&row, "type"), field(&row, "codec"))
+            else {
+                continue;
+            };
+            let shape =
+                Shape { name: name.as_bytes().to_vec(), ty: ty.as_bytes().to_vec(), codec: codec.as_bytes().to_vec() };
+            match shapes.iter_mut().find(|s| s.name == shape.name) {
+                Some(existing) => *existing = shape,
+                None => shapes.push(shape),
+            }
+        }
+        Ok(shapes)
+    }
+
+    /// The `{database:String}` and `{table:String}` bindings of a `system.*` read.
+    fn table_bindings(&self, table: &str) -> Vec<(String, Value)> {
+        vec![
+            ("database".to_owned(), Value::from(self.config.database.as_str())),
+            ("table".to_owned(), Value::from(table)),
+        ]
     }
 
     /// Adds the skip indexes a table created before them lacks, such as the
@@ -468,6 +675,9 @@ impl<A: utopia_client::Adapter> ClickHouse<A> {
             .order_by(order.iter().copied())?
             .partition_by("toYYYYMM(time)")
             .settings([("index_granularity", Value::Int(8192)), ("allow_nullable_key", Value::Int(1))])?;
+        if kind == Kind::Event {
+            self.declare_retention(&mut table)?;
+        }
         let statement = table.create_if_not_exists()?;
         self.query(&self.qualify(&statement.query, &[name]), &[]).await?;
         Ok(())
@@ -497,6 +707,7 @@ impl<A: utopia_client::Adapter> ClickHouse<A> {
             .order_by(order)?
             .partition_by("toYYYYMM(time)")
             .settings([("index_granularity", Value::Int(8192)), ("allow_nullable_key", Value::Int(1))])?;
+        self.declare_retention(&mut table)?;
         let statement = table.create_if_not_exists()?;
         self.query(&self.qualify(&statement.query, &[&name]), &[]).await?;
         Ok(())

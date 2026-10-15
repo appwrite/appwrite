@@ -11,7 +11,7 @@ use std::sync::{Arc, Mutex};
 
 use indexmap::IndexMap;
 use serde_json::Value;
-use utopia_validators::Validator;
+use utopia_validators::{Type, Validator};
 
 use crate::error::{Error, Result};
 use crate::http::Http;
@@ -594,7 +594,7 @@ impl Http {
                     Default::Factory(f) => f(&context.resolve(&param.injections)?),
                 }
             };
-            let value = match path_value {
+            let mut value = match path_value {
                 Some(v) => Value::String(v.clone()),
                 None => arg,
             };
@@ -609,6 +609,9 @@ impl Http {
                         return Err(Error::http(format!("Invalid `{key}` param: {}", validator.description()), 400));
                     }
                 }
+                if exists {
+                    value = self.coerce(param, context, value)?;
+                }
             }
             args.push((key.clone(), value));
         }
@@ -622,6 +625,21 @@ impl Http {
             injected.push((name.clone(), resource));
         }
         Ok((args, injected))
+    }
+
+    /// `coerce()`: a loose boolean (`"true"`, `"1"`, `1`, `"false"`, `"0"`,
+    /// `0`) checked by a boolean validator (also inside `Nullable`) becomes
+    /// that boolean; any other value is left as it is.
+    fn coerce(&self, param: &Param, context: &Resources, value: Value) -> Result<Value> {
+        let boolean = match &value {
+            Value::String(s) if s == "true" || s == "1" => true,
+            Value::String(s) if s == "false" || s == "0" => false,
+            Value::Number(n) if n.as_i64() == Some(1) => true,
+            Value::Number(n) if n.as_i64() == Some(0) => false,
+            _ => return Ok(value),
+        };
+        let validator = self.validator(param, context)?;
+        Ok(if validator.kind() == Type::Boolean && !validator.is_array() { Value::Bool(boolean) } else { value })
     }
 
     fn validator(&self, param: &Param, context: &Resources) -> Result<Arc<dyn Validator>> {

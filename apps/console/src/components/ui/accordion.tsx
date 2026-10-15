@@ -73,12 +73,18 @@ function AccordionTrigger({
 function AccordionContent({
   className,
   children,
+  forceMount,
   ...props
 }: React.ComponentProps<typeof AccordionPrimitive.Content>) {
   return (
     <AccordionPrimitive.Content
       data-slot="accordion-content"
-      className="data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down overflow-hidden text-sm"
+      forceMount={forceMount}
+      className={cn(
+        'data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down overflow-hidden text-sm',
+        // Radix stops hiding force-mounted content; hide it here while closed.
+        forceMount && 'data-[state=closed]:hidden',
+      )}
       {...props}
     >
       <div className={cn('pt-0 pb-4', className)}>{children}</div>

@@ -209,4 +209,35 @@ final class OriginTest extends TestCase
         $this->assertEquals(true, $validator->isValid('appwrite-callback-456://'));
         $this->assertEquals(false, $validator->isValid('exp://'));
     }
+
+    public function testHttpAuthority(): void
+    {
+        $validator = new Origin(
+            allowedHostnames: ['appwrite.io', 'localhost'],
+            allowedSchemes: ['exp', 'appwrite-callback-123']
+        );
+
+        $this->assertTrue($validator->isValid('https://appwrite.io'));
+        $this->assertTrue($validator->isValid('http://appwrite.io'));
+        $this->assertTrue($validator->isValid('http://appwrite.io:80'));
+        $this->assertTrue($validator->isValid('https://appwrite.io/reset'));
+        $this->assertTrue($validator->isValid('https://appwrite.io/reset?next=1'));
+        $this->assertTrue($validator->isValid('https://appwrite.io:443/reset?next=1#ok'));
+        $this->assertTrue($validator->isValid('http://localhost:3000/callback'));
+        $this->assertTrue($validator->isValid('https://appwrite.io/@account/reset'));
+        $this->assertTrue($validator->isValid('exp://'));
+        $this->assertTrue($validator->isValid('exp://index'));
+        $this->assertTrue($validator->isValid('appwrite-callback-123://'));
+        $this->assertTrue($validator->isValid('appwrite-callback-123://com.company.appname'));
+
+        $this->assertFalse($validator->isValid('https://other.example' . '\\' . '@appwrite.io/reset'));
+        $this->assertFalse($validator->isValid('https://other.example' . '\\\\' . 'appwrite.io/reset'));
+        $this->assertFalse($validator->isValid('https://other.example/' . '\\' . 'appwrite.io/reset'));
+        $this->assertFalse($validator->isValid('http://user@appwrite.io'));
+        $this->assertFalse($validator->isValid('https://user:pass@appwrite.io/reset'));
+        $this->assertFalse($validator->isValid('http://127.0.0.1@localhost'));
+        $this->assertFalse($validator->isValid("https://appwrite.io\t.other.example"));
+        $this->assertFalse($validator->isValid("https://appwrite.io\n.other.example"));
+        $this->assertFalse($validator->isValid("https://appwrite.io\r.other.example"));
+    }
 }
