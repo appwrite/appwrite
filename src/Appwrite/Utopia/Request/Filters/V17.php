@@ -66,8 +66,7 @@ class V17 extends Filter
         $parsed = [];
         foreach ($content['queries'] as $query) {
             try {
-                $query = $this->parseQuery($query);
-                $parsed[] = \json_encode(\array_filter($query->toArray()));
+                $parsed[] = \json_encode(\array_filter($this->parseQuery($query)));
             } catch (\Throwable $th) {
                 throw new Exception(Exception::GENERAL_QUERY_INVALID, $th->getMessage());
             }
@@ -78,8 +77,13 @@ class V17 extends Filter
         return $content;
     }
 
-    // 1.4 query parser
-    public function parseQuery(string $filter): Query
+    /**
+     * Parses a 1.4 query string into its 1.5 array form. An unknown method is kept as-is so the
+     * endpoint's query validation rejects it, as it did before the methods became an enum.
+     *
+     * @return array<string, mixed>
+     */
+    public function parseQuery(string $filter): array
     {
         // Init empty vars we fill later
         $method = '';
@@ -93,16 +97,21 @@ class V17 extends Filter
             throw new \Exception('Invalid query');
         }
 
-        $method = Method::tryFrom(\mb_substr($filter, 0, $paramsStart)) ?? \mb_substr($filter, 0, $paramsStart);
+        $name = \mb_substr($filter, 0, $paramsStart);
+
+        if (\str_contains($name, '.')) {
+            throw new \Exception('Invalid query method');
+        }
+
+        $method = Method::tryFrom($name);
+
+        if ($method === null) {
+            return ['method' => $name];
+        }
 
         // Separate params from filter
         $paramsEnd = \strlen($filter) - 1; // -1 to ignore )
         $parametersStart = $paramsStart + 1; // +1 to ignore (
-
-        // Check for deprecated query syntax (only relevant for raw strings, not resolved enum cases)
-        if (\is_string($method) && \str_contains($method, '.')) {
-            throw new \Exception('Invalid query method');
-        }
 
         $currentParam = ''; // We build param here before pushing when it's ended
         $currentArrayParam = []; // We build array param here before pushing when it's ended
@@ -226,6 +235,14 @@ class V17 extends Filter
             }
         }
 
+        return $this->toQuery($method, $parsedParams)->toArray();
+    }
+
+    /**
+     * @param array<mixed> $parsedParams
+     */
+    private function toQuery(Method $method, array $parsedParams): Query
+    {
         switch ($method) {
             case Method::Equal:
             case Method::NotEqual:

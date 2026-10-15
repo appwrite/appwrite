@@ -11,7 +11,9 @@ use Tests\E2E\Services\Databases\Queries\JoinPermissions;
 use Tests\E2E\Services\Databases\Queries\JoinProjection;
 use Tests\E2E\Services\Databases\Queries\JoinTypes;
 use Tests\E2E\Services\Databases\Queries\RejectedMethods;
+use Tests\E2E\Services\Databases\Queries\RejectedValues;
 use Tests\E2E\Services\Databases\Queries\StatisticalAggregates;
+use Tests\E2E\Services\Databases\Queries\Totals;
 use Tests\E2E\Traits\DatabasesUrlHelpers;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -38,6 +40,8 @@ trait DatabasesBase
     use JoinProjection;
     use StatisticalAggregates;
     use RejectedMethods;
+    use RejectedValues;
+    use Totals;
 
     /**
      * Static caches for test data - keyed by project ID to support parallel test runs
@@ -5077,6 +5081,28 @@ trait DatabasesBase
         );
     }
 
+    public function testListDocumentsTotalAcceptsBooleanStrings(): void
+    {
+        $data = $this->setupDocuments();
+        $documentIds = $data['documentIds'];
+
+        foreach (['false' => 0, '0' => 0, 'true' => \count($documentIds), '1' => \count($documentIds)] as $total => $expected) {
+            $documents = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($data['databaseId'], $data['moviesId']), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'queries' => [
+                    Query::equal('$id', $documentIds)->toString(),
+                ],
+                'total' => (string) $total,
+            ]);
+
+            $this->assertSame(200, $documents['headers']['status-code']);
+            $this->assertCount(\count($documentIds), $documents['body'][$this->getRecordResource()]);
+            $this->assertSame($expected, $documents['body']['total'], 'total=' . $total . ' must yield a total of ' . $expected);
+        }
+    }
+
     public function testListDocumentsWithCache(): void
     {
         if (!$this->getSupportForAttributes()) {
@@ -5956,6 +5982,28 @@ trait DatabasesBase
             [$postIds['Post 3'], $postIds['Post 4']],
             \array_column($page['body'][$this->getRecordResource()], '$id'),
         );
+    }
+
+    public function testListDocumentsRejectsOrderByRelationshipWithoutColumn(): void
+    {
+        if (!$this->getSupportForRelationships()) {
+            $this->markTestSkipped('Relationships are not supported by this database adapter');
+        }
+
+        $data = $this->setupDocuments();
+
+        foreach ([Query::orderAsc('starringActors'), Query::orderDesc('starringActors')] as $order) {
+            $documents = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($data['databaseId'], $data['moviesId']), array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'queries' => [$order->toString()],
+            ]);
+
+            $this->assertSame(400, $documents['headers']['status-code'], \json_encode($documents['body']));
+            $this->assertSame(Exception::GENERAL_QUERY_INVALID, $documents['body']['type']);
+            $this->assertStringContainsString('starringActors', $documents['body']['message']);
+        }
     }
 
     public function testListDocumentsLimitAndOffset(): void
