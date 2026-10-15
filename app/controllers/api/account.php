@@ -301,6 +301,8 @@ $createSession = function (string $userId, string $secret, Request $request, Res
         ->setAttribute('secret', $encoded)
     ;
 
+    $queueForEvents->setPayload($response->output($session, Response::MODEL_SESSION), sensitive: ['secret']);
+
     $response->dynamic($session, Response::MODEL_SESSION);
 };
 
@@ -1206,6 +1208,7 @@ Http::post('/v1/account/sessions/email')
         $queueForEvents
             ->setParam('userId', $user->getId())
             ->setParam('sessionId', $session->getId())
+            ->setPayload($response->output($session, Response::MODEL_SESSION), sensitive: ['secret'])
         ;
 
         $bus->dispatch(new SessionCreated(
@@ -1379,6 +1382,8 @@ Http::post('/v1/account/sessions/anonymous')
             ->setAttribute('countryName', $countryName)
             ->setAttribute('secret', $encoded)
         ;
+
+        $queueForEvents->setPayload($response->output($session, Response::MODEL_SESSION), sensitive: ['secret']);
 
         $response->dynamic($session, Response::MODEL_SESSION);
     });

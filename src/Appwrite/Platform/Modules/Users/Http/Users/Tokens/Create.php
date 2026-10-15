@@ -95,7 +95,7 @@ class Create extends Action
         $queueForEvents
             ->setParam('userId', $user->getId())
             ->setParam('tokenId', $token->getId())
-            ->setPayload($response->output($token, Response::MODEL_TOKEN));
+            ->setPayload($response->output($token, Response::MODEL_TOKEN), sensitive: ['secret']);
 
         $response->setStatusCode(Response::STATUS_CODE_CREATED);
         $response->dynamic($token, Response::MODEL_TOKEN);
