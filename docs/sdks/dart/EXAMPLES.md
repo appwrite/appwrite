@@ -1,4 +1,3 @@
-@@ -1,62 +0,0 @@
 # Examples
 
 Init your Appwrite client:
@@ -40,7 +39,7 @@ Upload File:
 ```dart
 Storage storage = Storage(client);
 
-InputFile input = InputFile(
+InputFile input = InputFile.fromPath(
   path: './path-to-file/image.jpg',
   filename: 'image.jpg',
 );

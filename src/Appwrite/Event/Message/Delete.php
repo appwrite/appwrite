@@ -19,7 +19,7 @@ final class Delete extends Base
     public function toArray(): array
     {
         return [
-            'project' => $this->project?->getArrayCopy(),
+            'project' => $this->project === null ? null : ProjectContext::fromDocument($this->project)->toArray(),
             'type' => $this->type,
             'document' => $this->document?->getArrayCopy(),
             'resource' => $this->resource,

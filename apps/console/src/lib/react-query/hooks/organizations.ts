@@ -179,6 +179,7 @@ function createSelfHostedOrganizationPlan(): OrganizationPlan {
     webhooks: Number.MAX_SAFE_INTEGER,
     wafRules: Number.MAX_SAFE_INTEGER,
     projects: Number.MAX_SAFE_INTEGER,
+    environments: 0,
     platforms: Number.MAX_SAFE_INTEGER,
     users: Number.MAX_SAFE_INTEGER,
     teams: Number.MAX_SAFE_INTEGER,

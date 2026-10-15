@@ -27,8 +27,8 @@ final class Audit extends Base
     {
         return [
             'project' => ProjectContext::fromDocument($this->project)->toArray(),
-            'user' => $this->user->getArrayCopy(),
-            'impersonatorUser' => $this->impersonatorUser->getArrayCopy(),
+            'user' => UserContext::fromDocument($this->user)->toArray(),
+            'impersonatorUser' => UserContext::fromDocument($this->impersonatorUser)->toArray(),
             'payload' => $this->payload,
             'resource' => $this->resource,
             'mode' => $this->mode,

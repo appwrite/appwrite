@@ -132,7 +132,6 @@ services:
       - _APP_DOMAIN
       - _APP_CONSOLE_DOMAIN
       - _APP_CONSOLE_URL
-      - _APP_CONSOLE_PASSKEY_ORIGINS
       - _APP_CONSOLE_TRUSTED_PROJECTS
       - _APP_DOMAIN_TARGET_CNAME
       - _APP_DOMAIN_TARGET_AAAA
@@ -274,7 +273,7 @@ services:
         max-file: "5"
         max-size: 10m
     container_name: appwrite-console
-    image: appwrite/new:1.2.55-self-hosted
+    image: appwrite/new:1.2.74-self-hosted
     restart: unless-stopped
     networks:
       - appwrite
@@ -1741,7 +1740,7 @@ services:
         max-file: "5"
         max-size: 10m
     stop_signal: SIGINT
-    image: openruntimes/executor:0.29.0
+    image: openruntimes/executor:1.1.2
     restart: unless-stopped
     networks:
       - appwrite
@@ -1886,6 +1885,7 @@ services:
   postgresql:
     image: appwrite/postgres:0.1.0
     container_name: appwrite-postgresql
+    shm_size: 1g
     logging:
       driver: json-file
       options:

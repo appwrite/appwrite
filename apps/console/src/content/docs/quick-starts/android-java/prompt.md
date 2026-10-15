@@ -22,7 +22,7 @@
 - Add the following dependency to the app-level `build.gradle` file inside the **dependencies** block:
 
 ```groovy
-implementation "io.appwrite:sdk-for-android:8.1.0"
+implementation "io.appwrite:sdk-for-android:29.2.0"
 ```
 
 - Add the OAuth callback activity inside the `<application>` tag in `AndroidManifest.xml` (replace `<PROJECT_ID>` with actual project ID):

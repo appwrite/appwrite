@@ -45,7 +45,7 @@ source .venv/bin/activate
 
 ## Step 3: Install Appwrite SDK
 
-- Run: `pip install appwrite==13.6.1`
+- Run: `pip install appwrite==24.4.0`
 
 ## Step 4: Import Appwrite and initialize client (ask user for details; never assume)
 

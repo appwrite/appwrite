@@ -1828,6 +1828,17 @@ return [
                 'array' => false,
             ],
             [
+                '$id' => ID::custom('description'),
+                'type' => Database::VAR_STRING,
+                'signed' => true,
+                'size' => 1024,
+                'format' => '',
+                'filters' => [],
+                'required' => false,
+                'default' => '',
+                'array' => false,
+            ],
+            [
                 '$id' => ID::custom('fileSecurity'),
                 'type' => Database::VAR_BOOLEAN,
                 'signed' => true,
@@ -2343,6 +2354,17 @@ return [
                 'filters' => [],
             ],
             [
+                '$id' => ID::custom('description'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 1024,
+                'signed' => true,
+                'required' => false,
+                'default' => '',
+                'array' => false,
+                'filters' => [],
+            ],
+            [
                 '$id' => ID::custom('subscribe'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
@@ -2436,7 +2458,7 @@ return [
                 'filters' => [],
             ],
             // message retention in seconds capped at 7 days. A ledger message expires
-            // this long after it is written.
+            // this long after it is written. null inherits the lowest Appwrite provider expiry.
             [
                 '$id' => ID::custom('expiry'),
                 'type' => Database::VAR_INTEGER,
