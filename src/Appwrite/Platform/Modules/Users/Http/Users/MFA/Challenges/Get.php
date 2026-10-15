@@ -48,7 +48,7 @@ class Get extends Action
                     ]
                 ),
             ])
-            ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'User ID.', false, ['dbForProject'])
+            ->param('userId', '', fn (Database $dbForProject) => new UID($dbForProject->getMaxUidLength()), 'User ID.', false, ['dbForProject'])
             ->param('challengeId', '', new Text(256), 'ID of the challenge.')
             ->inject('response')
             ->inject('dbForProject')

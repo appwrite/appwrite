@@ -254,7 +254,7 @@ $container->set('usageConnection', function () {
     );
 }, []);
 
-$container->set('executionStore', function () {
+$container->set('executionStore', function (): ExecutionStore {
     $client = new HttpClientPool(new Connections(
         new SwoolePoolAdapter(),
         'executions',

@@ -16,13 +16,12 @@ use Swoole\Timer;
 use Utopia\Compression\Compression;
 use Utopia\Config\Config;
 use Utopia\Console\Console;
-use Utopia\Database\Adapter\Pool as DatabasePool;
+use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Exception\Duplicate as DuplicateException;
-use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
+use Utopia\Database\Id;
+use Utopia\Database\Permission;
+use Utopia\Database\Role;
 use Utopia\DI\Container;
 use Utopia\Http\Adapter\Swoole\Mode;
 use Utopia\Http\Adapter\Swoole\Server;
@@ -61,6 +60,10 @@ $container->set('pools', function ($register) {
 
 $payloadSize = 12 * (1024 * 1024); // 12MB - adding slight buffer for headers and other data that might be sent with the payload - update later with valid testing
 $totalWorkers = intval(System::getEnv('_APP_CPU_NUM', swoole_cpu_num())) * intval(System::getEnv('_APP_WORKER_PER_CORE', 6));
+
+if (\is_file(APP_READINESS_MARKER)) {
+    \unlink(APP_READINESS_MARKER);
+}
 
 $swoole = new Server(
     host: "0.0.0.0",
@@ -137,12 +140,6 @@ function createDatabase(Container $resources, string $resourceKey, string $dbNam
             $database->create();
             break; // exit loop on success
         } catch (\Exception $e) {
-            if ($e instanceof DuplicateException) {
-                Span::add('database.exists', true);
-                Console::info("  └── Skip: metadata table already exists");
-                break;
-            }
-
             Console::warning("  └── Database create failed. Retrying ({$attempts})...");
             if ($attempts >= $max) {
                 throw new \Exception('  └── Failed to create database: ' . $e->getMessage());
@@ -159,31 +156,18 @@ function createDatabase(Container $resources, string $resourceKey, string $dbNam
             continue;
         }
 
-        if (!$database->getCollection($key)->isEmpty()) {
+        if ($database->findCollection($key) !== null) {
             continue;
         }
 
-        $attributes = array_map(fn ($attr) => new Document([
-            '$id' => ID::custom($attr['$id']),
-            'type' => $attr['type'],
-            'size' => $attr['size'],
-            'required' => $attr['required'],
-            'signed' => $attr['signed'],
-            'array' => $attr['array'],
-            'filters' => $attr['filters'],
-            'default' => $attr['default'] ?? null,
-            'format' => $attr['format'] ?? ''
-        ]), $collection['attributes']);
+        $attributes = $collection['attributes'];
+        $indexes = $collection['indexes'];
 
-        $indexes = array_map(fn ($index) => new Document([
-            '$id' => ID::custom($index['$id']),
-            'type' => $index['type'],
-            'attributes' => $index['attributes'],
-            'lengths' => $index['lengths'] ?? [],
-            'orders' => $index['orders'] ?? [],
-        ]), $collection['indexes']);
-
-        $database->createCollection($key, $attributes, $indexes);
+        $database->createCollection(Collection::create(
+            id: $key,
+            attributes: $attributes,
+            indexes: $indexes,
+        ));
         $collectionsCreated++;
     }
 
@@ -211,8 +195,8 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
 
             if ($dbForPlatform->getDocument('buckets', 'default')->isEmpty()) {
                 $dbForPlatform->createDocument('buckets', new Document([
-                    '$id' => ID::custom('default'),
-                    '$collection' => ID::custom('buckets'),
+                    '$id' => Id::custom('default'),
+                    '$collection' => Id::custom('buckets'),
                     'name' => 'Default',
                     'maximumFileSize' => (int) System::getEnv('_APP_STORAGE_LIMIT', 0),
                     'allowedFileExtensions' => [],
@@ -237,33 +221,20 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
                     throw new Exception('Files collection is not configured.');
                 }
 
-                $attributes = array_map(fn ($attr) => new Document([
-                    '$id' => ID::custom($attr['$id']),
-                    'type' => $attr['type'],
-                    'size' => $attr['size'],
-                    'required' => $attr['required'],
-                    'signed' => $attr['signed'],
-                    'array' => $attr['array'],
-                    'filters' => $attr['filters'],
-                    'default' => $attr['default'] ?? null,
-                    'format' => $attr['format'] ?? ''
-                ]), $files['attributes']);
+                $attributes = $files['attributes'];
+                $indexes = $files['indexes'];
 
-                $indexes = array_map(fn ($index) => new Document([
-                    '$id' => ID::custom($index['$id']),
-                    'type' => $index['type'],
-                    'attributes' => $index['attributes'],
-                    'lengths' => $index['lengths'] ?? [],
-                    'orders' => $index['orders'] ?? [],
-                ]), $files['indexes']);
-
-                $dbForPlatform->createCollection('bucket_' . $bucket->getSequence(), $attributes, $indexes);
+                $dbForPlatform->createCollection(Collection::create(
+                    id: 'bucket_' . $bucket->getSequence(),
+                    attributes: $attributes,
+                    indexes: $indexes,
+                ));
             }
 
             if ($authorization->skip(fn () => $dbForPlatform->getDocument('buckets', 'screenshots')->isEmpty())) {
                 $authorization->skip(fn () => $dbForPlatform->createDocument('buckets', new Document([
-                    '$id' => ID::custom('screenshots'),
-                    '$collection' => ID::custom('buckets'),
+                    '$id' => Id::custom('screenshots'),
+                    '$collection' => Id::custom('buckets'),
                     'name' => 'Screenshots',
                     'maximumFileSize' => 20000000, // ~20MB
                     'allowedFileExtensions' => [ 'png' ],
@@ -283,27 +254,14 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
                     throw new Exception('Files collection is not configured.');
                 }
 
-                $attributes = array_map(fn ($attr) => new Document([
-                    '$id' => ID::custom($attr['$id']),
-                    'type' => $attr['type'],
-                    'size' => $attr['size'],
-                    'required' => $attr['required'],
-                    'signed' => $attr['signed'],
-                    'array' => $attr['array'],
-                    'filters' => $attr['filters'],
-                    'default' => $attr['default'] ?? null,
-                    'format' => $attr['format'] ?? ''
-                ]), $files['attributes']);
+                $attributes = $files['attributes'];
+                $indexes = $files['indexes'];
 
-                $indexes = array_map(fn ($index) => new Document([
-                    '$id' => ID::custom($index['$id']),
-                    'type' => $index['type'],
-                    'attributes' => $index['attributes'],
-                    'lengths' => $index['lengths'] ?? [],
-                    'orders' => $index['orders'] ?? [],
-                ]), $files['indexes']);
-
-                $authorization->skip(fn () => $dbForPlatform->createCollection('bucket_' . $bucket->getSequence(), $attributes, $indexes));
+                $authorization->skip(fn () => $dbForPlatform->createCollection(Collection::create(
+                    id: 'bucket_' . $bucket->getSequence(),
+                    attributes: $attributes,
+                    indexes: $indexes,
+                )));
             }
         });
 
@@ -313,7 +271,8 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
         $documentsSharedTables = \explode(',', System::getEnv('_APP_DATABASE_DOCUMENTSDB_SHARED_TABLES', ''));
         $vectorSharedTables = \explode(',', System::getEnv('_APP_DATABASE_VECTORSDB_SHARED_TABLES', ''));
 
-        $cache = $container->get('cache');
+        /** @var \Appwrite\Database\Factory $databaseFactory */
+        $databaseFactory = $container->get('databaseFactory');
 
         // All shared tables pools that need project metadata collections
         $allSharedTables = \array_values(\array_unique(\array_filter([
@@ -326,12 +285,7 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
             Span::init('database.setup');
             Span::add('database.hostname', $hostname);
 
-            $adapter = new DatabasePool($pools->get($hostname));
-            $dbForProject = (new Database($adapter, $cache))
-                ->setDatabase('appwrite')
-                ->setSharedTables(true)
-                ->setTenant(null)
-                ->setNamespace(System::getEnv('_APP_DATABASE_SHARED_NAMESPACE', ''));
+            $dbForProject = $databaseFactory->setup($hostname);
 
             $max = 15;
             $sleep = 2;
@@ -342,10 +296,6 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
                     Console::success('[Setup] - Creating project database: ' . $hostname . '...');
                     $dbForProject->create();
                     break; // exit loop on success
-                } catch (DuplicateException) {
-                    Span::add('database.exists', true);
-                    Console::success('[Setup] - Skip: metadata table already exists');
-                    break;
                 } catch (\Throwable $e) {
                     Console::warning("  └── Project database create failed. Retrying ({$attempts})...");
                     if ($attempts >= $max) {
@@ -360,20 +310,29 @@ $http->on(Constant::EVENT_START, function ($http) use ($payloadSize, $totalWorke
                 if (($collection['$collection'] ?? '') !== Database::METADATA) {
                     continue;
                 }
-                if (!$dbForProject->getCollection($key)->isEmpty()) {
+                if ($dbForProject->findCollection($key) !== null) {
                     continue;
                 }
 
-                $attributes = \array_map(fn ($attribute) => new Document($attribute), $collection['attributes']);
-                $indexes = \array_map(fn (array $index) => new Document($index), $collection['indexes']);
+                $attributes = $collection['attributes'];
+                $indexes = $collection['indexes'];
 
-                $dbForProject->createCollection($key, $attributes, $indexes);
+                $dbForProject->createCollection(Collection::create(
+                    id: $key,
+                    attributes: $attributes,
+                    indexes: $indexes,
+                ));
                 $collectionsCreated++;
             }
 
             Span::add('database.collections_created', $collectionsCreated);
             Span::current()?->finish();
         }
+
+        // The container healthcheck gates on this file. The listener opens before this
+        // coroutine runs, so until the core schema exists every request that reaches a
+        // collection this loop has not created yet answers 500, not 404.
+        \touch(APP_READINESS_MARKER);
 
         // Usage is in ClickHouse, not the primary database, so it sets itself up
         // here. Giving up never blocks boot; reads and ingestion gate on
