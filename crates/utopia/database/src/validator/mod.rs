@@ -11,6 +11,15 @@
 //! |---|---|
 //! | `Validator\Authorization`, `Authorization\Input` | [`authorization::Authorization`], [`authorization::Input`] |
 //! | `Validator\BigInt` | [`big_int::BigInt`] |
+//! | `Validator\ByteLength` | [`byte_length::ByteLength`] |
+//! | `Validator\Datetime` | [`datetime::Datetime`], [`datetime::Precision`] |
+//! | `Validator\Key`, `UID`, `Label` | [`key::Key`], [`uid::Uid`], [`label::Label`] |
+//! | `Validator\ObjectPath` | [`object_path::ObjectPath`] |
+//! | `Validator\ObjectValue` | [`object_value::ObjectValue`] |
+//! | `Validator\Permissions`, `Roles` | [`permissions::Permissions`], [`roles::Roles`] |
+//! | `Validator\Sequence` | [`sequence::Sequence`] |
+//! | `Validator\Spatial` | [`spatial::Spatial`] |
+//! | `Validator\Vector` | [`vector::Vector`] |
 //!
 //! # State
 //!
@@ -29,6 +38,18 @@ use crate::value::{ArrayKey, Str, Value};
 
 pub mod authorization;
 pub mod big_int;
+pub mod byte_length;
+pub mod datetime;
+pub mod key;
+pub mod label;
+pub mod object_path;
+pub mod object_value;
+pub mod permissions;
+pub mod roles;
+pub mod sequence;
+pub mod spatial;
+pub mod uid;
+pub mod vector;
 
 /// The message a validator reports, changed by validations (PHP's
 /// `protected string $message`).
