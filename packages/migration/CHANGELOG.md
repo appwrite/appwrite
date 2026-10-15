@@ -1,5 +1,26 @@
 # Changelog
 
+## 4.0.0 (unreleased)
+
+### Breaking changes
+
+- `Target::call()` no longer follows redirects; a 3xx response throws. `setFollowRedirects(true)` restores following.
+  Requests are limited to `http` and `https`, redirects included.
+- The Appwrite source's SDK client is `Sources\Appwrite\Client`, a subclass of the SDK client, and it never follows
+  redirects: a 3xx response throws, except for `location` responses, which return the redirect target.
+- Requires `appwrite/appwrite` `^30.4.0` and no longer requires `utopia-php/dsn`, which nothing used.
+
+### Added
+
+- `Target::setDestinations()` confines a target's requests to a `Utopia\Client\Destinations`. Each connection and
+  redirect hop is checked against the address it actually reached, so DNS cannot answer differently between a check
+  and the connection. The Appwrite source applies it to its SDK client too. Unset, requests connect anywhere.
+- `Target::setResolver()` pins each request to the addresses a resolver returns as `CURLOPT_RESOLVE` entries, and
+  keeps pinned requests off proxies. The Appwrite source applies it to its SDK client too.
+- Appwrite to Appwrite migrations carry what sdk-for-php 30.4 can write: membership IDs, topic `qos` and `expiry`,
+  the reply-to address of scheduled emails, the Android channel of scheduled pushes, the password-pwned,
+  password-rotation and passkey policies, and project environments as the new `project-environment` resource.
+
 ## 3.1.2
 
 3.1.2 reverses the 3.0.0 notes below on `Aborted`, `markAborted()` and finalizing with `success()`.
