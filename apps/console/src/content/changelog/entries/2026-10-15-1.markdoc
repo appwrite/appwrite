@@ -1,0 +1,35 @@
+---
+layout: changelog
+title: "Cron schedules move to paid plans on Appwrite Cloud"
+date: 2026-10-15
+cover: /images/blog/announcing-function-intervals/cover.avif
+description: "From October 19, 2026, functions on the Appwrite Cloud Free and Education plans run on intervals instead of cron expressions. Existing cron schedules on those plans become intervals."
+tags: functions
+---
+
+From **Monday, October 19, 2026**, cron schedules for functions on Appwrite Cloud will need a paid plan. Functions on the Free and Education plans can run on an [interval](/docs/products/functions/execute#interval) of 60 minutes or longer. Paid plans and self-hosted Appwrite keep cron.
+
+On October 19, two things change for Free and Education organizations:
+
+- Creating a function with a cron schedule, or switching a function to one, fails.
+- Every existing cron schedule becomes an interval. Appwrite picks when within each interval the function runs, so a converted function no longer runs at a time of day you chose.
+
+Each cron expression becomes an interval as follows:
+
+- An expression with even gaps keeps its gap, raised to 60 minutes if shorter. `0 */6 * * *` becomes every 360 minutes, and `*/5 * * * *` becomes every 60 minutes.
+- An expression with uneven gaps becomes the longest standard interval that is no longer than its average gap. `0 8 * * 1-5` (weekdays at 08:00) becomes every 1440 minutes, so the function also runs on weekends.
+- A monthly or yearly expression becomes every 43200 minutes (30 days).
+
+Before October 19, pick what happens to your functions:
+
+- To keep a cron schedule, upgrade the organization to a paid plan.
+- To choose the interval yourself, open the function's **Settings** > **Executions** > **Schedule** and select **Interval**, or pass `interval` to `functions.update`.
+- If you deploy functions with the CLI or Terraform, replace `schedule` with `interval` in `appwrite.config.json` or in the `appwrite_function` resource. This needs CLI 28.3.0 or Terraform provider 2.3.0 or later. A deploy that still sets `schedule` fails after October 19.
+
+{% arrow_link href="/docs/products/functions/execute#interval" %}
+Learn about function intervals
+{% /arrow_link %}
+
+{% arrow_link href="/pricing" %}
+Compare plans
+{% /arrow_link %}
