@@ -226,6 +226,17 @@ fn keyed_model_json(json: &Json, key: Option<&str>) -> R<Json> {
     })
 }
 
+/// A `Document $document` parameter of a model's `fromDocument()`: the
+/// enum cases it holds read as [`model_json`] reads them.
+fn model_document(a: &Args, key: &str) -> R<Document> {
+    let document = a.document(key)?;
+    let attributes = model_json(&codec::encode_array(document.as_array()))?;
+    match codec::decode(&attributes)? {
+        Value::Array(data) | Value::Object(data) => Ok(Document::from_array_unchecked(data)),
+        _ => Ok(document),
+    }
+}
+
 /// An `array $data` parameter of a model's `fromArray()`.
 fn model_array(a: &Args, key: &str) -> R<Array> {
     let json = match a.raw(key) {
@@ -636,9 +647,11 @@ fn attribute_static(method: &str, a: &Args) -> R<Option<Obj>> {
         "relationship" => {
             Attribute::relationship(key()?, a.req::<Relationship>("relationship")?, a.req_enum("side")?).map_err(err)?
         }
-        "fromDocument" => Attribute::from_document(&a.document("document")?).map_err(err)?,
+        "fromDocument" => Attribute::from_document(&model_document(a, "document")?).map_err(err)?,
         "fromArray" => Attribute::from_array(&model_array(a, "data")?).map_err(err)?,
-        "isRelationship" => return Ok(Some(Attribute::is_relationship_document(&a.document("attribute")?).into_obj())),
+        "isRelationship" => {
+            return Ok(Some(Attribute::is_relationship_document(&model_document(a, "attribute")?).into_obj()));
+        }
         "typeFromStored" => return Ok(Some(enums::obj(Attribute::type_from_stored(&a.string("type")?).map_err(err)?))),
         "storedType" => return Ok(Some(Attribute::stored_type(a.req_enum("type")?).into_obj())),
         "availableTypes" => {
@@ -669,7 +682,7 @@ fn index_static(method: &str, a: &Args) -> R<Option<Obj>> {
         "hnswCosine" => Index::hnsw_cosine(key()?, attribute()?),
         "hnswDot" => Index::hnsw_dot(key()?, attribute()?),
         "ttl" => Index::ttl(key()?, attribute()?, a.int("ttl")?).map_err(err)?,
-        "fromDocument" => Index::from_document(&a.document("document")?).map_err(err)?,
+        "fromDocument" => Index::from_document(&model_document(a, "document")?).map_err(err)?,
         "fromArray" => Index::from_array(&model_array(a, "data")?).map_err(err)?,
         "unknownTypeMessage" => return Ok(Some(Index::unknown_type_message(&a.string("type")?).into_obj())),
         _ => return Ok(None),
@@ -685,7 +698,7 @@ fn relationship_static(method: &str, a: &Args) -> R<Option<Obj>> {
         "manyToOne" => RelationshipType::ManyToOne,
         "manyToMany" => RelationshipType::ManyToMany,
         "fromDocument" => {
-            return Ok(Some(Obj::object(Relationship::from_document(&a.document("document")?).map_err(err)?)));
+            return Ok(Some(Obj::object(Relationship::from_document(&model_document(a, "document")?).map_err(err)?)));
         }
         "fromArray" => return Ok(Some(Obj::object(Relationship::from_array(&model_array(a, "data")?).map_err(err)?))),
         _ => return Ok(None),
@@ -927,7 +940,28 @@ fn collection_method(document: &Document, method: &str, a: &Args) -> R<Option<Ob
     ) {
         return Ok(None);
     }
-    let collection = Collection::from_document(document).map_err(err)?;
+    // The collection as stored, not normalised again (`fromArray()` ran
+    // when it was built; later writes are read as they are).
+    let mut collection = Collection::from_array(Array::new()).map_err(err)?;
+    collection.exchange_array(document.as_array().clone());
+    // A model written straight into the stored list (held here as its
+    // `$value` array) is neither a document nor an array in PHP.
+    let holds_model = |key: &str| {
+        match document.get(key) {
+        Some(Value::Array(items)) => items.values().any(|v| {
+            matches!(v, Value::Array(fields) if fields.get_str("$value").is_some() && fields.get_str("fields").is_some())
+        }),
+        _ => false,
+    }
+    };
+    let reads_attributes = matches!(method, "attributes" | "attributesWith" | "fingerprint");
+    let reads_indexes = matches!(method, "indexes" | "fingerprint");
+    if reads_attributes && holds_model(collection::ATTRIBUTES) {
+        return Err(err(Error::structure("Collection attributes must be attribute documents")));
+    }
+    if reads_indexes && holds_model(collection::INDEXES) {
+        return Err(err(Error::index("Collection indexes must be index documents")));
+    }
     Ok(Some(match method {
         "attributes" => objects(collection.attributes().map_err(err)?.to_vec()),
         "attributesWith" => objects(collection.attributes_with(&a.list::<Attribute>("internal")?).map_err(err)?),
