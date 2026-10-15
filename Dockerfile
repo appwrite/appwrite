@@ -29,6 +29,14 @@ RUN if [ "$DEBUG" == "true" ]; then \
 
 WORKDIR /usr/src/code
 
+# Entire serves git only through its own remote helper, which git runs from
+# the PATH for entire:// remotes; the Builds worker clones Entire repositories with it.
+ARG TARGETARCH
+ARG ENTIRE_CLI_VERSION=0.11.5
+RUN curl -fsSL "https://github.com/entireio/cli/releases/download/v${ENTIRE_CLI_VERSION}/entire_linux_${TARGETARCH}.tar.gz" \
+    | tar -xz -C /usr/local/bin git-remote-entire && \
+    chmod +x /usr/local/bin/git-remote-entire
+
 COPY --from=composer /usr/local/src/vendor /usr/src/code/vendor
 
 # Add Source Code

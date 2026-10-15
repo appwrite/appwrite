@@ -281,6 +281,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_VCS_ORIGIN_PRIVATE_KEY
       - _APP_VCS_ENTIRE_PLUGIN
       - _APP_VCS_ENTIRE_PRIVATE_KEY
+      - _APP_VCS_ENTIRE_ISSUER
       - _APP_VCS_ENTIRE_ENDPOINT
       - _APP_VCS_WEBHOOK_URL
       - _APP_MIGRATIONS_FIREBASE_CLIENT_ID
@@ -582,6 +583,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_VCS_ORIGIN_PRIVATE_KEY
       - _APP_VCS_ENTIRE_PLUGIN
       - _APP_VCS_ENTIRE_PRIVATE_KEY
+      - _APP_VCS_ENTIRE_ISSUER
       - _APP_VCS_ENTIRE_ENDPOINT
       - _APP_VCS_WEBHOOK_URL
       - _APP_BUILDS_VOLUME
@@ -795,6 +797,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_VCS_ORIGIN_PRIVATE_KEY
       - _APP_VCS_ENTIRE_PLUGIN
       - _APP_VCS_ENTIRE_PRIVATE_KEY
+      - _APP_VCS_ENTIRE_ISSUER
       - _APP_VCS_ENTIRE_ENDPOINT
       - _APP_VCS_WEBHOOK_URL
       - _APP_BUILDS_VOLUME
@@ -953,6 +956,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_VCS_ORIGIN_PRIVATE_KEY
       - _APP_VCS_ENTIRE_PLUGIN
       - _APP_VCS_ENTIRE_PRIVATE_KEY
+      - _APP_VCS_ENTIRE_ISSUER
       - _APP_VCS_ENTIRE_ENDPOINT
       - _APP_VCS_WEBHOOK_URL
       - _APP_BUILDS_VOLUME
@@ -1252,6 +1256,7 @@ export const COMPOSE_SERVICES: Array<{ name: string; block: string }> = [
       - _APP_VCS_ORIGIN_PRIVATE_KEY
       - _APP_VCS_ENTIRE_PLUGIN
       - _APP_VCS_ENTIRE_PRIVATE_KEY
+      - _APP_VCS_ENTIRE_ISSUER
       - _APP_VCS_ENTIRE_ENDPOINT
       - _APP_VCS_WEBHOOK_URL
       - _APP_FUNCTIONS_TIMEOUT

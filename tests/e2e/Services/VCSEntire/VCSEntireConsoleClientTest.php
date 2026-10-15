@@ -77,7 +77,7 @@ final class VCSEntireConsoleClientTest extends Scope
             'content-type' => 'application/json',
         ], $this->refPayload());
 
-        $this->assertEquals(403, $event['headers']['status-code']);
+        $this->assertEquals(401, $event['headers']['status-code']);
         $this->assertEquals('general_access_forbidden', $event['body']['type']);
     }
 
@@ -108,7 +108,7 @@ final class VCSEntireConsoleClientTest extends Scope
             'authorization' => 'Bearer ' . $token,
         ], $payload);
 
-        $this->assertEquals(403, $event['headers']['status-code']);
+        $this->assertEquals(401, $event['headers']['status-code']);
         $this->assertEquals('general_access_forbidden', $event['body']['type']);
     }
 

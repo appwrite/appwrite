@@ -3,6 +3,8 @@
 namespace Appwrite\Deployment;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Event\Message\Build as BuildMessage;
+use Appwrite\Event\Publisher\Build as BuildPublisher;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Validator\VariableKey;
 use OpenRuntimes\Orchestrator\Enum\ArchiveCompression;
@@ -20,6 +22,7 @@ use OpenRuntimes\Orchestrator\Model\Callback;
 use OpenRuntimes\Orchestrator\Model\Volume;
 use Utopia\Config\Config;
 use Utopia\Console\Command;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -27,6 +30,7 @@ use Utopia\Database\Permission;
 use Utopia\Database\Query;
 use Utopia\Database\Role;
 use Utopia\DSN\DSN;
+use Utopia\Psr7\Stream;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\DeviceType;
@@ -67,6 +71,7 @@ readonly class Deployments
         protected Database $dbForProject,
         protected Document $project,
         private array $platform,
+        private BuildPublisher $publisherForBuilds,
     ) {
     }
 
@@ -153,10 +158,65 @@ readonly class Deployments
     }
 
     /**
+     * Same as createFromUpload(), but builds from a tree on this host that a
+     * worker checked out itself: packs it flat, like a manual upload's
+     * tarball, into the deployment's own source and builds from there.
+     */
+    public function createFromDirectory(Document $resource, Document $deployment, int $timeout, string $directory): Document
+    {
+        $projectId = $this->project->getId();
+        $deploymentId = $deployment->getId();
+        $resourceType = $resource->getCollection();
+
+        $archive = \rtrim(\sys_get_temp_dir(), '/') . "/source-{$deploymentId}.tar.gz";
+        $stdout = '';
+        $stderr = '';
+        $exit = Console::execute(
+            (new Command('tar'))->flag('-czf')->argument($archive)->option('-C', $directory)->argument('--exclude=.git')->argument('.'),
+            '',
+            $stdout,
+            $stderr,
+        );
+        if ($exit !== 0) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to pack the source: ' . $stderr);
+        }
+
+        $sourcePath = static::sourcePath($projectId, $resourceType, $deploymentId);
+        $device = getDevice(($resourceType === 'sites' ? APP_STORAGE_SITES : APP_STORAGE_FUNCTIONS) . "/app-{$projectId}");
+
+        $file = \fopen($archive, 'rb');
+        if ($file === false) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to read the packed source.');
+        }
+
+        try {
+            if (!$device->write($sourcePath, Stream::fromResource($file), 'application/gzip')) {
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to store the packed source.');
+            }
+        } finally {
+            \fclose($file);
+            \unlink($archive);
+        }
+
+        $size = $device->getFileSize($sourcePath);
+        $deployment->setAttributes([
+            'sourcePath' => $sourcePath,
+            'sourceSize' => $size,
+            'totalSize' => $size,
+            'sourceChunksTotal' => 1,
+            'sourceChunksUploaded' => 1,
+        ]);
+
+        return $this->createFromUpload($resource, $deployment, $timeout);
+    }
+
+    /**
      * Same as createFromUpload(), but builds from a repository on a VCS
-     * provider: a presigned archive URL when the provider hands those out, or
-     * a git clone through the jobs-service's clone artifact when the provider
-     * serves content over the git protocol only (Origin).
+     * provider: a presigned archive URL when the provider hands those out, a
+     * git clone through the jobs-service's clone artifact when the provider
+     * serves content over the git protocol only (Origin), or a clone by the
+     * Builds worker when only the provider's own tooling can fetch it
+     * (Entire), which then builds the tree it checked out.
      *
      * @param string $ref Branch, tag, or commit the deployment builds from
      */
@@ -181,6 +241,23 @@ readonly class Deployments
                 $rootDirectory,
                 $vcs->getRepositoryPresignedUrlHeaders(),
             );
+        }
+
+        if (!$vcs->supportsRepositoryCloneUrl()) {
+            // The worker reads the ref off the deployment, the way the
+            // template push does
+            $deployment = $this->upload($resource, $deployment->setAttribute('status', 'waiting'));
+
+            $this->publisherForBuilds->enqueue(new BuildMessage(
+                project: $this->project,
+                resource: $resource,
+                deployment: $deployment,
+                type: BUILD_TYPE_DEPLOYMENT,
+                template: new Document(),
+                platform: $this->platform,
+            ));
+
+            return $deployment;
         }
 
         return $this->submit($resource, $deployment, $timeout, [

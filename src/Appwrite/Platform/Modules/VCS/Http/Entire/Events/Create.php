@@ -91,7 +91,13 @@ class Create extends Action
             $claims = $vcs->getWebhookClaims($token);
             $issuer = \strval($claims['iss'] ?? '');
 
-            if (!empty($plugin) && ($claims['aud'] ?? '') === $plugin && $vcs->isTrustedIssuer($issuer)) {
+            $audience = \is_array($claims['aud'] ?? null) ? $claims['aud'] : [$claims['aud'] ?? ''];
+
+            if (empty($plugin) || !\in_array($plugin, $audience, true)) {
+                Console::warning('Entire delivery refused: audience ' . \json_encode($audience) . ' is not the plugin ' . $plugin);
+            } elseif (!$vcs->isTrustedIssuer($issuer)) {
+                Console::warning('Entire delivery refused: issuer ' . $issuer . ' is not a cell of the configured Entire deployment');
+            } else {
                 foreach ($this->signingKeys($vcs, $issuer) as $publicKey) {
                     if ($vcs->validateWebhookEvent($payload, $token, $publicKey)) {
                         $valid = true;
@@ -107,6 +113,10 @@ class Create extends Action
                             break;
                         }
                     }
+                }
+
+                if (!$valid) {
+                    Console::warning('Entire delivery refused: the token did not verify against the keys of ' . $issuer . ' (kid ' . \strval($claims['kid'] ?? '') . ')');
                 }
             }
         } catch (\Throwable $e) {

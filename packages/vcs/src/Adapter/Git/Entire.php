@@ -14,18 +14,16 @@ use Utopia\VCS\Exception\RepositoryNotFound;
  * Adapter for Entire (entire.io), the agent-native Git host.
  *
  * Entire plugins authenticate like GitHub Apps: an Ed25519-signed (EdDSA)
- * plugin JWT is exchanged on the control plane ("core") for a short-lived
- * installation access token. Repository data lives on regional data-plane
- * cells, so every repository call is routed to the cell serving that
- * repository. Pull requests are "trails"; a trail's discussions are where
- * comments go. Content writes (files, branches, tags) travel over Git smart
- * HTTP with the installation token as a bearer.
+ * plugin JWT is exchanged on a control plane ("core") for an installation
+ * access token that lasts about 45 minutes. Repository data lives on regional
+ * data-plane cells, so every repository call is routed to the cell serving
+ * that repository, which knows the repository by its own id. Pull requests
+ * are "trails"; a trail's discussions are where comments go. Git traffic goes
+ * through Entire's own remote helper, git-remote-entire, with the access
+ * token in ENTIRE_TOKEN - plain HTTPS clones are not served.
  *
- * Entire publishes its plugin contract as OpenAPI only, so the claims of the
- * plugin JWT, the install link and the receipt are the best reading of it;
- * each lives in one method to keep a correction local.
- *
- * @see https://us.console.entire.io/api/v1/openapi.json control plane
+ * @see Entire's partner guide "Building an Entire Plugin"
+ * @see https://us.auth.entire.io/api/v1/openapi.json control plane
  * @see https://aws-us-east-2.api.entire.io/api/v1/openapi.json data plane
  */
 class Entire extends Git
@@ -43,10 +41,40 @@ class Entire extends Git
     public const CONTENTS_FILE = 'file';
 
     /**
-     * Plugin JWT lifetime in seconds. Entire's own webhook tokens live five
-     * minutes, and a minted installation token is cached no longer than this.
+     * Plugin JWT lifetime in seconds: at most five minutes after iat.
      */
     public const PLUGIN_JWT_EXPIRY = 60 * 5;
+
+    /**
+     * The core allows no clock skew on iat, so a plugin JWT is issued this
+     * many seconds in the past.
+     */
+    public const PLUGIN_JWT_SKEW = 30;
+
+    /**
+     * How long a minted installation token is reused. Tokens last about 45
+     * minutes and are dropped five minutes before their own expiry.
+     */
+    public const TOKEN_CACHE_TTL = 60 * 40;
+
+    /**
+     * The repository permissions the plugin registers, requested as a whole
+     * so one token covers every selected repository.
+     */
+    public const PERMISSIONS = ['contents' => 'read', 'checks' => 'write'];
+
+    /**
+     * Entire's cores. A receipt is accepted from these only, and any of them
+     * serves any installation.
+     */
+    public const CORES = [
+        'https://us.auth.entire.io',
+        'https://eu.auth.entire.io',
+        'https://au.auth.entire.io',
+        'https://in.auth.entire.io',
+        'https://uk.auth.entire.io',
+        'https://sg.auth.entire.io',
+    ];
 
     /**
      * Clock skew tolerated when checking token times.
@@ -61,17 +89,22 @@ class Entire extends Git
     protected const COMMENT_SEPARATOR = '-';
 
     /**
-     * Control-plane API. Entire runs one core per jurisdiction; the US core
-     * serves standard accounts.
+     * Control-plane API. Entire runs one core per jurisdiction and any serves
+     * any installation; the nearest one is the right choice.
      */
     #[\Override]
-    protected string $endpoint = 'https://us.console.entire.io/api/v1';
+    protected string $endpoint = 'https://us.auth.entire.io/api/v1';
 
     /**
-     * Control-plane origin: the plugin JWT audience, the receipt issuer and
-     * where the receipt signing keys are published.
+     * Control-plane origin, which the plugin JWT names in its audience.
      */
-    protected string $coreEndpoint = 'https://us.console.entire.io';
+    protected string $coreEndpoint = 'https://us.auth.entire.io';
+
+    /**
+     * The issuer registered on the plugin: the iss claim of its JWTs and the
+     * audience of the receipts Entire signs for it.
+     */
+    protected string $issuer = '';
 
     /**
      * Browser-facing host.
@@ -113,11 +146,12 @@ class Entire extends Git
     protected array $dataEndpoints = [];
 
     /**
-     * Default branch per repository id.
+     * The serving cell's own record of a repository, per control-plane id:
+     * the id it addresses git endpoints by, and the default branch.
      *
-     * @var array<string, string>
+     * @var array<string, array<mixed>>
      */
-    protected array $defaultBranches = [];
+    protected array $regionalRepositories = [];
 
     /**
      * Global Headers
@@ -142,6 +176,14 @@ class Entire extends Git
     }
 
     /**
+     * The issuer registered on the plugin, see $issuer.
+     */
+    public function setIssuer(string $issuer): void
+    {
+        $this->issuer = $issuer;
+    }
+
+    /**
      * Get Adapter Name
      */
     public function getName(): string
@@ -162,14 +204,13 @@ class Entire extends Git
         $this->installationId = $installationId;
         $this->plugin = \strval($appId);
 
-        // Cache for 1 minute less than the JWT expiry so we refresh before the token actually expires.
-        $response = $this->cache->load('entire-' . $installationId, self::PLUGIN_JWT_EXPIRY - self::LEEWAY);
+        $response = $this->cache->load('entire-' . $installationId, self::TOKEN_CACHE_TTL);
         $parsed = \is_string($response) ? json_decode($response, true) : null;
         $parsed = \is_array($parsed) ? $parsed : [];
 
-        // The token may expire sooner than the cache entry
+        // The token is dropped five minutes before its own expiry
         $expiresAt = $this->number($parsed, 'expiresAt');
-        if ($parsed === [] || ($expiresAt > 0 && $expiresAt - self::LEEWAY <= time())) {
+        if ($parsed === [] || ($expiresAt > 0 && $expiresAt - 5 * self::LEEWAY <= time())) {
             $this->generateAccessToken($privateKey, $appId);
             return;
         }
@@ -182,7 +223,10 @@ class Entire extends Git
      * Generate Access Token
      *
      * Signs an EdDSA plugin JWT and exchanges it for an installation access
-     * token.
+     * token covering every selected repository with every registered
+     * permission. A plugin registered with fewer permissions than
+     * PERMISSIONS is refused the extra ones, so the mint falls back to
+     * reading contents alone.
      */
     protected function generateAccessToken(string $privateKey, ?string $appId): void
     {
@@ -192,11 +236,12 @@ class Entire extends Git
 
         $this->jwtToken = $this->generatePluginJwt($privateKey, $appId);
 
-        $response = $this->call(
-            self::METHOD_POST,
-            '/plugins/' . rawurlencode($appId) . '/installations/' . rawurlencode($this->installationId) . '/access-tokens',
-            ['Authorization' => 'Bearer ' . $this->jwtToken],
-        );
+        $path = '/plugins/' . rawurlencode($appId) . '/installations/' . rawurlencode($this->installationId) . '/access-tokens';
+        $response = $this->call(self::METHOD_POST, $path, ['Authorization' => 'Bearer ' . $this->jwtToken], ['permissions' => self::PERMISSIONS]);
+
+        if ($this->status($response) === 400 && $this->text($this->body($response), 'code') === 'unsupported_permission') {
+            $response = $this->call(self::METHOD_POST, $path, ['Authorization' => 'Bearer ' . $this->jwtToken], ['permissions' => ['contents' => 'read']]);
+        }
 
         $responseBody = $this->body($response);
         $statusCode = $this->status($response);
@@ -217,22 +262,23 @@ class Entire extends Git
     }
 
     /**
-     * Builds the EdDSA plugin JWT: Ed25519 signature, kid and iss both the
-     * plugin slug, sub the installation it is minted for, audience the core.
+     * Builds the EdDSA plugin JWT the core takes: the registered issuer, the
+     * core's STS endpoint as audience, and the plugin and installation it
+     * acts for. The key is registered as a PEM, so no kid names it.
      */
     protected function generatePluginJwt(string $privateKey, string $plugin): string
     {
         $secretKey = $this->ed25519SecretKey($privateKey);
 
-        $iat = time();
-        $header = ['alg' => 'EdDSA', 'kid' => $plugin, 'typ' => 'JWT'];
+        $iat = time() - self::PLUGIN_JWT_SKEW;
+        $header = ['alg' => 'EdDSA', 'typ' => 'JWT'];
         $claims = [
-            'iss' => $plugin,
-            'sub' => $this->installationId,
-            'aud' => $this->coreEndpoint,
+            'iss' => $this->issuer,
+            'aud' => $this->coreEndpoint . '/api/authz/sts',
+            'plugin_id' => $plugin,
+            'installation_id' => $this->installationId,
             'iat' => $iat,
             'exp' => $iat + self::PLUGIN_JWT_EXPIRY,
-            'jti' => bin2hex(random_bytes(16)),
         ];
 
         $signingInput = $this->base64UrlEncode(json_encode($header) ?: '')
@@ -247,8 +293,10 @@ class Entire extends Git
     /**
      * Resolves the configured private key to a libsodium Ed25519 secret key.
      *
-     * Accepts a PKCS#8 PEM, a raw base64-encoded 32-byte seed, or a
-     * base64-encoded 64-byte libsodium secret key.
+     * Accepts the PKCS#8 PEM `openssl genpkey -algorithm ed25519` writes, its
+     * bare base64 body (one line, for an environment variable), a raw
+     * base64-encoded 32-byte seed, or a base64-encoded 64-byte libsodium
+     * secret key.
      *
      * @return non-empty-string
      */
@@ -256,35 +304,26 @@ class Entire extends Git
     {
         $privateKey = trim($privateKey);
 
-        if (str_contains($privateKey, '-----BEGIN')) {
-            $der = base64_decode($this->pemBody($privateKey), true);
-            if ($der === false) {
-                throw new Exception('Failed to decode the Entire private key PEM.');
-            }
+        $decoded = base64_decode(str_contains($privateKey, '-----BEGIN') ? $this->pemBody($privateKey) : strtr($privateKey, '-_', '+/'), true);
+        if ($decoded === false) {
+            throw new Exception('Failed to decode the Entire private key.');
+        }
 
+        if (\strlen($decoded) === SODIUM_CRYPTO_SIGN_SECRETKEYBYTES) {
+            return $decoded;
+        }
+
+        if (\strlen($decoded) === SODIUM_CRYPTO_SIGN_SEEDBYTES) {
+            $seed = $decoded;
+        } else {
             // In PKCS#8 the Ed25519 seed is the 32 bytes after the
             // OCTET STRING wrapper (04 22 04 20).
             $marker = "\x04\x22\x04\x20";
-            $offset = strpos($der, $marker);
-            $seed = $offset !== false ? substr($der, $offset + 4, 32) : '';
+            $offset = strpos($decoded, $marker);
+            $seed = $offset !== false ? substr($decoded, $offset + 4, 32) : '';
             if (\strlen($seed) !== SODIUM_CRYPTO_SIGN_SEEDBYTES) {
                 throw new Exception('The Entire private key is not an Ed25519 PKCS#8 key.');
             }
-        } else {
-            $decoded = base64_decode(strtr($privateKey, '-_', '+/'), true);
-            if ($decoded === false) {
-                throw new Exception('Failed to decode the Entire private key.');
-            }
-
-            if (\strlen($decoded) === SODIUM_CRYPTO_SIGN_SECRETKEYBYTES) {
-                return $decoded;
-            }
-
-            if (\strlen($decoded) !== SODIUM_CRYPTO_SIGN_SEEDBYTES) {
-                throw new Exception('The Entire private key has an unexpected length.');
-            }
-
-            $seed = $decoded;
         }
 
         return sodium_crypto_sign_secretkey(sodium_crypto_sign_seed_keypair($seed));
@@ -413,12 +452,13 @@ class Entire extends Git
     }
 
     /**
-     * Verifies an installation receipt JWT against the core's published
-     * signing keys and returns its claims. The receipt is Entire's only proof
-     * of an installation, so a consumer must verify it before trusting
-     * anything else on its callback. The `sub` claim is the installation id,
-     * `state` echoes the state given to the install URL, and `project` names
-     * the installing project.
+     * Verifies an installation receipt JWT against the signing keys of the
+     * core that issued it and returns its claims. The receipt is Entire's
+     * only proof of an installation, so a consumer must verify it before
+     * trusting anything else on its callback. The `installation_id` claim is
+     * the installation, `project` and `project_id` name the installing
+     * project, `state` echoes the state given to the install URL, and `jti`
+     * makes the receipt single-use - the caller keeps the ones it accepted.
      *
      * @return array<mixed>
      * @throws Exception
@@ -435,7 +475,18 @@ class Entire extends Git
             throw new Exception('Installation receipt has an unexpected algorithm');
         }
 
-        $key = $this->signingKey($this->coreEndpoint, $this->text($header, 'kid'));
+        if (($header['typ'] ?? '') !== 'entire-install-receipt+jwt') {
+            throw new Exception('Installation receipt has an unexpected type');
+        }
+
+        // The issuer decides where the keys come from, so it is checked
+        // before any are fetched
+        $issuer = rtrim($this->text($claims, 'iss'), '/');
+        if (!$this->isTrustedCore($issuer)) {
+            throw new Exception('Installation receipt issuer is not an Entire core');
+        }
+
+        $key = $this->signingKey($issuer, $this->text($header, 'kid'));
 
         if (
             \strlen($signature) !== SODIUM_CRYPTO_SIGN_BYTES
@@ -444,12 +495,13 @@ class Entire extends Git
             throw new Exception('Installation receipt signature is invalid');
         }
 
-        if (rtrim($this->text($claims, 'iss'), '/') !== $this->coreEndpoint) {
-            throw new Exception('Installation receipt issuer is invalid');
+        $audience = \is_array($claims['aud'] ?? null) ? $claims['aud'] : [$claims['aud'] ?? ''];
+        if ($this->issuer === '' || !\in_array($this->issuer, $audience, true)) {
+            throw new Exception('Installation receipt audience does not include the registered audience');
         }
 
-        if (($claims['aud'] ?? '') !== $plugin) {
-            throw new Exception('Installation receipt audience does not match the plugin');
+        if (($claims['plugin_id'] ?? '') !== $plugin) {
+            throw new Exception('Installation receipt does not name this plugin');
         }
 
         $now = time();
@@ -466,11 +518,21 @@ class Entire extends Git
             throw new Exception('Installation receipt is issued in the future');
         }
 
-        if (empty($claims['sub'])) {
+        if (empty($claims['installation_id'])) {
             throw new Exception('Installation receipt is missing the installation ID');
         }
 
         return $claims;
+    }
+
+    /**
+     * Whether an origin is one of Entire's cores, or the configured one.
+     */
+    public function isTrustedCore(string $origin): bool
+    {
+        $origin = rtrim($origin, '/');
+
+        return $origin !== '' && ($origin === $this->coreEndpoint || \in_array($origin, self::CORES, true));
     }
 
     /**
@@ -945,9 +1007,10 @@ class Entire extends Git
 
     /**
      * Every repository the installation covers, in the shape the contract
-     * promises. The list is one page and memoized per instance; a lookup by
-     * id or name scans it, since a plugin addresses repositories only
-     * through its installation.
+     * promises, memoized per instance; a lookup by id or name scans it, since
+     * a plugin addresses repositories only through its installation. The
+     * customer changes the selection without notice, so the list is the
+     * authority on what the plugin may touch.
      *
      * @return array<array<string, mixed>>
      */
@@ -957,25 +1020,35 @@ class Entire extends Git
             return $this->repositories;
         }
 
-        $response = $this->call(
-            self::METHOD_GET,
-            '/plugins/' . rawurlencode($this->plugin) . '/installations/' . rawurlencode($this->installationId) . '/repositories',
-            ['Authorization' => "Bearer {$this->jwtToken}"],
-        );
-
-        $statusCode = $this->status($response);
-        if ($statusCode >= 400) {
-            throw $this->requestFailed('Failed to list installation repositories', $response);
-        }
-
-        $responseBody = $this->body($response);
-
         $repositories = [];
-        foreach ($this->nested($responseBody, 'repositories') as $repository) {
-            if (\is_array($repository)) {
-                $repositories[] = $this->normalizeRepository($repository);
+        $cursor = '';
+
+        do {
+            $response = $this->call(
+                self::METHOD_GET,
+                '/plugins/' . rawurlencode($this->plugin) . '/installations/' . rawurlencode($this->installationId) . '/repositories',
+                ['Authorization' => "Bearer {$this->jwtToken}"],
+                $cursor === '' ? [] : ['cursor' => $cursor],
+            );
+
+            $statusCode = $this->status($response);
+            if ($statusCode >= 400) {
+                throw $this->requestFailed('Failed to list installation repositories', $response);
             }
-        }
+
+            $responseBody = $this->body($response);
+            foreach ($this->nested($responseBody, 'repositories') as $repository) {
+                if (\is_array($repository)) {
+                    $repositories[] = $this->normalizeRepository($repository);
+                }
+            }
+
+            $nextCursor = $this->text($responseBody, 'next_cursor');
+            if ($nextCursor === $cursor) {
+                break;
+            }
+            $cursor = $nextCursor;
+        } while ($cursor !== '');
 
         return $this->repositories = $repositories;
     }
@@ -1122,6 +1195,31 @@ class Entire extends Git
     }
 
     /**
+     * Entire answers errors as RFC 9457 problem documents, whose media type
+     * the generic client leaves undecoded; their stable `code` is what a
+     * caller branches on, so they are decoded here.
+     *
+     * @param array<string, string> $headers
+     * @param array<mixed> $params
+     * @return array<mixed>
+     */
+    #[\Override]
+    protected function call(string $method, string $path = '', array $headers = [], array $params = [], bool $decode = true, bool $followRedirects = true): array
+    {
+        $response = parent::call($method, $path, $headers, $params, $decode, $followRedirects);
+
+        $contentType = strtolower($this->text($this->nested($response, 'headers'), 'content-type'));
+        if ($decode && \is_string($response['body'] ?? null) && str_starts_with($contentType, 'application/problem+json')) {
+            $problem = json_decode($response['body'], true);
+            if (\is_array($problem)) {
+                $response['body'] = $problem;
+            }
+        }
+
+        return $response;
+    }
+
+    /**
      * An API call against another base than the control plane.
      *
      * @param array<string, string> $headers
@@ -1141,24 +1239,47 @@ class Entire extends Git
     }
 
     /**
-     * The default branch of a repository, memoized.
+     * The serving cell's record of a repository, memoized. The cell knows
+     * the repository by its own id, which its git endpoints are addressed
+     * by; the control-plane id addresses the rest.
+     *
+     * @return array<mixed>
+     */
+    protected function regionalRepository(string $repositoryId): array
+    {
+        if (isset($this->regionalRepositories[$repositoryId])) {
+            return $this->regionalRepositories[$repositoryId];
+        }
+
+        $response = $this->dataCall($repositoryId, self::METHOD_GET, '/repos/' . rawurlencode($repositoryId));
+
+        $statusCode = $this->status($response);
+        if ($statusCode === 404) {
+            throw new RepositoryNotFound('Repository not found.');
+        }
+        if ($statusCode >= 400) {
+            throw $this->requestFailed('Failed to get repository', $response);
+        }
+
+        return $this->regionalRepositories[$repositoryId] = $this->body($response);
+    }
+
+    /**
+     * The id the serving cell's git endpoints address a repository by.
+     */
+    protected function gitRepositoryId(string $repositoryId): string
+    {
+        $id = $this->text($this->regionalRepository($repositoryId), 'id');
+
+        return $id === '' ? $repositoryId : $id;
+    }
+
+    /**
+     * The default branch of a repository.
      */
     protected function defaultBranch(string $repositoryId): string
     {
-        if (isset($this->defaultBranches[$repositoryId])) {
-            return $this->defaultBranches[$repositoryId];
-        }
-
-        $response = $this->dataCall($repositoryId, self::METHOD_GET, '/repos/' . rawurlencode($repositoryId) . '/branches');
-
-        $statusCode = $this->status($response);
-        if ($statusCode >= 400) {
-            throw $this->requestFailed('Failed to get repository branches', $response);
-        }
-
-        $responseBody = $this->body($response);
-
-        return $this->defaultBranches[$repositoryId] = $this->text($responseBody, 'default_branch', 'main');
+        return $this->text($this->regionalRepository($repositoryId), 'default_branch', 'main');
     }
 
     /**
@@ -1235,7 +1356,7 @@ class Entire extends Git
     {
         try {
             $repositoryId = $this->repositoryId($owner, $repositoryName);
-            $refs = $this->collectPages($repositoryId, '/git/repos/' . rawurlencode($repositoryId) . '/branches', 'branches');
+            $refs = $this->collectPages($repositoryId, '/git/repos/' . rawurlencode($this->gitRepositoryId($repositoryId)) . '/branches', 'branches');
         } catch (Exception) {
             // A missing repository, or one with no commits yet, has no branches
             return [];
@@ -1253,7 +1374,7 @@ class Entire extends Git
     {
         try {
             $repositoryId = $this->repositoryId($owner, $repositoryName);
-            $refs = $this->collectPages($repositoryId, '/git/repos/' . rawurlencode($repositoryId) . '/tags', 'tags');
+            $refs = $this->collectPages($repositoryId, '/git/repos/' . rawurlencode($this->gitRepositoryId($repositoryId)) . '/tags', 'tags');
         } catch (Exception) {
             return [];
         }
@@ -1303,7 +1424,7 @@ class Entire extends Git
             $params['recursive'] = 'true';
         }
 
-        $response = $this->dataCall($repositoryId, self::METHOD_GET, '/git/repos/' . rawurlencode($repositoryId) . '/tree', $params);
+        $response = $this->dataCall($repositoryId, self::METHOD_GET, '/git/repos/' . rawurlencode($this->gitRepositoryId($repositoryId)) . '/tree', $params);
 
         $statusCode = $this->status($response);
         if ($statusCode >= 400) {
@@ -1354,7 +1475,7 @@ class Entire extends Git
             $params['path'] = $path;
         }
 
-        $response = $this->dataCall($repositoryId, self::METHOD_GET, '/git/repos/' . rawurlencode($repositoryId) . '/tree', $params);
+        $response = $this->dataCall($repositoryId, self::METHOD_GET, '/git/repos/' . rawurlencode($this->gitRepositoryId($repositoryId)) . '/tree', $params);
 
         $statusCode = $this->status($response);
         if ($statusCode >= 400) {
@@ -1396,7 +1517,7 @@ class Entire extends Git
         $response = $this->dataCall(
             $repositoryId,
             self::METHOD_GET,
-            '/git/repos/' . rawurlencode($repositoryId) . '/raw',
+            '/git/repos/' . rawurlencode($this->gitRepositoryId($repositoryId)) . '/raw',
             [
                 'ref' => $ref === '' || $ref === '0' ? $this->defaultBranch($repositoryId) : $ref,
                 'path' => $this->normalizeRepositoryPath($path),
@@ -1425,7 +1546,7 @@ class Entire extends Git
     {
         $repositoryId = $this->repositoryId($owner, $repositoryName);
 
-        $response = $this->dataCall($repositoryId, self::METHOD_GET, '/git/repos/' . rawurlencode($repositoryId) . '/commits', ['ref' => $commitHash, 'pageSize' => 1]);
+        $response = $this->dataCall($repositoryId, self::METHOD_GET, '/git/repos/' . rawurlencode($this->gitRepositoryId($repositoryId)) . '/commits', ['ref' => $commitHash, 'pageSize' => 1]);
 
         $statusCode = $this->status($response);
         if ($statusCode === 404) {
@@ -1491,7 +1612,7 @@ class Entire extends Git
     {
         $repositoryId = $this->repositoryId($owner, $repositoryName);
 
-        $response = $this->dataCall($repositoryId, self::METHOD_GET, '/git/repos/' . rawurlencode($repositoryId) . '/compare', ['base' => $base, 'head' => $head]);
+        $response = $this->dataCall($repositoryId, self::METHOD_GET, '/git/repos/' . rawurlencode($this->gitRepositoryId($repositoryId)) . '/compare', ['base' => $base, 'head' => $head]);
 
         $statusCode = $this->status($response);
         if ($statusCode >= 400) {
@@ -1860,7 +1981,7 @@ class Entire extends Git
         $response = $this->dataCall(
             $repositoryId,
             self::METHOD_POST,
-            '/git/repos/' . rawurlencode($repositoryId) . '/branches-containing',
+            '/git/repos/' . rawurlencode($this->gitRepositoryId($repositoryId)) . '/branches-containing',
             ['targets' => [$commitHash]],
         );
 
@@ -1970,78 +2091,74 @@ class Entire extends Git
     /**
      * Generates a clone command using the installation access token.
      *
-     * Entire's Git endpoint takes the installation token as a bearer. The
-     * header is pinned to this repository's URL in the global git config, so
-     * every later git command against the clone - including the ones the
-     * sparse checkout runs through a shell - carries it, and no other host
-     * ever sees it.
+     * The entire:// remote is served by git-remote-entire, which git runs
+     * from the PATH and which reads the token from ENTIRE_TOKEN. Exporting
+     * it first puts it in the environment of every git command the chain
+     * runs, including the ones the sparse checkout runs through a shell.
      */
     public function generateCloneCommand(string $owner, string $repositoryName, string $version, string $versionType, string $directory, string $rootDirectory): Command
     {
-        $cloneUrl = $this->getRepositoryCloneUrl($owner, $repositoryName);
-        $clone = $this->cloneCommand($cloneUrl, $version, $versionType, $directory, $rootDirectory);
-
-        if ($this->accessToken === '' || $this->accessToken === '0') {
-            return $clone;
-        }
-
-        return Command::and(
-            new Command('git')->argument('config')->flag('--global')->argument('http.' . $cloneUrl . '.extraHeader')->argument('Authorization: Bearer ' . $this->accessToken),
-            $clone,
-        );
+        return $this->withToken($this->cloneCommand($this->getRepositoryCloneUrl($owner, $repositoryName), $version, $versionType, $directory, $rootDirectory));
     }
 
     /**
-     * Git HTTPS URL of a repository: the clone URL of its processing-primary
-     * placement. Carries no credentials - they ride the headers from
-     * getRepositoryCloneHeaders().
+     * Pushes a branch of a clone made by generateCloneCommand() back to its
+     * origin, with the token the remote helper needs.
+     */
+    #[\Override]
+    public function generatePushCommand(string $owner, string $repositoryName, string $directory, string $branch): Command
+    {
+        return $this->withToken(parent::generatePushCommand($owner, $repositoryName, $directory, $branch));
+    }
+
+    /**
+     * The entire:// address of a repository, which only git-remote-entire
+     * can fetch - see supportsRepositoryCloneUrl().
      */
     public function getRepositoryCloneUrl(string $owner, string $repositoryName): string
     {
         $repository = $this->repository($owner, $repositoryName);
 
-        $cloneUrl = $this->text($repository, 'clone_url');
-        if ($cloneUrl !== '') {
-            return $cloneUrl;
+        $entireUrl = $this->text($repository, 'entire_clone_url');
+        if ($entireUrl !== '') {
+            return $entireUrl;
         }
 
-        // The entire:// address names the cluster host; the same path is
-        // served over HTTPS there
-        $entireUrl = $this->text($repository, 'entire_clone_url');
-        if (str_starts_with($entireUrl, 'entire://')) {
-            return 'https://' . substr($entireUrl, \strlen('entire://'));
+        // The HTTPS address names the same cluster host and path
+        $cloneUrl = $this->text($repository, 'clone_url');
+        if (str_starts_with($cloneUrl, 'https://')) {
+            $cloneUrl = substr($cloneUrl, \strlen('https://'));
+
+            return 'entire://' . (str_ends_with($cloneUrl, '.git') ? substr($cloneUrl, 0, -4) : $cloneUrl);
         }
 
         throw new Exception('Repository reports no clone URL.');
     }
 
     /**
-     * @return array<string, string>
+     * Entire serves git only through its own remote helper, with the token
+     * in the environment, so no plain git client can fetch the clone URL.
      */
     #[\Override]
-    public function getRepositoryCloneHeaders(): array
+    public function supportsRepositoryCloneUrl(): bool
     {
-        if ($this->accessToken === '' || $this->accessToken === '0') {
-            return [];
-        }
-
-        return ['Authorization' => 'Bearer ' . $this->accessToken];
+        return false;
     }
 
     /**
-     * git, run against the repository in $directory, authenticating with the
-     * installation token. For the writes below, which talk to Entire alone;
-     * a clone pins the header to its URL instead (see generateCloneCommand()).
+     * Runs a command with the installation token where git-remote-entire
+     * reads it. Without a token the command runs as it is.
      */
-    protected function authenticatedGit(string $directory): Command
+    protected function withToken(Command $command): Command
     {
-        $git = $this->git($directory);
-
         if ($this->accessToken === '' || $this->accessToken === '0') {
-            return $git;
+            return $command;
         }
 
-        return $git->option('-c', 'http.extraHeader=Authorization: Bearer ' . $this->accessToken);
+        return Command::and(
+            new Command('export')->argument('ENTIRE_TOKEN=' . $this->accessToken),
+            $command,
+        );
     }
 
     /**
@@ -2078,9 +2195,9 @@ class Entire extends Git
     /**
      * Create a file in a repository
      *
-     * Entire has no contents-write API - content changes travel over Git
-     * HTTPS - so this commits the file locally and pushes it, which requires
-     * the `git` binary.
+     * Entire has no contents-write API - content changes travel over git -
+     * so this commits the file locally and pushes it through
+     * git-remote-entire, which requires both binaries.
      *
      * @return array<mixed>
      */
@@ -2097,15 +2214,15 @@ class Entire extends Git
         $directory = $this->temporaryDirectory();
 
         try {
-            $this->execute($this->authenticatedGit($directory)->argument('init')->flag('-q'), 'Initializing the working repository');
+            $this->execute($this->git($directory)->argument('init')->flag('-q'), 'Initializing the working repository');
 
             // Base the commit on the branch tip when there is one; a missing
             // target branch grows from the default branch, and an empty
             // repository starts from scratch
-            $hasBase = $this->tryExecute($this->authenticatedGit($directory)->argument('fetch')->flag('-q')->option('--depth', '1')->argument($remote)->argument('refs/heads/' . $targetBranch))
-                || (!\in_array($branch, ['', '0', $defaultBranch], true) && $this->tryExecute($this->authenticatedGit($directory)->argument('fetch')->flag('-q')->option('--depth', '1')->argument($remote)->argument('refs/heads/' . $defaultBranch)));
+            $hasBase = $this->tryExecute($this->withToken($this->git($directory)->argument('fetch')->flag('-q')->option('--depth', '1')->argument($remote)->argument('refs/heads/' . $targetBranch)))
+                || (!\in_array($branch, ['', '0', $defaultBranch], true) && $this->tryExecute($this->withToken($this->git($directory)->argument('fetch')->flag('-q')->option('--depth', '1')->argument($remote)->argument('refs/heads/' . $defaultBranch))));
             if ($hasBase) {
-                $this->execute($this->authenticatedGit($directory)->argument('checkout')->flag('-q')->argument('FETCH_HEAD'), 'Checking out the branch tip');
+                $this->execute($this->git($directory)->argument('checkout')->flag('-q')->argument('FETCH_HEAD'), 'Checking out the branch tip');
             }
 
             $absolute = $directory . '/' . $relative;
@@ -2129,10 +2246,10 @@ class Entire extends Git
                 throw new Exception("Failed to write {$filepath}");
             }
 
-            $this->execute($this->authenticatedGit($directory)->argument('add')->argument('--')->argument($relative), 'Staging the file');
-            $this->execute($this->authenticatedGit($directory)->option('-c', 'user.name=Utopia VCS')->option('-c', 'user.email=vcs@utopia.dev')->argument('commit')->flag('-q')->option('-m', $message), 'Committing the file');
-            $commitHash = trim($this->execute($this->authenticatedGit($directory)->argument('rev-parse')->argument('HEAD'), 'Reading the commit hash'));
-            $this->execute($this->authenticatedGit($directory)->argument('push')->flag('-q')->argument($remote)->argument('HEAD:refs/heads/' . $targetBranch), 'Pushing the commit');
+            $this->execute($this->git($directory)->argument('add')->argument('--')->argument($relative), 'Staging the file');
+            $this->execute($this->git($directory)->option('-c', 'user.name=Utopia VCS')->option('-c', 'user.email=vcs@utopia.dev')->argument('commit')->flag('-q')->option('-m', $message), 'Committing the file');
+            $commitHash = trim($this->execute($this->git($directory)->argument('rev-parse')->argument('HEAD'), 'Reading the commit hash'));
+            $this->execute($this->withToken($this->git($directory)->argument('push')->flag('-q')->argument($remote)->argument('HEAD:refs/heads/' . $targetBranch)), 'Pushing the commit');
 
             return [
                 'path' => $relative,
@@ -2147,8 +2264,8 @@ class Entire extends Git
     /**
      * Create a branch in a repository
      *
-     * Pushed over Git HTTPS; the remote already holds the objects, so only a
-     * ref update travels.
+     * Pushed through git-remote-entire; the remote already holds the
+     * objects, so only a ref update travels.
      *
      * @return array<mixed>
      */
@@ -2158,10 +2275,10 @@ class Entire extends Git
         $directory = $this->temporaryDirectory();
 
         try {
-            $this->execute($this->authenticatedGit($directory)->argument('init')->flag('-q'), 'Initializing the working repository');
-            $this->execute($this->authenticatedGit($directory)->argument('fetch')->flag('-q')->option('--depth', '1')->argument($remote)->argument('refs/heads/' . $oldBranchName), "Fetching branch {$oldBranchName}");
-            $sha = trim($this->execute($this->authenticatedGit($directory)->argument('rev-parse')->argument('FETCH_HEAD'), 'Reading the branch tip'));
-            $this->execute($this->authenticatedGit($directory)->argument('push')->flag('-q')->argument($remote)->argument('FETCH_HEAD:refs/heads/' . $newBranchName), "Creating branch {$newBranchName}");
+            $this->execute($this->git($directory)->argument('init')->flag('-q'), 'Initializing the working repository');
+            $this->execute($this->withToken($this->git($directory)->argument('fetch')->flag('-q')->option('--depth', '1')->argument($remote)->argument('refs/heads/' . $oldBranchName)), "Fetching branch {$oldBranchName}");
+            $sha = trim($this->execute($this->git($directory)->argument('rev-parse')->argument('FETCH_HEAD'), 'Reading the branch tip'));
+            $this->execute($this->withToken($this->git($directory)->argument('push')->flag('-q')->argument($remote)->argument('FETCH_HEAD:refs/heads/' . $newBranchName)), "Creating branch {$newBranchName}");
 
             return [
                 'name' => $newBranchName,
@@ -2176,8 +2293,8 @@ class Entire extends Git
     /**
      * Create a tag in a repository
      *
-     * Pushed over Git HTTPS. A message produces an annotated tag, no message
-     * a lightweight one.
+     * Pushed through git-remote-entire. A message produces an annotated
+     * tag, no message a lightweight one.
      *
      * @return array<mixed>
      */
@@ -2187,22 +2304,22 @@ class Entire extends Git
         $directory = $this->temporaryDirectory();
 
         try {
-            $this->execute($this->authenticatedGit($directory)->argument('init')->flag('-q'), 'Initializing the working repository');
+            $this->execute($this->git($directory)->argument('init')->flag('-q'), 'Initializing the working repository');
 
             // Prefer fetching the target object directly; fall back to every
             // branch head for servers that refuse fetch-by-SHA
-            if (!$this->tryExecute($this->authenticatedGit($directory)->argument('fetch')->flag('-q')->option('--depth', '1')->argument($remote)->argument($target))) {
-                $this->execute($this->authenticatedGit($directory)->argument('fetch')->flag('-q')->argument($remote)->argument('refs/heads/*:refs/remotes/origin/*'), "Fetching commit {$target}");
+            if (!$this->tryExecute($this->withToken($this->git($directory)->argument('fetch')->flag('-q')->option('--depth', '1')->argument($remote)->argument($target)))) {
+                $this->execute($this->withToken($this->git($directory)->argument('fetch')->flag('-q')->argument($remote)->argument('refs/heads/*:refs/remotes/origin/*')), "Fetching commit {$target}");
             }
 
             if ($message !== '' && $message !== '0') {
                 $this->execute(
-                    $this->authenticatedGit($directory)->option('-c', 'user.name=Utopia VCS')->option('-c', 'user.email=vcs@utopia.dev')->argument('tag')->flag('-a')->argument($tagName)->option('-m', $message)->argument($target),
+                    $this->git($directory)->option('-c', 'user.name=Utopia VCS')->option('-c', 'user.email=vcs@utopia.dev')->argument('tag')->flag('-a')->argument($tagName)->option('-m', $message)->argument($target),
                     "Creating tag {$tagName}",
                 );
-                $this->execute($this->authenticatedGit($directory)->argument('push')->flag('-q')->argument($remote)->argument('refs/tags/' . $tagName), "Pushing tag {$tagName}");
+                $this->execute($this->withToken($this->git($directory)->argument('push')->flag('-q')->argument($remote)->argument('refs/tags/' . $tagName)), "Pushing tag {$tagName}");
             } else {
-                $this->execute($this->authenticatedGit($directory)->argument('push')->flag('-q')->argument($remote)->argument($target . ':refs/tags/' . $tagName), "Pushing tag {$tagName}");
+                $this->execute($this->withToken($this->git($directory)->argument('push')->flag('-q')->argument($remote)->argument($target . ':refs/tags/' . $tagName)), "Pushing tag {$tagName}");
             }
 
             return [

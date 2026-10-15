@@ -41,6 +41,8 @@ final class EntireTest extends TestCase
     protected const string HEAD_BRANCH = 'feature-branch';
     protected const string INSTALLATION_ID = 'ins_01ARZ3NDEKTSV4RRFFQ69G5FAV';
     protected const string PLUGIN = 'appwrite';
+    protected const string ISSUER = 'https://appwrite.test';
+    protected const string CORE = 'https://eu.auth.entire.io';
     protected const string CELL = 'https://aws-us-east-2.api.entire.io';
 
     protected Entire $adapter;
@@ -52,6 +54,7 @@ final class EntireTest extends TestCase
     protected function setUp(): void
     {
         $this->adapter = new Entire(new Cache(new None()));
+        $this->adapter->setIssuer(self::ISSUER);
     }
 
     /**
@@ -213,24 +216,32 @@ final class EntireTest extends TestCase
         $publicKey = rtrim(strtr(base64_encode(sodium_crypto_sign_publickey($keyPair)), '+/', '-_'), '=');
 
         $adapter = new FixtureKeysEntire(new Cache(new None()));
+        $adapter->setIssuer(self::ISSUER);
         $adapter->fixtureKeys = [['kty' => 'OKP', 'crv' => 'Ed25519', 'kid' => 'k1', 'x' => $publicKey]];
 
-        $header = ['alg' => 'EdDSA', 'kid' => 'k1', 'typ' => 'JWT'];
+        $header = ['alg' => 'EdDSA', 'kid' => 'k1', 'typ' => 'entire-install-receipt+jwt'];
         $claims = [
-            'iss' => 'https://us.console.entire.io',
-            'aud' => self::PLUGIN,
-            'sub' => self::INSTALLATION_ID,
-            'state' => '{"projectId":"p1"}',
+            'iss' => self::CORE,
+            'aud' => [self::ISSUER],
+            'plugin_id' => self::PLUGIN,
+            'installation_id' => self::INSTALLATION_ID,
             'project' => self::OWNER,
+            'project_id' => '01M4ZC35447W79310H702K9276',
+            'state' => '{"projectId":"p1"}',
+            'jti' => 'rcp_0123456789',
             'iat' => time(),
             'exp' => time() + 300,
         ];
 
         $verified = $adapter->verifyReceipt($this->signJwt($header, $claims, $secretKey), self::PLUGIN);
 
-        $this->assertSame(self::INSTALLATION_ID, $verified['sub']);
+        $this->assertSame(self::INSTALLATION_ID, $verified['installation_id']);
         $this->assertSame('{"projectId":"p1"}', $verified['state']);
         $this->assertSame(self::OWNER, $verified['project']);
+        $this->assertSame('rcp_0123456789', $verified['jti']);
+
+        // The audience may be a single string
+        $this->assertSame(self::INSTALLATION_ID, $adapter->verifyReceipt($this->signJwt($header, ['aud' => self::ISSUER] + $claims, $secretKey), self::PLUGIN)['installation_id']);
     }
 
     public function testVerifyReceiptRejections(): void
@@ -240,13 +251,15 @@ final class EntireTest extends TestCase
         $publicKey = rtrim(strtr(base64_encode(sodium_crypto_sign_publickey($keyPair)), '+/', '-_'), '=');
 
         $adapter = new FixtureKeysEntire(new Cache(new None()));
+        $adapter->setIssuer(self::ISSUER);
         $adapter->fixtureKeys = [['kty' => 'OKP', 'crv' => 'Ed25519', 'kid' => 'k1', 'x' => $publicKey]];
 
-        $header = ['alg' => 'EdDSA', 'kid' => 'k1', 'typ' => 'JWT'];
+        $header = ['alg' => 'EdDSA', 'kid' => 'k1', 'typ' => 'entire-install-receipt+jwt'];
         $claims = [
-            'iss' => 'https://us.console.entire.io',
-            'aud' => self::PLUGIN,
-            'sub' => self::INSTALLATION_ID,
+            'iss' => self::CORE,
+            'aud' => [self::ISSUER],
+            'plugin_id' => self::PLUGIN,
+            'installation_id' => self::INSTALLATION_ID,
             'iat' => time(),
             'exp' => time() + 300,
         ];
@@ -254,11 +267,14 @@ final class EntireTest extends TestCase
         $cases = [
             'not a JWT' => ['not-a-jwt', self::PLUGIN],
             'wrong algorithm' => [$this->signJwt(['alg' => 'HS256'] + $header, $claims, $secretKey), self::PLUGIN],
+            'wrong token type' => [$this->signJwt(['typ' => 'JWT'] + $header, $claims, $secretKey), self::PLUGIN],
             'unknown key id' => [$this->signJwt(['kid' => 'k2'] + $header, $claims, $secretKey), self::PLUGIN],
-            'wrong audience' => [$this->signJwt($header, $claims, $secretKey), 'other-plugin'],
-            'wrong issuer' => [$this->signJwt($header, ['iss' => 'https://evil.test'] + $claims, $secretKey), self::PLUGIN],
+            'another plugin' => [$this->signJwt($header, $claims, $secretKey), 'other-plugin'],
+            'another audience' => [$this->signJwt($header, ['aud' => ['https://other.test']] + $claims, $secretKey), self::PLUGIN],
+            'issuer not a core' => [$this->signJwt($header, ['iss' => 'https://evil.test'] + $claims, $secretKey), self::PLUGIN],
+            'issuer a lookalike' => [$this->signJwt($header, ['iss' => 'https://eu.auth.entire.io.evil.test'] + $claims, $secretKey), self::PLUGIN],
             'expired' => [$this->signJwt($header, ['exp' => time() - 300] + $claims, $secretKey), self::PLUGIN],
-            'missing installation id' => [$this->signJwt($header, ['sub' => ''] + $claims, $secretKey), self::PLUGIN],
+            'missing installation id' => [$this->signJwt($header, ['installation_id' => ''] + $claims, $secretKey), self::PLUGIN],
             'signed by a different key' => [$this->signJwt($header, $claims, sodium_crypto_sign_secretkey(sodium_crypto_sign_keypair())), self::PLUGIN],
         ];
 
@@ -270,6 +286,21 @@ final class EntireTest extends TestCase
                 $this->assertNotEmpty($e->getMessage(), $name);
             }
         }
+    }
+
+    public function testIsTrustedCore(): void
+    {
+        foreach (Entire::CORES as $core) {
+            $this->assertTrue($this->adapter->isTrustedCore($core));
+        }
+        $this->assertTrue($this->adapter->isTrustedCore('https://us.auth.entire.io/'));
+        $this->assertFalse($this->adapter->isTrustedCore('https://us.console.entire.io'));
+        $this->assertFalse($this->adapter->isTrustedCore('https://aws-us-east-2.api.entire.io'));
+        $this->assertFalse($this->adapter->isTrustedCore(''));
+
+        // A development core configured as the endpoint is its own core
+        $this->adapter->setEndpoint('http://localhost:8787');
+        $this->assertTrue($this->adapter->isTrustedCore('http://localhost:8787'));
     }
 
     public function testGetSigningKeys(): void
@@ -459,8 +490,13 @@ final class EntireTest extends TestCase
         $this->assertFalse($this->adapter->hasAccessToAllRepositories());
         $this->assertSame([], $this->adapter->listRepositoryLanguages('acme', 'api'));
 
-        // No token before initialization, so no credential to send
+        // Only git-remote-entire fetches an entire:// address, so a consumer
+        // clones through generateCloneCommand() and never with headers
+        $this->assertFalse($this->adapter->supportsRepositoryCloneUrl());
         $this->assertSame([], $this->adapter->getRepositoryCloneHeaders());
+
+        // Without a token, a push is a plain push
+        $this->assertSame("'git' '-C' '/tmp/clone' 'push' 'origin' 'main'", $this->adapter->generatePushCommand('acme', 'api', '/tmp/clone', 'main')->toString());
     }
 
     public function testCreateFileRejectsEscapingPath(): void

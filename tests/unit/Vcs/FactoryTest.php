@@ -69,7 +69,8 @@ final class FactoryTest extends TestCase
         $registry = Config::getParam('vcs', []);
         $this->assertArrayHasKey('entire', $registry);
         $this->assertArrayNotHasKey('oauth2', $registry['entire']);
-        $this->assertSame('https://us.console.entire.io', $registry['entire']['endpoint']);
+        $this->assertSame('https://us.auth.entire.io', $registry['entire']['endpoint']);
+        $this->assertSame('_APP_VCS_ENTIRE_ISSUER', $registry['entire']['variables']['issuer']['envVariable']);
 
         $factory = new Factory($this->cache(), new Client(new CurlAdapter()), $registry);
         $this->assertInstanceOf(Entire::class, $factory->fromProvider('entire'));

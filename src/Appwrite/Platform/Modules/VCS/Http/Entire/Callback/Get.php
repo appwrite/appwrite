@@ -9,8 +9,10 @@ use Appwrite\Vcs\Factory as VcsFactory;
 use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Id;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
@@ -35,25 +37,36 @@ class Get extends Action
             ->groups(['api', 'vcs'])
             ->label('scope', 'public')
             ->label('error', APP_VIEWS_DIR . '/general/error.phtml')
-            ->param('installation_id', '', new Text(256, 0), 'Entire installation ID', true)
             ->param('receipt', '', new Text(8192, 0), 'Entire installation receipt JWT, signed by the Entire core.', true)
             ->param('state', '', new Text(APP_LIMIT_VCS_STATE, 0), 'Entire state. Contains info sent when starting the installation flow.', true)
+            ->param('error', '', new Text(256, 0), 'Entire error code, when the installation was not approved.', true)
             ->inject('response')
             ->inject('dbForPlatform')
+            ->inject('authorization')
             ->inject('platform')
             ->inject('vcsFactory')
             ->callback($this->action(...));
     }
 
     public function action(
-        string $providerInstallationId,
         string $receipt,
         string $state,
+        string $error,
         Response $response,
         Database $dbForPlatform,
+        Authorization $authorization,
         array $platform,
         VcsFactory $vcsFactory,
     ) {
+        // A customer who cancels on Entire comes back with an error and the
+        // state instead of a receipt
+        if (!empty($error) && empty($receipt)) {
+            $cancelled = \json_decode($state, true);
+            $redirectFailure = \is_array($cancelled) ? \strval($cancelled['failure'] ?? '') : '';
+            $this->failure($response, $redirectFailure, $error === 'access_denied' ? 'The installation was not approved on Entire.' : 'Entire refused the installation: ' . $error);
+            return;
+        }
+
         if (empty($receipt)) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Missing installation receipt. Please restart the installation from the Appwrite Console.');
         }
@@ -70,13 +83,7 @@ class Get extends Action
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Could not verify the Entire installation receipt. Please restart the installation from the Appwrite Console.');
         }
 
-        // The receipt's subject is the authoritative installation id; a
-        // separately passed installation_id may only confirm it.
-        $receiptInstallationId = \strval($receiptClaims['sub'] ?? '');
-        if (!empty($providerInstallationId) && $providerInstallationId !== $receiptInstallationId) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Receipt subject does not match the installation ID.');
-        }
-        $providerInstallationId = $receiptInstallationId;
+        $providerInstallationId = \strval($receiptClaims['installation_id'] ?? '');
 
         // Entire echoes the state given to the install URL as a receipt claim;
         // accept a query parameter carrying the same value as a fallback.
@@ -95,6 +102,20 @@ class Get extends Action
         $signature = \hash_hmac('sha256', \json_encode([$projectId, $state['success'] ?? '', $redirectFailure]), System::getEnv('_APP_OPENSSL_KEY_V1', ''));
         if (!\hash_equals($signature, \is_string($state['signature'] ?? null) ? $state['signature'] : '')) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid state parameter. Please restart the installation from the Appwrite Console.');
+        }
+
+        // Receipts are single-use: one replayed within its five-minute life
+        // must not attach the installation again
+        $receiptId = \strval($receiptClaims['jti'] ?? '');
+        if (!empty($receiptId)) {
+            try {
+                $authorization->skip(fn () => $dbForPlatform->createDocument('vcsCommentLocks', new Document([
+                    // Document ids are capped at 36 characters; a digest prefix keeps the claim within it
+                    '$id' => 'entire-receipt-' . \substr(\hash('sha256', $receiptId), 0, 21),
+                ])));
+            } catch (Duplicate) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'The installation receipt was already used. Please restart the installation from the Appwrite Console.');
+            }
         }
 
         $project = $dbForPlatform->getDocument('projects', $projectId);
