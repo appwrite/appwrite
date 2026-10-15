@@ -388,3 +388,115 @@ fn a_collection_or_attribute_whose_definition_is_unconfirmed_keeps_its_storage()
         assert_eq!(adapter.count("updateDocument"), 1);
     });
 }
+
+// ---- CollectionValidationTest (Memory) ---------------------------------
+
+#[test]
+fn a_point_attribute_is_refused_on_memory_when_validating() {
+    block_on(async {
+        let (_, db) = memory().await;
+        db.set_validation(true);
+        let error =
+            db.create_collection(collection("places", vec![Attribute::point("location")], Vec::new())).await.unwrap_err();
+        assert!(error.is_a(Kind::Database));
+        assert_eq!(error.message(), "Spatial attributes are not supported");
+    });
+}
+
+#[test]
+fn json_and_required_defaults_are_accepted_when_validating() {
+    block_on(async {
+        let (_, db) = memory().await;
+        db.set_validation(true);
+        let attributes = vec![
+            Attribute::string("prefs", 65_535)
+                .default(Value::Object(Array::new()))
+                .filters([crate::filter::Filter::Json]),
+            Attribute::string("status", 32).required(true).default(Value::Str(Str::from("active"))),
+        ];
+        assert_eq!(db.create_collection(collection("users", attributes, Vec::new())).await.unwrap().id(), "users");
+    });
+}
+
+#[test]
+fn create_collection_accepts_a_collection_model() {
+    block_on(async {
+        let (_, db) = memory().await;
+        let users = Collection::create(
+            "users",
+            "Users",
+            vec![Attribute::string("name", LENGTH_KEY).required(true)],
+            Vec::new(),
+            None,
+            true,
+            Array::new(),
+        )
+        .unwrap();
+        let created = db.create_collection(users).await.unwrap();
+        assert_eq!(created.id(), "users");
+        assert_eq!(created.get("name"), Some(&Value::Str(Str::from("Users"))));
+        let attributes = created.attributes().unwrap();
+        assert_eq!(attributes.len(), 1);
+        assert_eq!((attributes[0].key.as_str(), attributes[0].kind), ("name", ColumnType::String));
+    });
+}
+
+#[test]
+fn undeclared_permissions_default_to_create_any_and_empty_ones_stay_empty() {
+    block_on(async {
+        let (_, db) = memory().await;
+        let anon = db.create_collection(collection("anon", Vec::new(), Vec::new())).await.unwrap();
+        let locked = Collection::create("locked", "", Vec::new(), Vec::new(), Some(Vec::new()), true, Array::new());
+        let locked = db.create_collection(locked.unwrap()).await.unwrap();
+        assert_eq!(anon.permissions().unwrap(), [Permission::create(&Role::any())]);
+        assert!(locked.permissions().unwrap().is_empty());
+    });
+}
+
+#[test]
+fn list_collections_returns_the_stored_definitions() {
+    block_on(async {
+        let (_, db) = memory().await;
+        db.create_collection(collection("col1", Vec::new(), Vec::new())).await.unwrap();
+        db.create_collection(collection("col2", Vec::new(), Vec::new())).await.unwrap();
+        // The metadata collection grants no read: only a skipped
+        // authorization lists it (as PHP does).
+        assert!(db.list_collections(25, 0).await.unwrap().is_empty());
+        let authorization = db.authorization();
+        let listed = authorization.skip(db.list_collections(25, 0)).await.unwrap();
+        assert_eq!(listed.iter().map(|c| c.id().to_owned()).collect::<Vec<_>>(), ["col1", "col2"]);
+        let page = authorization.skip(db.list_collections(1, 1)).await.unwrap();
+        assert_eq!(page.iter().map(|c| c.id().to_owned()).collect::<Vec<_>>(), ["col2"]);
+        assert!(db.collection_exists("col1", None).await.unwrap());
+    });
+}
+
+// ---- SharedCollectionCleanupTest (Memory) ------------------------------
+
+#[test]
+fn a_shared_create_whose_definition_is_not_stored_keeps_the_shared_table() {
+    block_on(async {
+        let (adapter, db) = memory().await;
+        db.set_shared_tables(true);
+        db.set_tenant(Value::Int(2));
+        adapter.on(|call| match call {
+            Call::CreateDocument { collection, .. } if collection.id() == METADATA => {
+                Some(Reply::Error(Error::new(Kind::Runtime, "write conflict")))
+            }
+            _ => None,
+        });
+        let any = Role::any();
+        let logs = Collection::create(
+            "logs",
+            "",
+            vec![Attribute::string("message", 64)],
+            Vec::new(),
+            Some(vec![Permission::create(&any), Permission::read(&any)]),
+            false,
+            Array::new(),
+        )
+        .unwrap();
+        assert!(db.create_collection(logs).await.is_err());
+        assert_eq!(adapter.count("deleteCollection"), 0, "a table other tenants use is not dropped");
+    });
+}

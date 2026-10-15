@@ -3,7 +3,9 @@
 //! Memory to override a method).
 
 mod attributes;
+mod cache;
 mod collections;
+mod definitions;
 mod indexes;
 mod relationships;
 
