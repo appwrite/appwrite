@@ -4,7 +4,7 @@ import {
   AppwriteMark,
   ComparisonHeroBackdrop,
 } from '@/components/pages/alternative-to/$competitor/_components/ComparisonParts'
-import { GitHubSolidIcon } from '@/components/pages/marketing/MarketingGitHubStarsLink'
+import { GitHubSolidIcon } from '@/components/pages/marketing/GitHubSolidIcon'
 import { riseStyle } from '@/components/pages/products/_components/ArtParts'
 import { Button } from '@/components/ui/button'
 import type { SecretSuspect, SecretVariantContent } from '@/lib/campaigns/secret/content'
