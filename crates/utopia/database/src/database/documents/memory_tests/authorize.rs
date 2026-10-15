@@ -228,6 +228,32 @@ fn an_unknown_collection_is_not_found() {
     });
 }
 
+/// PHP: `Documents/DocumentMinorsTest::testAnUnchangedListOfRelatedIdsIsNotAChange`
+/// (PHP's database subclass, which hands the stored list back as ids, has no
+/// counterpart here: the stored list is compared as read).
+#[test]
+fn an_unchanged_list_of_related_ids_is_not_a_change() {
+    block_on(async {
+        let db = crate::database::testing_memory::memory("minors").await;
+        db.add_hook(Hook::Relationships(Arc::new(Relationships::new(true)))).unwrap();
+        let any = Role::any();
+        let read_only = vec![Permission::create(&any), Permission::read(&any)];
+        let mut writable = read_only.clone();
+        writable.push(Permission::update(&any));
+        crate::database::testing_memory::collection(&db, "parents", Vec::new(), read_only, true).await;
+        crate::database::testing_memory::collection(&db, "children", Vec::new(), writable, true).await;
+        let children = Relationship::one_to_many("children").key("children").two_way(true).two_way_key("parent");
+        db.create_relationship("parents", children).await.unwrap();
+        db.create_document("children", doc(vec![("$id", s("c1"))])).await.unwrap();
+        db.create_document("children", doc(vec![("$id", s("c2"))])).await.unwrap();
+        let parent = doc(vec![("$id", s("p1")), ("children", list([s("c1"), s("c2")]))]);
+        db.create_document("parents", parent).await.unwrap();
+        let same = doc(vec![("children", list([s("c1"), s("c2")]))]);
+        let updated = db.update_document("parents", "p1", same).await.unwrap();
+        assert_eq!(updated.id(), "p1", "an unchanged list needs no update permission");
+    });
+}
+
 #[test]
 fn the_checks_write_nothing() {
     block_on(async {

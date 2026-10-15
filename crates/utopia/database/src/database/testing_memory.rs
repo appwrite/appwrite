@@ -142,6 +142,8 @@ pub(crate) struct Tweaked {
     casting: bool,
     commit_failures: AtomicI64,
     lower_case_reads: bool,
+    cast_hook: Option<fn(&mut Document)>,
+    updates: Mutex<Vec<Document>>,
 }
 
 impl Tweaked {
@@ -154,6 +156,8 @@ impl Tweaked {
             casting: false,
             commit_failures: AtomicI64::new(0),
             lower_case_reads: false,
+            cast_hook: None,
+            updates: Mutex::new(Vec::new()),
         }
     }
 
@@ -181,6 +185,19 @@ impl Tweaked {
         self
     }
 
+    /// Casting itself with `hook` applied to each document going to the
+    /// engine.
+    pub(crate) fn casting_with(mut self, hook: fn(&mut Document)) -> Self {
+        self.casting = true;
+        self.cast_hook = Some(hook);
+        self
+    }
+
+    /// The updates `updateDocuments()` was handed, in order.
+    pub(crate) fn received_updates(&self) -> Vec<Document> {
+        self.updates.lock().unwrap().clone()
+    }
+
     /// Reading a document by its id lower-cased.
     pub(crate) fn lower_case_reads(mut self) -> Self {
         self.lower_case_reads = true;
@@ -200,7 +217,10 @@ impl Tweaked {
 }
 
 impl Casting for Tweaked {
-    fn cast_before(&self, _collection: &Collection, document: Document) -> Result<Document> {
+    fn cast_before(&self, _collection: &Collection, mut document: Document) -> Result<Document> {
+        if let Some(hook) = self.cast_hook {
+            hook(&mut document);
+        }
         Ok(document)
     }
 
@@ -393,6 +413,7 @@ impl Adapter for Tweaked {
         documents: Vec<Document>,
         skip_permissions: &[String],
     ) -> Result<i64> {
+        self.updates.lock().unwrap().push(updates.clone());
         self.inner.update_documents(collection, updates, documents, skip_permissions).await
     }
 

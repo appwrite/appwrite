@@ -6,6 +6,7 @@
 mod authorize;
 mod bulk;
 mod bulk_more;
+mod engine;
 mod ids;
 mod integer_rounding;
 mod numeric;
