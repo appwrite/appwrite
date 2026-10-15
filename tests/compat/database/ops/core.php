@@ -50,7 +50,7 @@ require_once \dirname(__DIR__) . '/Objects.php';
 // The custom document types of the e2e suite (Support\User, Support\Post).
 foreach (['User', 'Post'] as $support) {
     $file = \dirname(__DIR__, 4) . "/vendor/utopia-php/database/tests/e2e/Adapter/Support/{$support}.php";
-    if (is_file($file) && !class_exists('Tests\\E2E\\Adapter\\Support\\' . $support, false)) {
+    if (is_file($file)) {
         require_once $file;
     }
 }
@@ -463,7 +463,7 @@ final class Core
         }
         $fixture = new PoolFixture();
         $unreachable = (bool) ($spec['unreachable'] ?? false);
-        $fixture->pool = new UtopiaPool(new Stack(), $driver, (int) ($spec['size'] ?? 1), function () use ($fixture, $unreachable, $driver, $s) {
+        $fixture->pool = new UtopiaPool(new Stack(), $driver, (int) ($spec['size'] ?? 1), function () use ($unreachable, $driver, $s) {
             if ($unreachable) {
                 throw new \RuntimeException('SQLSTATE[HY000] [2002] Connection refused');
             }

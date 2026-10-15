@@ -179,7 +179,7 @@ foreach ($files as $path) {
             Recorder::$test = -1;
             Recorder::release($index);
             $recorded[] = $test;
-            if (Recorder::$testProblems !== []) {
+            if (Recorder::testProblems() !== []) {
                 $unportable[$path][$label] = implode('; ', array_unique(Recorder::$testProblems));
                 $recorded[$index]['status'] = 'unportable';
             }

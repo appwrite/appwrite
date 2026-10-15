@@ -125,7 +125,7 @@ final class Recorder
     /** @var \WeakMap<\Utopia\Database\Profiler, RecordingProfiler>|null the wrapper handed out for each profiler */
     private static ?\WeakMap $profilers = null;
 
-    /** @var \WeakMap<\Utopia\Database\Profiler, Database>|null the database each wrapped profiler belongs to */
+    /** @var \WeakMap<\Utopia\Database\Profiler, object>|null the database each wrapped profiler belongs to */
     private static ?\WeakMap $profilerOwners = null;
 
     /** Known global filters of the tests (file:line of the encode callback => fixture). */
@@ -805,7 +805,7 @@ final class Recorder
             $hook instanceof \Utopia\Database\Hook\Relationships => $prop($hook, 'prepare') === false ? ['$hook' => 'Relationships', 'prepare' => false] : ['$hook' => 'Relationships'],
             $hook instanceof \Utopia\Database\Hook\Permissions => ['$hook' => 'Permissions'],
             $hook instanceof \Utopia\Database\Hook\Tenancy => ['$hook' => 'Tenancy'],
-            $class === 'Tests\\E2E\\Adapter\\Support\\EventRecorder' => ['$hook' => 'Log', 'name' => $prop($hook, 'name')],
+            str_ends_with($class, '\\Support\\EventRecorder') => ['$hook' => 'Log', 'name' => $prop($hook, 'name')],
             $hook instanceof \Utopia\Database\Hook\Transform && str_contains($file, 'CollectionTests.php') => ['$hook' => 'Transform', 'table' => self::encode($prop($hook, 'table')), 'event' => 'document_read', 'append' => ' AND 1 = 0'],
             $hook instanceof \Utopia\Database\Hook\Nested && str_contains($file, 'NestedPreparationTests.php') => ['$hook' => 'Nested', 'marker' => $prop($hook, 'marker')],
             default => null,
@@ -851,7 +851,7 @@ final class Recorder
         $inner = (new \ReflectionProperty(\Utopia\Database\Cache\Query::class, 'cache'))->getValue($cache);
         $slots = (new \ReflectionProperty(\Utopia\Database\Cache\Query::class, 'slots'))->getValue($cache);
         $out = ['cache' => self::$main !== null && $inner === self::$main->getCache() ? 'database' : self::cache($inner)];
-        if ($slots !== \Utopia\Database\Cache\Query::SLOTS) {
+        if ($slots !== (new \ReflectionClassConstant(\Utopia\Database\Cache\Query::class, 'SLOTS'))->getValue()) {
             $out['slots'] = $slots;
         }
         $name = self::assign($cache);
@@ -1057,6 +1057,16 @@ final class Recorder
 
     /** @var list<string> why the test recording now cannot be ported (it is left out when it has any) */
     public static array $testProblems = [];
+
+    /**
+     * What made the running unit test unportable so far.
+     *
+     * @return list<string>
+     */
+    public static function testProblems(): array
+    {
+        return self::$testProblems;
+    }
 
     /**
      * Whether a value is an object of the library whose calls are recorded:
@@ -1274,7 +1284,7 @@ final class Recorder
             return $target->{$method}(...$args);
         }
         if (!self::$on || self::$depth > 0) {
-            if (self::$on && self::$depth > 0) {
+            if (self::$on) {
                 self::problem('the library ran test code that called ' . $target::class . "::{$method}");
             }
 

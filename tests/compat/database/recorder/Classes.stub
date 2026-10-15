@@ -91,3 +91,10 @@ class RecordingSharedTest extends \PHPUnit\Framework\TestCase
     {
     }
 }
+
+// ops/core.php's unreachable Redis client, which Fixture\UnreachableRedisCommands::declare() declares.
+namespace Tests\Compat\Database\Fixture;
+
+class UnreachableRedis extends \Redis
+{
+}

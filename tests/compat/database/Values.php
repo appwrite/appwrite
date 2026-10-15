@@ -301,7 +301,7 @@ final class Values
         if ($value instanceof \Closure) {
             return ['$closure' => true];
         }
-        if (\is_object($value) && self::shortName($value::class) !== null && !$value instanceof \Closure) {
+        if (\is_object($value) && self::shortName($value::class) !== null) {
             return self::encodeObject($value);
         }
         if (\is_object($value)) {

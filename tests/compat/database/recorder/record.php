@@ -480,7 +480,7 @@ final class Target
                 })(),
                 'adapter.locks' => $step('database.set_locks', ['locks' => (bool) $value]),
                 // The adapter's own Tenancy hook (shared tables) comes and goes with them.
-                'adapter.writeHooks' => (function () use ($step, $value, $settings, &$problems) {
+                'adapter.writeHooks' => (function () use ($value, &$problems) {
                     $fresh = array_values(array_filter(self::$fresh['adapter.writeHooks'] ?? [], fn ($h) => ($h['$hook'] ?? '') !== 'Tenancy'));
                     $now = array_values(array_filter($value, fn ($h) => ($h['$hook'] ?? '') !== 'Tenancy'));
                     if ($fresh !== $now) {

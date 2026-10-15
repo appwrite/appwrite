@@ -77,7 +77,7 @@ final class Rewriter extends NodeVisitorAbstract
         }
     }
 
-    public function leaveNode(Node $node)
+    public function leaveNode(Node $node): ?Node
     {
         if (isset($this->constant[spl_object_id($node)])) {
             return null;
