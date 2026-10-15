@@ -4,7 +4,6 @@ namespace Appwrite\Platform\Modules\Functions\Workers;
 
 use Appwrite\Deployment\Deployments;
 use Appwrite\Deployment\GitAction;
-use Appwrite\Deployment\RootDirectory;
 use Appwrite\Event\Publisher\Usage as UsagePublisher;
 use Appwrite\Event\Realtime;
 use Appwrite\Extend\Exception as AppwriteException;
@@ -12,7 +11,6 @@ use Appwrite\Usage\Build as BuildUsage;
 use Appwrite\Usage\Context;
 use Appwrite\Vcs\Factory as VcsFactory;
 use Exception;
-use InvalidArgumentException;
 use Utopia\Config\Config;
 use Utopia\Console\Command;
 use Utopia\Console\Console;
@@ -35,18 +33,6 @@ class Builds extends Action
     public static function getName(): string
     {
         return 'builds';
-    }
-
-    /**
-     * @throws BuildException when the path escapes the repository
-     */
-    private function resolveRootDirectory(string $path): string
-    {
-        try {
-            return (new RootDirectory($path))->path;
-        } catch (InvalidArgumentException $exception) {
-            throw new BuildException($exception->getMessage(), previous: $exception);
-        }
     }
 
     /**
@@ -291,7 +277,13 @@ class Builds extends Action
         try {
             // VCS and VCS+Temaplte
             $tmpDirectory = '/tmp/builds/' . $deploymentId . '/code';
-            $providerRootDirectory = $this->resolveRootDirectory($resource->getAttribute('providerRootDirectory', ''));
+            $providerRootDirectory = $resource->getAttribute('providerRootDirectory', '');
+            $providerRootDirectory = \rtrim($providerRootDirectory, '/');
+            $providerRootDirectory = \ltrim($providerRootDirectory, '.');
+            $providerRootDirectory = \ltrim($providerRootDirectory, '/');
+            if (\in_array('..', \explode('/', $providerRootDirectory), true)) {
+                throw new BuildException('Invalid root directory');
+            }
             $rootDirectory = $providerRootDirectory;
 
             $owner = $providerAdapter->getOwnerName($providerInstallationId, (int) $providerRepositoryId);
@@ -347,7 +339,13 @@ class Builds extends Action
             $templateReferenceType = $template->getAttribute('referenceType', '');
             $templateReferenceValue = $template->getAttribute('referenceValue', '');
 
-            $templateRootDirectory = $this->resolveRootDirectory($template->getAttribute('rootDirectory', ''));
+            $templateRootDirectory = $template->getAttribute('rootDirectory', '');
+            $templateRootDirectory = \rtrim($templateRootDirectory, '/');
+            $templateRootDirectory = \ltrim($templateRootDirectory, '.');
+            $templateRootDirectory = \ltrim($templateRootDirectory, '/');
+            if (\in_array('..', \explode('/', $templateRootDirectory), true)) {
+                throw new BuildException('Invalid root directory');
+            }
 
             if (! empty($templateRepositoryName) && ! empty($templateOwnerName) && ! empty($templateReferenceType) && ! empty($templateReferenceValue)) {
                 // Clone template repo
