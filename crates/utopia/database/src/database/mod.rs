@@ -59,7 +59,13 @@ mod scopes;
 mod transactions;
 
 #[cfg(test)]
+mod core_memory_tests;
+#[cfg(test)]
 mod core_tests;
+#[cfg(test)]
+pub(crate) mod fixtures;
+#[cfg(test)]
+pub(crate) mod spy;
 #[cfg(test)]
 mod schema_tests;
 #[cfg(test)]

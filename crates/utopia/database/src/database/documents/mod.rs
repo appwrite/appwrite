@@ -22,6 +22,10 @@ mod delete;
 mod find;
 #[cfg(test)]
 mod find_tests;
+#[cfg(test)]
+mod read_memory_tests;
+#[cfg(test)]
+mod queries_hook_tests;
 pub(crate) mod joins;
 mod numeric;
 mod read;
