@@ -202,8 +202,8 @@ final class AppwriteTest extends TestCase
         $this->assertCount(1, $broker->published);
         $publish = $broker->published[0];
         $this->assertSame(self::PROJECT_ID, $publish['projectId']);
-        // The fan-out carries the topic name subscribers match on, not the id.
-        $this->assertSame(['topic-1-name'], $publish['channels']);
+        // The fan-out carries the topic id subscribers match on, not the name.
+        $this->assertSame(['topic-1'], $publish['channels']);
         $this->assertSame(1, $publish['options']['qos']);
         // The ledger stores exactly what was published.
         $this->assertSame($row->getAttribute('data'), $publish['options']['payload']);
@@ -228,6 +228,7 @@ final class AppwriteTest extends TestCase
         $this->assertSame('India vs Australia', $payload['notification']['body']);
         $this->assertSame(['matchId' => '42'], $payload['data']);
         $this->assertSame('high', $payload['priority']);
+        $this->assertSame('msg-1', $payload['messageId']);
     }
 
     public function testSequenceAdvancesPerPublish(): void
@@ -349,7 +350,7 @@ final class AppwriteTest extends TestCase
         $this->assertCount(1, $ledger);
         $this->assertSame('topic-1', $ledger[0]->getAttribute('topic'));
         $this->assertCount(1, $broker->published);
-        $this->assertSame(['topic-1-name'], $broker->published[0]['channels']);
+        $this->assertSame(['topic-1'], $broker->published[0]['channels']);
     }
 
     public function testFanOutFailureIsRecordedPerTopic(): void
@@ -358,8 +359,8 @@ final class AppwriteTest extends TestCase
         // failure, yet the durable row is already written for later replay.
         $this->seedTopic('topic-1', 0);
         $broker = new FakeBroker();
-        // The broker rejects by the fanned-out channel, which is the topic name.
-        $broker->failTopics = ['topic-1-name'];
+        // The broker rejects by the fanned-out channel, which is the topic id.
+        $broker->failTopics = ['topic-1'];
 
         $response = $this->adapter($broker)->send(new Push(
             to: ['topic-1'],

@@ -35,5 +35,11 @@
         "ext-openssl": "*",
         "ext-scrypt": "*",
         "ext-sodium": "*"
+    },
+    "require-dev": {
+        "web-auth/webauthn-lib": "^5.3"
+    },
+    "suggest": {
+        "web-auth/webauthn-lib": "Required for passkeys (Utopia\\Auth\\Passkeys\\Ceremony)."
     }
 }

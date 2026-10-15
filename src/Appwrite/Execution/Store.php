@@ -82,6 +82,14 @@ class Store
         'requestPath' => ['requestPath', 'String'],
     ];
 
+    private const array WINDOW_METHODS = [
+        Query::TYPE_LESSER,
+        Query::TYPE_LESSER_EQUAL,
+        Query::TYPE_GREATER,
+        Query::TYPE_GREATER_EQUAL,
+        Query::TYPE_BETWEEN,
+    ];
+
     private readonly RequestFactory $requestFactory;
 
     private ?string $host = null;
@@ -508,13 +516,29 @@ class Store
      * the route's internal resource filters before aggregation avoids scanning
      * and grouping every execution in a large project.
      *
+     * A $createdAt window narrows the aggregation to the executions that have
+     * at least one version inside it. The window cannot filter versions
+     * directly: an execution queued through the API and finished by the
+     * functions worker gets a later createdAt on its worker-written versions,
+     * so dropping out-of-window versions could hide the latest one and return
+     * a stale status or a deleted execution. Every execution whose latest
+     * version matches has some version that matches, so the outer filter still
+     * decides on the latest snapshot.
+     *
      * @param array<Query> $queries
      * @param array<string, mixed> $params
      */
     private function latestWhere(array $queries, array &$params): string
     {
-        $conditions = ['source.projectId = {projectId:String}'];
+        $scope = ['projectId = {projectId:String}'];
+        $window = [];
         foreach ($queries as $query) {
+            if ($query->getAttribute() === '$createdAt'
+                && \in_array($query->getMethod(), self::WINDOW_METHODS, true)) {
+                $window[] = $this->filterSql($query, $params);
+                continue;
+            }
+
             if ($query->getMethod() !== Query::TYPE_EQUAL
                 || !\in_array($query->getAttribute(), ['resourceInternalId', 'resourceType'], true)) {
                 continue;
@@ -526,8 +550,14 @@ class Store
                 $parameters[] = $this->parameter($type, $value, $params);
             }
             if ($parameters !== []) {
-                $conditions[] = "source.{$column} IN (" . \implode(', ', $parameters) . ')';
+                $scope[] = "{$column} IN (" . \implode(', ', $parameters) . ')';
             }
+        }
+
+        $conditions = \array_map(fn (string $condition) => "source.{$condition}", $scope);
+        if ($window !== []) {
+            $conditions[] = 'source.id IN (SELECT id FROM ' . $this->table()
+                . ' WHERE ' . \implode(' AND ', [...$scope, ...$window]) . ')';
         }
 
         return \implode(' AND ', $conditions);

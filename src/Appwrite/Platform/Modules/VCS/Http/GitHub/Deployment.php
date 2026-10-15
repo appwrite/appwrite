@@ -3,12 +3,13 @@
 namespace Appwrite\Platform\Modules\VCS\Http\GitHub;
 
 use Appwrite\Bus\Events\RuleCreated;
+use Appwrite\Deployment\GitAction;
 use Appwrite\Extend\Exception;
 use Appwrite\Filter\BranchDomain as BranchDomainFilter;
 use Appwrite\Vcs\Comment;
 use Utopia\Bus\Bus;
 use Utopia\Config\Config;
-use Utopia\Console;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
@@ -23,6 +24,7 @@ use Utopia\System\System;
 use Utopia\Validator\Contains;
 use Utopia\Validator\Globstar;
 use Utopia\VCS\Adapter\Git;
+use Utopia\VCS\Exception\OwnerNotFound;
 use Utopia\VCS\Exception\RepositoryNotFound;
 
 trait Deployment
@@ -100,6 +102,13 @@ trait Deployment
                 $resource = $authorization->skip(fn () => $dbForProject->getDocument($resourceCollection, $resourceId));
                 if ($resource->isEmpty()) {
                     Span::add("{$logBase}.build.skipped.reason", 'resource not found');
+                    Span::add("{$logBase}.build.skipped", 'true');
+                    continue;
+                }
+
+                // Stale repository rows can outlive a disconnect, so only build for the repository the resource still links to.
+                if ($resource->getAttribute('repositoryId', '') !== $repositoryId) {
+                    Span::add("{$logBase}.build.skipped.reason", 'repository not connected');
                     Span::add("{$logBase}.build.skipped", 'true');
                     continue;
                 }
@@ -400,17 +409,33 @@ trait Deployment
 
                 // The Deployments service is built per repository: a webhook fans out to
                 // many tenant projects, each with its own database.
-                $deployment = $authorization->skip(fn () => $deploymentsFactory($dbForProject, $project)
-                    ->createFromVcs(
-                        $resource,
-                        $deployment,
-                        $timeout,
-                        $vcs,
-                        $providerRepositoryOwner,
-                        $providerRepositoryName,
-                        $providerCommitHash,
-                        $resource->getAttribute('providerRootDirectory', ''),
-                    ));
+                try {
+                    $deployment = $authorization->skip(fn () => $deploymentsFactory($dbForProject, $project)
+                        ->createFromVcs(
+                            $resource,
+                            $deployment,
+                            $timeout,
+                            $vcs,
+                            $providerRepositoryOwner,
+                            $providerRepositoryName,
+                            $providerCommitHash,
+                            $resource->getAttribute('providerRootDirectory', ''),
+                        ));
+                } catch (\Throwable $error) {
+                    // Deployments::submit() fails a deployment it refuses or cannot queue.
+                    // No build will report on it, so report the failure here, or the commit
+                    // status and the PR comment above stay waiting on a build that never runs.
+                    $failed = $authorization->skip(fn () => $dbForProject->getDocument('deployments', $deploymentId));
+                    if ($failed->getAttribute('status') === 'failed') {
+                        try {
+                            $authorization->skip(fn () => GitAction::run('failed', $vcs, $providerCommitHash, $owner, $repositoryName, $project, $resource, $failed, $dbForPlatform, $platform));
+                        } catch (\Throwable $report) {
+                            Console::warning("Failed to report deployment '{$deploymentId}' as failed: " . $report->getMessage());
+                        }
+                    }
+
+                    throw $error;
+                }
 
                 if ($resource->getCollection() === 'sites') {
                     $projectId = $project->getId();
@@ -587,6 +612,11 @@ trait Deployment
 
                 Span::add("{$logBase}.build.triggered", 'true');
                 //TODO: Add event?
+            } catch (OwnerNotFound $e) {
+                // The installation is gone, so nothing can be built or reported back for it.
+                Span::add("{$logBase}.build.skipped.reason", 'owner not found');
+                Span::add("{$logBase}.build.skipped", 'true');
+                Console::warning("Skipping repository '{$repository->getId()}': {$e->getMessage()}");
             } catch (Exception $e) {
                 Span::add("{$logBase}.error", $e->getMessage());
                 Span::add("{$logBase}.error.type", $e->getType());

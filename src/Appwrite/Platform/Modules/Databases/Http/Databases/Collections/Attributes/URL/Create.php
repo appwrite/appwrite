@@ -70,6 +70,7 @@ class Create extends Action
             ->param('array', false, new Boolean(), 'Is attribute an array?', true)
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('getDatabasesDB')
             ->inject('publisherForDatabase')
             ->inject('queueForEvents')
             ->inject('authorization')
@@ -85,6 +86,7 @@ class Create extends Action
         bool           $array,
         UtopiaResponse $response,
         Database       $dbForProject,
+        callable       $getDatabasesDB,
         DatabasePublisher  $publisherForDatabase,
         Event          $queueForEvents,
         Authorization $authorization
@@ -97,7 +99,7 @@ class Create extends Action
             'default' => $default,
             'array' => $array,
             'format' => APP_DATABASE_ATTRIBUTE_URL,
-        ]), $response, $dbForProject, $publisherForDatabase, $queueForEvents, $authorization);
+        ]), $response, $dbForProject, $getDatabasesDB, $publisherForDatabase, $queueForEvents, $authorization);
 
         $response
             ->setStatusCode(SwooleResponse::STATUS_CODE_ACCEPTED)

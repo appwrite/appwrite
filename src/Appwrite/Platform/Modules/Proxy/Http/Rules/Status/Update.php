@@ -102,10 +102,11 @@ class Update extends Action
             $bus->dispatch(new RuleUpdated($rule->getArrayCopy()));
 
             $certificateId = $rule->getAttribute('certificateId', '');
-            // Reset logs for the associated certificate.
+            // Reset logs and attempts for the associated certificate.
             if (!empty($certificateId)) {
                 $certificate = $authorization->skip(fn () => $dbForPlatform->updateDocument('certificates', $certificateId, new Document([
                     'logs' => '',
+                    'attempts' => 0,
                 ])));
             }
         } catch (Exception $err) {

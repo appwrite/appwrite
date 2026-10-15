@@ -263,7 +263,7 @@ class CorrectnessRegressionTest extends TestCase
         $builder
             ->from('users', 'u')
             ->queries([
-                Query::join('orders', 'id', 'user_id', '=', 'o'),
+                Query::join('orders', 'o', [Query::on('id', 'user_id')]),
                 Query::sum('amount', 'total'),
             ])
             ->build();
@@ -325,7 +325,7 @@ class CorrectnessRegressionTest extends TestCase
             ->from('users', 'u')
             ->queries([
                 Query::equal('id', [1]),
-                Query::join('orders', 'id', 'user_id', '=', 'o'),
+                Query::join('orders', 'o', [Query::on('id', 'user_id')]),
             ])
             ->build();
 

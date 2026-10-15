@@ -25,6 +25,8 @@ class Push implements Message
      * @param  bool|null  $contentAvailable <b>iOS only</b>. When set to true, the notification is silent (no sounds or vibrations) and the content-available flag is set to 1. If not specified, the notification is not silent.
      * @param  bool|null  $critical <b>iOS only</b>. When set to true, if the app is granted the critical alert capability, the notification is displayed using Apple's critical alert option. If not specified, the notification is not displayed using Apple's critical alert option.
      * @param  Priority|null  $priority The priority of the message. Valid values are "normal" and "high". On iOS, these correspond to APNs priority 5 and 10.<br><br>By default, notification messages are sent with high priority, and data messages are sent with normal priority.
+     * @param  string|null  $channelId <b>Android only</b>. The ID of the notification channel the notification is delivered on.<br><br>The app must have created a channel with this ID before a notification using it arrives. If not specified, or if the app has not created the channel yet, the channel from the app manifest is used.
+     * @param  bool|null  $mutableContent <b>iOS only</b>. When set to true, sets the mutable-content flag so the app's notification service extension runs and can modify the notification before it is shown.
      */
     public function __construct(
         private readonly array $to,
@@ -41,6 +43,8 @@ class Push implements Message
         private readonly ?bool $contentAvailable = null,
         private readonly ?bool $critical = null,
         private readonly ?Priority $priority = null,
+        private readonly ?string $channelId = null,
+        private readonly ?bool $mutableContent = null,
     ) {
         if (
             $title === null
@@ -133,6 +137,16 @@ class Push implements Message
     public function getPriority(): ?Priority
     {
         return $this->priority;
+    }
+
+    public function getChannelId(): ?string
+    {
+        return $this->channelId;
+    }
+
+    public function getMutableContent(): ?bool
+    {
+        return $this->mutableContent;
     }
 
     public function setOrigin(?string $origin): self

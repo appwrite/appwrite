@@ -441,6 +441,28 @@ return [
                 'default' => false,
                 'array' => false,
             ],
+            [
+                '$id' => ID::custom('photoId'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('photoSize'),
+                'type' => Database::VAR_INTEGER,
+                'format' => '',
+                'size' => 8,
+                'signed' => true,
+                'required' => false,
+                'default' => 0,
+                'array' => false,
+                'filters' => [],
+            ],
         ],
         'indexes' => [
             [
@@ -691,6 +713,39 @@ return [
                 'array' => false,
                 'filters' => ['json', 'encrypt'],
             ],
+            [
+                '$id' => ID::custom('identifier'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 64,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('name'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 128,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('accessedAt'),
+                'type' => Database::VAR_DATETIME,
+                'format' => '',
+                'size' => 0,
+                'signed' => false,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => ['datetime'],
+            ],
         ],
         'indexes' => [
             [
@@ -699,7 +754,21 @@ return [
                 'attributes' => ['userInternalId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
-            ]
+            ],
+            [
+                '$id' => ID::custom('_key_identifier'),
+                'type' => Database::INDEX_UNIQUE,
+                'attributes' => ['identifier'],
+                'lengths' => [],
+                'orders' => [Database::ORDER_ASC],
+            ],
+            [
+                '$id' => ID::custom('_key_accessedAt'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['accessedAt'],
+                'lengths' => [],
+                'orders' => [],
+            ],
         ],
     ],
 
@@ -771,6 +840,17 @@ return [
                 'default' => null,
                 'array' => false,
                 'filters' => ['datetime'],
+            ], [
+                // JSON is fine here: only read by ID once, then deleted, never queried
+                '$id' => ID::custom('passkey'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 16384,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => ['json', 'encrypt'],
             ]
         ],
         'indexes' => [
@@ -1748,6 +1828,17 @@ return [
                 'array' => false,
             ],
             [
+                '$id' => ID::custom('description'),
+                'type' => Database::VAR_STRING,
+                'signed' => true,
+                'size' => 1024,
+                'format' => '',
+                'filters' => [],
+                'required' => false,
+                'default' => '',
+                'array' => false,
+            ],
+            [
                 '$id' => ID::custom('fileSecurity'),
                 'type' => Database::VAR_BOOLEAN,
                 'signed' => true,
@@ -2263,6 +2354,17 @@ return [
                 'filters' => [],
             ],
             [
+                '$id' => ID::custom('description'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 1024,
+                'signed' => true,
+                'required' => false,
+                'default' => '',
+                'array' => false,
+                'filters' => [],
+            ],
+            [
                 '$id' => ID::custom('subscribe'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
@@ -2356,7 +2458,7 @@ return [
                 'filters' => [],
             ],
             // message retention in seconds capped at 7 days. A ledger message expires
-            // this long after it is written.
+            // this long after it is written. null inherits the lowest Appwrite provider expiry.
             [
                 '$id' => ID::custom('expiry'),
                 'type' => Database::VAR_INTEGER,

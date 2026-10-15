@@ -57,11 +57,11 @@ abstract class SQL extends BaseBuilder implements Locking, Transactions, Statist
         $attribute = $this->resolveAndWrap($query->getAttribute());
 
         if ($method === Method::Search) {
-            return $this->compileSearchExpr($attribute, $query->getValues(), false);
+            return $this->compileSearchExpression($attribute, $query->getValues(), false);
         }
 
         if ($method === Method::NotSearch) {
-            return $this->compileSearchExpr($attribute, $query->getValues(), true);
+            return $this->compileSearchExpression($attribute, $query->getValues(), true);
         }
 
         if ($method->isSpatial()) {
@@ -100,9 +100,9 @@ abstract class SQL extends BaseBuilder implements Locking, Transactions, Statist
 
         return match ($method) {
             Method::Contains,
-            Method::ContainsAny => $this->compileJsonOverlapsExpr($attribute, [$values]),
-            Method::NotContains => 'NOT ' . $this->compileJsonOverlapsExpr($attribute, [$values]),
-            Method::ContainsAll => $this->compileJsonContainsExpr($attribute, [$values], false),
+            Method::ContainsAny => $this->compileJsonOverlapsExpression($attribute, [$values]),
+            Method::NotContains => 'NOT ' . $this->compileJsonOverlapsExpression($attribute, [$values]),
+            Method::ContainsAll => $this->compileJsonContainsExpression($attribute, [$values], false),
             default => parent::compileFilter($query),
         };
     }
@@ -152,17 +152,17 @@ abstract class SQL extends BaseBuilder implements Locking, Transactions, Statist
     /**
      * @param  array<mixed>  $values
      */
-    abstract protected function compileSearchExpr(string $attribute, array $values, bool $not): string;
+    abstract protected function compileSearchExpression(string $attribute, array $values, bool $not): string;
 
     protected function compileJsonFilter(Method $method, string $attribute, Query $query): string
     {
         $values = $query->getValues();
 
         return match ($method) {
-            Method::JsonContains => $this->compileJsonContainsExpr($attribute, $values, false),
-            Method::JsonNotContains => $this->compileJsonContainsExpr($attribute, $values, true),
-            Method::JsonOverlaps => $this->compileJsonOverlapsExpr($attribute, $values),
-            Method::JsonPath => $this->compileJsonPathExpr($attribute, $values),
+            Method::JsonContains => $this->compileJsonContainsExpression($attribute, $values, false),
+            Method::JsonNotContains => $this->compileJsonContainsExpression($attribute, $values, true),
+            Method::JsonOverlaps => $this->compileJsonOverlapsExpression($attribute, $values),
+            Method::JsonPath => $this->compileJsonPathExpression($attribute, $values),
             default => parent::compileFilter($query),
         };
     }
@@ -170,15 +170,15 @@ abstract class SQL extends BaseBuilder implements Locking, Transactions, Statist
     /**
      * @param  array<mixed>  $values
      */
-    abstract protected function compileJsonContainsExpr(string $attribute, array $values, bool $not): string;
+    abstract protected function compileJsonContainsExpression(string $attribute, array $values, bool $not): string;
 
     /**
      * @param  array<mixed>  $values
      */
-    abstract protected function compileJsonOverlapsExpr(string $attribute, array $values): string;
+    abstract protected function compileJsonOverlapsExpression(string $attribute, array $values): string;
 
     /**
      * @param  array<mixed>  $values
      */
-    abstract protected function compileJsonPathExpr(string $attribute, array $values): string;
+    abstract protected function compileJsonPathExpression(string $attribute, array $values): string;
 }

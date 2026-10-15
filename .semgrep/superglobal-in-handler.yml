@@ -1,0 +1,25 @@
+rules:
+  - id: php.appwrite.superglobal-in-handler
+    message: >
+      PHP superglobals ($_GET, $_POST, $_REQUEST, $_COOKIE, $_FILES,
+      $_SERVER, $_ENV) are process-wide under Swoole and skip route
+      params and their validators. Use an injected $request (getParam,
+      getHeader, getCookie) or System::getEnv().
+    languages: [php]
+    severity: ERROR
+    metadata:
+      category: correctness
+      technology: [php]
+    paths:
+      include:
+        - "**/src/Appwrite/Platform/Modules/**"
+        - "**/app/controllers/**"
+        - "**/app/init/**"
+    pattern-either:
+      - pattern: $_GET
+      - pattern: $_POST
+      - pattern: $_REQUEST
+      - pattern: $_COOKIE
+      - pattern: $_FILES
+      - pattern: $_SERVER
+      - pattern: $_ENV

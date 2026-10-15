@@ -2,7 +2,9 @@
 
 global $utopia, $request, $response;
 
+use Appwrite\Auth\OIDC\Mock\SigningKey;
 use Appwrite\Extend\Exception;
+use Appwrite\Locking\Lock;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Factory as VcsFactory;
@@ -275,23 +277,9 @@ Http::get('/v1/mock/tests/general/oauth2/jwks')
     ->label('mock', true)
     ->inject('response')
     ->inject('cache')
-    ->action(function (Response $response, Cache $cache) {
-        // The signing key pair is generated on first use and shared between
-        // workers through the cache, so no private key lives in the repository.
-        $key = false;
-        $cached = $cache->load('oidc-mock-signing-key', 86400);
-        if (\is_array($cached) && \is_string($cached['pem'] ?? null)) {
-            $key = \openssl_pkey_get_private($cached['pem']);
-        }
-        if ($key === false) {
-            $key = \openssl_pkey_new([
-                'private_key_bits' => 2048,
-                'private_key_type' => OPENSSL_KEYTYPE_RSA,
-            ]);
-            \openssl_pkey_export($key, $pem);
-            $cache->save('oidc-mock-signing-key', ['pem' => $pem]);
-        }
-
+    ->inject('lock')
+    ->action(function (Response $response, Cache $cache, Lock $lock) {
+        $key = (new SigningKey($cache, $lock))->get();
         $details = \openssl_pkey_get_details($key);
 
         $response->json([
@@ -299,9 +287,7 @@ Http::get('/v1/mock/tests/general/oauth2/jwks')
                 'kty' => 'RSA',
                 'use' => 'sig',
                 'alg' => 'RS256',
-                // Derived from the modulus, so a regenerated key gets a new kid and
-                // verifiers holding a stale JWKS refresh instead of failing
-                'kid' => \substr(\sha1($details['rsa']['n']), 0, 16),
+                'kid' => SigningKey::getId($key),
                 'n' => \rtrim(\strtr(\base64_encode($details['rsa']['n']), '+/', '-_'), '='),
                 'e' => \rtrim(\strtr(\base64_encode($details['rsa']['e']), '+/', '-_'), '='),
             ]],
@@ -318,7 +304,8 @@ Http::get('/v1/mock/tests/general/oauth2/id-token')
     ->param('header', '', new Text(1024, 0), 'JSON encoded ID token header overrides.', true)
     ->inject('response')
     ->inject('cache')
-    ->action(function (string $claims, string $header, Response $response, Cache $cache) {
+    ->inject('lock')
+    ->action(function (string $claims, string $header, Response $response, Cache $cache, Lock $lock) {
         $claims = \json_decode($claims, true);
         $header = $header === '' ? [] : \json_decode($header, true);
 
@@ -326,26 +313,12 @@ Http::get('/v1/mock/tests/general/oauth2/id-token')
             throw new Exception(Exception::GENERAL_MOCK, 'Invalid claims or header');
         }
 
-        // Same cache-shared key pair the JWKS route publishes
-        $key = false;
-        $cached = $cache->load('oidc-mock-signing-key', 86400);
-        if (\is_array($cached) && \is_string($cached['pem'] ?? null)) {
-            $key = \openssl_pkey_get_private($cached['pem']);
-        }
-        if ($key === false) {
-            $key = \openssl_pkey_new([
-                'private_key_bits' => 2048,
-                'private_key_type' => OPENSSL_KEYTYPE_RSA,
-            ]);
-            \openssl_pkey_export($key, $pem);
-            $cache->save('oidc-mock-signing-key', ['pem' => $pem]);
-        }
+        $key = (new SigningKey($cache, $lock))->get();
 
         // Header overrides let tests mint deliberately broken tokens (unknown kid, unsupported alg, ...)
-        $details = \openssl_pkey_get_details($key);
         $header = \array_merge([
             'alg' => 'RS256',
-            'kid' => \substr(\sha1($details['rsa']['n']), 0, 16),
+            'kid' => SigningKey::getId($key),
             'typ' => 'JWT',
         ], $header);
 

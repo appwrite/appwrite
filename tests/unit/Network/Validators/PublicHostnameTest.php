@@ -5,200 +5,93 @@ declare(strict_types=1);
 namespace Tests\Unit\Network\Validators;
 
 use Appwrite\Network\Validator\PublicHostname;
-use PHPUnit\Framework\Attributes\DataProvider;
-use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\TestCase;
-use Swoole\Coroutine;
+use Tests\Unit\Network\FixedLookup;
+use Utopia\Client\Destinations\IPRange;
+use Utopia\Client\Destinations\PublicInternet;
 
 final class PublicHostnameTest extends TestCase
 {
-    public function testRejectsEmptyAndNonString(): void
+    public function testAcceptsAHostThatResolvesOnlyToPublicAddresses(): void
     {
-        $validator = new PublicHostname();
-
-        $this->assertFalse($validator->isValid(''));
-        $this->assertFalse($validator->isValid(null));
-        $this->assertFalse($validator->isValid(123));
-        $this->assertFalse($validator->isValid([]));
+        $this->assertTrue($this->validator()->isValid('example.com'));
+        $this->assertTrue($this->validator()->isValid('1.1.1.1'));
     }
 
-    #[DataProvider('privateIpv4Addresses')]
-    public function testRejectsPrivateIpv4Literals(string $ip): void
+    public function testRejectsWhatIsNotAHostname(): void
     {
-        $validator = new PublicHostname();
+        $validator = $this->validator();
 
-        $this->assertFalse(
-            $validator->isValid($ip),
-            "Expected {$ip} to be rejected as private/reserved"
-        );
-        $this->assertFalse(PublicHostname::isPublicIp($ip));
+        foreach (['', null, 123, [], '999.999.999.999'] as $value) {
+            $this->assertFalse($validator->isValid($value), \var_export($value, true));
+        }
     }
 
-    public static function privateIpv4Addresses(): \Iterator
+    public function testReasonNamesTheRefusedAddress(): void
     {
-        yield 'unspecified' => ['0.0.0.0'];
-        yield 'private 10/8' => ['10.0.0.1'];
-        yield 'private 172.16/12' => ['172.16.5.10'];
-        yield 'private 192.168/16' => ['192.168.1.1'];
-        yield 'cgnat' => ['100.64.0.1'];
-        yield 'loopback' => ['127.0.0.1'];
-        yield 'link-local imds' => ['169.254.169.254'];
-        yield 'gcp metadata' => ['169.254.169.254'];
-        yield 'multicast' => ['224.0.0.1'];
-        yield 'reserved 240/4' => ['240.0.0.1'];
-        yield 'broadcast' => ['255.255.255.255'];
-        yield 'test-net-1' => ['192.0.2.1'];
-        yield 'test-net-2' => ['198.51.100.1'];
-        yield 'test-net-3' => ['203.0.113.1'];
-        yield 'benchmark' => ['198.18.0.1'];
-    }
+        $validator = $this->validator();
 
-    #[DataProvider('privateIpv6Addresses')]
-    public function testRejectsPrivateIpv6Literals(string $ip): void
-    {
-        $validator = new PublicHostname();
-
-        $this->assertFalse(
-            $validator->isValid($ip),
-            "Expected {$ip} to be rejected as private/reserved"
-        );
-        $this->assertFalse(PublicHostname::isPublicIp($ip));
-    }
-
-    public static function privateIpv6Addresses(): \Iterator
-    {
-        yield 'loopback' => ['::1'];
-        yield 'unspecified' => ['::'];
-        yield 'link-local' => ['fe80::1'];
-        yield 'unique-local' => ['fc00::1'];
-        yield 'unique-local fd' => ['fd12:3456:789a::1'];
-        yield 'multicast' => ['ff02::1'];
-        yield 'ipv4-mapped loopback' => ['::ffff:127.0.0.1'];
-        yield 'ipv4-mapped private' => ['::ffff:10.0.0.1'];
-        yield 'ipv4-mapped imds' => ['::ffff:169.254.169.254'];
-        yield '6to4 loopback' => ['2002:7f00:1::'];
-        yield '6to4 imds' => ['2002:a9fe:a9fe::'];
-        yield 'teredo' => ['2001:0:1::1'];
-        yield 'documentation' => ['2001:db8::1'];
-    }
-
-    #[DataProvider('publicIpAddresses')]
-    public function testAcceptsPublicIpLiterals(string $ip): void
-    {
-        $validator = new PublicHostname();
-
-        $this->assertTrue(
-            $validator->isValid($ip),
-            "Expected {$ip} to be accepted as public"
-        );
-        $this->assertTrue(PublicHostname::isPublicIp($ip));
-    }
-
-    public static function publicIpAddresses(): \Iterator
-    {
-        yield 'google dns' => ['8.8.8.8'];
-        yield 'cloudflare' => ['1.1.1.1'];
-        yield 'opendns' => ['208.67.222.222'];
-        yield 'public ipv6' => ['2606:4700:4700::1111'];
-    }
-
-    public function testRejectsMalformedInput(): void
-    {
-        $validator = new PublicHostname();
-
-        $this->assertFalse($validator->isValid('not a hostname at all'));
-        $this->assertFalse($validator->isValid('http://example.com'));
-        $this->assertFalse($validator->isValid('999.999.999.999'));
-    }
-
-    public function testRejectsNonResolvingHostname(): void
-    {
-        $validator = new PublicHostname();
-
-        // RFC 2606 reserves this for testing — guaranteed not to resolve.
-        $this->assertFalse($validator->isValid('a-hostname-that-does-not-exist.invalid'));
-    }
-
-    public function testReasonIsPopulatedOnFailure(): void
-    {
-        $validator = new PublicHostname();
-        $validator->isValid('127.0.0.1');
-
-        $this->assertStringContainsString('127.0.0.1', $validator->getDescription());
-        $this->assertStringContainsString('private', $validator->getDescription());
+        $this->assertFalse($validator->isValid('rebind.example.com'));
+        $this->assertStringContainsString('10.0.0.1', $validator->getDescription());
     }
 
     public function testReasonResetsBetweenCalls(): void
     {
-        $validator = new PublicHostname();
+        $validator = $this->validator();
 
         $validator->isValid('');
         $this->assertSame('Hostname is empty.', $validator->getDescription());
 
         $validator->isValid('127.0.0.1');
         $this->assertStringContainsString('127.0.0.1', $validator->getDescription());
+
+        $this->assertTrue($validator->isValid('example.com'));
+        $this->assertSame('Value must be a publicly routable hostname or address.', $validator->getDescription());
     }
 
-    public function testIpInCidrEdgesViaPublicIp(): void
+    public function testAddressIsOneTheHostResolvesTo(): void
     {
-        // Boundary checks: first and last address of common ranges.
-        $this->assertFalse(PublicHostname::isPublicIp('10.0.0.0'));
-        $this->assertFalse(PublicHostname::isPublicIp('10.255.255.255'));
-        $this->assertTrue(PublicHostname::isPublicIp('11.0.0.0'));
-        $this->assertTrue(PublicHostname::isPublicIp('9.255.255.255'));
+        $hostname = $this->validator();
 
-        $this->assertFalse(PublicHostname::isPublicIp('169.254.0.0'));
-        $this->assertFalse(PublicHostname::isPublicIp('169.254.255.255'));
-        $this->assertTrue(PublicHostname::isPublicIp('169.253.255.255'));
-        $this->assertTrue(PublicHostname::isPublicIp('169.255.0.0'));
-
-        $this->assertFalse(PublicHostname::isPublicIp('100.64.0.0'));
-        $this->assertFalse(PublicHostname::isPublicIp('100.127.255.255'));
-        $this->assertTrue(PublicHostname::isPublicIp('100.128.0.0'));
-        $this->assertTrue(PublicHostname::isPublicIp('100.63.255.255'));
+        $this->assertSame('93.184.215.14', $hostname->address('example.com'));
+        $this->assertSame('93.184.215.14', $hostname->address(' Example.COM '));
+        $this->assertSame('2606:4700:4700::1111', $hostname->address('[2606:4700:4700::1111]'));
     }
 
-    #[RunInSeparateProcess]
-    public function testResolvesHostnameInsideCoroutine(): void
+    public function testAHostWithAnyRefusedAddressIsRefused(): void
     {
-        $validator = new PublicHostname();
-        $valid = null;
-
-        $this->inHookedCoroutine(function () use ($validator, &$valid): void {
-            $valid = $validator->isValid('localhost');
-        });
-
-        $this->assertFalse($valid);
-        $this->assertStringContainsString('Hostname localhost resolves to private or reserved address', $validator->getDescription());
+        // The connection could land on either answer, so one private answer refuses the host
+        $this->assertRefused($this->validator(), 'rebind.example.com', 'resolves to private or reserved address 10.0.0.1');
+        $this->assertRefused($this->validator(), '169.254.169.254', 'Address 169.254.169.254 is in a private or reserved range');
+        $this->assertRefused($this->validator(), 'nowhere.example.com', 'does not resolve');
+        $this->assertRefused($this->validator(), ' ', 'Hostname is empty');
     }
 
-    #[RunInSeparateProcess]
-    public function testResolvingInsideCoroutineRetainsNoMemoryPerLookup(): void
+    public function testAllowedInternalRangesAdmitTheirAddressesOnly(): void
     {
-        $validator = new PublicHostname();
-        $lookups = 200;
-        $growth = null;
+        $hostname = new PublicHostname(new PublicInternet(new IPRange('10.0.0.0/8')), new FixedLookup([
+            'internal.example.com' => ['10.1.2.3'],
+        ]));
 
-        $this->inHookedCoroutine(function () use ($validator, $lookups, &$growth): void {
-            $validator->isValid('localhost');
-            \gc_collect_cycles();
-            $before = \memory_get_usage();
-
-            for ($i = 0; $i < $lookups; $i++) {
-                $validator->isValid('localhost');
-            }
-
-            \gc_collect_cycles();
-            $growth = \memory_get_usage() - $before;
-        });
-
-        // The hooked dns_get_record() retained ~140 KiB per lookup.
-        $this->assertLessThan(4 * 1024, $growth / $lookups);
+        $this->assertSame('10.1.2.3', $hostname->address('internal.example.com'));
+        $this->assertRefused($hostname, '127.0.0.1', 'private or reserved');
     }
 
-    private function inHookedCoroutine(callable $callback): void
+    private function assertRefused(PublicHostname $hostname, string $host, string $reason): void
     {
-        Coroutine::set(['hook_flags' => SWOOLE_HOOK_ALL]);
-        Coroutine\run($callback);
+        try {
+            $address = $hostname->address($host);
+            $this->fail("Expected {$host} to be refused, got {$address}.");
+        } catch (\InvalidArgumentException $exception) {
+            $this->assertStringContainsString($reason, $exception->getMessage());
+        }
+    }
+
+    private function validator(): PublicHostname
+    {
+        return new PublicHostname(new PublicInternet(), new FixedLookup([
+            'example.com' => ['93.184.215.14'],
+            'rebind.example.com' => ['93.184.215.14', '10.0.0.1'],
+        ]));
     }
 }

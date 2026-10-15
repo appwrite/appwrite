@@ -221,6 +221,12 @@ class Local extends Device
         if (! file_exists(\dirname($tmp))) { // Checks if directory path to file exists
             throw new NotFoundException('File doesn\'t exist: ' . \dirname($path));
         }
+
+        // Chunks that were already joined into the file leave no directory behind.
+        if (! file_exists($tmp)) {
+            return ! file_exists($path);
+        }
+
         $files = $this->scanDirectory($tmp);
 
         foreach ($files as $file) {

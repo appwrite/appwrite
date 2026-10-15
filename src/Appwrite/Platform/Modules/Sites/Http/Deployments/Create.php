@@ -184,6 +184,11 @@ class Create extends Action
                 throw new Exception(Exception::STORAGE_INVALID_CONTENT_RANGE);
             }
 
+            $idValidator = new UID();
+            if (!$idValidator->isValid($deploymentId)) {
+                throw new Exception(Exception::STORAGE_INVALID_APPWRITE_ID);
+            }
+
             $chunks = (int) ceil($fileSize / APP_LIMIT_UPLOAD_CHUNK_SIZE);
             $chunk = (int) ($start / APP_LIMIT_UPLOAD_CHUNK_SIZE) + 1;
         }
@@ -322,7 +327,7 @@ class Create extends Action
         }
 
         try {
-            $locks($lockKey, 600, function () use ($buildTimeout, $activate, $authorization, $bus, $commands, $chunk, &$chunks, $dbForPlatform, $dbForProject, $deploymentId, $deployments, $deviceForLocal, $deviceForSites, $fileSize, $fileTmpName, &$metadata, $mergeUploadMetadata, $outputDirectory, $path, $platform, $project, $queueForEvents, $response, &$site, $type): void {
+            $locks($lockKey, 600, function () use ($buildTimeout, $activate, $authorization, $bus, $commands, $chunk, &$chunks, $dbForPlatform, $dbForProject, $deploymentId, $deployments, $deviceForLocal, $deviceForSites, $fileTmpName, &$metadata, $mergeUploadMetadata, $outputDirectory, $path, $platform, $project, $queueForEvents, $response, &$site, $type): void {
                 $deployment = $dbForProject->getDocument('deployments', $deploymentId);
                 $uploaded = 0;
 

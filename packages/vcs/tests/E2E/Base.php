@@ -974,12 +974,6 @@ abstract class Base extends TestCase
                 '*',
             );
 
-            $this->assertStringContainsString('git init', $command);
-            $this->assertStringContainsString('git remote add origin', $command);
-            $this->assertStringContainsString('git config core.sparseCheckout true', $command);
-            $this->assertStringContainsString('sparse-checkout', $command);
-            $this->assertStringContainsString($repositoryName, $command);
-
             $output = [];
             exec($command . ' 2>&1', $output, $exitCode);
             $this->assertSame(0, $exitCode, implode("\n", $output));
@@ -1012,10 +1006,6 @@ abstract class Base extends TestCase
                 $directory,
                 '*',
             );
-
-            $this->assertStringContainsString('sparse-checkout', $command);
-            $this->assertStringContainsString($commitHash, $command);
-            $this->assertStringContainsString('--depth=1', $command);
 
             $output = [];
             exec($command . ' 2>&1', $output, $exitCode);
@@ -1118,6 +1108,9 @@ abstract class Base extends TestCase
 
             $this->vcsAdapter->createTag(static::$owner, $repositoryName, 'v1.0.0', $commitHash, 'Release v1.0.0');
 
+            // Move the branch past the tag, so checking out the branch instead fails
+            $this->vcsAdapter->createFile(static::$owner, $repositoryName, 'CHANGELOG.md', '# After Tag');
+
             $command = $this->vcsAdapter->generateCloneCommand(
                 static::$owner,
                 $repositoryName,
@@ -1127,14 +1120,16 @@ abstract class Base extends TestCase
                 '/',
             );
 
-            $this->assertStringContainsString('git init', $command);
-            $this->assertStringContainsString('git remote add origin', $command);
-            $this->assertStringContainsString('git config core.sparseCheckout true', $command);
-            $this->assertStringContainsString('refs/tags', $command);
-            $this->assertStringContainsString('v1.0.0', $command);
-            $this->assertStringContainsString('git checkout FETCH_HEAD', $command);
+            $output = [];
+            exec($command . ' 2>&1', $output, $exitCode);
+            $this->assertSame(0, $exitCode, implode("\n", $output));
+            $this->assertFileExists($directory . '/README.md');
+            $this->assertFileDoesNotExist($directory . '/CHANGELOG.md');
         } finally {
             $this->discardRepositories($repositoryName);
+            if (is_dir($directory)) {
+                exec('rm -rf ' . escapeshellarg($directory));
+            }
         }
     }
 

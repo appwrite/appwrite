@@ -52,10 +52,11 @@ class Create extends Action
             ->param('duration', 900, new Range(0, 3600), 'Time in seconds before JWT expires. Default duration is 900 seconds, and maximum is 3600 seconds.', true)
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('project')
             ->callback($this->action(...));
     }
 
-    public function action(string $userId, string $sessionId, int $duration, Response $response, Database $dbForProject): void
+    public function action(string $userId, string $sessionId, int $duration, Response $response, Database $dbForProject, Document $project): void
     {
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -85,6 +86,7 @@ class Create extends Action
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic(new Document(['jwt' => $jwt->encode([
+                'projectId' => $project->getId(),
                 'userId' => $user->getId(),
                 'sessionId' => $session->isEmpty() ? '' : $session->getId()
             ])]), Response::MODEL_JWT);

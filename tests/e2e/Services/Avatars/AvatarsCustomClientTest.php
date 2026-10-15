@@ -70,43 +70,8 @@ final class AvatarsCustomClientTest extends Scope
          * claim rather than calling getUserPhoto(), so assert it lands on the
          * identity and wins the avatar chain exactly like the browser flow.
          */
-        $this->enableMockProvider();
-
         $projectId = $this->getProject()['$id'];
-
-        $token = $this->client->call(Client::METHOD_GET, '/mock/tests/general/oauth2/id-token', [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], [
-            'claims' => \json_encode([
-                'iss' => 'https://localhost/v1/mock',
-                'aud' => '1',
-                'iat' => \time(),
-                'exp' => \time() + 3600,
-                'sub' => 'idtoken-photo-' . \uniqid('', true),
-                'email' => 'idtoken.photo.' . \uniqid('', true) . '@localhost.test',
-                'email_verified' => true,
-                'picture' => 'http://localhost/v1/mock/tests/general/oauth2/photo',
-            ]),
-            'header' => '',
-        ]);
-
-        $this->assertEquals(200, $token['headers']['status-code']);
-
-        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/id-token', [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], [
-            'provider' => 'mock',
-            'idToken' => $token['body']['token'],
-        ]);
-
-        $this->assertEquals(201, $response['headers']['status-code']);
-
-        $session = $response['cookies']['a_session_' . $projectId] ?? '';
-        $this->assertNotEmpty($session);
+        $session = $this->createIdTokenSession();
 
         $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', [
             'origin' => 'http://localhost',
@@ -320,17 +285,71 @@ final class AvatarsCustomClientTest extends Scope
 
         $this->assertEquals(301, $response['headers']['status-code']);
 
+        // The cookies set when the flow started go to the Appwrite hops,
+        // as a browser would send them; the provider never sees them.
+        $startCookies = \implode('; ', \array_map(fn (string $name, string $value): string => $name . '=' . $value, \array_keys($response['cookies']), $response['cookies']));
+
         // Provider consent, callback and redirect are three separate hops, each
         // answering with the location of the next one.
         $oauthClient = new Client();
         $oauthClient->setEndpoint('');
 
-        foreach (\range(1, 3) as $ignored) {
-            $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], followRedirects: false);
+        foreach (\range(1, 3) as $hop) {
+            $response = $oauthClient->call(Client::METHOD_GET, $response['headers']['location'], $hop === 1 ? [] : ['cookie' => $startCookies], followRedirects: false);
             $this->assertEquals(301, $response['headers']['status-code']);
         }
 
         $session = $response['cookies']['a_session_' . $this->getProject()['$id']] ?? '';
+        $this->assertNotEmpty($session);
+
+        return $session;
+    }
+
+    /**
+     * Enable the mock OAuth2 provider on the project and sign in with a native
+     * ID token whose `picture` claim points at the mock photo, returning the
+     * session secret. Unlike the browser flow, every call signs in a fresh
+     * user, so a test may change that user's photo without touching the
+     * account other tests share.
+     */
+    private function createIdTokenSession(): string
+    {
+        $this->enableMockProvider();
+
+        $projectId = $this->getProject()['$id'];
+
+        $token = $this->client->call(Client::METHOD_GET, '/mock/tests/general/oauth2/id-token', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'claims' => \json_encode([
+                'iss' => 'https://localhost/v1/mock',
+                'aud' => '1',
+                'iat' => \time(),
+                'exp' => \time() + 3600,
+                'sub' => 'idtoken-photo-' . \uniqid('', true),
+                'email' => 'idtoken.photo.' . \uniqid('', true) . '@localhost.test',
+                'email_verified' => true,
+                'picture' => 'http://localhost/v1/mock/tests/general/oauth2/photo',
+            ]),
+            'header' => '',
+        ]);
+
+        $this->assertEquals(200, $token['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/id-token', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'provider' => 'mock',
+            'idToken' => $token['body']['token'],
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $session = $response['cookies']['a_session_' . $projectId] ?? '';
         $this->assertNotEmpty($session);
 
         return $session;
@@ -393,5 +412,234 @@ final class AvatarsCustomClientTest extends Scope
                 "Pixel at {$x},{$y} is not the OAuth2 provider photo — the avatar chain fell through to another provider."
             );
         }
+    }
+
+    public function testUpdatePhoto(): void
+    {
+        $headers = $this->createPhotoUser();
+
+        /**
+         * Test for SUCCESS — the uploaded photo wins the provider chain
+         */
+        $red = $this->createImage('#FF0000', 'png');
+        $response = $this->uploadPhoto($headers, $red, 'photo.png');
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertSamePhoto($red, $this->getPhoto($headers));
+
+        /**
+         * Test for SUCCESS — the account doesn't expose photo records
+         */
+        $account = $this->client->call(Client::METHOD_GET, '/account', $headers);
+
+        $this->assertEquals(200, $account['headers']['status-code']);
+        $this->assertArrayNotHasKey('photoId', $account['body']);
+        $this->assertArrayNotHasKey('photoSize', $account['body']);
+
+        /**
+         * Test for SUCCESS — a replacement is served right away
+         */
+        $blue = $this->createImage('#0000FF', 'png');
+        $response = $this->uploadPhoto($headers, $blue, 'photo.png');
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertSamePhoto($blue, $this->getPhoto($headers));
+
+        /**
+         * Test for SUCCESS — JPEG is served, within its lossy compression
+         */
+        $green = $this->createImage('#00FF00', 'jpeg');
+        $response = $this->uploadPhoto($headers, $green, 'photo.jpg');
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertSamePhoto($green, $this->getPhoto($headers), tolerance: 8);
+
+        /**
+         * Test for SUCCESS — WebP is served
+         */
+        $yellow = $this->createImage('#FFFF00', 'webp');
+        $response = $this->uploadPhoto($headers, $yellow, 'photo.webp');
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertSamePhoto($yellow, $this->getPhoto($headers));
+    }
+
+    public function testUpdatePhotoInvalid(): void
+    {
+        $headers = $this->createPhotoUser();
+        $png = $this->createImage('#FF0000', 'png');
+
+        /**
+         * Test for FAILURE — no file
+         */
+        $response = $this->client->call(Client::METHOD_PUT, '/avatars/photo', \array_merge($headers, [
+            'content-type' => 'multipart/form-data',
+        ]), [
+            'file' => '',
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals(Exception::STORAGE_FILE_EMPTY, $response['body']['type']);
+
+        /**
+         * Test for FAILURE — unsupported extension
+         */
+        $response = $this->uploadPhoto($headers, 'not an image', 'notes.txt');
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals(Exception::STORAGE_FILE_TYPE_UNSUPPORTED, $response['body']['type']);
+
+        /**
+         * Test for FAILURE — GIF isn't supported, by extension or by content
+         */
+        $gif = $this->createImage('#FF0000', 'gif');
+        $response = $this->uploadPhoto($headers, $gif, 'photo.gif');
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals(Exception::STORAGE_FILE_TYPE_UNSUPPORTED, $response['body']['type']);
+
+        $response = $this->uploadPhoto($headers, $gif, 'photo.png');
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals(Exception::STORAGE_FILE_TYPE_UNSUPPORTED, $response['body']['type']);
+
+        /**
+         * Test for FAILURE — an SVG renamed to .png is rejected by its content
+         */
+        $svg = '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><rect width="64" height="64" fill="#FF0000"/></svg>';
+        $response = $this->uploadPhoto($headers, $svg, 'photo.png');
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals(Exception::STORAGE_FILE_TYPE_UNSUPPORTED, $response['body']['type']);
+
+        /**
+         * Test for FAILURE — image over the 5MB limit
+         */
+        $response = $this->uploadPhoto($headers, $this->createNoiseImage(1400, 1400), 'large.png');
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals(Exception::STORAGE_INVALID_FILE_SIZE, $response['body']['type']);
+
+        /**
+         * Test for FAILURE — chunked uploads aren't supported
+         */
+        $response = $this->uploadPhoto($headers, $png, 'photo.png', [
+            'content-range' => 'bytes 0-' . (\strlen($png) - 1) . '/' . \strlen($png),
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals(Exception::STORAGE_INVALID_CONTENT_RANGE, $response['body']['type']);
+
+        /**
+         * Test for SUCCESS — none of the failures became the photo
+         */
+        $this->assertPhotoInitials($this->getPhoto($headers));
+    }
+
+    public function testUpdatePhotoLarge(): void
+    {
+        $headers = $this->createPhotoUser();
+
+        /**
+         * Test for SUCCESS — an image just under the limit is served in full
+         */
+        $large = $this->createNoiseImage(1200, 1200);
+
+        $this->assertLessThan(5 * 1024 * 1024, \strlen($large));
+
+        $response = $this->uploadPhoto($headers, $large, 'large.png');
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertSamePhoto($large, $this->getPhoto($headers));
+    }
+
+    public function testDeletePhoto(): void
+    {
+        $headers = $this->createPhotoUser();
+        $red = $this->createImage('#FF0000', 'png');
+
+        // Premise: with nothing uploaded the chain ends at initials.
+        $this->assertPhotoInitials($this->getPhoto($headers));
+
+        /**
+         * Test for SUCCESS — with no photo to delete, the placeholder still
+         * becomes the photo and shadows the initials
+         */
+        $response = $this->client->call(Client::METHOD_DELETE, '/avatars/photo', $headers);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+        $this->assertPhotoFallback($this->getPhoto($headers));
+
+        /**
+         * Test for SUCCESS — deleting an uploaded photo replaces it with the
+         * placeholder
+         */
+        $response = $this->uploadPhoto($headers, $red, 'photo.png');
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertSamePhoto($red, $this->getPhoto($headers));
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/avatars/photo', $headers);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+        $this->assertPhotoFallback($this->getPhoto($headers));
+
+        /**
+         * Test for SUCCESS — deleting again keeps the placeholder
+         */
+        $response = $this->client->call(Client::METHOD_DELETE, '/avatars/photo', $headers);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+        $this->assertPhotoFallback($this->getPhoto($headers));
+
+        /**
+         * Test for SUCCESS — the placeholder is served at the requested size,
+         * like any other stored photo
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/photo', $headers, [
+            'width' => 100,
+            'height' => 100,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertPhotoFallback($response['body']);
+
+        $image = new \Imagick();
+        $image->readImageBlob($response['body']);
+
+        $this->assertSame([100, 100], [$image->getImageWidth(), $image->getImageHeight()]);
+
+        /**
+         * Test for SUCCESS — a photo can be set again after deletion
+         */
+        $response = $this->uploadPhoto($headers, $red, 'photo.png');
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertSamePhoto($red, $this->getPhoto($headers));
+    }
+
+    public function testDeletePhotoOverridesIdentityPhoto(): void
+    {
+        /**
+         * Test for SUCCESS — the placeholder shadows the OAuth2 identity photo
+         *
+         * Deleting stores the placeholder as the user's own photo, so it wins
+         * the chain the way an upload does — the identity photo never comes
+         * back on its own.
+         */
+        $headers = [
+            'origin' => 'http://localhost',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $this->createIdTokenSession(),
+        ];
+
+        // Premise: the identity photo wins.
+        $this->assertOAuth2Photo($this->getPhoto($headers));
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/avatars/photo', $headers);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+        $this->assertPhotoFallback($this->getPhoto($headers));
     }
 }

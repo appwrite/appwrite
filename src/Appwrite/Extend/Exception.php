@@ -104,12 +104,18 @@ class Exception extends \Exception
     public const string USER_MORE_FACTORS_REQUIRED = 'user_more_factors_required';
     public const string USER_AUTHENTICATOR_NOT_FOUND = 'user_authenticator_not_found';
     public const string USER_AUTHENTICATOR_ALREADY_VERIFIED = 'user_authenticator_already_verified';
+    public const string USER_REAUTHENTICATION_REQUIRED = 'user_reauthentication_required';
+    public const string USER_PASSKEY_NOT_FOUND = 'user_passkey_not_found';
+    public const string USER_PASSKEY_ALREADY_EXISTS = 'user_passkey_already_exists';
+    public const string USER_PASSKEY_LIMIT_EXCEEDED = 'user_passkey_limit_exceeded';
+    public const string USER_PASSKEY_INVALID = 'user_passkey_invalid';
     public const string USER_RECOVERY_CODES_ALREADY_EXISTS = 'user_recovery_codes_already_exists';
     public const string USER_RECOVERY_CODES_NOT_FOUND = 'user_recovery_codes_not_found';
     public const string USER_CHALLENGE_REQUIRED = 'user_challenge_required';
     public const string USER_OAUTH2_BAD_REQUEST = 'user_oauth2_bad_request';
     public const string USER_OAUTH2_UNAUTHORIZED = 'user_oauth2_unauthorized';
     public const string USER_OAUTH2_TOKEN_INVALID = 'user_oauth2_token_invalid';
+    public const string USER_OAUTH2_STATE_INVALID = 'user_oauth2_state_invalid';
     public const string USER_OAUTH2_PROVIDER_ERROR = 'user_oauth2_provider_error';
     public const string USER_OAUTH2_PROVIDER_FAILURE = 'user_oauth2_provider_failure';
     public const string USER_EMAIL_ALREADY_VERIFIED = 'user_email_already_verified';
@@ -141,6 +147,7 @@ class Exception extends \Exception
 
     /** Membership */
     public const string MEMBERSHIP_NOT_FOUND = 'membership_not_found';
+    public const string MEMBERSHIP_ALREADY_EXISTS = 'membership_already_exists';
     public const string MEMBERSHIP_ALREADY_CONFIRMED = 'membership_already_confirmed';
     public const string MEMBERSHIP_DELETION_PROHIBITED = 'membership_deletion_prohibited';
     public const string MEMBERSHIP_DOWNGRADE_PROHIBITED = 'membership_downgrade_prohibited';
@@ -370,6 +377,7 @@ class Exception extends \Exception
     public const string MIGRATION_DATABASE_TYPE_UNSUPPORTED = 'migration_database_type_unsupported';
     public const string MIGRATION_SOURCE_PROJECT_ID_REQUIRED = 'migration_source_project_id_required';
     public const string MIGRATION_SOURCE_PROJECT_NOT_FOUND = 'migration_source_project_not_found';
+    public const string MIGRATION_SOURCE_UNAUTHORIZED = 'migration_source_unauthorized';
     public const string MIGRATION_SOURCE_TYPE_INVALID = 'migration_source_type_invalid';
     public const string MIGRATION_DESTINATION_TYPE_INVALID = 'migration_destination_type_invalid';
 

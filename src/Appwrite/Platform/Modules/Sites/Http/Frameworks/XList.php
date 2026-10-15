@@ -12,6 +12,7 @@ use Utopia\Database\Document;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\System\System;
+use Utopia\Validator\Boolean;
 
 class XList extends Base
 {
@@ -46,11 +47,12 @@ class XList extends Base
                     )
                 ]
             ))
+            ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
             ->inject('response')
             ->callback($this->action(...));
     }
 
-    public function action(Response $response)
+    public function action(bool $includeTotal, Response $response)
     {
         $frameworks = Config::getParam('frameworks');
         $allowList = \array_filter(\array_map('trim', \explode(',', System::getEnv('_APP_SITES_RUNTIMES', ''))));
@@ -80,7 +82,7 @@ class XList extends Base
         }
 
         $response->dynamic(new Document([
-            'total' => count($frameworks),
+            'total' => $includeTotal ? count($frameworks) : 0,
             'frameworks' => \array_values($frameworks)
         ]), Response::MODEL_FRAMEWORK_LIST);
     }

@@ -18,17 +18,17 @@ Once logged in, the CLI needs to be initialised before you can use it with your 
 $ appwrite init project
 ```
 
-The following prompt will guide you through the setup process. The `init` command also creates an `appwrite.json` file representing your Appwrite project.
+The following prompt will guide you through the setup process. The `init` command also creates an `appwrite.config.json` file representing your Appwrite project.
 
-The `appwrite.json` file does a lot of things. 
+The `appwrite.config.json` file does a lot of things. 
 * Provides context to the CLI
 * Keeps track of all your cloud functions
-* Keeps track of all your project's collections
+* Keeps track of all your project's tables
 * Helps you deploy your Appwrite project to production and more..
 
-You can also fetch all the collections in your current project using
+You can also fetch all the tables in your current project using
 ```sh
-appwrite init collection
+appwrite pull tables
 ```
 
 * ### Creating and deploying cloud functions
@@ -68,18 +68,18 @@ $ appwrite push function
 
 Your function has now been deployed on your Appwrite server! As soon as the build process is finished, you can start executing the function.
 
-* ### Deploying Collections
+* ### Deploying Tables
 
-Similarly, you can deploy all your collections to your Appwrite server using 
+Similarly, you can deploy all your tables to your Appwrite server using 
 
 ```sh
-appwrite push collections
+appwrite push tables
 ```
 
 > ### Note
 > By default, requests to domains with self signed SSL certificates (or no certificates) are disabled. If you trust the domain, you can bypass the certificate validation using
 ```sh
-$ appwrite client --selfSigned true
+$ appwrite client --self-signed true
 ```
 
 ## Usage 
@@ -92,18 +92,18 @@ $ appwrite [COMMAND] --[OPTIONS]
 A few sample commands to get you started 
 
 ```sh
-$ appwrite users create --userId "unique()" --email hello@appwrite.io --password very_strong_password
+$ appwrite users create --user-id "unique()" --email hello@appwrite.io --password very_strong_password
 $ appwrite users list 
 ```
 
-To create a document you can use the following command 
+To create a row you can use the following command 
 ```sh
-$ appwrite databases create-document --database-id <DATABASE_ID> --collection-id <COLLECTION_ID> --document-id "unique()" --data '{"name": "Walter O Brein"}' --permissions 'read("any")' 'read("team:abc")'
+$ appwrite tablesdb create-row --database-id <DATABASE_ID> --table-id <TABLE_ID> --row-id "unique()" --data '{"name": "Walter O Brein"}' --permissions 'read("any")' --permissions 'read("team:abc")'
 ```
 
 ### Some Gotchas
 - `data` must be a valid JSON string where each key and value are enclosed in double quotes `"` like the example above.
-- Some arguments like the `read` and `write` permissions are expected to be arrays. In the Appwrite CLI, array values are passed in using space as a separator like in the example above.
+- Some arguments like the `read` and `write` permissions are expected to be arrays. In the Appwrite CLI, array values are passed by repeating the flag once per value, like `--permissions` in the example above.
 
 
 To get information about the different services available, you can use 
@@ -115,8 +115,7 @@ To get information about a particular service and the commands available in a se
 ```sh
 $ appwrite users // or
 $ appwrite users --help // or
-$ appwrite users help // or
-$ appwrite accounts
+$ appwrite account
 ```
 
 To get information about a particular command and the parameters it accepts, you can use
@@ -139,5 +138,5 @@ $ appwrite client --reset
 The Appwrite CLI can also work in a CI environment. The initialisation of the CLI works a bit differently in CI. In CI, you set your `endpoint`, `projectId` and `API Key` using 
 
 ```sh
-appwrite client --endpoint http://localhost/v1 --projectId <PROJECT_ID> --key <API KEY>
+appwrite client --endpoint http://localhost/v1 --project-id <PROJECT_ID> --key <API KEY>
 ```
