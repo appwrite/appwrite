@@ -1948,6 +1948,9 @@ impl Normalizer {
                         .map(|(k, x)| {
                             let x = match (k.as_str(), x) {
                                 ("$sequence", _) if project => Value::String("{seq}".into()),
+                                // Any other row's sequence: with shared tables the
+                                // twins' rows share one counter, so they interleave.
+                                ("$sequence", Value::String(v)) => Value::String(self.number(v.clone(), "sequence")),
                                 (k, Value::String(v))
                                     if k.starts_with("project") && k.ends_with("InternalId") && *v == self.sequence =>
                                 {

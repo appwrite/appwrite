@@ -571,6 +571,8 @@ services:
     environment:
       - _APP_ENV
       - _APP_ALLOWED_INTERNAL_ADDRESSES
+      # PHP's mock OAuth2 provider, which PHP reaches at localhost.
+      - _APP_RUST_MOCK_ENDPOINT=http://appwrite
       - _APP_EDITION
       - _APP_LOCALE
       - _APP_REGION

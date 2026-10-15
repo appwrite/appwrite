@@ -1063,7 +1063,22 @@ thread_local! {
 
 /// `request('GET', $url)`: the body; a status of 400 or more fails with the
 /// provider's error (kept for [`provider_failure`]).
+/// PHP's mock providers call the API that serves them at
+/// `http://localhost/`; the Rust API reaches PHP's mock routes at
+/// `_APP_RUST_MOCK_ENDPOINT` instead (the PHP container, from Rust's own).
+fn mock_url(url: &str) -> String {
+    match url.strip_prefix("http://localhost/") {
+        Some(rest) => {
+            let base = utopia_system::env_or("_APP_RUST_MOCK_ENDPOINT", "http://localhost");
+            format!("{}/{rest}", base.trim_end_matches('/'))
+        }
+        None => url.to_owned(),
+    }
+}
+
 async fn request(url: &str) -> Result<String> {
+    let url = mock_url(url);
+    let url = url.as_str();
     let ranges: Vec<utopia_client::IpRange> = utopia_system::env_or("_APP_ALLOWED_INTERNAL_ADDRESSES", "")
         .split(',')
         .map(str::trim)
