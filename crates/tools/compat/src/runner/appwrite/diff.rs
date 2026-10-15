@@ -1100,6 +1100,8 @@ struct Normalizer {
     sequence: String,
     /// The twin's console account's sequence.
     account_sequence: String,
+    /// The twin's console account's ID (its documents name it).
+    account_user: String,
 }
 
 impl Normalizer {
@@ -1147,6 +1149,7 @@ impl Normalizer {
             generated: HashMap::new(),
             sequence: twin.prefix.trim_matches('_').to_owned(),
             account_sequence: twin.keys.user_sequence.clone(),
+            account_user: twin.keys.user.clone(),
         }
     }
 
@@ -1244,9 +1247,11 @@ impl Normalizer {
                 // platforms, created once per twin) have twin sequences, as
                 // do the organization's keys and the twin's console account's
                 // documents (its keys, sessions and targets).
-                let owned = ["userInternalId", "resourceInternalId"]
+                // The account's documents name it (`userId`, or `resourceId`
+                // for its keys): a project user's sequence can equal its own.
+                let owned = ["userId", "resourceId"]
                     .iter()
-                    .any(|k| o.get(*k).and_then(Value::as_str) == Some(self.account_sequence.as_str()));
+                    .any(|k| o.get(*k).and_then(Value::as_str) == Some(self.account_user.as_str()));
                 let project = owned
                     || o.get("$id").and_then(Value::as_str).is_some_and(|id| {
                         let id = self.text(id);
@@ -1267,7 +1272,7 @@ impl Normalizer {
                                 }
                                 // The twin's console account (its keys and sessions).
                                 ("resourceInternalId" | "userInternalId", Value::String(v))
-                                    if *v == self.account_sequence =>
+                                    if owned && *v == self.account_sequence =>
                                 {
                                     Value::String("{account-seq}".into())
                                 }
@@ -1424,7 +1429,7 @@ async fn record(
     let (method, url, headers, body) = request(scenario, twin, other, console);
     let reply = api.send(&method, &url, &headers, body.as_ref()).await?;
     // Work after the response (Rust's shutdown jobs) lands within this.
-    tokio::time::sleep(Duration::from_millis(300)).await;
+    tokio::time::sleep(Duration::from_millis(150)).await;
     let commands = monitor.until_marker(&format!("{}:{}:end", scenario.n, twin.runtime)).await?;
     let after = tables(db, &twin.prefix).await?;
 

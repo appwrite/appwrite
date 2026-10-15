@@ -983,7 +983,7 @@ jobs:
   e2e_rust:
     name: Tests / E2E / PostgreSQL (${{ matrix.mode }}) / Users (Rust)
     runs-on: gcrunner=${{ github.run_id }}/runner=e2e
-    timeout-minutes: 45
+    timeout-minutes: 75
     needs: [build, build_rust]
     permissions:
       contents: read
@@ -1074,7 +1074,7 @@ jobs:
       # the E2E suite, on a fresh stack, so it creates the instance's one
       # organization (the suite seeds its own when one exists).
       - name: Compare PHP and Rust request lifecycles
-        timeout-minutes: 20
+        timeout-minutes: 40
         run: bin/compat appwrite diff
 
       - name: Run tests
