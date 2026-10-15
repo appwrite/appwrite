@@ -898,15 +898,11 @@ class Query
                     break;
 
                 case $method === Method::Limit:
-                    if ($limit === null && isset($values[0]) && \is_numeric($values[0])) {
-                        $limit = \intval($values[0]);
-                    }
+                    $limit ??= self::toInteger($values[0] ?? null);
                     break;
 
                 case $method === Method::Offset:
-                    if ($offset === null && isset($values[0]) && \is_numeric($values[0])) {
-                        $offset = \intval($values[0]);
-                    }
+                    $offset ??= self::toInteger($values[0] ?? null);
                     break;
 
                 case $method === Method::CursorAfter:
@@ -1000,6 +996,29 @@ class Query
             cursorDirection: $cursorDirection,
             timeBuckets: $timeBuckets,
         );
+    }
+
+    private static function toInteger(mixed $value): ?int
+    {
+        if (\is_int($value)) {
+            return $value;
+        }
+
+        if (! \is_numeric($value)) {
+            return null;
+        }
+
+        $integer = \filter_var($value, FILTER_VALIDATE_INT);
+        if ($integer !== false) {
+            return $integer;
+        }
+
+        $number = (float) $value;
+        if (! \is_finite($number) || $number < PHP_INT_MIN || $number >= PHP_INT_MAX) {
+            return null;
+        }
+
+        return (int) $number;
     }
 
     /**
