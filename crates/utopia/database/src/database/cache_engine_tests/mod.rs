@@ -6,6 +6,7 @@
 //! `Event/DocumentPurgeTest` and `Transactions/NoRetryTest`.
 
 mod database;
+mod definition_read;
 mod epoch;
 mod invalidation;
 mod lease;
