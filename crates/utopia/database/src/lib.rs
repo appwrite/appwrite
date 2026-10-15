@@ -37,7 +37,8 @@
 //! | `Utopia\Database\Connection` | [`connection`] |
 //! | `Utopia\Database\DateTime` | [`datetime`] |
 //! | `Utopia\Database\Query`, `ParsedQuery` | [`Query`], [`query::ParsedQuery`] |
-//! | `Utopia\Database\Operator`, `OperatorType` | [`Operator`], [`operator`] |
+//! | `Utopia\Database\Operator`, `OperatorType` | [`Operator`], [`operator::OperatorType`] |
+//! | `Utopia\Database\Rounding` (internal) | [`rounding::Rounding`] |
 //! | `Utopia\Database\Filter`, `Filter\{Codec, Signed, Callback, Registry}` | [`filter::Filter`], [`filter::Codec`] (`Signed` is [`filter::Codec::signature`]), [`filter::Callback`], [`filter::Registry`] |
 //! | `Utopia\Database\Event`, `Event\Domain` and its subclasses, `Event\DispatcherHook` | [`Event`], [`event::Domain`], [`event::DispatcherHook`] |
 //! | `Utopia\Database\Hook\*` (interfaces, `Tenancy`, `RowMetadata`) | [`hook`] |
@@ -77,6 +78,7 @@ pub mod profiler;
 pub mod query;
 pub mod relationship;
 pub mod role;
+pub mod rounding;
 pub mod schema;
 mod serialize;
 pub mod state;

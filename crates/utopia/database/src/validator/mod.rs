@@ -10,12 +10,13 @@
 //! | PHP | Rust |
 //! |---|---|
 //! | `Validator\Authorization`, `Authorization\Input` | [`authorization::Authorization`], [`authorization::Input`] |
-//! | `Validator\BigInt` | [`big_int::BigInt`] |
+//! | `Validator\BigInt` | [`big_int::BigInt`], [`big_int::Integer`], [`big_int::Operand`] |
 //! | `Validator\ByteLength` | [`byte_length::ByteLength`] |
 //! | `Validator\Datetime` | [`datetime::Datetime`], [`datetime::Precision`] |
 //! | `Validator\Key`, `UID`, `Label` | [`key::Key`], [`uid::Uid`], [`label::Label`] |
 //! | `Validator\ObjectPath` | [`object_path::ObjectPath`] |
 //! | `Validator\ObjectValue` | [`object_value::ObjectValue`] |
+//! | `Validator\Operator` | [`operator::Operator`] |
 //! | `Validator\Permissions`, `Roles` | [`permissions::Permissions`], [`roles::Roles`] |
 //! | `Validator\Sequence` | [`sequence::Sequence`] |
 //! | `Validator\Spatial` | [`spatial::Spatial`] |
@@ -44,6 +45,7 @@ pub mod key;
 pub mod label;
 pub mod object_path;
 pub mod object_value;
+pub mod operator;
 pub mod permissions;
 pub mod roles;
 pub mod sequence;

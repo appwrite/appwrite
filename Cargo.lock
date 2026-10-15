@@ -4318,7 +4318,9 @@ dependencies = [
  "utopia-cache",
  "utopia-mongo",
  "utopia-pools",
+ "utopia-query",
  "utopia-validators",
+ "xxhash-rust",
 ]
 
 [[package]]
