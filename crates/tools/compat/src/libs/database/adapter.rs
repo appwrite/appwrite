@@ -7,17 +7,26 @@
 
 use std::sync::Arc;
 
+use futures_util::future::BoxFuture;
 use serde_json::{Value as Json, json};
 use utopia_database::adapter::memory::Memory as MemoryAdapter;
+use utopia_database::adapter::pool::Pool as PoolAdapter;
+use utopia_database::adapter::sql::pdo::{FetchMode, Options as PdoOptions, Pdo};
+use utopia_database::adapter::sql::{Engine, Sql};
 use utopia_database::adapter::{Adapter, Feature, Find};
 use utopia_database::capability::Capability;
+use utopia_database::change::Change;
 use utopia_database::collection::Collection;
+use utopia_database::database::Hook;
 use utopia_database::document::Document;
+use utopia_database::hook::{Tenancy, Write};
 use utopia_database::permission::PermissionType;
 use utopia_database::query::Query;
+use utopia_database::relationship::{self, RelationshipSide};
 use utopia_database::validator::authorization::Authorization;
 use utopia_database::value::{self, Array, ArrayKey, Str, Value};
 use utopia_database::{Attribute, Index};
+use utopia_database::{Error, Kind, Relationship};
 use utopia_query::schema::ColumnType;
 use utopia_query::{CursorDirection, OrderDirection};
 
@@ -26,9 +35,10 @@ use super::calls::Calls;
 use super::codec;
 use super::convert::{IntoObj, object, objects, ok, strings};
 use super::ctx::{Fail, R, fault};
-use super::database::{AuthorizationObj, ProfilerObj};
+use super::database::{AuthorizationObj, BuilderObj, ProfilerObj, SchemaObj};
 use super::enums;
 use super::fixtures;
+use super::fixtures::HookObj;
 use super::obj::Obj;
 use super::open::{self, AdapterObj};
 use super::values::LimitsObj;
@@ -63,7 +73,11 @@ pub async fn call(op: &str, a: &Args) -> R<Obj> {
                 Ok(adapter) => adapter,
                 Err(e) => return Err(Fail::Error(e)),
             };
-            if op == "mongo.fuzz_find" { fuzz_find(&*adapter, a).await } else { fuzz_roundtrip(&*adapter, a, true).await }
+            if op == "mongo.fuzz_find" {
+                fuzz_find(&*adapter, a).await
+            } else {
+                fuzz_roundtrip(&*adapter, a, true).await
+            }
         }
         _ => fault(format!("database: unknown operation `{op}`")),
     }
@@ -140,28 +154,188 @@ async fn adapter_open(a: &Args) -> R<Obj> {
 
 /// `new Adapter\<class>(...)`.
 pub async fn construct(class: &str, a: &Args) -> R<Option<Obj>> {
-    let _ = a;
-    Ok(match class {
-        "Adapter\\Memory" => Some(object(AdapterObj(Arc::new(MemoryAdapter::new())))),
-        _ => None,
-    })
+    let engine = match class {
+        "Adapter\\Memory" => return Ok(Some(object(AdapterObj(Arc::new(MemoryAdapter::new()))))),
+        "Adapter\\SQLite" => Engine::Sqlite,
+        "Adapter\\MariaDB" => Engine::MariaDb,
+        "Adapter\\MySQL" => Engine::MySql,
+        "Adapter\\Postgres" => Engine::Postgres,
+        _ => return Ok(None),
+    };
+    let pdo = match pdo_of(a, "pdo").await? {
+        Ok(pdo) => pdo,
+        Err(e) => return Err(Fail::Error(e)),
+    };
+    let sql = Arc::new(Sql::new(engine, pdo));
+    if matches!(a.raw("pdo"), Some(Json::Object(o)) if o.is_empty()) {
+        let mut stubs = super::ctx::lock(&STUBS);
+        stubs.retain(|w| w.strong_count() > 0);
+        stubs.push(Arc::downgrade(&sql));
+    }
+    Ok(Some(object(AdapterObj(sql))))
 }
 
-/// `Adapter\<class>::<method>(...)`.
+/// The SQL adapters a test built over a stub object instead of a PDO
+/// (`new MariaDB($stub)`).
+static STUBS: std::sync::LazyLock<std::sync::Mutex<Vec<std::sync::Weak<Sql>>>> =
+    std::sync::LazyLock::new(|| std::sync::Mutex::new(Vec::new()));
+
+/// The methods of an adapter over a stub object that never reach its
+/// connection; any other one asks `getDriver()` for the PDO, which refuses
+/// a stub (`SQL::getDriver()`).
+const CONNECTION_FREE: &[&str] = &[
+    "supports",
+    "capabilities",
+    "limits",
+    "hasFeature",
+    "setAuthorization",
+    "getAuthorization",
+    "setProfiler",
+    "getProfiler",
+    "setDatabase",
+    "getDatabase",
+    "setNamespace",
+    "getNamespace",
+    "setHostname",
+    "setSharedTables",
+    "hasSharedTables",
+    "setTenant",
+    "getTenant",
+    "withTenant",
+    "setTenantPerDocument",
+    "isTenantPerDocument",
+    "setMetadata",
+    "getMetadata",
+    "resetMetadata",
+    "setLocks",
+    "addWriteHook",
+    "removeWriteHook",
+    "getWriteHooks",
+    "getTenantHook",
+    "addTransform",
+    "removeTransform",
+    "resetTransforms",
+    "inTransaction",
+    "ignoreDuplicates",
+    "setTimeout",
+    "clearTimeout",
+    "getTimeout",
+    "encode",
+    "decode",
+    "getColumnType",
+    "getSchemaIndexType",
+    "getAttributeWidth",
+    "getCountOfAttributes",
+    "getCountOfIndexes",
+    "filter",
+    "builder",
+    "schema",
+    "update",
+];
+
+/// Whether `adapter` is a SQL adapter over a stub object.
+fn is_stub(adapter: &Arc<dyn Adapter>) -> bool {
+    let Some(sql) = adapter.as_any().downcast_ref::<Sql>() else {
+        return false;
+    };
+    super::ctx::lock(&STUBS).iter().any(|w| w.upgrade().is_some_and(|s| std::ptr::eq(&*s, sql)))
+}
+
+/// The PDO a unit test built (`Core::pdoOf`): `{"$pdo": {"dsn", "wrapper"?,
+/// "username"?, "password"?, "options"?}}`. Both `\PDO` and
+/// `Utopia\Database\PDO` are a [`Pdo`] here. A stub object (`{}`, a PHPUnit
+/// stub PHP never runs a statement on) is an in-memory SQLite connection,
+/// as the tests that need a connection-free adapter build one.
+async fn pdo_of(a: &Args, key: &str) -> R<utopia_database::Result<Pdo>> {
+    let spec = match a.raw(key) {
+        Some(Json::Object(o)) => match o.get("$pdo") {
+            Some(Json::Object(spec)) => spec.clone(),
+            Some(_) => return fault("`$pdo` is {\"dsn\", ...}"),
+            None if o.is_empty() => serde_json::Map::new(),
+            None => return fault(format!("`{key}` is not a PDO")),
+        },
+        _ => return fault(format!("`{key}` is not a PDO")),
+    };
+    let dsn = spec.get("dsn").and_then(Json::as_str).unwrap_or("sqlite::memory:");
+    let text = |k: &str| spec.get(k).and_then(Json::as_str).map(str::to_owned);
+    let mut options = PdoOptions::default();
+    if let Some(Json::Object(attributes)) = spec.get("options") {
+        // PDO::ATTR_TIMEOUT (2) and PDO::ATTR_DEFAULT_FETCH_MODE (19); the
+        // others (persistence, error mode, emulation, stringify) are how
+        // the Rust handle always behaves.
+        if let Some(seconds) = attributes.get("2").and_then(Json::as_u64) {
+            options.timeout = std::time::Duration::from_secs(seconds);
+        }
+        match attributes.get("19").and_then(Json::as_i64) {
+            Some(2) => options.fetch_mode = FetchMode::Assoc,
+            Some(3) => options.fetch_mode = FetchMode::Num,
+            Some(4) => options.fetch_mode = FetchMode::Both,
+            _ => {}
+        }
+    }
+    Ok(Pdo::connect_with(dsn, text("username").as_deref(), text("password").as_deref(), options).await)
+}
+
+/// `Adapter\<class>::<method>(...)`, and `Connection::hasError()` (its
+/// `{"$throwable": ...}` argument).
 pub async fn call_static(class: &str, method: &str, a: &Args) -> R<Option<Obj>> {
-    let _ = (class, a);
-    Ok(match method {
-        "filter" => Some(utopia_database::adapter::filter(&a.string("value")?).into_obj()),
+    Ok(match (class, method) {
+        ("Connection", "hasError") => Some(has_error(a.raw("e").unwrap_or(&Json::Null))?.into_obj()),
+        (_, "filter") if class.starts_with("Adapter\\") => {
+            Some(utopia_database::adapter::filter(&a.string("value")?).into_obj())
+        }
         _ => None,
     })
 }
 
+/// `Connection::hasError($e)` of a `{"$throwable": {"class", "message",
+/// "code"?, "errorInfo"?, "previous"?}}` (`Core::throwable`): a
+/// `PDOException` whose `errorInfo` names a lost connection, or a message
+/// that does. The previous exceptions are not consulted, as in PHP.
+fn has_error(e: &Json) -> R<bool> {
+    let Some(spec) = e.get("$throwable").and_then(Json::as_object) else {
+        return fault("`e` is {\"$throwable\": {...}}");
+    };
+    let class = spec.get("class").and_then(Json::as_str).unwrap_or("Exception").trim_start_matches('\\');
+    if class == "PDOException" || class.ends_with("\\PDOException") {
+        let info = spec.get("errorInfo").and_then(Json::as_array);
+        let state = info.and_then(|i| i.first()).and_then(Json::as_str);
+        let code = info.and_then(|i| i.get(1)).and_then(Json::as_i64);
+        if utopia_database::connection::has_lost_connection_code(state, code) {
+            return Ok(true);
+        }
+    }
+    let message = spec.get("message").and_then(Json::as_str).unwrap_or_default();
+    Ok(utopia_database::connection::has_error(message))
+}
+
+/// A `Document $collection` parameter of an adapter method. PHP hands the
+/// adapter the plain document (`Core::argument`), where an absent
+/// `documentSecurity` reads as `false`; a Rust `Collection` defaults it to
+/// `true`, so a plain document without it gets `false` here. A
+/// `Collection` object keeps its own.
 fn collection(a: &Args, key: &str) -> R<Collection> {
-    a.collection(key)
+    let document = a.document(key)?;
+    as_collection(document)
+}
+
+fn as_collection(mut document: Document) -> R<Collection> {
+    if document.class() != utopia_database::collection::CLASS
+        && !document.has(utopia_database::collection::DOCUMENT_SECURITY)
+    {
+        document.set(utopia_database::collection::DOCUMENT_SECURITY, Value::Bool(false))?;
+    }
+    Ok(Collection::from_document(&document)?)
 }
 
 /// Calls `method` (PHP's name) of `adapter`.
 pub async fn invoke(adapter: &Arc<dyn Adapter>, method: &str, a: &Args) -> R<Obj> {
+    if !CONNECTION_FREE.contains(&method) && is_stub(adapter) {
+        return Err(Fail::Error(Error::new(
+            Kind::Database,
+            "SQL adapter requires Utopia\\Database\\PDO, Swoole\\Database\\PDOProxy, or PDO",
+        )));
+    }
     let calls = Calls::new(&a.cx);
     let result = call_method(adapter, method, a, &calls).await;
     calls.finish(result)
@@ -173,9 +347,7 @@ async fn call_method(adapter: &Arc<dyn Adapter>, method: &str, a: &Args, calls: 
     Ok(match method {
         // ----- Profile -----
         "supports" => adapter.supports(capability(a, "capability")?).into_obj(),
-        "capabilities" => {
-            Obj::List(adapter.capabilities().iter().map(enums::obj).collect())
-        }
+        "capabilities" => Obj::List(adapter.capabilities().iter().map(enums::obj).collect()),
         "limits" => object(LimitsObj(adapter.limits())),
         "hasFeature" => adapter.has_feature(feature(&s("feature")?)?).into_obj(),
         // ----- Settings -----
@@ -227,7 +399,7 @@ async fn call_method(adapter: &Arc<dyn Adapter>, method: &str, a: &Args, calls: 
         }
         "resetMetadata" => {
             adapter.reset_metadata();
-            this()
+            Obj::null()
         }
         "setLocks" => {
             adapter.set_locks(a.bool("locks")?);
@@ -265,7 +437,7 @@ async fn call_method(adapter: &Arc<dyn Adapter>, method: &str, a: &Args, calls: 
         }
         "resetTransforms" => {
             adapter.reset_transforms();
-            this()
+            Obj::null()
         }
         // ----- Transactions -----
         "startTransaction" => ok(adapter.start_transaction().await)?,
@@ -339,7 +511,12 @@ async fn call_method(adapter: &Arc<dyn Adapter>, method: &str, a: &Args, calls: 
             ok(adapter.create_documents(&collection(a, "collection")?, a.documents("documents")?).await)?
         }
         "getDocument" => ok(adapter
-            .get_document(&collection(a, "collection")?, &s("id")?, a.queries("queries")?, a.bool_or("forUpdate", false)?)
+            .get_document(
+                &collection(a, "collection")?,
+                &s("id")?,
+                a.queries("queries")?,
+                a.bool_or("forUpdate", false)?,
+            )
             .await)?,
         "updateDocument" => ok(adapter
             .update_document(
@@ -374,9 +551,7 @@ async fn call_method(adapter: &Arc<dyn Adapter>, method: &str, a: &Args, calls: 
                 Value::Array(arr) => arr.into_iter().map(|(_, v)| v).collect(),
                 _ => Vec::new(),
             };
-            ok(adapter
-                .delete_documents(&collection(a, "collection")?, sequences, a.strings("permissionIds")?)
-                .await)?
+            ok(adapter.delete_documents(&collection(a, "collection")?, sequences, a.strings("permissionIds")?).await)?
         }
         "find" => ok(adapter.find(&collection(a, "collection")?, a.queries("queries")?, find_options(a)?).await)?,
         "count" => ok(adapter.count(&collection(a, "collection")?, a.queries("queries")?, a.opt_int("max")?).await)?,
@@ -430,12 +605,259 @@ async fn call_method(adapter: &Arc<dyn Adapter>, method: &str, a: &Args, calls: 
         },
         "getTimeout" => match adapter.timeouts() {
             Some(t) => t
-                .timeout(a.enum_::<utopia_database::event::Event>("event")?.unwrap_or(utopia_database::event::Event::All))
+                .timeout(
+                    a.enum_::<utopia_database::event::Event>("event")?.unwrap_or(utopia_database::event::Event::All),
+                )
                 .into_obj(),
             None => return fault("the adapter has no timeouts"),
         },
         "filter" => utopia_database::adapter::filter(&s("value")?).into_obj(),
+        // ----- Scopes and hooks -----
+        "withTenant" => {
+            let cb = calls.required("callback", a.raw("callback"))?;
+            returned(adapter.state().tenant().with(a.value("tenant")?, cb.invoke(Vec::new())).await)?
+        }
+        "ignoreDuplicates" => {
+            let cb = calls.required("callback", a.raw("callback"))?;
+            returned(adapter.state().ignoring_duplicates().with(true, cb.invoke(Vec::new())).await)?
+        }
+        "getTenantHook" => match adapter.tenant_hook() {
+            Some(tenancy) => object(HookObj { hook: Hook::write(Arc::new(tenancy)), class: "Tenancy" }),
+            None => Obj::null(),
+        },
+        "getWriteHooks" => Obj::List(adapter.write_hooks().into_iter().map(write_hook).collect()),
+        "setProfiler" => {
+            let profiler = match a.obj("profiler")? {
+                Some(obj) => Some(args::downcast::<ProfilerObj>(&obj)?.0),
+                None => None,
+            };
+            adapter.set_profiler(profiler);
+            this()
+        }
+        "isRetryable" => adapter.is_retryable(&throwable(a.raw("failure").unwrap_or(&Json::Null))?).into_obj(),
+        "getDriver" => driver(adapter)?,
+        "getReadConcurrency" => (adapter.read_concurrency() as i64).into_obj(),
+        "relaxAttributeRequired" => ok(adapter.relax_attribute_required(&s("collection")?, &s("id")?).await)?,
+        "getSchemaIndexType" => {
+            enums::obj(adapter.schema_index_type(a.req_enum::<utopia_query::schema::IndexType>("type")?))
+        }
+        // ----- Relationships -----
+        "createRelationship" => ok(relationships(adapter)?
+            .create_relationship(&s("collection")?, &a.req::<Relationship>("relationship")?)
+            .await)?,
+        "updateRelationship" => ok(relationships(adapter)?
+            .update_relationship(
+                &s("collection")?,
+                &a.req::<Relationship>("relationship")?,
+                a.req_enum::<RelationshipSide>("side")?,
+                &a.req::<relationship::Update>("update")?,
+            )
+            .await)?,
+        "deleteRelationship" => ok(relationships(adapter)?
+            .delete_relationship(
+                &s("collection")?,
+                &a.req::<Relationship>("relationship")?,
+                a.req_enum::<RelationshipSide>("side")?,
+            )
+            .await)?,
+        // ----- Upserts -----
+        "upsertDocument" => {
+            ok(upserts(adapter)?.upsert_document(&collection(a, "collection")?, a.req::<Change>("change")?).await)?
+        }
+        "upsertDocuments" => ok(upserts(adapter)?
+            .upsert_documents(
+                &collection(a, "collection")?,
+                a.list::<Change>("changes")?,
+                a.opt_string("increase")?.as_deref(),
+            )
+            .await)?,
+        // ----- Spatial -----
+        "encode" => ok(spatial(adapter)?.encode(&a.value("value")?, a.req_enum::<ColumnType>("type")?))?,
+        "decode" => {
+            let bytes = match a.value("value")? {
+                Value::Str(s) => s.as_bytes().to_vec(),
+                other => value::to_text(&other).into_bytes(),
+            };
+            ok(spatial(adapter)?.decode(&bytes, a.req_enum::<ColumnType>("type")?))?
+        }
+        // ----- Casting -----
+        "castBefore" => ok(casting(adapter)?.cast_before(&collection(a, "collection")?, a.document("document")?))?,
+        "castAfter" => ok(casting(adapter)?.cast_after(&collection(a, "collection")?, a.documents("documents")?))?,
+        "castDatetime" => ok(casting(adapter)?.cast_datetime(&s("value")?))?,
+        // ----- Schemaless -----
+        "setSchemaless" => match adapter.schemaless() {
+            Some(sl) => {
+                sl.set_schemaless(a.bool("schemaless")?);
+                this()
+            }
+            None => return fault(format!("{} has no method `setSchemaless`", open::adapter_class(&**adapter))),
+        },
+        "isSchemaless" => match adapter.schemaless() {
+            Some(sl) => sl.is_schemaless().into_obj(),
+            None => return fault(format!("{} has no method `isSchemaless`", open::adapter_class(&**adapter))),
+        },
+        // ----- Builders -----
+        "builder" => match adapter.query_builder() {
+            Some(q) => object(BuilderObj(Arc::new(std::sync::Mutex::new(q.builder()?)))),
+            None => return fault(format!("{} has no method `builder`", open::adapter_class(&**adapter))),
+        },
+        "schema" => match adapter.query_builder() {
+            Some(q) => object(SchemaObj(Arc::new(std::sync::Mutex::new(q.schema()?)))),
+            None => return fault(format!("{} has no method `schema`", open::adapter_class(&**adapter))),
+        },
+        // ----- Pool -----
+        "delegate" => return Box::pin(delegate(adapter, &s("method")?, a)).await,
+        "getPool" => return fault("Pool::getPool(): the pool is not an object of the harness"),
         _ => return fault(format!("{} has no method `{method}`", open::adapter_class(&**adapter))),
+    })
+}
+
+/// What a scope's callback returned, as the scope method returns it.
+fn returned(r: utopia_database::Result<Option<Obj>>) -> R<Obj> {
+    match r {
+        Ok(v) => Ok(v.unwrap_or_else(Obj::null)),
+        Err(e) => Err(Fail::Error(e)),
+    }
+}
+
+/// A registered write hook as an object: `Tenancy` or, for any other,
+/// `Permissions` (the only other write hook the cases register; the trait
+/// object does not say its class).
+fn write_hook(hook: Arc<dyn Write>) -> Obj {
+    if hook.tenancy().is_some() {
+        object(HookObj { hook: Hook::Write(hook, std::any::type_name::<Tenancy>()), class: "Tenancy" })
+    } else {
+        object(HookObj {
+            hook: Hook::Write(hook, std::any::type_name::<utopia_database::hook::Permissions>()),
+            class: "Permissions",
+        })
+    }
+}
+
+/// A `{"$throwable": {"class", "message", "errorInfo"?, "previous"?}}` as
+/// the library's error (`Core::throwable`).
+fn throwable(json: &Json) -> R<Error> {
+    let Some(spec) = json.get("$throwable").and_then(Json::as_object) else {
+        return fault("a throwable is {\"$throwable\": {...}}");
+    };
+    let class = spec.get("class").and_then(Json::as_str).unwrap_or("Exception").trim_start_matches('\\');
+    let kind = Kind::from_php_class(class).unwrap_or(Kind::Exception);
+    let mut error = Error::new(kind, spec.get("message").and_then(Json::as_str).unwrap_or_default());
+    if let Some(info) = spec.get("errorInfo").and_then(Json::as_array) {
+        if let Some(state) = info.first().and_then(Json::as_str) {
+            error = error.with_string_code(state.as_bytes());
+        }
+        if let Some(code) = info.get(1).and_then(Json::as_i64) {
+            error = error.with_driver_code(code);
+        }
+    }
+    if let Some(previous) = spec.get("previous").filter(|p| p.is_object()) {
+        error = error.with_previous(throwable(&json!({"$throwable": previous}))?);
+    }
+    Ok(error)
+}
+
+/// A PDO handle as PHP reports it (`{"$value": "PDO", "fields": {}}`).
+#[derive(Clone)]
+struct PdoObj;
+crate::php_object!(PdoObj, "PDO", |_p| json!({"$value": "PDO", "fields": {}}));
+
+/// `getDriver()`: a SQL adapter's PDO, the Memory adapter itself, a Pool's
+/// connection's driver.
+fn driver(adapter: &Arc<dyn Adapter>) -> R<Obj> {
+    let any = adapter.as_any();
+    if any.is::<Sql>() {
+        return Ok(object(PdoObj));
+    }
+    if any.is::<MemoryAdapter>() {
+        return Ok(object(AdapterObj(adapter.clone())));
+    }
+    if let Some(pool) = any.downcast_ref::<PoolAdapter>()
+        && let Some(pinned) = pool.pinned_adapter()
+    {
+        return driver(&pinned);
+    }
+    if any.is::<PoolAdapter>() {
+        return Ok(object(PdoObj));
+    }
+    fault(format!("{}::getDriver(): the client is not an object of the harness", open::adapter_class(&**adapter)))
+}
+
+fn relationships(adapter: &Arc<dyn Adapter>) -> R<&dyn utopia_database::adapter::Relationships> {
+    match adapter.relationships() {
+        Some(r) => Ok(r),
+        None => fault(format!("{} has no relationships", open::adapter_class(&**adapter))),
+    }
+}
+
+fn upserts(adapter: &Arc<dyn Adapter>) -> R<&dyn utopia_database::adapter::Upserts> {
+    match adapter.upserts() {
+        Some(u) => Ok(u),
+        None => fault(format!("{} has no upserts", open::adapter_class(&**adapter))),
+    }
+}
+
+fn spatial(adapter: &Arc<dyn Adapter>) -> R<&dyn utopia_database::adapter::Spatial> {
+    match adapter.spatial() {
+        Some(s) => Ok(s),
+        None => fault(format!("{} has no spatial codec", open::adapter_class(&**adapter))),
+    }
+}
+
+fn casting(adapter: &Arc<dyn Adapter>) -> R<&dyn utopia_database::adapter::Casting> {
+    match adapter.casting() {
+        Some(c) => Ok(c),
+        None => fault(format!("{} has no casting", open::adapter_class(&**adapter))),
+    }
+}
+
+/// The parameters of the methods `Pool::delegate()` is called with, in
+/// order (its `$arguments` are positional).
+const DELEGATED: &[(&str, &[&str])] = &[
+    ("setNamespace", &["namespace"]),
+    ("setDatabase", &["name"]),
+    ("setTenant", &["tenant"]),
+    ("setSharedTables", &["sharedTables"]),
+    ("getNamespace", &[]),
+    ("getDatabase", &[]),
+    ("getTenant", &[]),
+    ("hasSharedTables", &[]),
+    ("getDriver", &[]),
+    ("ping", &[]),
+    ("id", &[]),
+    ("hostname", &[]),
+    ("exists", &["database", "collection"]),
+    ("collectionExists", &["database", "collection"]),
+];
+
+/// `Pool::delegate($method, $arguments)`: the method run on the connection
+/// the pool lends (the pinned one in a transaction), its result as is.
+fn delegate<'a>(adapter: &'a Arc<dyn Adapter>, method: &'a str, a: &'a Args) -> BoxFuture<'a, R<Obj>> {
+    Box::pin(async move {
+        let Some(pool) = adapter.as_any().downcast_ref::<PoolAdapter>() else {
+            return fault(format!("{} has no method `delegate`", open::adapter_class(&**adapter)));
+        };
+        let Some((_, names)) = DELEGATED.iter().find(|(m, _)| *m == method) else {
+            return fault(format!("delegate: no parameter names for `{method}`"));
+        };
+        let positional = match a.raw("arguments") {
+            Some(list) => codec::list(list)?.into_iter().cloned().collect::<Vec<_>>(),
+            None => Vec::new(),
+        };
+        let named: serde_json::Map<String, Json> =
+            names.iter().zip(positional).map(|(name, v)| ((*name).to_owned(), v)).collect();
+        let inner = Args::new(&a.cx, &Json::Object(named))?;
+        if let Some(pinned) = pool.pinned_adapter() {
+            return invoke(&pinned, method, &inner).await;
+        }
+        let connection = match pool.pool().pop().await {
+            Ok(connection) => connection,
+            Err(e) => return Err(Fail::Error(Error::new(Kind::Exception, e.to_string()))),
+        };
+        let borrowed = connection.resource().0.clone();
+        let result = invoke(&borrowed, method, &inner).await;
+        pool.pool().reclaim(&connection);
+        result
     })
 }
 
@@ -444,10 +866,9 @@ async fn call_method(adapter: &Arc<dyn Adapter>, method: &str, a: &Args, calls: 
 /// `forPermission`).
 fn find_options(a: &Args) -> R<Find> {
     let order_types = match a.raw("orderTypes") {
-        Some(list) => codec::list(list)?
-            .into_iter()
-            .map(|j| super::values::enum_of::<OrderDirection>(j))
-            .collect::<R<Vec<_>>>()?,
+        Some(list) => {
+            codec::list(list)?.into_iter().map(super::values::enum_of::<OrderDirection>).collect::<R<Vec<_>>>()?
+        }
         None => Vec::new(),
     };
     Ok(Find {
@@ -501,8 +922,13 @@ fn doc_of(pairs: Vec<(&str, Value)>) -> Document {
     Document::from_array_unchecked(pairs.into_iter().map(|(k, v)| (ArrayKey::from(k), v)).collect())
 }
 
+/// `new Document(['$id' => $id])` as the adapter's collection: no
+/// `documentSecurity` (see [`collection`]).
 fn collection_named(id: &str) -> utopia_database::Result<Collection> {
-    Collection::from_document(&doc_of(vec![("$id", Value::Str(Str::from(id)))]))
+    Collection::from_document(&doc_of(vec![
+        ("$id", Value::Str(Str::from(id))),
+        (utopia_database::collection::DOCUMENT_SECURITY, Value::Bool(false)),
+    ]))
 }
 
 /// Seeds the fuzz database (`$fuzzSeed`).
@@ -675,12 +1101,7 @@ async fn fuzz_roundtrip(adapter: &dyn Adapter, a: &Args, objects: bool) -> R<Obj
         Err(e) => Err(e),
     };
     let read = adapter.get_document(&rt, "rt", Vec::new(), false).await.map(|d| codec::encode_document(&d));
-    let query = Query::new(
-        utopia_query::Method::Equal,
-        "t",
-        [value::to_query(&value)].into_iter().collect(),
-        "",
-    );
+    let query = Query::new(utopia_query::Method::Equal, "t", [value::to_query(&value)].into_iter().collect(), "");
     let found = adapter.find(&rt, vec![query], Find::default()).await.map(|d| codec::encode_documents(&d));
     let deleted = adapter.delete_document(&rt, "rt").await.map(Json::Bool);
     Ok(Obj::Value(codec::decode(&Json::Array(vec![out(created), out(read), out(found), out(deleted)]))?))
