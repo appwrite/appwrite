@@ -481,7 +481,11 @@ impl AttributeDefinition {
             _ => {
                 let available: Vec<&str> =
                     Attribute::available_types(&self.profile).into_iter().map(Attribute::stored_type).collect();
-                return db(format!("Unknown attribute type: {}. Must be one of {}", kind.as_str(), available.join(", ")));
+                return db(format!(
+                    "Unknown attribute type: {}. Must be one of {}",
+                    kind.as_str(),
+                    available.join(", ")
+                ));
             }
         }
         Ok(true)
@@ -505,13 +509,8 @@ impl AttributeDefinition {
             self.check_json_encodable(attribute)?;
             return Ok(true);
         }
-        let array_kinds = [
-            ColumnType::Vector,
-            ColumnType::Object,
-            ColumnType::Point,
-            ColumnType::Linestring,
-            ColumnType::Polygon,
-        ];
+        let array_kinds =
+            [ColumnType::Vector, ColumnType::Object, ColumnType::Point, ColumnType::Linestring, ColumnType::Polygon];
         if matches!(default, Value::Array(_)) && !attribute.array && !array_kinds.contains(&attribute.kind) {
             return self
                 .fail(Error::database, "Cannot set an array default value for a non-array attribute".to_owned());

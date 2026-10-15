@@ -183,7 +183,8 @@ impl IndexDefinition {
                 if let Some(base) = self.find(base_attribute(attribute))
                     && base.kind != ColumnType::Object
                 {
-                    return self.fail(format!("Index attribute \"{attribute}\" is only supported on object attributes"));
+                    return self
+                        .fail(format!("Index attribute \"{attribute}\" is only supported on object attributes"));
                 }
             }
         }
@@ -198,9 +199,7 @@ impl IndexDefinition {
             IndexType::Spatial if !index.orders.is_empty() && !supports(Capability::IndexSpatialOrder) => self.fail(
                 "Spatial indexes with explicit orders are not supported. Remove the orders to create this index.",
             ),
-            IndexType::HnswEuclidean | IndexType::HnswCosine | IndexType::HnswDot
-                if !supports(Capability::Vectors) =>
-            {
+            IndexType::HnswEuclidean | IndexType::HnswCosine | IndexType::HnswDot if !supports(Capability::Vectors) => {
                 self.fail("Vector indexes are not supported")
             }
             IndexType::Object if !supports(Capability::IndexObject) => self.fail("Object indexes are not supported"),
@@ -271,9 +270,8 @@ impl IndexDefinition {
             let attribute = self.find(name);
             if !is_string(attribute) {
                 let key = attribute.map_or(name.as_str(), |a| a.key.as_str());
-                return self.fail(format!(
-                    "Attribute \"{key}\" cannot be part of a fulltext index, must be of type string"
-                ));
+                return self
+                    .fail(format!("Attribute \"{key}\" cannot be part of a fulltext index, must be of type string"));
             }
         }
         true
@@ -340,9 +338,8 @@ impl IndexDefinition {
             return Ok(true);
         }
         if index.lengths.len() > index.attributes.len() {
-            return Ok(self.fail(
-                "Invalid index lengths. Count of lengths must be equal or less than the number of attributes.",
-            ));
+            return Ok(self
+                .fail("Invalid index lengths. Count of lengths must be equal or less than the number of attributes."));
         }
         let mut total: i64 = 0;
         for (position, name) in index.attributes.iter().enumerate() {
@@ -373,7 +370,9 @@ impl IndexDefinition {
                 index_length = database::MAX_ARRAY_INDEX_LENGTH;
             }
             if index_length > size {
-                return Ok(self.fail(format!("Index length {index_length} is larger than the size for {name}: {size}\"")));
+                return Ok(
+                    self.fail(format!("Index length {index_length} is larger than the size for {name}: {size}\""))
+                );
             }
             total = total.wrapping_add(index_length);
         }

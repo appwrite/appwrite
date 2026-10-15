@@ -62,7 +62,8 @@ fn legacy_big_integer_metadata_normalizes_to_canonical_type() {
     assert_eq!(attribute.size, None);
     assert_eq!(attribute.to_document().unwrap().get("type"), Some(&Value::from("bigint")));
 
-    let array_attribute = Attribute::from_array(&array(r#"{"$id": "arrayTotal", "type": "bigint", "size": 64}"#)).unwrap();
+    let array_attribute =
+        Attribute::from_array(&array(r#"{"$id": "arrayTotal", "type": "bigint", "size": 64}"#)).unwrap();
     assert_eq!(array_attribute.kind, ColumnType::BigInteger);
     assert_eq!(array_attribute.size, None);
 }
@@ -80,7 +81,11 @@ fn big_integer_defaults_support_native_and_string_boundaries() {
     );
     assert!(
         validator
-            .check(&Attribute::big_integer("values").default(val(r#"["-9223372036854775808", 9223372036854775807]"#)).array(true))
+            .check(
+                &Attribute::big_integer("values")
+                    .default(val(r#"["-9223372036854775808", 9223372036854775807]"#))
+                    .array(true)
+            )
             .unwrap()
     );
 }
@@ -97,10 +102,14 @@ fn big_integer_default_rejects_values_outside_signed_range() {
 
 #[test]
 fn big_integer_array_default_validates_every_value() {
-    let validator = AttributeDefinition::new(vec![], P { capabilities: vec![Capability::UnsignedBigInt], ..P::default() }.build());
+    let validator =
+        AttributeDefinition::new(vec![], P { capabilities: vec![Capability::UnsignedBigInt], ..P::default() }.build());
     assert_error_contains(
         validator.check(
-            &Attribute::big_integer("totals").default(val(r#"["1", "18446744073709551616"]"#)).signed(false).array(true),
+            &Attribute::big_integer("totals")
+                .default(val(r#"["1", "18446744073709551616"]"#))
+                .signed(false)
+                .array(true),
         ),
         Kind::Database,
         "does not match given type bigint",
@@ -114,7 +123,11 @@ fn existing(key: &str) -> Attribute {
 #[test]
 fn duplicate_attribute_id() {
     let validator = AttributeDefinition::new(vec![existing("title")], wide(&[], &[]));
-    assert_error(validator.is_valid(&dv(a("title", "string", 255, ""))), Kind::Duplicate, "Attribute already exists in metadata");
+    assert_error(
+        validator.is_valid(&dv(a("title", "string", 255, ""))),
+        Kind::Duplicate,
+        "Attribute already exists in metadata",
+    );
     assert_eq!(validator.description(), "Attribute already exists in metadata");
 }
 
@@ -125,11 +138,13 @@ fn valid_string_attribute() {
 
 #[test]
 fn string_size_too_large() {
-    let validator = AttributeDefinition::new(
-        vec![],
-        P { string: 1000, varchar: 65535, integer: i64::MAX, ..P::default() }.build(),
+    let validator =
+        AttributeDefinition::new(vec![], P { string: 1000, varchar: 65535, integer: i64::MAX, ..P::default() }.build());
+    assert_error(
+        validator.is_valid(&dv(a("title", "string", 2000, ""))),
+        Kind::Database,
+        "Max size allowed for string is: 1,000",
     );
-    assert_error(validator.is_valid(&dv(a("title", "string", 2000, ""))), Kind::Database, "Max size allowed for string is: 1,000");
 }
 
 #[test]
@@ -138,12 +153,20 @@ fn varchar_size_too_large() {
         vec![],
         P { string: 16_777_216, varchar: 1000, integer: i64::MAX, ..P::default() }.build(),
     );
-    assert_error(validator.is_valid(&dv(a("title", "varchar", 2000, ""))), Kind::Database, "Max size allowed for varchar is: 1,000");
+    assert_error(
+        validator.is_valid(&dv(a("title", "varchar", 2000, ""))),
+        Kind::Database,
+        "Max size allowed for varchar is: 1,000",
+    );
 }
 
 #[test]
 fn text_size_too_large() {
-    assert_error(standard().is_valid(&dv(a("content", "text", 70000, ""))), Kind::Database, "Max size allowed for text is: 65535");
+    assert_error(
+        standard().is_valid(&dv(a("content", "text", 70000, ""))),
+        Kind::Database,
+        "Max size allowed for text is: 65535",
+    );
 }
 
 #[test]
@@ -161,7 +184,11 @@ fn integer_size_too_large() {
         vec![],
         P { string: 16_777_216, varchar: 65535, integer: 100, ..P::default() }.build(),
     );
-    assert_error(validator.is_valid(&dv(a("count", "integer", 200, ""))), Kind::Database, "Max size allowed for int is: 50");
+    assert_error(
+        validator.is_valid(&dv(a("count", "integer", 200, ""))),
+        Kind::Database,
+        "Max size allowed for int is: 50",
+    );
 }
 
 #[test]
@@ -327,8 +354,15 @@ fn attribute_limit_exceeded() {
 fn row_width_limit_exceeded() {
     let validator = AttributeDefinition::new(
         vec![],
-        P { string: 16_777_216, varchar: 65535, integer: i64::MAX, attributes: 100, document_size: 1000, ..P::default() }
-            .build(),
+        P {
+            string: 16_777_216,
+            varchar: 65535,
+            integer: i64::MAX,
+            attributes: 100,
+            document_size: 1000,
+            ..P::default()
+        }
+        .build(),
     )
     .measures(Some(Box::new(|_| Ok(5))), Some(Box::new(|_| Ok(1500))));
     assert_error(
@@ -359,8 +393,12 @@ fn vector_default_value_wrong_element_count() {
 #[test]
 fn vector_default_value_non_numeric_elements() {
     assert_error(
-        vectors()
-            .is_valid(&dv(a("embedding", "vector", 3, r#""default": [1.0, "not_a_number", 3.0], "filters": ["vector"]"#))),
+        vectors().is_valid(&dv(a(
+            "embedding",
+            "vector",
+            3,
+            r#""default": [1.0, "not_a_number", 3.0], "filters": ["vector"]"#,
+        ))),
         Kind::Database,
         "Vector default value must contain only numeric elements",
     );
@@ -390,7 +428,15 @@ fn valid_attributes() {
     ok(&validator, a("active", "boolean", 0, r#""default": true"#));
     ok(&validator, a("tags", "string", 255, r#""array": true"#));
     ok(&validator, a("tags", "string", 255, r#""default": ["tag1", "tag2", "tag3"], "array": true"#));
-    ok(&validator, a("created", "datetime", 0, r#""default": "2024-01-01T00:00:00.000Z", "signed": false, "filters": ["datetime"]"#));
+    ok(
+        &validator,
+        a(
+            "created",
+            "datetime",
+            0,
+            r#""default": "2024-01-01T00:00:00.000Z", "signed": false, "filters": ["datetime"]"#,
+        ),
+    );
     ok(&validator, a("name", "varchar", 255, r#""default": "default name""#));
     ok(&validator, a("content", "text", 65535, r#""default": "default content""#));
     ok(&validator, a("count", "integer", 4, ""));
@@ -401,18 +447,33 @@ fn valid_attributes() {
 fn default_value_type_mismatches() {
     let validator = standard();
     let cases = [
-        (a("price", "double", 0, r#""default": "not_a_float""#), "Default value not_a_float does not match given type double"),
-        (a("active", "boolean", 0, r#""default": "not_a_boolean""#), "Default value not_a_boolean does not match given type boolean"),
+        (
+            a("price", "double", 0, r#""default": "not_a_float""#),
+            "Default value not_a_float does not match given type double",
+        ),
+        (
+            a("active", "boolean", 0, r#""default": "not_a_boolean""#),
+            "Default value not_a_boolean does not match given type boolean",
+        ),
         (a("title", "string", 255, r#""default": 123"#), "Default value 123 does not match given type string"),
-        (a("tags", "string", 255, r#""default": ["tag1", 123, "tag3"], "array": true"#), "Default value 123 does not match given type string"),
+        (
+            a("tags", "string", 255, r#""default": ["tag1", 123, "tag3"], "array": true"#),
+            "Default value 123 does not match given type string",
+        ),
         (
             a("created", "datetime", 0, r#""default": 12345, "signed": false, "filters": ["datetime"]"#),
             "Default value 12345 does not match given type datetime",
         ),
         (a("name", "varchar", 255, r#""default": 123"#), "Default value 123 does not match given type varchar"),
         (a("content", "text", 65535, r#""default": 123"#), "Default value 123 does not match given type text"),
-        (a("content", "mediumtext", 16_777_215, r#""default": 123"#), "Default value 123 does not match given type mediumtext"),
-        (a("content", "longtext", 4_294_967_295, r#""default": 123"#), "Default value 123 does not match given type longtext"),
+        (
+            a("content", "mediumtext", 16_777_215, r#""default": 123"#),
+            "Default value 123 does not match given type mediumtext",
+        ),
+        (
+            a("content", "longtext", 4_294_967_295, r#""default": 123"#),
+            "Default value 123 does not match given type longtext",
+        ),
     ];
     for (attribute, message) in cases {
         assert_error(validator.is_valid(&dv(attribute)), Kind::Database, message);
@@ -445,7 +506,11 @@ fn unsigned_integer_size_too_large() {
 #[test]
 fn duplicate_attribute_id_case_insensitive() {
     let validator = AttributeDefinition::new(vec![existing("Title")], wide(&[], &[]));
-    assert_error(validator.is_valid(&dv(a("title", "string", 255, ""))), Kind::Duplicate, "Attribute already exists in metadata");
+    assert_error(
+        validator.is_valid(&dv(a("title", "string", 255, ""))),
+        Kind::Duplicate,
+        "Attribute already exists in metadata",
+    );
 }
 
 fn column(name: &str) -> Column {
@@ -583,7 +648,11 @@ fn vector_component_non_numeric_default_type() {
         r#"{"key": "vec2", "type": "vector", "size": 3, "required": false, "default": [1.0, "notANumber", 3.0]}"#,
     ))
     .unwrap();
-    assert_error(vectors().check(&attribute), Kind::Database, "Vector default value must contain only numeric elements");
+    assert_error(
+        vectors().check(&attribute),
+        Kind::Database,
+        "Vector default value must contain only numeric elements",
+    );
 }
 
 #[test]
@@ -591,7 +660,11 @@ fn schema_duplicate_check_with_filter_callback() {
     let validator = AttributeDefinition::new(vec![], wide(&[Capability::SchemaIntrospection], &[]))
         .schema_attributes(&[column("_prefix_column")])
         .filter(Box::new(|key| key.replace("_prefix_", "")));
-    assert_error(validator.is_valid(&dv(a("column", "string", 255, ""))), Kind::Duplicate, "Attribute already exists in schema");
+    assert_error(
+        validator.is_valid(&dv(a("column", "string", 255, ""))),
+        Kind::Duplicate,
+        "Attribute already exists in schema",
+    );
 }
 
 #[test]

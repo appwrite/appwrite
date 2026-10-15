@@ -392,7 +392,11 @@ impl Structure {
     }
 
     /// `checkForAllRequiredValues`.
-    pub(crate) fn check_required<'a>(&self, structure: &Array, attributes: impl IntoIterator<Item = &'a Attribute>) -> bool {
+    pub(crate) fn check_required<'a>(
+        &self,
+        structure: &Array,
+        attributes: impl IntoIterator<Item = &'a Attribute>,
+    ) -> bool {
         if !self.profile.supports(Capability::DefinedAttributes) {
             return true;
         }
@@ -447,7 +451,7 @@ impl Structure {
                 continue;
             }
 
-            if self.stored_attributes.iter().any(|k| *k == key_name) {
+            if self.stored_attributes.contains(&key_name) {
                 continue;
             }
 
@@ -478,8 +482,10 @@ impl Structure {
 
             let mut validators: Vec<Box<dyn Validator>> = Vec::new();
             match kind {
-                ColumnType::Id => validators
-                    .push(Box::new(Sequence::new(self.profile.limits.id_type.as_str(), key_name == document::SEQUENCE))),
+                ColumnType::Id => validators.push(Box::new(Sequence::new(
+                    self.profile.limits.id_type.as_str(),
+                    key_name == document::SEQUENCE,
+                ))),
                 ColumnType::Text => {
                     validators.push(Box::new(ByteLength::new(size)));
                     validators.push(Box::new(ByteLength::new(database::MAX_TEXT_BYTES)));
@@ -512,7 +518,11 @@ impl Structure {
                     // Float and Range both: Range casts non-numeric values.
                     validators.push(Box::new(Float::default()));
                     let min = if signed { Number::Float(-database::MAX_DOUBLE) } else { Number::Int(0) };
-                    validators.push(Box::new(Range::with_format(min, Number::Float(database::MAX_DOUBLE), Type::Float)));
+                    validators.push(Box::new(Range::with_format(
+                        min,
+                        Number::Float(database::MAX_DOUBLE),
+                        Type::Float,
+                    )));
                 }
                 ColumnType::Boolean => validators.push(Box::new(Boolean::STRICT)),
                 ColumnType::Datetime => validators.push(Box::new(Datetime::between(

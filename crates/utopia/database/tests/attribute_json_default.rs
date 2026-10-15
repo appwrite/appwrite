@@ -11,7 +11,10 @@ use utopia_database::validator::attribute_definition::AttributeDefinition;
 use utopia_database::value::{Array, Value};
 
 fn validator() -> AttributeDefinition {
-    AttributeDefinition::new(vec![], P { string: 16_777_216, varchar: 65535, integer: i64::MAX, ..P::default() }.build())
+    AttributeDefinition::new(
+        vec![],
+        P { string: 16_777_216, varchar: 65535, integer: i64::MAX, ..P::default() }.build(),
+    )
 }
 
 fn meta(default: Value) -> Attribute {

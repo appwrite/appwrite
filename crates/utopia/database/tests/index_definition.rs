@@ -63,7 +63,10 @@ fn fulltext_with_non_string() {
         standard(),
     );
     assert!(!valid(&validator, &indexes[0]));
-    assert_eq!(validator.description(), "Attribute \"date\" cannot be part of a fulltext index, must be of type string");
+    assert_eq!(
+        validator.description(),
+        "Attribute \"date\" cannot be part of a fulltext index, must be of type string"
+    );
 }
 
 #[test]
@@ -108,13 +111,21 @@ fn object_index_validation() {
     assert!(!valid(&validator, &Index::object("idx_gin_invalid_type", "name")));
     assert!(validator.description().contains("Object index can only be created on object attributes"));
 
-    let multi = Index::new("idx_gin_multi", IndexType::Object, vec!["data".into(), "name".into()], vec![], vec![], None).unwrap();
+    let multi =
+        Index::new("idx_gin_multi", IndexType::Object, vec!["data".into(), "name".into()], vec![], vec![], None)
+            .unwrap();
     assert!(!valid(&validator, &multi));
     assert!(validator.description().contains("Object index can be created on a single object attribute"));
 
-    let ordered =
-        Index::new("idx_gin_order", IndexType::Object, vec!["data".into()], vec![], vec![Some(OrderDirection::Asc)], None)
-            .unwrap();
+    let ordered = Index::new(
+        "idx_gin_order",
+        IndexType::Object,
+        vec!["data".into()],
+        vec![],
+        vec![Some(OrderDirection::Asc)],
+        None,
+    )
+    .unwrap();
     assert!(!valid(&validator, &ordered));
     assert!(validator.description().contains("Object index do not support explicit orders"));
 
@@ -230,14 +241,21 @@ fn trigram_index_validation() {
     assert!(!valid(&validator, &Index::trigram("idx_trigram_mixed", ["name", "age"])));
     assert!(validator.description().contains("Trigram index can only be created on string type attributes"));
 
-    let ordered =
-        Index::new("idx_trigram_order", IndexType::Trigram, vec!["name".into()], vec![], vec![Some(OrderDirection::Asc)], None)
-            .unwrap();
+    let ordered = Index::new(
+        "idx_trigram_order",
+        IndexType::Trigram,
+        vec!["name".into()],
+        vec![],
+        vec![Some(OrderDirection::Asc)],
+        None,
+    )
+    .unwrap();
     assert!(!valid(&validator, &ordered));
     assert!(validator.description().contains("Trigram indexes do not support orders or lengths"));
 
     let sized =
-        Index::new("idx_trigram_length", IndexType::Trigram, vec!["name".into()], vec![Some(128)], vec![], None).unwrap();
+        Index::new("idx_trigram_length", IndexType::Trigram, vec!["name".into()], vec![Some(128)], vec![], None)
+            .unwrap();
     assert!(!valid(&validator, &sized));
     assert!(validator.description().contains("Trigram indexes do not support orders or lengths"));
 
@@ -391,7 +409,10 @@ fn order_on_an_array_attribute_is_rejected() {
         vec![],
         profile(&with(&[Capability::IndexArray])),
     );
-    assert!(!valid(&validator, &Index::key("by_tags", ["tags"], vec![Some(64)], vec![Some(OrderDirection::Asc)]).unwrap()));
+    assert!(!valid(
+        &validator,
+        &Index::key("by_tags", ["tags"], vec![Some(64)], vec![Some(OrderDirection::Asc)]).unwrap()
+    ));
     assert_eq!(
         validator.description(),
         format!("Invalid index order \"{}\" on array attribute \"tags\"", OrderDirection::Asc.as_str())

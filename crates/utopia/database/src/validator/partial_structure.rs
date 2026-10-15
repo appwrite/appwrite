@@ -81,9 +81,8 @@ impl PartialStructure {
         }
         let structure = document.array_copy();
         let definitions = s.definitions()?;
-        let required = internal_attributes()
-            .iter()
-            .filter(|a| a.required && document.as_array().get_str(&a.key).is_some());
+        let required =
+            internal_attributes().iter().filter(|a| a.required && document.as_array().get_str(&a.key).is_some());
         if !s.check_required(&structure, required) {
             return Ok(false);
         }

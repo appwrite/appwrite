@@ -42,7 +42,8 @@ fn eight_byte_numbers() -> [Attribute; 2] {
 #[test]
 fn index_over_the_byte_limit_is_rejected() {
     for number in eight_byte_numbers() {
-        let validator = IndexDefinition::new(vec![Attribute::string("title", 767), number], vec![], profile(&CAPABILITIES));
+        let validator =
+            IndexDefinition::new(vec![Attribute::string("title", 767), number], vec![], profile(&CAPABILITIES));
         assert!(!validator.check(&key("idx_title_score", &["title", "score"], vec![])).unwrap());
         assert_eq!(validator.description(), "Index length is longer than the maximum: 768");
     }
@@ -51,7 +52,8 @@ fn index_over_the_byte_limit_is_rejected() {
 #[test]
 fn index_at_the_byte_limit_is_valid() {
     for number in eight_byte_numbers() {
-        let validator = IndexDefinition::new(vec![Attribute::string("title", 766), number], vec![], profile(&CAPABILITIES));
+        let validator =
+            IndexDefinition::new(vec![Attribute::string("title", 766), number], vec![], profile(&CAPABILITIES));
         assert!(
             validator.check(&key("idx_title_score", &["title", "score"], vec![])).unwrap(),
             "{}",
@@ -63,8 +65,11 @@ fn index_at_the_byte_limit_is_valid() {
 /// `eightByteIntegers()`.
 #[test]
 fn big_int_columns_count_eight_bytes() {
-    let numbers =
-        [Attribute::big_integer("score"), Attribute::id("score"), Attribute::integer("score").width(IntegerWidth::Bits64)];
+    let numbers = [
+        Attribute::big_integer("score"),
+        Attribute::id("score"),
+        Attribute::integer("score").width(IntegerWidth::Bits64),
+    ];
     for number in numbers {
         let over =
             IndexDefinition::new(vec![Attribute::string("title", 767), number.clone()], vec![], profile(&CAPABILITIES));
@@ -99,7 +104,10 @@ fn object_paths() -> IndexDefinition {
 fn fulltext_index_on_object_path_is_rejected() {
     let validator = object_paths();
     assert!(!validator.check(&Index::fulltext("idx_fulltext", ["data.title"])).unwrap());
-    assert_eq!(validator.description(), "Attribute \"data.title\" cannot be part of a fulltext index, must be of type string");
+    assert_eq!(
+        validator.description(),
+        "Attribute \"data.title\" cannot be part of a fulltext index, must be of type string"
+    );
 }
 
 #[test]

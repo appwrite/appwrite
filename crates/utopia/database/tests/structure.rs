@@ -158,10 +158,7 @@ fn validator_plain() -> Structure {
 #[test]
 fn null_values() {
     let validator = validator();
-    assert!(check(
-        &validator,
-        &post(&[("title", s("My Title")), ("description", Value::Null), ("id", s("1000"))])
-    ));
+    assert!(check(&validator, &post(&[("title", s("My Title")), ("description", Value::Null), ("id", s("1000"))])));
     assert!(check(
         &validator,
         &post(&[("title", s("My Title")), ("description", Value::Null), ("tags", val(r#"["dog", null, "mouse"]"#))])
@@ -190,7 +187,10 @@ const INT32: &str = "Value must be a valid signed 32-bit integer between -2,147,
 fn integer_as_string() {
     let validator = validator();
     assert!(!check(&validator, &post(&[("rating", s("5"))])));
-    assert_eq!(validator.description(), format!("Invalid document structure: Attribute \"rating\" has invalid type. {INT32}"));
+    assert_eq!(
+        validator.description(),
+        format!("Invalid document structure: Attribute \"rating\" has invalid type. {INT32}")
+    );
 }
 
 #[test]
@@ -227,7 +227,9 @@ fn array_of_strings_validation() {
             ("title", s("string")),
             (
                 "tags",
-                val(r#"["too-long-tag-name-to-make-sure-the-length-validator-inside-string-attribute-type-fails-properly"]"#)
+                val(
+                    r#"["too-long-tag-name-to-make-sure-the-length-validator-inside-string-attribute-type-fails-properly"]"#
+                )
             ),
         ])
     ));
@@ -251,7 +253,10 @@ fn integer_validation() {
     let validator = validator();
     let expected = format!("Invalid document structure: Attribute \"rating\" has invalid type. {INT32}");
 
-    assert!(!check(&validator, &post(&[("title", s("string")), ("rating", Value::Bool(true)), ("published", Value::Bool(false))])));
+    assert!(!check(
+        &validator,
+        &post(&[("title", s("string")), ("rating", Value::Bool(true)), ("published", Value::Bool(false))])
+    ));
     assert_eq!(validator.description(), expected);
 
     assert!(!check(&validator, &post(&[("title", s("string")), ("rating", s("")), ("published", Value::Bool(false))])));
@@ -276,7 +281,10 @@ fn float_validation() {
     let validator = validator();
     let expected = "Invalid document structure: Attribute \"price\" has invalid type. Value must be a valid float";
 
-    assert!(!check(&validator, &post(&[("title", s("string")), ("price", s("2.5")), ("published", Value::Bool(false))])));
+    assert!(!check(
+        &validator,
+        &post(&[("title", s("string")), ("price", s("2.5")), ("published", Value::Bool(false))])
+    ));
     assert_eq!(validator.description(), expected);
 
     assert!(!check(&validator, &post(&[("title", s("string")), ("price", s("")), ("published", Value::Bool(false))])));
@@ -286,7 +294,8 @@ fn float_validation() {
 #[test]
 fn boolean_validation() {
     let validator = validator();
-    let expected = "Invalid document structure: Attribute \"published\" has invalid type. Value must be a valid boolean";
+    let expected =
+        "Invalid document structure: Attribute \"published\" has invalid type. Value must be a valid boolean";
 
     assert!(!check(&validator, &post(&[("title", s("string")), ("published", Value::Int(1))])));
     assert_eq!(validator.description(), expected);
@@ -309,7 +318,10 @@ fn format_validation() {
 fn integer_max_range() {
     let validator = validator();
     assert!(!check(&validator, &post(&[("title", s("string")), ("rating", Value::Int(i64::MAX))])));
-    assert_eq!(validator.description(), format!("Invalid document structure: Attribute \"rating\" has invalid type. {INT32}"));
+    assert_eq!(
+        validator.description(),
+        format!("Invalid document structure: Attribute \"rating\" has invalid type. {INT32}")
+    );
 }
 
 #[test]
@@ -328,7 +340,10 @@ fn double_unsigned() {
 #[test]
 fn double_max_range() {
     let validator = validator();
-    assert!(!check(&validator, &post(&[("title", s("string")), ("rating", Value::Int(1)), ("price", Value::Float(f64::INFINITY))])));
+    assert!(!check(
+        &validator,
+        &post(&[("title", s("string")), ("rating", Value::Int(1)), ("price", Value::Float(f64::INFINITY))])
+    ));
 }
 
 #[test]
@@ -509,7 +524,10 @@ fn string_type_array_validation() {
     assert!(!check(&validator, &small("varchar_array", val(r#"[123, "test2", "test3"]"#))));
     assert_eq!(validator.description(), expected);
 
-    assert!(!check(&validator, &small("varchar_array", Value::Array(Array::from_list(vec![s(&"a".repeat(129)), s("test2")])))));
+    assert!(!check(
+        &validator,
+        &small("varchar_array", Value::Array(Array::from_list(vec![s(&"a".repeat(129)), s("test2")])))
+    ));
     assert_eq!(validator.description(), expected);
 }
 
@@ -524,10 +542,9 @@ fn legacy_big_integer_metadata_uses_big_integer_validation() {
         "indexes": []
     }"#);
     let validator = Structure::new(collection, profile());
-    let mut document = doc(
-        r#"{"$collection": "posts", "signed": "-9223372036854775808", "unsigned": "18446744073709551615",
-            "$createdAt": "2000-04-01T12:00:00.000+00:00", "$updatedAt": "2000-04-01T12:00:00.000+00:00"}"#,
-    );
+    let mut document =
+        doc(r#"{"$collection": "posts", "signed": "-9223372036854775808", "unsigned": "18446744073709551615",
+            "$createdAt": "2000-04-01T12:00:00.000+00:00", "$updatedAt": "2000-04-01T12:00:00.000+00:00"}"#);
 
     assert!(validator.validate(&mut document).unwrap(), "{}", validator.description());
     assert_eq!(document.get("signed"), Some(&Value::Int(i64::MIN)));
@@ -561,7 +578,10 @@ fn text_validation_uses_column_capacity_not_declared_size() {
     let validator = Structure::new(collection, profile());
     let expected = "Invalid document structure: Attribute \"text\" has invalid type. Value must be a valid string no longer than 65535 bytes";
 
-    assert!(check(&validator, &small("text", s(&"a".repeat(65535)))), "A value filling the full column capacity is accepted");
+    assert!(
+        check(&validator, &small("text", s(&"a".repeat(65535)))),
+        "A value filling the full column capacity is accepted"
+    );
 
     assert!(!check(&validator, &small("text", s(&"a".repeat(65536)))));
     assert_eq!(validator.description(), expected);
