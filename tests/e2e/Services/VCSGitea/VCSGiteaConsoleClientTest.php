@@ -9,7 +9,9 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideConsole;
+use Utopia\Database\Document;
 use Utopia\Database\Id;
+use Utopia\Database\Query;
 use Utopia\Database\Role;
 use Utopia\System\System;
 
@@ -679,6 +681,58 @@ final class VCSGiteaConsoleClientTest extends Scope
         return $this->client->call(Client::METHOD_GET, '/vcs/gitea/callback', \array_merge([
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), $params, true, false);
+    }
+
+    public function testListRepositoryBranchesPaginatesByCursor(): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $installationId = $this->createInstallationHelper()['$id'];
+
+        $repository = $this->giteaApiHelper(Client::METHOD_POST, '/api/v1/user/repos', [
+            'name' => 'branches-' . \uniqid(),
+            'auto_init' => true,
+            'default_branch' => 'main',
+            'private' => false,
+        ]);
+        $this->assertEquals(201, $repository['headers']['status-code'], \json_encode($repository['body']));
+
+        $branchesPath = '/api/v1/repos/' . self::GITEA_USERNAME . '/' . $repository['body']['name'] . '/branches';
+        foreach (['alpha', 'beta'] as $name) {
+            $branch = $this->giteaApiHelper(Client::METHOD_POST, $branchesPath, [
+                'new_branch_name' => $name,
+                'old_branch_name' => 'main',
+            ]);
+            $this->assertEquals(201, $branch['headers']['status-code'], \json_encode($branch['body']));
+        }
+
+        $path = '/vcs/github/installations/' . $installationId . '/providerRepositories/' . $repository['body']['id'] . '/branches';
+        $headers = \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders());
+
+        $all = $this->client->call(Client::METHOD_GET, $path, $headers);
+        $this->assertEquals(200, $all['headers']['status-code'], \json_encode($all['body']));
+        $names = \array_column($all['body']['branches'], 'name');
+        $this->assertCount(3, $names);
+
+        $after = $this->client->call(Client::METHOD_GET, $path, $headers, [
+            'queries' => [
+                Query::limit(1)->toString(),
+                Query::cursorAfter(new Document(['$id' => $names[0]]))->toString(),
+            ],
+        ]);
+        $this->assertEquals(200, $after['headers']['status-code'], \json_encode($after['body']));
+        $this->assertSame([$names[1]], \array_column($after['body']['branches'], 'name'));
+
+        $before = $this->client->call(Client::METHOD_GET, $path, $headers, [
+            'queries' => [
+                Query::limit(1)->toString(),
+                Query::cursorBefore(new Document(['$id' => $names[2]]))->toString(),
+            ],
+        ]);
+        $this->assertEquals(200, $before['headers']['status-code'], \json_encode($before['body']));
+        $this->assertSame([$names[1]], \array_column($before['body']['branches'], 'name'));
     }
 
     public function testInstallationOrganizationUrl(): void
