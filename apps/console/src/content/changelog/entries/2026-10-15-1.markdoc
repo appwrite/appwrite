@@ -8,7 +8,7 @@ tags: auth
 
 Appwrite Auth can email a 6-digit code instead of a link for email verification and password recovery. The user types the code into your app, so mobile and desktop apps finish both flows without a redirect page or a deep link.
 
-`account.createEmailVerificationOTP` and `account.updateEmailVerificationOTP` verify a signed-in user's email. `account.createRecoveryOTP` and `account.updateRecoveryOTP` reset a forgotten password and apply your project's password policies to the new one. Each code is valid for 15 minutes and works once, and you can add a security phrase that appears in both the email and your app.
+`account.createEmailVerificationOTP` and `account.updateEmailVerificationOTP` verify a signed-in user's email. `account.createRecoveryOTP` and `account.updateRecoveryOTP` reset a forgotten password. Each code is valid for 15 minutes and works once, and you can add a security phrase that appears in both the email and your app.
 
 {% arrow_link href="/blog/post/announcing-verification-and-recovery-codes" %}
 Read the announcement
