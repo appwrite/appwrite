@@ -12,24 +12,27 @@
  * `mariadb`, `mysql` MariaDBTest/MySQLTest and `shared-mariadb`,
  * `shared-mysql` their SharedTables twins against the compat MariaDB/MySQL,
  * `sqlite` SQLiteTest.php and `sqlite-shared` SharedTables/SQLiteTest.php on
- * a SQLite file, `memory` MemoryTest.php) in declaration order (honouring
+ * a SQLite file, `memory` MemoryTest.php, `mongo`, `mongo-shared` and
+ * `mongo-schemaless` the MongoDB suites) in declaration order (honouring
  * @depends and @dataProvider), with a recording Database, adapter and
  * Authorization. Each test method becomes a self-contained case (see
  * README.md here), written to tests/compat/database/cases/ under the
  * profile's prefix (`Scope-[<Profile>-]*.json`, `MariaDB-Scope-*.json`,
  * `MySQL-Scope-*.json`), and <Adapter>Test.json for the class's own tests;
  * what PHP returned while recording goes to recorder/out/<profile>.json for
- * `fidelity.php`. Expectations are then written by `bin/compat record`.
+ * `fidelity.py`. Expectations are then written by `bin/compat record`.
  */
 
 namespace Tests\Compat\Database\Recorder;
 
 use Tests\Compat\Codec;
+use Tests\Compat\Database\Core;
 use Tests\Compat\Session;
 use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Adapter\Postgres;
-use Utopia\Database\Adapter\SQLite;
 use Utopia\Database\Database;
+use Utopia\Database\Hook\Permissions;
+use Utopia\Database\Hook\Relationships;
 use Utopia\Database\PDO;
 
 \ini_set('memory_limit', '4G');
@@ -44,11 +47,28 @@ require_once $root . '/tests/compat/database/ops/core.php';
 require_once __DIR__ . '/Recorder.php';
 require_once __DIR__ . '/Classes.php';
 require_once __DIR__ . '/Cases.php';
+require_once __DIR__ . '/Profile.php';
 
 // The suite's classes. A file that builds its own Database (`new
 // Database(...)`, a peer of the suite's) loads from a copy where that is a
-// recorded PeerDatabase, with __DIR__ still the original directory.
+// recorded PeerDatabase, with __DIR__ still the original directory; the
+// suite's hooks log their calls (Recorder::log) for `db.log`; a MongoDB
+// client the test opens itself reaches the suite's server.
 const PATCHED = '/tmp/cxrecorder-e2e/';
+const PATCHES = [
+    // Support\EventRecorder: every event it is handed.
+    'Support/EventRecorder.php' => [
+        "    public function handle(Domain \$event): void\n    {\n" => "    public function handle(Domain \$event): void\n    {\n        \\Tests\\Compat\\Database\\Recorder\\Recorder::logHook(\$this);\n",
+    ],
+    // CollectionTests::testTransformations' transform: each statement it rewrites.
+    'Scopes/CollectionTests.php' => [
+        "                \$this->query = \$query;\n" => "                \\Tests\\Compat\\Database\\Recorder\\Recorder::log();\n                \$this->query = \$query;\n",
+    ],
+    // NestedPreparationTests' nested hook: each document it prepares.
+    'Scopes/Relationships/NestedPreparationTests.php' => [
+        "                (\$this->record)(\$collection->getId(), \$document->getId());\n" => "                \\Tests\\Compat\\Database\\Recorder\\Recorder::log();\n                (\$this->record)(\$collection->getId(), \$document->getId());\n",
+    ],
+];
 \spl_autoload_register(function (string $class) use ($root) {
     if (!str_starts_with($class, 'Tests\\E2E\\')) {
         return;
@@ -59,18 +79,25 @@ const PATCHED = '/tmp/cxrecorder-e2e/';
         return;
     }
     $source = (string) file_get_contents($file);
-    if (!str_contains($source, 'new Database(')) {
+    $patches = PATCHES[substr($relative, \strlen('Adapter/'))] ?? [];
+    if (!str_contains($source, 'new Database(') && !str_contains($source, 'new Memory()') && !str_contains($source, "'mongo', 27017") && $patches === []) {
         require_once $file;
 
         return;
     }
+    foreach ($patches as $from => $to) {
+        if (!str_contains($source, $from)) {
+            throw new \RuntimeException("recorder: the patch of {$relative} no longer applies");
+        }
+        $source = str_replace($from, $to, $source);
+    }
     $source = str_replace(
-        ['new Database(', '__DIR__', 'new Memory()', '(new \\ReflectionClass($adapter))->getProperty(\'data\')->getValue($adapter)'],
+        ['new Database(', '__DIR__', 'new Memory()', "'mongo', 27017"],
         [
             'new \\Tests\\Compat\\Database\\Recorder\\PeerDatabase(',
             var_export(\dirname($file), true),
             'new \\Tests\\Compat\\Database\\Recorder\\PeerMemory()',
-            '\\Tests\\Compat\\Database\\Recorder\\Recorder::memoryData($adapter)',
+            "'compat-database-mongo', 27017",
         ],
         $source,
     );
@@ -88,108 +115,6 @@ Classes::load();
     (new \PHPUnit\TextUI\CliArguments\Builder())->fromParameters([]),
     \PHPUnit\TextUI\XmlConfiguration\DefaultConfiguration::create(),
 );
-
-/**
- * A recording profile: the suite it runs and how its cases open their
- * database.
- */
-final class Profile
-{
-    /**
-     * @param string $parent the suite's test class, whose tests (and scope traits') are recorded
-     * @param string $suite its file under tests/e2e/Adapter/ (named in the cases' `source`)
-     * @param string $prefix of the case files: `Scope-<prefix><Trait>.json`
-     * @param string $schema the recording's schema (database name)
-     * @param array<string, mixed>|\stdClass $open the cases' `db.open` arguments
-     * @param list<string> $state the snapshot kinds of its cases
-     * @param list<array<string, mixed>> $opening steps every case runs after its `db.open`
-     * @param string|null $files the scope case files' prefix, when not `Scope-<prefix>`
-     */
-    public function __construct(
-        public string $name,
-        public string $parent,
-        public string $suite,
-        public string $prefix,
-        public string $schema,
-        public array|\stdClass $open,
-        public array $state,
-        public array $opening = [],
-        public ?string $files = null,
-    ) {
-    }
-
-    /** The scope cases' file prefix: `Scope-<prefix>` unless `files` names another. */
-    public function scope(): string
-    {
-        return $this->files ?? 'Scope-' . $this->prefix;
-    }
-
-    /** The adapter its `db.open` picks (`engine` or `driver`): postgres, sqlite, memory, mariadb or mysql. */
-    public function engine(): string
-    {
-        $open = (array) $this->open;
-
-        return (string) ($open['engine'] ?? $open['driver'] ?? 'postgres');
-    }
-
-    /** Whether its tables are shared (tenant 999, namespace ''). */
-    public function shared(): bool
-    {
-        return (bool) (((array) $this->open)['shared_tables'] ?? false);
-    }
-
-    public static function get(string $name): ?self
-    {
-        return match ($name) {
-            'postgres' => new self($name, 'Tests\\E2E\\Adapter\\PostgresTest', 'PostgresTest.php', '', 'cxrecorderp', new \stdClass(), ['postgres@database-postgres']),
-            'shared' => new self($name, 'Tests\\E2E\\Adapter\\SharedTables\\PostgresTest', 'SharedTables/PostgresTest.php', 'SharedTables-', 'cxrecorders', ['namespace' => '', 'shared_tables' => true, 'tenant' => 999], ['postgres@database-postgres']),
-            // PoolTest: the suite over a Pool of 10 connections and a Redis
-            // cache (Json entries), on PostgreSQL rather than MySQL; its own
-            // test is ported by hand (PoolTest.json).
-            'pool' => new self($name, 'Tests\\E2E\\Adapter\\Base', 'PoolTest.php', 'Pool-', 'cxrecorderpl', ['pool' => ['size' => 10], 'cache' => 'redis'], ['postgres@database-postgres']),
-            // MirrorTest: a Mirror of a PostgreSQL database (Redis cache) onto
-            // a second PostgreSQL database (its own Redis cache), as the
-            // suite mirrors MariaDB onto MariaDB; `src` and `dst` are the
-            // handles of the two.
-            // RedisTest: the suite over the Redis adapter (no cache), in a
-            // namespace of the case's own; SharedTables\RedisTest with shared
-            // tables, tenant 999 and the empty namespace.
-            'redis' => new self($name, 'Tests\\E2E\\Adapter\\RedisTest', 'RedisTest.php', 'Redis-', 'cxrecorderr', ['redis' => true, 'cache' => 'none', 'namespace' => '${ns}'], ['redis-json@database-redis-adapter']),
-            'shared-redis' => new self($name, 'Tests\\E2E\\Adapter\\SharedTables\\RedisTest', 'SharedTables/RedisTest.php', 'SharedTables-Redis-', 'cxrecorderrs', ['redis' => true, 'cache' => 'none', 'namespace' => '', 'shared_tables' => true, 'tenant' => 999], ['redis-json@database-redis-adapter']),
-            'mirror' => new self(
-                $name,
-                'Tests\\E2E\\Adapter\\MirrorTest',
-                'MirrorTest.php',
-                'Mirror-',
-                'cxrecorderm',
-                ['mirror' => ['destination' => true], 'cache' => 'redis'],
-                ['postgres@database-postgres', 'postgres@database-postgres-mirror'],
-                [
-                    ['op' => 'db.mirror', 'args' => ['part' => 'source'], 'bind' => 'src'],
-                    ['op' => 'db.mirror', 'args' => ['part' => 'destination'], 'bind' => 'dst'],
-                ],
-            ),
-            // SQLiteTest (a SQLite file, MySQL emulated as the suite sets it)
-            // and SharedTables\SQLiteTest; MemoryTest on the in-memory adapter.
-            'sqlite' => new self($name, 'Tests\\E2E\\Adapter\\SQLiteTest', 'SQLiteTest.php', 'SQLite-', 'cxrecorderq', ['engine' => 'sqlite', 'emulate_mysql' => true], ['sqlite']),
-            'sqlite-shared' => new self($name, 'Tests\\E2E\\Adapter\\SharedTables\\SQLiteTest', 'SharedTables/SQLiteTest.php', 'SQLite-SharedTables-', 'cxrecordert', ['engine' => 'sqlite', 'emulate_mysql' => true, 'namespace' => '', 'shared_tables' => true, 'tenant' => 999], ['sqlite']),
-            'memory' => new self($name, 'Tests\\E2E\\Adapter\\MemoryTest', 'MemoryTest.php', 'Memory-', 'cxrecorderx', ['engine' => 'memory'], []),
-            // MariaDBTest and MySQLTest, and their SharedTables twins, on the
-            // compat MariaDB/MySQL (a database per case): MariaDB-Scope-*.json,
-            // MySQL-Scope-*.json.
-            'mariadb' => new self($name, 'Tests\\E2E\\Adapter\\MariaDBTest', 'MariaDBTest.php', 'MariaDB-', 'cxrecorderpm', ['driver' => 'mariadb'], ['mysql@database-mariadb'], files: 'MariaDB-Scope-'),
-            'shared-mariadb' => new self($name, 'Tests\\E2E\\Adapter\\SharedTables\\MariaDBTest', 'SharedTables/MariaDBTest.php', 'MariaDB-SharedTables-', 'cxrecordersm', ['driver' => 'mariadb', 'namespace' => '', 'shared_tables' => true, 'tenant' => 999], ['mysql@database-mariadb'], files: 'MariaDB-Scope-SharedTables-'),
-            'mysql' => new self($name, 'Tests\\E2E\\Adapter\\MySQLTest', 'MySQLTest.php', 'MySQL-', 'cxrecorderpy', ['driver' => 'mysql'], ['mysql@database-mysql'], files: 'MySQL-Scope-'),
-            'shared-mysql' => new self($name, 'Tests\\E2E\\Adapter\\SharedTables\\MySQLTest', 'SharedTables/MySQLTest.php', 'MySQL-SharedTables-', 'cxrecordersy', ['driver' => 'mysql', 'namespace' => '', 'shared_tables' => true, 'tenant' => 999], ['mysql@database-mysql'], files: 'MySQL-Scope-SharedTables-'),
-            // MongoDBTest and its SharedTables and Schemaless twins on the
-            // compat MongoDB (a database per case).
-            'mongo' => new self($name, 'Tests\\E2E\\Adapter\\MongoDBTest', 'MongoDBTest.php', 'Mongo-', 'cxrecordermg', ['engine' => 'mongo'], ['mongo@database-mongo']),
-            'mongo-shared' => new self($name, 'Tests\\E2E\\Adapter\\SharedTables\\MongoDBTest', 'SharedTables/MongoDBTest.php', 'Mongo-SharedTables-', 'cxrecordermgs', ['engine' => 'mongo', 'shared_tables' => true, 'tenant' => 999], ['mongo@database-mongo']),
-            'mongo-schemaless' => new self($name, 'Tests\\E2E\\Adapter\\Schemaless\\MongoDBTest', 'Schemaless/MongoDBTest.php', 'Mongo-Schemaless-', 'cxrecordermgl', ['engine' => 'mongo', 'schemaless' => true], ['mongo@database-mongo']),
-            default => null,
-        };
-    }
-}
 
 $profile = $argv[1] ?? 'postgres';
 $filter = $argv[2] ?? null;
@@ -232,11 +157,10 @@ final class Target
     {
         if (self::$pdo === null && self::$config->engine() === 'sqlite') {
             @unlink(self::SQLITE_FILE);
-            self::$pdo = new PDO('sqlite:' . self::SQLITE_FILE, null, null, SQLite::getPDOAttributes());
-        } elseif (self::$pdo === null && self::$config->engine() !== 'postgres') {
-            // MariaDB or MySQL.
+            self::$pdo = new PDO('sqlite:' . self::SQLITE_FILE, null, null, Core::PDO_ATTRIBUTES);
+        } elseif (self::$pdo === null && \in_array(self::$config->engine(), ['mariadb', 'mysql'], true)) {
             $url = self::url();
-            self::$pdo = new PDO("mysql:host={$url['host']};port={$url['port']};charset=utf8mb4", $url['user'], $url['pass'], MariaDB::getPDOAttributes());
+            self::$pdo = new PDO("mysql:host={$url['host']};port={$url['port']};charset=utf8mb4", $url['user'], $url['pass'], Core::PDO_ATTRIBUTES);
         }
 
         return self::$pdo ??= self::connect();
@@ -247,9 +171,9 @@ final class Target
      */
     public static function connect(): PDO
     {
-        $url = self::url();
+        $url = parse_url('postgres://root:password@compat-database-postgres:5432/root');
 
-        return new PDO("pgsql:host={$url['host']};port={$url['port']};dbname=root", $url['user'], $url['pass'], Postgres::getPDOAttributes());
+        return new PDO("pgsql:host={$url['host']};port={$url['port']};dbname=root", $url['user'], $url['pass'], Core::PDO_ATTRIBUTES);
     }
 
     public static ?PDO $mirrorPdo = null;
@@ -260,9 +184,7 @@ final class Target
      */
     public static function mirrorPdo(): PDO
     {
-        $url = self::url();
-
-        return self::$mirrorPdo ??= new PDO("pgsql:host={$url['host']};port={$url['port']};dbname=mirror", $url['user'], $url['pass'], Postgres::getPDOAttributes());
+        return self::$mirrorPdo ??= new PDO('pgsql:host=compat-database-postgres;port=5432;dbname=mirror', 'root', 'password', Core::PDO_ATTRIBUTES);
     }
 
     /**
@@ -291,25 +213,17 @@ final class Target
         return match (self::$profile) {
             'pool' => [
                 new RecordingPool(new \Utopia\Pools\Pool(new \Utopia\Pools\Adapter\Stack(), 'postgres', 10, fn () => new Postgres(self::connect()), timeout: 0.0)),
-                \Tests\Compat\Database\Core::cache('redis', $session, fresh: true),
+                Core::cache('redis', $session, fresh: true),
             ],
             'redis', 'shared-redis' => [
-                new RecordingRedis(\Tests\Compat\Database\Core::redis($session, 'database-redis-adapter')),
-                \Tests\Compat\Database\Core::cache('none'),
+                new RecordingRedis(Core::redis($session, 'database-redis-adapter')),
+                Core::cache('none'),
             ],
-            'sqlite', 'sqlite-shared' => [
-                (function () {
-                    $adapter = new RecordingSQLite(self::pdo());
-                    $adapter->setEmulateMySQL(true);
-
-                    return $adapter;
-                })(),
-                \Tests\Compat\Database\Core::cache('memory'),
-            ],
-            'memory' => [new RecordingMemory(), \Tests\Compat\Database\Core::cache('memory')],
-            'mariadb', 'shared-mariadb' => [new RecordingMariaDB(self::pdo()), \Tests\Compat\Database\Core::cache('memory')],
-            'mysql', 'shared-mysql' => [new RecordingMySQL(self::pdo()), \Tests\Compat\Database\Core::cache('memory')],
-            default => [new RecordingPostgres(self::pdo()), \Tests\Compat\Database\Core::cache('memory')],
+            'sqlite', 'sqlite-shared' => [new RecordingEmulatedSQLite(self::pdo()), Core::cache('memory')],
+            'memory' => [new RecordingMemory(), Core::cache('memory')],
+            'mariadb', 'shared-mariadb' => [new RecordingMariaDB(self::pdo()), Core::cache('memory')],
+            'mysql', 'shared-mysql' => [new RecordingMySQL(self::pdo()), Core::cache('memory')],
+            default => [new RecordingPostgres(self::pdo()), Core::cache('memory')],
         };
     }
 
@@ -326,7 +240,7 @@ final class Target
      * client's database is the recorder's schema, dropped first with the
      * tests' other databases (`<schema>_<name>`).
      */
-    private static function mongoDatabase(\Utopia\Database\Validator\Authorization $authorization): Database
+    private static function mongoDatabase(): Database
     {
         $client = new \Utopia\Mongo\Client(Recorder::$schema, 'compat-database-mongo', 27017, 'root', 'password', false);
         $client->connect();
@@ -335,20 +249,14 @@ final class Target
                 $client->dropDatabase([], $existing->name);
             }
         }
-        $database = new RecordingDatabase(new RecordingMongo($client), \Tests\Compat\Database\Core::cache('memory'));
-        $database->getAdapter()->setSupportForAttributes(self::$profile !== 'mongo-schemaless');
-        $database->setAuthorization($authorization)->setDatabase(Recorder::$schema);
-        if (self::$profile === 'mongo-shared') {
-            $database->setSharedTables(true)->setTenant(999);
-        }
-        $database->setNamespace('compat');
-        $database->create();
 
-        return $database;
+        return new RecordingDatabase(new RecordingMongo($client), Core::cache('memory'));
     }
 
     /**
-     * A recording Database built like `db.open` builds one for the profile.
+     * A recording Database built like `db.open` builds one for the profile:
+     * its hooks (Core::DEFAULT_HOOKS), authorization, database, tenancy and
+     * namespace, created.
      */
     public static function database(\Utopia\Database\Validator\Authorization $authorization): Database
     {
@@ -357,65 +265,71 @@ final class Target
         }
         $was = Recorder::$on;
         Recorder::$on = false;
+        Core::filters();
         if (self::mongo()) {
-            $database = self::mongoDatabase($authorization);
-            self::$database = $database;
-            Recorder::$main = $database;
-            self::$fresh = self::settings();
-            Recorder::$on = $was;
-
-            return $database;
-        }
-        $pdos = match (true) {
-            self::$config->engine() !== 'postgres' => [],
-            self::$profile === 'mirror' => [self::pdo(), self::mirrorPdo()],
-            default => [self::pdo()],
-        };
-        foreach ($pdos as $pdo) {
-            $pdo->exec('DROP SCHEMA IF EXISTS "' . Recorder::$schema . '" CASCADE');
-            // And the tests' other databases, which the recorder isolates as `<schema>_<name>`.
-            $others = $pdo->prepare('SELECT nspname FROM pg_namespace WHERE starts_with(nspname, ?)');
-            $others->execute([Recorder::$schema . '_']);
-            foreach ($others->fetchAll(\PDO::FETCH_COLUMN) as $other) {
-                $pdo->exec('DROP SCHEMA IF EXISTS "' . $other . '" CASCADE');
-            }
-        }
-        if (\in_array(self::$config->engine(), ['mariadb', 'mysql'], true)) {
-            $pdo = self::pdo();
-            $pdo->exec('DROP DATABASE IF EXISTS `' . Recorder::$schema . '`');
-            // And the tests' other databases, which the recorder isolates as `<schema>_<name>`.
-            $others = $pdo->prepare('SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE LEFT(SCHEMA_NAME, ?) = ?');
-            $others->execute([\strlen(Recorder::$schema) + 1, Recorder::$schema . '_']);
-            foreach ($others->fetchAll(\PDO::FETCH_COLUMN) as $other) {
-                $pdo->exec('DROP DATABASE IF EXISTS `' . $other . '`');
-            }
-        }
-        if (\in_array(self::$profile, ['redis', 'shared-redis'], true)) {
-            // The recording's keys of an earlier run.
-            $redis = \Tests\Compat\Database\Core::redis(self::session(), 'database-redis-adapter');
-            $iterator = null;
-            while (($keys = $redis->scan($iterator, '*' . Recorder::$schema . '*', 500)) !== false) {
-                if ($keys !== []) {
-                    $redis->del($keys);
-                }
-                if ($iterator === 0) {
-                    break;
-                }
-            }
-        }
-        if (self::$profile === 'mirror') {
-            $session = self::session();
-            $source = new RecordingDatabase(new Postgres(self::pdo()), \Tests\Compat\Database\Core::cache('redis', $session, fresh: true));
-            $destination = new RecordingDatabase(new Postgres(self::mirrorPdo()), \Tests\Compat\Database\Core::cache('redis-mirror', $session, fresh: true));
-            Recorder::$parts = ['src' => $source, 'dst' => $destination];
-            $database = new RecordingMirror($source, $destination);
+            $database = self::mongoDatabase();
         } else {
-            [$adapter, $cache] = self::backing();
-            $database = new RecordingDatabase($adapter, $cache);
+            $pdos = match (true) {
+                self::$config->engine() !== 'postgres' => [],
+                self::$profile === 'mirror' => [self::pdo(), self::mirrorPdo()],
+                default => [self::pdo()],
+            };
+            foreach ($pdos as $pdo) {
+                $pdo->exec('DROP SCHEMA IF EXISTS "' . Recorder::$schema . '" CASCADE');
+                // And the tests' other databases, which the recorder isolates as `<schema>_<name>`.
+                $others = $pdo->prepare('SELECT nspname FROM pg_namespace WHERE starts_with(nspname, ?)');
+                $others->execute([Recorder::$schema . '_']);
+                foreach ($others->fetchAll(\PDO::FETCH_COLUMN) as $other) {
+                    $pdo->exec('DROP SCHEMA IF EXISTS "' . $other . '" CASCADE');
+                }
+            }
+            if (\in_array(self::$config->engine(), ['mariadb', 'mysql'], true)) {
+                $pdo = self::pdo();
+                $pdo->exec('DROP DATABASE IF EXISTS `' . Recorder::$schema . '`');
+                // And the tests' other databases, which the recorder isolates as `<schema>_<name>`.
+                $others = $pdo->prepare('SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE LEFT(SCHEMA_NAME, ?) = ?');
+                $others->execute([\strlen(Recorder::$schema) + 1, Recorder::$schema . '_']);
+                foreach ($others->fetchAll(\PDO::FETCH_COLUMN) as $other) {
+                    $pdo->exec('DROP DATABASE IF EXISTS `' . $other . '`');
+                }
+            }
+            if (\in_array(self::$profile, ['redis', 'shared-redis'], true)) {
+                // The recording's keys of an earlier run.
+                $redis = Core::redis(self::session(), 'database-redis-adapter');
+                $iterator = null;
+                while (($keys = $redis->scan($iterator, '*' . Recorder::$schema . '*', 500)) !== false) {
+                    if ($keys !== []) {
+                        $redis->del($keys);
+                    }
+                    if ($iterator === 0) {
+                        break;
+                    }
+                }
+            }
+            if (self::$profile === 'mirror') {
+                $session = self::session();
+                $source = new RecordingDatabase(new Postgres(self::pdo()), Core::cache('redis', $session, fresh: true));
+                $destination = new RecordingDatabase(new Postgres(self::mirrorPdo()), Core::cache('redis-mirror', $session, fresh: true));
+                Recorder::$parts = ['src' => $source, 'dst' => $destination];
+                $database = new RecordingMirror($source, $destination);
+            } else {
+                [$adapter, $cache] = self::backing();
+                $database = new RecordingDatabase($adapter, $cache);
+            }
         }
-        $database->setAuthorization($authorization)->setDatabase(Recorder::$schema);
+        $database->setAuthorization($authorization);
+        if (self::$profile === 'mongo-schemaless') {
+            $database->setSchemaless(true);
+        }
+        $database->addHook(new Relationships())->addHook(new Permissions());
+        $database->setDatabase(Recorder::$schema);
         if (self::$config->shared()) {
-            $database->setSharedTables(true)->setTenant(999)->setNamespace('');
+            $database->setSharedTables(true)->setTenant(999);
+            if (!self::mongo()) {
+                $database->setNamespace('');
+            } else {
+                $database->setNamespace('compat');
+            }
         } elseif (self::$profile === 'redis') {
             $database->setNamespace(Recorder::$schema);
         } else {
@@ -433,79 +347,91 @@ final class Target
     /** @var array<string, mixed>|null settings of the database when it was fresh */
     public static ?array $fresh = null;
 
-    private const VOLATILE = [
-        'adapter', 'cache', 'authorization', 'pdo', 'timestamp', 'relationshipWriteStack', 'relationshipFetchStack',
-        'relationshipDeleteStack', 'inBatchRelationshipPopulation', 'relationshipFetchDepth', 'filterSignatures',
-        'filterSignaturesEncoded', 'filterSignaturesVersion', 'filterSignaturesSource', 'inTransaction', 'hostname', 'message',
-        // A Mirror's databases and filters.
-        'source', 'destination', 'writeFilters', 'errorCallbacks',
-        // The Redis adapter's client and journal.
-        'client', 'journalStack',
-        // A Pool's connections; its timeouts are restored with `timeouts`.
-        'pool', 'pinnedAdapter',
-        // SQLite: the FTS5 table lookup cache, and the settings db.open makes.
-        'ftsTableCache', 'pcreRegistered', 'emulateMySQL',
-        // Memory: the stored data and its indexes, and the filter cache.
-        'databases', 'data', 'permissions', 'permissionsByDocument', 'permissionsByPermission', 'uniqueIndexHashes',
-        'journals', 'filterCache',
-        // MongoDB's session.
-        'session',
-    ];
+    /**
+     * A property of an object, from its class or a parent's.
+     */
+    private static function property(object $object, string $name): mixed
+    {
+        for ($class = new \ReflectionClass($object); $class !== false; $class = $class->getParentClass()) {
+            if ($class->hasProperty($name) && $class->getProperty($name)->getDeclaringClass()->getName() === $class->getName()) {
+                $p = $class->getProperty($name);
+
+                return $p->isInitialized($object) ? $p->getValue($object) : null;
+            }
+        }
+
+        return null;
+    }
 
     /**
-     * The settings of the database, its adapter and its authorization: every
-     * instance property but the volatile ones, closures as their keys.
+     * The settings of the database, its adapter and its authorization that a
+     * test can leave behind, read through their getters (and the few
+     * properties without one).
      *
      * @return array<string, mixed>
      */
     public static function settings(): array
     {
-        $out = [];
         $db = self::$database;
         if ($db === null) {
             return [];
         }
         $was = Recorder::$on;
         Recorder::$on = false;
-        foreach (['db' => $db, 'adapter' => $db->getAdapter(), 'authorization' => $db->getAuthorization()] as $label => $object) {
-            for ($class = new \ReflectionClass($object); $class !== false; $class = $class->getParentClass()) {
-                foreach ($class->getProperties() as $p) {
-                    if ($p->isStatic() || $p->getDeclaringClass()->getName() !== $class->getName() || \in_array($p->getName(), self::VOLATILE, true)) {
+        Recorder::$depth++;
+        try {
+            $adapter = $db->getAdapter();
+            $authorization = $db->getAuthorization();
+            $hooks = [];
+            foreach (['lifecycleHooks', 'decorators', 'nestedHooks', 'queryHooks'] as $kind) {
+                foreach ((array) self::property($db, $kind) as $key => $hook) {
+                    // The suite's EventRecorders only record: one a test leaves
+                    // registered is not carried into later cases.
+                    if ($hook::class === 'Tests\\E2E\\Adapter\\Support\\EventRecorder') {
                         continue;
                     }
-                    $out["{$label}.{$p->getName()}"] = self::plain($p->isInitialized($object) ? $p->getValue($object) : null);
+                    $hooks[$kind][] = [\is_string($key) ? $key : null, Recorder::hookSpec($hook)];
                 }
             }
+            $relationships = self::property($db, 'relationshipHook');
+            $out = [
+                'authorization.roles' => $authorization->getRoles(),
+                'authorization.status' => $authorization->getStatus(),
+                'adapter.database' => $db->getDatabase(),
+                'adapter.namespace' => $db->getNamespace(),
+                'adapter.tenant' => $db->getTenant(),
+                'adapter.sharedTables' => $db->hasSharedTables(),
+                'adapter.tenantPerDocument' => $db->isTenantPerDocument(),
+                'adapter.metadata' => $db->getMetadata(),
+                'adapter.timeouts' => $adapter instanceof \Utopia\Database\Adapter\Feature\Timeouts ? (array) self::property($adapter, 'timeouts') : [],
+                'adapter.locks' => self::property($adapter, 'locks'),
+                'adapter.writeHooks' => array_map(fn ($h) => Recorder::hookSpec($h), $adapter->getWriteHooks()),
+                'adapter.transforms' => array_keys((array) self::property($adapter, 'transforms')),
+                'adapter.schemaless' => $adapter instanceof \Utopia\Database\Adapter\Feature\Schemaless ? $adapter->isSchemaless() : null,
+                'db.cacheName' => $db->getCacheName(),
+                'db.preserveDates' => $db->isPreservingDates(),
+                'db.preserveSequence' => $db->isPreservingSequence(),
+                'db.checkGrants' => $db->isCheckingGrants(),
+                'db.migrating' => $db->isMigrating(),
+                'db.maxQueryValues' => $db->getMaxQueryValues(),
+                'db.dropUnknownAttributes' => $db->isDroppingUnknownAttributes(),
+                'db.filtering' => $db->isFiltering(),
+                'db.validation' => $db->isValidating(),
+                'db.globalCollections' => $db->getGlobalCollections(),
+                'db.documentTypes' => (array) self::property($db, 'documentTypes'),
+                'db.profiling' => $db->isProfiling(),
+                'db.queryCache' => $db->getQueryCache() === null ? null : 'set',
+                'db.cacheWriterTimeout' => self::property($db, 'cacheWriterTimeout'),
+                'db.hooks' => $hooks,
+                'db.relationships' => $relationships === null ? null : [Recorder::hookSpec($relationships), $relationships->isEnabled()],
+                'db.codecs' => array_keys($db->getFilters()->signatures()),
+            ];
+        } finally {
+            Recorder::$depth--;
+            Recorder::$on = $was;
         }
-        Recorder::$on = $was;
 
         return $out;
-    }
-
-    /**
-     * A property value as plain data: closures and objects as markers, and
-     * empty lists dropped from maps (a listener set emptied again).
-     */
-    private static function plain(mixed $value): mixed
-    {
-        if (\is_array($value)) {
-            $out = [];
-            foreach ($value as $k => $v) {
-                $v = self::plain($v);
-                if (\is_string($k) && $v === []) {
-                    continue;
-                }
-                $out[$k] = $v;
-            }
-
-            return $out;
-        }
-
-        return match (true) {
-            $value instanceof \Closure => 'closure',
-            \is_object($value) => $value::class,
-            default => $value,
-        };
     }
 
     /**
@@ -513,6 +439,7 @@ final class Target
      * left behind before the next one starts).
      *
      * @param array<string, mixed> $settings
+     * @param list<string> $problems
      * @return list<array{op: string, args: array<string, mixed>|\stdClass}>
      */
     public static function restore(array $settings, array &$problems): array
@@ -528,24 +455,21 @@ final class Target
             match ($key) {
                 'authorization.roles' => (function () use ($step, $value) {
                     $step('db.authorization.clean_roles');
-                    foreach (array_keys($value) as $role) {
+                    foreach ($value as $role) {
                         $step('db.authorization.add_role', ['role' => (string) $role]);
                     }
                 })(),
                 'authorization.status' => $step('db.authorization.set_status', ['status' => $value]),
-                'authorization.statusDefault' => $step('db.authorization.set_default_status', ['status' => $value]),
                 'adapter.database' => $step('database.set_database', ['name' => str_replace(Recorder::$schema, '${ns}', (string) $value)]),
-                'adapter.namespace' => $step('database.set_namespace', ['namespace' => $value]),
+                'adapter.namespace' => $step('database.set_namespace', ['namespace' => str_replace(Recorder::$schema, '${ns}', (string) $value)]),
                 'adapter.tenant' => $step('database.set_tenant', ['tenant' => $value]),
                 'adapter.sharedTables' => $step('database.set_shared_tables', ['sharedTables' => $value]),
                 'adapter.tenantPerDocument' => $step('database.set_tenant_per_document', ['enabled' => $value]),
-                'adapter.supportForAttributes' => $step('db.adapter', ['method' => 'setSupportForAttributes', 'args' => ['support' => $value]]),
-                'adapter.timeout' => isset($settings['adapter.timeouts']) ? null : ($value === 0 ? $step('database.clear_timeout') : $step('database.set_timeout', ['milliseconds' => $value])),
-                // A Pool's timeouts per event (its `timeout` is the global one).
+                'adapter.schemaless' => $step('database.set_schemaless', ['schemaless' => $value]),
                 'adapter.timeouts' => (function () use ($step, $value) {
                     $step('database.clear_timeout');
                     foreach ($value as $event => $milliseconds) {
-                        $step('database.set_timeout', ['milliseconds' => $milliseconds, 'event' => (string) $event]);
+                        $step('database.set_timeout', $event === '*' ? ['milliseconds' => $milliseconds] : ['milliseconds' => $milliseconds, 'event' => ['$enum' => 'Event::' . \Utopia\Database\Event::from((string) $event)->name]]);
                     }
                 })(),
                 'adapter.metadata' => (function () use ($step, $value) {
@@ -554,24 +478,27 @@ final class Target
                         $step('database.set_metadata', ['key' => (string) $k, 'value' => $v]);
                     }
                 })(),
-                // setMetadata() registers the `metadata` transformation for good.
-                'adapter.transformations' => match (true) {
-                    $value !== ['*' => ['metadata' => 'closure']] => $problems[] = 'cannot restore transformations ' . json_encode($value),
-                    // With metadata, restoring it registers the transformation too.
-                    ($settings['adapter.metadata'] ?? []) !== [] => null,
-                    default => (function () use ($step) {
-                        $step('database.set_metadata', ['key' => 'compat', 'value' => '']);
-                        $step('database.reset_metadata');
-                    })(),
-                },
+                'adapter.locks' => $step('database.set_locks', ['locks' => (bool) $value]),
+                // The adapter's own Tenancy hook (shared tables) comes and goes with them.
+                'adapter.writeHooks' => (function () use ($value, &$problems) {
+                    $fresh = array_values(array_filter(self::$fresh['adapter.writeHooks'] ?? [], fn ($h) => ($h['$hook'] ?? '') !== 'Tenancy'));
+                    $now = array_values(array_filter($value, fn ($h) => ($h['$hook'] ?? '') !== 'Tenancy'));
+                    if ($fresh !== $now) {
+                        $problems[] = 'cannot restore write hooks ' . json_encode($value);
+                    }
+                })(),
+                'adapter.transforms' => $value === [] ? null : $problems[] = 'cannot restore transforms ' . json_encode($value),
+                'db.cacheName' => $step('database.set_cache_name', ['name' => $value]),
                 'db.preserveDates' => $step('database.set_preserve_dates', ['preserve' => $value]),
                 'db.preserveSequence' => $step('database.set_preserve_sequence', ['preserve' => $value]),
+                'db.checkGrants' => $step('database.set_check_grants', ['check' => $value]),
                 'db.migrating' => $step('database.set_migrating', ['migrating' => $value]),
                 'db.maxQueryValues' => $step('database.set_max_query_values', ['max' => $value]),
                 'db.dropUnknownAttributes' => $step('database.set_drop_unknown_attributes', ['drop' => $value]),
-                'db.filter' => $step($value ? 'database.enable_filters' : 'database.disable_filters'),
-                'db.validate' => $step($value ? 'database.enable_validation' : 'database.disable_validation'),
-                'db.cacheName' => $step('database.set_cache_name', ['name' => $value]),
+                'db.filtering' => $step('database.set_filtering', ['filtering' => $value]),
+                'db.validation' => $step('database.set_validation', ['validation' => $value]),
+                'db.profiling' => $step('database.set_profiling', ['profiling' => $value]),
+                'db.cacheWriterTimeout' => $step('database.set_cache_writer_timeout', ['seconds' => $value]),
                 'db.globalCollections' => (function () use ($step, $value) {
                     $step('database.reset_global_collections');
                     if ($value !== []) {
@@ -579,18 +506,32 @@ final class Target
                     }
                 })(),
                 'db.documentTypes' => (function () use ($step, $value) {
-                    $step('database.clear_all_document_types');
+                    $step('database.clear_document_types');
                     foreach ($value as $collection => $class) {
                         $step('database.set_document_type', ['collection' => (string) $collection, 'className' => $class]);
                     }
                 })(),
-                'db.listeners' => (function () use ($step, $value) {
-                    foreach ($value as $event => $names) {
-                        foreach (array_keys($names) as $name) {
-                            $step('database.on', ['event' => (string) $event, 'name' => (string) $name, 'callback' => true]);
+                'db.hooks' => (function () use ($step, $value, &$problems) {
+                    // Hooks a test left registered: the suite's EventRecorders.
+                    $fresh = self::$fresh['db.hooks'] ?? [];
+                    foreach ($value as $kind => $hooks) {
+                        foreach ($hooks as $i => [$name, $spec]) {
+                            if (($fresh[$kind][$i] ?? null) === [$name, $spec]) {
+                                continue;
+                            }
+                            if (!\is_array($spec)) {
+                                $problems[] = 'cannot restore the hook ' . json_encode($spec);
+                                continue;
+                            }
+                            $step('database.add_hook', ['hook' => $spec]);
                         }
                     }
                 })(),
+                'db.relationships' => match (true) {
+                    $value === null => $step('database.remove_hook', ['hook' => 'Utopia\\Database\\Hook\\Relationships']),
+                    $value[1] === false => $problems[] = 'cannot restore a disabled relationships hook',
+                    default => $step('database.add_hook', ['hook' => $value[0]]),
+                },
                 default => $problems[] = "cannot restore setting {$key}: " . json_encode($value),
             };
         }
@@ -601,7 +542,7 @@ final class Target
     /**
      * `db.open`'s arguments for the profile.
      *
-     * @return array<string, mixed>
+     * @return array<string, mixed>|\stdClass
      */
     public static function open(): array|\stdClass
     {
@@ -614,10 +555,6 @@ final class Target
      */
     public static function deleteColumn(Database $database, string $collection, string $column): void
     {
-        if (\in_array(self::$config->engine(), ['memory', 'mongo'], true)) {
-            // MemoryTest and MongoDBTest: no out-of-band schema changes.
-            return;
-        }
         $table = $database->getNamespace() . '_' . $collection;
         $sql = match (self::$config->engine()) {
             'sqlite' => "ALTER TABLE `{$table}` DROP COLUMN `{$column}`",
@@ -636,9 +573,6 @@ final class Target
      */
     public static function deleteIndex(Database $database, string $collection, string $index): void
     {
-        if (\in_array(self::$config->engine(), ['memory', 'mongo'], true)) {
-            return;
-        }
         $name = $database->getNamespace() . '_' . $database->getTenant() . '_' . $collection . '_' . $index;
         $sql = match (self::$config->engine()) {
             'sqlite' => "DROP INDEX `{$name}`",
@@ -658,21 +592,34 @@ Recorder::$schema = Target::$config->schema;
 
 $parent = Target::$config->parent;
 $recording = 'Recording' . str_replace('-', '', ucwords($profile, '-')) . 'Test';
-// The Redis suites keep their own (no SQL to run): the helpers are renamed away.
-$redis = \in_array($profile, ['redis', 'shared-redis'], true);
-$deleteColumn = $redis
-    ? 'protected function sqlDeleteColumn(string $collection, string $column): bool'
-    : 'protected function deleteColumn(string $collection, string $column): bool';
-$deleteIndex = $redis
-    ? 'protected function sqlDeleteIndex(string $collection, string $index): bool'
-    : 'protected function deleteIndex(string $collection, string $index): bool';
-// MirrorTest declares getDatabase(bool $fresh = false): Mirror.
-$getDatabase = match (true) {
-    $profile === 'mirror' => 'protected function getDatabase(bool $fresh = false): \\Utopia\\Database\\Mirror',
-    // MariaDBTest and MySQLTest declare getDatabase(bool $fresh = false).
-    \in_array(Target::$config->engine(), ['mariadb', 'mysql'], true) => 'public function getDatabase(bool $fresh = false): \\Utopia\\Database\\Database',
-    default => 'public function getDatabase(): \\Utopia\\Database\\Database',
+// The suite's getDatabase(), with its own signature.
+$signature = static function (string $class, string $method): string {
+    $m = new \ReflectionMethod($class, $method);
+    $params = [];
+    foreach ($m->getParameters() as $p) {
+        $params[] = ($p->hasType() ? $p->getType() . ' ' : '') . '$' . $p->getName() . ($p->isDefaultValueAvailable() ? ' = ' . var_export($p->getDefaultValue(), true) : '');
+    }
+    $type = (string) $m->getReturnType();
+
+    return ($m->isPublic() ? 'public' : 'protected') . " function {$method}(" . implode(', ', $params) . ')' . ($type === '' ? '' : ': \\' . ltrim($type, '\\'));
 };
+$getDatabase = $signature($parent, 'getDatabase');
+// Engines with no out-of-band schema keep the suite's own helpers.
+$helpers = \in_array(Target::$config->engine(), ['memory', 'mongo'], true) || \in_array($profile, ['redis', 'shared-redis'], true) ? '' : <<<PHP
+    protected function deleteColumn(string \$collection, string \$column): bool
+    {
+        Target::deleteColumn(\$this->getDatabase(), \$collection, \$column);
+
+        return true;
+    }
+
+    protected function deleteIndex(string \$collection, string \$index): bool
+    {
+        Target::deleteIndex(\$this->getDatabase(), \$collection, \$index);
+
+        return true;
+    }
+PHP;
 eval(<<<PHP
 namespace Tests\\Compat\\Database\\Recorder;
 
@@ -691,9 +638,14 @@ class {$recording} extends \\{$parent}
         \$this->testDatabase = Recorder::\$schema;
     }
 
+    public function tearDown(): void
+    {
+        parent::tearDown();
+    }
+
     {$getDatabase}
     {
-        if (property_exists(self::class, 'pdo') && !\in_array(Target::\$config->engine(), ['memory', 'mongo'], true)) {
+        if (property_exists(self::class, 'pdo') && !\\in_array(Target::\$config->engine(), ['memory', 'mongo'], true) && !\\in_array(Target::\$profile, ['redis', 'shared-redis'], true)) {
             self::\$pdo = Target::pdo();
         }
         \$database = Target::database(self::\$authorization);
@@ -705,19 +657,7 @@ class {$recording} extends \\{$parent}
         return \$database;
     }
 
-    {$deleteColumn}
-    {
-        Target::deleteColumn(\$this->getDatabase(), \$collection, \$column);
-
-        return true;
-    }
-
-    {$deleteIndex}
-    {
-        Target::deleteIndex(\$this->getDatabase(), \$collection, \$index);
-
-        return true;
-    }
+    {$helpers}
 }
 PHP);
 
@@ -730,6 +670,7 @@ $scopes = $root . '/vendor/utopia-php/database/tests/e2e/Adapter/';
  */
 const NOT_PORTED = [
     'testCacheReconnect' => 'needs a Redis cache it stops and restarts (docker) to test reconnection; the cases use a Memory cache',
+    'testConcurrentIncrementsOnMongoDBAllLand' => 'races writers on clients it opens inside Swoole coroutines; concurrent writers are not a sequence of steps',
 ];
 
 /** @var array<string, array{method: \ReflectionMethod, file: string, depends: list<string>, provider: ?string}> $declared */
@@ -750,6 +691,14 @@ foreach ($reflection->getMethods(\ReflectionMethod::IS_PUBLIC) as $method) {
         } elseif (str_starts_with($line, '@dataProvider ')) {
             $provider = trim(substr($line, 14));
         }
+    }
+    foreach ($method->getAttributes() as $attribute) {
+        $args = $attribute->getArguments();
+        match ($attribute->getName()) {
+            \PHPUnit\Framework\Attributes\Depends::class => $depends[] = (string) $args[0],
+            \PHPUnit\Framework\Attributes\DataProvider::class => $provider = (string) $args[0],
+            default => null,
+        };
     }
     $declared[$name] = ['method' => $method, 'file' => $file, 'depends' => $depends, 'provider' => $provider];
 }
@@ -788,7 +737,7 @@ foreach (array_keys($order) as $name) {
     }
     $sets = ['' => []];
     if ($provider !== null) {
-        $sets = (new $class($provider))->{$provider}();
+        $sets = (new \ReflectionMethod($class, $provider))->isStatic() ? $class::$provider() : (new $class($provider))->{$provider}();
     }
     foreach ($sets as $key => $data) {
         $label = $name . ($provider !== null ? '#' . $key : '');
@@ -876,7 +825,7 @@ function plain(mixed $value): mixed
     };
 }
 
-\ini_set("memory_limit", "-1");
+\ini_set('memory_limit', '-1');
 $cases = new Cases(Target::$config, Recorder::$stream, $tests, Target::open(), Recorder::$schema, $dirty);
 $written = $cases->write($root . '/tests/compat/database/cases', $filter);
 foreach (array_merge(Recorder::$problems, $cases->problems) as $problem) {

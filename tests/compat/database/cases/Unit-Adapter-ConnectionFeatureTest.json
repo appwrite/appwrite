@@ -1,0 +1,441 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Adapter/ConnectionFeatureTest.php"
+  ],
+  "cases": [
+    {
+      "name": "ConnectionFeatureTest::testADatabaseWithoutAConnectionIsAlwaysReachableAndNamesNoConnection",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o1683"
+          },
+          "bind": "s12876",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o1683"
+              },
+              "cache": "none"
+            },
+            "as": "o1684"
+          },
+          "bind": "s12877",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o1685"
+          },
+          "bind": "s12878",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1684"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o1685"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1684"
+            },
+            "method": "ping",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1684"
+            },
+            "method": "reconnect",
+            "args": {}
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1684"
+            },
+            "method": "getConnectionId",
+            "args": {}
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1684"
+            },
+            "method": "getHostname",
+            "args": {}
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "ConnectionFeatureTest::testAReconnectedConnectionKeepsAnswering",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o1688"
+          },
+          "bind": "s12890",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o1688"
+              },
+              "cache": "none"
+            },
+            "as": "o1689"
+          },
+          "bind": "s12891",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o1690"
+          },
+          "bind": "s12892",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1689"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o1690"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1689"
+            },
+            "method": "getConnectionId",
+            "args": {}
+          },
+          "expect": "3134"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1689"
+            },
+            "method": "reconnect",
+            "args": {}
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1689"
+            },
+            "method": "ping",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1689"
+            },
+            "method": "getConnectionId",
+            "args": {}
+          },
+          "expect": "3134"
+        }
+      ]
+    },
+    {
+      "name": "ConnectionFeatureTest::testCacheKeysOfAdaptersWithoutAConnectionDoNotDependOnAHost",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o1716"
+          },
+          "bind": "s12948",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o1716"
+              },
+              "cache": "none"
+            },
+            "as": "o1717"
+          },
+          "bind": "s12949",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o1718"
+          },
+          "bind": "s12950",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1717"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o1718"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o1719"
+          },
+          "bind": "s12952",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o1719"
+              },
+              "cache": "none"
+            },
+            "as": "o1720"
+          },
+          "bind": "s12953",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o1721"
+          },
+          "bind": "s12954",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1720"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o1721"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1720"
+            },
+            "method": "getAdapter",
+            "args": {}
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1719"
+            },
+            "method": "setHostname",
+            "args": {
+              "hostname": "db-2"
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1717"
+            },
+            "method": "getCacheKeys",
+            "args": {
+              "collectionId": "posts",
+              "documentId": "post"
+            }
+          },
+          "expect": [
+            "default-cache-::::collection:posts",
+            "default-cache-::::collection:posts:post",
+            "default-cache-::::collection:posts:post:19ac5a9b31d89e411f201223e3a2fdd0"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1720"
+            },
+            "method": "getCacheKeys",
+            "args": {
+              "collectionId": "posts",
+              "documentId": "post"
+            }
+          },
+          "expect": [
+            "default-cache-::::collection:posts",
+            "default-cache-::::collection:posts:post",
+            "default-cache-::::collection:posts:post:19ac5a9b31d89e411f201223e3a2fdd0"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1717"
+            },
+            "method": "getQueryCacheKey",
+            "args": {
+              "collectionId": "posts"
+            }
+          },
+          "expect": "default-cache-::::collection:posts:query"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1720"
+            },
+            "method": "getQueryCacheKey",
+            "args": {
+              "collectionId": "posts"
+            }
+          },
+          "expect": "default-cache-::::collection:posts:query"
+        }
+      ]
+    }
+  ]
+}

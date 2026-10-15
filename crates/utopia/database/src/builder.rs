@@ -171,6 +171,12 @@ macro_rules! forward_statement {
 }
 
 impl SqlBuilder {
+    /// The refusal a call returning the builder kept for the next statement,
+    /// taken: PHP throws it from that call (`requireUnbound()`).
+    pub fn take_refusal(&mut self) -> Option<utopia_query::Error> {
+        each_builder!(&mut *self, b => b.take_refusal())
+    }
+
     forward! {
         /// `from($table, $alias)`: on a scoped builder, a collection id.
         fn from(&mut self, table: &str, alias: &str);

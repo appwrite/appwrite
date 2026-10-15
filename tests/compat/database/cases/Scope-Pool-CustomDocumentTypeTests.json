@@ -24,30 +24,30 @@
           }
         },
         {
-          "op": "database.set_tenant",
+          "op": "db.add_format",
           "args": {
-            "tenant": 1
+            "name": "priceRange"
           },
-          "expect": {
-            "$database": true
-          }
+          "expect": true
         },
         {
-          "op": "db.authorization.clean_roles",
-          "args": {},
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
           "expect": null
         },
         {
-          "op": "db.authorization.add_role",
+          "op": "database.add_filter",
           "args": {
-            "role": "any"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "label:reader"
+            "name": "subQueryProbe"
           },
           "expect": null
         },
@@ -55,7 +55,7 @@
           "op": "database.set_document_type",
           "args": {
             "collection": "users",
-            "className": "Tests\\E2E\\Adapter\\Scopes\\TestUser"
+            "className": "Tests\\E2E\\Adapter\\Support\\User"
           },
           "expect": {
             "$database": true
@@ -66,16 +66,67 @@
           "args": {
             "collection": "users"
           },
-          "expect": "Tests\\E2E\\Adapter\\Scopes\\TestUser"
+          "expect": "Tests\\E2E\\Adapter\\Support\\User"
         },
         {
           "op": "database.clear_document_type",
           "args": {
             "collection": "users"
           },
+          "expect": null
+        },
+        {
+          "op": "database.set_document_type",
+          "args": {
+            "collection": "users",
+            "className": "Tests\\E2E\\Adapter\\Support\\User"
+          },
           "expect": {
             "$database": true
           }
+        },
+        {
+          "op": "database.set_document_type",
+          "args": {
+            "collection": "posts",
+            "className": "Tests\\E2E\\Adapter\\Support\\Post"
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.get_document_type",
+          "args": {
+            "collection": "users"
+          },
+          "expect": "Tests\\E2E\\Adapter\\Support\\User"
+        },
+        {
+          "op": "database.get_document_type",
+          "args": {
+            "collection": "posts"
+          },
+          "expect": "Tests\\E2E\\Adapter\\Support\\Post"
+        },
+        {
+          "op": "database.clear_document_types",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "database.get_document_type",
+          "args": {
+            "collection": "users"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.get_document_type",
+          "args": {
+            "collection": "posts"
+          },
+          "expect": null
         }
       ]
     },
@@ -99,30 +150,30 @@
           }
         },
         {
-          "op": "database.set_tenant",
+          "op": "db.add_format",
           "args": {
-            "tenant": 1
+            "name": "priceRange"
           },
-          "expect": {
-            "$database": true
-          }
+          "expect": true
         },
         {
-          "op": "db.authorization.clean_roles",
-          "args": {},
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
           "expect": null
         },
         {
-          "op": "db.authorization.add_role",
+          "op": "database.add_filter",
           "args": {
-            "role": "any"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "label:reader"
+            "name": "subQueryProbe"
           },
           "expect": null
         },
@@ -155,30 +206,30 @@
           }
         },
         {
-          "op": "database.set_tenant",
+          "op": "db.add_format",
           "args": {
-            "tenant": 1
+            "name": "priceRange"
           },
-          "expect": {
-            "$database": true
-          }
+          "expect": true
         },
         {
-          "op": "db.authorization.clean_roles",
-          "args": {},
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
           "expect": null
         },
         {
-          "op": "db.authorization.add_role",
+          "op": "database.add_filter",
           "args": {
-            "role": "any"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "label:reader"
+            "name": "subQueryProbe"
           },
           "expect": null
         },
@@ -217,30 +268,30 @@
           }
         },
         {
-          "op": "database.set_tenant",
+          "op": "db.add_format",
           "args": {
-            "tenant": 1
+            "name": "priceRange"
           },
-          "expect": {
-            "$database": true
-          }
+          "expect": true
         },
         {
-          "op": "db.authorization.clean_roles",
-          "args": {},
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
           "expect": null
         },
         {
-          "op": "db.authorization.add_role",
+          "op": "database.add_filter",
           "args": {
-            "role": "any"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "label:reader"
+            "name": "subQueryProbe"
           },
           "expect": null
         },
@@ -279,30 +330,30 @@
           }
         },
         {
-          "op": "database.set_tenant",
+          "op": "db.add_format",
           "args": {
-            "tenant": 1
+            "name": "priceRange"
           },
-          "expect": {
-            "$database": true
-          }
+          "expect": true
         },
         {
-          "op": "db.authorization.clean_roles",
-          "args": {},
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
           "expect": null
         },
         {
-          "op": "db.authorization.add_role",
+          "op": "database.add_filter",
           "args": {
-            "role": "any"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "label:reader"
+            "name": "subQueryProbe"
           },
           "expect": null
         },
@@ -310,7 +361,7 @@
           "op": "database.set_document_type",
           "args": {
             "collection": "users",
-            "className": "Tests\\E2E\\Adapter\\Scopes\\TestUser"
+            "className": "Tests\\E2E\\Adapter\\Support\\User"
           },
           "expect": {
             "$database": true
@@ -321,16 +372,14 @@
           "args": {
             "collection": "users"
           },
-          "expect": "Tests\\E2E\\Adapter\\Scopes\\TestUser"
+          "expect": "Tests\\E2E\\Adapter\\Support\\User"
         },
         {
           "op": "database.clear_document_type",
           "args": {
             "collection": "users"
           },
-          "expect": {
-            "$database": true
-          }
+          "expect": null
         },
         {
           "op": "database.get_document_type",
@@ -361,30 +410,30 @@
           }
         },
         {
-          "op": "database.set_tenant",
+          "op": "db.add_format",
           "args": {
-            "tenant": 1
+            "name": "priceRange"
           },
-          "expect": {
-            "$database": true
-          }
+          "expect": true
         },
         {
-          "op": "db.authorization.clean_roles",
-          "args": {},
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
           "expect": null
         },
         {
-          "op": "db.authorization.add_role",
+          "op": "database.add_filter",
           "args": {
-            "role": "any"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "label:reader"
+            "name": "subQueryProbe"
           },
           "expect": null
         },
@@ -392,7 +441,7 @@
           "op": "database.set_document_type",
           "args": {
             "collection": "users",
-            "className": "Tests\\E2E\\Adapter\\Scopes\\TestUser"
+            "className": "Tests\\E2E\\Adapter\\Support\\User"
           },
           "expect": {
             "$database": true
@@ -402,7 +451,7 @@
           "op": "database.set_document_type",
           "args": {
             "collection": "posts",
-            "className": "Tests\\E2E\\Adapter\\Scopes\\TestPost"
+            "className": "Tests\\E2E\\Adapter\\Support\\Post"
           },
           "expect": {
             "$database": true
@@ -413,21 +462,19 @@
           "args": {
             "collection": "users"
           },
-          "expect": "Tests\\E2E\\Adapter\\Scopes\\TestUser"
+          "expect": "Tests\\E2E\\Adapter\\Support\\User"
         },
         {
           "op": "database.get_document_type",
           "args": {
             "collection": "posts"
           },
-          "expect": "Tests\\E2E\\Adapter\\Scopes\\TestPost"
+          "expect": "Tests\\E2E\\Adapter\\Support\\Post"
         },
         {
-          "op": "database.clear_all_document_types",
+          "op": "database.clear_document_types",
           "args": {},
-          "expect": {
-            "$database": true
-          }
+          "expect": null
         },
         {
           "op": "database.get_document_type",
@@ -465,30 +512,30 @@
           }
         },
         {
-          "op": "database.set_tenant",
+          "op": "db.add_format",
           "args": {
-            "tenant": 1
+            "name": "priceRange"
           },
-          "expect": {
-            "$database": true
-          }
+          "expect": true
         },
         {
-          "op": "db.authorization.clean_roles",
-          "args": {},
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
           "expect": null
         },
         {
-          "op": "db.authorization.add_role",
+          "op": "database.add_filter",
           "args": {
-            "role": "any"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "label:reader"
+            "name": "subQueryProbe"
           },
           "expect": null
         },
@@ -496,7 +543,7 @@
           "op": "database.set_document_type",
           "args": {
             "collection": "users",
-            "className": "Tests\\E2E\\Adapter\\Scopes\\TestUser"
+            "className": "Tests\\E2E\\Adapter\\Support\\User"
           },
           "expect": {
             "$database": true
@@ -506,7 +553,7 @@
           "op": "database.set_document_type",
           "args": {
             "collection": "users",
-            "className": "Tests\\E2E\\Adapter\\Scopes\\TestUser"
+            "className": "Tests\\E2E\\Adapter\\Support\\User"
           },
           "expect": {
             "$database": true
@@ -516,7 +563,7 @@
           "op": "database.set_document_type",
           "args": {
             "collection": "posts",
-            "className": "Tests\\E2E\\Adapter\\Scopes\\TestPost"
+            "className": "Tests\\E2E\\Adapter\\Support\\Post"
           },
           "expect": {
             "$database": true
@@ -527,21 +574,19 @@
           "args": {
             "collection": "users"
           },
-          "expect": "Tests\\E2E\\Adapter\\Scopes\\TestUser"
+          "expect": "Tests\\E2E\\Adapter\\Support\\User"
         },
         {
           "op": "database.get_document_type",
           "args": {
             "collection": "posts"
           },
-          "expect": "Tests\\E2E\\Adapter\\Scopes\\TestPost"
+          "expect": "Tests\\E2E\\Adapter\\Support\\Post"
         },
         {
-          "op": "database.clear_all_document_types",
+          "op": "database.clear_document_types",
           "args": {},
-          "expect": {
-            "$database": true
-          }
+          "expect": null
         }
       ]
     },
@@ -565,102 +610,165 @@
           }
         },
         {
-          "op": "database.set_tenant",
+          "op": "db.add_format",
           "args": {
-            "tenant": 1
+            "name": "priceRange"
           },
-          "expect": {
-            "$database": true
-          }
+          "expect": true
         },
         {
-          "op": "db.authorization.clean_roles",
-          "args": {},
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
           "expect": null
         },
         {
-          "op": "db.authorization.add_role",
+          "op": "database.add_filter",
           "args": {
-            "role": "any"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "label:reader"
+            "name": "subQueryProbe"
           },
           "expect": null
         },
         {
           "op": "database.create_collection",
           "args": {
-            "id": "customUsers",
-            "permissions": [
-              "read(\"any\")",
-              "create(\"any\")",
-              "update(\"any\")",
-              "delete(\"any\")"
-            ]
+            "collection": {
+              "$document": {
+                "$id": "customUsers",
+                "name": "customUsers",
+                "attributes": [
+                  {
+                    "$id": "email",
+                    "key": "email",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  },
+                  {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  },
+                  {
+                    "$id": "status",
+                    "key": "status",
+                    "type": "string",
+                    "size": 50,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
           },
           "expect": {
             "$document": {
               "$id": "customUsers",
+              "name": "customUsers",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "email",
+                    "key": "email",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "status",
+                    "key": "status",
+                    "type": "string",
+                    "size": 50,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
               "$permissions": [
                 "read(\"any\")",
                 "create(\"any\")",
                 "update(\"any\")",
                 "delete(\"any\")"
               ],
-              "name": "customUsers",
-              "attributes": [],
-              "indexes": [],
-              "documentSecurity": true,
               "$collection": "_metadata",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "1"
-            }
+            },
+            "$class": "Collection"
           }
-        },
-        {
-          "op": "database.create_attribute",
-          "args": {
-            "collection": "customUsers",
-            "id": "email",
-            "type": "string",
-            "size": 255,
-            "required": true
-          },
-          "expect": true
-        },
-        {
-          "op": "database.create_attribute",
-          "args": {
-            "collection": "customUsers",
-            "id": "name",
-            "type": "string",
-            "size": 255,
-            "required": true
-          },
-          "expect": true
-        },
-        {
-          "op": "database.create_attribute",
-          "args": {
-            "collection": "customUsers",
-            "id": "status",
-            "type": "string",
-            "size": 50,
-            "required": true
-          },
-          "expect": true
         },
         {
           "op": "database.set_document_type",
           "args": {
             "collection": "customUsers",
-            "className": "Tests\\E2E\\Adapter\\Scopes\\TestUser"
+            "className": "Tests\\E2E\\Adapter\\Support\\User"
           },
           "expect": {
             "$database": true
@@ -672,7 +780,7 @@
             "collection": "customUsers",
             "document": {
               "$document": {
-                "$id": "u0000000000000000005",
+                "$id": "u0000000000000000039",
                 "email": "test@example.com",
                 "name": "Test User",
                 "status": "active",
@@ -684,7 +792,7 @@
           },
           "expect": {
             "$document": {
-              "$id": "u0000000000000000005",
+              "$id": "u0000000000000000039",
               "email": "test@example.com",
               "name": "Test User",
               "status": "active",
@@ -696,14 +804,14 @@
               "$updatedAt": "<now>",
               "$sequence": "1"
             },
-            "$class": "Tests\\E2E\\Adapter\\Scopes\\TestUser"
+            "$class": "Tests\\E2E\\Adapter\\Support\\User"
           }
         },
         {
           "op": "database.get_document",
           "args": {
             "collection": "customUsers",
-            "id": "u0000000000000000005"
+            "id": "u0000000000000000039"
           },
           "expect": {
             "$document": {
@@ -711,7 +819,7 @@
               "name": "Test User",
               "status": "active",
               "$sequence": "1",
-              "$id": "u0000000000000000005",
+              "$id": "u0000000000000000039",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$permissions": [
@@ -719,24 +827,22 @@
               ],
               "$collection": "customUsers"
             },
-            "$class": "Tests\\E2E\\Adapter\\Scopes\\TestUser"
+            "$class": "Tests\\E2E\\Adapter\\Support\\User"
           }
         },
         {
           "op": "database.delete_collection",
           "args": {
-            "id": "customUsers"
+            "collection": "customUsers"
           },
-          "expect": true
+          "expect": null
         },
         {
           "op": "database.clear_document_type",
           "args": {
             "collection": "customUsers"
           },
-          "expect": {
-            "$database": true
-          }
+          "expect": null
         }
       ]
     },
@@ -760,87 +866,133 @@
           }
         },
         {
-          "op": "database.set_tenant",
+          "op": "db.add_format",
           "args": {
-            "tenant": 1
+            "name": "priceRange"
           },
-          "expect": {
-            "$database": true
-          }
+          "expect": true
         },
         {
-          "op": "db.authorization.clean_roles",
-          "args": {},
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
           "expect": null
         },
         {
-          "op": "db.authorization.add_role",
+          "op": "database.add_filter",
           "args": {
-            "role": "any"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "label:reader"
+            "name": "subQueryProbe"
           },
           "expect": null
         },
         {
           "op": "database.create_collection",
           "args": {
-            "id": "customPosts",
-            "permissions": [
-              "read(\"any\")",
-              "create(\"any\")"
-            ]
+            "collection": {
+              "$document": {
+                "$id": "customPosts",
+                "name": "customPosts",
+                "attributes": [
+                  {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  },
+                  {
+                    "$id": "content",
+                    "key": "content",
+                    "type": "string",
+                    "size": 5000,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
           },
           "expect": {
             "$document": {
               "$id": "customPosts",
+              "name": "customPosts",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "content",
+                    "key": "content",
+                    "type": "string",
+                    "size": 5000,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
               "$permissions": [
                 "read(\"any\")",
                 "create(\"any\")"
               ],
-              "name": "customPosts",
-              "attributes": [],
-              "indexes": [],
-              "documentSecurity": true,
               "$collection": "_metadata",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "1"
-            }
+            },
+            "$class": "Collection"
           }
-        },
-        {
-          "op": "database.create_attribute",
-          "args": {
-            "collection": "customPosts",
-            "id": "title",
-            "type": "string",
-            "size": 255,
-            "required": true
-          },
-          "expect": true
-        },
-        {
-          "op": "database.create_attribute",
-          "args": {
-            "collection": "customPosts",
-            "id": "content",
-            "type": "string",
-            "size": 5000,
-            "required": true
-          },
-          "expect": true
         },
         {
           "op": "database.set_document_type",
           "args": {
             "collection": "customPosts",
-            "className": "Tests\\E2E\\Adapter\\Scopes\\TestPost"
+            "className": "Tests\\E2E\\Adapter\\Support\\Post"
           },
           "expect": {
             "$database": true
@@ -852,7 +1004,7 @@
             "collection": "customPosts",
             "document": {
               "$document": {
-                "$id": "u0000000000000000006",
+                "$id": "u0000000000000000040",
                 "title": "First Post",
                 "content": "This is the first post",
                 "$permissions": [
@@ -863,7 +1015,7 @@
           },
           "expect": {
             "$document": {
-              "$id": "u0000000000000000006",
+              "$id": "u0000000000000000040",
               "title": "First Post",
               "content": "This is the first post",
               "$permissions": [
@@ -874,7 +1026,7 @@
               "$updatedAt": "<now>",
               "$sequence": "1"
             },
-            "$class": "Tests\\E2E\\Adapter\\Scopes\\TestPost"
+            "$class": "Tests\\E2E\\Adapter\\Support\\Post"
           }
         },
         {
@@ -883,7 +1035,7 @@
             "collection": "customPosts",
             "document": {
               "$document": {
-                "$id": "u0000000000000000007",
+                "$id": "u0000000000000000041",
                 "title": "Second Post",
                 "content": "This is the second post",
                 "$permissions": [
@@ -894,7 +1046,7 @@
           },
           "expect": {
             "$document": {
-              "$id": "u0000000000000000007",
+              "$id": "u0000000000000000041",
               "title": "Second Post",
               "content": "This is the second post",
               "$permissions": [
@@ -905,7 +1057,7 @@
               "$updatedAt": "<now>",
               "$sequence": "2"
             },
-            "$class": "Tests\\E2E\\Adapter\\Scopes\\TestPost"
+            "$class": "Tests\\E2E\\Adapter\\Support\\Post"
           }
         },
         {
@@ -929,7 +1081,7 @@
               "$document": {
                 "title": "First Post",
                 "content": "This is the first post",
-                "$id": "u0000000000000000006",
+                "$id": "u0000000000000000040",
                 "$sequence": "1",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
@@ -938,13 +1090,13 @@
                 ],
                 "$collection": "customPosts"
               },
-              "$class": "Tests\\E2E\\Adapter\\Scopes\\TestPost"
+              "$class": "Tests\\E2E\\Adapter\\Support\\Post"
             },
             {
               "$document": {
                 "title": "Second Post",
                 "content": "This is the second post",
-                "$id": "u0000000000000000007",
+                "$id": "u0000000000000000041",
                 "$sequence": "2",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
@@ -953,25 +1105,23 @@
                 ],
                 "$collection": "customPosts"
               },
-              "$class": "Tests\\E2E\\Adapter\\Scopes\\TestPost"
+              "$class": "Tests\\E2E\\Adapter\\Support\\Post"
             }
           ]
         },
         {
           "op": "database.delete_collection",
           "args": {
-            "id": "customPosts"
+            "collection": "customPosts"
           },
-          "expect": true
+          "expect": null
         },
         {
           "op": "database.clear_document_type",
           "args": {
             "collection": "customPosts"
           },
-          "expect": {
-            "$database": true
-          }
+          "expect": null
         }
       ]
     },
@@ -995,100 +1145,163 @@
           }
         },
         {
-          "op": "database.set_tenant",
+          "op": "db.add_format",
           "args": {
-            "tenant": 1
+            "name": "priceRange"
           },
-          "expect": {
-            "$database": true
-          }
+          "expect": true
         },
         {
-          "op": "db.authorization.clean_roles",
-          "args": {},
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
           "expect": null
         },
         {
-          "op": "db.authorization.add_role",
+          "op": "database.add_filter",
           "args": {
-            "role": "any"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "label:reader"
+            "name": "subQueryProbe"
           },
           "expect": null
         },
         {
           "op": "database.create_collection",
           "args": {
-            "id": "customUsersUpdate",
-            "permissions": [
-              "read(\"any\")",
-              "create(\"any\")",
-              "update(\"any\")"
-            ]
+            "collection": {
+              "$document": {
+                "$id": "customUsersUpdate",
+                "name": "customUsersUpdate",
+                "attributes": [
+                  {
+                    "$id": "email",
+                    "key": "email",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  },
+                  {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  },
+                  {
+                    "$id": "status",
+                    "key": "status",
+                    "type": "string",
+                    "size": 50,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
           },
           "expect": {
             "$document": {
               "$id": "customUsersUpdate",
+              "name": "customUsersUpdate",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "email",
+                    "key": "email",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "status",
+                    "key": "status",
+                    "type": "string",
+                    "size": 50,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
               "$permissions": [
                 "read(\"any\")",
                 "create(\"any\")",
                 "update(\"any\")"
               ],
-              "name": "customUsersUpdate",
-              "attributes": [],
-              "indexes": [],
-              "documentSecurity": true,
               "$collection": "_metadata",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "1"
-            }
+            },
+            "$class": "Collection"
           }
-        },
-        {
-          "op": "database.create_attribute",
-          "args": {
-            "collection": "customUsersUpdate",
-            "id": "email",
-            "type": "string",
-            "size": 255,
-            "required": true
-          },
-          "expect": true
-        },
-        {
-          "op": "database.create_attribute",
-          "args": {
-            "collection": "customUsersUpdate",
-            "id": "name",
-            "type": "string",
-            "size": 255,
-            "required": true
-          },
-          "expect": true
-        },
-        {
-          "op": "database.create_attribute",
-          "args": {
-            "collection": "customUsersUpdate",
-            "id": "status",
-            "type": "string",
-            "size": 50,
-            "required": true
-          },
-          "expect": true
         },
         {
           "op": "database.set_document_type",
           "args": {
             "collection": "customUsersUpdate",
-            "className": "Tests\\E2E\\Adapter\\Scopes\\TestUser"
+            "className": "Tests\\E2E\\Adapter\\Support\\User"
           },
           "expect": {
             "$database": true
@@ -1100,7 +1313,7 @@
             "collection": "customUsersUpdate",
             "document": {
               "$document": {
-                "$id": "u0000000000000000008",
+                "$id": "u0000000000000000042",
                 "email": "original@example.com",
                 "name": "Original Name",
                 "status": "active",
@@ -1113,7 +1326,7 @@
           },
           "expect": {
             "$document": {
-              "$id": "u0000000000000000008",
+              "$id": "u0000000000000000042",
               "email": "original@example.com",
               "name": "Original Name",
               "status": "active",
@@ -1126,17 +1339,17 @@
               "$updatedAt": "<now>",
               "$sequence": "1"
             },
-            "$class": "Tests\\E2E\\Adapter\\Scopes\\TestUser"
+            "$class": "Tests\\E2E\\Adapter\\Support\\User"
           }
         },
         {
           "op": "database.update_document",
           "args": {
             "collection": "customUsersUpdate",
-            "id": "u0000000000000000008",
+            "id": "u0000000000000000042",
             "document": {
               "$document": {
-                "$id": "u0000000000000000008",
+                "$id": "u0000000000000000042",
                 "email": "updated@example.com",
                 "name": "Updated Name",
                 "status": "inactive"
@@ -1149,7 +1362,7 @@
               "name": "Updated Name",
               "status": "inactive",
               "$sequence": "1",
-              "$id": "u0000000000000000008",
+              "$id": "u0000000000000000042",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$permissions": [
@@ -1158,24 +1371,22 @@
               ],
               "$collection": "customUsersUpdate"
             },
-            "$class": "Tests\\E2E\\Adapter\\Scopes\\TestUser"
+            "$class": "Tests\\E2E\\Adapter\\Support\\User"
           }
         },
         {
           "op": "database.delete_collection",
           "args": {
-            "id": "customUsersUpdate"
+            "collection": "customUsersUpdate"
           },
-          "expect": true
+          "expect": null
         },
         {
           "op": "database.clear_document_type",
           "args": {
             "collection": "customUsersUpdate"
           },
-          "expect": {
-            "$database": true
-          }
+          "expect": null
         }
       ]
     },
@@ -1199,70 +1410,99 @@
           }
         },
         {
-          "op": "database.set_tenant",
+          "op": "db.add_format",
           "args": {
-            "tenant": 1
+            "name": "priceRange"
           },
-          "expect": {
-            "$database": true
-          }
+          "expect": true
         },
         {
-          "op": "db.authorization.clean_roles",
-          "args": {},
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
           "expect": null
         },
         {
-          "op": "db.authorization.add_role",
+          "op": "database.add_filter",
           "args": {
-            "role": "any"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "label:reader"
+            "name": "subQueryProbe"
           },
           "expect": null
         },
         {
           "op": "database.create_collection",
           "args": {
-            "id": "unmappedCollection",
-            "permissions": [
-              "read(\"any\")",
-              "create(\"any\")"
-            ]
+            "collection": {
+              "$document": {
+                "$id": "unmappedCollection",
+                "name": "unmappedCollection",
+                "attributes": [
+                  {
+                    "$id": "data",
+                    "key": "data",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
           },
           "expect": {
             "$document": {
               "$id": "unmappedCollection",
+              "name": "unmappedCollection",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "data",
+                    "key": "data",
+                    "type": "string",
+                    "size": 255,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
               "$permissions": [
                 "read(\"any\")",
                 "create(\"any\")"
               ],
-              "name": "unmappedCollection",
-              "attributes": [],
-              "indexes": [],
-              "documentSecurity": true,
               "$collection": "_metadata",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "1"
-            }
+            },
+            "$class": "Collection"
           }
-        },
-        {
-          "op": "database.create_attribute",
-          "args": {
-            "collection": "unmappedCollection",
-            "id": "data",
-            "type": "string",
-            "size": 255,
-            "required": true
-          },
-          "expect": true
         },
         {
           "op": "database.create_document",
@@ -1270,7 +1510,7 @@
             "collection": "unmappedCollection",
             "document": {
               "$document": {
-                "$id": "u0000000000000000009",
+                "$id": "u0000000000000000043",
                 "data": "test data",
                 "$permissions": [
                   "read(\"any\")"
@@ -1280,7 +1520,7 @@
           },
           "expect": {
             "$document": {
-              "$id": "u0000000000000000009",
+              "$id": "u0000000000000000043",
               "data": "test data",
               "$permissions": [
                 "read(\"any\")"
@@ -1295,9 +1535,9 @@
         {
           "op": "database.delete_collection",
           "args": {
-            "id": "unmappedCollection"
+            "collection": "unmappedCollection"
           },
-          "expect": true
+          "expect": null
         }
       ]
     }

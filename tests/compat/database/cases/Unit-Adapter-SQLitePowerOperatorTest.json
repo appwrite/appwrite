@@ -1,0 +1,2205 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Adapter/SQLitePowerOperatorTest.php"
+  ],
+  "cases": [
+    {
+      "name": "SQLitePowerOperatorTest::testPowerWithANonNumericExponentIsRefusedAndLeavesTheValue#word",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o343"
+          },
+          "bind": "s630",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o343"
+              },
+              "cache": "none"
+            },
+            "as": "o344"
+          },
+          "bind": "s631",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o344"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "power"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o344"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "power"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o345"
+          },
+          "bind": "s634",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o344"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o345"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o344"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "value"
+            },
+            "as": "o346"
+          },
+          "bind": "s637",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "value",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o347"
+          },
+          "bind": "s638",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o347"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o348"
+          },
+          "bind": "s640",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o348"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o349"
+          },
+          "bind": "s642",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o349"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "scores",
+              "attributes": [
+                {
+                  "$obj": "o346"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o350"
+          },
+          "bind": "s644",
+          "expect": {
+            "$document": {
+              "$id": "scores",
+              "name": "scores",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "value",
+                    "key": "value",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o344"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o350"
+              }
+            },
+            "as": "o351"
+          },
+          "expect": {
+            "$document": {
+              "$id": "scores",
+              "name": "scores",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "value",
+                    "key": "value",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "first",
+                "value": 3
+              }
+            },
+            "as": "o352"
+          },
+          "bind": "s646",
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "value": 3
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o344"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "scores",
+              "document": {
+                "$obj": "o352"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "value": 3,
+              "$collection": "scores",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o344"
+            },
+            "method": "getCollection",
+            "args": {
+              "collection": "scores"
+            },
+            "as": "o353"
+          },
+          "bind": "s648",
+          "expect": {
+            "$document": {
+              "name": "scores",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "value",
+                    "key": "value",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$sequence": "1",
+              "$id": "scores",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Operator",
+            "args": {
+              "method": {
+                "$enum": "OperatorType::Power"
+              },
+              "attribute": "value",
+              "values": [
+                "two"
+              ]
+            },
+            "as": "o354"
+          },
+          "bind": "s649",
+          "expect": {
+            "$operator": {
+              "method": "power",
+              "attribute": "value",
+              "values": [
+                "two"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "value": {
+                  "$obj": "o354"
+                }
+              }
+            },
+            "as": "o355"
+          },
+          "bind": "s650",
+          "expect": {
+            "$document": {
+              "value": {
+                "$operator": {
+                  "method": "power",
+                  "attribute": "value",
+                  "values": [
+                    "two"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o344"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "scores",
+              "id": "first"
+            },
+            "as": "o356"
+          },
+          "bind": "s651",
+          "expect": {
+            "$document": {
+              "value": 3,
+              "$sequence": "1",
+              "$id": "first",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "scores"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o343"
+            },
+            "method": "updateDocuments",
+            "args": {
+              "collection": {
+                "$obj": "o353"
+              },
+              "updates": {
+                "$obj": "o355"
+              },
+              "documents": [
+                {
+                  "$obj": "o356"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Operator",
+              "message": "Power exponent must be numeric"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o344"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "scores",
+              "id": "first"
+            },
+            "as": "o357"
+          },
+          "bind": "s653",
+          "expect": {
+            "$document": {
+              "value": 3,
+              "$sequence": "1",
+              "$id": "first",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "scores"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o357"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "value"
+            }
+          },
+          "expect": 3
+        }
+      ]
+    },
+    {
+      "name": "SQLitePowerOperatorTest::testPowerWithANonNumericExponentIsRefusedAndLeavesTheValue#boolean",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o358"
+          },
+          "bind": "s655",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o358"
+              },
+              "cache": "none"
+            },
+            "as": "o359"
+          },
+          "bind": "s656",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o359"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "power"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o359"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "power"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o360"
+          },
+          "bind": "s659",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o359"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o360"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o359"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "value"
+            },
+            "as": "o361"
+          },
+          "bind": "s662",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "value",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o362"
+          },
+          "bind": "s663",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o362"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o363"
+          },
+          "bind": "s665",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o363"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o364"
+          },
+          "bind": "s667",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o364"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "scores",
+              "attributes": [
+                {
+                  "$obj": "o361"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o365"
+          },
+          "bind": "s669",
+          "expect": {
+            "$document": {
+              "$id": "scores",
+              "name": "scores",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "value",
+                    "key": "value",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o359"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o365"
+              }
+            },
+            "as": "o366"
+          },
+          "expect": {
+            "$document": {
+              "$id": "scores",
+              "name": "scores",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "value",
+                    "key": "value",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "first",
+                "value": 3
+              }
+            },
+            "as": "o367"
+          },
+          "bind": "s671",
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "value": 3
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o359"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "scores",
+              "document": {
+                "$obj": "o367"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "value": 3,
+              "$collection": "scores",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o359"
+            },
+            "method": "getCollection",
+            "args": {
+              "collection": "scores"
+            },
+            "as": "o368"
+          },
+          "bind": "s673",
+          "expect": {
+            "$document": {
+              "name": "scores",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "value",
+                    "key": "value",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$sequence": "1",
+              "$id": "scores",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Operator",
+            "args": {
+              "method": {
+                "$enum": "OperatorType::Power"
+              },
+              "attribute": "value",
+              "values": [
+                true
+              ]
+            },
+            "as": "o369"
+          },
+          "bind": "s674",
+          "expect": {
+            "$operator": {
+              "method": "power",
+              "attribute": "value",
+              "values": [
+                true
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "value": {
+                  "$obj": "o369"
+                }
+              }
+            },
+            "as": "o370"
+          },
+          "bind": "s675",
+          "expect": {
+            "$document": {
+              "value": {
+                "$operator": {
+                  "method": "power",
+                  "attribute": "value",
+                  "values": [
+                    true
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o359"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "scores",
+              "id": "first"
+            },
+            "as": "o371"
+          },
+          "bind": "s676",
+          "expect": {
+            "$document": {
+              "value": 3,
+              "$sequence": "1",
+              "$id": "first",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "scores"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o358"
+            },
+            "method": "updateDocuments",
+            "args": {
+              "collection": {
+                "$obj": "o368"
+              },
+              "updates": {
+                "$obj": "o370"
+              },
+              "documents": [
+                {
+                  "$obj": "o371"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Operator",
+              "message": "Power exponent must be numeric"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o359"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "scores",
+              "id": "first"
+            },
+            "as": "o372"
+          },
+          "bind": "s678",
+          "expect": {
+            "$document": {
+              "value": 3,
+              "$sequence": "1",
+              "$id": "first",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "scores"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o372"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "value"
+            }
+          },
+          "expect": 3
+        }
+      ]
+    },
+    {
+      "name": "SQLitePowerOperatorTest::testPowerWithANonNumericExponentIsRefusedAndLeavesTheValue#list",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o373"
+          },
+          "bind": "s680",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o373"
+              },
+              "cache": "none"
+            },
+            "as": "o374"
+          },
+          "bind": "s681",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o374"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "power"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o374"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "power"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o375"
+          },
+          "bind": "s684",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o374"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o375"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o374"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "value"
+            },
+            "as": "o376"
+          },
+          "bind": "s687",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "value",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o377"
+          },
+          "bind": "s688",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o377"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o378"
+          },
+          "bind": "s690",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o378"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o379"
+          },
+          "bind": "s692",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o379"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "scores",
+              "attributes": [
+                {
+                  "$obj": "o376"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o380"
+          },
+          "bind": "s694",
+          "expect": {
+            "$document": {
+              "$id": "scores",
+              "name": "scores",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "value",
+                    "key": "value",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o374"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o380"
+              }
+            },
+            "as": "o381"
+          },
+          "expect": {
+            "$document": {
+              "$id": "scores",
+              "name": "scores",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "value",
+                    "key": "value",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "first",
+                "value": 3
+              }
+            },
+            "as": "o382"
+          },
+          "bind": "s696",
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "value": 3
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o374"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "scores",
+              "document": {
+                "$obj": "o382"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "value": 3,
+              "$collection": "scores",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o374"
+            },
+            "method": "getCollection",
+            "args": {
+              "collection": "scores"
+            },
+            "as": "o383"
+          },
+          "bind": "s698",
+          "expect": {
+            "$document": {
+              "name": "scores",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "value",
+                    "key": "value",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$sequence": "1",
+              "$id": "scores",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Operator",
+            "args": {
+              "method": {
+                "$enum": "OperatorType::Power"
+              },
+              "attribute": "value",
+              "values": [
+                [
+                  2
+                ]
+              ]
+            },
+            "as": "o384"
+          },
+          "bind": "s699",
+          "expect": {
+            "$operator": {
+              "method": "power",
+              "attribute": "value",
+              "values": [
+                [
+                  2
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "value": {
+                  "$obj": "o384"
+                }
+              }
+            },
+            "as": "o385"
+          },
+          "bind": "s700",
+          "expect": {
+            "$document": {
+              "value": {
+                "$operator": {
+                  "method": "power",
+                  "attribute": "value",
+                  "values": [
+                    [
+                      2
+                    ]
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o374"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "scores",
+              "id": "first"
+            },
+            "as": "o386"
+          },
+          "bind": "s701",
+          "expect": {
+            "$document": {
+              "value": 3,
+              "$sequence": "1",
+              "$id": "first",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "scores"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o373"
+            },
+            "method": "updateDocuments",
+            "args": {
+              "collection": {
+                "$obj": "o383"
+              },
+              "updates": {
+                "$obj": "o385"
+              },
+              "documents": [
+                {
+                  "$obj": "o386"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Operator",
+              "message": "Power exponent must be numeric"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o374"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "scores",
+              "id": "first"
+            },
+            "as": "o387"
+          },
+          "bind": "s703",
+          "expect": {
+            "$document": {
+              "value": 3,
+              "$sequence": "1",
+              "$id": "first",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "scores"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o387"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "value"
+            }
+          },
+          "expect": 3
+        }
+      ]
+    },
+    {
+      "name": "SQLitePowerOperatorTest::testPowerWithANumericExponentRaisesTheValue",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o388"
+          },
+          "bind": "s705",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o388"
+              },
+              "cache": "none"
+            },
+            "as": "o389"
+          },
+          "bind": "s706",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o389"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "power"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o389"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "power"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o390"
+          },
+          "bind": "s709",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o389"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o390"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o389"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "value"
+            },
+            "as": "o391"
+          },
+          "bind": "s712",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "value",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o392"
+          },
+          "bind": "s713",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o392"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o393"
+          },
+          "bind": "s715",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o393"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o394"
+          },
+          "bind": "s717",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o394"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "scores",
+              "attributes": [
+                {
+                  "$obj": "o391"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o395"
+          },
+          "bind": "s719",
+          "expect": {
+            "$document": {
+              "$id": "scores",
+              "name": "scores",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "value",
+                    "key": "value",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o389"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o395"
+              }
+            },
+            "as": "o396"
+          },
+          "expect": {
+            "$document": {
+              "$id": "scores",
+              "name": "scores",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "value",
+                    "key": "value",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "first",
+                "value": 3
+              }
+            },
+            "as": "o397"
+          },
+          "bind": "s721",
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "value": 3
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o389"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "scores",
+              "document": {
+                "$obj": "o397"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "value": 3,
+              "$collection": "scores",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "power",
+            "args": {
+              "exponent": 2
+            },
+            "as": "o398"
+          },
+          "bind": "s723",
+          "expect": {
+            "$operator": {
+              "method": "power",
+              "attribute": "",
+              "values": [
+                2
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "value": {
+                  "$obj": "o398"
+                }
+              }
+            },
+            "as": "o399"
+          },
+          "bind": "s724",
+          "expect": {
+            "$document": {
+              "value": {
+                "$operator": {
+                  "method": "power",
+                  "attribute": "",
+                  "values": [
+                    2
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o389"
+            },
+            "method": "updateDocument",
+            "args": {
+              "collection": "scores",
+              "id": "first",
+              "document": {
+                "$obj": "o399"
+              }
+            },
+            "as": "o400"
+          },
+          "expect": {
+            "$document": {
+              "value": 9,
+              "$id": "first",
+              "$sequence": "1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "scores"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o389"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "scores",
+              "id": "first"
+            },
+            "as": "o401"
+          },
+          "bind": "s726",
+          "expect": {
+            "$document": {
+              "value": 9,
+              "$sequence": "1",
+              "$id": "first",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "scores"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o401"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "value"
+            }
+          },
+          "expect": 9
+        }
+      ]
+    }
+  ]
+}

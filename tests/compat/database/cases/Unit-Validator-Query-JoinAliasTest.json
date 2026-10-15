@@ -1,0 +1,1383 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Validator/Query/JoinAliasTest.php"
+  ],
+  "cases": [
+    {
+      "name": "JoinAliasTest::testAcceptsAlias#a short identifier with a digit",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "on",
+            "args": {
+              "left": "$id",
+              "right": "customerId"
+            },
+            "as": "o1660"
+          },
+          "bind": "s2622",
+          "expect": {
+            "$query": {
+              "method": "on",
+              "attribute": "",
+              "values": [
+                "$id",
+                "=",
+                "customerId"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "join",
+            "args": {
+              "collection": "orders",
+              "alias": "j0",
+              "on": [
+                {
+                  "$obj": "o1660"
+                }
+              ]
+            },
+            "as": "o1661"
+          },
+          "bind": "s2623",
+          "expect": {
+            "$query": {
+              "method": "join",
+              "attribute": "orders",
+              "values": [
+                {
+                  "$query": {
+                    "method": "on",
+                    "attribute": "",
+                    "values": [
+                      "$id",
+                      "=",
+                      "customerId"
+                    ]
+                  }
+                }
+              ],
+              "alias": "j0"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Join",
+            "args": {},
+            "as": "o1669"
+          },
+          "bind": "s2631",
+          "expect": {
+            "$value": "Validator\\Query\\Join",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1669"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1661"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1669"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid query"
+        }
+      ]
+    },
+    {
+      "name": "JoinAliasTest::testAcceptsAlias#an identifier",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "on",
+            "args": {
+              "left": "$id",
+              "right": "customerId"
+            },
+            "as": "o1662"
+          },
+          "bind": "s2624",
+          "expect": {
+            "$query": {
+              "method": "on",
+              "attribute": "",
+              "values": [
+                "$id",
+                "=",
+                "customerId"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "join",
+            "args": {
+              "collection": "orders",
+              "alias": "ord",
+              "on": [
+                {
+                  "$obj": "o1662"
+                }
+              ]
+            },
+            "as": "o1663"
+          },
+          "bind": "s2625",
+          "expect": {
+            "$query": {
+              "method": "join",
+              "attribute": "orders",
+              "values": [
+                {
+                  "$query": {
+                    "method": "on",
+                    "attribute": "",
+                    "values": [
+                      "$id",
+                      "=",
+                      "customerId"
+                    ]
+                  }
+                }
+              ],
+              "alias": "ord"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Join",
+            "args": {},
+            "as": "o1670"
+          },
+          "bind": "s2634",
+          "expect": {
+            "$value": "Validator\\Query\\Join",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1670"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1663"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1670"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid query"
+        }
+      ]
+    },
+    {
+      "name": "JoinAliasTest::testAcceptsAlias#an identifier with digits and underscores",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "on",
+            "args": {
+              "left": "$id",
+              "right": "customerId"
+            },
+            "as": "o1664"
+          },
+          "bind": "s2626",
+          "expect": {
+            "$query": {
+              "method": "on",
+              "attribute": "",
+              "values": [
+                "$id",
+                "=",
+                "customerId"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "leftJoin",
+            "args": {
+              "collection": "orders",
+              "alias": "_order_2",
+              "on": [
+                {
+                  "$obj": "o1664"
+                }
+              ]
+            },
+            "as": "o1665"
+          },
+          "bind": "s2627",
+          "expect": {
+            "$query": {
+              "method": "leftJoin",
+              "attribute": "orders",
+              "values": [
+                {
+                  "$query": {
+                    "method": "on",
+                    "attribute": "",
+                    "values": [
+                      "$id",
+                      "=",
+                      "customerId"
+                    ]
+                  }
+                }
+              ],
+              "alias": "_order_2"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Join",
+            "args": {},
+            "as": "o1671"
+          },
+          "bind": "s2637",
+          "expect": {
+            "$value": "Validator\\Query\\Join",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1671"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1665"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1671"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid query"
+        }
+      ]
+    },
+    {
+      "name": "JoinAliasTest::testAcceptsAlias#a cross join alias",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "orders",
+              "alias": "ord"
+            },
+            "as": "o1666"
+          },
+          "bind": "s2628",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "orders",
+              "values": [],
+              "alias": "ord"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Join",
+            "args": {},
+            "as": "o1672"
+          },
+          "bind": "s2640",
+          "expect": {
+            "$value": "Validator\\Query\\Join",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1672"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1666"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1672"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid query"
+        }
+      ]
+    },
+    {
+      "name": "JoinAliasTest::testAcceptsAlias#a nested join alias",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "on",
+            "args": {
+              "left": "$id",
+              "right": "customerId"
+            },
+            "as": "o1667"
+          },
+          "bind": "s2629",
+          "expect": {
+            "$query": {
+              "method": "on",
+              "attribute": "",
+              "values": [
+                "$id",
+                "=",
+                "customerId"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "rightJoin",
+            "args": {
+              "collection": "orders",
+              "alias": "ord",
+              "on": [
+                {
+                  "$obj": "o1667"
+                }
+              ]
+            },
+            "as": "o1668"
+          },
+          "bind": "s2630",
+          "expect": {
+            "$query": {
+              "method": "rightJoin",
+              "attribute": "orders",
+              "values": [
+                {
+                  "$query": {
+                    "method": "on",
+                    "attribute": "",
+                    "values": [
+                      "$id",
+                      "=",
+                      "customerId"
+                    ]
+                  }
+                }
+              ],
+              "alias": "ord"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Join",
+            "args": {},
+            "as": "o1673"
+          },
+          "bind": "s2643",
+          "expect": {
+            "$value": "Validator\\Query\\Join",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1673"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1668"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1673"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid query"
+        }
+      ]
+    },
+    {
+      "name": "JoinAliasTest::testRejectsAlias#no alias",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "on",
+            "args": {
+              "left": "$id",
+              "right": "customerId"
+            },
+            "as": "o1674"
+          },
+          "bind": "s2646",
+          "expect": {
+            "$query": {
+              "method": "on",
+              "attribute": "",
+              "values": [
+                "$id",
+                "=",
+                "customerId"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query",
+            "args": {
+              "method": {
+                "$enum": "Query\\Method::Join"
+              },
+              "attribute": "orders",
+              "values": [
+                {
+                  "$obj": "o1674"
+                }
+              ],
+              "alias": ""
+            },
+            "as": "o1675"
+          },
+          "bind": "s2647",
+          "expect": {
+            "$query": {
+              "method": "join",
+              "attribute": "orders",
+              "values": [
+                {
+                  "$query": {
+                    "method": "on",
+                    "attribute": "",
+                    "values": [
+                      "$id",
+                      "=",
+                      "customerId"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Join",
+            "args": {},
+            "as": "o1690"
+          },
+          "bind": "s2662",
+          "expect": {
+            "$value": "Validator\\Query\\Join",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1690"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1675"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1690"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Join alias is required"
+        }
+      ]
+    },
+    {
+      "name": "JoinAliasTest::testRejectsAlias#the main collection alias",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "on",
+            "args": {
+              "left": "$id",
+              "right": "customerId"
+            },
+            "as": "o1676"
+          },
+          "bind": "s2648",
+          "expect": {
+            "$query": {
+              "method": "on",
+              "attribute": "",
+              "values": [
+                "$id",
+                "=",
+                "customerId"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "join",
+            "args": {
+              "collection": "orders",
+              "alias": "table_main",
+              "on": [
+                {
+                  "$obj": "o1676"
+                }
+              ]
+            },
+            "as": "o1677"
+          },
+          "bind": "s2649",
+          "expect": {
+            "$query": {
+              "method": "join",
+              "attribute": "orders",
+              "values": [
+                {
+                  "$query": {
+                    "method": "on",
+                    "attribute": "",
+                    "values": [
+                      "$id",
+                      "=",
+                      "customerId"
+                    ]
+                  }
+                }
+              ],
+              "alias": "table_main"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Join",
+            "args": {},
+            "as": "o1691"
+          },
+          "bind": "s2665",
+          "expect": {
+            "$value": "Validator\\Query\\Join",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1691"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1677"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1691"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Join alias \"table_main\" is reserved for the main collection"
+        }
+      ]
+    },
+    {
+      "name": "JoinAliasTest::testRejectsAlias#the main collection alias in upper case",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "on",
+            "args": {
+              "left": "$id",
+              "right": "customerId"
+            },
+            "as": "o1678"
+          },
+          "bind": "s2650",
+          "expect": {
+            "$query": {
+              "method": "on",
+              "attribute": "",
+              "values": [
+                "$id",
+                "=",
+                "customerId"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "join",
+            "args": {
+              "collection": "orders",
+              "alias": "TABLE_MAIN",
+              "on": [
+                {
+                  "$obj": "o1678"
+                }
+              ]
+            },
+            "as": "o1679"
+          },
+          "bind": "s2651",
+          "expect": {
+            "$query": {
+              "method": "join",
+              "attribute": "orders",
+              "values": [
+                {
+                  "$query": {
+                    "method": "on",
+                    "attribute": "",
+                    "values": [
+                      "$id",
+                      "=",
+                      "customerId"
+                    ]
+                  }
+                }
+              ],
+              "alias": "TABLE_MAIN"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Join",
+            "args": {},
+            "as": "o1692"
+          },
+          "bind": "s2668",
+          "expect": {
+            "$value": "Validator\\Query\\Join",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1692"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1679"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1692"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Join alias \"TABLE_MAIN\" is reserved for the main collection"
+        }
+      ]
+    },
+    {
+      "name": "JoinAliasTest::testRejectsAlias#the main collection alias on a cross join",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "orders",
+              "alias": "table_main"
+            },
+            "as": "o1680"
+          },
+          "bind": "s2652",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "orders",
+              "values": [],
+              "alias": "table_main"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Join",
+            "args": {},
+            "as": "o1693"
+          },
+          "bind": "s2671",
+          "expect": {
+            "$value": "Validator\\Query\\Join",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1693"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1680"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1693"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Join alias \"table_main\" is reserved for the main collection"
+        }
+      ]
+    },
+    {
+      "name": "JoinAliasTest::testRejectsAlias#the main collection alias on a nested join",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "on",
+            "args": {
+              "left": "$id",
+              "right": "customerId"
+            },
+            "as": "o1681"
+          },
+          "bind": "s2653",
+          "expect": {
+            "$query": {
+              "method": "on",
+              "attribute": "",
+              "values": [
+                "$id",
+                "=",
+                "customerId"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "fullOuterJoin",
+            "args": {
+              "collection": "orders",
+              "alias": "table_main",
+              "on": [
+                {
+                  "$obj": "o1681"
+                }
+              ]
+            },
+            "as": "o1682"
+          },
+          "bind": "s2654",
+          "expect": {
+            "$query": {
+              "method": "fullOuterJoin",
+              "attribute": "orders",
+              "values": [
+                {
+                  "$query": {
+                    "method": "on",
+                    "attribute": "",
+                    "values": [
+                      "$id",
+                      "=",
+                      "customerId"
+                    ]
+                  }
+                }
+              ],
+              "alias": "table_main"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Join",
+            "args": {},
+            "as": "o1694"
+          },
+          "bind": "s2674",
+          "expect": {
+            "$value": "Validator\\Query\\Join",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1694"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1682"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1694"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Join alias \"table_main\" is reserved for the main collection"
+        }
+      ]
+    },
+    {
+      "name": "JoinAliasTest::testRejectsAlias#a hyphen",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "on",
+            "args": {
+              "left": "$id",
+              "right": "customerId"
+            },
+            "as": "o1683"
+          },
+          "bind": "s2655",
+          "expect": {
+            "$query": {
+              "method": "on",
+              "attribute": "",
+              "values": [
+                "$id",
+                "=",
+                "customerId"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "join",
+            "args": {
+              "collection": "orders",
+              "alias": "my-alias",
+              "on": [
+                {
+                  "$obj": "o1683"
+                }
+              ]
+            },
+            "as": "o1684"
+          },
+          "bind": "s2656",
+          "expect": {
+            "$query": {
+              "method": "join",
+              "attribute": "orders",
+              "values": [
+                {
+                  "$query": {
+                    "method": "on",
+                    "attribute": "",
+                    "values": [
+                      "$id",
+                      "=",
+                      "customerId"
+                    ]
+                  }
+                }
+              ],
+              "alias": "my-alias"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Join",
+            "args": {},
+            "as": "o1695"
+          },
+          "bind": "s2677",
+          "expect": {
+            "$value": "Validator\\Query\\Join",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1695"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1684"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1695"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Join alias must start with a letter or an underscore and contain only letters, digits and underscores"
+        }
+      ]
+    },
+    {
+      "name": "JoinAliasTest::testRejectsAlias#a leading digit",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "on",
+            "args": {
+              "left": "$id",
+              "right": "customerId"
+            },
+            "as": "o1685"
+          },
+          "bind": "s2657",
+          "expect": {
+            "$query": {
+              "method": "on",
+              "attribute": "",
+              "values": [
+                "$id",
+                "=",
+                "customerId"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "leftJoin",
+            "args": {
+              "collection": "orders",
+              "alias": "1st",
+              "on": [
+                {
+                  "$obj": "o1685"
+                }
+              ]
+            },
+            "as": "o1686"
+          },
+          "bind": "s2658",
+          "expect": {
+            "$query": {
+              "method": "leftJoin",
+              "attribute": "orders",
+              "values": [
+                {
+                  "$query": {
+                    "method": "on",
+                    "attribute": "",
+                    "values": [
+                      "$id",
+                      "=",
+                      "customerId"
+                    ]
+                  }
+                }
+              ],
+              "alias": "1st"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Join",
+            "args": {},
+            "as": "o1696"
+          },
+          "bind": "s2680",
+          "expect": {
+            "$value": "Validator\\Query\\Join",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1696"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1686"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1696"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Join alias must start with a letter or an underscore and contain only letters, digits and underscores"
+        }
+      ]
+    },
+    {
+      "name": "JoinAliasTest::testRejectsAlias#a dot",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "on",
+            "args": {
+              "left": "$id",
+              "right": "customerId"
+            },
+            "as": "o1687"
+          },
+          "bind": "s2659",
+          "expect": {
+            "$query": {
+              "method": "on",
+              "attribute": "",
+              "values": [
+                "$id",
+                "=",
+                "customerId"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "join",
+            "args": {
+              "collection": "orders",
+              "alias": "a.b",
+              "on": [
+                {
+                  "$obj": "o1687"
+                }
+              ]
+            },
+            "as": "o1688"
+          },
+          "bind": "s2660",
+          "expect": {
+            "$query": {
+              "method": "join",
+              "attribute": "orders",
+              "values": [
+                {
+                  "$query": {
+                    "method": "on",
+                    "attribute": "",
+                    "values": [
+                      "$id",
+                      "=",
+                      "customerId"
+                    ]
+                  }
+                }
+              ],
+              "alias": "a.b"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Join",
+            "args": {},
+            "as": "o1697"
+          },
+          "bind": "s2683",
+          "expect": {
+            "$value": "Validator\\Query\\Join",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1697"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1688"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1697"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Join alias must start with a letter or an underscore and contain only letters, digits and underscores"
+        }
+      ]
+    },
+    {
+      "name": "JoinAliasTest::testRejectsAlias#a quote",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "crossJoin",
+            "args": {
+              "collection": "orders",
+              "alias": "x`y"
+            },
+            "as": "o1689"
+          },
+          "bind": "s2661",
+          "expect": {
+            "$query": {
+              "method": "crossJoin",
+              "attribute": "orders",
+              "values": [],
+              "alias": "x`y"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Join",
+            "args": {},
+            "as": "o1698"
+          },
+          "bind": "s2686",
+          "expect": {
+            "$value": "Validator\\Query\\Join",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1698"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1689"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1698"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Join alias must start with a letter or an underscore and contain only letters, digits and underscores"
+        }
+      ]
+    }
+  ]
+}

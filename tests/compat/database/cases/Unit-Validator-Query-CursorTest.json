@@ -1,0 +1,570 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Validator/Query/CursorTest.php"
+  ],
+  "cases": [
+    {
+      "name": "CursorTest::test_value_success",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Cursor",
+            "args": {},
+            "as": "o1145"
+          },
+          "bind": "s1891",
+          "expect": {
+            "$value": "Validator\\Query\\Cursor",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query",
+            "args": {
+              "method": {
+                "$enum": "Query\\Method::CursorAfter"
+              },
+              "values": [
+                "asdf"
+              ]
+            },
+            "as": "o1146"
+          },
+          "bind": "s1892",
+          "expect": {
+            "$query": {
+              "method": "cursorAfter",
+              "attribute": "",
+              "values": [
+                "asdf"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1145"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1146"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query",
+            "args": {
+              "method": {
+                "$enum": "Query\\Method::CursorBefore"
+              },
+              "values": [
+                "asdf"
+              ]
+            },
+            "as": "o1147"
+          },
+          "bind": "s1894",
+          "expect": {
+            "$query": {
+              "method": "cursorBefore",
+              "attribute": "",
+              "values": [
+                "asdf"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1145"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1147"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "CursorTest::test_value_failure",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Cursor",
+            "args": {},
+            "as": "o1148"
+          },
+          "bind": "s1896",
+          "expect": {
+            "$value": "Validator\\Query\\Cursor",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "limit",
+            "args": {
+              "value": -1
+            },
+            "as": "o1149"
+          },
+          "bind": "s1897",
+          "expect": {
+            "$query": {
+              "method": "limit",
+              "attribute": "",
+              "values": [
+                -1
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1148"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1149"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1148"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid query"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "limit",
+            "args": {
+              "value": 101
+            },
+            "as": "o1150"
+          },
+          "bind": "s1900",
+          "expect": {
+            "$query": {
+              "method": "limit",
+              "attribute": "",
+              "values": [
+                101
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1148"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1150"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "offset",
+            "args": {
+              "value": -1
+            },
+            "as": "o1151"
+          },
+          "bind": "s1902",
+          "expect": {
+            "$query": {
+              "method": "offset",
+              "attribute": "",
+              "values": [
+                -1
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1148"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1151"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "offset",
+            "args": {
+              "value": 5001
+            },
+            "as": "o1152"
+          },
+          "bind": "s1904",
+          "expect": {
+            "$query": {
+              "method": "offset",
+              "attribute": "",
+              "values": [
+                5001
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1148"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1152"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "equal",
+            "args": {
+              "attribute": "attr",
+              "values": [
+                "v"
+              ]
+            },
+            "as": "o1153"
+          },
+          "bind": "s1906",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "attr",
+              "values": [
+                "v"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1148"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1153"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "orderAsc",
+            "args": {
+              "attribute": "attr"
+            },
+            "as": "o1154"
+          },
+          "bind": "s1908",
+          "expect": {
+            "$query": {
+              "method": "orderAsc",
+              "attribute": "attr",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1148"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1154"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "orderDesc",
+            "args": {
+              "attribute": "attr"
+            },
+            "as": "o1155"
+          },
+          "bind": "s1910",
+          "expect": {
+            "$query": {
+              "method": "orderDesc",
+              "attribute": "attr",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1148"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1155"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "CursorTest::test_non_query_value_returns_false",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Cursor",
+            "args": {},
+            "as": "o1156"
+          },
+          "bind": "s1912",
+          "expect": {
+            "$value": "Validator\\Query\\Cursor",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1156"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "some_string"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1156"
+            },
+            "method": "isValid",
+            "args": {
+              "value": 42
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1156"
+            },
+            "method": "isValid",
+            "args": {
+              "value": null
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1156"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "array"
+              ]
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "CursorTest::test_invalid_cursor_value_fails_uid_validation",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Query\\Cursor",
+            "args": {},
+            "as": "o1157"
+          },
+          "bind": "s1917",
+          "expect": {
+            "$value": "Validator\\Query\\Cursor",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query",
+            "args": {
+              "method": {
+                "$enum": "Query\\Method::CursorAfter"
+              },
+              "values": [
+                "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+              ]
+            },
+            "as": "o1158"
+          },
+          "bind": "s1918",
+          "expect": {
+            "$query": {
+              "method": "cursorAfter",
+              "attribute": "",
+              "values": [
+                "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1157"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1158"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1157"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Invalid cursor: UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a leading period, hyphen, or underscore"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Query",
+            "args": {
+              "method": {
+                "$enum": "Query\\Method::CursorBefore"
+              },
+              "values": [
+                ""
+              ]
+            },
+            "as": "o1159"
+          },
+          "bind": "s1921",
+          "expect": {
+            "$query": {
+              "method": "cursorBefore",
+              "attribute": "",
+              "values": [
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1157"
+            },
+            "method": "isValid",
+            "args": {
+              "value": {
+                "$obj": "o1159"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    }
+  ]
+}

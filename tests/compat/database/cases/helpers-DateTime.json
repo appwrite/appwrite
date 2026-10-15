@@ -3,313 +3,633 @@
   "cases": [
     {
       "name": "now",
-      "op": "datetime.now",
-      "args": {},
-      "expect": "<masked>"
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "now",
+            "args": {}
+          },
+          "expect": "<now>"
+        }
+      ]
     },
     {
       "name": "format \"2024-01-02 03:04:05\"",
-      "op": "datetime.format",
-      "args": {
-        "date": "2024-01-02 03:04:05"
-      },
-      "expect": "2024-01-02 03:04:05.000"
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "format",
+            "args": {
+              "date": {
+                "$datetime": "2024-01-02 03:04:05"
+              }
+            }
+          },
+          "expect": "2024-01-02 03:04:05.000"
+        }
+      ]
     },
     {
       "name": "format \"2024-01-02 03:04:05.6789\"",
-      "op": "datetime.format",
-      "args": {
-        "date": "2024-01-02 03:04:05.6789"
-      },
-      "expect": "2024-01-02 03:04:05.678"
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "format",
+            "args": {
+              "date": {
+                "$datetime": "2024-01-02 03:04:05.6789"
+              }
+            }
+          },
+          "expect": "2024-01-02 03:04:05.678"
+        }
+      ]
     },
     {
       "name": "format \"2024-01-02T03:04:05+02:00\"",
-      "op": "datetime.format",
-      "args": {
-        "date": "2024-01-02T03:04:05+02:00"
-      },
-      "expect": "2024-01-02 03:04:05.000"
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "format",
+            "args": {
+              "date": {
+                "$datetime": "2024-01-02T03:04:05+02:00"
+              }
+            }
+          },
+          "expect": "2024-01-02 03:04:05.000"
+        }
+      ]
     },
     {
       "name": "format \"2024-02-30 10:00:00\"",
-      "op": "datetime.format",
-      "args": {
-        "date": "2024-02-30 10:00:00"
-      },
-      "expect": "2024-03-01 10:00:00.000"
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "format",
+            "args": {
+              "date": {
+                "$datetime": "2024-02-30 10:00:00"
+              }
+            }
+          },
+          "expect": "2024-03-01 10:00:00.000"
+        }
+      ]
     },
     {
       "name": "format \"1970-01-01 00:00:00 Europe/Paris\"",
-      "op": "datetime.format",
-      "args": {
-        "date": "1970-01-01 00:00:00 Europe/Paris"
-      },
-      "expect": "1970-01-01 00:00:00.000"
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "format",
+            "args": {
+              "date": {
+                "$datetime": "1970-01-01 00:00:00 Europe/Paris"
+              }
+            }
+          },
+          "expect": "1970-01-01 00:00:00.000"
+        }
+      ]
     },
     {
       "name": "format \"@1700000000.5\"",
-      "op": "datetime.format",
-      "args": {
-        "date": "@1700000000.5"
-      },
-      "expect": "2023-11-14 22:13:20.500"
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "format",
+            "args": {
+              "date": {
+                "$datetime": "@1700000000.5"
+              }
+            }
+          },
+          "expect": "2023-11-14 22:13:20.500"
+        }
+      ]
     },
     {
       "name": "format \"2024-01-02\"",
-      "op": "datetime.format",
-      "args": {
-        "date": "2024-01-02"
-      },
-      "expect": "2024-01-02 00:00:00.000"
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "format",
+            "args": {
+              "date": {
+                "$datetime": "2024-01-02"
+              }
+            }
+          },
+          "expect": "2024-01-02 00:00:00.000"
+        }
+      ]
     },
     {
       "name": "format \"tomorrow\"",
-      "op": "datetime.format",
-      "args": {
-        "date": "tomorrow"
-      },
-      "expect": "depends on now"
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "format",
+            "args": {
+              "date": {
+                "$datetime": "tomorrow"
+              }
+            }
+          },
+          "expect": "<now>"
+        }
+      ]
     },
     {
       "name": "format \"10:00\"",
-      "op": "datetime.format",
-      "args": {
-        "date": "10:00"
-      },
-      "expect": "depends on now"
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "format",
+            "args": {
+              "date": {
+                "$datetime": "10:00"
+              }
+            }
+          },
+          "expect": "<now>"
+        }
+      ]
     },
     {
       "name": "format \"garbage\"",
-      "op": "datetime.format",
-      "args": {
-        "date": "garbage"
-      },
-      "expect": {
-        "$error": {
-          "class": "DateMalformedStringException",
-          "message": "Failed to parse time string (garbage) at position 0 (g): The timezone could not be found in the database"
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "format",
+            "args": {
+              "date": {
+                "$datetime": "garbage"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "DateMalformedStringException",
+              "message": "Failed to parse time string (garbage) at position 0 (g): The timezone could not be found in the database"
+            }
+          }
         }
-      }
+      ]
     },
     {
       "name": "format \"\"",
-      "op": "datetime.format",
-      "args": {
-        "date": ""
-      },
-      "expect": "depends on now"
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "format",
+            "args": {
+              "date": {
+                "$datetime": ""
+              }
+            }
+          },
+          "expect": "<now>"
+        }
+      ]
     },
     {
       "name": "format \"2024-13-45 00:00:00\"",
-      "op": "datetime.format",
-      "args": {
-        "date": "2024-13-45 00:00:00"
-      },
-      "expect": {
-        "$error": {
-          "class": "DateMalformedStringException",
-          "message": "Failed to parse time string (2024-13-45 00:00:00) at position 6 (3): Unexpected character"
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "format",
+            "args": {
+              "date": {
+                "$datetime": "2024-13-45 00:00:00"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "DateMalformedStringException",
+              "message": "Failed to parse time string (2024-13-45 00:00:00) at position 6 (3): Unexpected character"
+            }
+          }
         }
-      }
+      ]
     },
     {
       "name": "format \"0000-00-00 00:00:00\"",
-      "op": "datetime.format",
-      "args": {
-        "date": "0000-00-00 00:00:00"
-      },
-      "expect": "-0001-11-30 00:00:00.000"
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "format",
+            "args": {
+              "date": {
+                "$datetime": "0000-00-00 00:00:00"
+              }
+            }
+          },
+          "expect": "-0001-11-30 00:00:00.000"
+        }
+      ]
     },
     {
       "name": "addSeconds 60 to \"2024-01-02 03:04:05.678\"",
-      "op": "datetime.add_seconds",
-      "args": {
-        "date": "2024-01-02 03:04:05.678",
-        "seconds": 60
-      },
-      "expect": "2024-01-02 03:05:05.678"
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "addSeconds",
+            "args": {
+              "date": {
+                "$datetime": "2024-01-02 03:04:05.678"
+              },
+              "seconds": 60
+            }
+          },
+          "expect": "2024-01-02 03:05:05.678"
+        }
+      ]
     },
     {
       "name": "addSeconds -86400 to \"2024-01-02 03:04:05.678\"",
-      "op": "datetime.add_seconds",
-      "args": {
-        "date": "2024-01-02 03:04:05.678",
-        "seconds": -86400
-      },
-      "expect": "2024-01-01 03:04:05.678"
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "addSeconds",
+            "args": {
+              "date": {
+                "$datetime": "2024-01-02 03:04:05.678"
+              },
+              "seconds": -86400
+            }
+          },
+          "expect": "2024-01-01 03:04:05.678"
+        }
+      ]
     },
     {
       "name": "addSeconds 1 to \"2024-02-28 23:59:59\"",
-      "op": "datetime.add_seconds",
-      "args": {
-        "date": "2024-02-28 23:59:59",
-        "seconds": 1
-      },
-      "expect": "2024-02-29 00:00:00.000"
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "addSeconds",
+            "args": {
+              "date": {
+                "$datetime": "2024-02-28 23:59:59"
+              },
+              "seconds": 1
+            }
+          },
+          "expect": "2024-02-29 00:00:00.000"
+        }
+      ]
     },
     {
       "name": "addSeconds 9223372036854775807 to \"2024-01-01 00:00:00\"",
-      "op": "datetime.add_seconds",
-      "args": {
-        "date": "2024-01-01 00:00:00",
-        "seconds": 9223372036854775807
-      },
-      "expect": "3191-11-18 21:43:27.000"
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "addSeconds",
+            "args": {
+              "date": {
+                "$datetime": "2024-01-01 00:00:00"
+              },
+              "seconds": 9223372036854775807
+            }
+          },
+          "expect": "3191-11-18 21:43:27.000"
+        }
+      ]
     },
     {
       "name": "addSeconds -9223372036854775808 to \"2024-01-01 00:00:00\"",
-      "op": "datetime.add_seconds",
-      "args": {
-        "date": "2024-01-01 00:00:00",
-        "seconds": -9223372036854775808
-      },
-      "expect": {
-        "$error": {
-          "class": "DateMalformedIntervalStringException",
-          "message": "String '-9223372036854775808 seconds' contains non-relative elements"
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "addSeconds",
+            "args": {
+              "date": {
+                "$datetime": "2024-01-01 00:00:00"
+              },
+              "seconds": -9223372036854775808
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "DateMalformedIntervalStringException",
+              "message": "String '-9223372036854775808 seconds' contains non-relative elements"
+            }
+          }
         }
-      }
+      ]
     },
     {
       "name": "addSeconds 0 to \"2024-01-01 00:00:00\"",
-      "op": "datetime.add_seconds",
-      "args": {
-        "date": "2024-01-01 00:00:00",
-        "seconds": 0
-      },
-      "expect": "2024-01-01 00:00:00.000"
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "addSeconds",
+            "args": {
+              "date": {
+                "$datetime": "2024-01-01 00:00:00"
+              },
+              "seconds": 0
+            }
+          },
+          "expect": "2024-01-01 00:00:00.000"
+        }
+      ]
     },
     {
       "name": "addSeconds 1 to \"2024-03-31 01:59:59 Europe/Paris\"",
-      "op": "datetime.add_seconds",
-      "args": {
-        "date": "2024-03-31 01:59:59 Europe/Paris",
-        "seconds": 1
-      },
-      "expect": "2024-03-31 03:00:00.000"
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "addSeconds",
+            "args": {
+              "date": {
+                "$datetime": "2024-03-31 01:59:59 Europe/Paris"
+              },
+              "seconds": 1
+            }
+          },
+          "expect": "2024-03-31 03:00:00.000"
+        }
+      ]
     },
     {
       "name": "setTimezone \"2024-01-02 03:04:05.678+02:00\"",
-      "op": "datetime.set_timezone",
-      "args": {
-        "datetime": "2024-01-02 03:04:05.678+02:00"
-      },
-      "expect": "2024-01-02 01:04:05.678"
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "setTimezone",
+            "args": {
+              "datetime": "2024-01-02 03:04:05.678+02:00"
+            }
+          },
+          "expect": "2024-01-02 01:04:05.678"
+        }
+      ]
     },
     {
       "name": "setTimezone \"2024-01-02 03:04:05 America/New_York\"",
-      "op": "datetime.set_timezone",
-      "args": {
-        "datetime": "2024-01-02 03:04:05 America/New_York"
-      },
-      "expect": "2024-01-02 08:04:05.000"
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "setTimezone",
+            "args": {
+              "datetime": "2024-01-02 03:04:05 America/New_York"
+            }
+          },
+          "expect": "2024-01-02 08:04:05.000"
+        }
+      ]
     },
     {
       "name": "setTimezone \"2024-01-02 03:04:05\"",
-      "op": "datetime.set_timezone",
-      "args": {
-        "datetime": "2024-01-02 03:04:05"
-      },
-      "expect": "2024-01-02 03:04:05.000"
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "setTimezone",
+            "args": {
+              "datetime": "2024-01-02 03:04:05"
+            }
+          },
+          "expect": "2024-01-02 03:04:05.000"
+        }
+      ]
     },
     {
       "name": "setTimezone \"nonsense\"",
-      "op": "datetime.set_timezone",
-      "args": {
-        "datetime": "nonsense"
-      },
-      "expect": {
-        "$error": {
-          "class": "Utopia\\Database\\Exception",
-          "message": "Failed to parse time string (nonsense) at position 0 (n): The timezone could not be found in the database"
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "setTimezone",
+            "args": {
+              "datetime": "nonsense"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Failed to parse time string (nonsense) at position 0 (n): The timezone could not be found in the database"
+            }
+          }
         }
-      }
+      ]
     },
     {
       "name": "setTimezone \"2024-01-02 03:04:05 Mars/Phobos\"",
-      "op": "datetime.set_timezone",
-      "args": {
-        "datetime": "2024-01-02 03:04:05 Mars/Phobos"
-      },
-      "expect": {
-        "$error": {
-          "class": "Utopia\\Database\\Exception",
-          "message": "Failed to parse time string (2024-01-02 03:04:05 Mars/Phobos) at position 20 (M): The timezone could not be found in the database"
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "setTimezone",
+            "args": {
+              "datetime": "2024-01-02 03:04:05 Mars/Phobos"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Failed to parse time string (2024-01-02 03:04:05 Mars/Phobos) at position 20 (M): The timezone could not be found in the database"
+            }
+          }
         }
-      }
+      ]
     },
     {
       "name": "setTimezone \"\"",
-      "op": "datetime.set_timezone",
-      "args": {
-        "datetime": ""
-      },
-      "expect": "depends on now"
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "setTimezone",
+            "args": {
+              "datetime": ""
+            }
+          },
+          "expect": "<now>"
+        }
+      ]
     },
     {
       "name": "setTimezone \"2024-06-01 12:00:00 EST\"",
-      "op": "datetime.set_timezone",
-      "args": {
-        "datetime": "2024-06-01 12:00:00 EST"
-      },
-      "expect": "2024-06-01 17:00:00.000"
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "setTimezone",
+            "args": {
+              "datetime": "2024-06-01 12:00:00 EST"
+            }
+          },
+          "expect": "2024-06-01 17:00:00.000"
+        }
+      ]
     },
     {
       "name": "formatTz \"2024-01-02 03:04:05.678\"",
-      "op": "datetime.format_tz",
-      "args": {
-        "value": "2024-01-02 03:04:05.678"
-      },
-      "expect": "2024-01-02T03:04:05.678+00:00"
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "formatTz",
+            "args": {
+              "dbFormat": "2024-01-02 03:04:05.678"
+            }
+          },
+          "expect": "2024-01-02T03:04:05.678+00:00"
+        }
+      ]
     },
     {
       "name": "formatTz \"2024-01-02 03:04:05.678912\"",
-      "op": "datetime.format_tz",
-      "args": {
-        "value": "2024-01-02 03:04:05.678912"
-      },
-      "expect": "2024-01-02T03:04:05.678+00:00"
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "formatTz",
+            "args": {
+              "dbFormat": "2024-01-02 03:04:05.678912"
+            }
+          },
+          "expect": "2024-01-02T03:04:05.678+00:00"
+        }
+      ]
     },
     {
       "name": "formatTz \"2024-01-02T03:04:05+05:30\"",
-      "op": "datetime.format_tz",
-      "args": {
-        "value": "2024-01-02T03:04:05+05:30"
-      },
-      "expect": "2024-01-02T03:04:05.000+05:30"
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "formatTz",
+            "args": {
+              "dbFormat": "2024-01-02T03:04:05+05:30"
+            }
+          },
+          "expect": "2024-01-02T03:04:05.000+05:30"
+        }
+      ]
     },
     {
       "name": "formatTz \"garbage x\"",
-      "op": "datetime.format_tz",
-      "args": {
-        "value": "garbage x"
-      },
-      "expect": "garbage x"
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "formatTz",
+            "args": {
+              "dbFormat": "garbage x"
+            }
+          },
+          "expect": "garbage x"
+        }
+      ]
     },
     {
       "name": "formatTz null",
-      "op": "datetime.format_tz",
-      "args": {
-        "value": null
-      },
-      "expect": null
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "formatTz",
+            "args": {
+              "dbFormat": null
+            }
+          },
+          "expect": null
+        }
+      ]
     },
     {
       "name": "formatTz \"\"",
-      "op": "datetime.format_tz",
-      "args": {
-        "value": ""
-      },
-      "expect": "depends on now"
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "formatTz",
+            "args": {
+              "dbFormat": ""
+            }
+          },
+          "expect": "<now>"
+        }
+      ]
     },
     {
       "name": "formatTz \"2024-01-02 03:04:05 Asia/Kolkata\"",
-      "op": "datetime.format_tz",
-      "args": {
-        "value": "2024-01-02 03:04:05 Asia/Kolkata"
-      },
-      "expect": "2024-01-02T03:04:05.000+05:30"
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "DateTime",
+            "method": "formatTz",
+            "args": {
+              "dbFormat": "2024-01-02 03:04:05 Asia/Kolkata"
+            }
+          },
+          "expect": "2024-01-02T03:04:05.000+05:30"
+        }
+      ]
     }
   ]
 }

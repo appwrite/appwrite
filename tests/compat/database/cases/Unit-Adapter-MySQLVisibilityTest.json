@@ -1,0 +1,45 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Adapter/MySQLVisibilityTest.php"
+  ],
+  "cases": [
+    {
+      "name": "MySQLVisibilityTest::testOnlyThePublicSurfaceIsCallable#the capability list is public",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\MySQL",
+            "args": {
+              "pdo": {}
+            },
+            "as": "o713"
+          },
+          "expect": {
+            "$adapter": "MySQL"
+          }
+        }
+      ]
+    },
+    {
+      "name": "MySQLVisibilityTest::testOnlyThePublicSurfaceIsCallable#the spatial column type is not public",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\MySQL",
+            "args": {
+              "pdo": {}
+            },
+            "as": "o714"
+          },
+          "expect": {
+            "$adapter": "MySQL"
+          }
+        }
+      ]
+    }
+  ]
+}

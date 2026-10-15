@@ -481,6 +481,16 @@ fn test_group_by_type_refuses_a_cursor_that_is_not_a_document() {
 }
 
 #[test]
+fn test_group_by_type_names_a_query_cursor_as_a_database_query() {
+    let nested = utopia_query::Value::Ext(utopia_query::Object::Query(Box::new(Query::limit(1).into())));
+    assert_error(
+        Query::group_by_type(&[Query::cursor_after_value(nested)]),
+        Kind::Query,
+        "Invalid query: Invalid cursor: a cursor must be a document, Utopia\\Database\\Query given",
+    );
+}
+
+#[test]
 fn test_group_by_type_tells_an_aggregation_from_a_document_list() {
     let group = |qs: &[Query]| Query::group_by_type(qs).unwrap().is_aggregation();
     assert!(!group(&[Query::equal("category", ["news"]), Query::order_asc("views", None), Query::limit(2)]));

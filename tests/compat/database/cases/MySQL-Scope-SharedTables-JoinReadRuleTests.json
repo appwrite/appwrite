@@ -1,0 +1,1170 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/e2e/Adapter/Scopes/JoinReadRuleTests.php",
+    "vendor/utopia-php/database/tests/e2e/Adapter/SharedTables/MySQLTest.php"
+  ],
+  "cases": [
+    {
+      "name": "JoinReadRuleTests::testJoinReadRuleAggregateRefusesAJoinedCollectionWithoutGrantOrDocumentSecurity",
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "driver": "mysql",
+            "namespace": "",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Joins"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.collection_exists",
+          "args": {
+            "collection": "jrule_deny_m"
+          },
+          "expect": false
+        },
+        {
+          "op": "database.collection_exists",
+          "args": {
+            "collection": "jrule_deny_j"
+          },
+          "expect": false
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "jrule_deny_m",
+                "name": "jrule_deny_m",
+                "attributes": [
+                  {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "jrule_deny_m",
+              "name": "jrule_deny_m",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "jrule_deny_j",
+                "name": "jrule_deny_j",
+                "attributes": [
+                  {
+                    "$id": "mainId",
+                    "key": "mainId",
+                    "type": "string",
+                    "size": 36,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  },
+                  {
+                    "$id": "amount",
+                    "key": "amount",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": false,
+                "$permissions": [
+                  "create(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "jrule_deny_j",
+              "name": "jrule_deny_j",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "mainId",
+                    "key": "mainId",
+                    "type": "string",
+                    "size": 36,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "amount",
+                    "key": "amount",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "2"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "jrule_deny_m",
+            "document": {
+              "$document": {
+                "$id": "customer",
+                "name": "Customer",
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "customer",
+              "name": "Customer",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "jrule_deny_m",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "db.authorization.skip",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "jrule_deny_j",
+                    "document": {
+                      "$document": {
+                        "$id": "alice-entry",
+                        "mainId": "customer",
+                        "amount": 5,
+                        "$permissions": [
+                          "read(\"user:alice\")"
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "jrule_deny_j",
+                    "document": {
+                      "$document": {
+                        "$id": "bob-entry",
+                        "mainId": "customer",
+                        "amount": 7,
+                        "$permissions": [
+                          "read(\"user:bob\")"
+                        ]
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "$id": "alice-entry",
+                        "mainId": "customer",
+                        "amount": 5,
+                        "$permissions": [
+                          "read(\"user:alice\")"
+                        ],
+                        "$collection": "jrule_deny_j",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$tenant": "999",
+                        "$sequence": "1"
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "bob-entry",
+                        "mainId": "customer",
+                        "amount": 7,
+                        "$permissions": [
+                          "read(\"user:bob\")"
+                        ],
+                        "$collection": "jrule_deny_j",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$tenant": "999",
+                        "$sequence": "2"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "db.authorization.get_roles",
+          "args": {},
+          "expect": [
+            "any",
+            "users",
+            "user:x"
+          ]
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "database.aggregate",
+          "args": {
+            "collection": "jrule_deny_m",
+            "queries": [
+              {
+                "$query": {
+                  "method": "join",
+                  "attribute": "jrule_deny_j",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "on",
+                        "attribute": "",
+                        "values": [
+                          "$id",
+                          "=",
+                          "mainId"
+                        ]
+                      }
+                    }
+                  ],
+                  "alias": "entry"
+                }
+              },
+              {
+                "$query": {
+                  "method": "count",
+                  "attribute": "*",
+                  "values": [],
+                  "alias": "rows"
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Authorization",
+              "message": "Unauthorized access to joined collection 'jrule_deny_j'"
+            }
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.skip",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.aggregate",
+                  "args": {
+                    "collection": "jrule_deny_m",
+                    "queries": [
+                      {
+                        "$query": {
+                          "method": "join",
+                          "attribute": "jrule_deny_j",
+                          "values": [
+                            {
+                              "$query": {
+                                "method": "on",
+                                "attribute": "",
+                                "values": [
+                                  "$id",
+                                  "=",
+                                  "mainId"
+                                ]
+                              }
+                            }
+                          ],
+                          "alias": "entry"
+                        }
+                      },
+                      {
+                        "$query": {
+                          "method": "count",
+                          "attribute": "*",
+                          "values": [],
+                          "alias": "rows"
+                        }
+                      }
+                    ]
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": [
+              {
+                "rows": "2"
+              }
+            ],
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    [
+                      {
+                        "rows": "2"
+                      }
+                    ]
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.collection_exists",
+          "args": {
+            "collection": "jrule_deny_m"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "jrule_deny_m"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.collection_exists",
+          "args": {
+            "collection": "jrule_deny_j"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "jrule_deny_j"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "JoinReadRuleTests::testJoinReadRuleAggregateFiltersAJoinedCollectionPerDocument",
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "driver": "mysql",
+            "namespace": "",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Joins"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Aggregations"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.collection_exists",
+          "args": {
+            "collection": "jrule_owned_m"
+          },
+          "expect": false
+        },
+        {
+          "op": "database.collection_exists",
+          "args": {
+            "collection": "jrule_owned_j"
+          },
+          "expect": false
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "jrule_owned_m",
+                "name": "jrule_owned_m",
+                "attributes": [
+                  {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "jrule_owned_m",
+              "name": "jrule_owned_m",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "jrule_owned_j",
+                "name": "jrule_owned_j",
+                "attributes": [
+                  {
+                    "$id": "mainId",
+                    "key": "mainId",
+                    "type": "string",
+                    "size": 36,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  },
+                  {
+                    "$id": "amount",
+                    "key": "amount",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "create(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "jrule_owned_j",
+              "name": "jrule_owned_j",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "mainId",
+                    "key": "mainId",
+                    "type": "string",
+                    "size": 36,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "amount",
+                    "key": "amount",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "2"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "jrule_owned_m",
+            "document": {
+              "$document": {
+                "$id": "customer",
+                "name": "Customer",
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "customer",
+              "name": "Customer",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "jrule_owned_m",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "db.authorization.skip",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "jrule_owned_j",
+                    "document": {
+                      "$document": {
+                        "$id": "alice-entry",
+                        "mainId": "customer",
+                        "amount": 5,
+                        "$permissions": [
+                          "read(\"user:alice\")"
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "jrule_owned_j",
+                    "document": {
+                      "$document": {
+                        "$id": "bob-entry",
+                        "mainId": "customer",
+                        "amount": 7,
+                        "$permissions": [
+                          "read(\"user:bob\")"
+                        ]
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "$id": "alice-entry",
+                        "mainId": "customer",
+                        "amount": 5,
+                        "$permissions": [
+                          "read(\"user:alice\")"
+                        ],
+                        "$collection": "jrule_owned_j",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$tenant": "999",
+                        "$sequence": "1"
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "bob-entry",
+                        "mainId": "customer",
+                        "amount": 7,
+                        "$permissions": [
+                          "read(\"user:bob\")"
+                        ],
+                        "$collection": "jrule_owned_j",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$tenant": "999",
+                        "$sequence": "2"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "db.authorization.get_roles",
+          "args": {},
+          "expect": [
+            "any",
+            "users",
+            "user:x"
+          ]
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:alice"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "database.aggregate",
+          "args": {
+            "collection": "jrule_owned_j",
+            "queries": [
+              {
+                "$query": {
+                  "method": "count",
+                  "attribute": "*",
+                  "values": [],
+                  "alias": "rows"
+                }
+              },
+              {
+                "$query": {
+                  "method": "sum",
+                  "attribute": "amount",
+                  "values": [],
+                  "alias": "total"
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "rows": "1",
+              "total": "5"
+            }
+          ]
+        },
+        {
+          "op": "database.aggregate",
+          "args": {
+            "collection": "jrule_owned_m",
+            "queries": [
+              {
+                "$query": {
+                  "method": "join",
+                  "attribute": "jrule_owned_j",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "on",
+                        "attribute": "",
+                        "values": [
+                          "$id",
+                          "=",
+                          "mainId"
+                        ]
+                      }
+                    }
+                  ],
+                  "alias": "entry"
+                }
+              },
+              {
+                "$query": {
+                  "method": "count",
+                  "attribute": "*",
+                  "values": [],
+                  "alias": "rows"
+                }
+              },
+              {
+                "$query": {
+                  "method": "sum",
+                  "attribute": "entry.amount",
+                  "values": [],
+                  "alias": "total"
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "rows": "1",
+              "total": "5"
+            }
+          ]
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "database.collection_exists",
+          "args": {
+            "collection": "jrule_owned_m"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "jrule_owned_m"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.collection_exists",
+          "args": {
+            "collection": "jrule_owned_j"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "jrule_owned_j"
+          },
+          "expect": null
+        }
+      ]
+    }
+  ]
+}

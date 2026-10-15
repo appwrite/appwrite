@@ -1,0 +1,6088 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Validator/PermissionsTest.php"
+  ],
+  "cases": [
+    {
+      "name": "PermissionsTest::test_single_method_single_value",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Permissions",
+            "args": {},
+            "as": "o566"
+          },
+          "bind": "s809",
+          "expect": {
+            "$value": "Validator\\Permissions",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "unique",
+            "args": {}
+          },
+          "bind": "s810",
+          "expect": "<uniqid>"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "unique",
+            "args": {}
+          },
+          "bind": "s811",
+          "expect": "<uniqid>"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o567"
+          },
+          "bind": "s812",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o567"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": {
+                  "$ref": "s810",
+                  "path": ""
+                },
+                "$collection": {
+                  "$ref": "s811",
+                  "path": ""
+                },
+                "$permissions": [
+                  "create(\"any\")"
+                ]
+              }
+            },
+            "as": "o568"
+          },
+          "bind": "s814",
+          "expect": {
+            "$document": {
+              "$id": "<uniqid>",
+              "$collection": "<uniqid>",
+              "$permissions": [
+                "create(\"any\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o568"
+            },
+            "method": "getPermissions",
+            "args": {}
+          },
+          "expect": [
+            "create(\"any\")"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o566"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "create(\"any\")"
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "users",
+            "args": {},
+            "as": "o569"
+          },
+          "bind": "s817",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o569"
+              }
+            }
+          },
+          "expect": "create(\"users\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o568"
+            },
+            "method": "getPermissions",
+            "args": {}
+          },
+          "expect": [
+            "create(\"any\")"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o566"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "create(\"users\")"
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "123abc"
+            }
+          },
+          "expect": "123abc"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "user",
+            "args": {
+              "identifier": "123abc"
+            },
+            "as": "o570"
+          },
+          "bind": "s822",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o570"
+              }
+            }
+          },
+          "expect": "create(\"user:123abc\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o568"
+            },
+            "method": "getPermissions",
+            "args": {}
+          },
+          "expect": [
+            "create(\"any\")"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o566"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "create(\"user:123abc\")"
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "123abc"
+            }
+          },
+          "expect": "123abc"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "team",
+            "args": {
+              "identifier": "123abc"
+            },
+            "as": "o571"
+          },
+          "bind": "s827",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o571"
+              }
+            }
+          },
+          "expect": "create(\"team:123abc\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o568"
+            },
+            "method": "getPermissions",
+            "args": {}
+          },
+          "expect": [
+            "create(\"any\")"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o566"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "create(\"team:123abc\")"
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "123abc"
+            }
+          },
+          "expect": "123abc"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "team",
+            "args": {
+              "identifier": "123abc",
+              "dimension": "edit"
+            },
+            "as": "o572"
+          },
+          "bind": "s832",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o572"
+              }
+            }
+          },
+          "expect": "create(\"team:123abc/edit\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o568"
+            },
+            "method": "getPermissions",
+            "args": {}
+          },
+          "expect": [
+            "create(\"any\")"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o566"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "create(\"team:123abc/edit\")"
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "guests",
+            "args": {},
+            "as": "o573"
+          },
+          "bind": "s836",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o573"
+              }
+            }
+          },
+          "expect": "create(\"guests\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o568"
+            },
+            "method": "getPermissions",
+            "args": {}
+          },
+          "expect": [
+            "create(\"any\")"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o566"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "create(\"guests\")"
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "users",
+            "args": {
+              "status": "verified"
+            },
+            "as": "o574"
+          },
+          "bind": "s840",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o574"
+              }
+            }
+          },
+          "expect": "create(\"users/verified\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o568"
+            },
+            "method": "getPermissions",
+            "args": {}
+          },
+          "expect": [
+            "create(\"any\")"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o566"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "create(\"users/verified\")"
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o575"
+          },
+          "bind": "s844",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o575"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o568"
+            },
+            "method": "getPermissions",
+            "args": {}
+          },
+          "expect": [
+            "create(\"any\")"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o566"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "read(\"any\")"
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "users",
+            "args": {},
+            "as": "o576"
+          },
+          "bind": "s848",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o576"
+              }
+            }
+          },
+          "expect": "read(\"users\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o568"
+            },
+            "method": "getPermissions",
+            "args": {}
+          },
+          "expect": [
+            "create(\"any\")"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o566"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "read(\"users\")"
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "123abc"
+            }
+          },
+          "expect": "123abc"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "user",
+            "args": {
+              "identifier": "123abc"
+            },
+            "as": "o577"
+          },
+          "bind": "s853",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o577"
+              }
+            }
+          },
+          "expect": "read(\"user:123abc\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o568"
+            },
+            "method": "getPermissions",
+            "args": {}
+          },
+          "expect": [
+            "create(\"any\")"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o566"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "read(\"user:123abc\")"
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "123abc"
+            }
+          },
+          "expect": "123abc"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "team",
+            "args": {
+              "identifier": "123abc"
+            },
+            "as": "o578"
+          },
+          "bind": "s858",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o578"
+              }
+            }
+          },
+          "expect": "read(\"team:123abc\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o568"
+            },
+            "method": "getPermissions",
+            "args": {}
+          },
+          "expect": [
+            "create(\"any\")"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o566"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "read(\"team:123abc\")"
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "123abc"
+            }
+          },
+          "expect": "123abc"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "team",
+            "args": {
+              "identifier": "123abc",
+              "dimension": "viewer"
+            },
+            "as": "o579"
+          },
+          "bind": "s863",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o579"
+              }
+            }
+          },
+          "expect": "read(\"team:123abc/viewer\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o568"
+            },
+            "method": "getPermissions",
+            "args": {}
+          },
+          "expect": [
+            "create(\"any\")"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o566"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "read(\"team:123abc/viewer\")"
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "guests",
+            "args": {},
+            "as": "o580"
+          },
+          "bind": "s867",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o580"
+              }
+            }
+          },
+          "expect": "read(\"guests\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o568"
+            },
+            "method": "getPermissions",
+            "args": {}
+          },
+          "expect": [
+            "create(\"any\")"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o566"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "read(\"guests\")"
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "users",
+            "args": {
+              "status": "verified"
+            },
+            "as": "o581"
+          },
+          "bind": "s871",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o581"
+              }
+            }
+          },
+          "expect": "read(\"users/verified\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o568"
+            },
+            "method": "getPermissions",
+            "args": {}
+          },
+          "expect": [
+            "create(\"any\")"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o566"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "read(\"users/verified\")"
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o582"
+          },
+          "bind": "s875",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o582"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o568"
+            },
+            "method": "getPermissions",
+            "args": {}
+          },
+          "expect": [
+            "create(\"any\")"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o566"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "update(\"any\")"
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "users",
+            "args": {},
+            "as": "o583"
+          },
+          "bind": "s879",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o583"
+              }
+            }
+          },
+          "expect": "update(\"users\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o568"
+            },
+            "method": "getPermissions",
+            "args": {}
+          },
+          "expect": [
+            "create(\"any\")"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o566"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "update(\"users\")"
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "123abc"
+            }
+          },
+          "expect": "123abc"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "user",
+            "args": {
+              "identifier": "123abc"
+            },
+            "as": "o584"
+          },
+          "bind": "s884",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o584"
+              }
+            }
+          },
+          "expect": "update(\"user:123abc\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o568"
+            },
+            "method": "getPermissions",
+            "args": {}
+          },
+          "expect": [
+            "create(\"any\")"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o566"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "update(\"user:123abc\")"
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "123abc"
+            }
+          },
+          "expect": "123abc"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "team",
+            "args": {
+              "identifier": "123abc"
+            },
+            "as": "o585"
+          },
+          "bind": "s889",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o585"
+              }
+            }
+          },
+          "expect": "update(\"team:123abc\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o568"
+            },
+            "method": "getPermissions",
+            "args": {}
+          },
+          "expect": [
+            "create(\"any\")"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o566"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "update(\"team:123abc\")"
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "123abc"
+            }
+          },
+          "expect": "123abc"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "team",
+            "args": {
+              "identifier": "123abc",
+              "dimension": "edit"
+            },
+            "as": "o586"
+          },
+          "bind": "s894",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o586"
+              }
+            }
+          },
+          "expect": "update(\"team:123abc/edit\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o568"
+            },
+            "method": "getPermissions",
+            "args": {}
+          },
+          "expect": [
+            "create(\"any\")"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o566"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "update(\"team:123abc/edit\")"
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "guests",
+            "args": {},
+            "as": "o587"
+          },
+          "bind": "s898",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o587"
+              }
+            }
+          },
+          "expect": "update(\"guests\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o568"
+            },
+            "method": "getPermissions",
+            "args": {}
+          },
+          "expect": [
+            "create(\"any\")"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o566"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "update(\"guests\")"
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "users",
+            "args": {
+              "status": "verified"
+            },
+            "as": "o588"
+          },
+          "bind": "s902",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o588"
+              }
+            }
+          },
+          "expect": "update(\"users/verified\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o568"
+            },
+            "method": "getPermissions",
+            "args": {}
+          },
+          "expect": [
+            "create(\"any\")"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o566"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "update(\"users/verified\")"
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o589"
+          },
+          "bind": "s906",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "delete",
+            "args": {
+              "role": {
+                "$obj": "o589"
+              }
+            }
+          },
+          "expect": "delete(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o568"
+            },
+            "method": "getPermissions",
+            "args": {}
+          },
+          "expect": [
+            "create(\"any\")"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o566"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "delete(\"any\")"
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "users",
+            "args": {},
+            "as": "o590"
+          },
+          "bind": "s910",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "delete",
+            "args": {
+              "role": {
+                "$obj": "o590"
+              }
+            }
+          },
+          "expect": "delete(\"users\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o568"
+            },
+            "method": "getPermissions",
+            "args": {}
+          },
+          "expect": [
+            "create(\"any\")"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o566"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "delete(\"users\")"
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "123abc"
+            }
+          },
+          "expect": "123abc"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "user",
+            "args": {
+              "identifier": "123abc"
+            },
+            "as": "o591"
+          },
+          "bind": "s915",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "delete",
+            "args": {
+              "role": {
+                "$obj": "o591"
+              }
+            }
+          },
+          "expect": "delete(\"user:123abc\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o568"
+            },
+            "method": "getPermissions",
+            "args": {}
+          },
+          "expect": [
+            "create(\"any\")"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o566"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "delete(\"user:123abc\")"
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "123abc"
+            }
+          },
+          "expect": "123abc"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "team",
+            "args": {
+              "identifier": "123abc"
+            },
+            "as": "o592"
+          },
+          "bind": "s920",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "delete",
+            "args": {
+              "role": {
+                "$obj": "o592"
+              }
+            }
+          },
+          "expect": "delete(\"team:123abc\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o568"
+            },
+            "method": "getPermissions",
+            "args": {}
+          },
+          "expect": [
+            "create(\"any\")"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o566"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "delete(\"team:123abc\")"
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "123abc"
+            }
+          },
+          "expect": "123abc"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "team",
+            "args": {
+              "identifier": "123abc",
+              "dimension": "edit"
+            },
+            "as": "o593"
+          },
+          "bind": "s925",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "delete",
+            "args": {
+              "role": {
+                "$obj": "o593"
+              }
+            }
+          },
+          "expect": "delete(\"team:123abc/edit\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o568"
+            },
+            "method": "getPermissions",
+            "args": {}
+          },
+          "expect": [
+            "create(\"any\")"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o566"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "delete(\"team:123abc/edit\")"
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "guests",
+            "args": {},
+            "as": "o594"
+          },
+          "bind": "s929",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "delete",
+            "args": {
+              "role": {
+                "$obj": "o594"
+              }
+            }
+          },
+          "expect": "delete(\"guests\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o568"
+            },
+            "method": "getPermissions",
+            "args": {}
+          },
+          "expect": [
+            "create(\"any\")"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o566"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "delete(\"guests\")"
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "users",
+            "args": {
+              "status": "verified"
+            },
+            "as": "o595"
+          },
+          "bind": "s933",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "delete",
+            "args": {
+              "role": {
+                "$obj": "o595"
+              }
+            }
+          },
+          "expect": "delete(\"users/verified\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o568"
+            },
+            "method": "getPermissions",
+            "args": {}
+          },
+          "expect": [
+            "create(\"any\")"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o566"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "delete(\"users/verified\")"
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "label",
+            "args": {
+              "identifier": "vip"
+            },
+            "as": "o596"
+          },
+          "bind": "s937",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "delete",
+            "args": {
+              "role": {
+                "$obj": "o596"
+              }
+            }
+          },
+          "expect": "delete(\"label:vip\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o568"
+            },
+            "method": "getPermissions",
+            "args": {}
+          },
+          "expect": [
+            "create(\"any\")"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o566"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "delete(\"label:vip\")"
+              ]
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "PermissionsTest::test_multiple_method_single_value",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Permissions",
+            "args": {},
+            "as": "o597"
+          },
+          "bind": "s941",
+          "expect": {
+            "$value": "Validator\\Permissions",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "unique",
+            "args": {}
+          },
+          "bind": "s942",
+          "expect": "<uniqid>"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "unique",
+            "args": {}
+          },
+          "bind": "s943",
+          "expect": "<uniqid>"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o598"
+          },
+          "bind": "s944",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o598"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o599"
+          },
+          "bind": "s946",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o599"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o600"
+          },
+          "bind": "s948",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o600"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": {
+                  "$ref": "s942",
+                  "path": ""
+                },
+                "$collection": {
+                  "$ref": "s943",
+                  "path": ""
+                },
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")"
+                ]
+              }
+            },
+            "as": "o601"
+          },
+          "bind": "s950",
+          "expect": {
+            "$document": {
+              "$id": "<uniqid>",
+              "$collection": "<uniqid>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o601"
+            },
+            "method": "getPermissions",
+            "args": {}
+          },
+          "expect": [
+            "read(\"any\")",
+            "create(\"any\")",
+            "update(\"any\")"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o597"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")"
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "users",
+            "args": {},
+            "as": "o602"
+          },
+          "bind": "s953",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o602"
+              }
+            }
+          },
+          "expect": "read(\"users\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "users",
+            "args": {},
+            "as": "o603"
+          },
+          "bind": "s955",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o603"
+              }
+            }
+          },
+          "expect": "create(\"users\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "users",
+            "args": {},
+            "as": "o604"
+          },
+          "bind": "s957",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o604"
+              }
+            }
+          },
+          "expect": "update(\"users\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o601"
+            },
+            "method": "getPermissions",
+            "args": {}
+          },
+          "expect": [
+            "read(\"any\")",
+            "create(\"any\")",
+            "update(\"any\")"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o597"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "read(\"users\")",
+                "create(\"users\")",
+                "update(\"users\")"
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "123abc"
+            }
+          },
+          "expect": "123abc"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "user",
+            "args": {
+              "identifier": "123abc"
+            },
+            "as": "o605"
+          },
+          "bind": "s962",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o605"
+              }
+            }
+          },
+          "expect": "read(\"user:123abc\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "123abc"
+            }
+          },
+          "expect": "123abc"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "user",
+            "args": {
+              "identifier": "123abc"
+            },
+            "as": "o606"
+          },
+          "bind": "s965",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o606"
+              }
+            }
+          },
+          "expect": "create(\"user:123abc\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "123abc"
+            }
+          },
+          "expect": "123abc"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "user",
+            "args": {
+              "identifier": "123abc"
+            },
+            "as": "o607"
+          },
+          "bind": "s968",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o607"
+              }
+            }
+          },
+          "expect": "update(\"user:123abc\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o601"
+            },
+            "method": "getPermissions",
+            "args": {}
+          },
+          "expect": [
+            "read(\"any\")",
+            "create(\"any\")",
+            "update(\"any\")"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o597"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "read(\"user:123abc\")",
+                "create(\"user:123abc\")",
+                "update(\"user:123abc\")"
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "123abc"
+            }
+          },
+          "expect": "123abc"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "team",
+            "args": {
+              "identifier": "123abc"
+            },
+            "as": "o608"
+          },
+          "bind": "s973",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o608"
+              }
+            }
+          },
+          "expect": "read(\"team:123abc\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "123abc"
+            }
+          },
+          "expect": "123abc"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "team",
+            "args": {
+              "identifier": "123abc"
+            },
+            "as": "o609"
+          },
+          "bind": "s976",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o609"
+              }
+            }
+          },
+          "expect": "create(\"team:123abc\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "123abc"
+            }
+          },
+          "expect": "123abc"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "team",
+            "args": {
+              "identifier": "123abc"
+            },
+            "as": "o610"
+          },
+          "bind": "s979",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o610"
+              }
+            }
+          },
+          "expect": "update(\"team:123abc\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o601"
+            },
+            "method": "getPermissions",
+            "args": {}
+          },
+          "expect": [
+            "read(\"any\")",
+            "create(\"any\")",
+            "update(\"any\")"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o597"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "read(\"team:123abc\")",
+                "create(\"team:123abc\")",
+                "update(\"team:123abc\")"
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "123abc"
+            }
+          },
+          "expect": "123abc"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "team",
+            "args": {
+              "identifier": "123abc",
+              "dimension": "viewer"
+            },
+            "as": "o611"
+          },
+          "bind": "s984",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o611"
+              }
+            }
+          },
+          "expect": "read(\"team:123abc/viewer\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "123abc"
+            }
+          },
+          "expect": "123abc"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "team",
+            "args": {
+              "identifier": "123abc",
+              "dimension": "viewer"
+            },
+            "as": "o612"
+          },
+          "bind": "s987",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o612"
+              }
+            }
+          },
+          "expect": "create(\"team:123abc/viewer\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "123abc"
+            }
+          },
+          "expect": "123abc"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "team",
+            "args": {
+              "identifier": "123abc",
+              "dimension": "viewer"
+            },
+            "as": "o613"
+          },
+          "bind": "s990",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o613"
+              }
+            }
+          },
+          "expect": "update(\"team:123abc/viewer\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o601"
+            },
+            "method": "getPermissions",
+            "args": {}
+          },
+          "expect": [
+            "read(\"any\")",
+            "create(\"any\")",
+            "update(\"any\")"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o597"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "read(\"team:123abc/viewer\")",
+                "create(\"team:123abc/viewer\")",
+                "update(\"team:123abc/viewer\")"
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "guests",
+            "args": {},
+            "as": "o614"
+          },
+          "bind": "s994",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o614"
+              }
+            }
+          },
+          "expect": "read(\"guests\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "guests",
+            "args": {},
+            "as": "o615"
+          },
+          "bind": "s996",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o615"
+              }
+            }
+          },
+          "expect": "create(\"guests\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "guests",
+            "args": {},
+            "as": "o616"
+          },
+          "bind": "s998",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o616"
+              }
+            }
+          },
+          "expect": "update(\"guests\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o601"
+            },
+            "method": "getPermissions",
+            "args": {}
+          },
+          "expect": [
+            "read(\"any\")",
+            "create(\"any\")",
+            "update(\"any\")"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o597"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "read(\"guests\")",
+                "create(\"guests\")",
+                "update(\"guests\")"
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "users",
+            "args": {
+              "status": "verified"
+            },
+            "as": "o617"
+          },
+          "bind": "s1002",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o617"
+              }
+            }
+          },
+          "expect": "read(\"users/verified\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "users",
+            "args": {
+              "status": "verified"
+            },
+            "as": "o618"
+          },
+          "bind": "s1004",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o618"
+              }
+            }
+          },
+          "expect": "create(\"users/verified\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "users",
+            "args": {
+              "status": "verified"
+            },
+            "as": "o619"
+          },
+          "bind": "s1006",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o619"
+              }
+            }
+          },
+          "expect": "update(\"users/verified\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o601"
+            },
+            "method": "getPermissions",
+            "args": {}
+          },
+          "expect": [
+            "read(\"any\")",
+            "create(\"any\")",
+            "update(\"any\")"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o597"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "read(\"users/verified\")",
+                "create(\"users/verified\")",
+                "update(\"users/verified\")"
+              ]
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "PermissionsTest::test_multiple_method_multiple_values",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Permissions",
+            "args": {},
+            "as": "o620"
+          },
+          "bind": "s1010",
+          "expect": {
+            "$value": "Validator\\Permissions",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "unique",
+            "args": {}
+          },
+          "bind": "s1011",
+          "expect": "<uniqid>"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "unique",
+            "args": {}
+          },
+          "bind": "s1012",
+          "expect": "<uniqid>"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "users",
+            "args": {},
+            "as": "o621"
+          },
+          "bind": "s1013",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o621"
+              }
+            }
+          },
+          "expect": "read(\"users\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "123abc"
+            }
+          },
+          "expect": "123abc"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "user",
+            "args": {
+              "identifier": "123abc"
+            },
+            "as": "o622"
+          },
+          "bind": "s1016",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o622"
+              }
+            }
+          },
+          "expect": "create(\"user:123abc\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "123abc"
+            }
+          },
+          "expect": "123abc"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "team",
+            "args": {
+              "identifier": "123abc"
+            },
+            "as": "o623"
+          },
+          "bind": "s1019",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o623"
+              }
+            }
+          },
+          "expect": "create(\"team:123abc\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "123abc"
+            }
+          },
+          "expect": "123abc"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "user",
+            "args": {
+              "identifier": "123abc"
+            },
+            "as": "o624"
+          },
+          "bind": "s1022",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o624"
+              }
+            }
+          },
+          "expect": "update(\"user:123abc\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "123abc"
+            }
+          },
+          "expect": "123abc"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "team",
+            "args": {
+              "identifier": "123abc"
+            },
+            "as": "o625"
+          },
+          "bind": "s1025",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o625"
+              }
+            }
+          },
+          "expect": "update(\"team:123abc\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "123abc"
+            }
+          },
+          "expect": "123abc"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "user",
+            "args": {
+              "identifier": "123abc"
+            },
+            "as": "o626"
+          },
+          "bind": "s1028",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "delete",
+            "args": {
+              "role": {
+                "$obj": "o626"
+              }
+            }
+          },
+          "expect": "delete(\"user:123abc\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": {
+                  "$ref": "s1011",
+                  "path": ""
+                },
+                "$collection": {
+                  "$ref": "s1012",
+                  "path": ""
+                },
+                "$permissions": [
+                  "read(\"users\")",
+                  "create(\"user:123abc\")",
+                  "create(\"team:123abc\")",
+                  "update(\"user:123abc\")",
+                  "update(\"team:123abc\")",
+                  "delete(\"user:123abc\")"
+                ]
+              }
+            },
+            "as": "o627"
+          },
+          "bind": "s1030",
+          "expect": {
+            "$document": {
+              "$id": "<uniqid>",
+              "$collection": "<uniqid>",
+              "$permissions": [
+                "read(\"users\")",
+                "create(\"user:123abc\")",
+                "create(\"team:123abc\")",
+                "update(\"user:123abc\")",
+                "update(\"team:123abc\")",
+                "delete(\"user:123abc\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o627"
+            },
+            "method": "getPermissions",
+            "args": {}
+          },
+          "expect": [
+            "read(\"users\")",
+            "create(\"user:123abc\")",
+            "create(\"team:123abc\")",
+            "update(\"user:123abc\")",
+            "update(\"team:123abc\")",
+            "delete(\"user:123abc\")"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o620"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "read(\"users\")",
+                "create(\"user:123abc\")",
+                "create(\"team:123abc\")",
+                "update(\"user:123abc\")",
+                "update(\"team:123abc\")",
+                "delete(\"user:123abc\")"
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "123abc"
+            }
+          },
+          "expect": "123abc"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "user",
+            "args": {
+              "identifier": "123abc"
+            },
+            "as": "o628"
+          },
+          "bind": "s1034",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o628"
+              }
+            }
+          },
+          "expect": "read(\"user:123abc\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "123abc"
+            }
+          },
+          "expect": "123abc"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "team",
+            "args": {
+              "identifier": "123abc"
+            },
+            "as": "o629"
+          },
+          "bind": "s1037",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o629"
+              }
+            }
+          },
+          "expect": "read(\"team:123abc\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "123abc"
+            }
+          },
+          "expect": "123abc"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "user",
+            "args": {
+              "identifier": "123abc"
+            },
+            "as": "o630"
+          },
+          "bind": "s1040",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o630"
+              }
+            }
+          },
+          "expect": "create(\"user:123abc\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "123abc"
+            }
+          },
+          "expect": "123abc"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "team",
+            "args": {
+              "identifier": "123abc"
+            },
+            "as": "o631"
+          },
+          "bind": "s1043",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o631"
+              }
+            }
+          },
+          "expect": "create(\"team:123abc\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "123abc"
+            }
+          },
+          "expect": "123abc"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "user",
+            "args": {
+              "identifier": "123abc"
+            },
+            "as": "o632"
+          },
+          "bind": "s1046",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o632"
+              }
+            }
+          },
+          "expect": "update(\"user:123abc\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "123abc"
+            }
+          },
+          "expect": "123abc"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "team",
+            "args": {
+              "identifier": "123abc"
+            },
+            "as": "o633"
+          },
+          "bind": "s1049",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o633"
+              }
+            }
+          },
+          "expect": "update(\"team:123abc\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "123abc"
+            }
+          },
+          "expect": "123abc"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "user",
+            "args": {
+              "identifier": "123abc"
+            },
+            "as": "o634"
+          },
+          "bind": "s1052",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "delete",
+            "args": {
+              "role": {
+                "$obj": "o634"
+              }
+            }
+          },
+          "expect": "delete(\"user:123abc\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o627"
+            },
+            "method": "getPermissions",
+            "args": {}
+          },
+          "expect": [
+            "read(\"users\")",
+            "create(\"user:123abc\")",
+            "create(\"team:123abc\")",
+            "update(\"user:123abc\")",
+            "update(\"team:123abc\")",
+            "delete(\"user:123abc\")"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o620"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "read(\"user:123abc\")",
+                "read(\"team:123abc\")",
+                "create(\"user:123abc\")",
+                "create(\"team:123abc\")",
+                "update(\"user:123abc\")",
+                "update(\"team:123abc\")",
+                "delete(\"user:123abc\")"
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o635"
+          },
+          "bind": "s1056",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o635"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "guests",
+            "args": {},
+            "as": "o636"
+          },
+          "bind": "s1058",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o636"
+              }
+            }
+          },
+          "expect": "create(\"guests\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "123abc"
+            }
+          },
+          "expect": "123abc"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "team",
+            "args": {
+              "identifier": "123abc",
+              "dimension": "edit"
+            },
+            "as": "o637"
+          },
+          "bind": "s1061",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o637"
+              }
+            }
+          },
+          "expect": "update(\"team:123abc/edit\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "123abc"
+            }
+          },
+          "expect": "123abc"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "team",
+            "args": {
+              "identifier": "123abc",
+              "dimension": "edit"
+            },
+            "as": "o638"
+          },
+          "bind": "s1064",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "delete",
+            "args": {
+              "role": {
+                "$obj": "o638"
+              }
+            }
+          },
+          "expect": "delete(\"team:123abc/edit\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o627"
+            },
+            "method": "getPermissions",
+            "args": {}
+          },
+          "expect": [
+            "read(\"users\")",
+            "create(\"user:123abc\")",
+            "create(\"team:123abc\")",
+            "update(\"user:123abc\")",
+            "update(\"team:123abc\")",
+            "delete(\"user:123abc\")"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o620"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "read(\"any\")",
+                "create(\"guests\")",
+                "update(\"team:123abc/edit\")",
+                "delete(\"team:123abc/edit\")"
+              ]
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "PermissionsTest::test_invalid_permissions",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Permissions",
+            "args": {},
+            "as": "o639"
+          },
+          "bind": "s1068",
+          "expect": {
+            "$value": "Validator\\Permissions",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o640"
+          },
+          "bind": "s1069",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o640"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "isValid",
+            "args": {
+              "value": "create(\"any\")"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Permissions must be an array of strings."
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "isValid",
+            "args": {
+              "value": false
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Permissions must be an array of strings."
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "isValid",
+            "args": {
+              "value": 1.5
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Permissions must be an array of strings."
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                0,
+                1.5
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Every permission must be of type string."
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                false,
+                []
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Every permission must be of type string."
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                [
+                  "a"
+                ]
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Every permission must be of type string."
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "*"
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Wildcard permission \"*\" has been replaced. Use \"any\" instead."
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "read(\"role:all\")"
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Permissions using the \"role:\" prefix have been replaced. Use \"users\", \"guests\", or \"any\" instead."
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "create(\"role:guest\")"
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Permissions using the \"role:\" prefix have been replaced. Use \"users\", \"guests\", or \"any\" instead."
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "update(\"role:member\")"
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Permissions using the \"role:\" prefix have been replaced. Use \"users\", \"guests\", or \"any\" instead."
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "user1234"
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Permission \"user1234\" is not allowed. Must be one of: create, read, update, delete, write."
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "user::1234"
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Permission \"user::1234\" is not allowed. Must be one of: create, read, update, delete, write."
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "user:123:4"
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Permission \"user:123:4\" is not allowed. Must be one of: create, read, update, delete, write."
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "read(\"member:\")"
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Role \"member\" must have an ID value."
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "read(\"user:\")"
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Role \"user\" must have an ID value."
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "read(\"team:\")"
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Role \"team\" must have an ID value."
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "read(\"anyy\")"
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Role \"anyy\" is not allowed. Must be one of: any, guests, users, user, team, member, label."
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "read(\"gguest\")"
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Role \"gguest\" is not allowed. Must be one of: any, guests, users, user, team, member, label."
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "read(\"memer:123abc\")"
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Role \"memer\" is not allowed. Must be one of: any, guests, users, user, team, member, label."
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "user",
+            "args": {
+              "identifier": "_1234"
+            },
+            "as": "o641"
+          },
+          "bind": "s1109",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o641"
+              }
+            }
+          },
+          "expect": "read(\"user:_1234\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "read(\"user:_1234\")"
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Role \"user\" identifier value is invalid: Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "team",
+            "args": {
+              "identifier": "-1234"
+            },
+            "as": "o642"
+          },
+          "bind": "s1113",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o642"
+              }
+            }
+          },
+          "expect": "read(\"team:-1234\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "read(\"team:-1234\")"
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Role \"team\" identifier value is invalid: Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "member",
+            "args": {
+              "identifier": ".1234"
+            },
+            "as": "o643"
+          },
+          "bind": "s1117",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o643"
+              }
+            }
+          },
+          "expect": "read(\"member:.1234\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "read(\"member:.1234\")"
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Role \"member\" identifier value is invalid: Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "user",
+            "args": {
+              "identifier": "12$4"
+            },
+            "as": "o644"
+          },
+          "bind": "s1121",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o644"
+              }
+            }
+          },
+          "expect": "read(\"user:12$4\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "read(\"user:12$4\")"
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Role \"user\" identifier value is invalid: Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "user",
+            "args": {
+              "identifier": "12&4"
+            },
+            "as": "o645"
+          },
+          "bind": "s1125",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o645"
+              }
+            }
+          },
+          "expect": "read(\"user:12&4\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "read(\"user:12&4\")"
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Role \"user\" identifier value is invalid: Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "user",
+            "args": {
+              "identifier": "ab(124"
+            },
+            "as": "o646"
+          },
+          "bind": "s1129",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o646"
+              }
+            }
+          },
+          "expect": "read(\"user:ab(124\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "read(\"user:ab(124\")"
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Role \"user\" identifier value is invalid: Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            }
+          },
+          "expect": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "user",
+            "args": {
+              "identifier": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "as": "o647"
+          },
+          "bind": "s1134",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o647"
+              }
+            }
+          },
+          "expect": "read(\"user:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "read(\"user:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\")"
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            }
+          },
+          "expect": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "user",
+            "args": {
+              "identifier": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "as": "o648"
+          },
+          "bind": "s1138",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o648"
+              }
+            }
+          },
+          "expect": "read(\"user:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "read(\"user:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\")"
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Role \"user\" identifier value is invalid: Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "update(\"memmber:1234\")"
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Role \"memmber\" is not allowed. Must be one of: any, guests, users, user, team, member, label."
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "update(\"tteam:1234\")"
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Role \"tteam\" is not allowed. Must be one of: any, guests, users, user, team, member, label."
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "update(\"userr:1234\")"
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Role \"userr\" is not allowed. Must be one of: any, guests, users, user, team, member, label."
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "_abcd"
+            }
+          },
+          "expect": "_abcd"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "team",
+            "args": {
+              "identifier": "_abcd"
+            },
+            "as": "o649"
+          },
+          "bind": "s1149",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o649"
+              }
+            }
+          },
+          "expect": "read(\"team:_abcd\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "read(\"team:_abcd\")"
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Role \"team\" identifier value is invalid: Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "abcd/"
+            }
+          },
+          "expect": "abcd/"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "team",
+            "args": {
+              "identifier": "abcd/"
+            },
+            "as": "o650"
+          },
+          "bind": "s1154",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o650"
+              }
+            }
+          },
+          "expect": "read(\"team:abcd/\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "read(\"team:abcd/\")"
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Dimension must not be empty"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": ""
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "team",
+            "args": {
+              "identifier": "",
+              "dimension": "abcd"
+            },
+            "as": "o651"
+          },
+          "bind": "s1159",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o651"
+              }
+            }
+          },
+          "expect": "read(\"team/abcd\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "read(\"team/abcd\")"
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Role \"team\" must have an ID value."
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "abcd"
+            }
+          },
+          "expect": "abcd"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "team",
+            "args": {
+              "identifier": "abcd",
+              "dimension": "/efgh"
+            },
+            "as": "o652"
+          },
+          "bind": "s1164",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o652"
+              }
+            }
+          },
+          "expect": "read(\"team:abcd//efgh\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "read(\"team:abcd//efgh\")"
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Only one dimension can be provided"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "abcd"
+            }
+          },
+          "expect": "abcd"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "team",
+            "args": {
+              "identifier": "abcd",
+              "dimension": "e/fgh"
+            },
+            "as": "o653"
+          },
+          "bind": "s1169",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o653"
+              }
+            }
+          },
+          "expect": "read(\"team:abcd/e/fgh\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "read(\"team:abcd/e/fgh\")"
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Only one dimension can be provided"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "ab&cd3"
+            }
+          },
+          "expect": "ab&cd3"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "team",
+            "args": {
+              "identifier": "ab&cd3",
+              "dimension": "efgh"
+            },
+            "as": "o654"
+          },
+          "bind": "s1174",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o654"
+              }
+            }
+          },
+          "expect": "read(\"team:ab&cd3/efgh\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "read(\"team:ab&cd3/efgh\")"
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Role \"team\" identifier value is invalid: Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            }
+          },
+          "expect": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "team",
+            "args": {
+              "identifier": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "dimension": "efgh"
+            },
+            "as": "o655"
+          },
+          "bind": "s1179",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o655"
+              }
+            }
+          },
+          "expect": "read(\"team:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/efgh\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "read(\"team:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/efgh\")"
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Role \"team\" identifier value is invalid: Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "abcd"
+            }
+          },
+          "expect": "abcd"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "team",
+            "args": {
+              "identifier": "abcd",
+              "dimension": "ef*gh"
+            },
+            "as": "o656"
+          },
+          "bind": "s1184",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o656"
+              }
+            }
+          },
+          "expect": "read(\"team:abcd/ef*gh\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "read(\"team:abcd/ef*gh\")"
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Role \"team\" dimension value is invalid: Parameter must contain at most 81 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "custom",
+            "args": {
+              "id": "abcd"
+            }
+          },
+          "expect": "abcd"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "team",
+            "args": {
+              "identifier": "abcd",
+              "dimension": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "as": "o657"
+          },
+          "bind": "s1189",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o657"
+              }
+            }
+          },
+          "expect": "read(\"team:abcd/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "read(\"team:abcd/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\")"
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o639"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Role \"team\" dimension value is invalid: Parameter must contain at most 81 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Permissions",
+            "args": {
+              "length": 100
+            },
+            "as": "o658"
+          },
+          "bind": "s1193",
+          "expect": {
+            "$value": "Validator\\Permissions",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o659"
+          },
+          "bind": "s1194",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o659"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o658"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")"
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o660"
+          },
+          "bind": "s1197",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o660"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o658"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")",
+                "read(\"any\")"
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o658"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "You can only provide up to 100 permissions."
+        }
+      ]
+    },
+    {
+      "name": "PermissionsTest::test_duplicate_methods",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Permissions",
+            "args": {},
+            "as": "o661"
+          },
+          "bind": "s1201",
+          "expect": {
+            "$value": "Validator\\Permissions",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Id",
+            "method": "unique",
+            "args": {}
+          },
+          "bind": "s1202",
+          "expect": "<uniqid>"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o662"
+          },
+          "bind": "s1203",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o662"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "user",
+            "args": {
+              "identifier": {
+                "$ref": "s1202",
+                "path": ""
+              }
+            },
+            "as": "o663"
+          },
+          "bind": "s1205",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o663"
+              }
+            }
+          },
+          "expect": "read(\"user:<uniqid>\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "user",
+            "args": {
+              "identifier": {
+                "$ref": "s1202",
+                "path": ""
+              }
+            },
+            "as": "o664"
+          },
+          "bind": "s1207",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o664"
+              }
+            }
+          },
+          "expect": "read(\"user:<uniqid>\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "user",
+            "args": {
+              "identifier": {
+                "$ref": "s1202",
+                "path": ""
+              }
+            },
+            "as": "o665"
+          },
+          "bind": "s1209",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "write",
+            "args": {
+              "role": {
+                "$obj": "o665"
+              }
+            }
+          },
+          "expect": "write(\"user:<uniqid>\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "user",
+            "args": {
+              "identifier": {
+                "$ref": "s1202",
+                "path": ""
+              }
+            },
+            "as": "o666"
+          },
+          "bind": "s1211",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o666"
+              }
+            }
+          },
+          "expect": "update(\"user:<uniqid>\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "user",
+            "args": {
+              "identifier": {
+                "$ref": "s1202",
+                "path": ""
+              }
+            },
+            "as": "o667"
+          },
+          "bind": "s1213",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "delete",
+            "args": {
+              "role": {
+                "$obj": "o667"
+              }
+            }
+          },
+          "expect": "delete(\"user:<uniqid>\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "name": "x"
+              }
+            },
+            "as": "o668"
+          },
+          "bind": "s1215",
+          "expect": {
+            "$document": {
+              "name": "x"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "name": "y"
+              }
+            },
+            "as": "o669"
+          },
+          "bind": "s1216",
+          "expect": {
+            "$document": {
+              "name": "y"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "name": "z"
+              }
+            },
+            "as": "o670"
+          },
+          "bind": "s1217",
+          "expect": {
+            "$document": {
+              "name": "z"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "u000000000001",
+                "$collection": "u000000000002",
+                "$permissions": [
+                  "read(\"any\")",
+                  "read(\"user:6ad074bf6b9d415e78a2\")",
+                  "read(\"user:6ad074bf6b9d415e78a2\")",
+                  "write(\"user:6ad074bf6b9d415e78a2\")",
+                  "update(\"user:6ad074bf6b9d415e78a2\")",
+                  "delete(\"user:6ad074bf6b9d415e78a2\")"
+                ],
+                "title": "This is a test.",
+                "list": [
+                  "one"
+                ],
+                "children": [
+                  {
+                    "$obj": "o668"
+                  },
+                  {
+                    "$obj": "o669"
+                  },
+                  {
+                    "$obj": "o670"
+                  }
+                ]
+              }
+            },
+            "as": "o671"
+          },
+          "bind": "s1218",
+          "expect": {
+            "$document": {
+              "$id": "u000000000001",
+              "$collection": "u000000000002",
+              "$permissions": [
+                "read(\"any\")",
+                "read(\"user:<uniqid>\")",
+                "write(\"user:<uniqid>\")",
+                "update(\"user:<uniqid>\")",
+                "delete(\"user:<uniqid>\")"
+              ],
+              "title": "This is a test.",
+              "list": [
+                "one"
+              ],
+              "children": [
+                {
+                  "$document": {
+                    "name": "x"
+                  }
+                },
+                {
+                  "$document": {
+                    "name": "y"
+                  }
+                },
+                {
+                  "$document": {
+                    "name": "z"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o671"
+            },
+            "method": "getPermissions",
+            "args": {}
+          },
+          "expect": [
+            "read(\"any\")",
+            "read(\"user:<uniqid>\")",
+            "write(\"user:<uniqid>\")",
+            "update(\"user:<uniqid>\")",
+            "delete(\"user:<uniqid>\")"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o661"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "read(\"any\")",
+                "read(\"user:6ad074bf6b9d415e78a2\")",
+                "write(\"user:6ad074bf6b9d415e78a2\")",
+                "update(\"user:6ad074bf6b9d415e78a2\")",
+                "delete(\"user:6ad074bf6b9d415e78a2\")"
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o671"
+            },
+            "method": "getPermissions",
+            "args": {}
+          },
+          "expect": [
+            "read(\"any\")",
+            "read(\"user:<uniqid>\")",
+            "write(\"user:<uniqid>\")",
+            "update(\"user:<uniqid>\")",
+            "delete(\"user:<uniqid>\")"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "PermissionsTest::test_custom_type_rejected_as_in_7_4",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Permissions",
+            "args": {},
+            "as": "o672"
+          },
+          "bind": "s1222",
+          "expect": {
+            "$value": "Validator\\Permissions",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o672"
+            },
+            "method": "isValid",
+            "args": {
+              "value": [
+                "execute(\"any\")"
+              ]
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o672"
+            },
+            "method": "getDescription",
+            "args": {}
+          },
+          "expect": "Permission \"execute(\"any\")\" is not allowed. Must be one of: create, read, update, delete, write."
+        }
+      ]
+    }
+  ]
+}

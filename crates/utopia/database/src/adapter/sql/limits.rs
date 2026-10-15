@@ -531,6 +531,28 @@ const MYSQL: Capabilities = Capabilities::of(&[
     Capability::IndexArrayCast,
 ]);
 
+/// SQLite's capabilities with `emulateMySQL`: `AttributeResizing` stays in
+/// its place among SQL's.
+const SQLITE_EMULATED: Capabilities = Capabilities::of(&[
+    Capability::IndexKey,
+    Capability::IndexArray,
+    Capability::IndexUnique,
+    Capability::Caching,
+    Capability::IndexFulltext,
+    Capability::IndexFulltextMultiple,
+    Capability::TransactionRetries,
+    Capability::TransactionNested,
+    Capability::Operators,
+    Capability::OrderRandom,
+    Capability::IndexIdentical,
+    Capability::AttributeResizing,
+    Capability::DefinedAttributes,
+    Capability::Joins,
+    Capability::Aggregations,
+    Capability::IntegerBooleans,
+    Capability::SchemaIntrospection,
+]);
+
 /// SQLite's capabilities (`SQLite::capabilities()`, without `emulateMySQL`).
 const SQLITE: Capabilities = Capabilities::of(&[
     Capability::IndexKey,
@@ -558,7 +580,7 @@ impl Sql {
             Engine::Postgres => POSTGRES,
             Engine::MariaDb => MARIADB,
             Engine::MySql => MYSQL,
-            Engine::Sqlite if self.engine_state().emulate_mysql => SQLITE.with(Capability::AttributeResizing),
+            Engine::Sqlite if self.engine_state().emulate_mysql => SQLITE_EMULATED,
             Engine::Sqlite => SQLITE,
         }
     }

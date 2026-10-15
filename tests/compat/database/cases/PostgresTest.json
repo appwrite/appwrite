@@ -4,6 +4,158 @@
   ],
   "cases": [
     {
+      "name": "PostgresTest::testCreateCollectionWithMongoSequenceShapedId",
+      "state": [
+        "postgres@database-postgres"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {},
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.get_namespace",
+          "args": {},
+          "expect": "compat"
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "database_507f1f77bcf86cd799439012_collection_507f1f77bcf86cd799439013",
+                "name": "database_507f1f77bcf86cd799439012_collection_507f1f77bcf86cd799439013",
+                "attributes": [
+                  {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 128,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "database_507f1f77bcf86cd799439012_collection_507f1f77bcf86cd799439013",
+              "name": "database_507f1f77bcf86cd799439012_collection_507f1f77bcf86cd799439013",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 128,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "database_507f1f77bcf86cd799439012_collection_507f1f77bcf86cd799439013",
+            "document": {
+              "$document": {
+                "$id": "vector-doc",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "name": "embeddings"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "vector-doc",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "name": "embeddings",
+              "$collection": "database_507f1f77bcf86cd799439012_collection_507f1f77bcf86cd799439013",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "database_507f1f77bcf86cd799439012_collection_507f1f77bcf86cd799439013",
+            "id": "vector-doc"
+          },
+          "expect": {
+            "$document": {
+              "name": "embeddings",
+              "$sequence": "1",
+              "$id": "vector-doc",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "database_507f1f77bcf86cd799439012_collection_507f1f77bcf86cd799439013"
+            }
+          }
+        },
+        {
+          "op": "database.collection_exists",
+          "args": {
+            "collection": "database_507f1f77bcf86cd799439012_collection_507f1f77bcf86cd799439013"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "database_507f1f77bcf86cd799439012_collection_507f1f77bcf86cd799439013"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
       "name": "PostgresTest::testReadDoesNotTouchThePermissionsTable",
       "state": [
         "postgres@database-postgres"
@@ -20,38 +172,67 @@
         {
           "op": "database.create_collection",
           "args": {
-            "id": "permsPlan",
-            "permissions": [
-              "create(\"any\")"
-            ]
+            "collection": {
+              "$document": {
+                "$id": "permsPlan",
+                "name": "permsPlan",
+                "attributes": [
+                  {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "create(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
           },
           "expect": {
             "$document": {
               "$id": "permsPlan",
+              "name": "permsPlan",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "title",
+                    "key": "title",
+                    "type": "string",
+                    "size": 64,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
               "$permissions": [
                 "create(\"any\")"
               ],
-              "name": "permsPlan",
-              "attributes": [],
-              "indexes": [],
-              "documentSecurity": true,
               "$collection": "_metadata",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "1"
-            }
+            },
+            "$class": "Collection"
           }
-        },
-        {
-          "op": "database.create_attribute",
-          "args": {
-            "collection": "permsPlan",
-            "id": "title",
-            "type": "string",
-            "size": 64,
-            "required": true
-          },
-          "expect": true
         },
         {
           "op": "database.create_document",
@@ -136,9 +317,9 @@
         {
           "op": "database.delete_collection",
           "args": {
-            "id": "permsPlan"
+            "collection": "permsPlan"
           },
-          "expect": true
+          "expect": null
         }
       ]
     },
@@ -159,53 +340,97 @@
         {
           "op": "database.create_collection",
           "args": {
-            "id": "vectorPlan",
-            "permissions": [
-              "read(\"any\")",
-              "create(\"any\")"
-            ],
-            "documentSecurity": false
+            "collection": {
+              "$document": {
+                "$id": "vectorPlan",
+                "name": "vectorPlan",
+                "attributes": [
+                  {
+                    "$id": "embedding",
+                    "key": "embedding",
+                    "type": "vector",
+                    "size": 3,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "vector"
+                    ]
+                  }
+                ],
+                "indexes": [
+                  {
+                    "$id": "idx_cosine",
+                    "key": "idx_cosine",
+                    "type": "hnsw_cosine",
+                    "attributes": [
+                      "embedding"
+                    ],
+                    "lengths": [],
+                    "orders": []
+                  }
+                ],
+                "documentSecurity": false,
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
           },
           "expect": {
             "$document": {
               "$id": "vectorPlan",
+              "name": "vectorPlan",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "embedding",
+                    "key": "embedding",
+                    "type": "vector",
+                    "size": 3,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": [
+                      "vector"
+                    ]
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "$document": {
+                    "$id": "idx_cosine",
+                    "key": "idx_cosine",
+                    "type": "hnsw_cosine",
+                    "attributes": [
+                      "embedding"
+                    ],
+                    "lengths": [],
+                    "orders": []
+                  }
+                }
+              ],
+              "documentSecurity": false,
               "$permissions": [
                 "read(\"any\")",
                 "create(\"any\")"
               ],
-              "name": "vectorPlan",
-              "attributes": [],
-              "indexes": [],
-              "documentSecurity": false,
               "$collection": "_metadata",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "1"
-            }
+            },
+            "$class": "Collection"
           }
-        },
-        {
-          "op": "database.create_attribute",
-          "args": {
-            "collection": "vectorPlan",
-            "id": "embedding",
-            "type": "vector",
-            "size": 3,
-            "required": true
-          },
-          "expect": true
-        },
-        {
-          "op": "database.create_index",
-          "args": {
-            "collection": "vectorPlan",
-            "id": "idx_cosine",
-            "type": "hnsw_cosine",
-            "attributes": [
-              "embedding"
-            ]
-          },
-          "expect": true
         },
         {
           "op": "database.create_document",
@@ -2011,7 +2236,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": "<masked>",
+                "$distance": 0.0002081889712793883,
                 "$collection": "vectorPlan"
               }
             },
@@ -2029,7 +2254,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": "<masked>",
+                "$distance": 0.0008669553294843313,
                 "$collection": "vectorPlan"
               }
             },
@@ -2047,7 +2272,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": "<masked>",
+                "$distance": 0.0020309184875728636,
                 "$collection": "vectorPlan"
               }
             },
@@ -2065,7 +2290,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": "<masked>",
+                "$distance": 0.0037594005278706044,
                 "$collection": "vectorPlan"
               }
             },
@@ -2083,7 +2308,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": "<masked>",
+                "$distance": 0.006116251198662548,
                 "$collection": "vectorPlan"
               }
             },
@@ -2101,7 +2326,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": "<masked>",
+                "$distance": 0.00916983804337701,
                 "$collection": "vectorPlan"
               }
             },
@@ -2119,7 +2344,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": "<masked>",
+                "$distance": 0.012992698649738288,
                 "$collection": "vectorPlan"
               }
             },
@@ -2137,7 +2362,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": "<masked>",
+                "$distance": 0.017661450666614398,
                 "$collection": "vectorPlan"
               }
             },
@@ -2155,7 +2380,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": "<masked>",
+                "$distance": 0.02325567208829038,
                 "$collection": "vectorPlan"
               }
             },
@@ -2173,24 +2398,18 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": "<masked>",
+                "$distance": 0.02985753301900307,
                 "$collection": "vectorPlan"
               }
             }
-          ],
-          "mask": {
-            "paths": [
-              "/*/$document/$distance"
-            ],
-            "reason": "pgvector computes $distance, and its float arithmetic differs in the last digits between CPUs (SIMD); both runtimes read the same value, and the result order and documents are still compared"
-          }
+          ]
         },
         {
           "op": "database.delete_collection",
           "args": {
-            "id": "vectorPlan"
+            "collection": "vectorPlan"
           },
-          "expect": true
+          "expect": null
         }
       ]
     }

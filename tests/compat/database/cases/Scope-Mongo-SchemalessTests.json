@@ -21,50 +21,41 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:alice0"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.authorization.add_role",
           "args": {
             "role": "any"
           },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user1"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user2"
-          },
-          "expect": null
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
           },
           "expect": true
         },
@@ -90,105 +81,22 @@
           "expect": null
         },
         {
-          "op": "db.adapter",
-          "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
-          },
-          "expect": true
-        }
-      ]
-    },
-    {
-      "name": "SchemalessTests::testSchemalessDocumentInvalidInteralAttributeValidation",
-      "state": [
-        "mongo@database-mongo"
-      ],
-      "steps": [
-        {
-          "op": "db.open",
-          "args": {
-            "engine": "mongo"
-          },
-          "bind": "db",
-          "expect": {
-            "$handle": "*"
-          }
-        },
-        {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "any"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user1"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user2"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "priceRange"
-          },
-          "expect": true
-        },
-        {
           "op": "database.add_filter",
           "args": {
-            "name": "encrypt"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "subQueryProbe"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "operator_double_decode"
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
           },
           "expect": null
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         }
@@ -211,50 +119,41 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:alice0"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.authorization.add_role",
           "args": {
             "role": "any"
           },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user1"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user2"
-          },
-          "expect": null
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
           },
           "expect": true
         },
@@ -280,10 +179,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         }
@@ -306,50 +217,41 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:alice0"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.authorization.add_role",
           "args": {
             "role": "any"
           },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user1"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user2"
-          },
-          "expect": null
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
           },
           "expect": true
         },
@@ -375,10 +277,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         }
@@ -401,50 +315,41 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:alice0"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.authorization.add_role",
           "args": {
             "role": "any"
           },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user1"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user2"
-          },
-          "expect": null
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
           },
           "expect": true
         },
@@ -470,10 +375,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         }
@@ -496,50 +413,41 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:alice0"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.authorization.add_role",
           "args": {
             "role": "any"
           },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user1"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user2"
-          },
-          "expect": null
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
           },
           "expect": true
         },
@@ -565,10 +473,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         }
@@ -591,50 +511,41 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:alice0"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.authorization.add_role",
           "args": {
             "role": "any"
           },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user1"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user2"
-          },
-          "expect": null
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
           },
           "expect": true
         },
@@ -660,10 +571,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         }
@@ -686,50 +609,41 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:alice0"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.authorization.add_role",
           "args": {
             "role": "any"
           },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user1"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user2"
-          },
-          "expect": null
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
           },
           "expect": true
         },
@@ -755,10 +669,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         }
@@ -781,50 +707,41 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:alice0"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.authorization.add_role",
           "args": {
             "role": "any"
           },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user1"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user2"
-          },
-          "expect": null
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
           },
           "expect": true
         },
@@ -850,10 +767,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         }
@@ -876,50 +805,41 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:alice0"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.authorization.add_role",
           "args": {
             "role": "any"
           },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user1"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user2"
-          },
-          "expect": null
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
           },
           "expect": true
         },
@@ -945,10 +865,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         }
@@ -971,50 +903,41 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:alice0"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.authorization.add_role",
           "args": {
             "role": "any"
           },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user1"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user2"
-          },
-          "expect": null
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
           },
           "expect": true
         },
@@ -1040,105 +963,22 @@
           "expect": null
         },
         {
-          "op": "db.adapter",
-          "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
-          },
-          "expect": true
-        }
-      ]
-    },
-    {
-      "name": "SchemalessTests::testSchemalessIndexDuplicatePrevention",
-      "state": [
-        "mongo@database-mongo"
-      ],
-      "steps": [
-        {
-          "op": "db.open",
-          "args": {
-            "engine": "mongo"
-          },
-          "bind": "db",
-          "expect": {
-            "$handle": "*"
-          }
-        },
-        {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "any"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user1"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user2"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.add_format",
-          "args": {
-            "name": "priceRange"
-          },
-          "expect": true
-        },
-        {
           "op": "database.add_filter",
           "args": {
-            "name": "encrypt"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "subQueryProbe"
-          },
-          "expect": null
-        },
-        {
-          "op": "database.add_filter",
-          "args": {
-            "name": "operator_double_decode"
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
           },
           "expect": null
         },
         {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         }
@@ -1161,50 +1001,41 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:alice0"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.authorization.add_role",
           "args": {
             "role": "any"
           },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user1"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user2"
-          },
-          "expect": null
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
           },
           "expect": true
         },
@@ -1230,10 +1061,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         }
@@ -1256,50 +1099,41 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:alice0"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.authorization.add_role",
           "args": {
             "role": "any"
           },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user1"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user2"
-          },
-          "expect": null
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
           },
           "expect": true
         },
@@ -1325,10 +1159,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         }
@@ -1351,50 +1197,41 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:alice0"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.authorization.add_role",
           "args": {
             "role": "any"
           },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user1"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user2"
-          },
-          "expect": null
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
           },
           "expect": true
         },
@@ -1420,10 +1257,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         }
@@ -1446,50 +1295,41 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:alice0"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.authorization.add_role",
           "args": {
             "role": "any"
           },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user1"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user2"
-          },
-          "expect": null
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
           },
           "expect": true
         },
@@ -1515,10 +1355,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         }
@@ -1541,50 +1393,41 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:alice0"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.authorization.add_role",
           "args": {
             "role": "any"
           },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user1"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user2"
-          },
-          "expect": null
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
           },
           "expect": true
         },
@@ -1610,10 +1453,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         }
@@ -1636,50 +1491,41 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:alice0"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.authorization.add_role",
           "args": {
             "role": "any"
           },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user1"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user2"
-          },
-          "expect": null
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
           },
           "expect": true
         },
@@ -1705,10 +1551,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         }
@@ -1731,50 +1589,41 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:alice0"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.authorization.add_role",
           "args": {
             "role": "any"
           },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user1"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user2"
-          },
-          "expect": null
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
           },
           "expect": true
         },
@@ -1800,10 +1649,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         }
@@ -1826,50 +1687,41 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:alice0"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.authorization.add_role",
           "args": {
             "role": "any"
           },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user1"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user2"
-          },
-          "expect": null
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
           },
           "expect": true
         },
@@ -1895,10 +1747,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         }
@@ -1921,50 +1785,41 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:alice0"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.authorization.add_role",
           "args": {
             "role": "any"
           },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user1"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user2"
-          },
-          "expect": null
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
           },
           "expect": true
         },
@@ -1990,10 +1845,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         }
@@ -2016,50 +1883,41 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:alice0"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.authorization.add_role",
           "args": {
             "role": "any"
           },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user1"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user2"
-          },
-          "expect": null
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
           },
           "expect": true
         },
@@ -2085,10 +1943,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         }
@@ -2111,50 +1981,41 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:alice0"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.authorization.add_role",
           "args": {
             "role": "any"
           },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user1"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user2"
-          },
-          "expect": null
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
           },
           "expect": true
         },
@@ -2180,10 +2041,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         }
@@ -2206,50 +2079,41 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:alice0"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.authorization.add_role",
           "args": {
             "role": "any"
           },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user1"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user2"
-          },
-          "expect": null
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
           },
           "expect": true
         },
@@ -2275,10 +2139,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         }
@@ -2301,50 +2177,41 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:alice0"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.authorization.add_role",
           "args": {
             "role": "any"
           },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user1"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user2"
-          },
-          "expect": null
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
           },
           "expect": true
         },
@@ -2370,10 +2237,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         }
@@ -2396,50 +2275,41 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:alice0"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.authorization.add_role",
           "args": {
             "role": "any"
           },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user1"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user2"
-          },
-          "expect": null
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
           },
           "expect": true
         },
@@ -2465,10 +2335,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         }
@@ -2491,50 +2373,41 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:alice0"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.authorization.add_role",
           "args": {
             "role": "any"
           },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user1"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user2"
-          },
-          "expect": null
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
           },
           "expect": true
         },
@@ -2560,10 +2433,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         }
@@ -2586,50 +2471,41 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:alice0"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.authorization.add_role",
           "args": {
             "role": "any"
           },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user1"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user2"
-          },
-          "expect": null
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
           },
           "expect": true
         },
@@ -2655,10 +2531,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         }
@@ -2681,50 +2569,41 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:alice0"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.authorization.add_role",
           "args": {
             "role": "any"
           },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user1"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user2"
-          },
-          "expect": null
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
           },
           "expect": true
         },
@@ -2750,10 +2629,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         }
@@ -2776,50 +2667,41 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:alice0"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.authorization.add_role",
           "args": {
             "role": "any"
           },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user1"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user2"
-          },
-          "expect": null
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
           },
           "expect": true
         },
@@ -2845,10 +2727,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         }
@@ -2871,50 +2765,41 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:alice0"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.authorization.add_role",
           "args": {
             "role": "any"
           },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user1"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user2"
-          },
-          "expect": null
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
           },
           "expect": true
         },
@@ -2940,10 +2825,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         }
@@ -2966,50 +2863,41 @@
           }
         },
         {
-          "op": "database.set_metadata",
-          "args": {
-            "key": "compat",
-            "value": ""
-          },
+          "op": "db.authorization.clean_roles",
+          "args": {},
           "expect": {
-            "$database": true
+            "$authorization": true
           }
         },
         {
-          "op": "database.reset_metadata",
-          "args": {},
-          "expect": null
-        },
-        {
-          "op": "db.authorization.clean_roles",
-          "args": {},
-          "expect": null
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:alice0"
+          },
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.authorization.add_role",
           "args": {
             "role": "any"
           },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user1"
-          },
-          "expect": null
-        },
-        {
-          "op": "db.authorization.add_role",
-          "args": {
-            "role": "user:user2"
-          },
-          "expect": null
+          "expect": {
+            "$authorization": true
+          }
         },
         {
           "op": "db.add_format",
           "args": {
             "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
           },
           "expect": true
         },
@@ -3035,10 +2923,22 @@
           "expect": null
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt",
+            "fixture": "encrypt_operator"
+          },
+          "expect": null
+        },
+        {
           "op": "db.adapter",
           "args": {
-            "method": "getSupportForAttributes",
-            "args": {}
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
           },
           "expect": true
         }

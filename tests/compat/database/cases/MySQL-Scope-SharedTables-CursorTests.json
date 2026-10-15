@@ -1,0 +1,2710 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/e2e/Adapter/Scopes/CursorTests.php",
+    "vendor/utopia-php/database/tests/e2e/Adapter/SharedTables/MySQLTest.php"
+  ],
+  "cases": [
+    {
+      "name": "CursorTests::testResolveCursorPagesPastADocumentTheCallerCannotRead",
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "driver": "mysql",
+            "namespace": "",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.collection_exists",
+          "args": {
+            "collection": "cursor_customers"
+          },
+          "expect": false
+        },
+        {
+          "op": "database.collection_exists",
+          "args": {
+            "collection": "cursor_orders"
+          },
+          "expect": false
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "cursor_customers",
+                "name": "cursor_customers",
+                "attributes": [
+                  {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "create(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "cursor_customers",
+              "name": "cursor_customers",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "cursor_orders",
+                "name": "cursor_orders",
+                "attributes": [
+                  {
+                    "$id": "customerId",
+                    "key": "customerId",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  },
+                  {
+                    "$id": "status",
+                    "key": "status",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  },
+                  {
+                    "$id": "amount",
+                    "key": "amount",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "create(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "cursor_orders",
+              "name": "cursor_orders",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "customerId",
+                    "key": "customerId",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "status",
+                    "key": "status",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "amount",
+                    "key": "amount",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "2"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "db.authorization.skip",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "cursor_customers",
+                    "document": {
+                      "$document": {
+                        "$id": "alice",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "name": "Alice"
+                      }
+                    }
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": {
+              "$document": {
+                "$id": "alice",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "name": "Alice",
+                "$collection": "cursor_customers",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$tenant": "999",
+                "$sequence": "1"
+              }
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "$id": "alice",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "name": "Alice",
+                        "$collection": "cursor_customers",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$tenant": "999",
+                        "$sequence": "1"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "db.authorization.skip",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "cursor_customers",
+                    "document": {
+                      "$document": {
+                        "$id": "bob",
+                        "$permissions": [
+                          "read(\"user:cursor-other\")"
+                        ],
+                        "name": "Bob"
+                      }
+                    }
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": {
+              "$document": {
+                "$id": "bob",
+                "$permissions": [
+                  "read(\"user:cursor-other\")"
+                ],
+                "name": "Bob",
+                "$collection": "cursor_customers",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$tenant": "999",
+                "$sequence": "2"
+              }
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "$id": "bob",
+                        "$permissions": [
+                          "read(\"user:cursor-other\")"
+                        ],
+                        "name": "Bob",
+                        "$collection": "cursor_customers",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$tenant": "999",
+                        "$sequence": "2"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "db.authorization.skip",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "cursor_customers",
+                    "document": {
+                      "$document": {
+                        "$id": "carol",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "name": "Carol"
+                      }
+                    }
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": {
+              "$document": {
+                "$id": "carol",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "name": "Carol",
+                "$collection": "cursor_customers",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$tenant": "999",
+                "$sequence": "3"
+              }
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "$id": "carol",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "name": "Carol",
+                        "$collection": "cursor_customers",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$tenant": "999",
+                        "$sequence": "3"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.resolve_cursor",
+          "args": {
+            "collection": "cursor_customers",
+            "id": "bob",
+            "direction": {
+              "$enum": "Query\\CursorDirection::After"
+            },
+            "queries": [
+              {
+                "$query": {
+                  "method": "orderAsc",
+                  "attribute": "name",
+                  "values": []
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$document": {
+              "$id": "bob",
+              "$sequence": "2",
+              "$collection": "cursor_customers",
+              "name": "Bob"
+            }
+          }
+        },
+        {
+          "op": "database.resolve_cursor",
+          "args": {
+            "collection": "cursor_customers",
+            "id": "bob",
+            "direction": {
+              "$enum": "Query\\CursorDirection::Before"
+            },
+            "queries": [
+              {
+                "$query": {
+                  "method": "orderAsc",
+                  "attribute": "name",
+                  "values": []
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$document": {
+              "$id": "bob",
+              "$sequence": "2",
+              "$collection": "cursor_customers",
+              "name": "Bob"
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "cursor_customers",
+            "queries": [
+              {
+                "$query": {
+                  "method": "orderAsc",
+                  "attribute": "name",
+                  "values": []
+                }
+              },
+              {
+                "$query": {
+                  "method": "cursorAfter",
+                  "attribute": "",
+                  "values": [
+                    {
+                      "$document": {
+                        "$id": "bob",
+                        "$sequence": "2",
+                        "$collection": "cursor_customers",
+                        "name": "Bob"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "Carol",
+                "$id": "carol",
+                "$sequence": "3",
+                "$tenant": "999",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "cursor_customers"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "cursor_customers",
+            "queries": [
+              {
+                "$query": {
+                  "method": "orderAsc",
+                  "attribute": "name",
+                  "values": []
+                }
+              },
+              {
+                "$query": {
+                  "method": "cursorBefore",
+                  "attribute": "",
+                  "values": [
+                    {
+                      "$document": {
+                        "$id": "bob",
+                        "$sequence": "2",
+                        "$collection": "cursor_customers",
+                        "name": "Bob"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "Alice",
+                "$id": "alice",
+                "$sequence": "1",
+                "$tenant": "999",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "cursor_customers"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.resolve_cursor",
+          "args": {
+            "collection": "cursor_customers",
+            "id": "nobody",
+            "direction": {
+              "$enum": "Query\\CursorDirection::After"
+            },
+            "queries": [
+              {
+                "$query": {
+                  "method": "orderAsc",
+                  "attribute": "name",
+                  "values": []
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$document": {}
+          }
+        },
+        {
+          "op": "database.collection_exists",
+          "args": {
+            "collection": "cursor_customers"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "cursor_customers"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.collection_exists",
+          "args": {
+            "collection": "cursor_orders"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "cursor_orders"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "CursorTests::testResolveCursorTakesAJoinedOrderFromTheRowsTheCallerCanRead",
+      "state": [
+        "mysql@database-mysql"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "driver": "mysql",
+            "namespace": "",
+            "shared_tables": true,
+            "tenant": 999
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::Joins"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.collection_exists",
+          "args": {
+            "collection": "cursor_customers"
+          },
+          "expect": false
+        },
+        {
+          "op": "database.collection_exists",
+          "args": {
+            "collection": "cursor_orders"
+          },
+          "expect": false
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "cursor_customers",
+                "name": "cursor_customers",
+                "attributes": [
+                  {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "create(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "cursor_customers",
+              "name": "cursor_customers",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "cursor_orders",
+                "name": "cursor_orders",
+                "attributes": [
+                  {
+                    "$id": "customerId",
+                    "key": "customerId",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  },
+                  {
+                    "$id": "status",
+                    "key": "status",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  },
+                  {
+                    "$id": "amount",
+                    "key": "amount",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "create(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "cursor_orders",
+              "name": "cursor_orders",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "customerId",
+                    "key": "customerId",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "status",
+                    "key": "status",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "amount",
+                    "key": "amount",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": "999",
+              "$sequence": "2"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "db.authorization.skip",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "cursor_customers",
+                    "document": {
+                      "$document": {
+                        "$id": "alice",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "name": "Alice"
+                      }
+                    }
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": {
+              "$document": {
+                "$id": "alice",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "name": "Alice",
+                "$collection": "cursor_customers",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$tenant": "999",
+                "$sequence": "1"
+              }
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "$id": "alice",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "name": "Alice",
+                        "$collection": "cursor_customers",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$tenant": "999",
+                        "$sequence": "1"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "db.authorization.skip",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "cursor_customers",
+                    "document": {
+                      "$document": {
+                        "$id": "bob",
+                        "$permissions": [
+                          "read(\"user:cursor-other\")"
+                        ],
+                        "name": "Bob"
+                      }
+                    }
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": {
+              "$document": {
+                "$id": "bob",
+                "$permissions": [
+                  "read(\"user:cursor-other\")"
+                ],
+                "name": "Bob",
+                "$collection": "cursor_customers",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$tenant": "999",
+                "$sequence": "2"
+              }
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "$id": "bob",
+                        "$permissions": [
+                          "read(\"user:cursor-other\")"
+                        ],
+                        "name": "Bob",
+                        "$collection": "cursor_customers",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$tenant": "999",
+                        "$sequence": "2"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "db.authorization.skip",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "cursor_customers",
+                    "document": {
+                      "$document": {
+                        "$id": "carol",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "name": "Carol"
+                      }
+                    }
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": {
+              "$document": {
+                "$id": "carol",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "name": "Carol",
+                "$collection": "cursor_customers",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$tenant": "999",
+                "$sequence": "3"
+              }
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "$id": "carol",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "name": "Carol",
+                        "$collection": "cursor_customers",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$tenant": "999",
+                        "$sequence": "3"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "db.authorization.skip",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "cursor_orders",
+                    "document": {
+                      "$document": {
+                        "$id": "a-first",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "customerId": "alice",
+                        "amount": 10,
+                        "status": "paid"
+                      }
+                    }
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": {
+              "$document": {
+                "$id": "a-first",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "customerId": "alice",
+                "amount": 10,
+                "status": "paid",
+                "$collection": "cursor_orders",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$tenant": "999",
+                "$sequence": "1"
+              }
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "$id": "a-first",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "customerId": "alice",
+                        "amount": 10,
+                        "status": "paid",
+                        "$collection": "cursor_orders",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$tenant": "999",
+                        "$sequence": "1"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "db.authorization.skip",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "cursor_orders",
+                    "document": {
+                      "$document": {
+                        "$id": "a-hidden",
+                        "$permissions": [
+                          "read(\"user:cursor-other\")"
+                        ],
+                        "customerId": "alice",
+                        "amount": 35,
+                        "status": "paid"
+                      }
+                    }
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": {
+              "$document": {
+                "$id": "a-hidden",
+                "$permissions": [
+                  "read(\"user:cursor-other\")"
+                ],
+                "customerId": "alice",
+                "amount": 35,
+                "status": "paid",
+                "$collection": "cursor_orders",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$tenant": "999",
+                "$sequence": "2"
+              }
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "$id": "a-hidden",
+                        "$permissions": [
+                          "read(\"user:cursor-other\")"
+                        ],
+                        "customerId": "alice",
+                        "amount": 35,
+                        "status": "paid",
+                        "$collection": "cursor_orders",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$tenant": "999",
+                        "$sequence": "2"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "db.authorization.skip",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "cursor_orders",
+                    "document": {
+                      "$document": {
+                        "$id": "a-open",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "customerId": "alice",
+                        "amount": 60,
+                        "status": "open"
+                      }
+                    }
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": {
+              "$document": {
+                "$id": "a-open",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "customerId": "alice",
+                "amount": 60,
+                "status": "open",
+                "$collection": "cursor_orders",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$tenant": "999",
+                "$sequence": "3"
+              }
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "$id": "a-open",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "customerId": "alice",
+                        "amount": 60,
+                        "status": "open",
+                        "$collection": "cursor_orders",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$tenant": "999",
+                        "$sequence": "3"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "db.authorization.skip",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "cursor_orders",
+                    "document": {
+                      "$document": {
+                        "$id": "a-second",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "customerId": "alice",
+                        "amount": 25,
+                        "status": "paid"
+                      }
+                    }
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": {
+              "$document": {
+                "$id": "a-second",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "customerId": "alice",
+                "amount": 25,
+                "status": "paid",
+                "$collection": "cursor_orders",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$tenant": "999",
+                "$sequence": "4"
+              }
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "$id": "a-second",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "customerId": "alice",
+                        "amount": 25,
+                        "status": "paid",
+                        "$collection": "cursor_orders",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$tenant": "999",
+                        "$sequence": "4"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "db.authorization.skip",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "cursor_orders",
+                    "document": {
+                      "$document": {
+                        "$id": "b-hidden",
+                        "$permissions": [
+                          "read(\"user:cursor-other\")"
+                        ],
+                        "customerId": "bob",
+                        "amount": 30,
+                        "status": "paid"
+                      }
+                    }
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": {
+              "$document": {
+                "$id": "b-hidden",
+                "$permissions": [
+                  "read(\"user:cursor-other\")"
+                ],
+                "customerId": "bob",
+                "amount": 30,
+                "status": "paid",
+                "$collection": "cursor_orders",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$tenant": "999",
+                "$sequence": "5"
+              }
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "$id": "b-hidden",
+                        "$permissions": [
+                          "read(\"user:cursor-other\")"
+                        ],
+                        "customerId": "bob",
+                        "amount": 30,
+                        "status": "paid",
+                        "$collection": "cursor_orders",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$tenant": "999",
+                        "$sequence": "5"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "db.authorization.skip",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "cursor_orders",
+                    "document": {
+                      "$document": {
+                        "$id": "b-only",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "customerId": "bob",
+                        "amount": 20,
+                        "status": "paid"
+                      }
+                    }
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": {
+              "$document": {
+                "$id": "b-only",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "customerId": "bob",
+                "amount": 20,
+                "status": "paid",
+                "$collection": "cursor_orders",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$tenant": "999",
+                "$sequence": "6"
+              }
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "$id": "b-only",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "customerId": "bob",
+                        "amount": 20,
+                        "status": "paid",
+                        "$collection": "cursor_orders",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$tenant": "999",
+                        "$sequence": "6"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "db.authorization.skip",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "cursor_orders",
+                    "document": {
+                      "$document": {
+                        "$id": "c-only",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "customerId": "carol",
+                        "amount": 15,
+                        "status": "paid"
+                      }
+                    }
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": {
+              "$document": {
+                "$id": "c-only",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "customerId": "carol",
+                "amount": 15,
+                "status": "paid",
+                "$collection": "cursor_orders",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$tenant": "999",
+                "$sequence": "7"
+              }
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "$id": "c-only",
+                        "$permissions": [
+                          "read(\"any\")"
+                        ],
+                        "customerId": "carol",
+                        "amount": 15,
+                        "status": "paid",
+                        "$collection": "cursor_orders",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$tenant": "999",
+                        "$sequence": "7"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "cursor_customers",
+            "queries": [
+              {
+                "$query": {
+                  "method": "join",
+                  "attribute": "cursor_orders",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "on",
+                        "attribute": "",
+                        "values": [
+                          "$id",
+                          "=",
+                          "customerId"
+                        ]
+                      }
+                    }
+                  ],
+                  "alias": "ord"
+                }
+              },
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "ord.status",
+                  "values": [
+                    "paid"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "orderAsc",
+                  "attribute": "ord.amount",
+                  "values": []
+                }
+              },
+              {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": [
+                    100
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "Alice",
+                "ord.customerId": "alice",
+                "ord.status": "paid",
+                "ord.amount": 10,
+                "ord.$id": "a-first",
+                "$id": "alice",
+                "$sequence": "1",
+                "$tenant": "999",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "cursor_customers"
+              }
+            },
+            {
+              "$document": {
+                "name": "Carol",
+                "ord.customerId": "carol",
+                "ord.status": "paid",
+                "ord.amount": 15,
+                "ord.$id": "c-only",
+                "$id": "carol",
+                "$sequence": "3",
+                "$tenant": "999",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "cursor_customers"
+              }
+            },
+            {
+              "$document": {
+                "name": "Alice",
+                "ord.customerId": "alice",
+                "ord.status": "paid",
+                "ord.amount": 25,
+                "ord.$id": "a-second",
+                "$id": "alice",
+                "$sequence": "1",
+                "$tenant": "999",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "cursor_customers"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.resolve_cursor",
+          "args": {
+            "collection": "cursor_customers",
+            "id": "alice",
+            "direction": {
+              "$enum": "Query\\CursorDirection::After"
+            },
+            "queries": [
+              {
+                "$query": {
+                  "method": "join",
+                  "attribute": "cursor_orders",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "on",
+                        "attribute": "",
+                        "values": [
+                          "$id",
+                          "=",
+                          "customerId"
+                        ]
+                      }
+                    }
+                  ],
+                  "alias": "ord"
+                }
+              },
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "ord.status",
+                  "values": [
+                    "paid"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "orderAsc",
+                  "attribute": "ord.amount",
+                  "values": []
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$document": {
+              "$id": "alice",
+              "$sequence": "1",
+              "$collection": "cursor_customers",
+              "ord.amount": 25,
+              "ord.$id": "a-second"
+            }
+          }
+        },
+        {
+          "op": "database.resolve_cursor",
+          "args": {
+            "collection": "cursor_customers",
+            "id": "alice",
+            "direction": {
+              "$enum": "Query\\CursorDirection::Before"
+            },
+            "queries": [
+              {
+                "$query": {
+                  "method": "join",
+                  "attribute": "cursor_orders",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "on",
+                        "attribute": "",
+                        "values": [
+                          "$id",
+                          "=",
+                          "customerId"
+                        ]
+                      }
+                    }
+                  ],
+                  "alias": "ord"
+                }
+              },
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "ord.status",
+                  "values": [
+                    "paid"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "orderAsc",
+                  "attribute": "ord.amount",
+                  "values": []
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$document": {
+              "$id": "alice",
+              "$sequence": "1",
+              "$collection": "cursor_customers",
+              "ord.amount": 10,
+              "ord.$id": "a-first"
+            }
+          }
+        },
+        {
+          "op": "database.resolve_cursor",
+          "args": {
+            "collection": "cursor_customers",
+            "id": "bob",
+            "direction": {
+              "$enum": "Query\\CursorDirection::After"
+            },
+            "queries": [
+              {
+                "$query": {
+                  "method": "join",
+                  "attribute": "cursor_orders",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "on",
+                        "attribute": "",
+                        "values": [
+                          "$id",
+                          "=",
+                          "customerId"
+                        ]
+                      }
+                    }
+                  ],
+                  "alias": "ord"
+                }
+              },
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "ord.status",
+                  "values": [
+                    "paid"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "orderAsc",
+                  "attribute": "ord.amount",
+                  "values": []
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$document": {
+              "$id": "bob",
+              "$sequence": "2",
+              "$collection": "cursor_customers",
+              "ord.amount": 20,
+              "ord.$id": "b-only"
+            }
+          }
+        },
+        {
+          "op": "database.resolve_cursor",
+          "args": {
+            "collection": "cursor_customers",
+            "id": "alice",
+            "direction": {
+              "$enum": "Query\\CursorDirection::After"
+            },
+            "queries": [
+              {
+                "$query": {
+                  "method": "join",
+                  "attribute": "cursor_orders",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "on",
+                        "attribute": "",
+                        "values": [
+                          "$id",
+                          "=",
+                          "customerId"
+                        ]
+                      }
+                    }
+                  ],
+                  "alias": "ord"
+                }
+              },
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "ord.status",
+                  "values": [
+                    "paid"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "orderAsc",
+                  "attribute": "ord.amount",
+                  "values": []
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$document": {
+              "$id": "alice",
+              "$sequence": "1",
+              "$collection": "cursor_customers",
+              "ord.amount": 25,
+              "ord.$id": "a-second"
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "cursor_customers",
+            "queries": [
+              {
+                "$query": {
+                  "method": "join",
+                  "attribute": "cursor_orders",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "on",
+                        "attribute": "",
+                        "values": [
+                          "$id",
+                          "=",
+                          "customerId"
+                        ]
+                      }
+                    }
+                  ],
+                  "alias": "ord"
+                }
+              },
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "ord.status",
+                  "values": [
+                    "paid"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "orderAsc",
+                  "attribute": "ord.amount",
+                  "values": []
+                }
+              },
+              {
+                "$query": {
+                  "method": "cursorAfter",
+                  "attribute": "",
+                  "values": [
+                    {
+                      "$document": {
+                        "$id": "alice",
+                        "$sequence": "1",
+                        "$collection": "cursor_customers",
+                        "ord.amount": 25,
+                        "ord.$id": "a-second"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": []
+        },
+        {
+          "op": "database.resolve_cursor",
+          "args": {
+            "collection": "cursor_customers",
+            "id": "alice",
+            "direction": {
+              "$enum": "Query\\CursorDirection::Before"
+            },
+            "queries": [
+              {
+                "$query": {
+                  "method": "join",
+                  "attribute": "cursor_orders",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "on",
+                        "attribute": "",
+                        "values": [
+                          "$id",
+                          "=",
+                          "customerId"
+                        ]
+                      }
+                    }
+                  ],
+                  "alias": "ord"
+                }
+              },
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "ord.status",
+                  "values": [
+                    "paid"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "orderAsc",
+                  "attribute": "ord.amount",
+                  "values": []
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$document": {
+              "$id": "alice",
+              "$sequence": "1",
+              "$collection": "cursor_customers",
+              "ord.amount": 10,
+              "ord.$id": "a-first"
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "cursor_customers",
+            "queries": [
+              {
+                "$query": {
+                  "method": "join",
+                  "attribute": "cursor_orders",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "on",
+                        "attribute": "",
+                        "values": [
+                          "$id",
+                          "=",
+                          "customerId"
+                        ]
+                      }
+                    }
+                  ],
+                  "alias": "ord"
+                }
+              },
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "ord.status",
+                  "values": [
+                    "paid"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "orderAsc",
+                  "attribute": "ord.amount",
+                  "values": []
+                }
+              },
+              {
+                "$query": {
+                  "method": "cursorBefore",
+                  "attribute": "",
+                  "values": [
+                    {
+                      "$document": {
+                        "$id": "alice",
+                        "$sequence": "1",
+                        "$collection": "cursor_customers",
+                        "ord.amount": 10,
+                        "ord.$id": "a-first"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": []
+        },
+        {
+          "op": "database.resolve_cursor",
+          "args": {
+            "collection": "cursor_customers",
+            "id": "carol",
+            "direction": {
+              "$enum": "Query\\CursorDirection::After"
+            },
+            "queries": [
+              {
+                "$query": {
+                  "method": "join",
+                  "attribute": "cursor_orders",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "on",
+                        "attribute": "",
+                        "values": [
+                          "$id",
+                          "=",
+                          "customerId"
+                        ]
+                      }
+                    }
+                  ],
+                  "alias": "ord"
+                }
+              },
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "ord.status",
+                  "values": [
+                    "paid"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "orderAsc",
+                  "attribute": "ord.amount",
+                  "values": []
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$document": {
+              "$id": "carol",
+              "$sequence": "3",
+              "$collection": "cursor_customers",
+              "ord.amount": 15,
+              "ord.$id": "c-only"
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "cursor_customers",
+            "queries": [
+              {
+                "$query": {
+                  "method": "join",
+                  "attribute": "cursor_orders",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "on",
+                        "attribute": "",
+                        "values": [
+                          "$id",
+                          "=",
+                          "customerId"
+                        ]
+                      }
+                    }
+                  ],
+                  "alias": "ord"
+                }
+              },
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "ord.status",
+                  "values": [
+                    "paid"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "orderAsc",
+                  "attribute": "ord.amount",
+                  "values": []
+                }
+              },
+              {
+                "$query": {
+                  "method": "cursorAfter",
+                  "attribute": "",
+                  "values": [
+                    {
+                      "$document": {
+                        "$id": "carol",
+                        "$sequence": "3",
+                        "$collection": "cursor_customers",
+                        "ord.amount": 15,
+                        "ord.$id": "c-only"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "Alice",
+                "ord.customerId": "alice",
+                "ord.status": "paid",
+                "ord.amount": 25,
+                "ord.$id": "a-second",
+                "$id": "alice",
+                "$sequence": "1",
+                "$tenant": "999",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "cursor_customers"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.resolve_cursor",
+          "args": {
+            "collection": "cursor_customers",
+            "id": "carol",
+            "direction": {
+              "$enum": "Query\\CursorDirection::Before"
+            },
+            "queries": [
+              {
+                "$query": {
+                  "method": "join",
+                  "attribute": "cursor_orders",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "on",
+                        "attribute": "",
+                        "values": [
+                          "$id",
+                          "=",
+                          "customerId"
+                        ]
+                      }
+                    }
+                  ],
+                  "alias": "ord"
+                }
+              },
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "ord.status",
+                  "values": [
+                    "paid"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "orderAsc",
+                  "attribute": "ord.amount",
+                  "values": []
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$document": {
+              "$id": "carol",
+              "$sequence": "3",
+              "$collection": "cursor_customers",
+              "ord.amount": 15,
+              "ord.$id": "c-only"
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "cursor_customers",
+            "queries": [
+              {
+                "$query": {
+                  "method": "join",
+                  "attribute": "cursor_orders",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "on",
+                        "attribute": "",
+                        "values": [
+                          "$id",
+                          "=",
+                          "customerId"
+                        ]
+                      }
+                    }
+                  ],
+                  "alias": "ord"
+                }
+              },
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "ord.status",
+                  "values": [
+                    "paid"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "orderAsc",
+                  "attribute": "ord.amount",
+                  "values": []
+                }
+              },
+              {
+                "$query": {
+                  "method": "cursorBefore",
+                  "attribute": "",
+                  "values": [
+                    {
+                      "$document": {
+                        "$id": "carol",
+                        "$sequence": "3",
+                        "$collection": "cursor_customers",
+                        "ord.amount": 15,
+                        "ord.$id": "c-only"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "Alice",
+                "ord.customerId": "alice",
+                "ord.status": "paid",
+                "ord.amount": 10,
+                "ord.$id": "a-first",
+                "$id": "alice",
+                "$sequence": "1",
+                "$tenant": "999",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "cursor_customers"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.resolve_cursor",
+          "args": {
+            "collection": "cursor_customers",
+            "id": "bob",
+            "direction": {
+              "$enum": "Query\\CursorDirection::After"
+            },
+            "queries": [
+              {
+                "$query": {
+                  "method": "join",
+                  "attribute": "cursor_orders",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "on",
+                        "attribute": "",
+                        "values": [
+                          "$id",
+                          "=",
+                          "customerId"
+                        ]
+                      }
+                    }
+                  ],
+                  "alias": "ord"
+                }
+              },
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "ord.status",
+                  "values": [
+                    "paid"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "orderAsc",
+                  "attribute": "ord.amount",
+                  "values": []
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$document": {
+              "$id": "bob",
+              "$sequence": "2",
+              "$collection": "cursor_customers",
+              "ord.amount": 20,
+              "ord.$id": "b-only"
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "cursor_customers",
+            "queries": [
+              {
+                "$query": {
+                  "method": "join",
+                  "attribute": "cursor_orders",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "on",
+                        "attribute": "",
+                        "values": [
+                          "$id",
+                          "=",
+                          "customerId"
+                        ]
+                      }
+                    }
+                  ],
+                  "alias": "ord"
+                }
+              },
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "ord.status",
+                  "values": [
+                    "paid"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "orderAsc",
+                  "attribute": "ord.amount",
+                  "values": []
+                }
+              },
+              {
+                "$query": {
+                  "method": "cursorAfter",
+                  "attribute": "",
+                  "values": [
+                    {
+                      "$document": {
+                        "$id": "bob",
+                        "$sequence": "2",
+                        "$collection": "cursor_customers",
+                        "ord.amount": 20,
+                        "ord.$id": "b-only"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "Alice",
+                "ord.customerId": "alice",
+                "ord.status": "paid",
+                "ord.amount": 25,
+                "ord.$id": "a-second",
+                "$id": "alice",
+                "$sequence": "1",
+                "$tenant": "999",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "cursor_customers"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.resolve_cursor",
+          "args": {
+            "collection": "cursor_customers",
+            "id": "bob",
+            "direction": {
+              "$enum": "Query\\CursorDirection::Before"
+            },
+            "queries": [
+              {
+                "$query": {
+                  "method": "join",
+                  "attribute": "cursor_orders",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "on",
+                        "attribute": "",
+                        "values": [
+                          "$id",
+                          "=",
+                          "customerId"
+                        ]
+                      }
+                    }
+                  ],
+                  "alias": "ord"
+                }
+              },
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "ord.status",
+                  "values": [
+                    "paid"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "orderAsc",
+                  "attribute": "ord.amount",
+                  "values": []
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$document": {
+              "$id": "bob",
+              "$sequence": "2",
+              "$collection": "cursor_customers",
+              "ord.amount": 20,
+              "ord.$id": "b-only"
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "cursor_customers",
+            "queries": [
+              {
+                "$query": {
+                  "method": "join",
+                  "attribute": "cursor_orders",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "on",
+                        "attribute": "",
+                        "values": [
+                          "$id",
+                          "=",
+                          "customerId"
+                        ]
+                      }
+                    }
+                  ],
+                  "alias": "ord"
+                }
+              },
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "ord.status",
+                  "values": [
+                    "paid"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "orderAsc",
+                  "attribute": "ord.amount",
+                  "values": []
+                }
+              },
+              {
+                "$query": {
+                  "method": "cursorBefore",
+                  "attribute": "",
+                  "values": [
+                    {
+                      "$document": {
+                        "$id": "bob",
+                        "$sequence": "2",
+                        "$collection": "cursor_customers",
+                        "ord.amount": 20,
+                        "ord.$id": "b-only"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "Alice",
+                "ord.customerId": "alice",
+                "ord.status": "paid",
+                "ord.amount": 10,
+                "ord.$id": "a-first",
+                "$id": "alice",
+                "$sequence": "1",
+                "$tenant": "999",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "cursor_customers"
+              }
+            },
+            {
+              "$document": {
+                "name": "Carol",
+                "ord.customerId": "carol",
+                "ord.status": "paid",
+                "ord.amount": 15,
+                "ord.$id": "c-only",
+                "$id": "carol",
+                "$sequence": "3",
+                "$tenant": "999",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "cursor_customers"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.collection_exists",
+          "args": {
+            "collection": "cursor_customers"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "cursor_customers"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.collection_exists",
+          "args": {
+            "collection": "cursor_orders"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "cursor_orders"
+          },
+          "expect": null
+        }
+      ]
+    }
+  ]
+}

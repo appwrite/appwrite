@@ -1,0 +1,5372 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Joins/FullOuterJoinAggregateTest.php"
+  ],
+  "cases": [
+    {
+      "name": "FullOuterJoinAggregateTest::testCountAndSumSeeBothHalvesOfTheJoin",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o319669"
+          },
+          "bind": "s913128",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o319670"
+          },
+          "bind": "s913129",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o319670"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "any"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o319669"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "any"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o319671"
+          },
+          "bind": "s913132",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o319671"
+              },
+              "cache": "memory"
+            },
+            "as": "o319672"
+          },
+          "bind": "s913133",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o319672"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o319669"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o319672"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "aggregates"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o319672"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "aggregates_u000000000111"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Hook\\Permissions",
+            "args": {},
+            "as": "o319673"
+          },
+          "bind": "s913137",
+          "expect": {
+            "$hook": "Permissions"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o319672"
+            },
+            "method": "addHook",
+            "args": {
+              "hook": {
+                "$obj": "o319673"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o319672"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o319674"
+          },
+          "bind": "s913140",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o319674"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o319675"
+          },
+          "bind": "s913142",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o319675"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "link",
+              "size": 16,
+              "required": true
+            },
+            "as": "o319676"
+          },
+          "bind": "s913144",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "link",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 16,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "category",
+              "size": 16,
+              "required": false
+            },
+            "as": "o319677"
+          },
+          "bind": "s913145",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "category",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 16,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "score",
+              "required": true
+            },
+            "as": "o319678"
+          },
+          "bind": "s913146",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "score",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "main",
+              "attributes": [
+                {
+                  "$obj": "o319676"
+                },
+                {
+                  "$obj": "o319677"
+                },
+                {
+                  "$obj": "o319678"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o319679"
+          },
+          "bind": "s913147",
+          "expect": {
+            "$document": {
+              "$id": "main",
+              "name": "main",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "link",
+                    "key": "link",
+                    "type": "string",
+                    "size": 16,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "category",
+                    "key": "category",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "score",
+                    "key": "score",
+                    "type": "integer",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o319672"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o319679"
+              }
+            },
+            "as": "o319680"
+          },
+          "expect": {
+            "$document": {
+              "$id": "main",
+              "name": "main",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "link",
+                    "key": "link",
+                    "type": "string",
+                    "size": 16,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "category",
+                    "key": "category",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "score",
+                    "key": "score",
+                    "type": "integer",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "link",
+              "size": 16,
+              "required": true
+            },
+            "as": "o319681"
+          },
+          "bind": "s913149",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "link",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 16,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "category",
+              "size": 16,
+              "required": false
+            },
+            "as": "o319682"
+          },
+          "bind": "s913150",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "category",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 16,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "score",
+              "required": true
+            },
+            "as": "o319683"
+          },
+          "bind": "s913151",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "score",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "a",
+              "attributes": [
+                {
+                  "$obj": "o319681"
+                },
+                {
+                  "$obj": "o319682"
+                },
+                {
+                  "$obj": "o319683"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o319684"
+          },
+          "bind": "s913152",
+          "expect": {
+            "$document": {
+              "$id": "a",
+              "name": "a",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "link",
+                    "key": "link",
+                    "type": "string",
+                    "size": 16,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "category",
+                    "key": "category",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "score",
+                    "key": "score",
+                    "type": "integer",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o319672"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o319684"
+              }
+            },
+            "as": "o319685"
+          },
+          "expect": {
+            "$document": {
+              "$id": "a",
+              "name": "a",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "link",
+                    "key": "link",
+                    "type": "string",
+                    "size": 16,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "category",
+                    "key": "category",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "score",
+                    "key": "score",
+                    "type": "integer",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "link",
+              "size": 16,
+              "required": true
+            },
+            "as": "o319686"
+          },
+          "bind": "s913154",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "link",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 16,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "category",
+              "size": 16,
+              "required": false
+            },
+            "as": "o319687"
+          },
+          "bind": "s913155",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "category",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 16,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "score",
+              "required": true
+            },
+            "as": "o319688"
+          },
+          "bind": "s913156",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "score",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "b",
+              "attributes": [
+                {
+                  "$obj": "o319686"
+                },
+                {
+                  "$obj": "o319687"
+                },
+                {
+                  "$obj": "o319688"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o319689"
+          },
+          "bind": "s913157",
+          "expect": {
+            "$document": {
+              "$id": "b",
+              "name": "b",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "link",
+                    "key": "link",
+                    "type": "string",
+                    "size": 16,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "category",
+                    "key": "category",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "score",
+                    "key": "score",
+                    "type": "integer",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o319672"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o319689"
+              }
+            },
+            "as": "o319690"
+          },
+          "expect": {
+            "$document": {
+              "$id": "b",
+              "name": "b",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "link",
+                    "key": "link",
+                    "type": "string",
+                    "size": 16,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "category",
+                    "key": "category",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "score",
+                    "key": "score",
+                    "type": "integer",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "3"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "link",
+              "size": 16,
+              "required": true
+            },
+            "as": "o319691"
+          },
+          "bind": "s913159",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "link",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 16,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "category",
+              "size": 16,
+              "required": false
+            },
+            "as": "o319692"
+          },
+          "bind": "s913160",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "category",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 16,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "score",
+              "required": true
+            },
+            "as": "o319693"
+          },
+          "bind": "s913161",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "score",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "c",
+              "attributes": [
+                {
+                  "$obj": "o319691"
+                },
+                {
+                  "$obj": "o319692"
+                },
+                {
+                  "$obj": "o319693"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o319694"
+          },
+          "bind": "s913162",
+          "expect": {
+            "$document": {
+              "$id": "c",
+              "name": "c",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "link",
+                    "key": "link",
+                    "type": "string",
+                    "size": 16,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "category",
+                    "key": "category",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "score",
+                    "key": "score",
+                    "type": "integer",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o319672"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o319694"
+              }
+            },
+            "as": "o319695"
+          },
+          "expect": {
+            "$document": {
+              "$id": "c",
+              "name": "c",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "link",
+                    "key": "link",
+                    "type": "string",
+                    "size": 16,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "category",
+                    "key": "category",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "score",
+                    "key": "score",
+                    "type": "integer",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "4"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o319696"
+          },
+          "bind": "s913164",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o319696"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "m1",
+                "link": "1",
+                "category": "p",
+                "score": 10,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            "as": "o319697"
+          },
+          "bind": "s913166",
+          "expect": {
+            "$document": {
+              "$id": "m1",
+              "link": "1",
+              "category": "p",
+              "score": 10,
+              "$permissions": [
+                "read(\"any\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o319672"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "main",
+              "document": {
+                "$obj": "o319697"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "m1",
+              "link": "1",
+              "category": "p",
+              "score": 10,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "main",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o319698"
+          },
+          "bind": "s913168",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o319698"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "m2",
+                "link": "2",
+                "category": "q",
+                "score": 20,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            "as": "o319699"
+          },
+          "bind": "s913170",
+          "expect": {
+            "$document": {
+              "$id": "m2",
+              "link": "2",
+              "category": "q",
+              "score": 20,
+              "$permissions": [
+                "read(\"any\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o319672"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "main",
+              "document": {
+                "$obj": "o319699"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "m2",
+              "link": "2",
+              "category": "q",
+              "score": 20,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "main",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o319700"
+          },
+          "bind": "s913172",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o319700"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "m3",
+                "link": "5",
+                "category": "p",
+                "score": 30,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            "as": "o319701"
+          },
+          "bind": "s913174",
+          "expect": {
+            "$document": {
+              "$id": "m3",
+              "link": "5",
+              "category": "p",
+              "score": 30,
+              "$permissions": [
+                "read(\"any\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o319672"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "main",
+              "document": {
+                "$obj": "o319701"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "m3",
+              "link": "5",
+              "category": "p",
+              "score": 30,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "main",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "3"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o319702"
+          },
+          "bind": "s913176",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o319702"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "a1",
+                "link": "1",
+                "category": "p",
+                "score": 1,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            "as": "o319703"
+          },
+          "bind": "s913178",
+          "expect": {
+            "$document": {
+              "$id": "a1",
+              "link": "1",
+              "category": "p",
+              "score": 1,
+              "$permissions": [
+                "read(\"any\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o319672"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "a",
+              "document": {
+                "$obj": "o319703"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "a1",
+              "link": "1",
+              "category": "p",
+              "score": 1,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "a",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o319704"
+          },
+          "bind": "s913180",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o319704"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "a2",
+                "link": "3",
+                "category": "q",
+                "score": 2,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            "as": "o319705"
+          },
+          "bind": "s913182",
+          "expect": {
+            "$document": {
+              "$id": "a2",
+              "link": "3",
+              "category": "q",
+              "score": 2,
+              "$permissions": [
+                "read(\"any\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o319672"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "a",
+              "document": {
+                "$obj": "o319705"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "a2",
+              "link": "3",
+              "category": "q",
+              "score": 2,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "a",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o319706"
+          },
+          "bind": "s913184",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o319706"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "a3",
+                "link": "4",
+                "category": null,
+                "score": 3,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            "as": "o319707"
+          },
+          "bind": "s913186",
+          "expect": {
+            "$document": {
+              "$id": "a3",
+              "link": "4",
+              "category": null,
+              "score": 3,
+              "$permissions": [
+                "read(\"any\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o319672"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "a",
+              "document": {
+                "$obj": "o319707"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "a3",
+              "link": "4",
+              "category": null,
+              "score": 3,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "a",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "3"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o319708"
+          },
+          "bind": "s913188",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o319708"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "b1",
+                "link": "1",
+                "category": "p",
+                "score": 4,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            "as": "o319709"
+          },
+          "bind": "s913190",
+          "expect": {
+            "$document": {
+              "$id": "b1",
+              "link": "1",
+              "category": "p",
+              "score": 4,
+              "$permissions": [
+                "read(\"any\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o319672"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "b",
+              "document": {
+                "$obj": "o319709"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "b1",
+              "link": "1",
+              "category": "p",
+              "score": 4,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "b",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o319710"
+          },
+          "bind": "s913192",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o319710"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "b2",
+                "link": "3",
+                "category": "p",
+                "score": 5,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            "as": "o319711"
+          },
+          "bind": "s913194",
+          "expect": {
+            "$document": {
+              "$id": "b2",
+              "link": "3",
+              "category": "p",
+              "score": 5,
+              "$permissions": [
+                "read(\"any\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o319672"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "b",
+              "document": {
+                "$obj": "o319711"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "b2",
+              "link": "3",
+              "category": "p",
+              "score": 5,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "b",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o319712"
+          },
+          "bind": "s913196",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o319712"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "b3",
+                "link": "6",
+                "category": null,
+                "score": 6,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            "as": "o319713"
+          },
+          "bind": "s913198",
+          "expect": {
+            "$document": {
+              "$id": "b3",
+              "link": "6",
+              "category": null,
+              "score": 6,
+              "$permissions": [
+                "read(\"any\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o319672"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "b",
+              "document": {
+                "$obj": "o319713"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "b3",
+              "link": "6",
+              "category": null,
+              "score": 6,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "b",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "3"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o319714"
+          },
+          "bind": "s913200",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o319714"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "b4",
+                "link": "1",
+                "category": "q",
+                "score": 7,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            "as": "o319715"
+          },
+          "bind": "s913202",
+          "expect": {
+            "$document": {
+              "$id": "b4",
+              "link": "1",
+              "category": "q",
+              "score": 7,
+              "$permissions": [
+                "read(\"any\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o319672"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "b",
+              "document": {
+                "$obj": "o319715"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "b4",
+              "link": "1",
+              "category": "q",
+              "score": 7,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "b",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "4"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o319716"
+          },
+          "bind": "s913204",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o319716"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "c1",
+                "link": "1",
+                "category": "q",
+                "score": 8,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            "as": "o319717"
+          },
+          "bind": "s913206",
+          "expect": {
+            "$document": {
+              "$id": "c1",
+              "link": "1",
+              "category": "q",
+              "score": 8,
+              "$permissions": [
+                "read(\"any\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o319672"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "c",
+              "document": {
+                "$obj": "o319717"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "c1",
+              "link": "1",
+              "category": "q",
+              "score": 8,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "c",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o319718"
+          },
+          "bind": "s913208",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o319718"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "c2",
+                "link": "4",
+                "category": "p",
+                "score": 9,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            "as": "o319719"
+          },
+          "bind": "s913210",
+          "expect": {
+            "$document": {
+              "$id": "c2",
+              "link": "4",
+              "category": "p",
+              "score": 9,
+              "$permissions": [
+                "read(\"any\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o319672"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "c",
+              "document": {
+                "$obj": "o319719"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "c2",
+              "link": "4",
+              "category": "p",
+              "score": 9,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "c",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o319720"
+          },
+          "bind": "s913212",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o319720"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "c3",
+                "link": "6",
+                "category": null,
+                "score": 10,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            "as": "o319721"
+          },
+          "bind": "s913214",
+          "expect": {
+            "$document": {
+              "$id": "c3",
+              "link": "6",
+              "category": null,
+              "score": 10,
+              "$permissions": [
+                "read(\"any\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o319672"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "c",
+              "document": {
+                "$obj": "o319721"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "c3",
+              "link": "6",
+              "category": null,
+              "score": 10,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "c",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "3"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o319722"
+          },
+          "bind": "s913216",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o319722"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "c4",
+                "link": "7",
+                "category": "p",
+                "score": 11,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            "as": "o319723"
+          },
+          "bind": "s913218",
+          "expect": {
+            "$document": {
+              "$id": "c4",
+              "link": "7",
+              "category": "p",
+              "score": 11,
+              "$permissions": [
+                "read(\"any\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o319672"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "c",
+              "document": {
+                "$obj": "o319723"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "c4",
+              "link": "7",
+              "category": "p",
+              "score": 11,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "c",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "4"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "on",
+            "args": {
+              "left": "link",
+              "right": "link"
+            },
+            "as": "o319724"
+          },
+          "bind": "s913220",
+          "expect": {
+            "$query": {
+              "method": "on",
+              "attribute": "",
+              "values": [
+                "link",
+                "=",
+                "link"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "fullOuterJoin",
+            "args": {
+              "collection": "b",
+              "alias": "b",
+              "on": [
+                {
+                  "$obj": "o319724"
+                }
+              ]
+            },
+            "as": "o319725"
+          },
+          "bind": "s913221",
+          "expect": {
+            "$query": {
+              "method": "fullOuterJoin",
+              "attribute": "b",
+              "values": [
+                {
+                  "$query": {
+                    "method": "on",
+                    "attribute": "",
+                    "values": [
+                      "link",
+                      "=",
+                      "link"
+                    ]
+                  }
+                }
+              ],
+              "alias": "b"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "count",
+            "args": {
+              "attribute": "*",
+              "alias": "rows"
+            },
+            "as": "o319726"
+          },
+          "bind": "s913222",
+          "expect": {
+            "$query": {
+              "method": "count",
+              "attribute": "*",
+              "values": [],
+              "alias": "rows"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "sum",
+            "args": {
+              "attribute": "b.score",
+              "alias": "total"
+            },
+            "as": "o319727"
+          },
+          "bind": "s913223",
+          "expect": {
+            "$query": {
+              "method": "sum",
+              "attribute": "b.score",
+              "values": [],
+              "alias": "total"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o319672"
+            },
+            "method": "aggregate",
+            "args": {
+              "collection": "main",
+              "queries": [
+                {
+                  "$obj": "o319725"
+                },
+                {
+                  "$obj": "o319726"
+                },
+                {
+                  "$obj": "o319727"
+                }
+              ]
+            }
+          },
+          "expect": [
+            {
+              "rows": 6,
+              "total": 22
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "FullOuterJoinAggregateTest::testDistinctReturnsAValueBothHalvesHoldOnce",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o319728"
+          },
+          "bind": "s913225",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o319729"
+          },
+          "bind": "s913226",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o319729"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "any"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o319728"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "any"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o319730"
+          },
+          "bind": "s913229",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o319730"
+              },
+              "cache": "memory"
+            },
+            "as": "o319731"
+          },
+          "bind": "s913230",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o319731"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o319728"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o319731"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "aggregates"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o319731"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "aggregates_u000000000112"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Hook\\Permissions",
+            "args": {},
+            "as": "o319732"
+          },
+          "bind": "s913234",
+          "expect": {
+            "$hook": "Permissions"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o319731"
+            },
+            "method": "addHook",
+            "args": {
+              "hook": {
+                "$obj": "o319732"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o319731"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o319733"
+          },
+          "bind": "s913237",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o319733"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o319734"
+          },
+          "bind": "s913239",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o319734"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "link",
+              "size": 16,
+              "required": true
+            },
+            "as": "o319735"
+          },
+          "bind": "s913241",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "link",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 16,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "category",
+              "size": 16,
+              "required": false
+            },
+            "as": "o319736"
+          },
+          "bind": "s913242",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "category",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 16,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "score",
+              "required": true
+            },
+            "as": "o319737"
+          },
+          "bind": "s913243",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "score",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "main",
+              "attributes": [
+                {
+                  "$obj": "o319735"
+                },
+                {
+                  "$obj": "o319736"
+                },
+                {
+                  "$obj": "o319737"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o319738"
+          },
+          "bind": "s913244",
+          "expect": {
+            "$document": {
+              "$id": "main",
+              "name": "main",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "link",
+                    "key": "link",
+                    "type": "string",
+                    "size": 16,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "category",
+                    "key": "category",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "score",
+                    "key": "score",
+                    "type": "integer",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o319731"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o319738"
+              }
+            },
+            "as": "o319739"
+          },
+          "expect": {
+            "$document": {
+              "$id": "main",
+              "name": "main",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "link",
+                    "key": "link",
+                    "type": "string",
+                    "size": 16,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "category",
+                    "key": "category",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "score",
+                    "key": "score",
+                    "type": "integer",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "link",
+              "size": 16,
+              "required": true
+            },
+            "as": "o319740"
+          },
+          "bind": "s913246",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "link",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 16,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "category",
+              "size": 16,
+              "required": false
+            },
+            "as": "o319741"
+          },
+          "bind": "s913247",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "category",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 16,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "score",
+              "required": true
+            },
+            "as": "o319742"
+          },
+          "bind": "s913248",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "score",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "a",
+              "attributes": [
+                {
+                  "$obj": "o319740"
+                },
+                {
+                  "$obj": "o319741"
+                },
+                {
+                  "$obj": "o319742"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o319743"
+          },
+          "bind": "s913249",
+          "expect": {
+            "$document": {
+              "$id": "a",
+              "name": "a",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "link",
+                    "key": "link",
+                    "type": "string",
+                    "size": 16,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "category",
+                    "key": "category",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "score",
+                    "key": "score",
+                    "type": "integer",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o319731"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o319743"
+              }
+            },
+            "as": "o319744"
+          },
+          "expect": {
+            "$document": {
+              "$id": "a",
+              "name": "a",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "link",
+                    "key": "link",
+                    "type": "string",
+                    "size": 16,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "category",
+                    "key": "category",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "score",
+                    "key": "score",
+                    "type": "integer",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "link",
+              "size": 16,
+              "required": true
+            },
+            "as": "o319745"
+          },
+          "bind": "s913251",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "link",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 16,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "category",
+              "size": 16,
+              "required": false
+            },
+            "as": "o319746"
+          },
+          "bind": "s913252",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "category",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 16,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "score",
+              "required": true
+            },
+            "as": "o319747"
+          },
+          "bind": "s913253",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "score",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "b",
+              "attributes": [
+                {
+                  "$obj": "o319745"
+                },
+                {
+                  "$obj": "o319746"
+                },
+                {
+                  "$obj": "o319747"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o319748"
+          },
+          "bind": "s913254",
+          "expect": {
+            "$document": {
+              "$id": "b",
+              "name": "b",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "link",
+                    "key": "link",
+                    "type": "string",
+                    "size": 16,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "category",
+                    "key": "category",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "score",
+                    "key": "score",
+                    "type": "integer",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o319731"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o319748"
+              }
+            },
+            "as": "o319749"
+          },
+          "expect": {
+            "$document": {
+              "$id": "b",
+              "name": "b",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "link",
+                    "key": "link",
+                    "type": "string",
+                    "size": 16,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "category",
+                    "key": "category",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "score",
+                    "key": "score",
+                    "type": "integer",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "3"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "link",
+              "size": 16,
+              "required": true
+            },
+            "as": "o319750"
+          },
+          "bind": "s913256",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "link",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 16,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "category",
+              "size": 16,
+              "required": false
+            },
+            "as": "o319751"
+          },
+          "bind": "s913257",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "category",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 16,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "integer",
+            "args": {
+              "key": "score",
+              "required": true
+            },
+            "as": "o319752"
+          },
+          "bind": "s913258",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "score",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "c",
+              "attributes": [
+                {
+                  "$obj": "o319750"
+                },
+                {
+                  "$obj": "o319751"
+                },
+                {
+                  "$obj": "o319752"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "documentSecurity": false
+            },
+            "as": "o319753"
+          },
+          "bind": "s913259",
+          "expect": {
+            "$document": {
+              "$id": "c",
+              "name": "c",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "link",
+                    "key": "link",
+                    "type": "string",
+                    "size": 16,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "category",
+                    "key": "category",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "score",
+                    "key": "score",
+                    "type": "integer",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o319731"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o319753"
+              }
+            },
+            "as": "o319754"
+          },
+          "expect": {
+            "$document": {
+              "$id": "c",
+              "name": "c",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "link",
+                    "key": "link",
+                    "type": "string",
+                    "size": 16,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "category",
+                    "key": "category",
+                    "type": "string",
+                    "size": 16,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "score",
+                    "key": "score",
+                    "type": "integer",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "4"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o319755"
+          },
+          "bind": "s913261",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o319755"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "m1",
+                "link": "1",
+                "category": "p",
+                "score": 10,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            "as": "o319756"
+          },
+          "bind": "s913263",
+          "expect": {
+            "$document": {
+              "$id": "m1",
+              "link": "1",
+              "category": "p",
+              "score": 10,
+              "$permissions": [
+                "read(\"any\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o319731"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "main",
+              "document": {
+                "$obj": "o319756"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "m1",
+              "link": "1",
+              "category": "p",
+              "score": 10,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "main",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o319757"
+          },
+          "bind": "s913265",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o319757"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "m2",
+                "link": "2",
+                "category": "q",
+                "score": 20,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            "as": "o319758"
+          },
+          "bind": "s913267",
+          "expect": {
+            "$document": {
+              "$id": "m2",
+              "link": "2",
+              "category": "q",
+              "score": 20,
+              "$permissions": [
+                "read(\"any\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o319731"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "main",
+              "document": {
+                "$obj": "o319758"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "m2",
+              "link": "2",
+              "category": "q",
+              "score": 20,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "main",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o319759"
+          },
+          "bind": "s913269",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o319759"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "m3",
+                "link": "5",
+                "category": "p",
+                "score": 30,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            "as": "o319760"
+          },
+          "bind": "s913271",
+          "expect": {
+            "$document": {
+              "$id": "m3",
+              "link": "5",
+              "category": "p",
+              "score": 30,
+              "$permissions": [
+                "read(\"any\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o319731"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "main",
+              "document": {
+                "$obj": "o319760"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "m3",
+              "link": "5",
+              "category": "p",
+              "score": 30,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "main",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "3"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o319761"
+          },
+          "bind": "s913273",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o319761"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "a1",
+                "link": "1",
+                "category": "p",
+                "score": 1,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            "as": "o319762"
+          },
+          "bind": "s913275",
+          "expect": {
+            "$document": {
+              "$id": "a1",
+              "link": "1",
+              "category": "p",
+              "score": 1,
+              "$permissions": [
+                "read(\"any\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o319731"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "a",
+              "document": {
+                "$obj": "o319762"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "a1",
+              "link": "1",
+              "category": "p",
+              "score": 1,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "a",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o319763"
+          },
+          "bind": "s913277",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o319763"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "a2",
+                "link": "3",
+                "category": "q",
+                "score": 2,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            "as": "o319764"
+          },
+          "bind": "s913279",
+          "expect": {
+            "$document": {
+              "$id": "a2",
+              "link": "3",
+              "category": "q",
+              "score": 2,
+              "$permissions": [
+                "read(\"any\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o319731"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "a",
+              "document": {
+                "$obj": "o319764"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "a2",
+              "link": "3",
+              "category": "q",
+              "score": 2,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "a",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o319765"
+          },
+          "bind": "s913281",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o319765"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "a3",
+                "link": "4",
+                "category": null,
+                "score": 3,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            "as": "o319766"
+          },
+          "bind": "s913283",
+          "expect": {
+            "$document": {
+              "$id": "a3",
+              "link": "4",
+              "category": null,
+              "score": 3,
+              "$permissions": [
+                "read(\"any\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o319731"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "a",
+              "document": {
+                "$obj": "o319766"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "a3",
+              "link": "4",
+              "category": null,
+              "score": 3,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "a",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "3"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o319767"
+          },
+          "bind": "s913285",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o319767"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "b1",
+                "link": "1",
+                "category": "p",
+                "score": 4,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            "as": "o319768"
+          },
+          "bind": "s913287",
+          "expect": {
+            "$document": {
+              "$id": "b1",
+              "link": "1",
+              "category": "p",
+              "score": 4,
+              "$permissions": [
+                "read(\"any\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o319731"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "b",
+              "document": {
+                "$obj": "o319768"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "b1",
+              "link": "1",
+              "category": "p",
+              "score": 4,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "b",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o319769"
+          },
+          "bind": "s913289",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o319769"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "b2",
+                "link": "3",
+                "category": "p",
+                "score": 5,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            "as": "o319770"
+          },
+          "bind": "s913291",
+          "expect": {
+            "$document": {
+              "$id": "b2",
+              "link": "3",
+              "category": "p",
+              "score": 5,
+              "$permissions": [
+                "read(\"any\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o319731"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "b",
+              "document": {
+                "$obj": "o319770"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "b2",
+              "link": "3",
+              "category": "p",
+              "score": 5,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "b",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o319771"
+          },
+          "bind": "s913293",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o319771"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "b3",
+                "link": "6",
+                "category": null,
+                "score": 6,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            "as": "o319772"
+          },
+          "bind": "s913295",
+          "expect": {
+            "$document": {
+              "$id": "b3",
+              "link": "6",
+              "category": null,
+              "score": 6,
+              "$permissions": [
+                "read(\"any\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o319731"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "b",
+              "document": {
+                "$obj": "o319772"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "b3",
+              "link": "6",
+              "category": null,
+              "score": 6,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "b",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "3"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o319773"
+          },
+          "bind": "s913297",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o319773"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "b4",
+                "link": "1",
+                "category": "q",
+                "score": 7,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            "as": "o319774"
+          },
+          "bind": "s913299",
+          "expect": {
+            "$document": {
+              "$id": "b4",
+              "link": "1",
+              "category": "q",
+              "score": 7,
+              "$permissions": [
+                "read(\"any\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o319731"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "b",
+              "document": {
+                "$obj": "o319774"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "b4",
+              "link": "1",
+              "category": "q",
+              "score": 7,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "b",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "4"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o319775"
+          },
+          "bind": "s913301",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o319775"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "c1",
+                "link": "1",
+                "category": "q",
+                "score": 8,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            "as": "o319776"
+          },
+          "bind": "s913303",
+          "expect": {
+            "$document": {
+              "$id": "c1",
+              "link": "1",
+              "category": "q",
+              "score": 8,
+              "$permissions": [
+                "read(\"any\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o319731"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "c",
+              "document": {
+                "$obj": "o319776"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "c1",
+              "link": "1",
+              "category": "q",
+              "score": 8,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "c",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o319777"
+          },
+          "bind": "s913305",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o319777"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "c2",
+                "link": "4",
+                "category": "p",
+                "score": 9,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            "as": "o319778"
+          },
+          "bind": "s913307",
+          "expect": {
+            "$document": {
+              "$id": "c2",
+              "link": "4",
+              "category": "p",
+              "score": 9,
+              "$permissions": [
+                "read(\"any\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o319731"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "c",
+              "document": {
+                "$obj": "o319778"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "c2",
+              "link": "4",
+              "category": "p",
+              "score": 9,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "c",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o319779"
+          },
+          "bind": "s913309",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o319779"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "c3",
+                "link": "6",
+                "category": null,
+                "score": 10,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            "as": "o319780"
+          },
+          "bind": "s913311",
+          "expect": {
+            "$document": {
+              "$id": "c3",
+              "link": "6",
+              "category": null,
+              "score": 10,
+              "$permissions": [
+                "read(\"any\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o319731"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "c",
+              "document": {
+                "$obj": "o319780"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "c3",
+              "link": "6",
+              "category": null,
+              "score": 10,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "c",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "3"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o319781"
+          },
+          "bind": "s913313",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o319781"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "c4",
+                "link": "7",
+                "category": "p",
+                "score": 11,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            "as": "o319782"
+          },
+          "bind": "s913315",
+          "expect": {
+            "$document": {
+              "$id": "c4",
+              "link": "7",
+              "category": "p",
+              "score": 11,
+              "$permissions": [
+                "read(\"any\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o319731"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "c",
+              "document": {
+                "$obj": "o319782"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "c4",
+              "link": "7",
+              "category": "p",
+              "score": 11,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "c",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "4"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "on",
+            "args": {
+              "left": "link",
+              "right": "link"
+            },
+            "as": "o319783"
+          },
+          "bind": "s913317",
+          "expect": {
+            "$query": {
+              "method": "on",
+              "attribute": "",
+              "values": [
+                "link",
+                "=",
+                "link"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "fullOuterJoin",
+            "args": {
+              "collection": "b",
+              "alias": "b",
+              "on": [
+                {
+                  "$obj": "o319783"
+                }
+              ]
+            },
+            "as": "o319784"
+          },
+          "bind": "s913318",
+          "expect": {
+            "$query": {
+              "method": "fullOuterJoin",
+              "attribute": "b",
+              "values": [
+                {
+                  "$query": {
+                    "method": "on",
+                    "attribute": "",
+                    "values": [
+                      "link",
+                      "=",
+                      "link"
+                    ]
+                  }
+                }
+              ],
+              "alias": "b"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "distinct",
+            "args": {},
+            "as": "o319785"
+          },
+          "bind": "s913319",
+          "expect": {
+            "$query": {
+              "method": "distinct",
+              "attribute": "",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "select",
+            "args": {
+              "attributes": [
+                "b.category"
+              ]
+            },
+            "as": "o319786"
+          },
+          "bind": "s913320",
+          "expect": {
+            "$query": {
+              "method": "select",
+              "attribute": "",
+              "values": [
+                "b.category"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o319731"
+            },
+            "method": "find",
+            "args": {
+              "collection": "main",
+              "queries": [
+                {
+                  "$obj": "o319784"
+                },
+                {
+                  "$obj": "o319785"
+                },
+                {
+                  "$obj": "o319786"
+                }
+              ]
+            }
+          },
+          "expect": [
+            {
+              "$document": {
+                "b.category": null,
+                "$id": null,
+                "$sequence": null,
+                "$collection": "main",
+                "$createdAt": null,
+                "$updatedAt": null
+              }
+            },
+            {
+              "$document": {
+                "b.category": "p",
+                "$id": null,
+                "$sequence": null,
+                "$collection": "main",
+                "$createdAt": null,
+                "$updatedAt": null
+              }
+            },
+            {
+              "$document": {
+                "b.category": "q",
+                "$id": null,
+                "$sequence": null,
+                "$collection": "main",
+                "$createdAt": null,
+                "$updatedAt": null
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "b.category": null,
+                "$id": null,
+                "$sequence": null,
+                "$collection": "main",
+                "$createdAt": null,
+                "$updatedAt": null
+              }
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "b.category"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "$id must be of type string"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "b.category": "p",
+                "$id": null,
+                "$sequence": null,
+                "$collection": "main",
+                "$createdAt": null,
+                "$updatedAt": null
+              }
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "b.category"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "$id must be of type string"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "b.category": "q",
+                "$id": null,
+                "$sequence": null,
+                "$collection": "main",
+                "$createdAt": null,
+                "$updatedAt": null
+              }
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "b.category"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "$id must be of type string"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

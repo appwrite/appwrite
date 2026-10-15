@@ -767,6 +767,11 @@ pub(crate) fn md5_hex(bytes: &[u8]) -> String {
 fn enums_as_values(value: &QValue) -> QValue {
     match value {
         QValue::Ext(Object::Nulls(n)) => utopia_query::string(n.as_str()),
+        // An operator has no public properties: `json_encode()` writes `{}`
+        // (Operator.php declares them protected).
+        QValue::Ext(Object::Row { class, .. }) if class == "Utopia\\Database\\Operator" => {
+            QValue::Object(QArray::new())
+        }
         QValue::Ext(Object::Row { fields, .. }) => QValue::Object(map_array(fields)),
         QValue::Array(a) => QValue::Array(map_array(a)),
         QValue::Object(a) => QValue::Object(map_array(a)),
@@ -892,10 +897,12 @@ impl ParsedQuery {
                 {
                     parsed.cursor = Some(*d);
                 }
-                _ => {
+                // Named as PHP's get_debug_type() names it: a nested query
+                // is a `Utopia\Database\Query`.
+                other => {
                     return Err(Error::query(format!(
                         "Invalid query: Invalid cursor: a cursor must be a document, {} given",
-                        value.debug_type()
+                        other.debug_type()
                     )));
                 }
             }

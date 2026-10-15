@@ -61,6 +61,16 @@ impl<D: Dialect> Builder<D> {
         self.scoped_from(table.into(), alias.into())
     }
 
+    /// The refusal a call returning the builder kept for the next
+    /// statement, taken: PHP throws it from that call (`from()` of another
+    /// collection or alias on a bound builder, `into()` and the dialects'
+    /// multi-table writes once a collection is bound).
+    ///
+    /// PHP: `ScopesCollections::from()`, `requireUnbound()`.
+    pub fn take_refusal(&mut self) -> Option<crate::Error> {
+        self.core.deferred.take()
+    }
+
     /// A select without `FROM`.
     ///
     /// PHP: `fromNone()`.

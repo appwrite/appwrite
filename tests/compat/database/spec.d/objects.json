@@ -1,0 +1,2493 @@
+{
+  "ops": {
+    "object.new": {
+      "doc": "new <class>(...args): a class of the library by name, the constructor's parameters by name; stored under `as` (README: database, the objects vocabulary)",
+      "covers": [
+        "Utopia\\Database\\Attribute\\Update::__construct",
+        "Utopia\\Database\\Cache\\Entry::__construct",
+        "Utopia\\Database\\Cache\\Epoch::__construct",
+        "Utopia\\Database\\Cache\\Invalidator::__construct",
+        "Utopia\\Database\\Cache\\Owners::__construct",
+        "Utopia\\Database\\Cache\\Query::__construct",
+        "Utopia\\Database\\Cache\\Region::__construct",
+        "Utopia\\Database\\Cache\\Registration::__construct",
+        "Utopia\\Database\\Cache\\Scope::__construct",
+        "Utopia\\Database\\Change::__construct",
+        "Utopia\\Database\\Collection\\Update::__construct",
+        "Utopia\\Database\\Document::__construct",
+        "Utopia\\Database\\Event\\Attribute\\BatchCreated::__construct",
+        "Utopia\\Database\\Event\\Attribute\\Created::__construct",
+        "Utopia\\Database\\Event\\Attribute\\Deleted::__construct",
+        "Utopia\\Database\\Event\\Attribute\\Renamed::__construct",
+        "Utopia\\Database\\Event\\Attribute\\Updated::__construct",
+        "Utopia\\Database\\Event\\Collection\\Created::__construct",
+        "Utopia\\Database\\Event\\Collection\\Deleted::__construct",
+        "Utopia\\Database\\Event\\Collection\\Listed::__construct",
+        "Utopia\\Database\\Event\\Collection\\Read::__construct",
+        "Utopia\\Database\\Event\\Collection\\Updated::__construct",
+        "Utopia\\Database\\Event\\Database\\Created::__construct",
+        "Utopia\\Database\\Event\\Database\\Deleted::__construct",
+        "Utopia\\Database\\Event\\Database\\Listed::__construct",
+        "Utopia\\Database\\Event\\Database\\Updated::__construct",
+        "Utopia\\Database\\Event\\DispatcherHook::__construct",
+        "Utopia\\Database\\Event\\Document\\Aggregated::__construct",
+        "Utopia\\Database\\Event\\Document\\BatchCreated::__construct",
+        "Utopia\\Database\\Event\\Document\\BatchDeleted::__construct",
+        "Utopia\\Database\\Event\\Document\\BatchUpdated::__construct",
+        "Utopia\\Database\\Event\\Document\\BatchUpserted::__construct",
+        "Utopia\\Database\\Event\\Document\\Counted::__construct",
+        "Utopia\\Database\\Event\\Document\\Created::__construct",
+        "Utopia\\Database\\Event\\Document\\Decreased::__construct",
+        "Utopia\\Database\\Event\\Document\\Deleted::__construct",
+        "Utopia\\Database\\Event\\Document\\Found::__construct",
+        "Utopia\\Database\\Event\\Document\\Increased::__construct",
+        "Utopia\\Database\\Event\\Document\\Purged::__construct",
+        "Utopia\\Database\\Event\\Document\\Read::__construct",
+        "Utopia\\Database\\Event\\Document\\Summed::__construct",
+        "Utopia\\Database\\Event\\Document\\Updated::__construct",
+        "Utopia\\Database\\Event\\Document\\Upserted::__construct",
+        "Utopia\\Database\\Event\\Domain::__construct",
+        "Utopia\\Database\\Event\\Index\\BatchCreated::__construct",
+        "Utopia\\Database\\Event\\Index\\Created::__construct",
+        "Utopia\\Database\\Event\\Index\\Deleted::__construct",
+        "Utopia\\Database\\Event\\Index\\Renamed::__construct",
+        "Utopia\\Database\\Exception::__construct",
+        "Utopia\\Database\\Exception\\Order::__construct",
+        "Utopia\\Database\\Filter\\Callback::__construct",
+        "Utopia\\Database\\Format::__construct",
+        "Utopia\\Database\\NumericBounds::__construct",
+        "Utopia\\Database\\Operator::__construct",
+        "Utopia\\Database\\ParsedQuery::__construct",
+        "Utopia\\Database\\Permission::__construct",
+        "Utopia\\Database\\Profiler\\Log::__construct",
+        "Utopia\\Database\\Query::__construct",
+        "Utopia\\Database\\Relationship\\Update::__construct",
+        "Utopia\\Database\\Role::__construct",
+        "Utopia\\Database\\Schema\\Column::__construct",
+        "Utopia\\Database\\Schema\\Index::__construct",
+        "Utopia\\Database\\State\\Frame::__construct",
+        "Utopia\\Database\\State\\Snapshot::__construct",
+        "Utopia\\Database\\State\\Value::__construct",
+        "Utopia\\Database\\Validator\\AttributeDefinition::__construct",
+        "Utopia\\Database\\Validator\\Authorization::__construct",
+        "Utopia\\Database\\Validator\\Authorization\\Input::__construct",
+        "Utopia\\Database\\Validator\\BigInt::__construct",
+        "Utopia\\Database\\Validator\\ByteLength::__construct",
+        "Utopia\\Database\\Validator\\Datetime::__construct",
+        "Utopia\\Database\\Validator\\IndexDefinition::__construct",
+        "Utopia\\Database\\Validator\\IndexDependency::__construct",
+        "Utopia\\Database\\Validator\\Key::__construct",
+        "Utopia\\Database\\Validator\\Label::__construct",
+        "Utopia\\Database\\Validator\\Operator::__construct",
+        "Utopia\\Database\\Validator\\Permissions::__construct",
+        "Utopia\\Database\\Validator\\Queries\\Base::__construct",
+        "Utopia\\Database\\Validator\\Queries\\Document::__construct",
+        "Utopia\\Database\\Validator\\Queries\\Documents::__construct",
+        "Utopia\\Database\\Validator\\Queries\\Indexed::__construct",
+        "Utopia\\Database\\Validator\\Query\\Aggregate::__construct",
+        "Utopia\\Database\\Validator\\Query\\Cursor::__construct",
+        "Utopia\\Database\\Validator\\Query\\Filter::__construct",
+        "Utopia\\Database\\Validator\\Query\\GroupBy::__construct",
+        "Utopia\\Database\\Validator\\Query\\Join::__construct",
+        "Utopia\\Database\\Validator\\Query\\Joined\\Collection::__construct",
+        "Utopia\\Database\\Validator\\Query\\Limit::__construct",
+        "Utopia\\Database\\Validator\\Query\\Offset::__construct",
+        "Utopia\\Database\\Validator\\Query\\Order::__construct",
+        "Utopia\\Database\\Validator\\Query\\Select::__construct",
+        "Utopia\\Database\\Validator\\Roles::__construct",
+        "Utopia\\Database\\Validator\\Sequence::__construct",
+        "Utopia\\Database\\Validator\\Spatial::__construct",
+        "Utopia\\Database\\Validator\\Structure::__construct",
+        "Utopia\\Database\\Validator\\UID::__construct",
+        "Utopia\\Database\\Validator\\Vector::__construct"
+      ],
+      "fuzz": [
+        {
+          "name": "Document: random",
+          "iterations": 3000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "class": {
+                "gen": "const",
+                "value": "Document"
+              },
+              "args": {
+                "gen": "object",
+                "fields": {
+                  "input": {
+                    "gen": "ref",
+                    "name": "helpers_doc_input"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Document: any",
+          "iterations": 2000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "class": {
+                "gen": "const",
+                "value": "Document"
+              },
+              "args": {
+                "gen": "object",
+                "fields": {
+                  "input": {
+                    "gen": "one_of",
+                    "of": [
+                      {
+                        "gen": "array",
+                        "items": {
+                          "gen": "any",
+                          "depth": 3
+                        },
+                        "max": 4
+                      },
+                      {
+                        "gen": "object",
+                        "fields": {
+                          "$id": {
+                            "gen": "any",
+                            "depth": 1
+                          },
+                          "$collection": {
+                            "gen": "any",
+                            "depth": 1
+                          },
+                          "$permissions": {
+                            "gen": "any",
+                            "depth": 2
+                          },
+                          "a": {
+                            "gen": "any",
+                            "depth": 3
+                          },
+                          "b": {
+                            "gen": "any",
+                            "depth": 3
+                          }
+                        },
+                        "optional": [
+                          "$id",
+                          "$collection",
+                          "$permissions",
+                          "a",
+                          "b"
+                        ]
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "object.call": {
+      "doc": "<class>::method(...args), or <this>->method(...args) on a stored object ({\"$obj\": name}) or a value tag; stored under `as`",
+      "covers": [
+        "Utopia\\Database\\Adapter\\Profile::hasFeature",
+        "Utopia\\Database\\Adapter\\Profile::supports",
+        "Utopia\\Database\\Adapter\\SQL\\BoundedPage::withoutSearches",
+        "Utopia\\Database\\Adapter\\SQL\\Hook\\Column\\AllowNull::filter",
+        "Utopia\\Database\\Adapter\\SQL\\Hook\\Column\\AllowNull::quote",
+        "Utopia\\Database\\Adapter\\SQL\\Hook\\Column\\AllowNull::wrap",
+        "Utopia\\Database\\Adapter\\SQL\\Hook\\Join\\Chain::fromQueries",
+        "Utopia\\Database\\Adapter\\SQL\\Hook\\Join\\Chain::has",
+        "Utopia\\Database\\Adapter\\SQL\\Hook\\Join\\Chain::hasPreservingOuterJoin",
+        "Utopia\\Database\\Adapter\\SQL\\Hook\\Join\\Chain::preceding",
+        "Utopia\\Database\\Adapter\\SQL\\Hook\\Join\\Chain::type",
+        "Utopia\\Database\\Adapter\\SQL\\Hook\\Join\\OuterChain::filterJoin",
+        "Utopia\\Database\\Adapter\\SQL\\Hook\\Permission\\Filter::collate",
+        "Utopia\\Database\\Adapter\\SQL\\Hook\\Permission\\Filter::filter",
+        "Utopia\\Database\\Adapter\\SQL\\Hook\\Permission\\Filter::filterJoin",
+        "Utopia\\Database\\Adapter\\SQL\\Hook\\Permission\\Filter::withoutSemiJoin",
+        "Utopia\\Database\\Adapter\\SQL\\Hook\\Permission\\Join::filterJoin",
+        "Utopia\\Database\\Adapter\\SQL\\Hook\\Permission\\OuterJoin::filterJoin",
+        "Utopia\\Database\\Adapter\\SQL\\Hook\\Tenant\\Filter::filter",
+        "Utopia\\Database\\Adapter\\SQL\\Hook\\Tenant\\Filter::filterJoin",
+        "Utopia\\Database\\Adapter\\SQL\\Hook\\Tenant\\Filter::joined",
+        "Utopia\\Database\\Adapter\\SQL\\Hook\\Tenant\\OuterJoin::filterJoin",
+        "Utopia\\Database\\Adapter\\SQL\\Hook\\Tenant\\Raw::filter",
+        "Utopia\\Database\\Adapter\\SQL\\Hook\\Tenant\\Raw::filterJoin",
+        "Utopia\\Database\\Adapter\\SQL\\Hook\\Tenant\\Raw::outerJoin",
+        "Utopia\\Database\\Adapter\\SQL\\Hook\\Tenant\\Raw::reset",
+        "Utopia\\Database\\Adapter\\SQL\\Hook\\Tenant\\RawOuterJoin::filterJoin",
+        "Utopia\\Database\\Adapter\\SQL\\Hook\\WriteContext::builder",
+        "Utopia\\Database\\Adapter\\SQL\\Hook\\WriteContext::decorateRow",
+        "Utopia\\Database\\Adapter\\SQL\\Hook\\WriteContext::fetch",
+        "Utopia\\Database\\Adapter\\SQL\\Hook\\WriteContext::ignoreDuplicates",
+        "Utopia\\Database\\Adapter\\SQL\\Hook\\WriteContext::rawTable",
+        "Utopia\\Database\\Adapter\\SQL\\Hook\\WriteContext::run",
+        "Utopia\\Database\\Adapter\\SQL\\Hook\\WriteContext::skipPermissions",
+        "Utopia\\Database\\Adapter\\SQL\\Scope\\Filter::bind",
+        "Utopia\\Database\\Adapter\\SQL\\Scope\\Filter::joinTable",
+        "Utopia\\Database\\Adapter\\SQL\\Scope\\Filter::table",
+        "Utopia\\Database\\Adapter\\SQL\\Scope\\Raw::bind",
+        "Utopia\\Database\\Adapter\\SQL\\Scope\\Raw::joinTable",
+        "Utopia\\Database\\Adapter\\SQL\\Scope\\Raw::table",
+        "Utopia\\Database\\Adapter\\SQL\\Wkt::encode",
+        "Utopia\\Database\\Attribute::apply",
+        "Utopia\\Database\\Attribute::availableTypes",
+        "Utopia\\Database\\Attribute::bigInteger",
+        "Utopia\\Database\\Attribute::boolean",
+        "Utopia\\Database\\Attribute::bounds",
+        "Utopia\\Database\\Attribute::datetime",
+        "Utopia\\Database\\Attribute::double",
+        "Utopia\\Database\\Attribute::float",
+        "Utopia\\Database\\Attribute::fromArray",
+        "Utopia\\Database\\Attribute::fromDocument",
+        "Utopia\\Database\\Attribute::id",
+        "Utopia\\Database\\Attribute::integer",
+        "Utopia\\Database\\Attribute::isInteger",
+        "Utopia\\Database\\Attribute::isNumeric",
+        "Utopia\\Database\\Attribute::isRelationship",
+        "Utopia\\Database\\Attribute::isSpatial",
+        "Utopia\\Database\\Attribute::lineString",
+        "Utopia\\Database\\Attribute::longText",
+        "Utopia\\Database\\Attribute::mediumText",
+        "Utopia\\Database\\Attribute::object",
+        "Utopia\\Database\\Attribute::point",
+        "Utopia\\Database\\Attribute::polygon",
+        "Utopia\\Database\\Attribute::relationship",
+        "Utopia\\Database\\Attribute::resolvedSize",
+        "Utopia\\Database\\Attribute::storedType",
+        "Utopia\\Database\\Attribute::string",
+        "Utopia\\Database\\Attribute::text",
+        "Utopia\\Database\\Attribute::toDocument",
+        "Utopia\\Database\\Attribute::typeFromStored",
+        "Utopia\\Database\\Attribute::varchar",
+        "Utopia\\Database\\Attribute::vector",
+        "Utopia\\Database\\Attribute::width",
+        "Utopia\\Database\\Attribute::withFilters",
+        "Utopia\\Database\\Attribute\\Update::changesDefault",
+        "Utopia\\Database\\Attribute\\Update::changesFormat",
+        "Utopia\\Database\\Attribute\\Update::isEmpty",
+        "Utopia\\Database\\Builder\\CompilesFilters::compileFilters",
+        "Utopia\\Database\\Builder\\MariaDB::build",
+        "Utopia\\Database\\Builder\\MariaDB::compileFilters",
+        "Utopia\\Database\\Builder\\MariaDB::deleteJoin",
+        "Utopia\\Database\\Builder\\MariaDB::from",
+        "Utopia\\Database\\Builder\\MariaDB::fromTable",
+        "Utopia\\Database\\Builder\\MariaDB::into",
+        "Utopia\\Database\\Builder\\MariaDB::isScoped",
+        "Utopia\\Database\\Builder\\MariaDB::scope",
+        "Utopia\\Database\\Builder\\MariaDB::updateJoin",
+        "Utopia\\Database\\Builder\\MySQL::build",
+        "Utopia\\Database\\Builder\\MySQL::compileFilters",
+        "Utopia\\Database\\Builder\\MySQL::deleteJoin",
+        "Utopia\\Database\\Builder\\MySQL::from",
+        "Utopia\\Database\\Builder\\MySQL::fromTable",
+        "Utopia\\Database\\Builder\\MySQL::into",
+        "Utopia\\Database\\Builder\\MySQL::isScoped",
+        "Utopia\\Database\\Builder\\MySQL::scope",
+        "Utopia\\Database\\Builder\\MySQL::updateJoin",
+        "Utopia\\Database\\Builder\\Postgres::build",
+        "Utopia\\Database\\Builder\\Postgres::compileFilter",
+        "Utopia\\Database\\Builder\\Postgres::compileFilters",
+        "Utopia\\Database\\Builder\\Postgres::deleteUsing",
+        "Utopia\\Database\\Builder\\Postgres::from",
+        "Utopia\\Database\\Builder\\Postgres::fromTable",
+        "Utopia\\Database\\Builder\\Postgres::into",
+        "Utopia\\Database\\Builder\\Postgres::isScoped",
+        "Utopia\\Database\\Builder\\Postgres::scope",
+        "Utopia\\Database\\Builder\\Postgres::updateFrom",
+        "Utopia\\Database\\Builder\\RefusesJoinedWrites::deleteJoin",
+        "Utopia\\Database\\Builder\\RefusesJoinedWrites::updateJoin",
+        "Utopia\\Database\\Builder\\SQLite::build",
+        "Utopia\\Database\\Builder\\SQLite::compileFilters",
+        "Utopia\\Database\\Builder\\SQLite::compileJoin",
+        "Utopia\\Database\\Builder\\SQLite::from",
+        "Utopia\\Database\\Builder\\SQLite::fromTable",
+        "Utopia\\Database\\Builder\\SQLite::into",
+        "Utopia\\Database\\Builder\\SQLite::isScoped",
+        "Utopia\\Database\\Builder\\SQLite::scope",
+        "Utopia\\Database\\Builder\\ScopesCollections::build",
+        "Utopia\\Database\\Builder\\ScopesCollections::from",
+        "Utopia\\Database\\Builder\\ScopesCollections::fromTable",
+        "Utopia\\Database\\Builder\\ScopesCollections::into",
+        "Utopia\\Database\\Builder\\ScopesCollections::isScoped",
+        "Utopia\\Database\\Builder\\ScopesCollections::scope",
+        "Utopia\\Database\\Cache\\Fields::kept",
+        "Utopia\\Database\\Cache\\Fields::remember",
+        "Utopia\\Database\\Cache\\Invalidator::activate",
+        "Utopia\\Database\\Cache\\Invalidator::block",
+        "Utopia\\Database\\Cache\\Invalidator::handle",
+        "Utopia\\Database\\Cache\\Invalidator::invalidate",
+        "Utopia\\Database\\Cache\\Invalidator::isMutation",
+        "Utopia\\Database\\Cache\\Invalidator::tokens",
+        "Utopia\\Database\\Cache\\Owners::find",
+        "Utopia\\Database\\Cache\\Owners::register",
+        "Utopia\\Database\\Cache\\Query::activateCollection",
+        "Utopia\\Database\\Cache\\Query::blockCollection",
+        "Utopia\\Database\\Cache\\Query::createToken",
+        "Utopia\\Database\\Cache\\Query::flush",
+        "Utopia\\Database\\Cache\\Query::get",
+        "Utopia\\Database\\Cache\\Query::getCollectionKey",
+        "Utopia\\Database\\Cache\\Query::getEntry",
+        "Utopia\\Database\\Cache\\Query::getGeneration",
+        "Utopia\\Database\\Cache\\Query::getRegion",
+        "Utopia\\Database\\Cache\\Query::invalidateCollection",
+        "Utopia\\Database\\Cache\\Query::set",
+        "Utopia\\Database\\Cache\\Query::setRegion",
+        "Utopia\\Database\\Cache\\Scope::withTenant",
+        "Utopia\\Database\\Collection::attributes",
+        "Utopia\\Database\\Collection::attributesWith",
+        "Utopia\\Database\\Collection::create",
+        "Utopia\\Database\\Collection::declaredPermissions",
+        "Utopia\\Database\\Collection::documentSecurity",
+        "Utopia\\Database\\Collection::exchangeArray",
+        "Utopia\\Database\\Collection::fingerprint",
+        "Utopia\\Database\\Collection::fromArray",
+        "Utopia\\Database\\Collection::fromDocument",
+        "Utopia\\Database\\Collection::indexes",
+        "Utopia\\Database\\Collection::name",
+        "Utopia\\Database\\Collection::offsetSet",
+        "Utopia\\Database\\Collection::offsetUnset",
+        "Utopia\\Database\\Collection::toDocument",
+        "Utopia\\Database\\Connection::hasError",
+        "Utopia\\Database\\DateTime::addSeconds",
+        "Utopia\\Database\\DateTime::format",
+        "Utopia\\Database\\DateTime::formatTz",
+        "Utopia\\Database\\DateTime::now",
+        "Utopia\\Database\\DateTime::nowAfter",
+        "Utopia\\Database\\DateTime::setTimezone",
+        "Utopia\\Database\\Document::except",
+        "Utopia\\Database\\Document::fromArray",
+        "Utopia\\Database\\Document::fromRow",
+        "Utopia\\Database\\Document::fromStorage",
+        "Utopia\\Database\\Document::getArray",
+        "Utopia\\Database\\Document::getArrayCopy",
+        "Utopia\\Database\\Document::getAttribute",
+        "Utopia\\Database\\Document::getAttributes",
+        "Utopia\\Database\\Document::getCollection",
+        "Utopia\\Database\\Document::getCreatedAt",
+        "Utopia\\Database\\Document::getDocument",
+        "Utopia\\Database\\Document::getDocuments",
+        "Utopia\\Database\\Document::getId",
+        "Utopia\\Database\\Document::getPermissions",
+        "Utopia\\Database\\Document::getPermissionsByType",
+        "Utopia\\Database\\Document::getSequence",
+        "Utopia\\Database\\Document::getTenant",
+        "Utopia\\Database\\Document::getUpdatedAt",
+        "Utopia\\Database\\Document::isEmpty",
+        "Utopia\\Database\\Document::isSet",
+        "Utopia\\Database\\Document::only",
+        "Utopia\\Database\\Document::removeAttribute",
+        "Utopia\\Database\\Document::setAttribute",
+        "Utopia\\Database\\Document::setAttributes",
+        "Utopia\\Database\\Event::domain",
+        "Utopia\\Database\\Event\\DispatcherHook::handle",
+        "Utopia\\Database\\Event\\DispatcherHook::handles",
+        "Utopia\\Database\\Event\\DispatcherHook::on",
+        "Utopia\\Database\\Exception\\Order::getAttribute",
+        "Utopia\\Database\\Filter::names",
+        "Utopia\\Database\\Filter\\Callback::decode",
+        "Utopia\\Database\\Filter\\Callback::encode",
+        "Utopia\\Database\\Filter\\Callback::name",
+        "Utopia\\Database\\Filter\\Callback::signature",
+        "Utopia\\Database\\Filter\\Registry::get",
+        "Utopia\\Database\\Filter\\Registry::has",
+        "Utopia\\Database\\Filter\\Registry::register",
+        "Utopia\\Database\\Filter\\Registry::signatures",
+        "Utopia\\Database\\Id::custom",
+        "Utopia\\Database\\Id::unique",
+        "Utopia\\Database\\Index::fromArray",
+        "Utopia\\Database\\Index::fromDocument",
+        "Utopia\\Database\\Index::fulltext",
+        "Utopia\\Database\\Index::hnswCosine",
+        "Utopia\\Database\\Index::hnswDot",
+        "Utopia\\Database\\Index::hnswEuclidean",
+        "Utopia\\Database\\Index::key",
+        "Utopia\\Database\\Index::object",
+        "Utopia\\Database\\Index::spatial",
+        "Utopia\\Database\\Index::toDocument",
+        "Utopia\\Database\\Index::trigram",
+        "Utopia\\Database\\Index::ttl",
+        "Utopia\\Database\\Index::unique",
+        "Utopia\\Database\\Index::unknownTypeMessage",
+        "Utopia\\Database\\Index::withKey",
+        "Utopia\\Database\\Index::withLengths",
+        "Utopia\\Database\\Index::withOrders",
+        "Utopia\\Database\\IntegerWidth::fromSize",
+        "Utopia\\Database\\IntegerWidth::size",
+        "Utopia\\Database\\Operator::arrayAppend",
+        "Utopia\\Database\\Operator::arrayDiff",
+        "Utopia\\Database\\Operator::arrayFilter",
+        "Utopia\\Database\\Operator::arrayInsert",
+        "Utopia\\Database\\Operator::arrayIntersect",
+        "Utopia\\Database\\Operator::arrayPrepend",
+        "Utopia\\Database\\Operator::arrayRemove",
+        "Utopia\\Database\\Operator::arrayUnique",
+        "Utopia\\Database\\Operator::dateAddDays",
+        "Utopia\\Database\\Operator::dateSetNow",
+        "Utopia\\Database\\Operator::dateSubDays",
+        "Utopia\\Database\\Operator::decrement",
+        "Utopia\\Database\\Operator::divide",
+        "Utopia\\Database\\Operator::extractOperators",
+        "Utopia\\Database\\Operator::getAttribute",
+        "Utopia\\Database\\Operator::getMethod",
+        "Utopia\\Database\\Operator::getValue",
+        "Utopia\\Database\\Operator::getValues",
+        "Utopia\\Database\\Operator::increment",
+        "Utopia\\Database\\Operator::isArrayOperation",
+        "Utopia\\Database\\Operator::isBooleanOperation",
+        "Utopia\\Database\\Operator::isDateOperation",
+        "Utopia\\Database\\Operator::isMethod",
+        "Utopia\\Database\\Operator::isNumericOperation",
+        "Utopia\\Database\\Operator::isOperator",
+        "Utopia\\Database\\Operator::isStringOperation",
+        "Utopia\\Database\\Operator::modulo",
+        "Utopia\\Database\\Operator::multiply",
+        "Utopia\\Database\\Operator::parse",
+        "Utopia\\Database\\Operator::parseOperator",
+        "Utopia\\Database\\Operator::parseOperators",
+        "Utopia\\Database\\Operator::power",
+        "Utopia\\Database\\Operator::setAttribute",
+        "Utopia\\Database\\Operator::setMethod",
+        "Utopia\\Database\\Operator::setValue",
+        "Utopia\\Database\\Operator::setValues",
+        "Utopia\\Database\\Operator::stringConcat",
+        "Utopia\\Database\\Operator::stringReplace",
+        "Utopia\\Database\\Operator::toArray",
+        "Utopia\\Database\\Operator::toString",
+        "Utopia\\Database\\Operator::toggle",
+        "Utopia\\Database\\OperatorType::isArray",
+        "Utopia\\Database\\OperatorType::isBoolean",
+        "Utopia\\Database\\OperatorType::isDate",
+        "Utopia\\Database\\OperatorType::isNumeric",
+        "Utopia\\Database\\OperatorType::isString",
+        "Utopia\\Database\\ParsedQuery::isAggregation",
+        "Utopia\\Database\\Permission::aggregate",
+        "Utopia\\Database\\Permission::create",
+        "Utopia\\Database\\Permission::delete",
+        "Utopia\\Database\\Permission::getDimension",
+        "Utopia\\Database\\Permission::getIdentifier",
+        "Utopia\\Database\\Permission::getPermission",
+        "Utopia\\Database\\Permission::getRole",
+        "Utopia\\Database\\Permission::parse",
+        "Utopia\\Database\\Permission::read",
+        "Utopia\\Database\\Permission::toString",
+        "Utopia\\Database\\Permission::update",
+        "Utopia\\Database\\Permission::write",
+        "Utopia\\Database\\Query::cursorAfter",
+        "Utopia\\Database\\Query::cursorBefore",
+        "Utopia\\Database\\Query::fingerprint",
+        "Utopia\\Database\\Query::groupByType",
+        "Utopia\\Database\\Query::isMethod",
+        "Utopia\\Database\\Query::isObjectAttribute",
+        "Utopia\\Database\\Query::isSpatialAttribute",
+        "Utopia\\Database\\Query::parse",
+        "Utopia\\Database\\Query::parseQuery",
+        "Utopia\\Database\\Query::shape",
+        "Utopia\\Database\\Query::stddev",
+        "Utopia\\Database\\Query::toArray",
+        "Utopia\\Database\\Query::variance",
+        "Utopia\\Database\\Relationship::apply",
+        "Utopia\\Database\\Relationship::fromArray",
+        "Utopia\\Database\\Relationship::fromDocument",
+        "Utopia\\Database\\Relationship::inverse",
+        "Utopia\\Database\\Relationship::manyToMany",
+        "Utopia\\Database\\Relationship::manyToOne",
+        "Utopia\\Database\\Relationship::oneToMany",
+        "Utopia\\Database\\Relationship::oneToOne",
+        "Utopia\\Database\\Relationship::toDocument",
+        "Utopia\\Database\\Relationship::toOptions",
+        "Utopia\\Database\\RelationshipDeleteAction::toForeignKeyAction",
+        "Utopia\\Database\\Role::any",
+        "Utopia\\Database\\Role::getDimension",
+        "Utopia\\Database\\Role::getIdentifier",
+        "Utopia\\Database\\Role::getRole",
+        "Utopia\\Database\\Role::guests",
+        "Utopia\\Database\\Role::label",
+        "Utopia\\Database\\Role::member",
+        "Utopia\\Database\\Role::parse",
+        "Utopia\\Database\\Role::team",
+        "Utopia\\Database\\Role::toString",
+        "Utopia\\Database\\Role::user",
+        "Utopia\\Database\\Role::users",
+        "Utopia\\Database\\Rounding::round",
+        "Utopia\\Database\\State\\Value::get",
+        "Utopia\\Database\\State\\Value::set",
+        "Utopia\\Database\\State\\Value::with",
+        "Utopia\\Database\\Storage::attribute",
+        "Utopia\\Database\\Storage::attributeMap",
+        "Utopia\\Database\\Storage::column",
+        "Utopia\\Database\\Storage::columnMap",
+        "Utopia\\Database\\Storage::permissionsTable",
+        "Utopia\\Database\\Validator\\AttributeDefinition::checkAttributeLimits",
+        "Utopia\\Database\\Validator\\AttributeDefinition::checkDefaultValue",
+        "Utopia\\Database\\Validator\\AttributeDefinition::checkDuplicateId",
+        "Utopia\\Database\\Validator\\AttributeDefinition::checkDuplicateInSchema",
+        "Utopia\\Database\\Validator\\AttributeDefinition::checkFormat",
+        "Utopia\\Database\\Validator\\AttributeDefinition::checkRequiredFilters",
+        "Utopia\\Database\\Validator\\AttributeDefinition::checkType",
+        "Utopia\\Database\\Validator\\AttributeDefinition::getDescription",
+        "Utopia\\Database\\Validator\\AttributeDefinition::getType",
+        "Utopia\\Database\\Validator\\AttributeDefinition::isArray",
+        "Utopia\\Database\\Validator\\AttributeDefinition::isValid",
+        "Utopia\\Database\\Validator\\Authorization\\Input::getAction",
+        "Utopia\\Database\\Validator\\Authorization\\Input::getPermissions",
+        "Utopia\\Database\\Validator\\Authorization\\Input::setAction",
+        "Utopia\\Database\\Validator\\Authorization\\Input::setPermissions",
+        "Utopia\\Database\\Validator\\BigInt::add",
+        "Utopia\\Database\\Validator\\BigInt::calculate",
+        "Utopia\\Database\\Validator\\BigInt::calculateOutsideNative",
+        "Utopia\\Database\\Validator\\BigInt::compare",
+        "Utopia\\Database\\Validator\\BigInt::compareUnsignedStrings",
+        "Utopia\\Database\\Validator\\BigInt::divide",
+        "Utopia\\Database\\Validator\\BigInt::fitsBigIntRange",
+        "Utopia\\Database\\Validator\\BigInt::fitsPhpInt",
+        "Utopia\\Database\\Validator\\BigInt::formatIntegerString",
+        "Utopia\\Database\\Validator\\BigInt::getDescription",
+        "Utopia\\Database\\Validator\\BigInt::getType",
+        "Utopia\\Database\\Validator\\BigInt::integralValue",
+        "Utopia\\Database\\Validator\\BigInt::isArray",
+        "Utopia\\Database\\Validator\\BigInt::isIntegerString",
+        "Utopia\\Database\\Validator\\BigInt::isIntegerValue",
+        "Utopia\\Database\\Validator\\BigInt::isValid",
+        "Utopia\\Database\\Validator\\BigInt::modulo",
+        "Utopia\\Database\\Validator\\BigInt::multiply",
+        "Utopia\\Database\\Validator\\BigInt::negate",
+        "Utopia\\Database\\Validator\\BigInt::normalizeInteger",
+        "Utopia\\Database\\Validator\\BigInt::normalizeUnsignedString",
+        "Utopia\\Database\\Validator\\BigInt::power",
+        "Utopia\\Database\\Validator\\BigInt::subtract",
+        "Utopia\\Database\\Validator\\BigInt::toNative",
+        "Utopia\\Database\\Validator\\ByteLength::getDescription",
+        "Utopia\\Database\\Validator\\ByteLength::getType",
+        "Utopia\\Database\\Validator\\ByteLength::isArray",
+        "Utopia\\Database\\Validator\\ByteLength::isValid",
+        "Utopia\\Database\\Validator\\Datetime::getDescription",
+        "Utopia\\Database\\Validator\\Datetime::getType",
+        "Utopia\\Database\\Validator\\Datetime::isArray",
+        "Utopia\\Database\\Validator\\Datetime::isValid",
+        "Utopia\\Database\\Validator\\IndexDefinition::checkArrayIndexes",
+        "Utopia\\Database\\Validator\\IndexDefinition::checkDuplicatedAttributes",
+        "Utopia\\Database\\Validator\\IndexDefinition::checkEmptyIndexAttributes",
+        "Utopia\\Database\\Validator\\IndexDefinition::checkFulltextIndexNonString",
+        "Utopia\\Database\\Validator\\IndexDefinition::checkIdenticalIndexes",
+        "Utopia\\Database\\Validator\\IndexDefinition::checkIndexLengths",
+        "Utopia\\Database\\Validator\\IndexDefinition::checkKeyUniqueFulltextSupport",
+        "Utopia\\Database\\Validator\\IndexDefinition::checkMultipleFulltextIndexes",
+        "Utopia\\Database\\Validator\\IndexDefinition::checkNonSpatialIndexOnSpatialAttributes",
+        "Utopia\\Database\\Validator\\IndexDefinition::checkObjectIndexes",
+        "Utopia\\Database\\Validator\\IndexDefinition::checkReservedNames",
+        "Utopia\\Database\\Validator\\IndexDefinition::checkSpatialIndexes",
+        "Utopia\\Database\\Validator\\IndexDefinition::checkTrigramIndexes",
+        "Utopia\\Database\\Validator\\IndexDefinition::checkTtlIndexes",
+        "Utopia\\Database\\Validator\\IndexDefinition::checkValidAttributes",
+        "Utopia\\Database\\Validator\\IndexDefinition::checkValidIndex",
+        "Utopia\\Database\\Validator\\IndexDefinition::checkVectorIndexes",
+        "Utopia\\Database\\Validator\\IndexDefinition::getDescription",
+        "Utopia\\Database\\Validator\\IndexDefinition::getType",
+        "Utopia\\Database\\Validator\\IndexDefinition::isArray",
+        "Utopia\\Database\\Validator\\IndexDefinition::isValid",
+        "Utopia\\Database\\Validator\\IndexDependency::getDescription",
+        "Utopia\\Database\\Validator\\IndexDependency::getType",
+        "Utopia\\Database\\Validator\\IndexDependency::isArray",
+        "Utopia\\Database\\Validator\\IndexDependency::isValid",
+        "Utopia\\Database\\Validator\\Key::getDescription",
+        "Utopia\\Database\\Validator\\Key::getType",
+        "Utopia\\Database\\Validator\\Key::isArray",
+        "Utopia\\Database\\Validator\\Key::isValid",
+        "Utopia\\Database\\Validator\\Label::isValid",
+        "Utopia\\Database\\Validator\\ObjectPath::getDescription",
+        "Utopia\\Database\\Validator\\ObjectPath::getType",
+        "Utopia\\Database\\Validator\\ObjectPath::isArray",
+        "Utopia\\Database\\Validator\\ObjectPath::isValid",
+        "Utopia\\Database\\Validator\\ObjectValue::getDescription",
+        "Utopia\\Database\\Validator\\ObjectValue::getType",
+        "Utopia\\Database\\Validator\\ObjectValue::isArray",
+        "Utopia\\Database\\Validator\\ObjectValue::isValid",
+        "Utopia\\Database\\Validator\\Operator::getDescription",
+        "Utopia\\Database\\Validator\\Operator::getType",
+        "Utopia\\Database\\Validator\\Operator::isArray",
+        "Utopia\\Database\\Validator\\Operator::isValid",
+        "Utopia\\Database\\Validator\\PartialStructure::isValid",
+        "Utopia\\Database\\Validator\\Permissions::getDescription",
+        "Utopia\\Database\\Validator\\Permissions::getType",
+        "Utopia\\Database\\Validator\\Permissions::isArray",
+        "Utopia\\Database\\Validator\\Permissions::isValid",
+        "Utopia\\Database\\Validator\\Queries\\Base::getDescription",
+        "Utopia\\Database\\Validator\\Queries\\Base::getType",
+        "Utopia\\Database\\Validator\\Queries\\Base::isArray",
+        "Utopia\\Database\\Validator\\Queries\\Base::isValid",
+        "Utopia\\Database\\Validator\\Queries\\Base::setJoinedCollections",
+        "Utopia\\Database\\Validator\\Queries\\Document::isValid",
+        "Utopia\\Database\\Validator\\Queries\\Documents::internalAttributes",
+        "Utopia\\Database\\Validator\\Queries\\Indexed::isValid",
+        "Utopia\\Database\\Validator\\Queries\\Narrow::accepts",
+        "Utopia\\Database\\Validator\\Queries\\Narrow::isValid",
+        "Utopia\\Database\\Validator\\Queries\\Narrow::of",
+        "Utopia\\Database\\Validator\\Query\\Aggregate::allowJoinAliases",
+        "Utopia\\Database\\Validator\\Query\\Aggregate::allowJoins",
+        "Utopia\\Database\\Validator\\Query\\Aggregate::getMethodType",
+        "Utopia\\Database\\Validator\\Query\\Aggregate::resetJoinAliases",
+        "Utopia\\Database\\Validator\\Query\\Aggregate::setAggregations",
+        "Utopia\\Database\\Validator\\Query\\Aggregate::setGroupBy",
+        "Utopia\\Database\\Validator\\Query\\Base::getDescription",
+        "Utopia\\Database\\Validator\\Query\\Base::getType",
+        "Utopia\\Database\\Validator\\Query\\Base::isArray",
+        "Utopia\\Database\\Validator\\Query\\Base::isValid",
+        "Utopia\\Database\\Validator\\Query\\Cursor::getMethodType",
+        "Utopia\\Database\\Validator\\Query\\Cursor::isValid",
+        "Utopia\\Database\\Validator\\Query\\Distinct::getMethodType",
+        "Utopia\\Database\\Validator\\Query\\Filter::allowJoinAliases",
+        "Utopia\\Database\\Validator\\Query\\Filter::allowJoins",
+        "Utopia\\Database\\Validator\\Query\\Filter::getMaxValuesCount",
+        "Utopia\\Database\\Validator\\Query\\Filter::getMethodType",
+        "Utopia\\Database\\Validator\\Query\\Filter::isValid",
+        "Utopia\\Database\\Validator\\Query\\Filter::resetJoinAliases",
+        "Utopia\\Database\\Validator\\Query\\GroupBy::allowJoinAliases",
+        "Utopia\\Database\\Validator\\Query\\GroupBy::allowJoins",
+        "Utopia\\Database\\Validator\\Query\\GroupBy::getMethodType",
+        "Utopia\\Database\\Validator\\Query\\GroupBy::resetJoinAliases",
+        "Utopia\\Database\\Validator\\Query\\Having::getMethodType",
+        "Utopia\\Database\\Validator\\Query\\Having::setAggregations",
+        "Utopia\\Database\\Validator\\Query\\Having::setFilter",
+        "Utopia\\Database\\Validator\\Query\\Having::setGroupBy",
+        "Utopia\\Database\\Validator\\Query\\Join::allowJoins",
+        "Utopia\\Database\\Validator\\Query\\Join::describeInvalidAlias",
+        "Utopia\\Database\\Validator\\Query\\Join::getMethodType",
+        "Utopia\\Database\\Validator\\Query\\Join::isValidCount",
+        "Utopia\\Database\\Validator\\Query\\Join::resetJoinAliases",
+        "Utopia\\Database\\Validator\\Query\\Joined\\Attributes::allowJoinAliases",
+        "Utopia\\Database\\Validator\\Query\\Joined\\Attributes::allowJoins",
+        "Utopia\\Database\\Validator\\Query\\Joined\\Attributes::resetJoinAliases",
+        "Utopia\\Database\\Validator\\Query\\Joined\\Collection::columns",
+        "Utopia\\Database\\Validator\\Query\\Joined\\Collection::holdsColumn",
+        "Utopia\\Database\\Validator\\Query\\Joined\\Collection::of",
+        "Utopia\\Database\\Validator\\Query\\Limit::getMethodType",
+        "Utopia\\Database\\Validator\\Query\\Limit::isValid",
+        "Utopia\\Database\\Validator\\Query\\Offset::getMethodType",
+        "Utopia\\Database\\Validator\\Query\\Offset::isValid",
+        "Utopia\\Database\\Validator\\Query\\Order::addAggregationAliases",
+        "Utopia\\Database\\Validator\\Query\\Order::allowJoinAliases",
+        "Utopia\\Database\\Validator\\Query\\Order::allowJoins",
+        "Utopia\\Database\\Validator\\Query\\Order::getMethodType",
+        "Utopia\\Database\\Validator\\Query\\Order::isValid",
+        "Utopia\\Database\\Validator\\Query\\Order::resetAggregationAliases",
+        "Utopia\\Database\\Validator\\Query\\Order::resetJoinAliases",
+        "Utopia\\Database\\Validator\\Query\\Order::setAggregations",
+        "Utopia\\Database\\Validator\\Query\\Order::setGroupBy",
+        "Utopia\\Database\\Validator\\Query\\Select::allowJoinAliases",
+        "Utopia\\Database\\Validator\\Query\\Select::allowJoins",
+        "Utopia\\Database\\Validator\\Query\\Select::getMethodType",
+        "Utopia\\Database\\Validator\\Query\\Select::isValid",
+        "Utopia\\Database\\Validator\\Query\\Select::resetJoinAliases",
+        "Utopia\\Database\\Validator\\Query\\Select::setAggregations",
+        "Utopia\\Database\\Validator\\Query\\Select::setGroupBy",
+        "Utopia\\Database\\Validator\\Roles::getDescription",
+        "Utopia\\Database\\Validator\\Roles::getType",
+        "Utopia\\Database\\Validator\\Roles::isArray",
+        "Utopia\\Database\\Validator\\Roles::isValid",
+        "Utopia\\Database\\Validator\\Sequence::getDescription",
+        "Utopia\\Database\\Validator\\Sequence::getType",
+        "Utopia\\Database\\Validator\\Sequence::isArray",
+        "Utopia\\Database\\Validator\\Sequence::isValid",
+        "Utopia\\Database\\Validator\\Spatial::getDescription",
+        "Utopia\\Database\\Validator\\Spatial::getSpatialType",
+        "Utopia\\Database\\Validator\\Spatial::getType",
+        "Utopia\\Database\\Validator\\Spatial::isArray",
+        "Utopia\\Database\\Validator\\Spatial::isValid",
+        "Utopia\\Database\\Validator\\Spatial::isWktString",
+        "Utopia\\Database\\Validator\\Structure::getDescription",
+        "Utopia\\Database\\Validator\\Structure::getFormat",
+        "Utopia\\Database\\Validator\\Structure::getType",
+        "Utopia\\Database\\Validator\\Structure::hasFormat",
+        "Utopia\\Database\\Validator\\Structure::isArray",
+        "Utopia\\Database\\Validator\\Structure::isValid",
+        "Utopia\\Database\\Validator\\Structure::removeFormat",
+        "Utopia\\Database\\Validator\\UID::getDescription",
+        "Utopia\\Database\\Validator\\Vector::getDescription",
+        "Utopia\\Database\\Validator\\Vector::getType",
+        "Utopia\\Database\\Validator\\Vector::isArray",
+        "Utopia\\Database\\Validator\\Vector::isValid"
+      ],
+      "fuzz": [
+        {
+          "name": "Document::getTenant",
+          "iterations": 2000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "method": {
+                "gen": "const",
+                "value": "getTenant"
+              },
+              "args": {
+                "gen": "object",
+                "fields": {}
+              },
+              "this": {
+                "gen": "object",
+                "fields": {
+                  "$document": {
+                    "gen": "object",
+                    "fields": {
+                      "$tenant": {
+                        "gen": "ref",
+                        "name": "helpers_scalar"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Document::getPermissions",
+          "iterations": 2000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "method": {
+                "gen": "const",
+                "value": "getPermissions"
+              },
+              "args": {
+                "gen": "object",
+                "fields": {}
+              },
+              "this": {
+                "gen": "object",
+                "fields": {
+                  "$document": {
+                    "gen": "object",
+                    "fields": {
+                      "$permissions": {
+                        "gen": "ref",
+                        "name": "helpers_permissions"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Document::getPermissionsByType",
+          "iterations": 3000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "method": {
+                "gen": "const",
+                "value": "getPermissionsByType"
+              },
+              "args": {
+                "gen": "object",
+                "fields": {
+                  "type": {
+                    "gen": "one_of",
+                    "of": [
+                      {
+                        "gen": "pick",
+                        "from": [
+                          "read",
+                          "create",
+                          "update",
+                          "delete",
+                          "write",
+                          "",
+                          "re",
+                          "read(",
+                          "\"",
+                          " "
+                        ]
+                      },
+                      {
+                        "gen": "string",
+                        "alphabet": "readcupt(\" )",
+                        "max": 6
+                      }
+                    ]
+                  }
+                }
+              },
+              "this": {
+                "gen": "object",
+                "fields": {
+                  "$document": {
+                    "gen": "object",
+                    "fields": {
+                      "$permissions": {
+                        "gen": "ref",
+                        "name": "helpers_permissions"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "DateTime::setTimezone: dates",
+          "iterations": 2000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "class": {
+                "gen": "const",
+                "value": "DateTime"
+              },
+              "method": {
+                "gen": "const",
+                "value": "setTimezone"
+              },
+              "args": {
+                "gen": "object",
+                "fields": {
+                  "datetime": {
+                    "gen": "ref",
+                    "name": "helpers_date"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "DateTime::setTimezone: garbage",
+          "iterations": 2000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "class": {
+                "gen": "const",
+                "value": "DateTime"
+              },
+              "method": {
+                "gen": "const",
+                "value": "setTimezone"
+              },
+              "args": {
+                "gen": "object",
+                "fields": {
+                  "datetime": {
+                    "gen": "ref",
+                    "name": "helpers_date_garbage"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "DateTime::formatTz: dates",
+          "iterations": 2000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "class": {
+                "gen": "const",
+                "value": "DateTime"
+              },
+              "method": {
+                "gen": "const",
+                "value": "formatTz"
+              },
+              "args": {
+                "gen": "object",
+                "fields": {
+                  "dbFormat": {
+                    "gen": "ref",
+                    "name": "helpers_date"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "DateTime::formatTz: garbage",
+          "iterations": 2000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "class": {
+                "gen": "const",
+                "value": "DateTime"
+              },
+              "method": {
+                "gen": "const",
+                "value": "formatTz"
+              },
+              "args": {
+                "gen": "object",
+                "fields": {
+                  "dbFormat": {
+                    "gen": "one_of",
+                    "of": [
+                      {
+                        "gen": "ref",
+                        "name": "helpers_date_garbage"
+                      },
+                      {
+                        "gen": "null"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Query::parse",
+          "iterations": 3000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "class": {
+                "gen": "const",
+                "value": "Query"
+              },
+              "method": {
+                "gen": "const",
+                "value": "parse"
+              },
+              "args": {
+                "gen": "object",
+                "fields": {
+                  "query": {
+                    "gen": "ref",
+                    "name": "values_query_json"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Query::parseQuery",
+          "iterations": 3000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "class": {
+                "gen": "const",
+                "value": "Query"
+              },
+              "method": {
+                "gen": "const",
+                "value": "parseQuery"
+              },
+              "args": {
+                "gen": "object",
+                "fields": {
+                  "query": {
+                    "gen": "object",
+                    "fields": {
+                      "method": {
+                        "gen": "one_of",
+                        "of": [
+                          {
+                            "gen": "ref",
+                            "name": "values_method_name"
+                          },
+                          {
+                            "gen": "any",
+                            "depth": 1
+                          }
+                        ]
+                      },
+                      "attribute": {
+                        "gen": "one_of",
+                        "of": [
+                          {
+                            "gen": "ref",
+                            "name": "values_attribute"
+                          },
+                          {
+                            "gen": "any",
+                            "depth": 1
+                          }
+                        ]
+                      },
+                      "values": {
+                        "gen": "one_of",
+                        "of": [
+                          {
+                            "gen": "array",
+                            "items": {
+                              "gen": "any",
+                              "depth": 3
+                            }
+                          },
+                          {
+                            "gen": "any",
+                            "depth": 3
+                          },
+                          {
+                            "gen": "array",
+                            "items": {
+                              "gen": "ref",
+                              "name": "values_query_json"
+                            },
+                            "max": 3
+                          }
+                        ]
+                      }
+                    },
+                    "optional": [
+                      "method",
+                      "attribute",
+                      "values"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Query::fingerprint",
+          "iterations": 2000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "class": {
+                "gen": "const",
+                "value": "Query"
+              },
+              "method": {
+                "gen": "const",
+                "value": "fingerprint"
+              },
+              "args": {
+                "gen": "object",
+                "fields": {
+                  "queries": {
+                    "gen": "array",
+                    "items": {
+                      "gen": "one_of",
+                      "of": [
+                        {
+                          "gen": "ref",
+                          "name": "values_query_tag"
+                        },
+                        {
+                          "gen": "ref",
+                          "name": "values_query_json"
+                        }
+                      ]
+                    },
+                    "max": 4
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Query::groupByType",
+          "iterations": 2000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "class": {
+                "gen": "const",
+                "value": "Query"
+              },
+              "method": {
+                "gen": "const",
+                "value": "groupByType"
+              },
+              "args": {
+                "gen": "object",
+                "fields": {
+                  "queries": {
+                    "gen": "array",
+                    "items": {
+                      "gen": "one_of",
+                      "of": [
+                        {
+                          "gen": "ref",
+                          "name": "values_query_tag"
+                        },
+                        {
+                          "gen": "any",
+                          "depth": 1
+                        }
+                      ]
+                    },
+                    "max": 8
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Operator::parse",
+          "iterations": 3000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "class": {
+                "gen": "const",
+                "value": "Operator"
+              },
+              "method": {
+                "gen": "const",
+                "value": "parse"
+              },
+              "args": {
+                "gen": "object",
+                "fields": {
+                  "operator": {
+                    "gen": "ref",
+                    "name": "values_operator_json"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Query->toString",
+          "iterations": 3000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "method": {
+                "gen": "const",
+                "value": "toString"
+              },
+              "args": {
+                "gen": "object",
+                "fields": {}
+              },
+              "this": {
+                "gen": "ref",
+                "name": "values_query_tag"
+              }
+            }
+          }
+        },
+        {
+          "name": "Query->toArray",
+          "iterations": 2000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "method": {
+                "gen": "const",
+                "value": "toArray"
+              },
+              "args": {
+                "gen": "object",
+                "fields": {}
+              },
+              "this": {
+                "gen": "ref",
+                "name": "values_query_tag"
+              }
+            }
+          }
+        },
+        {
+          "name": "Operator->toString",
+          "iterations": 2000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "method": {
+                "gen": "const",
+                "value": "toString"
+              },
+              "args": {
+                "gen": "object",
+                "fields": {}
+              },
+              "this": {
+                "gen": "object",
+                "fields": {
+                  "$operator": {
+                    "gen": "object",
+                    "fields": {
+                      "method": {
+                        "gen": "pick",
+                        "from": [
+                          "increment",
+                          "arrayAppend",
+                          "toggle",
+                          "nope",
+                          ""
+                        ]
+                      },
+                      "attribute": {
+                        "gen": "ref",
+                        "name": "values_attribute"
+                      },
+                      "values": {
+                        "gen": "one_of",
+                        "of": [
+                          {
+                            "gen": "array",
+                            "items": {
+                              "gen": "any",
+                              "depth": 2
+                            }
+                          },
+                          {
+                            "gen": "array",
+                            "items": {
+                              "gen": "ref",
+                              "name": "values_query_leaf"
+                            },
+                            "max": 2
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Permission::aggregate",
+          "iterations": 2000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "class": {
+                "gen": "const",
+                "value": "Permission"
+              },
+              "method": {
+                "gen": "const",
+                "value": "aggregate"
+              },
+              "args": {
+                "gen": "object",
+                "fields": {
+                  "permissions": {
+                    "gen": "array",
+                    "items": {
+                      "gen": "ref",
+                      "name": "permstr"
+                    },
+                    "min": 0,
+                    "max": 4
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "object.get": {
+      "doc": "A public property of an object ({\"$obj\": name} or a value tag)"
+    }
+  },
+  "generators": {
+    "helpers_date": {
+      "gen": "concat",
+      "parts": [
+        {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "int",
+              "min": 1000,
+              "max": 2999
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "1970",
+                "2000",
+                "2024",
+                "0001",
+                "9999",
+                "2038"
+              ]
+            }
+          ]
+        },
+        {
+          "gen": "const",
+          "value": "-"
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "01",
+            "02",
+            "06",
+            "10",
+            "12",
+            "1",
+            "13",
+            "00"
+          ]
+        },
+        {
+          "gen": "const",
+          "value": "-"
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "01",
+            "15",
+            "28",
+            "29",
+            "30",
+            "31",
+            "32",
+            "00",
+            "9"
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            " ",
+            "T",
+            "t",
+            "  "
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "00",
+            "01",
+            "12",
+            "23",
+            "24",
+            "9"
+          ]
+        },
+        {
+          "gen": "const",
+          "value": ":"
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "00",
+            "30",
+            "59",
+            "60"
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "",
+            ":00",
+            ":59",
+            ":60",
+            ":05"
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "",
+            ".",
+            ".1",
+            ".12",
+            ".123",
+            ".1234",
+            ".123456",
+            ".9999999",
+            ".000"
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "",
+            "Z",
+            "z",
+            "+00:00",
+            "+02:00",
+            "-05:30",
+            "+0530",
+            "+14:00",
+            "-12",
+            " UTC",
+            " Europe/Paris",
+            " America/New_York",
+            " Asia/Kolkata",
+            " EST",
+            " CEST",
+            " +1 day",
+            " -3 hours",
+            " +90 seconds",
+            " GMT+2",
+            " Mars/Phobos"
+          ]
+        }
+      ]
+    },
+    "helpers_date_garbage": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "string",
+          "alphabet": "0123456789-:. TZ+",
+          "max": 24
+        },
+        {
+          "gen": "string",
+          "alphabet": "ascii",
+          "max": 12
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "",
+            "now",
+            "garbage",
+            "2024-13-45",
+            "2024-02-30 10:00:00",
+            "@0",
+            "@1700000000.5",
+            "1 January 2024 10:00",
+            "2024-01-01 25:00:00",
+            "0000-00-00 00:00:00",
+            "-0001-01-01 00:00:00",
+            "2024-W01-1 00:00:00",
+            "Mon, 15 Aug 2005 15:52:01 +0000",
+            "2005-08-15T15:52:01+00:00"
+          ]
+        }
+      ]
+    },
+    "helpers_doc_input": {
+      "gen": "object",
+      "fields": {
+        "$id": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "string",
+              "alphabet": "alnum",
+              "max": 8
+            },
+            {
+              "gen": "int"
+            },
+            {
+              "gen": "null"
+            },
+            {
+              "gen": "array",
+              "items": {
+                "gen": "int"
+              },
+              "max": 1
+            }
+          ]
+        },
+        "$collection": {
+          "gen": "ref",
+          "name": "helpers_scalar"
+        },
+        "$permissions": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "helpers_permissions"
+            },
+            {
+              "gen": "string",
+              "max": 4
+            },
+            {
+              "gen": "null"
+            }
+          ]
+        },
+        "a": {
+          "gen": "ref",
+          "name": "helpers_value"
+        },
+        "5": {
+          "gen": "ref",
+          "name": "helpers_value"
+        },
+        "list": {
+          "gen": "ref",
+          "name": "helpers_value"
+        },
+        "": {
+          "gen": "ref",
+          "name": "helpers_value"
+        }
+      },
+      "optional": [
+        "$id",
+        "$collection",
+        "$permissions",
+        "a",
+        "5",
+        "list",
+        ""
+      ]
+    },
+    "helpers_nested": {
+      "gen": "object",
+      "fields": {
+        "$id": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "string",
+              "alphabet": "alnum",
+              "max": 6
+            },
+            {
+              "gen": "int"
+            },
+            {
+              "gen": "null"
+            }
+          ]
+        },
+        "$collection": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "string",
+              "alphabet": "alnum",
+              "max": 6
+            },
+            {
+              "gen": "null"
+            },
+            {
+              "gen": "bool"
+            }
+          ]
+        },
+        "name": {
+          "gen": "ref",
+          "name": "helpers_scalar"
+        },
+        "0": {
+          "gen": "ref",
+          "name": "helpers_scalar"
+        }
+      },
+      "optional": [
+        "$id",
+        "$collection",
+        "name",
+        "0"
+      ]
+    },
+    "helpers_permission": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "pick",
+          "from": [
+            "read(\"any\")",
+            "read(any)",
+            "read(\"user:1\")",
+            "create(\"any\")",
+            "update(\"any\")",
+            "delete(\"any\")",
+            "create(\"user:1\")",
+            "update(\"user:1\")",
+            "delete(\"user:1\")",
+            "write(\"any\")",
+            "read( \"team:1/owner\" )",
+            "readx(\"a\")",
+            "create(\"users\")",
+            "update(\"users\")",
+            "delete(\"users\")",
+            "read(\"read(x)\")",
+            "",
+            "read",
+            "(\")"
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "read",
+                "create",
+                "update",
+                "delete",
+                "write"
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "(\"",
+                "(",
+                ""
+              ]
+            },
+            {
+              "gen": "string",
+              "alphabet": "abc:1 \"()",
+              "max": 6
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "\")",
+                ")",
+                ""
+              ]
+            }
+          ]
+        },
+        {
+          "gen": "int",
+          "min": -2,
+          "max": 3
+        },
+        {
+          "gen": "float",
+          "min": 0,
+          "max": 2
+        },
+        {
+          "gen": "bool"
+        },
+        {
+          "gen": "null"
+        }
+      ]
+    },
+    "helpers_permissions": {
+      "gen": "array",
+      "items": {
+        "gen": "ref",
+        "name": "helpers_permission"
+      },
+      "min": 0,
+      "max": 8
+    },
+    "helpers_scalar": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "string",
+          "tricky": 0.5
+        },
+        {
+          "gen": "int"
+        },
+        {
+          "gen": "float",
+          "min": -1e+20,
+          "max": 1e+20
+        },
+        {
+          "gen": "bool"
+        },
+        {
+          "gen": "null"
+        }
+      ]
+    },
+    "helpers_value": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "helpers_scalar"
+        },
+        {
+          "gen": "ref",
+          "name": "helpers_nested"
+        },
+        {
+          "gen": "array",
+          "items": {
+            "gen": "one_of",
+            "of": [
+              {
+                "gen": "ref",
+                "name": "helpers_nested"
+              },
+              {
+                "gen": "ref",
+                "name": "helpers_scalar"
+              },
+              {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "helpers_nested"
+                },
+                "max": 2
+              }
+            ]
+          },
+          "max": 4
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "a": {
+              "gen": "ref",
+              "name": "helpers_nested"
+            },
+            "7": {
+              "gen": "ref",
+              "name": "helpers_scalar"
+            },
+            "b": {
+              "gen": "ref",
+              "name": "helpers_scalar"
+            }
+          },
+          "optional": [
+            "a",
+            "7",
+            "b"
+          ]
+        },
+        {
+          "gen": "any",
+          "depth": 2
+        }
+      ]
+    },
+    "permstr": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "read",
+                "create",
+                "update",
+                "delete",
+                "write",
+                "list",
+                "",
+                "read("
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "(\"",
+                "(\"",
+                "(",
+                ""
+              ]
+            },
+            {
+              "gen": "ref",
+              "name": "rolestr"
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "\")",
+                "\")",
+                ")",
+                "",
+                "\")\")"
+              ]
+            }
+          ]
+        },
+        {
+          "gen": "string",
+          "min": 0,
+          "max": 12,
+          "tricky": 0.6
+        }
+      ]
+    },
+    "rolestr": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "any",
+                "guests",
+                "users",
+                "user",
+                "team",
+                "member",
+                "label",
+                "role",
+                "x",
+                "",
+                "*",
+                "us/ers"
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "",
+                "",
+                ":",
+                ":",
+                "::"
+              ]
+            },
+            {
+              "gen": "string",
+              "min": 0,
+              "max": 8,
+              "tricky": 0.0,
+              "alphabet": "abcAZ09_.-$é"
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "",
+                "",
+                "/",
+                "//"
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "",
+                "verified",
+                "unverified",
+                "owner",
+                "0",
+                "a/b",
+                "project-123-dev",
+                "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+              ]
+            }
+          ]
+        },
+        {
+          "gen": "string",
+          "min": 0,
+          "max": 12,
+          "tricky": 0.6
+        }
+      ]
+    },
+    "values_attribute": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "pick",
+          "from": [
+            "",
+            "0",
+            "title",
+            "$id",
+            "$sequence"
+          ]
+        },
+        {
+          "gen": "string",
+          "alphabet": "unicode",
+          "max": 8
+        },
+        {
+          "gen": "string",
+          "tricky": 1.0
+        }
+      ]
+    },
+    "values_attribute_text": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "pick",
+          "from": [
+            "\"title\"",
+            "\"\"",
+            "\"0\"",
+            "\"$id\"",
+            "\"a.b\"",
+            "\"\\u00e9t\\u00e9\"",
+            "1",
+            "null",
+            "[]",
+            "{\"x\":1}",
+            "1.5",
+            "false"
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "\""
+            },
+            {
+              "gen": "string",
+              "alphabet": "alnum",
+              "max": 12
+            },
+            {
+              "gen": "const",
+              "value": "\""
+            }
+          ]
+        }
+      ]
+    },
+    "values_method_name": {
+      "gen": "pick",
+      "from": [
+        "equal",
+        "notEqual",
+        "lessThan",
+        "between",
+        "search",
+        "isNull",
+        "select",
+        "orderAsc",
+        "orderDesc",
+        "orderRandom",
+        "limit",
+        "offset",
+        "cursorAfter",
+        "cursorBefore",
+        "and",
+        "or",
+        "elemMatch",
+        "regex",
+        "distanceLessThan",
+        "vectorCosine",
+        "exists",
+        "notExists",
+        "intersects",
+        "foo",
+        ""
+      ]
+    },
+    "values_operator_json": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "{\"method\":"
+            },
+            {
+              "gen": "ref",
+              "name": "values_operator_method"
+            },
+            {
+              "gen": "const",
+              "value": ",\"attribute\":"
+            },
+            {
+              "gen": "ref",
+              "name": "values_attribute_text"
+            },
+            {
+              "gen": "const",
+              "value": ",\"values\":"
+            },
+            {
+              "gen": "ref",
+              "name": "values_values_text"
+            },
+            {
+              "gen": "const",
+              "value": "}"
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "{\"method\":"
+            },
+            {
+              "gen": "ref",
+              "name": "values_operator_method"
+            },
+            {
+              "gen": "const",
+              "value": "}"
+            }
+          ]
+        },
+        {
+          "gen": "string",
+          "tricky": 0.6,
+          "alphabet": "{}[]\",:0123456789.-truefalsn\\ ",
+          "max": 24
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "any",
+              "depth": 3
+            }
+          ]
+        }
+      ]
+    },
+    "values_operator_method": {
+      "gen": "pick",
+      "from": [
+        "\"increment\"",
+        "\"decrement\"",
+        "\"multiply\"",
+        "\"divide\"",
+        "\"modulo\"",
+        "\"power\"",
+        "\"arrayAppend\"",
+        "\"arrayFilter\"",
+        "\"stringConcat\"",
+        "\"toggle\"",
+        "\"dateSetNow\"",
+        "\"append\"",
+        "\"\"",
+        "1",
+        "null",
+        "[]"
+      ]
+    },
+    "values_query_flat": {
+      "gen": "concat",
+      "parts": [
+        {
+          "gen": "const",
+          "value": "{\"method\":"
+        },
+        {
+          "gen": "ref",
+          "name": "values_query_method"
+        },
+        {
+          "gen": "const",
+          "value": ",\"attribute\":"
+        },
+        {
+          "gen": "ref",
+          "name": "values_attribute_text"
+        },
+        {
+          "gen": "const",
+          "value": ",\"values\":"
+        },
+        {
+          "gen": "ref",
+          "name": "values_values_text"
+        },
+        {
+          "gen": "const",
+          "value": "}"
+        }
+      ]
+    },
+    "values_query_json": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "{\"method\":"
+            },
+            {
+              "gen": "ref",
+              "name": "values_query_method"
+            },
+            {
+              "gen": "const",
+              "value": ",\"attribute\":"
+            },
+            {
+              "gen": "ref",
+              "name": "values_attribute_text"
+            },
+            {
+              "gen": "const",
+              "value": ",\"values\":"
+            },
+            {
+              "gen": "ref",
+              "name": "values_values_text"
+            },
+            {
+              "gen": "const",
+              "value": "}"
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "{\"values\":"
+            },
+            {
+              "gen": "ref",
+              "name": "values_values_text"
+            },
+            {
+              "gen": "const",
+              "value": ",\"method\":"
+            },
+            {
+              "gen": "ref",
+              "name": "values_query_method"
+            },
+            {
+              "gen": "const",
+              "value": "}"
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "{\"method\":"
+            },
+            {
+              "gen": "ref",
+              "name": "values_query_method"
+            },
+            {
+              "gen": "const",
+              "value": ",\"values\":["
+            },
+            {
+              "gen": "repeat",
+              "part": {
+                "gen": "ref",
+                "name": "values_query_flat"
+              },
+              "sep": ",",
+              "min": 0,
+              "max": 3
+            },
+            {
+              "gen": "const",
+              "value": "]}"
+            }
+          ]
+        },
+        {
+          "gen": "string",
+          "tricky": 0.6,
+          "alphabet": "{}[]\",:0123456789.-truefalsn\\ ",
+          "max": 24
+        },
+        {
+          "gen": "bytes",
+          "max": 12
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "any",
+              "depth": 3
+            }
+          ]
+        }
+      ]
+    },
+    "values_query_leaf": {
+      "gen": "object",
+      "fields": {
+        "$query": {
+          "gen": "object",
+          "fields": {
+            "method": {
+              "gen": "ref",
+              "name": "values_method_name"
+            },
+            "attribute": {
+              "gen": "ref",
+              "name": "values_attribute"
+            },
+            "values": {
+              "gen": "array",
+              "items": {
+                "gen": "any",
+                "depth": 1
+              },
+              "max": 3
+            }
+          },
+          "optional": [
+            "attribute"
+          ]
+        }
+      }
+    },
+    "values_query_method": {
+      "gen": "pick",
+      "from": [
+        "\"equal\"",
+        "\"notEqual\"",
+        "\"lessThan\"",
+        "\"between\"",
+        "\"search\"",
+        "\"isNull\"",
+        "\"select\"",
+        "\"orderAsc\"",
+        "\"orderDesc\"",
+        "\"orderRandom\"",
+        "\"limit\"",
+        "\"offset\"",
+        "\"cursorAfter\"",
+        "\"and\"",
+        "\"or\"",
+        "\"elemMatch\"",
+        "\"regex\"",
+        "\"distanceEqual\"",
+        "\"vectorDot\"",
+        "\"exists\"",
+        "\"notExists\"",
+        "\"containsAll\"",
+        "\"foo\"",
+        "\"\"",
+        "\"Equal\"",
+        "1",
+        "null",
+        "[]",
+        "true"
+      ]
+    },
+    "values_query_tag": {
+      "gen": "object",
+      "fields": {
+        "$query": {
+          "gen": "object",
+          "fields": {
+            "method": {
+              "gen": "ref",
+              "name": "values_method_name"
+            },
+            "attribute": {
+              "gen": "ref",
+              "name": "values_attribute"
+            },
+            "values": {
+              "gen": "one_of",
+              "of": [
+                {
+                  "gen": "array",
+                  "items": {
+                    "gen": "any",
+                    "depth": 2
+                  },
+                  "max": 4
+                },
+                {
+                  "gen": "array",
+                  "items": {
+                    "gen": "ref",
+                    "name": "values_query_leaf"
+                  },
+                  "max": 3
+                },
+                {
+                  "gen": "object",
+                  "fields": {
+                    "k": {
+                      "gen": "ref",
+                      "name": "values_query_leaf"
+                    },
+                    "0": {
+                      "gen": "any"
+                    }
+                  },
+                  "optional": [
+                    "0"
+                  ]
+                },
+                {
+                  "gen": "array",
+                  "items": {
+                    "gen": "one_of",
+                    "of": [
+                      {
+                        "gen": "object",
+                        "fields": {
+                          "$document": {
+                            "gen": "object",
+                            "fields": {
+                              "$id": {
+                                "gen": "string",
+                                "alphabet": "alnum",
+                                "max": 6
+                              },
+                              "n": {
+                                "gen": "any"
+                              }
+                            },
+                            "optional": [
+                              "n"
+                            ]
+                          }
+                        }
+                      },
+                      {
+                        "gen": "float"
+                      },
+                      {
+                        "gen": "string",
+                        "tricky": 0.5,
+                        "alphabet": "unicode"
+                      }
+                    ]
+                  },
+                  "max": 3
+                }
+              ]
+            }
+          },
+          "optional": [
+            "attribute"
+          ]
+        }
+      }
+    },
+    "values_value_text": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "pick",
+          "from": [
+            "1",
+            "-1",
+            "0",
+            "1.5",
+            "-0.0",
+            "1e2",
+            "1E400",
+            "12345678901234567890",
+            "\"x\"",
+            "\"\"",
+            "\"0\"",
+            "null",
+            "true",
+            "false",
+            "[1,2]",
+            "{\"a\":1}",
+            "{}",
+            "[]",
+            "\"\\u00e9\"",
+            "\"\\ud83d\\ude00\"",
+            "\"\\ud800\"",
+            "\"a\\u0000b\"",
+            "{\"method\":\"equal\",\"attribute\":\"a\",\"values\":[1]}",
+            "{\"method\":\"isNull\",\"attribute\":\"b\"}",
+            "\"{\\\"method\\\":\\\"isNull\\\",\\\"attribute\\\":\\\"c\\\"}\"",
+            "{\"method\":\"or\",\"values\":[{\"method\":\"isNull\"}]}",
+            "{\"method\":\"nope\"}",
+            "\"not json\"",
+            "{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"limit\",\"values\":[1]}]}]}"
+          ]
+        },
+        {
+          "gen": "any",
+          "depth": 3
+        }
+      ]
+    },
+    "values_values_text": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "["
+            },
+            {
+              "gen": "repeat",
+              "part": {
+                "gen": "ref",
+                "name": "values_value_text"
+              },
+              "sep": ",",
+              "min": 0,
+              "max": 4
+            },
+            {
+              "gen": "const",
+              "value": "]"
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "{\"k\":"
+            },
+            {
+              "gen": "ref",
+              "name": "values_value_text"
+            },
+            {
+              "gen": "const",
+              "value": ",\"0\":"
+            },
+            {
+              "gen": "ref",
+              "name": "values_value_text"
+            },
+            {
+              "gen": "const",
+              "value": "}"
+            }
+          ]
+        },
+        {
+          "gen": "ref",
+          "name": "values_value_text"
+        }
+      ]
+    }
+  },
+  "quirks": [],
+  "deviations": []
+}

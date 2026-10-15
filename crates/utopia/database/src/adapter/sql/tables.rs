@@ -324,6 +324,21 @@ impl WriteContext for SqlWriteContext<'_> {
         self.adapter.table_raw(table)
     }
 
+    /// `builder()->fromTable($table)`: the stored table as it is. The
+    /// builder's `from()` qualifies a collection name (namespace, tenant
+    /// scope), which would qualify `table` a second time.
+    fn builder_from_table(&self, table: &str) -> SqlBuilder {
+        let mut builder = self.builder();
+        // Taking a table on a fresh builder cannot fail.
+        let _ = match &mut builder {
+            SqlBuilder::MySql(b) => b.from_table(table, "").map(|_| ()),
+            SqlBuilder::MariaDb(b) => b.from_table(table, "").map(|_| ()),
+            SqlBuilder::PostgreSql(b) => b.from_table(table, "").map(|_| ()),
+            SqlBuilder::Sqlite(b) => b.from_table(table, "").map(|_| ()),
+        };
+        builder
+    }
+
     async fn run(&self, statement: Statement, event: Event) -> Result<bool> {
         let mut prepared = self.adapter.execute_result(&statement, Some(event), "").await?;
         self.adapter.execute(&mut prepared).await

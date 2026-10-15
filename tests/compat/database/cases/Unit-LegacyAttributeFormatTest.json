@@ -1,0 +1,1669 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/LegacyAttributeFormatTest.php"
+  ],
+  "cases": [
+    {
+      "name": "LegacyAttributeFormatTest::testStoredEmptyFormatReadsBackLikeTheDefinition#SQLite",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "resourceInternalId",
+              "size": 255
+            },
+            "as": "o14271"
+          },
+          "bind": "s27835",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "resourceInternalId",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 255,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:"
+                }
+              }
+            },
+            "as": "o14272"
+          },
+          "bind": "s27836",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o14272"
+              },
+              "cache": "none"
+            },
+            "as": "o14273"
+          },
+          "bind": "s27837",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14273"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "legacy"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14273"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "legacy_u000000000297"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o14274"
+          },
+          "bind": "s27840",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14273"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o14274"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14273"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "migrations",
+              "attributes": [
+                {
+                  "$obj": "o14271"
+                }
+              ]
+            },
+            "as": "o14275"
+          },
+          "bind": "s27843",
+          "expect": {
+            "$document": {
+              "$id": "migrations",
+              "name": "migrations",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "resourceInternalId",
+                    "key": "resourceInternalId",
+                    "type": "string",
+                    "size": 255,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14273"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o14275"
+              }
+            },
+            "as": "o14276"
+          },
+          "expect": {
+            "$document": {
+              "$id": "migrations",
+              "name": "migrations",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "resourceInternalId",
+                    "key": "resourceInternalId",
+                    "type": "string",
+                    "size": 255,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14271"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o14277"
+          },
+          "bind": "s27845",
+          "expect": {
+            "$document": {
+              "$id": "resourceInternalId",
+              "key": "resourceInternalId",
+              "type": "string",
+              "size": 255,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14277"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "$id": "resourceInternalId",
+            "key": "resourceInternalId",
+            "type": "string",
+            "size": 255,
+            "required": false,
+            "default": null,
+            "signed": true,
+            "array": false,
+            "format": null,
+            "formatOptions": [],
+            "filters": []
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14273"
+            },
+            "method": "getAuthorization",
+            "args": {}
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14274"
+            },
+            "method": "skip",
+            "args": {
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.new",
+                    "args": {
+                      "class": "Document",
+                      "args": {
+                        "input": {
+                          "attributes": [
+                            {
+                              "$id": "resourceInternalId",
+                              "key": "resourceInternalId",
+                              "type": "string",
+                              "size": 255,
+                              "required": false,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": "",
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          ]
+                        }
+                      },
+                      "as": "o14278"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o14273"
+                      },
+                      "method": "updateDocument",
+                      "args": {
+                        "collection": "_metadata",
+                        "id": "migrations",
+                        "document": {
+                          "$obj": "o14278"
+                        }
+                      },
+                      "as": "o14279"
+                    },
+                    "return": true
+                  }
+                ]
+              }
+            }
+          },
+          "bind": "s27848",
+          "expect": {
+            "result": {
+              "$document": {
+                "name": "migrations",
+                "attributes": [
+                  {
+                    "$document": {
+                      "$id": "resourceInternalId",
+                      "key": "resourceInternalId",
+                      "type": "string",
+                      "size": 255,
+                      "required": false,
+                      "default": null,
+                      "signed": true,
+                      "array": false,
+                      "format": "",
+                      "formatOptions": [],
+                      "filters": []
+                    }
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": true,
+                "$sequence": "1",
+                "$id": "migrations",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "create(\"any\")"
+                ],
+                "$collection": "_metadata"
+              },
+              "$class": "Collection"
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "attributes": [
+                          {
+                            "$document": {
+                              "$id": "resourceInternalId",
+                              "key": "resourceInternalId",
+                              "type": "string",
+                              "size": 255,
+                              "required": false,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": "",
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "$document": {
+                        "name": "migrations",
+                        "attributes": [
+                          {
+                            "$document": {
+                              "$id": "resourceInternalId",
+                              "key": "resourceInternalId",
+                              "type": "string",
+                              "size": 255,
+                              "required": false,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": "",
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": true,
+                        "$sequence": "1",
+                        "$id": "migrations",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [
+                          "create(\"any\")"
+                        ],
+                        "$collection": "_metadata"
+                      },
+                      "$class": "Collection"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14273"
+            },
+            "method": "getCollection",
+            "args": {
+              "collection": "migrations"
+            },
+            "as": "o14280"
+          },
+          "bind": "s27849",
+          "expect": {
+            "$document": {
+              "name": "migrations",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "resourceInternalId",
+                    "key": "resourceInternalId",
+                    "type": "string",
+                    "size": 255,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": "",
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$sequence": "1",
+              "$id": "migrations",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14280"
+            },
+            "method": "attributes",
+            "args": {}
+          },
+          "expect": [
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "resourceInternalId",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$value": "Attribute",
+              "fields": {
+                "key": "resourceInternalId",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o14281"
+          },
+          "bind": "s27851",
+          "expect": {
+            "$document": {
+              "$id": "resourceInternalId",
+              "key": "resourceInternalId",
+              "type": "string",
+              "size": 255,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14271"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o14282"
+          },
+          "bind": "s27852",
+          "expect": {
+            "$document": {
+              "$id": "resourceInternalId",
+              "key": "resourceInternalId",
+              "type": "string",
+              "size": 255,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14282"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "type"
+            }
+          },
+          "expect": "string"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14281"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "type"
+            }
+          },
+          "expect": "string"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14282"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "size"
+            }
+          },
+          "expect": 255
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14281"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "size"
+            }
+          },
+          "expect": 255
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14282"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "required"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14281"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "required"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14282"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "default"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14281"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "default"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14282"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "signed"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14281"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "signed"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14282"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "array"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14281"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "array"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14282"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "format"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14281"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "format"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14282"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "formatOptions"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14281"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "formatOptions"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14282"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "filters"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14281"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "filters"
+            }
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "LegacyAttributeFormatTest::testStoredEmptyFormatReadsBackLikeTheDefinition#Memory",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "resourceInternalId",
+              "size": 255
+            },
+            "as": "o14283"
+          },
+          "bind": "s27871",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "resourceInternalId",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 255,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o14284"
+          },
+          "bind": "s27872",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o14284"
+              },
+              "cache": "none"
+            },
+            "as": "o14285"
+          },
+          "bind": "s27873",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14285"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "legacy"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14285"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "legacy_u000000000298"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o14286"
+          },
+          "bind": "s27876",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14285"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o14286"
+              }
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14285"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "migrations",
+              "attributes": [
+                {
+                  "$obj": "o14283"
+                }
+              ]
+            },
+            "as": "o14287"
+          },
+          "bind": "s27879",
+          "expect": {
+            "$document": {
+              "$id": "migrations",
+              "name": "migrations",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "resourceInternalId",
+                    "key": "resourceInternalId",
+                    "type": "string",
+                    "size": 255,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14285"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o14287"
+              }
+            },
+            "as": "o14288"
+          },
+          "expect": {
+            "$document": {
+              "$id": "migrations",
+              "name": "migrations",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "resourceInternalId",
+                    "key": "resourceInternalId",
+                    "type": "string",
+                    "size": 255,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14283"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o14289"
+          },
+          "bind": "s27881",
+          "expect": {
+            "$document": {
+              "$id": "resourceInternalId",
+              "key": "resourceInternalId",
+              "type": "string",
+              "size": 255,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14289"
+            },
+            "method": "getArrayCopy",
+            "args": {}
+          },
+          "expect": {
+            "$id": "resourceInternalId",
+            "key": "resourceInternalId",
+            "type": "string",
+            "size": 255,
+            "required": false,
+            "default": null,
+            "signed": true,
+            "array": false,
+            "format": null,
+            "formatOptions": [],
+            "filters": []
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14285"
+            },
+            "method": "getAuthorization",
+            "args": {}
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14286"
+            },
+            "method": "skip",
+            "args": {
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.new",
+                    "args": {
+                      "class": "Document",
+                      "args": {
+                        "input": {
+                          "attributes": [
+                            {
+                              "$id": "resourceInternalId",
+                              "key": "resourceInternalId",
+                              "type": "string",
+                              "size": 255,
+                              "required": false,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": "",
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          ]
+                        }
+                      },
+                      "as": "o14290"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o14285"
+                      },
+                      "method": "updateDocument",
+                      "args": {
+                        "collection": "_metadata",
+                        "id": "migrations",
+                        "document": {
+                          "$obj": "o14290"
+                        }
+                      },
+                      "as": "o14291"
+                    },
+                    "return": true
+                  }
+                ]
+              }
+            }
+          },
+          "bind": "s27884",
+          "expect": {
+            "result": {
+              "$document": {
+                "name": "migrations",
+                "attributes": [
+                  {
+                    "$document": {
+                      "$id": "resourceInternalId",
+                      "key": "resourceInternalId",
+                      "type": "string",
+                      "size": 255,
+                      "required": false,
+                      "default": null,
+                      "signed": true,
+                      "array": false,
+                      "format": "",
+                      "formatOptions": [],
+                      "filters": []
+                    }
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": true,
+                "$sequence": "1",
+                "$id": "migrations",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "create(\"any\")"
+                ],
+                "$collection": "_metadata"
+              },
+              "$class": "Collection"
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "attributes": [
+                          {
+                            "$document": {
+                              "$id": "resourceInternalId",
+                              "key": "resourceInternalId",
+                              "type": "string",
+                              "size": 255,
+                              "required": false,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": "",
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "$document": {
+                        "name": "migrations",
+                        "attributes": [
+                          {
+                            "$document": {
+                              "$id": "resourceInternalId",
+                              "key": "resourceInternalId",
+                              "type": "string",
+                              "size": 255,
+                              "required": false,
+                              "default": null,
+                              "signed": true,
+                              "array": false,
+                              "format": "",
+                              "formatOptions": [],
+                              "filters": []
+                            }
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": true,
+                        "$sequence": "1",
+                        "$id": "migrations",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [
+                          "create(\"any\")"
+                        ],
+                        "$collection": "_metadata"
+                      },
+                      "$class": "Collection"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14285"
+            },
+            "method": "getCollection",
+            "args": {
+              "collection": "migrations"
+            },
+            "as": "o14292"
+          },
+          "bind": "s27885",
+          "expect": {
+            "$document": {
+              "name": "migrations",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "resourceInternalId",
+                    "key": "resourceInternalId",
+                    "type": "string",
+                    "size": 255,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": "",
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$sequence": "1",
+              "$id": "migrations",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14292"
+            },
+            "method": "attributes",
+            "args": {}
+          },
+          "expect": [
+            {
+              "$value": "Attribute",
+              "fields": {
+                "key": "resourceInternalId",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$value": "Attribute",
+              "fields": {
+                "key": "resourceInternalId",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o14293"
+          },
+          "bind": "s27887",
+          "expect": {
+            "$document": {
+              "$id": "resourceInternalId",
+              "key": "resourceInternalId",
+              "type": "string",
+              "size": 255,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14283"
+            },
+            "method": "toDocument",
+            "args": {},
+            "as": "o14294"
+          },
+          "bind": "s27888",
+          "expect": {
+            "$document": {
+              "$id": "resourceInternalId",
+              "key": "resourceInternalId",
+              "type": "string",
+              "size": 255,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "formatOptions": [],
+              "filters": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14294"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "type"
+            }
+          },
+          "expect": "string"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14293"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "type"
+            }
+          },
+          "expect": "string"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14294"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "size"
+            }
+          },
+          "expect": 255
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14293"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "size"
+            }
+          },
+          "expect": 255
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14294"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "required"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14293"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "required"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14294"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "default"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14293"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "default"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14294"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "signed"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14293"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "signed"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14294"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "array"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14293"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "array"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14294"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "format"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14293"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "format"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14294"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "formatOptions"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14293"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "formatOptions"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14294"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "filters"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o14293"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "filters"
+            }
+          },
+          "expect": []
+        }
+      ]
+    }
+  ]
+}

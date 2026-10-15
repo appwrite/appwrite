@@ -21,9 +21,10 @@
           "op": "db.open",
           "args": {
             "engine": "memory",
-            "detached": true
+            "detached": true,
+            "hooks": []
           },
-          "bind": "s23",
+          "bind": "s53",
           "expect": {
             "$handle": "*"
           }
@@ -32,32 +33,24 @@
           "op": "db.open",
           "args": {
             "adapter": {
-              "$ref": "s23"
+              "$ref": "s53"
             },
-            "cache": "memory"
+            "cache": "memory",
+            "hooks": []
           },
-          "bind": "s24",
+          "bind": "s54",
           "expect": {
             "$handle": "*"
           }
         },
         {
-          "op": "db.authorization.get_roles",
-          "args": {},
-          "expect": [
-            "any"
-          ]
-        },
-        {
           "op": "database.set_authorization",
           "args": {
             "db": {
-              "$ref": "s24"
+              "$ref": "s54"
             },
             "authorization": {
-              "roles": [
-                "any"
-              ]
+              "$ref": "db"
             }
           },
           "expect": {
@@ -68,9 +61,9 @@
           "op": "database.set_database",
           "args": {
             "db": {
-              "$ref": "s24"
+              "$ref": "s54"
             },
-            "name": "${ns}_utopiaTests"
+            "name": "${ns}"
           },
           "expect": {
             "$database": true
@@ -80,7 +73,7 @@
           "op": "database.set_namespace",
           "args": {
             "db": {
-              "$ref": "s24"
+              "$ref": "s54"
             },
             "namespace": "memory_iso_u000000000001"
           },
@@ -92,32 +85,24 @@
           "op": "database.create",
           "args": {
             "db": {
-              "$ref": "s24"
+              "$ref": "s54"
             }
           },
           "expect": true
         },
         {
-          "op": "db.adapter",
+          "op": "database.upsert_documents",
           "args": {
             "db": {
-              "$ref": "s23"
+              "$ref": "s54"
             },
-            "method": "upsertDocuments",
-            "args": {
-              "collection": {
-                "$document": {
-                  "$id": "any"
-                }
-              },
-              "attribute": "",
-              "changes": []
-            }
+            "collection": "any",
+            "documents": []
           },
           "expect": {
             "$error": {
               "class": "Utopia\\Database\\Exception",
-              "message": "Upsert is not implemented in the Memory adapter"
+              "message": "Adapter does not support upserts"
             }
           }
         }
@@ -141,9 +126,10 @@
           "op": "db.open",
           "args": {
             "engine": "memory",
-            "detached": true
+            "detached": true,
+            "hooks": []
           },
-          "bind": "s33",
+          "bind": "s66",
           "expect": {
             "$handle": "*"
           }
@@ -152,32 +138,24 @@
           "op": "db.open",
           "args": {
             "adapter": {
-              "$ref": "s33"
+              "$ref": "s66"
             },
-            "cache": "memory"
+            "cache": "memory",
+            "hooks": []
           },
-          "bind": "s34",
+          "bind": "s67",
           "expect": {
             "$handle": "*"
           }
         },
         {
-          "op": "db.authorization.get_roles",
-          "args": {},
-          "expect": [
-            "any"
-          ]
-        },
-        {
           "op": "database.set_authorization",
           "args": {
             "db": {
-              "$ref": "s34"
+              "$ref": "s67"
             },
             "authorization": {
-              "roles": [
-                "any"
-              ]
+              "$ref": "db"
             }
           },
           "expect": {
@@ -188,9 +166,9 @@
           "op": "database.set_database",
           "args": {
             "db": {
-              "$ref": "s34"
+              "$ref": "s67"
             },
-            "name": "${ns}_utopiaTests"
+            "name": "${ns}"
           },
           "expect": {
             "$database": true
@@ -200,7 +178,7 @@
           "op": "database.set_namespace",
           "args": {
             "db": {
-              "$ref": "s34"
+              "$ref": "s67"
             },
             "namespace": "memory_iso_u000000000002"
           },
@@ -212,7 +190,7 @@
           "op": "database.create",
           "args": {
             "db": {
-              "$ref": "s34"
+              "$ref": "s67"
             }
           },
           "expect": true
@@ -221,62 +199,77 @@
           "op": "database.create_collection",
           "args": {
             "db": {
-              "$ref": "s34"
+              "$ref": "s67"
             },
-            "id": "nested",
-            "attributes": [
-              {
-                "$document": {
-                  "$id": "name",
-                  "type": "string",
-                  "size": 64,
-                  "required": true,
-                  "signed": true,
-                  "array": false,
-                  "filters": []
-                }
-              }
-            ],
-            "permissions": [
-              "create(\"any\")",
-              "read(\"any\")"
-            ]
+            "collection": {
+              "$document": {
+                "$id": "nested",
+                "name": "nested",
+                "attributes": [
+                  {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
           },
           "expect": {
             "$document": {
               "$id": "nested",
-              "$permissions": [
-                "create(\"any\")",
-                "read(\"any\")"
-              ],
               "name": "nested",
               "attributes": [
                 {
                   "$document": {
                     "$id": "name",
+                    "key": "name",
                     "type": "string",
                     "size": 64,
                     "required": true,
+                    "default": null,
                     "signed": true,
                     "array": false,
+                    "format": null,
+                    "formatOptions": [],
                     "filters": []
                   }
                 }
               ],
               "indexes": [],
               "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
               "$collection": "_metadata",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "1"
-            }
+            },
+            "$class": "Collection"
           }
         },
         {
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s33"
+              "$ref": "s66"
             },
             "method": "startTransaction",
             "args": {}
@@ -287,7 +280,7 @@
           "op": "database.create_document",
           "args": {
             "db": {
-              "$ref": "s34"
+              "$ref": "s67"
             },
             "collection": "nested",
             "document": {
@@ -318,7 +311,7 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s33"
+              "$ref": "s66"
             },
             "method": "startTransaction",
             "args": {}
@@ -329,7 +322,7 @@
           "op": "database.create_document",
           "args": {
             "db": {
-              "$ref": "s34"
+              "$ref": "s67"
             },
             "collection": "nested",
             "document": {
@@ -360,7 +353,7 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s33"
+              "$ref": "s66"
             },
             "method": "rollbackTransaction",
             "args": {}
@@ -371,7 +364,7 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s33"
+              "$ref": "s66"
             },
             "method": "inTransaction",
             "args": {}
@@ -382,7 +375,7 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s33"
+              "$ref": "s66"
             },
             "method": "commitTransaction",
             "args": {}
@@ -393,7 +386,7 @@
           "op": "database.get_document",
           "args": {
             "db": {
-              "$ref": "s34"
+              "$ref": "s67"
             },
             "collection": "nested",
             "id": "outer"
@@ -401,13 +394,13 @@
           "expect": {
             "$document": {
               "name": "outer",
+              "$sequence": "1",
               "$id": "outer",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$permissions": [
                 "read(\"any\")"
               ],
-              "$sequence": "1",
               "$collection": "nested"
             }
           }
@@ -416,7 +409,7 @@
           "op": "database.get_document",
           "args": {
             "db": {
-              "$ref": "s34"
+              "$ref": "s67"
             },
             "collection": "nested",
             "id": "inner"
@@ -445,9 +438,10 @@
           "op": "db.open",
           "args": {
             "engine": "memory",
-            "detached": true
+            "detached": true,
+            "hooks": []
           },
-          "bind": "s52",
+          "bind": "s88",
           "expect": {
             "$handle": "*"
           }
@@ -456,32 +450,24 @@
           "op": "db.open",
           "args": {
             "adapter": {
-              "$ref": "s52"
+              "$ref": "s88"
             },
-            "cache": "memory"
+            "cache": "memory",
+            "hooks": []
           },
-          "bind": "s53",
+          "bind": "s89",
           "expect": {
             "$handle": "*"
           }
         },
         {
-          "op": "db.authorization.get_roles",
-          "args": {},
-          "expect": [
-            "any"
-          ]
-        },
-        {
           "op": "database.set_authorization",
           "args": {
             "db": {
-              "$ref": "s53"
+              "$ref": "s89"
             },
             "authorization": {
-              "roles": [
-                "any"
-              ]
+              "$ref": "db"
             }
           },
           "expect": {
@@ -492,9 +478,9 @@
           "op": "database.set_database",
           "args": {
             "db": {
-              "$ref": "s53"
+              "$ref": "s89"
             },
-            "name": "${ns}_utopiaTests"
+            "name": "${ns}"
           },
           "expect": {
             "$database": true
@@ -504,7 +490,7 @@
           "op": "database.set_namespace",
           "args": {
             "db": {
-              "$ref": "s53"
+              "$ref": "s89"
             },
             "namespace": "memory_iso_u000000000003"
           },
@@ -516,7 +502,7 @@
           "op": "database.create",
           "args": {
             "db": {
-              "$ref": "s53"
+              "$ref": "s89"
             }
           },
           "expect": true
@@ -525,62 +511,77 @@
           "op": "database.create_collection",
           "args": {
             "db": {
-              "$ref": "s53"
+              "$ref": "s89"
             },
-            "id": "lists",
-            "attributes": [
-              {
-                "$document": {
-                  "$id": "tags",
-                  "type": "string",
-                  "size": 64,
-                  "required": false,
-                  "signed": true,
-                  "array": true,
-                  "filters": []
-                }
-              }
-            ],
-            "permissions": [
-              "create(\"any\")",
-              "read(\"any\")"
-            ]
+            "collection": {
+              "$document": {
+                "$id": "lists",
+                "name": "lists",
+                "attributes": [
+                  {
+                    "$id": "tags",
+                    "key": "tags",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
           },
           "expect": {
             "$document": {
               "$id": "lists",
-              "$permissions": [
-                "create(\"any\")",
-                "read(\"any\")"
-              ],
               "name": "lists",
               "attributes": [
                 {
                   "$document": {
                     "$id": "tags",
+                    "key": "tags",
                     "type": "string",
                     "size": 64,
                     "required": false,
+                    "default": null,
                     "signed": true,
                     "array": true,
+                    "format": null,
+                    "formatOptions": [],
                     "filters": []
                   }
                 }
               ],
               "indexes": [],
               "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
               "$collection": "_metadata",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "1"
-            }
+            },
+            "$class": "Collection"
           }
         },
         {
           "op": "database.create_document",
           "args": {
             "db": {
-              "$ref": "s53"
+              "$ref": "s89"
             },
             "collection": "lists",
             "document": {
@@ -619,7 +620,7 @@
           "op": "database.get_document",
           "args": {
             "db": {
-              "$ref": "s53"
+              "$ref": "s89"
             },
             "collection": "lists",
             "id": "l1"
@@ -631,13 +632,13 @@
                 "memory",
                 "adapter"
               ],
+              "$sequence": "1",
               "$id": "l1",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$permissions": [
                 "read(\"any\")"
               ],
-              "$sequence": "1",
               "$collection": "lists"
             }
           }
@@ -662,9 +663,10 @@
           "op": "db.open",
           "args": {
             "engine": "memory",
-            "detached": true
+            "detached": true,
+            "hooks": []
           },
-          "bind": "s64",
+          "bind": "s103",
           "expect": {
             "$handle": "*"
           }
@@ -673,7 +675,7 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s64"
+              "$ref": "s103"
             },
             "method": "setNamespace",
             "args": {
@@ -688,11 +690,11 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s64"
+              "$ref": "s103"
             },
             "method": "createCollection",
             "args": {
-              "name": "emails"
+              "collection": "emails"
             }
           },
           "expect": true
@@ -701,7 +703,7 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s64"
+              "$ref": "s103"
             },
             "method": "createDocument",
             "args": {
@@ -732,7 +734,7 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s64"
+              "$ref": "s103"
             },
             "method": "createDocument",
             "args": {
@@ -763,18 +765,26 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s64"
+              "$ref": "s103"
             },
             "method": "createIndex",
             "args": {
               "collection": "emails",
-              "id": "unique_addr",
-              "type": "unique",
-              "attributes": [
-                "addr"
-              ],
-              "lengths": [],
-              "orders": []
+              "index": {
+                "$value": "Index",
+                "fields": {
+                  "key": "unique_addr",
+                  "type": {
+                    "$enum": "Query\\Schema\\IndexType::Unique"
+                  },
+                  "attributes": [
+                    "addr"
+                  ],
+                  "lengths": [],
+                  "orders": [],
+                  "ttl": null
+                }
+              }
             }
           },
           "expect": {
@@ -804,9 +814,10 @@
           "op": "db.open",
           "args": {
             "engine": "memory",
-            "detached": true
+            "detached": true,
+            "hooks": []
           },
-          "bind": "s72",
+          "bind": "s115",
           "expect": {
             "$handle": "*"
           }
@@ -815,32 +826,24 @@
           "op": "db.open",
           "args": {
             "adapter": {
-              "$ref": "s72"
+              "$ref": "s115"
             },
-            "cache": "memory"
+            "cache": "memory",
+            "hooks": []
           },
-          "bind": "s73",
+          "bind": "s116",
           "expect": {
             "$handle": "*"
           }
         },
         {
-          "op": "db.authorization.get_roles",
-          "args": {},
-          "expect": [
-            "any"
-          ]
-        },
-        {
           "op": "database.set_authorization",
           "args": {
             "db": {
-              "$ref": "s73"
+              "$ref": "s116"
             },
             "authorization": {
-              "roles": [
-                "any"
-              ]
+              "$ref": "db"
             }
           },
           "expect": {
@@ -851,9 +854,9 @@
           "op": "database.set_database",
           "args": {
             "db": {
-              "$ref": "s73"
+              "$ref": "s116"
             },
-            "name": "${ns}_utopiaTests"
+            "name": "${ns}"
           },
           "expect": {
             "$database": true
@@ -863,7 +866,7 @@
           "op": "database.set_namespace",
           "args": {
             "db": {
-              "$ref": "s73"
+              "$ref": "s116"
             },
             "namespace": "memory_iso_u000000000005"
           },
@@ -875,7 +878,7 @@
           "op": "database.create",
           "args": {
             "db": {
-              "$ref": "s73"
+              "$ref": "s116"
             }
           },
           "expect": true
@@ -884,55 +887,65 @@
           "op": "database.create_collection",
           "args": {
             "db": {
-              "$ref": "s73"
+              "$ref": "s116"
             },
-            "id": "optional",
-            "attributes": [
-              {
-                "$document": {
-                  "$id": "token",
-                  "type": "string",
-                  "size": 64,
-                  "required": false,
-                  "signed": true,
-                  "array": false,
-                  "filters": []
-                }
-              }
-            ],
-            "indexes": [
-              {
-                "$document": {
-                  "$id": "unique_token",
-                  "type": "unique",
-                  "attributes": [
-                    "token"
-                  ]
-                }
-              }
-            ],
-            "permissions": [
-              "create(\"any\")",
-              "read(\"any\")"
-            ]
+            "collection": {
+              "$document": {
+                "$id": "optional",
+                "name": "optional",
+                "attributes": [
+                  {
+                    "$id": "token",
+                    "key": "token",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [
+                  {
+                    "$id": "unique_token",
+                    "key": "unique_token",
+                    "type": "unique",
+                    "attributes": [
+                      "token"
+                    ],
+                    "lengths": [],
+                    "orders": []
+                  }
+                ],
+                "documentSecurity": true,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
           },
           "expect": {
             "$document": {
               "$id": "optional",
-              "$permissions": [
-                "create(\"any\")",
-                "read(\"any\")"
-              ],
               "name": "optional",
               "attributes": [
                 {
                   "$document": {
                     "$id": "token",
+                    "key": "token",
                     "type": "string",
                     "size": 64,
                     "required": false,
+                    "default": null,
                     "signed": true,
                     "array": false,
+                    "format": null,
+                    "formatOptions": [],
                     "filters": []
                   }
                 }
@@ -941,6 +954,7 @@
                 {
                   "$document": {
                     "$id": "unique_token",
+                    "key": "unique_token",
                     "type": "unique",
                     "attributes": [
                       "token"
@@ -951,7 +965,43 @@
                 }
               ],
               "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
               "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "db": {
+              "$ref": "s116"
+            },
+            "collection": "optional",
+            "document": {
+              "$document": {
+                "$id": "a",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "token": null
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "a",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "token": null,
+              "$collection": "optional",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "1"
@@ -962,33 +1012,7 @@
           "op": "database.create_document",
           "args": {
             "db": {
-              "$ref": "s73"
-            },
-            "collection": "optional",
-            "document": {
-              "$document": {
-                "$id": "a",
-                "$permissions": [
-                  "read(\"any\")"
-                ],
-                "token": {
-                  "$ref": "db"
-                }
-              }
-            }
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Attribute \"token\" has invalid type. Value must be a valid string and no longer than 64 chars"
-            }
-          }
-        },
-        {
-          "op": "database.create_document",
-          "args": {
-            "db": {
-              "$ref": "s73"
+              "$ref": "s116"
             },
             "collection": "optional",
             "document": {
@@ -997,16 +1021,21 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "token": {
-                  "$ref": "db"
-                }
+                "token": null
               }
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Structure",
-              "message": "Invalid document structure: Attribute \"token\" has invalid type. Value must be a valid string and no longer than 64 chars"
+            "$document": {
+              "$id": "b",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "token": null,
+              "$collection": "optional",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "2"
             }
           }
         },
@@ -1014,16 +1043,16 @@
           "op": "database.count",
           "args": {
             "db": {
-              "$ref": "s73"
+              "$ref": "s116"
             },
             "collection": "optional"
           },
-          "expect": 0
+          "expect": 2
         }
       ]
     },
     {
-      "name": "MemoryTest::testUpdateAttributeAppliesMetadataAfterRename",
+      "name": "MemoryTest::testUpdateAttributeMovesStoredValuesToTheNewKey",
       "state": [],
       "steps": [
         {
@@ -1040,9 +1069,10 @@
           "op": "db.open",
           "args": {
             "engine": "memory",
-            "detached": true
+            "detached": true,
+            "hooks": []
           },
-          "bind": "s85",
+          "bind": "s131",
           "expect": {
             "$handle": "*"
           }
@@ -1051,7 +1081,7 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s85"
+              "$ref": "s131"
             },
             "method": "setNamespace",
             "args": {
@@ -1066,11 +1096,11 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s85"
+              "$ref": "s131"
             },
             "method": "createCollection",
             "args": {
-              "name": "renames"
+              "collection": "renames"
             }
           },
           "expect": true
@@ -1079,14 +1109,29 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s85"
+              "$ref": "s131"
             },
             "method": "createAttribute",
             "args": {
               "collection": "renames",
-              "id": "old",
-              "type": "string",
-              "size": 64
+              "attribute": {
+                "$value": "Attribute",
+                "fields": {
+                  "key": "old",
+                  "type": {
+                    "$enum": "Query\\Schema\\ColumnType::String"
+                  },
+                  "size": 64,
+                  "required": false,
+                  "default": null,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "filters": [],
+                  "relationship": null,
+                  "side": null
+                }
+              }
             }
           },
           "expect": true
@@ -1095,40 +1140,30 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s85"
+              "$ref": "s131"
             },
-            "method": "updateAttribute",
+            "method": "createDocument",
             "args": {
-              "collection": "renames",
-              "id": "old",
-              "type": "string",
-              "size": 256,
-              "newKey": "fresh"
-            }
-          },
-          "expect": true
-        },
-        {
-          "op": "db.memory_data",
-          "args": {
-            "db": {
-              "$ref": "s85"
+              "collection": {
+                "$document": {
+                  "$id": "renames"
+                }
+              },
+              "document": {
+                "$document": {
+                  "$id": "row",
+                  "$permissions": [],
+                  "old": "value"
+                }
+              }
             }
           },
           "expect": {
-            ".rename_u000000000006_renames": {
-              "attributes": {
-                "fresh": {
-                  "type": "string",
-                  "size": 256,
-                  "signed": true,
-                  "array": false,
-                  "required": false
-                }
-              },
-              "indexes": [],
-              "documents": [],
-              "sequence": 0
+            "$document": {
+              "$id": "row",
+              "$permissions": [],
+              "old": "value",
+              "$sequence": "1"
             }
           }
         },
@@ -1136,28 +1171,65 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s85"
+              "$ref": "s131"
             },
-            "method": "getDatabase",
-            "args": {}
+            "method": "updateAttribute",
+            "args": {
+              "collection": "renames",
+              "key": "old",
+              "attribute": {
+                "$value": "Attribute",
+                "fields": {
+                  "key": "fresh",
+                  "type": {
+                    "$enum": "Query\\Schema\\ColumnType::String"
+                  },
+                  "size": 256,
+                  "required": false,
+                  "default": null,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "filters": [],
+                  "relationship": null,
+                  "side": null
+                }
+              }
+            }
           },
-          "expect": ""
+          "expect": true
         },
         {
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s85"
+              "$ref": "s131"
             },
-            "method": "getNamespace",
-            "args": {}
+            "method": "getDocument",
+            "args": {
+              "collection": {
+                "$document": {
+                  "$id": "renames"
+                }
+              },
+              "id": "row"
+            }
           },
-          "expect": "rename_u000000000006"
+          "expect": {
+            "$document": {
+              "$id": "row",
+              "$createdAt": null,
+              "$updatedAt": null,
+              "$permissions": [],
+              "$sequence": "1",
+              "fresh": "value"
+            }
+          }
         }
       ]
     },
     {
-      "name": "MemoryTest::testRenameAttributeUpdatesIndexReferences",
+      "name": "MemoryTest::testRenameAttributeCarriesValuesIndexesAndRegistration",
       "state": [],
       "steps": [
         {
@@ -1174,9 +1246,10 @@
           "op": "db.open",
           "args": {
             "engine": "memory",
-            "detached": true
+            "detached": true,
+            "hooks": []
           },
-          "bind": "s95",
+          "bind": "s144",
           "expect": {
             "$handle": "*"
           }
@@ -1185,7 +1258,7 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s95"
+              "$ref": "s144"
             },
             "method": "setNamespace",
             "args": {
@@ -1200,11 +1273,11 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s95"
+              "$ref": "s144"
             },
             "method": "createCollection",
             "args": {
-              "name": "indexed"
+              "collection": "indexed"
             }
           },
           "expect": true
@@ -1213,14 +1286,29 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s95"
+              "$ref": "s144"
             },
             "method": "createAttribute",
             "args": {
               "collection": "indexed",
-              "id": "name",
-              "type": "string",
-              "size": 64
+              "attribute": {
+                "$value": "Attribute",
+                "fields": {
+                  "key": "name",
+                  "type": {
+                    "$enum": "Query\\Schema\\ColumnType::String"
+                  },
+                  "size": 64,
+                  "required": false,
+                  "default": null,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "filters": [],
+                  "relationship": null,
+                  "side": null
+                }
+              }
             }
           },
           "expect": true
@@ -1229,18 +1317,26 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s95"
+              "$ref": "s144"
             },
             "method": "createIndex",
             "args": {
               "collection": "indexed",
-              "id": "idx_name",
-              "type": "key",
-              "attributes": [
-                "name"
-              ],
-              "lengths": [],
-              "orders": []
+              "index": {
+                "$value": "Index",
+                "fields": {
+                  "key": "unique_name",
+                  "type": {
+                    "$enum": "Query\\Schema\\IndexType::Unique"
+                  },
+                  "attributes": [
+                    "name"
+                  ],
+                  "lengths": [],
+                  "orders": [],
+                  "ttl": null
+                }
+              }
             }
           },
           "expect": true
@@ -1249,7 +1345,38 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s95"
+              "$ref": "s144"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": {
+                "$document": {
+                  "$id": "indexed"
+                }
+              },
+              "document": {
+                "$document": {
+                  "$id": "first",
+                  "$permissions": [],
+                  "name": "taken"
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "$permissions": [],
+              "name": "taken",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s144"
             },
             "method": "renameAttribute",
             "args": {
@@ -1261,35 +1388,29 @@
           "expect": true
         },
         {
-          "op": "db.memory_data",
+          "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s95"
+              "$ref": "s144"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": {
+                "$document": {
+                  "$id": "indexed"
+                }
+              },
+              "id": "first"
             }
           },
           "expect": {
-            ".idxrn_u000000000007_indexed": {
-              "attributes": {
-                "title": {
-                  "type": "string",
-                  "size": 64,
-                  "signed": true,
-                  "array": false,
-                  "required": false
-                }
-              },
-              "indexes": {
-                "idx_name": {
-                  "type": "key",
-                  "attributes": [
-                    "title"
-                  ],
-                  "lengths": [],
-                  "orders": []
-                }
-              },
-              "documents": [],
-              "sequence": 0
+            "$document": {
+              "$id": "first",
+              "$createdAt": null,
+              "$updatedAt": null,
+              "$permissions": [],
+              "$sequence": "1",
+              "title": "taken"
             }
           }
         },
@@ -1297,28 +1418,106 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s95"
+              "$ref": "s144"
             },
-            "method": "getDatabase",
-            "args": {}
+            "method": "createDocument",
+            "args": {
+              "collection": {
+                "$document": {
+                  "$id": "indexed"
+                }
+              },
+              "document": {
+                "$document": {
+                  "$id": "free",
+                  "$permissions": [],
+                  "title": "available"
+                }
+              }
+            }
           },
-          "expect": ""
+          "expect": {
+            "$document": {
+              "$id": "free",
+              "$permissions": [],
+              "title": "available",
+              "$sequence": "2"
+            }
+          }
         },
         {
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s95"
+              "$ref": "s144"
             },
-            "method": "getNamespace",
-            "args": {}
+            "method": "createDocument",
+            "args": {
+              "collection": {
+                "$document": {
+                  "$id": "indexed"
+                }
+              },
+              "document": {
+                "$document": {
+                  "$id": "second",
+                  "$permissions": [],
+                  "title": "taken"
+                }
+              }
+            }
           },
-          "expect": "idxrn_u000000000007"
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Unique",
+              "message": "Unique index violation"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s144"
+            },
+            "method": "deleteAttribute",
+            "args": {
+              "collection": "indexed",
+              "key": "title"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s144"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": {
+                "$document": {
+                  "$id": "indexed"
+                }
+              },
+              "id": "first"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "$createdAt": null,
+              "$updatedAt": null,
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
         }
       ]
     },
     {
-      "name": "MemoryTest::testDeleteAttributeRemovesFromIndex",
+      "name": "MemoryTest::testDeleteAttributeNarrowsCompositeUniqueIndex",
       "state": [],
       "steps": [
         {
@@ -1335,9 +1534,10 @@
           "op": "db.open",
           "args": {
             "engine": "memory",
-            "detached": true
+            "detached": true,
+            "hooks": []
           },
-          "bind": "s106",
+          "bind": "s162",
           "expect": {
             "$handle": "*"
           }
@@ -1346,7 +1546,7 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s106"
+              "$ref": "s162"
             },
             "method": "setNamespace",
             "args": {
@@ -1361,11 +1561,11 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s106"
+              "$ref": "s162"
             },
             "method": "createCollection",
             "args": {
-              "name": "drops"
+              "collection": "drops"
             }
           },
           "expect": true
@@ -1374,14 +1574,29 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s106"
+              "$ref": "s162"
             },
             "method": "createAttribute",
             "args": {
               "collection": "drops",
-              "id": "a",
-              "type": "string",
-              "size": 64
+              "attribute": {
+                "$value": "Attribute",
+                "fields": {
+                  "key": "a",
+                  "type": {
+                    "$enum": "Query\\Schema\\ColumnType::String"
+                  },
+                  "size": 64,
+                  "required": false,
+                  "default": null,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "filters": [],
+                  "relationship": null,
+                  "side": null
+                }
+              }
             }
           },
           "expect": true
@@ -1390,14 +1605,29 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s106"
+              "$ref": "s162"
             },
             "method": "createAttribute",
             "args": {
               "collection": "drops",
-              "id": "b",
-              "type": "string",
-              "size": 64
+              "attribute": {
+                "$value": "Attribute",
+                "fields": {
+                  "key": "b",
+                  "type": {
+                    "$enum": "Query\\Schema\\ColumnType::String"
+                  },
+                  "size": 64,
+                  "required": false,
+                  "default": null,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "filters": [],
+                  "relationship": null,
+                  "side": null
+                }
+              }
             }
           },
           "expect": true
@@ -1406,19 +1636,27 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s106"
+              "$ref": "s162"
             },
             "method": "createIndex",
             "args": {
               "collection": "drops",
-              "id": "idx_ab",
-              "type": "key",
-              "attributes": [
-                "a",
-                "b"
-              ],
-              "lengths": [],
-              "orders": []
+              "index": {
+                "$value": "Index",
+                "fields": {
+                  "key": "unique_ab",
+                  "type": {
+                    "$enum": "Query\\Schema\\IndexType::Unique"
+                  },
+                  "attributes": [
+                    "a",
+                    "b"
+                  ],
+                  "lengths": [],
+                  "orders": [],
+                  "ttl": null
+                }
+              }
             }
           },
           "expect": true
@@ -1427,46 +1665,32 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s106"
+              "$ref": "s162"
             },
-            "method": "deleteAttribute",
+            "method": "createDocument",
             "args": {
-              "collection": "drops",
-              "id": "a"
-            }
-          },
-          "expect": true
-        },
-        {
-          "op": "db.memory_data",
-          "args": {
-            "db": {
-              "$ref": "s106"
+              "collection": {
+                "$document": {
+                  "$id": "drops"
+                }
+              },
+              "document": {
+                "$document": {
+                  "$id": "existing",
+                  "$permissions": [],
+                  "a": "one",
+                  "b": "kept"
+                }
+              }
             }
           },
           "expect": {
-            ".idxdrop_u000000000008_drops": {
-              "attributes": {
-                "b": {
-                  "type": "string",
-                  "size": 64,
-                  "signed": true,
-                  "array": false,
-                  "required": false
-                }
-              },
-              "indexes": {
-                "idx_ab": {
-                  "type": "key",
-                  "attributes": [
-                    "b"
-                  ],
-                  "lengths": [],
-                  "orders": []
-                }
-              },
-              "documents": [],
-              "sequence": 0
+            "$document": {
+              "$id": "existing",
+              "$permissions": [],
+              "a": "one",
+              "b": "kept",
+              "$sequence": "1"
             }
           }
         },
@@ -1474,23 +1698,102 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s106"
+              "$ref": "s162"
             },
-            "method": "getDatabase",
-            "args": {}
+            "method": "deleteAttribute",
+            "args": {
+              "collection": "drops",
+              "key": "a"
+            }
           },
-          "expect": ""
+          "expect": true
         },
         {
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s106"
+              "$ref": "s162"
             },
-            "method": "getNamespace",
-            "args": {}
+            "method": "getDocument",
+            "args": {
+              "collection": {
+                "$document": {
+                  "$id": "drops"
+                }
+              },
+              "id": "existing"
+            }
           },
-          "expect": "idxdrop_u000000000008"
+          "expect": {
+            "$document": {
+              "b": "kept",
+              "$id": "existing",
+              "$createdAt": null,
+              "$updatedAt": null,
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s162"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": {
+                "$document": {
+                  "$id": "drops"
+                }
+              },
+              "document": {
+                "$document": {
+                  "$id": "first",
+                  "$permissions": [],
+                  "b": "shared"
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "$permissions": [],
+              "b": "shared",
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "db": {
+              "$ref": "s162"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": {
+                "$document": {
+                  "$id": "drops"
+                }
+              },
+              "document": {
+                "$document": {
+                  "$id": "second",
+                  "$permissions": [],
+                  "b": "shared"
+                }
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Unique",
+              "message": "Unique index violation"
+            }
+          }
         }
       ]
     },
@@ -1512,9 +1815,10 @@
           "op": "db.open",
           "args": {
             "engine": "memory",
-            "detached": true
+            "detached": true,
+            "hooks": []
           },
-          "bind": "s118",
+          "bind": "s179",
           "expect": {
             "$handle": "*"
           }
@@ -1523,32 +1827,24 @@
           "op": "db.open",
           "args": {
             "adapter": {
-              "$ref": "s118"
+              "$ref": "s179"
             },
-            "cache": "memory"
+            "cache": "memory",
+            "hooks": []
           },
-          "bind": "s119",
+          "bind": "s180",
           "expect": {
             "$handle": "*"
           }
         },
         {
-          "op": "db.authorization.get_roles",
-          "args": {},
-          "expect": [
-            "any"
-          ]
-        },
-        {
           "op": "database.set_authorization",
           "args": {
             "db": {
-              "$ref": "s119"
+              "$ref": "s180"
             },
             "authorization": {
-              "roles": [
-                "any"
-              ]
+              "$ref": "db"
             }
           },
           "expect": {
@@ -1559,9 +1855,9 @@
           "op": "database.set_database",
           "args": {
             "db": {
-              "$ref": "s119"
+              "$ref": "s180"
             },
-            "name": "${ns}_utopiaTests"
+            "name": "${ns}"
           },
           "expect": {
             "$database": true
@@ -1571,7 +1867,7 @@
           "op": "database.set_namespace",
           "args": {
             "db": {
-              "$ref": "s119"
+              "$ref": "s180"
             },
             "namespace": "memory_iso_u000000000009"
           },
@@ -1583,7 +1879,7 @@
           "op": "database.create",
           "args": {
             "db": {
-              "$ref": "s119"
+              "$ref": "s180"
             }
           },
           "expect": true
@@ -1592,57 +1888,66 @@
           "op": "database.create_collection",
           "args": {
             "db": {
-              "$ref": "s119"
+              "$ref": "s180"
             },
-            "id": "handles",
-            "attributes": [
-              {
-                "$document": {
-                  "$id": "handle",
-                  "type": "string",
-                  "size": 64,
-                  "required": true,
-                  "signed": true,
-                  "array": false,
-                  "filters": []
-                }
-              }
-            ],
-            "indexes": [
-              {
-                "$document": {
-                  "$id": "unique_handle",
-                  "type": "unique",
-                  "attributes": [
-                    "handle"
-                  ]
-                }
-              }
-            ],
-            "permissions": [
-              "create(\"any\")",
-              "read(\"any\")",
-              "update(\"any\")"
-            ]
+            "collection": {
+              "$document": {
+                "$id": "handles",
+                "name": "handles",
+                "attributes": [
+                  {
+                    "$id": "handle",
+                    "key": "handle",
+                    "type": "string",
+                    "size": 64,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [
+                  {
+                    "$id": "unique_handle",
+                    "key": "unique_handle",
+                    "type": "unique",
+                    "attributes": [
+                      "handle"
+                    ],
+                    "lengths": [],
+                    "orders": []
+                  }
+                ],
+                "documentSecurity": true,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
           },
           "expect": {
             "$document": {
               "$id": "handles",
-              "$permissions": [
-                "create(\"any\")",
-                "read(\"any\")",
-                "update(\"any\")"
-              ],
               "name": "handles",
               "attributes": [
                 {
                   "$document": {
                     "$id": "handle",
+                    "key": "handle",
                     "type": "string",
                     "size": 64,
                     "required": true,
+                    "default": null,
                     "signed": true,
                     "array": false,
+                    "format": null,
+                    "formatOptions": [],
                     "filters": []
                   }
                 }
@@ -1651,6 +1956,7 @@
                 {
                   "$document": {
                     "$id": "unique_handle",
+                    "key": "unique_handle",
                     "type": "unique",
                     "attributes": [
                       "handle"
@@ -1661,18 +1967,24 @@
                 }
               ],
               "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
               "$collection": "_metadata",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "1"
-            }
+            },
+            "$class": "Collection"
           }
         },
         {
           "op": "database.create_document",
           "args": {
             "db": {
-              "$ref": "s119"
+              "$ref": "s180"
             },
             "collection": "handles",
             "document": {
@@ -1705,7 +2017,7 @@
           "op": "database.create_document",
           "args": {
             "db": {
-              "$ref": "s119"
+              "$ref": "s180"
             },
             "collection": "handles",
             "document": {
@@ -1738,7 +2050,7 @@
           "op": "database.update_documents",
           "args": {
             "db": {
-              "$ref": "s119"
+              "$ref": "s180"
             },
             "collection": "handles",
             "updates": {
@@ -1769,7 +2081,7 @@
           "op": "database.get_document",
           "args": {
             "db": {
-              "$ref": "s119"
+              "$ref": "s180"
             },
             "collection": "handles",
             "id": "h1"
@@ -1777,6 +2089,7 @@
           "expect": {
             "$document": {
               "handle": "taken",
+              "$sequence": "1",
               "$id": "h1",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
@@ -1784,7 +2097,6 @@
                 "read(\"any\")",
                 "update(\"any\")"
               ],
-              "$sequence": "1",
               "$collection": "handles"
             }
           }
@@ -1793,7 +2105,7 @@
           "op": "database.get_document",
           "args": {
             "db": {
-              "$ref": "s119"
+              "$ref": "s180"
             },
             "collection": "handles",
             "id": "h2"
@@ -1801,6 +2113,7 @@
           "expect": {
             "$document": {
               "handle": "free",
+              "$sequence": "2",
               "$id": "h2",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
@@ -1808,7 +2121,6 @@
                 "read(\"any\")",
                 "update(\"any\")"
               ],
-              "$sequence": "2",
               "$collection": "handles"
             }
           }
@@ -1833,9 +2145,10 @@
           "op": "db.open",
           "args": {
             "engine": "memory",
-            "detached": true
+            "detached": true,
+            "hooks": []
           },
-          "bind": "s133",
+          "bind": "s197",
           "expect": {
             "$handle": "*"
           }
@@ -1844,32 +2157,24 @@
           "op": "db.open",
           "args": {
             "adapter": {
-              "$ref": "s133"
+              "$ref": "s197"
             },
-            "cache": "memory"
+            "cache": "memory",
+            "hooks": []
           },
-          "bind": "s134",
+          "bind": "s198",
           "expect": {
             "$handle": "*"
           }
         },
         {
-          "op": "db.authorization.get_roles",
-          "args": {},
-          "expect": [
-            "any"
-          ]
-        },
-        {
           "op": "database.set_authorization",
           "args": {
             "db": {
-              "$ref": "s134"
+              "$ref": "s198"
             },
             "authorization": {
-              "roles": [
-                "any"
-              ]
+              "$ref": "db"
             }
           },
           "expect": {
@@ -1880,9 +2185,9 @@
           "op": "database.set_database",
           "args": {
             "db": {
-              "$ref": "s134"
+              "$ref": "s198"
             },
-            "name": "${ns}_utopiaTests"
+            "name": "${ns}"
           },
           "expect": {
             "$database": true
@@ -1892,7 +2197,7 @@
           "op": "database.set_namespace",
           "args": {
             "db": {
-              "$ref": "s134"
+              "$ref": "s198"
             },
             "namespace": "memory_iso_u000000000010"
           },
@@ -1904,7 +2209,7 @@
           "op": "database.create",
           "args": {
             "db": {
-              "$ref": "s134"
+              "$ref": "s198"
             }
           },
           "expect": true
@@ -1913,57 +2218,66 @@
           "op": "database.create_collection",
           "args": {
             "db": {
-              "$ref": "s134"
+              "$ref": "s198"
             },
-            "id": "siblings",
-            "attributes": [
-              {
-                "$document": {
-                  "$id": "handle",
-                  "type": "string",
-                  "size": 64,
-                  "required": true,
-                  "signed": true,
-                  "array": false,
-                  "filters": []
-                }
-              }
-            ],
-            "indexes": [
-              {
-                "$document": {
-                  "$id": "unique_handle",
-                  "type": "unique",
-                  "attributes": [
-                    "handle"
-                  ]
-                }
-              }
-            ],
-            "permissions": [
-              "create(\"any\")",
-              "read(\"any\")",
-              "update(\"any\")"
-            ]
+            "collection": {
+              "$document": {
+                "$id": "siblings",
+                "name": "siblings",
+                "attributes": [
+                  {
+                    "$id": "handle",
+                    "key": "handle",
+                    "type": "string",
+                    "size": 64,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [
+                  {
+                    "$id": "unique_handle",
+                    "key": "unique_handle",
+                    "type": "unique",
+                    "attributes": [
+                      "handle"
+                    ],
+                    "lengths": [],
+                    "orders": []
+                  }
+                ],
+                "documentSecurity": true,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
           },
           "expect": {
             "$document": {
               "$id": "siblings",
-              "$permissions": [
-                "create(\"any\")",
-                "read(\"any\")",
-                "update(\"any\")"
-              ],
               "name": "siblings",
               "attributes": [
                 {
                   "$document": {
                     "$id": "handle",
+                    "key": "handle",
                     "type": "string",
                     "size": 64,
                     "required": true,
+                    "default": null,
                     "signed": true,
                     "array": false,
+                    "format": null,
+                    "formatOptions": [],
                     "filters": []
                   }
                 }
@@ -1972,6 +2286,7 @@
                 {
                   "$document": {
                     "$id": "unique_handle",
+                    "key": "unique_handle",
                     "type": "unique",
                     "attributes": [
                       "handle"
@@ -1982,18 +2297,24 @@
                 }
               ],
               "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
               "$collection": "_metadata",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "1"
-            }
+            },
+            "$class": "Collection"
           }
         },
         {
           "op": "database.create_document",
           "args": {
             "db": {
-              "$ref": "s134"
+              "$ref": "s198"
             },
             "collection": "siblings",
             "document": {
@@ -2026,7 +2347,7 @@
           "op": "database.create_document",
           "args": {
             "db": {
-              "$ref": "s134"
+              "$ref": "s198"
             },
             "collection": "siblings",
             "document": {
@@ -2059,7 +2380,7 @@
           "op": "database.update_documents",
           "args": {
             "db": {
-              "$ref": "s134"
+              "$ref": "s198"
             },
             "collection": "siblings",
             "updates": {
@@ -2091,7 +2412,7 @@
           "op": "database.get_document",
           "args": {
             "db": {
-              "$ref": "s134"
+              "$ref": "s198"
             },
             "collection": "siblings",
             "id": "s1"
@@ -2099,6 +2420,7 @@
           "expect": {
             "$document": {
               "handle": "a",
+              "$sequence": "1",
               "$id": "s1",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
@@ -2106,7 +2428,6 @@
                 "read(\"any\")",
                 "update(\"any\")"
               ],
-              "$sequence": "1",
               "$collection": "siblings"
             }
           }
@@ -2115,7 +2436,7 @@
           "op": "database.get_document",
           "args": {
             "db": {
-              "$ref": "s134"
+              "$ref": "s198"
             },
             "collection": "siblings",
             "id": "s2"
@@ -2123,6 +2444,7 @@
           "expect": {
             "$document": {
               "handle": "b",
+              "$sequence": "2",
               "$id": "s2",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
@@ -2130,7 +2452,6 @@
                 "read(\"any\")",
                 "update(\"any\")"
               ],
-              "$sequence": "2",
               "$collection": "siblings"
             }
           }
@@ -2155,9 +2476,10 @@
           "op": "db.open",
           "args": {
             "engine": "memory",
-            "detached": true
+            "detached": true,
+            "hooks": []
           },
-          "bind": "s148",
+          "bind": "s215",
           "expect": {
             "$handle": "*"
           }
@@ -2166,32 +2488,24 @@
           "op": "db.open",
           "args": {
             "adapter": {
-              "$ref": "s148"
+              "$ref": "s215"
             },
-            "cache": "memory"
+            "cache": "memory",
+            "hooks": []
           },
-          "bind": "s149",
+          "bind": "s216",
           "expect": {
             "$handle": "*"
           }
         },
         {
-          "op": "db.authorization.get_roles",
-          "args": {},
-          "expect": [
-            "any"
-          ]
-        },
-        {
           "op": "database.set_authorization",
           "args": {
             "db": {
-              "$ref": "s149"
+              "$ref": "s216"
             },
             "authorization": {
-              "roles": [
-                "any"
-              ]
+              "$ref": "db"
             }
           },
           "expect": {
@@ -2202,9 +2516,9 @@
           "op": "database.set_database",
           "args": {
             "db": {
-              "$ref": "s149"
+              "$ref": "s216"
             },
-            "name": "${ns}_utopiaTests"
+            "name": "${ns}"
           },
           "expect": {
             "$database": true
@@ -2214,7 +2528,7 @@
           "op": "database.set_namespace",
           "args": {
             "db": {
-              "$ref": "s149"
+              "$ref": "s216"
             },
             "namespace": "memory_iso_u000000000011"
           },
@@ -2226,7 +2540,7 @@
           "op": "database.create",
           "args": {
             "db": {
-              "$ref": "s149"
+              "$ref": "s216"
             }
           },
           "expect": true
@@ -2235,62 +2549,77 @@
           "op": "database.create_collection",
           "args": {
             "db": {
-              "$ref": "s149"
+              "$ref": "s216"
             },
-            "id": "cleanup",
-            "attributes": [
-              {
-                "$document": {
-                  "$id": "name",
-                  "type": "string",
-                  "size": 64,
-                  "required": true,
-                  "signed": true,
-                  "array": false,
-                  "filters": []
-                }
-              }
-            ],
-            "permissions": [
-              "create(\"any\")",
-              "delete(\"any\")"
-            ]
+            "collection": {
+              "$document": {
+                "$id": "cleanup",
+                "name": "cleanup",
+                "attributes": [
+                  {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "create(\"any\")",
+                  "delete(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
           },
           "expect": {
             "$document": {
               "$id": "cleanup",
-              "$permissions": [
-                "create(\"any\")",
-                "delete(\"any\")"
-              ],
               "name": "cleanup",
               "attributes": [
                 {
                   "$document": {
                     "$id": "name",
+                    "key": "name",
                     "type": "string",
                     "size": 64,
                     "required": true,
+                    "default": null,
                     "signed": true,
                     "array": false,
+                    "format": null,
+                    "formatOptions": [],
                     "filters": []
                   }
                 }
               ],
               "indexes": [],
               "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "delete(\"any\")"
+              ],
               "$collection": "_metadata",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "1"
-            }
+            },
+            "$class": "Collection"
           }
         },
         {
           "op": "database.create_document",
           "args": {
             "db": {
-              "$ref": "s149"
+              "$ref": "s216"
             },
             "collection": "cleanup",
             "document": {
@@ -2323,7 +2652,7 @@
           "op": "database.create_document",
           "args": {
             "db": {
-              "$ref": "s149"
+              "$ref": "s216"
             },
             "collection": "cleanup",
             "document": {
@@ -2356,7 +2685,7 @@
           "op": "database.create_document",
           "args": {
             "db": {
-              "$ref": "s149"
+              "$ref": "s216"
             },
             "collection": "cleanup",
             "document": {
@@ -2386,32 +2715,118 @@
           }
         },
         {
+          "op": "database.find",
+          "args": {
+            "db": {
+              "$ref": "s216"
+            },
+            "collection": "cleanup"
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "n0",
+                "$id": "c0",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "$sequence": "1",
+                "$collection": "cleanup"
+              }
+            },
+            {
+              "$document": {
+                "name": "n1",
+                "$id": "c1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "$sequence": "2",
+                "$collection": "cleanup"
+              }
+            },
+            {
+              "$document": {
+                "name": "n2",
+                "$id": "c2",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "$sequence": "3",
+                "$collection": "cleanup"
+              }
+            }
+          ]
+        },
+        {
           "op": "database.delete_documents",
           "args": {
             "db": {
-              "$ref": "s149"
+              "$ref": "s216"
             },
             "collection": "cleanup"
           },
           "expect": 3
         },
         {
-          "op": "database.get_database",
+          "op": "database.find",
           "args": {
             "db": {
-              "$ref": "s149"
-            }
+              "$ref": "s216"
+            },
+            "collection": "cleanup"
           },
-          "expect": "${ns}_utopiaTests"
+          "expect": []
         },
         {
-          "op": "database.get_namespace",
+          "op": "database.create_document",
           "args": {
             "db": {
-              "$ref": "s149"
+              "$ref": "s216"
+            },
+            "collection": "cleanup",
+            "document": {
+              "$document": {
+                "$id": "c0",
+                "$permissions": [
+                  "delete(\"any\")"
+                ],
+                "name": "restricted"
+              }
             }
           },
-          "expect": "memory_iso_u000000000011"
+          "expect": {
+            "$document": {
+              "$id": "c0",
+              "$permissions": [
+                "delete(\"any\")"
+              ],
+              "name": "restricted",
+              "$collection": "cleanup",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "4"
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "db": {
+              "$ref": "s216"
+            },
+            "collection": "cleanup"
+          },
+          "expect": []
         }
       ]
     },
@@ -2433,9 +2848,10 @@
           "op": "db.open",
           "args": {
             "engine": "memory",
-            "detached": true
+            "detached": true,
+            "hooks": []
           },
-          "bind": "s164",
+          "bind": "s236",
           "expect": {
             "$handle": "*"
           }
@@ -2444,7 +2860,7 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s164"
+              "$ref": "s236"
             },
             "method": "setNamespace",
             "args": {
@@ -2459,37 +2875,41 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s164"
+              "$ref": "s236"
             },
             "method": "setSharedTables",
             "args": {
               "sharedTables": true
             }
           },
-          "expect": true
+          "expect": {
+            "$adapter": "Memory"
+          }
         },
         {
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s164"
+              "$ref": "s236"
             },
             "method": "setTenant",
             "args": {
               "tenant": 1
             }
           },
-          "expect": true
+          "expect": {
+            "$adapter": "Memory"
+          }
         },
         {
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s164"
+              "$ref": "s236"
             },
             "method": "createCollection",
             "args": {
-              "name": "shared"
+              "collection": "shared"
             }
           },
           "expect": true
@@ -2498,7 +2918,7 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s164"
+              "$ref": "s236"
             },
             "method": "createDocument",
             "args": {
@@ -2529,20 +2949,22 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s164"
+              "$ref": "s236"
             },
             "method": "setTenant",
             "args": {
               "tenant": 2
             }
           },
-          "expect": true
+          "expect": {
+            "$adapter": "Memory"
+          }
         },
         {
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s164"
+              "$ref": "s236"
             },
             "method": "createDocument",
             "args": {
@@ -2573,7 +2995,7 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s164"
+              "$ref": "s236"
             },
             "method": "getDocument",
             "args": {
@@ -2601,20 +3023,22 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s164"
+              "$ref": "s236"
             },
             "method": "setTenant",
             "args": {
               "tenant": 1
             }
           },
-          "expect": true
+          "expect": {
+            "$adapter": "Memory"
+          }
         },
         {
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s164"
+              "$ref": "s236"
             },
             "method": "getDocument",
             "args": {
@@ -2657,35 +3081,76 @@
         {
           "op": "database.create_collection",
           "args": {
-            "id": "single_date_operations_memory"
+            "collection": {
+              "$document": {
+                "$id": "single_date_operations_memory",
+                "name": "single_date_operations_memory",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true
+              },
+              "$class": "Collection"
+            }
           },
           "expect": {
             "$document": {
               "$id": "single_date_operations_memory",
-              "$permissions": [
-                "create(\"any\")"
-              ],
               "name": "single_date_operations_memory",
               "attributes": [],
               "indexes": [],
               "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
               "$collection": "_metadata",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "1"
-            }
+            },
+            "$class": "Collection"
           }
         },
         {
           "op": "database.create_attribute",
           "args": {
             "collection": "single_date_operations_memory",
-            "id": "string",
-            "type": "string",
-            "size": 128,
-            "required": false
+            "attribute": {
+              "$value": "Attribute",
+              "fields": {
+                "key": "string",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 128,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            }
           },
-          "expect": true
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "string",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 128,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
         },
         {
           "op": "database.set_preserve_dates",
@@ -2743,6 +3208,7 @@
           "expect": {
             "$document": {
               "string": "no_dates_update",
+              "$sequence": "1",
               "$id": "doc11",
               "$createdAt": "2000-01-01T10:00:00.000+00:00",
               "$updatedAt": "<now>",
@@ -2751,7 +3217,6 @@
                 "write(\"any\")",
                 "update(\"any\")"
               ],
-              "$sequence": "1",
               "$collection": "single_date_operations_memory"
             }
           }
@@ -2768,9 +3233,9 @@
         {
           "op": "database.delete_collection",
           "args": {
-            "id": "single_date_operations_memory"
+            "collection": "single_date_operations_memory"
           },
-          "expect": true
+          "expect": null
         }
       ]
     },
@@ -2792,9 +3257,10 @@
           "op": "db.open",
           "args": {
             "engine": "memory",
-            "detached": true
+            "detached": true,
+            "hooks": []
           },
-          "bind": "s64",
+          "bind": "s103",
           "expect": {
             "$handle": "*"
           }
@@ -2803,11 +3269,11 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s64"
+              "$ref": "s103"
             },
             "method": "createCollection",
             "args": {
-              "name": "emails"
+              "collection": "emails"
             }
           },
           "expect": true
@@ -2816,7 +3282,7 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s64"
+              "$ref": "s103"
             },
             "method": "createDocument",
             "args": {
@@ -2847,7 +3313,7 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s64"
+              "$ref": "s103"
             },
             "method": "createDocument",
             "args": {
@@ -2878,18 +3344,26 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s64"
+              "$ref": "s103"
             },
             "method": "createIndex",
             "args": {
               "collection": "emails",
-              "id": "unique_addr",
-              "type": "unique",
-              "attributes": [
-                "addr"
-              ],
-              "lengths": [],
-              "orders": []
+              "index": {
+                "$value": "Index",
+                "fields": {
+                  "key": "unique_addr",
+                  "type": {
+                    "$enum": "Query\\Schema\\IndexType::Unique"
+                  },
+                  "attributes": [
+                    "addr"
+                  ],
+                  "lengths": [],
+                  "orders": [],
+                  "ttl": null
+                }
+              }
             }
           },
           "expect": {
@@ -2903,9 +3377,10 @@
           "op": "db.open",
           "args": {
             "engine": "memory",
-            "detached": true
+            "detached": true,
+            "hooks": []
           },
-          "bind": "s186",
+          "bind": "s266",
           "expect": {
             "$handle": "*"
           }
@@ -2914,7 +3389,7 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s186"
+              "$ref": "s266"
             },
             "method": "setNamespace",
             "args": {
@@ -2929,37 +3404,41 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s186"
+              "$ref": "s266"
             },
             "method": "setSharedTables",
             "args": {
               "sharedTables": true
             }
           },
-          "expect": true
+          "expect": {
+            "$adapter": "Memory"
+          }
         },
         {
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s186"
+              "$ref": "s266"
             },
             "method": "setTenant",
             "args": {
               "tenant": 1
             }
           },
-          "expect": true
+          "expect": {
+            "$adapter": "Memory"
+          }
         },
         {
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s186"
+              "$ref": "s266"
             },
             "method": "createCollection",
             "args": {
-              "name": "emails"
+              "collection": "emails"
             }
           },
           "expect": true
@@ -2968,15 +3447,29 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s186"
+              "$ref": "s266"
             },
             "method": "createAttribute",
             "args": {
               "collection": "emails",
-              "id": "addr",
-              "type": "string",
-              "size": 128,
-              "required": true
+              "attribute": {
+                "$value": "Attribute",
+                "fields": {
+                  "key": "addr",
+                  "type": {
+                    "$enum": "Query\\Schema\\ColumnType::String"
+                  },
+                  "size": 128,
+                  "required": true,
+                  "default": null,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "filters": [],
+                  "relationship": null,
+                  "side": null
+                }
+              }
             }
           },
           "expect": true
@@ -2985,18 +3478,26 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s186"
+              "$ref": "s266"
             },
             "method": "createIndex",
             "args": {
               "collection": "emails",
-              "id": "unique_addr",
-              "type": "unique",
-              "attributes": [
-                "addr"
-              ],
-              "lengths": [],
-              "orders": []
+              "index": {
+                "$value": "Index",
+                "fields": {
+                  "key": "unique_addr",
+                  "type": {
+                    "$enum": "Query\\Schema\\IndexType::Unique"
+                  },
+                  "attributes": [
+                    "addr"
+                  ],
+                  "lengths": [],
+                  "orders": [],
+                  "ttl": null
+                }
+              }
             }
           },
           "expect": true
@@ -3005,7 +3506,7 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s186"
+              "$ref": "s266"
             },
             "method": "createDocument",
             "args": {
@@ -3036,20 +3537,22 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s186"
+              "$ref": "s266"
             },
             "method": "setTenant",
             "args": {
               "tenant": 2
             }
           },
-          "expect": true
+          "expect": {
+            "$adapter": "Memory"
+          }
         },
         {
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s186"
+              "$ref": "s266"
             },
             "method": "createDocument",
             "args": {
@@ -3080,7 +3583,7 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s186"
+              "$ref": "s266"
             },
             "method": "getDocument",
             "args": {
@@ -3108,20 +3611,22 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s186"
+              "$ref": "s266"
             },
             "method": "setTenant",
             "args": {
               "tenant": 1
             }
           },
-          "expect": true
+          "expect": {
+            "$adapter": "Memory"
+          }
         },
         {
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s186"
+              "$ref": "s266"
             },
             "method": "getDocument",
             "args": {
@@ -3149,7 +3654,7 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s186"
+              "$ref": "s266"
             },
             "method": "createDocument",
             "args": {
@@ -3194,9 +3699,10 @@
           "op": "db.open",
           "args": {
             "engine": "memory",
-            "detached": true
+            "detached": true,
+            "hooks": []
           },
-          "bind": "s202",
+          "bind": "s286",
           "expect": {
             "$handle": "*"
           }
@@ -3205,7 +3711,7 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s202"
+              "$ref": "s286"
             },
             "method": "setNamespace",
             "args": {
@@ -3220,7 +3726,7 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s202"
+              "$ref": "s286"
             },
             "method": "find",
             "args": {
@@ -3258,9 +3764,10 @@
           "op": "db.open",
           "args": {
             "engine": "memory",
-            "detached": true
+            "detached": true,
+            "hooks": []
           },
-          "bind": "s207",
+          "bind": "s295",
           "expect": {
             "$handle": "*"
           }
@@ -3269,7 +3776,7 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s207"
+              "$ref": "s295"
             },
             "method": "setNamespace",
             "args": {
@@ -3284,7 +3791,7 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s207"
+              "$ref": "s295"
             },
             "method": "count",
             "args": {
@@ -3322,9 +3829,10 @@
           "op": "db.open",
           "args": {
             "engine": "memory",
-            "detached": true
+            "detached": true,
+            "hooks": []
           },
-          "bind": "s212",
+          "bind": "s304",
           "expect": {
             "$handle": "*"
           }
@@ -3333,7 +3841,7 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s212"
+              "$ref": "s304"
             },
             "method": "setNamespace",
             "args": {
@@ -3348,7 +3856,7 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s212"
+              "$ref": "s304"
             },
             "method": "sum",
             "args": {
@@ -3387,9 +3895,10 @@
           "op": "db.open",
           "args": {
             "engine": "memory",
-            "detached": true
+            "detached": true,
+            "hooks": []
           },
-          "bind": "s217",
+          "bind": "s313",
           "expect": {
             "$handle": "*"
           }
@@ -3398,7 +3907,7 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s217"
+              "$ref": "s313"
             },
             "method": "setNamespace",
             "args": {
@@ -3413,11 +3922,15 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s217"
+              "$ref": "s313"
             },
             "method": "deleteDocument",
             "args": {
-              "collection": "ghost",
+              "collection": {
+                "$document": {
+                  "$id": "ghost"
+                }
+              },
               "id": "x"
             }
           },
@@ -3448,9 +3961,10 @@
           "op": "db.open",
           "args": {
             "engine": "memory",
-            "detached": true
+            "detached": true,
+            "hooks": []
           },
-          "bind": "s222",
+          "bind": "s322",
           "expect": {
             "$handle": "*"
           }
@@ -3459,7 +3973,7 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s222"
+              "$ref": "s322"
             },
             "method": "setNamespace",
             "args": {
@@ -3474,11 +3988,11 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s222"
+              "$ref": "s322"
             },
             "method": "createCollection",
             "args": {
-              "name": "here"
+              "collection": "here"
             }
           },
           "expect": true
@@ -3487,11 +4001,15 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s222"
+              "$ref": "s322"
             },
             "method": "deleteDocument",
             "args": {
-              "collection": "here",
+              "collection": {
+                "$document": {
+                  "$id": "here"
+                }
+              },
               "id": "never-created"
             }
           },
@@ -3517,9 +4035,10 @@
           "op": "db.open",
           "args": {
             "engine": "memory",
-            "detached": true
+            "detached": true,
+            "hooks": []
           },
-          "bind": "s217",
+          "bind": "s313",
           "expect": {
             "$handle": "*"
           }
@@ -3528,11 +4047,15 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s217"
+              "$ref": "s313"
             },
             "method": "deleteDocument",
             "args": {
-              "collection": "ghost",
+              "collection": {
+                "$document": {
+                  "$id": "ghost"
+                }
+              },
               "id": "x"
             }
           },
@@ -3547,9 +4070,10 @@
           "op": "db.open",
           "args": {
             "engine": "memory",
-            "detached": true
+            "detached": true,
+            "hooks": []
           },
-          "bind": "s228",
+          "bind": "s332",
           "expect": {
             "$handle": "*"
           }
@@ -3558,7 +4082,7 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s228"
+              "$ref": "s332"
             },
             "method": "setNamespace",
             "args": {
@@ -3573,11 +4097,15 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s228"
+              "$ref": "s332"
             },
             "method": "deleteDocuments",
             "args": {
-              "collection": "ghost",
+              "collection": {
+                "$document": {
+                  "$id": "ghost"
+                }
+              },
               "sequences": [],
               "permissionIds": []
             }
@@ -3609,9 +4137,10 @@
           "op": "db.open",
           "args": {
             "engine": "memory",
-            "detached": true
+            "detached": true,
+            "hooks": []
           },
-          "bind": "s233",
+          "bind": "s341",
           "expect": {
             "$handle": "*"
           }
@@ -3620,7 +4149,7 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s233"
+              "$ref": "s341"
             },
             "method": "setNamespace",
             "args": {
@@ -3635,37 +4164,41 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s233"
+              "$ref": "s341"
             },
             "method": "setSharedTables",
             "args": {
               "sharedTables": true
             }
           },
-          "expect": true
+          "expect": {
+            "$adapter": "Memory"
+          }
         },
         {
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s233"
+              "$ref": "s341"
             },
             "method": "setTenant",
             "args": {
               "tenant": 1
             }
           },
-          "expect": true
+          "expect": {
+            "$adapter": "Memory"
+          }
         },
         {
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s233"
+              "$ref": "s341"
             },
             "method": "createCollection",
             "args": {
-              "name": "box"
+              "collection": "box"
             }
           },
           "expect": true
@@ -3674,7 +4207,7 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s233"
+              "$ref": "s341"
             },
             "method": "createDocument",
             "args": {
@@ -3705,20 +4238,22 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s233"
+              "$ref": "s341"
             },
             "method": "setTenant",
             "args": {
               "tenant": 2
             }
           },
-          "expect": true
+          "expect": {
+            "$adapter": "Memory"
+          }
         },
         {
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s233"
+              "$ref": "s341"
             },
             "method": "createDocument",
             "args": {
@@ -3749,24 +4284,30 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s233"
+              "$ref": "s341"
             },
             "method": "setTenant",
             "args": {
               "tenant": 1
             }
           },
-          "expect": true
+          "expect": {
+            "$adapter": "Memory"
+          }
         },
         {
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s233"
+              "$ref": "s341"
             },
             "method": "deleteDocuments",
             "args": {
-              "collection": "box",
+              "collection": {
+                "$document": {
+                  "$id": "box"
+                }
+              },
               "sequences": [
                 "1"
               ],
@@ -3779,20 +4320,22 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s233"
+              "$ref": "s341"
             },
             "method": "setTenant",
             "args": {
               "tenant": 2
             }
           },
-          "expect": true
+          "expect": {
+            "$adapter": "Memory"
+          }
         },
         {
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s233"
+              "$ref": "s341"
             },
             "method": "getDocument",
             "args": {
@@ -3836,9 +4379,10 @@
           "op": "db.open",
           "args": {
             "engine": "memory",
-            "detached": true
+            "detached": true,
+            "hooks": []
           },
-          "bind": "s233",
+          "bind": "s341",
           "expect": {
             "$handle": "*"
           }
@@ -3847,11 +4391,11 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s233"
+              "$ref": "s341"
             },
             "method": "createCollection",
             "args": {
-              "name": "box"
+              "collection": "box"
             }
           },
           "expect": true
@@ -3860,7 +4404,7 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s233"
+              "$ref": "s341"
             },
             "method": "createDocument",
             "args": {
@@ -3891,7 +4435,7 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s233"
+              "$ref": "s341"
             },
             "method": "createDocument",
             "args": {
@@ -3922,11 +4466,15 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s233"
+              "$ref": "s341"
             },
             "method": "deleteDocuments",
             "args": {
-              "collection": "box",
+              "collection": {
+                "$document": {
+                  "$id": "box"
+                }
+              },
               "sequences": [
                 "1"
               ],
@@ -3939,9 +4487,10 @@
           "op": "db.open",
           "args": {
             "engine": "memory",
-            "detached": true
+            "detached": true,
+            "hooks": []
           },
-          "bind": "s247",
+          "bind": "s359",
           "expect": {
             "$handle": "*"
           }
@@ -3950,7 +4499,7 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s247"
+              "$ref": "s359"
             },
             "method": "setNamespace",
             "args": {
@@ -3965,37 +4514,41 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s247"
+              "$ref": "s359"
             },
             "method": "setSharedTables",
             "args": {
               "sharedTables": true
             }
           },
-          "expect": true
+          "expect": {
+            "$adapter": "Memory"
+          }
         },
         {
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s247"
+              "$ref": "s359"
             },
             "method": "setTenant",
             "args": {
               "tenant": 1
             }
           },
-          "expect": true
+          "expect": {
+            "$adapter": "Memory"
+          }
         },
         {
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s247"
+              "$ref": "s359"
             },
             "method": "createCollection",
             "args": {
-              "name": "box"
+              "collection": "box"
             }
           },
           "expect": true
@@ -4004,7 +4557,7 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s247"
+              "$ref": "s359"
             },
             "method": "createDocument",
             "args": {
@@ -4035,20 +4588,22 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s247"
+              "$ref": "s359"
             },
             "method": "setTenant",
             "args": {
               "tenant": 7
             }
           },
-          "expect": true
+          "expect": {
+            "$adapter": "Memory"
+          }
         },
         {
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s247"
+              "$ref": "s359"
             },
             "method": "createDocument",
             "args": {
@@ -4079,11 +4634,15 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s247"
+              "$ref": "s359"
             },
             "method": "getSequences",
             "args": {
-              "collection": "box",
+              "collection": {
+                "$document": {
+                  "$id": "box"
+                }
+              },
               "documents": [
                 {
                   "$document": {
@@ -4124,9 +4683,10 @@
           "op": "db.open",
           "args": {
             "engine": "memory",
-            "detached": true
+            "detached": true,
+            "hooks": []
           },
-          "bind": "s258",
+          "bind": "s374",
           "expect": {
             "$handle": "*"
           }
@@ -4135,11 +4695,12 @@
           "op": "db.open",
           "args": {
             "adapter": {
-              "$ref": "s258"
+              "$ref": "s374"
             },
-            "cache": "memory"
+            "cache": "memory",
+            "hooks": []
           },
-          "bind": "s259",
+          "bind": "s375",
           "expect": {
             "$handle": "*"
           }
@@ -4148,7 +4709,7 @@
           "op": "database.set_authorization",
           "args": {
             "db": {
-              "$ref": "s259"
+              "$ref": "s375"
             },
             "authorization": {
               "$ref": "db"
@@ -4162,9 +4723,9 @@
           "op": "database.set_database",
           "args": {
             "db": {
-              "$ref": "s259"
+              "$ref": "s375"
             },
-            "name": "${ns}_utopiaTests"
+            "name": "${ns}"
           },
           "expect": {
             "$database": true
@@ -4174,7 +4735,7 @@
           "op": "database.set_namespace",
           "args": {
             "db": {
-              "$ref": "s259"
+              "$ref": "s375"
             },
             "namespace": "memory_iso_u000000000022"
           },
@@ -4186,7 +4747,7 @@
           "op": "database.create",
           "args": {
             "db": {
-              "$ref": "s259"
+              "$ref": "s375"
             }
           },
           "expect": true
@@ -4195,55 +4756,65 @@
           "op": "database.create_collection",
           "args": {
             "db": {
-              "$ref": "s259"
+              "$ref": "s375"
             },
-            "id": "flags",
-            "attributes": [
-              {
-                "$document": {
-                  "$id": "active",
-                  "type": "boolean",
-                  "size": 0,
-                  "required": true,
-                  "signed": true,
-                  "array": false,
-                  "filters": []
-                }
-              }
-            ],
-            "indexes": [
-              {
-                "$document": {
-                  "$id": "unique_active",
-                  "type": "unique",
-                  "attributes": [
-                    "active"
-                  ]
-                }
-              }
-            ],
-            "permissions": [
-              "create(\"any\")",
-              "read(\"any\")"
-            ]
+            "collection": {
+              "$document": {
+                "$id": "flags",
+                "name": "flags",
+                "attributes": [
+                  {
+                    "$id": "active",
+                    "key": "active",
+                    "type": "boolean",
+                    "size": 0,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [
+                  {
+                    "$id": "unique_active",
+                    "key": "unique_active",
+                    "type": "unique",
+                    "attributes": [
+                      "active"
+                    ],
+                    "lengths": [],
+                    "orders": []
+                  }
+                ],
+                "documentSecurity": true,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")"
+                ]
+              },
+              "$class": "Collection"
+            }
           },
           "expect": {
             "$document": {
               "$id": "flags",
-              "$permissions": [
-                "create(\"any\")",
-                "read(\"any\")"
-              ],
               "name": "flags",
               "attributes": [
                 {
                   "$document": {
                     "$id": "active",
+                    "key": "active",
                     "type": "boolean",
                     "size": 0,
                     "required": true,
+                    "default": null,
                     "signed": true,
                     "array": false,
+                    "format": null,
+                    "formatOptions": [],
                     "filters": []
                   }
                 }
@@ -4252,6 +4823,7 @@
                 {
                   "$document": {
                     "$id": "unique_active",
+                    "key": "unique_active",
                     "type": "unique",
                     "attributes": [
                       "active"
@@ -4262,18 +4834,23 @@
                 }
               ],
               "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
               "$collection": "_metadata",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "1"
-            }
+            },
+            "$class": "Collection"
           }
         },
         {
           "op": "database.create_document",
           "args": {
             "db": {
-              "$ref": "s259"
+              "$ref": "s375"
             },
             "collection": "flags",
             "document": {
@@ -4304,7 +4881,7 @@
           "op": "database.create_document",
           "args": {
             "db": {
-              "$ref": "s259"
+              "$ref": "s375"
             },
             "collection": "flags",
             "document": {
@@ -4344,9 +4921,10 @@
           "op": "db.open",
           "args": {
             "engine": "memory",
-            "detached": true
+            "detached": true,
+            "hooks": []
           },
-          "bind": "s269",
+          "bind": "s389",
           "expect": {
             "$handle": "*"
           }
@@ -4355,7 +4933,7 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s269"
+              "$ref": "s389"
             },
             "method": "setNamespace",
             "args": {
@@ -4370,11 +4948,11 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s269"
+              "$ref": "s389"
             },
             "method": "createCollection",
             "args": {
-              "name": "codes"
+              "collection": "codes"
             }
           },
           "expect": true
@@ -4383,15 +4961,29 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s269"
+              "$ref": "s389"
             },
             "method": "createAttribute",
             "args": {
               "collection": "codes",
-              "id": "code",
-              "type": "string",
-              "size": 16,
-              "required": true
+              "attribute": {
+                "$value": "Attribute",
+                "fields": {
+                  "key": "code",
+                  "type": {
+                    "$enum": "Query\\Schema\\ColumnType::String"
+                  },
+                  "size": 16,
+                  "required": true,
+                  "default": null,
+                  "signed": true,
+                  "array": false,
+                  "format": null,
+                  "filters": [],
+                  "relationship": null,
+                  "side": null
+                }
+              }
             }
           },
           "expect": true
@@ -4400,18 +4992,26 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s269"
+              "$ref": "s389"
             },
             "method": "createIndex",
             "args": {
               "collection": "codes",
-              "id": "unique_code",
-              "type": "unique",
-              "attributes": [
-                "code"
-              ],
-              "lengths": [],
-              "orders": []
+              "index": {
+                "$value": "Index",
+                "fields": {
+                  "key": "unique_code",
+                  "type": {
+                    "$enum": "Query\\Schema\\IndexType::Unique"
+                  },
+                  "attributes": [
+                    "code"
+                  ],
+                  "lengths": [],
+                  "orders": [],
+                  "ttl": null
+                }
+              }
             }
           },
           "expect": true
@@ -4420,7 +5020,7 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s269"
+              "$ref": "s389"
             },
             "method": "createDocument",
             "args": {
@@ -4451,7 +5051,7 @@
           "op": "db.adapter",
           "args": {
             "db": {
-              "$ref": "s269"
+              "$ref": "s389"
             },
             "method": "createDocument",
             "args": {
@@ -4496,9 +5096,10 @@
           "op": "db.open",
           "args": {
             "engine": "memory",
-            "detached": true
+            "detached": true,
+            "hooks": []
           },
-          "bind": "s278",
+          "bind": "s402",
           "expect": {
             "$handle": "*"
           }
@@ -4507,11 +5108,12 @@
           "op": "db.open",
           "args": {
             "adapter": {
-              "$ref": "s278"
+              "$ref": "s402"
             },
-            "cache": "memory"
+            "cache": "memory",
+            "hooks": []
           },
-          "bind": "s279",
+          "bind": "s403",
           "expect": {
             "$handle": "*"
           }
@@ -4520,7 +5122,7 @@
           "op": "database.set_authorization",
           "args": {
             "db": {
-              "$ref": "s279"
+              "$ref": "s403"
             },
             "authorization": {
               "$ref": "db"
@@ -4534,9 +5136,9 @@
           "op": "database.set_database",
           "args": {
             "db": {
-              "$ref": "s279"
+              "$ref": "s403"
             },
-            "name": "${ns}_utopiaTests"
+            "name": "${ns}"
           },
           "expect": {
             "$database": true
@@ -4546,7 +5148,7 @@
           "op": "database.set_namespace",
           "args": {
             "db": {
-              "$ref": "s279"
+              "$ref": "s403"
             },
             "namespace": "memory_iso_u000000000024"
           },
@@ -4558,7 +5160,7 @@
           "op": "database.create",
           "args": {
             "db": {
-              "$ref": "s279"
+              "$ref": "s403"
             }
           },
           "expect": true
@@ -4567,82 +5169,120 @@
           "op": "database.create_collection",
           "args": {
             "db": {
-              "$ref": "s279"
+              "$ref": "s403"
             },
-            "id": "nullable",
-            "attributes": [
-              {
-                "$document": {
-                  "$id": "name",
-                  "type": "string",
-                  "size": 64,
-                  "required": false
-                }
+            "collection": {
+              "$document": {
+                "$id": "nullable",
+                "name": "nullable",
+                "attributes": [
+                  {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  },
+                  {
+                    "$id": "score",
+                    "key": "score",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  },
+                  {
+                    "$id": "bio",
+                    "key": "bio",
+                    "type": "string",
+                    "size": 1024,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                ],
+                "indexes": [
+                  {
+                    "$id": "bio_ft",
+                    "key": "bio_ft",
+                    "type": "fulltext",
+                    "attributes": [
+                      "bio"
+                    ]
+                  }
+                ],
+                "documentSecurity": true,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")"
+                ]
               },
-              {
-                "$document": {
-                  "$id": "score",
-                  "type": "integer",
-                  "size": 0,
-                  "required": false
-                }
-              },
-              {
-                "$document": {
-                  "$id": "bio",
-                  "type": "string",
-                  "size": 1024,
-                  "required": false
-                }
-              }
-            ],
-            "indexes": [
-              {
-                "$document": {
-                  "$id": "bio_ft",
-                  "type": "fulltext",
-                  "attributes": [
-                    "bio"
-                  ]
-                }
-              }
-            ],
-            "permissions": [
-              "create(\"any\")",
-              "read(\"any\")"
-            ]
+              "$class": "Collection"
+            }
           },
           "expect": {
             "$document": {
               "$id": "nullable",
-              "$permissions": [
-                "create(\"any\")",
-                "read(\"any\")"
-              ],
               "name": "nullable",
               "attributes": [
                 {
                   "$document": {
                     "$id": "name",
+                    "key": "name",
                     "type": "string",
                     "size": 64,
-                    "required": false
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
                   }
                 },
                 {
                   "$document": {
                     "$id": "score",
+                    "key": "score",
                     "type": "integer",
                     "size": 0,
-                    "required": false
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
                   }
                 },
                 {
                   "$document": {
                     "$id": "bio",
+                    "key": "bio",
                     "type": "string",
                     "size": 1024,
-                    "required": false
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
                   }
                 }
               ],
@@ -4650,28 +5290,32 @@
                 {
                   "$document": {
                     "$id": "bio_ft",
+                    "key": "bio_ft",
                     "type": "fulltext",
                     "attributes": [
                       "bio"
-                    ],
-                    "lengths": [],
-                    "orders": []
+                    ]
                   }
                 }
               ],
               "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
               "$collection": "_metadata",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "1"
-            }
+            },
+            "$class": "Collection"
           }
         },
         {
           "op": "database.create_document",
           "args": {
             "db": {
-              "$ref": "s279"
+              "$ref": "s403"
             },
             "collection": "nullable",
             "document": {
@@ -4706,7 +5350,7 @@
           "op": "database.create_document",
           "args": {
             "db": {
-              "$ref": "s279"
+              "$ref": "s403"
             },
             "collection": "nullable",
             "document": {
@@ -4741,7 +5385,7 @@
           "op": "database.find",
           "args": {
             "db": {
-              "$ref": "s279"
+              "$ref": "s403"
             },
             "collection": "nullable",
             "queries": [
@@ -4778,7 +5422,7 @@
           "op": "database.find",
           "args": {
             "db": {
-              "$ref": "s279"
+              "$ref": "s403"
             },
             "collection": "nullable",
             "queries": [
@@ -4816,7 +5460,7 @@
           "op": "database.find",
           "args": {
             "db": {
-              "$ref": "s279"
+              "$ref": "s403"
             },
             "collection": "nullable",
             "queries": [
@@ -4853,7 +5497,7 @@
           "op": "database.find",
           "args": {
             "db": {
-              "$ref": "s279"
+              "$ref": "s403"
             },
             "collection": "nullable",
             "queries": [
@@ -4890,7 +5534,7 @@
           "op": "database.find",
           "args": {
             "db": {
-              "$ref": "s279"
+              "$ref": "s403"
             },
             "collection": "nullable",
             "queries": [
@@ -4927,7 +5571,7 @@
           "op": "database.find",
           "args": {
             "db": {
-              "$ref": "s279"
+              "$ref": "s403"
             },
             "collection": "nullable",
             "queries": [

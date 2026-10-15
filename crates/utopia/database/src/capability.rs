@@ -136,51 +136,137 @@ impl Capability {
     }
 }
 
-/// A set of [`Capability`] cases, as a bit set (checked in O(1) without a
-/// lookup).
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
-pub struct Capabilities(u64);
+/// A set of [`Capability`] cases: a bit set (checked in O(1) without a
+/// lookup) that also keeps the order the cases were added in, as PHP's
+/// `array<Capability>` does (`Profile::$capabilities`, an adapter's
+/// `capabilities()`: the parent's cases, then the subclass's).
+///
+/// Two sets with the same cases are equal whatever their order.
+#[derive(Debug, Clone, Copy)]
+pub struct Capabilities {
+    bits: u64,
+    order: [u8; 64],
+    len: u8,
+}
+
+impl Default for Capabilities {
+    fn default() -> Self {
+        Capabilities::EMPTY
+    }
+}
+
+impl PartialEq for Capabilities {
+    fn eq(&self, other: &Self) -> bool {
+        self.bits == other.bits
+    }
+}
+
+impl Eq for Capabilities {}
+
+impl std::hash::Hash for Capabilities {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.bits.hash(state);
+    }
+}
 
 impl Capabilities {
     /// The empty set.
-    pub const EMPTY: Capabilities = Capabilities(0);
+    pub const EMPTY: Capabilities = Capabilities { bits: 0, order: [0; 64], len: 0 };
 
-    /// The set of `capabilities`.
+    /// The set of `capabilities`, in their order (a repeated case keeps its
+    /// first place).
     pub const fn of(capabilities: &[Capability]) -> Capabilities {
-        let mut bits = 0;
+        let mut set = Capabilities::EMPTY;
         let mut i = 0;
         while i < capabilities.len() {
-            bits |= capabilities[i].bit();
+            set = set.with(capabilities[i]);
             i += 1;
         }
-        Capabilities(bits)
+        set
     }
 
     /// Whether `capability` is in the set.
     pub const fn contains(self, capability: Capability) -> bool {
-        self.0 & capability.bit() != 0
+        self.bits & capability.bit() != 0
     }
 
-    /// The set with `capability` added.
+    /// The set with `capability` added last (unchanged when it is in the
+    /// set).
     #[must_use]
     pub const fn with(self, capability: Capability) -> Capabilities {
-        Capabilities(self.0 | capability.bit())
+        if self.contains(capability) {
+            return self;
+        }
+        let mut set = self;
+        set.bits |= capability.bit();
+        set.order[set.len as usize] = capability as u8;
+        set.len += 1;
+        set
     }
 
     /// The set without `capability`.
     #[must_use]
     pub const fn without(self, capability: Capability) -> Capabilities {
-        Capabilities(self.0 & !capability.bit())
+        if !self.contains(capability) {
+            return self;
+        }
+        let mut set = Capabilities::EMPTY;
+        let mut i = 0;
+        while i < self.len as usize {
+            let case = Capability::CASES[self.order[i] as usize];
+            if case as u8 != capability as u8 {
+                set = set.with(case);
+            }
+            i += 1;
+        }
+        set
     }
 
-    /// The cases in the set, in declaration order.
+    /// The cases in the set, in the order they were added.
     pub fn iter(self) -> impl Iterator<Item = Capability> {
-        Capability::CASES.into_iter().filter(move |c| self.contains(*c))
+        (0..self.len as usize).map(move |i| Capability::CASES[self.order[i] as usize])
     }
 }
 
 impl FromIterator<Capability> for Capabilities {
     fn from_iter<I: IntoIterator<Item = Capability>>(iter: I) -> Self {
         iter.into_iter().fold(Capabilities::EMPTY, Capabilities::with)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// The set lists its cases in the order they were added, as PHP's arrays
+    /// do, and compares as a set.
+    #[test]
+    fn capabilities_keep_their_order() {
+        let set = Capabilities::of(&[Capability::Joins, Capability::IndexKey, Capability::Joins]);
+        assert_eq!(set.iter().collect::<Vec<_>>(), [Capability::Joins, Capability::IndexKey]);
+        assert_eq!(set, Capabilities::of(&[Capability::IndexKey, Capability::Joins]));
+        assert_eq!(set.without(Capability::Joins).iter().collect::<Vec<_>>(), [Capability::IndexKey]);
+        assert!(set.with(Capability::Vectors).contains(Capability::Vectors));
+    }
+
+    /// An adapter lists its capabilities as PHP's `capabilities()` does (the
+    /// base adapter's first); a profile in the enum's order, without
+    /// DefinedAttributes (`Database::profile()`).
+    #[cfg(feature = "memory")]
+    #[test]
+    fn profiles_list_capabilities_in_the_enum_order() {
+        use std::sync::Arc;
+
+        use crate::adapter::{Adapter, Profile};
+        let memory: Arc<dyn Adapter> = Arc::new(crate::adapter::memory::Memory::new());
+        let listed: Vec<_> = memory.capabilities().iter().take(4).collect();
+        assert_eq!(
+            listed,
+            [Capability::IndexKey, Capability::IndexArray, Capability::IndexUnique, Capability::Schemas]
+        );
+        let profile: Vec<_> = Profile::of(memory, false).capabilities.iter().collect();
+        assert_eq!(profile.first(), Some(&Capability::AttributeResizing));
+        assert!(!profile.contains(&Capability::DefinedAttributes));
+        assert!(profile.windows(2).all(|w| (w[0] as u8) < (w[1] as u8)));
     }
 }

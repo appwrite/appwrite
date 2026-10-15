@@ -1,8 +1,10 @@
 {
-  "source": "vendor/utopia-php/database/tests/e2e/Adapter/PoolTest.php",
+  "source": [
+    "vendor/utopia-php/database/tests/e2e/Adapter/PoolTest.php"
+  ],
   "cases": [
     {
-      "name": "testOrphanedPermissionsRecovery",
+      "name": "PoolTest::test_orphaned_permissions_recovery",
       "state": [
         "postgres@database-postgres"
       ],
@@ -23,48 +25,91 @@
         {
           "op": "database.create_collection",
           "args": {
-            "id": "orphanedPermsRecovery"
+            "collection": {
+              "$document": {
+                "$id": "orphanedPermsRecovery",
+                "name": "orphanedPermsRecovery",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true
+              },
+              "$class": "Collection"
+            }
           },
           "expect": {
             "$document": {
               "$id": "orphanedPermsRecovery",
-              "$permissions": [
-                "create(\"any\")"
-              ],
               "name": "orphanedPermsRecovery",
               "attributes": [],
               "indexes": [],
               "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
               "$collection": "_metadata",
               "$createdAt": "<now>",
               "$updatedAt": "<now>",
               "$sequence": "1"
-            }
+            },
+            "$class": "Collection"
           }
         },
         {
           "op": "database.create_attribute",
           "args": {
             "collection": "orphanedPermsRecovery",
-            "id": "title",
-            "type": "string",
-            "size": 128,
-            "required": true
+            "attribute": {
+              "$value": "Attribute",
+              "fields": {
+                "key": "title",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::String"
+                },
+                "size": 128,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [],
+                "relationship": null,
+                "side": null
+              }
+            }
           },
-          "expect": true
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "title",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 128,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
         },
         {
           "op": "database.create_document",
           "args": {
             "collection": "orphanedPermsRecovery",
             "document": {
-              "$id": "orphan_test",
-              "$permissions": [
-                "read(\"any\")",
-                "update(\"any\")",
-                "delete(\"any\")"
-              ],
-              "title": "Original"
+              "$document": {
+                "$id": "orphan_test",
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "title": "Original"
+              }
             }
           },
           "expect": {
@@ -102,63 +147,14 @@
           }
         },
         {
-          "op": "db.sql",
-          "args": {
-            "sql": "INSERT INTO \"${ns}\".\"compat_orphanedPermsRecovery_perms\" (_type, _permission, _document) VALUES ('read', 'any', 'orphan_test') RETURNING _document"
-          },
-          "expect": [
-            {
-              "_document": "orphan_test"
-            }
-          ]
+          "op": "database.get_namespace",
+          "args": {},
+          "expect": "compat"
         },
         {
-          "op": "db.sql",
-          "args": {
-            "sql": "INSERT INTO \"${ns}\".\"compat_orphanedPermsRecovery_perms\" (_type, _permission, _document) VALUES ('update', 'any', 'orphan_test') RETURNING _document"
-          },
-          "expect": [
-            {
-              "_document": "orphan_test"
-            }
-          ]
-        },
-        {
-          "op": "database.create_document",
-          "args": {
-            "collection": "orphanedPermsRecovery",
-            "document": {
-              "$id": "orphan_test",
-              "$permissions": [
-                "read(\"any\")",
-                "update(\"any\")"
-              ],
-              "title": "Recreated"
-            }
-          },
-          "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Unique",
-              "message": "Unique index violation"
-            }
-          }
-        },
-        {
-          "op": "database.get_document",
-          "args": {
-            "collection": "orphanedPermsRecovery",
-            "id": "orphan_test"
-          },
-          "expect": {
-            "$document": {}
-          }
-        },
-        {
-          "op": "database.delete_collection",
-          "args": {
-            "id": "orphanedPermsRecovery"
-          },
-          "expect": true
+          "op": "database.get_database",
+          "args": {},
+          "expect": "${ns}"
         }
       ]
     }

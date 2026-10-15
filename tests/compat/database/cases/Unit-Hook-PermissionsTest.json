@@ -1,0 +1,1598 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Hook/PermissionsTest.php"
+  ],
+  "cases": [
+    {
+      "name": "PermissionsTest::testBatchUpdateParsesEachPermissionTypeOnce",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:",
+                  "wrapper": true
+                }
+              }
+            },
+            "as": "o11193"
+          },
+          "bind": "s63686",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o11193"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "permissions"
+            }
+          },
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o11194"
+          },
+          "bind": "s63688",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o11194"
+            },
+            "method": "disable",
+            "args": {}
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o11193"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o11194"
+              }
+            }
+          },
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Hook\\Permissions",
+            "args": {},
+            "as": "o11195"
+          },
+          "bind": "s63691",
+          "expect": {
+            "$hook": "Permissions"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o11193"
+            },
+            "method": "addWriteHook",
+            "args": {
+              "hook": {
+                "$obj": "o11195"
+              }
+            }
+          },
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o11193"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": "movies"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "movies"
+              }
+            },
+            "as": "o11196"
+          },
+          "bind": "s63694",
+          "expect": {
+            "$document": {
+              "$id": "movies"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o11197"
+          },
+          "bind": "s63695",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o11197"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "first",
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            "as": "o11198"
+          },
+          "bind": "s63697",
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "$permissions": [
+                "read(\"any\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o11199"
+          },
+          "bind": "s63698",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o11199"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "second",
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            "as": "o11200"
+          },
+          "bind": "s63700",
+          "expect": {
+            "$document": {
+              "$id": "second",
+              "$permissions": [
+                "read(\"any\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o11193"
+            },
+            "method": "createDocuments",
+            "args": {
+              "collection": {
+                "$obj": "o11196"
+              },
+              "documents": [
+                {
+                  "$obj": "o11198"
+                },
+                {
+                  "$obj": "o11200"
+                }
+              ]
+            }
+          },
+          "expect": [
+            {
+              "$document": {
+                "$id": "first",
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            },
+            {
+              "$document": {
+                "$id": "second",
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "user",
+            "args": {
+              "identifier": "reader"
+            },
+            "as": "o11201"
+          },
+          "bind": "s63702",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o11201"
+              }
+            }
+          },
+          "expect": "read(\"user:reader\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "user",
+            "args": {
+              "identifier": "editor"
+            },
+            "as": "o11202"
+          },
+          "bind": "s63704",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o11202"
+              }
+            }
+          },
+          "expect": "update(\"user:editor\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o11193"
+            },
+            "method": "updateDocuments",
+            "args": {
+              "collection": {
+                "$obj": "o11196"
+              },
+              "updates": {
+                "$document": {
+                  "$permissions": [
+                    "read(\"user:reader\")",
+                    "update(\"user:editor\")"
+                  ]
+                },
+                "$class": "Document@anonymous\u0000/tmp/cxrecorder-units/Hook/PermissionsTest.php:22$22b"
+              },
+              "documents": [
+                {
+                  "$obj": "o11198"
+                },
+                {
+                  "$obj": "o11200"
+                }
+              ]
+            }
+          },
+          "expect": 0
+        }
+      ]
+    },
+    {
+      "name": "PermissionsTest::testUpdateDoesNotInsertDuplicatePermissionRows",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:",
+                  "wrapper": true
+                }
+              }
+            },
+            "as": "o11229"
+          },
+          "bind": "s63760",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o11229"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "permissions"
+            }
+          },
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o11230"
+          },
+          "bind": "s63762",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o11230"
+            },
+            "method": "disable",
+            "args": {}
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o11229"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o11230"
+              }
+            }
+          },
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Hook\\Permissions",
+            "args": {},
+            "as": "o11231"
+          },
+          "bind": "s63765",
+          "expect": {
+            "$hook": "Permissions"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o11229"
+            },
+            "method": "addWriteHook",
+            "args": {
+              "hook": {
+                "$obj": "o11231"
+              }
+            }
+          },
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o11229"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": "movies"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "movies"
+              }
+            },
+            "as": "o11232"
+          },
+          "bind": "s63768",
+          "expect": {
+            "$document": {
+              "$id": "movies"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o11233"
+          },
+          "bind": "s63769",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o11233"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "dupes",
+                "$permissions": [
+                  "create(\"any\")"
+                ]
+              }
+            },
+            "as": "o11234"
+          },
+          "bind": "s63771",
+          "expect": {
+            "$document": {
+              "$id": "dupes",
+              "$permissions": [
+                "create(\"any\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o11229"
+            },
+            "method": "createDocuments",
+            "args": {
+              "collection": {
+                "$obj": "o11232"
+              },
+              "documents": [
+                {
+                  "$obj": "o11234"
+                }
+              ]
+            }
+          },
+          "expect": [
+            {
+              "$document": {
+                "$id": "dupes",
+                "$permissions": [
+                  "create(\"any\")"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o11235"
+          },
+          "bind": "s63773",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o11235"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "guests",
+            "args": {},
+            "as": "o11236"
+          },
+          "bind": "s63775",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o11236"
+              }
+            }
+          },
+          "expect": "create(\"guests\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o11229"
+            },
+            "method": "updateDocument",
+            "args": {
+              "collection": {
+                "$obj": "o11232"
+              },
+              "id": "dupes",
+              "document": {
+                "$document": {
+                  "$id": "dupes",
+                  "$permissions": [
+                    "create(\"any\")",
+                    "create(\"guests\")"
+                  ]
+                },
+                "$class": "Document@anonymous\u0000/tmp/cxrecorder-units/Hook/PermissionsTest.php:57$22c"
+              },
+              "skipPermissions": false
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "dupes",
+              "$permissions": [
+                "create(\"any\")",
+                "create(\"guests\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o11229"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": {
+                "$obj": "o11232"
+              },
+              "id": "dupes"
+            },
+            "as": "o11237"
+          },
+          "bind": "s63778",
+          "expect": {
+            "$document": {
+              "$id": "dupes",
+              "$sequence": 1,
+              "$createdAt": null,
+              "$updatedAt": null,
+              "$permissions": [
+                "create(\"any\")",
+                "create(\"guests\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o11237"
+            },
+            "method": "getPermissionsByType",
+            "args": {
+              "type": {
+                "$enum": "PermissionType::Create"
+              }
+            }
+          },
+          "expect": [
+            "any",
+            "guests"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "PermissionsTest::testUpdateDoesNotDuplicatePermissionsWhenDocumentIdCasingDiffers",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:",
+                  "wrapper": true
+                }
+              }
+            },
+            "as": "o11238"
+          },
+          "bind": "s63780",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o11238"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "permissions"
+            }
+          },
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o11239"
+          },
+          "bind": "s63782",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o11239"
+            },
+            "method": "disable",
+            "args": {}
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o11238"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o11239"
+              }
+            }
+          },
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Hook\\Permissions",
+            "args": {},
+            "as": "o11240"
+          },
+          "bind": "s63785",
+          "expect": {
+            "$hook": "Permissions"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o11238"
+            },
+            "method": "addWriteHook",
+            "args": {
+              "hook": {
+                "$obj": "o11240"
+              }
+            }
+          },
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o11238"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": "movies"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "movies"
+              }
+            },
+            "as": "o11241"
+          },
+          "bind": "s63788",
+          "expect": {
+            "$document": {
+              "$id": "movies"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o11242"
+          },
+          "bind": "s63789",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o11242"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o11243"
+          },
+          "bind": "s63791",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o11243"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "caseSensitive",
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")"
+                ]
+              }
+            },
+            "as": "o11244"
+          },
+          "bind": "s63793",
+          "expect": {
+            "$document": {
+              "$id": "caseSensitive",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o11238"
+            },
+            "method": "createDocuments",
+            "args": {
+              "collection": {
+                "$obj": "o11241"
+              },
+              "documents": [
+                {
+                  "$obj": "o11244"
+                }
+              ]
+            }
+          },
+          "expect": [
+            {
+              "$document": {
+                "$id": "caseSensitive",
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o11245"
+          },
+          "bind": "s63795",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o11245"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "guests",
+            "args": {},
+            "as": "o11246"
+          },
+          "bind": "s63797",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o11246"
+              }
+            }
+          },
+          "expect": "create(\"guests\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "guests",
+            "args": {},
+            "as": "o11247"
+          },
+          "bind": "s63799",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o11247"
+              }
+            }
+          },
+          "expect": "create(\"guests\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o11248"
+          },
+          "bind": "s63801",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o11248"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "guests",
+            "args": {},
+            "as": "o11249"
+          },
+          "bind": "s63803",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o11249"
+              }
+            }
+          },
+          "expect": "read(\"guests\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "guests",
+            "args": {},
+            "as": "o11250"
+          },
+          "bind": "s63805",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o11250"
+              }
+            }
+          },
+          "expect": "read(\"guests\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "CaseSensitive",
+                "$permissions": [
+                  "create(\"any\")",
+                  "create(\"guests\")",
+                  "create(\"guests\")",
+                  "read(\"any\")",
+                  "read(\"guests\")",
+                  "read(\"guests\")"
+                ]
+              }
+            },
+            "as": "o11251"
+          },
+          "bind": "s63807",
+          "expect": {
+            "$document": {
+              "$id": "CaseSensitive",
+              "$permissions": [
+                "create(\"any\")",
+                "create(\"guests\")",
+                "read(\"any\")",
+                "read(\"guests\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o11238"
+            },
+            "method": "updateDocument",
+            "args": {
+              "collection": {
+                "$obj": "o11241"
+              },
+              "id": "caseSensitive",
+              "document": {
+                "$obj": "o11251"
+              },
+              "skipPermissions": false
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "CaseSensitive",
+              "$permissions": [
+                "create(\"any\")",
+                "create(\"guests\")",
+                "read(\"any\")",
+                "read(\"guests\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o11238"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": {
+                "$obj": "o11241"
+              },
+              "id": "CaseSensitive"
+            },
+            "as": "o11252"
+          },
+          "bind": "s63809",
+          "expect": {
+            "$document": {
+              "$id": "CaseSensitive",
+              "$sequence": 1,
+              "$createdAt": null,
+              "$updatedAt": null,
+              "$permissions": [
+                "create(\"any\")",
+                "create(\"guests\")",
+                "read(\"any\")",
+                "read(\"guests\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o11252"
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "CaseSensitive"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o11252"
+            },
+            "method": "getPermissionsByType",
+            "args": {
+              "type": {
+                "$enum": "PermissionType::Create"
+              }
+            }
+          },
+          "expect": [
+            "any",
+            "guests"
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o11252"
+            },
+            "method": "getPermissionsByType",
+            "args": {
+              "type": {
+                "$enum": "PermissionType::Read"
+              }
+            }
+          },
+          "expect": [
+            "any",
+            "guests"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "PermissionsTest::testBatchUpdateDeduplicatesPermissionAdditions",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQLite",
+            "args": {
+              "pdo": {
+                "$pdo": {
+                  "dsn": "sqlite::memory:",
+                  "wrapper": true
+                }
+              }
+            },
+            "as": "o11253"
+          },
+          "bind": "s63813",
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o11253"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "permissions"
+            }
+          },
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o11254"
+          },
+          "bind": "s63815",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o11254"
+            },
+            "method": "disable",
+            "args": {}
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o11253"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o11254"
+              }
+            }
+          },
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Hook\\Permissions",
+            "args": {},
+            "as": "o11255"
+          },
+          "bind": "s63818",
+          "expect": {
+            "$hook": "Permissions"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o11253"
+            },
+            "method": "addWriteHook",
+            "args": {
+              "hook": {
+                "$obj": "o11255"
+              }
+            }
+          },
+          "expect": {
+            "$adapter": "SQLite"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o11253"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": "movies"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "movies"
+              }
+            },
+            "as": "o11256"
+          },
+          "bind": "s63821",
+          "expect": {
+            "$document": {
+              "$id": "movies"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o11257"
+          },
+          "bind": "s63822",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o11257"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "batch",
+                "$permissions": [
+                  "create(\"any\")"
+                ]
+              }
+            },
+            "as": "o11258"
+          },
+          "bind": "s63824",
+          "expect": {
+            "$document": {
+              "$id": "batch",
+              "$permissions": [
+                "create(\"any\")"
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o11253"
+            },
+            "method": "createDocuments",
+            "args": {
+              "collection": {
+                "$obj": "o11256"
+              },
+              "documents": [
+                {
+                  "$obj": "o11258"
+                }
+              ]
+            }
+          },
+          "expect": [
+            {
+              "$document": {
+                "$id": "batch",
+                "$permissions": [
+                  "create(\"any\")"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o11259"
+          },
+          "bind": "s63826",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o11259"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "guests",
+            "args": {},
+            "as": "o11260"
+          },
+          "bind": "s63828",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o11260"
+              }
+            }
+          },
+          "expect": "create(\"guests\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o11253"
+            },
+            "method": "updateDocuments",
+            "args": {
+              "collection": {
+                "$obj": "o11256"
+              },
+              "updates": {
+                "$document": {
+                  "$permissions": [
+                    "create(\"any\")",
+                    "create(\"guests\")"
+                  ]
+                },
+                "$class": "Document@anonymous\u0000/tmp/cxrecorder-units/Hook/PermissionsTest.php:92$22d"
+              },
+              "documents": [
+                {
+                  "$obj": "o11258"
+                }
+              ]
+            }
+          },
+          "expect": 0
+        }
+      ]
+    }
+  ]
+}

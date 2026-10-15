@@ -1,0 +1,53 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Adapter/AttributeSupportToggleTest.php"
+  ],
+  "cases": [
+    {
+      "name": "AttributeSupportToggleTest::testSchemaAdaptersReportThatAttributesStayDefined#memory",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o9"
+          },
+          "bind": "s21",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o9"
+            },
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Schemaless"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o9"
+            },
+            "method": "supports",
+            "args": {
+              "capability": {
+                "$enum": "Capability::DefinedAttributes"
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    }
+  ]
+}

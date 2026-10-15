@@ -94,6 +94,21 @@ impl BsonValue {
         };
         pairs.into_iter().map(|(k, v)| (php_std::ArrayKey::Str(k.into()), Value::Str(v.into()))).collect()
     }
+
+    /// The value of a `class` with the properties [`BsonValue::to_array`]
+    /// gave (`None`: not a BSON class, or properties it never has).
+    pub fn from_array(class: &str, fields: &Array) -> Option<BsonValue> {
+        let text = |key: &str| match fields.get_str(key) {
+            Some(Value::Str(s)) => Some(String::from_utf8_lossy(s.as_bytes()).into_owned()),
+            _ => None,
+        };
+        match class {
+            "MongoDB\\BSON\\UTCDateTime" => text("milliseconds")?.parse().ok().map(BsonValue::UtcDateTime),
+            "MongoDB\\BSON\\ObjectId" => hex::decode(text("oid")?).ok()?.try_into().ok().map(BsonValue::ObjectId),
+            "MongoDB\\BSON\\Regex" => Some(BsonValue::Regex { pattern: text("pattern")?, flags: text("flags")? }),
+            _ => None,
+        }
+    }
 }
 
 impl From<BsonValue> for Value {
@@ -186,9 +201,12 @@ pub fn to_query_array(array: &Array) -> utopia_query::Array {
 }
 
 /// A query value as a document value: the inverse of [`to_query`]. A row of
-/// class `Utopia\Database\Document` (or of a document class registered with
-/// a database) becomes a [`Document`] of that class; any other row its
-/// fields as an array; a nested query [`Ext::Query`]; a `NullsPosition` case
+/// a document class (`Utopia\Database\Document`, `Collection`, or a custom
+/// document type: [`crate::document::is_document_class`]) becomes a
+/// [`Document`] of that class; a BSON value's row the BSON value (a
+/// datetime query value `castDatetime()` made reaches the MongoDB adapter as
+/// the `UTCDateTime` PHP passes); any other row (an `Operator`, an
+/// `ArrayObject` such as `Utopia\Audit\Log`) its fields as an array; a nested query [`Ext::Query`]; a `NullsPosition` case
 /// its backing value.
 pub fn from_query(value: &utopia_query::Value) -> Value {
     use utopia_query::{Object, Value as Q};
@@ -204,10 +222,12 @@ pub fn from_query(value: &utopia_query::Value) -> Value {
         Q::Ext(Object::Nulls(n)) => Value::Str(Str::from_static(n.as_str())),
         Q::Ext(Object::Row { class, fields }) => {
             let fields = from_query_array(fields);
-            if class == "Utopia\\Database\\Operator" || class.starts_with("MongoDB\\") {
-                Value::Array(fields)
-            } else {
+            if let Some(bson) = BsonValue::from_array(class, &fields) {
+                Value::from(bson)
+            } else if crate::document::is_document_class(class) {
                 Value::from(Document::from_array_unchecked(fields).with_class(class.as_str()))
+            } else {
+                Value::Array(fields)
             }
         }
     }

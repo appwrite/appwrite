@@ -553,3 +553,50 @@ fn updates_over_a_stored_non_string_permission() {
         assert_eq!(document.permissions().unwrap(), read_any());
     });
 }
+
+/// A cursor that is an object of another class (an `ArrayObject` such as
+/// `Utopia\Audit\Log`) is no document: its `$id` is not read, and the cursor
+/// fails as a UID does (PHP `Validator\Query\Cursor::isValid` checks a value
+/// that is not `instanceof Document` with `UID`): an `Exception\Query`, not
+/// an `Exception\Order`.
+#[test]
+fn a_cursor_of_another_class_is_refused_as_an_invalid_uid() {
+    block_on(async {
+        let db = seeded(2).await;
+        let mut fields = utopia_query::Array::new();
+        fields.set(php_std::ArrayKey::from("$id"), utopia_query::string("doc1"));
+        let log =
+            utopia_query::Value::Ext(utopia_query::Object::Row { class: "Utopia\\Audit\\Log".to_owned(), fields });
+        let err = db.find(POSTS, vec![Query::cursor_after_value(log)], PermissionType::Read).await.unwrap_err();
+        assert_eq!(err.kind(), Kind::Query);
+        assert_eq!(
+            err.message(),
+            "Invalid query: Invalid cursor: UID must contain at most 255 chars. Valid chars are a-z, A-Z, 0-9, \
+             period, hyphen, and underscore. Can't start with a leading period, hyphen, or underscore"
+        );
+        assert!(!crate::document::is_document_class("Utopia\\Audit\\Log"));
+    });
+}
+/// A missing collection definition reads as `Collection::fromArray([])`
+/// (PHP `newDocument()`), which is no empty document: updating one fails
+/// on the structure of the merged definition, as PHP's does.
+#[test]
+fn a_missing_definition_reads_as_an_unnamed_collection() {
+    block_on(async {
+        let db = seeded(1).await;
+        let missing = db.get_document(crate::database::METADATA, "missing", Vec::new(), false).await.unwrap();
+        assert!(!missing.is_empty());
+        assert_eq!(missing.class(), crate::collection::CLASS);
+        assert_eq!(missing.get("$id"), Some(&string("")));
+        let err = db
+            .update_document(
+                crate::database::METADATA,
+                "missing",
+                doc(vec![("name", string("actors")), ("$id", string("missing"))]),
+            )
+            .await
+            .unwrap_err();
+        assert_eq!(err.kind(), Kind::Structure);
+        assert_eq!(err.message(), "Invalid document structure: Missing collection attribute $collection");
+    });
+}

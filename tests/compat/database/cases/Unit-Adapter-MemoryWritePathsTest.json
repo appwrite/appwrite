@@ -1,0 +1,6905 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Adapter/MemoryWritePathsTest.php"
+  ],
+  "cases": [
+    {
+      "name": "MemoryWritePathsTest::testSharedTablesUniqueIndexOverExistingRowsIsPerTenant",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o544"
+          },
+          "bind": "s1038",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o544"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "write_paths_shared_u000000000011"
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o544"
+            },
+            "method": "setSharedTables",
+            "args": {
+              "sharedTables": true
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o544"
+            },
+            "method": "setTenant",
+            "args": {
+              "tenant": 1
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o544"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": "addresses"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "addr",
+              "size": 128,
+              "required": true
+            },
+            "as": "o545"
+          },
+          "bind": "s1043",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "addr",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 128,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o544"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "addresses",
+              "attribute": {
+                "$obj": "o545"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "label",
+              "size": 32
+            },
+            "as": "o546"
+          },
+          "bind": "s1045",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "label",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o544"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "addresses",
+              "attribute": {
+                "$obj": "o546"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "double",
+            "args": {
+              "key": "visits"
+            },
+            "as": "o547"
+          },
+          "bind": "s1047",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "visits",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Double"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o544"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "addresses",
+              "attribute": {
+                "$obj": "o547"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o544"
+            },
+            "method": "setTenant",
+            "args": {
+              "tenant": 1
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "addresses"
+              }
+            },
+            "as": "o548"
+          },
+          "bind": "s1050",
+          "expect": {
+            "$document": {
+              "$id": "addresses"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "home",
+                "$permissions": [],
+                "$updatedAt": "2025-01-01 00:00:00.000",
+                "addr": "x",
+                "visits": null
+              }
+            },
+            "as": "o549"
+          },
+          "bind": "s1051",
+          "expect": {
+            "$document": {
+              "$id": "home",
+              "$permissions": [],
+              "$updatedAt": "2025-01-01 00:00:00.000",
+              "addr": "x",
+              "visits": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o544"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": {
+                "$obj": "o548"
+              },
+              "document": {
+                "$obj": "o549"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "home",
+              "$permissions": [],
+              "$updatedAt": "2025-01-01 00:00:00.000",
+              "addr": "x",
+              "visits": null,
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o544"
+            },
+            "method": "setTenant",
+            "args": {
+              "tenant": 2
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "addresses"
+              }
+            },
+            "as": "o550"
+          },
+          "bind": "s1054",
+          "expect": {
+            "$document": {
+              "$id": "addresses"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "home",
+                "$permissions": [],
+                "$updatedAt": "2025-01-01 00:00:00.000",
+                "addr": "x",
+                "visits": null
+              }
+            },
+            "as": "o551"
+          },
+          "bind": "s1055",
+          "expect": {
+            "$document": {
+              "$id": "home",
+              "$permissions": [],
+              "$updatedAt": "2025-01-01 00:00:00.000",
+              "addr": "x",
+              "visits": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o544"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": {
+                "$obj": "o550"
+              },
+              "document": {
+                "$obj": "o551"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "home",
+              "$permissions": [],
+              "$updatedAt": "2025-01-01 00:00:00.000",
+              "addr": "x",
+              "visits": null,
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o544"
+            },
+            "method": "setTenant",
+            "args": {
+              "tenant": 1
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "unique",
+            "args": {
+              "key": "unique_addr",
+              "attributes": [
+                "addr"
+              ]
+            },
+            "as": "o552"
+          },
+          "bind": "s1058",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "unique_addr",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Unique"
+              },
+              "attributes": [
+                "addr"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o544"
+            },
+            "method": "createIndex",
+            "args": {
+              "collection": "addresses",
+              "index": {
+                "$obj": "o552"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "addresses"
+              }
+            },
+            "as": "o553"
+          },
+          "bind": "s1060",
+          "expect": {
+            "$document": {
+              "$id": "addresses"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "second",
+                "$permissions": [],
+                "$updatedAt": "2025-01-01 00:00:00.000",
+                "addr": "x",
+                "visits": null
+              }
+            },
+            "as": "o554"
+          },
+          "bind": "s1061",
+          "expect": {
+            "$document": {
+              "$id": "second",
+              "$permissions": [],
+              "$updatedAt": "2025-01-01 00:00:00.000",
+              "addr": "x",
+              "visits": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o544"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": {
+                "$obj": "o553"
+              },
+              "document": {
+                "$obj": "o554"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Unique",
+              "message": "Unique index violation"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o544"
+            },
+            "method": "setTenant",
+            "args": {
+              "tenant": 2
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "addresses"
+              }
+            },
+            "as": "o555"
+          },
+          "bind": "s1064",
+          "expect": {
+            "$document": {
+              "$id": "addresses"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o544"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": {
+                "$obj": "o555"
+              },
+              "id": "home"
+            },
+            "as": "o556"
+          },
+          "bind": "s1065",
+          "expect": {
+            "$document": {
+              "addr": "x",
+              "visits": null,
+              "$id": "home",
+              "$createdAt": null,
+              "$updatedAt": "2025-01-01 00:00:00.000",
+              "$permissions": [],
+              "$tenant": 2,
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o556"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "addr"
+            }
+          },
+          "expect": "x"
+        }
+      ]
+    },
+    {
+      "name": "MemoryWritePathsTest::testSharedTablesUniqueIndexRejectsDuplicatesWithinOneTenant",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o557"
+          },
+          "bind": "s1067",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o557"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "write_paths_shared_u000000000012"
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o557"
+            },
+            "method": "setSharedTables",
+            "args": {
+              "sharedTables": true
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o557"
+            },
+            "method": "setTenant",
+            "args": {
+              "tenant": 1
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o557"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": "addresses"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "addr",
+              "size": 128,
+              "required": true
+            },
+            "as": "o558"
+          },
+          "bind": "s1072",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "addr",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 128,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o557"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "addresses",
+              "attribute": {
+                "$obj": "o558"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "label",
+              "size": 32
+            },
+            "as": "o559"
+          },
+          "bind": "s1074",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "label",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o557"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "addresses",
+              "attribute": {
+                "$obj": "o559"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "double",
+            "args": {
+              "key": "visits"
+            },
+            "as": "o560"
+          },
+          "bind": "s1076",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "visits",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Double"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o557"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "addresses",
+              "attribute": {
+                "$obj": "o560"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o557"
+            },
+            "method": "setTenant",
+            "args": {
+              "tenant": 1
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "addresses"
+              }
+            },
+            "as": "o561"
+          },
+          "bind": "s1079",
+          "expect": {
+            "$document": {
+              "$id": "addresses"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "first",
+                "$permissions": [],
+                "$updatedAt": "2025-01-01 00:00:00.000",
+                "addr": "x",
+                "visits": null
+              }
+            },
+            "as": "o562"
+          },
+          "bind": "s1080",
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "$permissions": [],
+              "$updatedAt": "2025-01-01 00:00:00.000",
+              "addr": "x",
+              "visits": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o557"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": {
+                "$obj": "o561"
+              },
+              "document": {
+                "$obj": "o562"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "$permissions": [],
+              "$updatedAt": "2025-01-01 00:00:00.000",
+              "addr": "x",
+              "visits": null,
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "addresses"
+              }
+            },
+            "as": "o563"
+          },
+          "bind": "s1082",
+          "expect": {
+            "$document": {
+              "$id": "addresses"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "second",
+                "$permissions": [],
+                "$updatedAt": "2025-01-01 00:00:00.000",
+                "addr": "x",
+                "visits": null
+              }
+            },
+            "as": "o564"
+          },
+          "bind": "s1083",
+          "expect": {
+            "$document": {
+              "$id": "second",
+              "$permissions": [],
+              "$updatedAt": "2025-01-01 00:00:00.000",
+              "addr": "x",
+              "visits": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o557"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": {
+                "$obj": "o563"
+              },
+              "document": {
+                "$obj": "o564"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "second",
+              "$permissions": [],
+              "$updatedAt": "2025-01-01 00:00:00.000",
+              "addr": "x",
+              "visits": null,
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "unique",
+            "args": {
+              "key": "unique_addr",
+              "attributes": [
+                "addr"
+              ]
+            },
+            "as": "o565"
+          },
+          "bind": "s1085",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "unique_addr",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Unique"
+              },
+              "attributes": [
+                "addr"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o557"
+            },
+            "method": "createIndex",
+            "args": {
+              "collection": "addresses",
+              "index": {
+                "$obj": "o565"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Unique",
+              "message": "Unique index violation"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "MemoryWritePathsTest::testRolledBackUniqueIndexLeavesNoHashTable",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "addr",
+              "size": 128,
+              "required": true
+            },
+            "as": "o566"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "addr",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 128,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "label",
+              "size": 32
+            },
+            "as": "o567"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "label",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "double",
+            "args": {
+              "key": "visits"
+            },
+            "as": "o568"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "visits",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Double"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "addresses"
+              }
+            },
+            "as": "o569"
+          },
+          "expect": {
+            "$document": {
+              "$id": "addresses"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "home",
+                "$permissions": [],
+                "$updatedAt": "2025-01-01 00:00:00.000",
+                "addr": "x",
+                "visits": null
+              }
+            },
+            "as": "o570"
+          },
+          "expect": {
+            "$document": {
+              "$id": "home",
+              "$permissions": [],
+              "$updatedAt": "2025-01-01 00:00:00.000",
+              "addr": "x",
+              "visits": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "unique",
+            "args": {
+              "key": "unique_addr",
+              "attributes": [
+                "addr"
+              ]
+            },
+            "as": "o571"
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "unique_addr",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Unique"
+              },
+              "attributes": [
+                "addr"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "MemoryWritePathsTest::testSharedTablesUniqueBindingsFollowTheirTenantOnUpdateAndDelete",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o572"
+          },
+          "bind": "s1093",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o572"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "write_paths_shared_u000000000013"
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o572"
+            },
+            "method": "setSharedTables",
+            "args": {
+              "sharedTables": true
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o572"
+            },
+            "method": "setTenant",
+            "args": {
+              "tenant": 1
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o572"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": "addresses"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "addr",
+              "size": 128,
+              "required": true
+            },
+            "as": "o573"
+          },
+          "bind": "s1098",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "addr",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 128,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o572"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "addresses",
+              "attribute": {
+                "$obj": "o573"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "label",
+              "size": 32
+            },
+            "as": "o574"
+          },
+          "bind": "s1100",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "label",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o572"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "addresses",
+              "attribute": {
+                "$obj": "o574"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "double",
+            "args": {
+              "key": "visits"
+            },
+            "as": "o575"
+          },
+          "bind": "s1102",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "visits",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Double"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o572"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "addresses",
+              "attribute": {
+                "$obj": "o575"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o572"
+            },
+            "method": "setTenant",
+            "args": {
+              "tenant": 1
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "unique",
+            "args": {
+              "key": "unique_addr",
+              "attributes": [
+                "addr"
+              ]
+            },
+            "as": "o576"
+          },
+          "bind": "s1105",
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "unique_addr",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Unique"
+              },
+              "attributes": [
+                "addr"
+              ],
+              "lengths": [],
+              "orders": [],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o572"
+            },
+            "method": "createIndex",
+            "args": {
+              "collection": "addresses",
+              "index": {
+                "$obj": "o576"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o572"
+            },
+            "method": "setTenant",
+            "args": {
+              "tenant": 1
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "addresses"
+              }
+            },
+            "as": "o577"
+          },
+          "bind": "s1108",
+          "expect": {
+            "$document": {
+              "$id": "addresses"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "home",
+                "$permissions": [],
+                "$updatedAt": "2025-01-01 00:00:00.000",
+                "addr": "x",
+                "visits": null
+              }
+            },
+            "as": "o578"
+          },
+          "bind": "s1109",
+          "expect": {
+            "$document": {
+              "$id": "home",
+              "$permissions": [],
+              "$updatedAt": "2025-01-01 00:00:00.000",
+              "addr": "x",
+              "visits": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o572"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": {
+                "$obj": "o577"
+              },
+              "document": {
+                "$obj": "o578"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "home",
+              "$permissions": [],
+              "$updatedAt": "2025-01-01 00:00:00.000",
+              "addr": "x",
+              "visits": null,
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o572"
+            },
+            "method": "setTenant",
+            "args": {
+              "tenant": 2
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "addresses"
+              }
+            },
+            "as": "o579"
+          },
+          "bind": "s1112",
+          "expect": {
+            "$document": {
+              "$id": "addresses"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "home",
+                "$permissions": [],
+                "$updatedAt": "2025-01-01 00:00:00.000",
+                "addr": "x",
+                "visits": null
+              }
+            },
+            "as": "o580"
+          },
+          "bind": "s1113",
+          "expect": {
+            "$document": {
+              "$id": "home",
+              "$permissions": [],
+              "$updatedAt": "2025-01-01 00:00:00.000",
+              "addr": "x",
+              "visits": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o572"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": {
+                "$obj": "o579"
+              },
+              "document": {
+                "$obj": "o580"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "home",
+              "$permissions": [],
+              "$updatedAt": "2025-01-01 00:00:00.000",
+              "addr": "x",
+              "visits": null,
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o572"
+            },
+            "method": "setTenant",
+            "args": {
+              "tenant": 2
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "addresses"
+              }
+            },
+            "as": "o581"
+          },
+          "bind": "s1116",
+          "expect": {
+            "$document": {
+              "$id": "addresses"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "home",
+                "addr": "x",
+                "label": "kept"
+              }
+            },
+            "as": "o582"
+          },
+          "bind": "s1117",
+          "expect": {
+            "$document": {
+              "$id": "home",
+              "addr": "x",
+              "label": "kept"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o572"
+            },
+            "method": "updateDocument",
+            "args": {
+              "collection": {
+                "$obj": "o581"
+              },
+              "id": "home",
+              "document": {
+                "$obj": "o582"
+              },
+              "skipPermissions": true
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "home",
+              "addr": "x",
+              "label": "kept"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "addresses"
+              }
+            },
+            "as": "o583"
+          },
+          "bind": "s1119",
+          "expect": {
+            "$document": {
+              "$id": "addresses"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o572"
+            },
+            "method": "deleteDocument",
+            "args": {
+              "collection": {
+                "$obj": "o583"
+              },
+              "id": "home"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o572"
+            },
+            "method": "setTenant",
+            "args": {
+              "tenant": 1
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "addresses"
+              }
+            },
+            "as": "o584"
+          },
+          "bind": "s1122",
+          "expect": {
+            "$document": {
+              "$id": "addresses"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "second",
+                "$permissions": [],
+                "$updatedAt": "2025-01-01 00:00:00.000",
+                "addr": "x",
+                "visits": null
+              }
+            },
+            "as": "o585"
+          },
+          "bind": "s1123",
+          "expect": {
+            "$document": {
+              "$id": "second",
+              "$permissions": [],
+              "$updatedAt": "2025-01-01 00:00:00.000",
+              "addr": "x",
+              "visits": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o572"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": {
+                "$obj": "o584"
+              },
+              "document": {
+                "$obj": "o585"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Unique",
+              "message": "Unique index violation"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o572"
+            },
+            "method": "setTenant",
+            "args": {
+              "tenant": 2
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "addresses"
+              }
+            },
+            "as": "o586"
+          },
+          "bind": "s1126",
+          "expect": {
+            "$document": {
+              "$id": "addresses"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "again",
+                "$permissions": [],
+                "$updatedAt": "2025-01-01 00:00:00.000",
+                "addr": "x",
+                "visits": null
+              }
+            },
+            "as": "o587"
+          },
+          "bind": "s1127",
+          "expect": {
+            "$document": {
+              "$id": "again",
+              "$permissions": [],
+              "$updatedAt": "2025-01-01 00:00:00.000",
+              "addr": "x",
+              "visits": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o572"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": {
+                "$obj": "o586"
+              },
+              "document": {
+                "$obj": "o587"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "again",
+              "$permissions": [],
+              "$updatedAt": "2025-01-01 00:00:00.000",
+              "addr": "x",
+              "visits": null,
+              "$sequence": "3"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "addresses"
+              }
+            },
+            "as": "o588"
+          },
+          "bind": "s1129",
+          "expect": {
+            "$document": {
+              "$id": "addresses"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o572"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": {
+                "$obj": "o588"
+              },
+              "id": "again"
+            },
+            "as": "o589"
+          },
+          "bind": "s1130",
+          "expect": {
+            "$document": {
+              "addr": "x",
+              "visits": null,
+              "$id": "again",
+              "$createdAt": null,
+              "$updatedAt": "2025-01-01 00:00:00.000",
+              "$permissions": [],
+              "$tenant": 2,
+              "$sequence": "3"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o589"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "addr"
+            }
+          },
+          "expect": "x"
+        }
+      ]
+    },
+    {
+      "name": "MemoryWritePathsTest::testRollbackRestoresARenamedDocument",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o590"
+          },
+          "bind": "s1132",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o590"
+              },
+              "cache": "none"
+            },
+            "as": "o591"
+          },
+          "bind": "s1133",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o591"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "write_paths"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o591"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "write_paths_u000000000014"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o591"
+            },
+            "method": "getAuthorization",
+            "args": {},
+            "as": "o592"
+          },
+          "bind": "s1136",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o593"
+          },
+          "bind": "s1137",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o593"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "any"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o592"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "any"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o591"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "addr",
+              "size": 128,
+              "required": true
+            },
+            "as": "o594"
+          },
+          "bind": "s1141",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "addr",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 128,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "label",
+              "size": 32
+            },
+            "as": "o595"
+          },
+          "bind": "s1142",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "label",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o596"
+          },
+          "bind": "s1143",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o596"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o597"
+          },
+          "bind": "s1145",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o597"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o598"
+          },
+          "bind": "s1147",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o598"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "addresses",
+              "attributes": [
+                {
+                  "$obj": "o594"
+                },
+                {
+                  "$obj": "o595"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ]
+            },
+            "as": "o599"
+          },
+          "bind": "s1149",
+          "expect": {
+            "$document": {
+              "$id": "addresses",
+              "name": "addresses",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "addr",
+                    "key": "addr",
+                    "type": "string",
+                    "size": 128,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "label",
+                    "key": "label",
+                    "type": "string",
+                    "size": 32,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o591"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o599"
+              }
+            },
+            "as": "o600"
+          },
+          "expect": {
+            "$document": {
+              "$id": "addresses",
+              "name": "addresses",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "addr",
+                    "key": "addr",
+                    "type": "string",
+                    "size": 128,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "label",
+                    "key": "label",
+                    "type": "string",
+                    "size": 32,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "a",
+                "addr": "x",
+                "label": "original"
+              }
+            },
+            "as": "o601"
+          },
+          "bind": "s1151",
+          "expect": {
+            "$document": {
+              "$id": "a",
+              "addr": "x",
+              "label": "original"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o591"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "addresses",
+              "document": {
+                "$obj": "o601"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "a",
+              "addr": "x",
+              "label": "original",
+              "$collection": "addresses",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o591"
+            },
+            "method": "withTransaction",
+            "args": {
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.new",
+                    "args": {
+                      "class": "Document",
+                      "args": {
+                        "input": {
+                          "$id": "b",
+                          "label": "renamed"
+                        }
+                      },
+                      "as": "o602"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o591"
+                      },
+                      "method": "updateDocument",
+                      "args": {
+                        "collection": "addresses",
+                        "id": "a",
+                        "document": {
+                          "$obj": "o602"
+                        }
+                      },
+                      "as": "o603"
+                    }
+                  },
+                  {
+                    "op": "$throw",
+                    "args": {
+                      "class": "RuntimeException",
+                      "message": "roll back"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "bind": "s1153",
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "roll back"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o591"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "addresses",
+              "id": "a"
+            },
+            "as": "o604"
+          },
+          "bind": "s1154",
+          "expect": {
+            "$document": {
+              "addr": "x",
+              "label": "original",
+              "$sequence": "1",
+              "$id": "a",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "addresses"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o604"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "label"
+            }
+          },
+          "expect": "original"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o591"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": "addresses",
+              "id": "b"
+            },
+            "as": "o605"
+          },
+          "bind": "s1156",
+          "expect": {
+            "$document": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o605"
+            },
+            "method": "isEmpty",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o591"
+            },
+            "method": "find",
+            "args": {
+              "collection": "addresses"
+            }
+          },
+          "expect": [
+            {
+              "$document": {
+                "addr": "x",
+                "label": "original",
+                "$id": "a",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$sequence": "1",
+                "$collection": "addresses"
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "addr": "x",
+                "label": "original",
+                "$id": "a",
+                "$createdAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$updatedAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$permissions": [],
+                "$sequence": "1",
+                "$collection": "addresses"
+              }
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "a"
+        }
+      ]
+    },
+    {
+      "name": "MemoryWritePathsTest::testRollbackUndoesAnIncrement",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o606"
+          },
+          "bind": "s1160",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o606"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "write_paths_u000000000015"
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o606"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": "addresses"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "addr",
+              "size": 128,
+              "required": true
+            },
+            "as": "o607"
+          },
+          "bind": "s1163",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "addr",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 128,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o606"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "addresses",
+              "attribute": {
+                "$obj": "o607"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "label",
+              "size": 32
+            },
+            "as": "o608"
+          },
+          "bind": "s1165",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "label",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o606"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "addresses",
+              "attribute": {
+                "$obj": "o608"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "double",
+            "args": {
+              "key": "visits"
+            },
+            "as": "o609"
+          },
+          "bind": "s1167",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "visits",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Double"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o606"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "addresses",
+              "attribute": {
+                "$obj": "o609"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "addresses"
+              }
+            },
+            "as": "o610"
+          },
+          "bind": "s1169",
+          "expect": {
+            "$document": {
+              "$id": "addresses"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "home",
+                "$permissions": [],
+                "$updatedAt": "2025-01-01 00:00:00.000",
+                "addr": "x",
+                "visits": 1
+              }
+            },
+            "as": "o611"
+          },
+          "bind": "s1170",
+          "expect": {
+            "$document": {
+              "$id": "home",
+              "$permissions": [],
+              "$updatedAt": "2025-01-01 00:00:00.000",
+              "addr": "x",
+              "visits": 1
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o606"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": {
+                "$obj": "o610"
+              },
+              "document": {
+                "$obj": "o611"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "home",
+              "$permissions": [],
+              "$updatedAt": "2025-01-01 00:00:00.000",
+              "addr": "x",
+              "visits": 1,
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "addresses"
+              }
+            },
+            "as": "o612"
+          },
+          "bind": "s1172",
+          "expect": {
+            "$document": {
+              "$id": "addresses"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o606"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": {
+                "$obj": "o612"
+              },
+              "id": "home"
+            },
+            "as": "o613"
+          },
+          "bind": "s1173",
+          "expect": {
+            "$document": {
+              "addr": "x",
+              "visits": 1,
+              "$id": "home",
+              "$createdAt": null,
+              "$updatedAt": "2025-01-01 00:00:00.000",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o606"
+            },
+            "method": "startTransaction",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "addresses"
+              }
+            },
+            "as": "o614"
+          },
+          "bind": "s1175",
+          "expect": {
+            "$document": {
+              "$id": "addresses"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o606"
+            },
+            "method": "increaseDocumentAttribute",
+            "args": {
+              "collection": {
+                "$obj": "o614"
+              },
+              "id": "home",
+              "attribute": "visits",
+              "value": 5,
+              "updatedAt": "2026-01-01 00:00:00.000"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "addresses"
+              }
+            },
+            "as": "o615"
+          },
+          "bind": "s1177",
+          "expect": {
+            "$document": {
+              "$id": "addresses"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o606"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": {
+                "$obj": "o615"
+              },
+              "id": "home"
+            },
+            "as": "o616"
+          },
+          "bind": "s1178",
+          "expect": {
+            "$document": {
+              "addr": "x",
+              "visits": 6,
+              "$id": "home",
+              "$createdAt": null,
+              "$updatedAt": "2026-01-01 00:00:00.000",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o616"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "visits"
+            }
+          },
+          "expect": 6
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o606"
+            },
+            "method": "rollbackTransaction",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "addresses"
+              }
+            },
+            "as": "o617"
+          },
+          "bind": "s1181",
+          "expect": {
+            "$document": {
+              "$id": "addresses"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o606"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": {
+                "$obj": "o617"
+              },
+              "id": "home"
+            },
+            "as": "o618"
+          },
+          "bind": "s1182",
+          "expect": {
+            "$document": {
+              "addr": "x",
+              "visits": 1,
+              "$id": "home",
+              "$createdAt": null,
+              "$updatedAt": "2025-01-01 00:00:00.000",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o618"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "visits"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o613"
+            },
+            "method": "getUpdatedAt",
+            "args": {}
+          },
+          "expect": "2025-01-01 00:00:00.000"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o618"
+            },
+            "method": "getUpdatedAt",
+            "args": {}
+          },
+          "expect": "2025-01-01 00:00:00.000"
+        }
+      ]
+    },
+    {
+      "name": "MemoryWritePathsTest::testRollbackOfAnIncrementRemovesTheValueAndTimestampItAdded",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o619"
+          },
+          "bind": "s1186",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o619"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "write_paths_u000000000016"
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o619"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": "addresses"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "addr",
+              "size": 128,
+              "required": true
+            },
+            "as": "o620"
+          },
+          "bind": "s1189",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "addr",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 128,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o619"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "addresses",
+              "attribute": {
+                "$obj": "o620"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "label",
+              "size": 32
+            },
+            "as": "o621"
+          },
+          "bind": "s1191",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "label",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o619"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "addresses",
+              "attribute": {
+                "$obj": "o621"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "double",
+            "args": {
+              "key": "visits"
+            },
+            "as": "o622"
+          },
+          "bind": "s1193",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "visits",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Double"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o619"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "addresses",
+              "attribute": {
+                "$obj": "o622"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "addresses"
+              }
+            },
+            "as": "o623"
+          },
+          "bind": "s1195",
+          "expect": {
+            "$document": {
+              "$id": "addresses"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "home",
+                "$permissions": [],
+                "addr": "x"
+              }
+            },
+            "as": "o624"
+          },
+          "bind": "s1196",
+          "expect": {
+            "$document": {
+              "$id": "home",
+              "$permissions": [],
+              "addr": "x"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o619"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": {
+                "$obj": "o623"
+              },
+              "document": {
+                "$obj": "o624"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "home",
+              "$permissions": [],
+              "addr": "x",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "addresses"
+              }
+            },
+            "as": "o625"
+          },
+          "bind": "s1198",
+          "expect": {
+            "$document": {
+              "$id": "addresses"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o619"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": {
+                "$obj": "o625"
+              },
+              "id": "home"
+            },
+            "as": "o626"
+          },
+          "bind": "s1199",
+          "expect": {
+            "$document": {
+              "addr": "x",
+              "$id": "home",
+              "$createdAt": null,
+              "$updatedAt": null,
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o626"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "visits"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o626"
+            },
+            "method": "getUpdatedAt",
+            "args": {}
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o619"
+            },
+            "method": "startTransaction",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "addresses"
+              }
+            },
+            "as": "o627"
+          },
+          "bind": "s1203",
+          "expect": {
+            "$document": {
+              "$id": "addresses"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o619"
+            },
+            "method": "increaseDocumentAttribute",
+            "args": {
+              "collection": {
+                "$obj": "o627"
+              },
+              "id": "home",
+              "attribute": "visits",
+              "value": 5,
+              "updatedAt": "2026-01-01 00:00:00.000"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "addresses"
+              }
+            },
+            "as": "o628"
+          },
+          "bind": "s1205",
+          "expect": {
+            "$document": {
+              "$id": "addresses"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o619"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": {
+                "$obj": "o628"
+              },
+              "id": "home"
+            },
+            "as": "o629"
+          },
+          "bind": "s1206",
+          "expect": {
+            "$document": {
+              "addr": "x",
+              "$id": "home",
+              "$createdAt": null,
+              "$updatedAt": "2026-01-01 00:00:00.000",
+              "$permissions": [],
+              "$sequence": "1",
+              "visits": 5
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o629"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "visits"
+            }
+          },
+          "expect": 5
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o619"
+            },
+            "method": "rollbackTransaction",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "addresses"
+              }
+            },
+            "as": "o630"
+          },
+          "bind": "s1209",
+          "expect": {
+            "$document": {
+              "$id": "addresses"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o619"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": {
+                "$obj": "o630"
+              },
+              "id": "home"
+            },
+            "as": "o631"
+          },
+          "bind": "s1210",
+          "expect": {
+            "$document": {
+              "addr": "x",
+              "$id": "home",
+              "$createdAt": null,
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o631"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "visits"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o631"
+            },
+            "method": "getUpdatedAt",
+            "args": {}
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "MemoryWritePathsTest::testADivisionOrModuloByZeroThatSkippedValidationKeepsTheValue",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o632"
+          },
+          "bind": "s1213",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o632"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "write_paths_u000000000017"
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o632"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": "addresses"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "addr",
+              "size": 128,
+              "required": true
+            },
+            "as": "o633"
+          },
+          "bind": "s1216",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "addr",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 128,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o632"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "addresses",
+              "attribute": {
+                "$obj": "o633"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "label",
+              "size": 32
+            },
+            "as": "o634"
+          },
+          "bind": "s1218",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "label",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o632"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "addresses",
+              "attribute": {
+                "$obj": "o634"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "double",
+            "args": {
+              "key": "visits"
+            },
+            "as": "o635"
+          },
+          "bind": "s1220",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "visits",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Double"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o632"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "addresses",
+              "attribute": {
+                "$obj": "o635"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "addresses"
+              }
+            },
+            "as": "o636"
+          },
+          "bind": "s1222",
+          "expect": {
+            "$document": {
+              "$id": "addresses"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "home",
+                "$permissions": [],
+                "$updatedAt": "2025-01-01 00:00:00.000",
+                "addr": "x",
+                "visits": 10
+              }
+            },
+            "as": "o637"
+          },
+          "bind": "s1223",
+          "expect": {
+            "$document": {
+              "$id": "home",
+              "$permissions": [],
+              "$updatedAt": "2025-01-01 00:00:00.000",
+              "addr": "x",
+              "visits": 10
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o632"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": {
+                "$obj": "o636"
+              },
+              "document": {
+                "$obj": "o637"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "home",
+              "$permissions": [],
+              "$updatedAt": "2025-01-01 00:00:00.000",
+              "addr": "x",
+              "visits": 10,
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "parse",
+            "args": {
+              "operator": "{\"method\":\"divide\",\"attribute\":\"visits\",\"values\":[0]}"
+            },
+            "as": "o638"
+          },
+          "bind": "s1225",
+          "expect": {
+            "$operator": {
+              "method": "divide",
+              "attribute": "visits",
+              "values": [
+                0
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "addresses"
+              }
+            },
+            "as": "o639"
+          },
+          "bind": "s1226",
+          "expect": {
+            "$document": {
+              "$id": "addresses"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "home",
+                "visits": {
+                  "$obj": "o638"
+                }
+              }
+            },
+            "as": "o640"
+          },
+          "bind": "s1227",
+          "expect": {
+            "$document": {
+              "$id": "home",
+              "visits": {
+                "$operator": {
+                  "method": "divide",
+                  "attribute": "visits",
+                  "values": [
+                    0
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o632"
+            },
+            "method": "updateDocument",
+            "args": {
+              "collection": {
+                "$obj": "o639"
+              },
+              "id": "home",
+              "document": {
+                "$obj": "o640"
+              },
+              "skipPermissions": true
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "home",
+              "visits": 10
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "addresses"
+              }
+            },
+            "as": "o641"
+          },
+          "bind": "s1229",
+          "expect": {
+            "$document": {
+              "$id": "addresses"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o632"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": {
+                "$obj": "o641"
+              },
+              "id": "home"
+            },
+            "as": "o642"
+          },
+          "bind": "s1230",
+          "expect": {
+            "$document": {
+              "addr": "x",
+              "visits": 10,
+              "$id": "home",
+              "$createdAt": null,
+              "$updatedAt": null,
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o642"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "visits"
+            }
+          },
+          "expect": 10
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Operator",
+            "method": "parse",
+            "args": {
+              "operator": "{\"method\":\"modulo\",\"attribute\":\"visits\",\"values\":[0]}"
+            },
+            "as": "o643"
+          },
+          "bind": "s1232",
+          "expect": {
+            "$operator": {
+              "method": "modulo",
+              "attribute": "visits",
+              "values": [
+                0
+              ]
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "addresses"
+              }
+            },
+            "as": "o644"
+          },
+          "bind": "s1233",
+          "expect": {
+            "$document": {
+              "$id": "addresses"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "home",
+                "visits": {
+                  "$obj": "o643"
+                }
+              }
+            },
+            "as": "o645"
+          },
+          "bind": "s1234",
+          "expect": {
+            "$document": {
+              "$id": "home",
+              "visits": {
+                "$operator": {
+                  "method": "modulo",
+                  "attribute": "visits",
+                  "values": [
+                    0
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o632"
+            },
+            "method": "updateDocument",
+            "args": {
+              "collection": {
+                "$obj": "o644"
+              },
+              "id": "home",
+              "document": {
+                "$obj": "o645"
+              },
+              "skipPermissions": true
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "home",
+              "visits": 10
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "addresses"
+              }
+            },
+            "as": "o646"
+          },
+          "bind": "s1236",
+          "expect": {
+            "$document": {
+              "$id": "addresses"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o632"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": {
+                "$obj": "o646"
+              },
+              "id": "home"
+            },
+            "as": "o647"
+          },
+          "bind": "s1237",
+          "expect": {
+            "$document": {
+              "addr": "x",
+              "visits": 10,
+              "$id": "home",
+              "$createdAt": null,
+              "$updatedAt": null,
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o647"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "visits"
+            }
+          },
+          "expect": 10
+        }
+      ]
+    },
+    {
+      "name": "MemoryWritePathsTest::testACursorWithoutAnOrderPagesBySequence",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Validator\\Authorization",
+            "args": {},
+            "as": "o648"
+          },
+          "bind": "s1239",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o648"
+            },
+            "method": "disable",
+            "args": {}
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o649"
+          },
+          "bind": "s1241",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o649"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "write_paths_u000000000018"
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o649"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": "addresses"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "addr",
+              "size": 128,
+              "required": true
+            },
+            "as": "o650"
+          },
+          "bind": "s1244",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "addr",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 128,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o649"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "addresses",
+              "attribute": {
+                "$obj": "o650"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "label",
+              "size": 32
+            },
+            "as": "o651"
+          },
+          "bind": "s1246",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "label",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o649"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "addresses",
+              "attribute": {
+                "$obj": "o651"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "double",
+            "args": {
+              "key": "visits"
+            },
+            "as": "o652"
+          },
+          "bind": "s1248",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "visits",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Double"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o649"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "addresses",
+              "attribute": {
+                "$obj": "o652"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o649"
+            },
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "$obj": "o648"
+              }
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "addresses"
+              }
+            },
+            "as": "o653"
+          },
+          "bind": "s1251",
+          "expect": {
+            "$document": {
+              "$id": "addresses"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "first",
+                "$permissions": [],
+                "$updatedAt": "2025-01-01 00:00:00.000",
+                "addr": "x",
+                "visits": null
+              }
+            },
+            "as": "o654"
+          },
+          "bind": "s1252",
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "$permissions": [],
+              "$updatedAt": "2025-01-01 00:00:00.000",
+              "addr": "x",
+              "visits": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o649"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": {
+                "$obj": "o653"
+              },
+              "document": {
+                "$obj": "o654"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "$permissions": [],
+              "$updatedAt": "2025-01-01 00:00:00.000",
+              "addr": "x",
+              "visits": null,
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "addresses"
+              }
+            },
+            "as": "o655"
+          },
+          "bind": "s1254",
+          "expect": {
+            "$document": {
+              "$id": "addresses"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "second",
+                "$permissions": [],
+                "$updatedAt": "2025-01-01 00:00:00.000",
+                "addr": "x",
+                "visits": null
+              }
+            },
+            "as": "o656"
+          },
+          "bind": "s1255",
+          "expect": {
+            "$document": {
+              "$id": "second",
+              "$permissions": [],
+              "$updatedAt": "2025-01-01 00:00:00.000",
+              "addr": "x",
+              "visits": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o649"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": {
+                "$obj": "o655"
+              },
+              "document": {
+                "$obj": "o656"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "second",
+              "$permissions": [],
+              "$updatedAt": "2025-01-01 00:00:00.000",
+              "addr": "x",
+              "visits": null,
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "addresses"
+              }
+            },
+            "as": "o657"
+          },
+          "bind": "s1257",
+          "expect": {
+            "$document": {
+              "$id": "addresses"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "third",
+                "$permissions": [],
+                "$updatedAt": "2025-01-01 00:00:00.000",
+                "addr": "x",
+                "visits": null
+              }
+            },
+            "as": "o658"
+          },
+          "bind": "s1258",
+          "expect": {
+            "$document": {
+              "$id": "third",
+              "$permissions": [],
+              "$updatedAt": "2025-01-01 00:00:00.000",
+              "addr": "x",
+              "visits": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o649"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": {
+                "$obj": "o657"
+              },
+              "document": {
+                "$obj": "o658"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "third",
+              "$permissions": [],
+              "$updatedAt": "2025-01-01 00:00:00.000",
+              "addr": "x",
+              "visits": null,
+              "$sequence": "3"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "addresses"
+              }
+            },
+            "as": "o659"
+          },
+          "bind": "s1260",
+          "expect": {
+            "$document": {
+              "$id": "addresses"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o649"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": {
+                "$obj": "o659"
+              },
+              "id": "second"
+            },
+            "as": "o660"
+          },
+          "bind": "s1261",
+          "expect": {
+            "$document": {
+              "addr": "x",
+              "visits": null,
+              "$id": "second",
+              "$createdAt": null,
+              "$updatedAt": "2025-01-01 00:00:00.000",
+              "$permissions": [],
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o660"
+            },
+            "method": "getSequence",
+            "args": {}
+          },
+          "expect": "2"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "addresses"
+              }
+            },
+            "as": "o661"
+          },
+          "bind": "s1263",
+          "expect": {
+            "$document": {
+              "$id": "addresses"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o649"
+            },
+            "method": "find",
+            "args": {
+              "collection": {
+                "$obj": "o661"
+              },
+              "cursor": {
+                "$sequence": "2"
+              }
+            }
+          },
+          "expect": [
+            {
+              "$document": {
+                "addr": "x",
+                "visits": null,
+                "$id": "third",
+                "$createdAt": null,
+                "$updatedAt": "2025-01-01 00:00:00.000",
+                "$permissions": [],
+                "$sequence": "3"
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "addr": "x",
+                "visits": null,
+                "$id": "third",
+                "$createdAt": null,
+                "$updatedAt": "2025-01-01 00:00:00.000",
+                "$permissions": [],
+                "$sequence": "3"
+              }
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "third"
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "addresses"
+              }
+            },
+            "as": "o662"
+          },
+          "bind": "s1266",
+          "expect": {
+            "$document": {
+              "$id": "addresses"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o649"
+            },
+            "method": "find",
+            "args": {
+              "collection": {
+                "$obj": "o662"
+              },
+              "cursor": {
+                "$sequence": "2"
+              },
+              "cursorDirection": {
+                "$enum": "Query\\CursorDirection::Before"
+              }
+            }
+          },
+          "expect": [
+            {
+              "$document": {
+                "addr": "x",
+                "visits": null,
+                "$id": "first",
+                "$createdAt": null,
+                "$updatedAt": "2025-01-01 00:00:00.000",
+                "$permissions": [],
+                "$sequence": "1"
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "addr": "x",
+                "visits": null,
+                "$id": "first",
+                "$createdAt": null,
+                "$updatedAt": "2025-01-01 00:00:00.000",
+                "$permissions": [],
+                "$sequence": "1"
+              }
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "first"
+        }
+      ]
+    },
+    {
+      "name": "MemoryWritePathsTest::testIncrementIsANoOpWhenTheStoredValueAlreadyViolatesTheBound",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o663"
+          },
+          "bind": "s1269",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o663"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "write_paths_u000000000019"
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o663"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": "addresses"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "addr",
+              "size": 128,
+              "required": true
+            },
+            "as": "o664"
+          },
+          "bind": "s1272",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "addr",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 128,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o663"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "addresses",
+              "attribute": {
+                "$obj": "o664"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "label",
+              "size": 32
+            },
+            "as": "o665"
+          },
+          "bind": "s1274",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "label",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o663"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "addresses",
+              "attribute": {
+                "$obj": "o665"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "double",
+            "args": {
+              "key": "visits"
+            },
+            "as": "o666"
+          },
+          "bind": "s1276",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "visits",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Double"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o663"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "addresses",
+              "attribute": {
+                "$obj": "o666"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "addresses"
+              }
+            },
+            "as": "o667"
+          },
+          "bind": "s1278",
+          "expect": {
+            "$document": {
+              "$id": "addresses"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "whole",
+                "$permissions": [],
+                "$updatedAt": "2025-01-01 00:00:00.000",
+                "addr": "x",
+                "visits": 10
+              }
+            },
+            "as": "o668"
+          },
+          "bind": "s1279",
+          "expect": {
+            "$document": {
+              "$id": "whole",
+              "$permissions": [],
+              "$updatedAt": "2025-01-01 00:00:00.000",
+              "addr": "x",
+              "visits": 10
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o663"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": {
+                "$obj": "o667"
+              },
+              "document": {
+                "$obj": "o668"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "whole",
+              "$permissions": [],
+              "$updatedAt": "2025-01-01 00:00:00.000",
+              "addr": "x",
+              "visits": 10,
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "addresses"
+              }
+            },
+            "as": "o669"
+          },
+          "bind": "s1281",
+          "expect": {
+            "$document": {
+              "$id": "addresses"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "fraction",
+                "$permissions": [],
+                "$updatedAt": "2025-01-01 00:00:00.000",
+                "addr": "y",
+                "visits": 10.5
+              }
+            },
+            "as": "o670"
+          },
+          "bind": "s1282",
+          "expect": {
+            "$document": {
+              "$id": "fraction",
+              "$permissions": [],
+              "$updatedAt": "2025-01-01 00:00:00.000",
+              "addr": "y",
+              "visits": 10.5
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o663"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": {
+                "$obj": "o669"
+              },
+              "document": {
+                "$obj": "o670"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "fraction",
+              "$permissions": [],
+              "$updatedAt": "2025-01-01 00:00:00.000",
+              "addr": "y",
+              "visits": 10.5,
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "addresses"
+              }
+            },
+            "as": "o671"
+          },
+          "bind": "s1284",
+          "expect": {
+            "$document": {
+              "$id": "addresses"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o663"
+            },
+            "method": "increaseDocumentAttribute",
+            "args": {
+              "collection": {
+                "$obj": "o671"
+              },
+              "id": "whole",
+              "attribute": "visits",
+              "value": 1,
+              "updatedAt": "2026-01-01 00:00:00.000",
+              "max": 5
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "addresses"
+              }
+            },
+            "as": "o672"
+          },
+          "bind": "s1286",
+          "expect": {
+            "$document": {
+              "$id": "addresses"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o663"
+            },
+            "method": "increaseDocumentAttribute",
+            "args": {
+              "collection": {
+                "$obj": "o672"
+              },
+              "id": "whole",
+              "attribute": "visits",
+              "value": -1,
+              "updatedAt": "2026-01-01 00:00:00.000",
+              "min": 20
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "addresses"
+              }
+            },
+            "as": "o673"
+          },
+          "bind": "s1288",
+          "expect": {
+            "$document": {
+              "$id": "addresses"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o663"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": {
+                "$obj": "o673"
+              },
+              "id": "whole"
+            },
+            "as": "o674"
+          },
+          "bind": "s1289",
+          "expect": {
+            "$document": {
+              "addr": "x",
+              "visits": 10,
+              "$id": "whole",
+              "$createdAt": null,
+              "$updatedAt": "2025-01-01 00:00:00.000",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o674"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "visits"
+            }
+          },
+          "expect": 10
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "addresses"
+              }
+            },
+            "as": "o675"
+          },
+          "bind": "s1291",
+          "expect": {
+            "$document": {
+              "$id": "addresses"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o663"
+            },
+            "method": "increaseDocumentAttribute",
+            "args": {
+              "collection": {
+                "$obj": "o675"
+              },
+              "id": "fraction",
+              "attribute": "visits",
+              "value": 1,
+              "updatedAt": "2026-01-01 00:00:00.000",
+              "max": 5
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "addresses"
+              }
+            },
+            "as": "o676"
+          },
+          "bind": "s1293",
+          "expect": {
+            "$document": {
+              "$id": "addresses"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o663"
+            },
+            "method": "increaseDocumentAttribute",
+            "args": {
+              "collection": {
+                "$obj": "o676"
+              },
+              "id": "fraction",
+              "attribute": "visits",
+              "value": -1,
+              "updatedAt": "2026-01-01 00:00:00.000",
+              "min": 20
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "addresses"
+              }
+            },
+            "as": "o677"
+          },
+          "bind": "s1295",
+          "expect": {
+            "$document": {
+              "$id": "addresses"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o663"
+            },
+            "method": "getDocument",
+            "args": {
+              "collection": {
+                "$obj": "o677"
+              },
+              "id": "fraction"
+            },
+            "as": "o678"
+          },
+          "bind": "s1296",
+          "expect": {
+            "$document": {
+              "addr": "y",
+              "visits": 10.5,
+              "$id": "fraction",
+              "$createdAt": null,
+              "$updatedAt": "2025-01-01 00:00:00.000",
+              "$permissions": [],
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o678"
+            },
+            "method": "getAttribute",
+            "args": {
+              "name": "visits"
+            }
+          },
+          "expect": 10.5
+        }
+      ]
+    },
+    {
+      "name": "MemoryWritePathsTest::testBatchMixingDocumentsWithAndWithoutASequenceIsRejected",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o679"
+          },
+          "bind": "s1298",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o679"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "write_paths_u000000000020"
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o679"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": "addresses"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "addr",
+              "size": 128,
+              "required": true
+            },
+            "as": "o680"
+          },
+          "bind": "s1301",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "addr",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 128,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o679"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "addresses",
+              "attribute": {
+                "$obj": "o680"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "label",
+              "size": 32
+            },
+            "as": "o681"
+          },
+          "bind": "s1303",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "label",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o679"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "addresses",
+              "attribute": {
+                "$obj": "o681"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "double",
+            "args": {
+              "key": "visits"
+            },
+            "as": "o682"
+          },
+          "bind": "s1305",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "visits",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Double"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o679"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "addresses",
+              "attribute": {
+                "$obj": "o682"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "first",
+                "$permissions": [],
+                "$updatedAt": "2025-01-01 00:00:00.000",
+                "addr": "x",
+                "visits": null
+              }
+            },
+            "as": "o683"
+          },
+          "bind": "s1307",
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "$permissions": [],
+              "$updatedAt": "2025-01-01 00:00:00.000",
+              "addr": "x",
+              "visits": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o683"
+            },
+            "method": "setAttribute",
+            "args": {
+              "key": "$sequence",
+              "value": "10"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "$permissions": [],
+              "$updatedAt": "2025-01-01 00:00:00.000",
+              "addr": "x",
+              "visits": null,
+              "$sequence": "10"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "second",
+                "$permissions": [],
+                "$updatedAt": "2025-01-01 00:00:00.000",
+                "addr": "y",
+                "visits": null
+              }
+            },
+            "as": "o684"
+          },
+          "bind": "s1309",
+          "expect": {
+            "$document": {
+              "$id": "second",
+              "$permissions": [],
+              "$updatedAt": "2025-01-01 00:00:00.000",
+              "addr": "y",
+              "visits": null
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "addresses"
+              }
+            },
+            "as": "o685"
+          },
+          "bind": "s1310",
+          "expect": {
+            "$document": {
+              "$id": "addresses"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o679"
+            },
+            "method": "createDocuments",
+            "args": {
+              "collection": {
+                "$obj": "o685"
+              },
+              "documents": [
+                {
+                  "$obj": "o683"
+                },
+                {
+                  "$obj": "o684"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "All documents must have an sequence if one is set"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "addresses"
+              }
+            },
+            "as": "o686"
+          },
+          "bind": "s1312",
+          "expect": {
+            "$document": {
+              "$id": "addresses"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o679"
+            },
+            "method": "find",
+            "args": {
+              "collection": {
+                "$obj": "o686"
+              }
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o687"
+          },
+          "bind": "s1314",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o687"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "write_paths_u000000000021"
+            }
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o687"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": "addresses"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "addr",
+              "size": 128,
+              "required": true
+            },
+            "as": "o688"
+          },
+          "bind": "s1317",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "addr",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 128,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o687"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "addresses",
+              "attribute": {
+                "$obj": "o688"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "label",
+              "size": 32
+            },
+            "as": "o689"
+          },
+          "bind": "s1319",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "label",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o687"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "addresses",
+              "attribute": {
+                "$obj": "o689"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "double",
+            "args": {
+              "key": "visits"
+            },
+            "as": "o690"
+          },
+          "bind": "s1321",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "visits",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Double"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o687"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "addresses",
+              "attribute": {
+                "$obj": "o690"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "first",
+                "$permissions": [],
+                "$updatedAt": "2025-01-01 00:00:00.000",
+                "addr": "x",
+                "visits": null
+              }
+            },
+            "as": "o691"
+          },
+          "bind": "s1323",
+          "expect": {
+            "$document": {
+              "$id": "first",
+              "$permissions": [],
+              "$updatedAt": "2025-01-01 00:00:00.000",
+              "addr": "x",
+              "visits": null
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "second",
+                "$permissions": [],
+                "$updatedAt": "2025-01-01 00:00:00.000",
+                "addr": "y",
+                "visits": null
+              }
+            },
+            "as": "o692"
+          },
+          "bind": "s1324",
+          "expect": {
+            "$document": {
+              "$id": "second",
+              "$permissions": [],
+              "$updatedAt": "2025-01-01 00:00:00.000",
+              "addr": "y",
+              "visits": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o692"
+            },
+            "method": "setAttribute",
+            "args": {
+              "key": "$sequence",
+              "value": "10"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "second",
+              "$permissions": [],
+              "$updatedAt": "2025-01-01 00:00:00.000",
+              "addr": "y",
+              "visits": null,
+              "$sequence": "10"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "addresses"
+              }
+            },
+            "as": "o693"
+          },
+          "bind": "s1326",
+          "expect": {
+            "$document": {
+              "$id": "addresses"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o687"
+            },
+            "method": "createDocuments",
+            "args": {
+              "collection": {
+                "$obj": "o693"
+              },
+              "documents": [
+                {
+                  "$obj": "o691"
+                },
+                {
+                  "$obj": "o692"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "All documents must have an sequence if one is set"
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "addresses"
+              }
+            },
+            "as": "o694"
+          },
+          "bind": "s1328",
+          "expect": {
+            "$document": {
+              "$id": "addresses"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o687"
+            },
+            "method": "find",
+            "args": {
+              "collection": {
+                "$obj": "o694"
+              }
+            }
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "MemoryWritePathsTest::testNullChecksAndUnsupportedMethodsOnAWholeObjectAttribute",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o695"
+          },
+          "bind": "s1330",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o695"
+              },
+              "cache": "none"
+            },
+            "as": "o696"
+          },
+          "bind": "s1331",
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o696"
+            },
+            "method": "setDatabase",
+            "args": {
+              "name": "write_paths"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o696"
+            },
+            "method": "setNamespace",
+            "args": {
+              "namespace": "write_paths_u000000000022"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o696"
+            },
+            "method": "getAuthorization",
+            "args": {},
+            "as": "o697"
+          },
+          "bind": "s1334",
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o698"
+          },
+          "bind": "s1335",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o698"
+            },
+            "method": "toString",
+            "args": {}
+          },
+          "expect": "any"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o697"
+            },
+            "method": "addRole",
+            "args": {
+              "role": "any"
+            }
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o696"
+            },
+            "method": "create",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "addr",
+              "size": 128,
+              "required": true
+            },
+            "as": "o699"
+          },
+          "bind": "s1339",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "addr",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 128,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "string",
+            "args": {
+              "key": "label",
+              "size": 32
+            },
+            "as": "o700"
+          },
+          "bind": "s1340",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "label",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o701"
+          },
+          "bind": "s1341",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "create",
+            "args": {
+              "role": {
+                "$obj": "o701"
+              }
+            }
+          },
+          "expect": "create(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o702"
+          },
+          "bind": "s1343",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "read",
+            "args": {
+              "role": {
+                "$obj": "o702"
+              }
+            }
+          },
+          "expect": "read(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Role",
+            "method": "any",
+            "args": {},
+            "as": "o703"
+          },
+          "bind": "s1345",
+          "expect": {
+            "$value": "Role",
+            "fields": {}
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Permission",
+            "method": "update",
+            "args": {
+              "role": {
+                "$obj": "o703"
+              }
+            }
+          },
+          "expect": "update(\"any\")"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Collection",
+            "method": "create",
+            "args": {
+              "id": "addresses",
+              "attributes": [
+                {
+                  "$obj": "o699"
+                },
+                {
+                  "$obj": "o700"
+                }
+              ],
+              "permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ]
+            },
+            "as": "o704"
+          },
+          "bind": "s1347",
+          "expect": {
+            "$document": {
+              "$id": "addresses",
+              "name": "addresses",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "addr",
+                    "key": "addr",
+                    "type": "string",
+                    "size": 128,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "label",
+                    "key": "label",
+                    "type": "string",
+                    "size": 32,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ]
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o696"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": {
+                "$obj": "o704"
+              }
+            },
+            "as": "o705"
+          },
+          "expect": {
+            "$document": {
+              "$id": "addresses",
+              "name": "addresses",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "addr",
+                    "key": "addr",
+                    "type": "string",
+                    "size": 128,
+                    "required": true,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "label",
+                    "key": "label",
+                    "type": "string",
+                    "size": 32,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "object",
+            "args": {
+              "key": "meta"
+            },
+            "as": "o706"
+          },
+          "bind": "s1349",
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "meta",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Object"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "object"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o696"
+            },
+            "method": "createAttribute",
+            "args": {
+              "collection": "addresses",
+              "attribute": {
+                "$obj": "o706"
+              }
+            },
+            "as": "o707"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "meta",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Object"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [
+                "object"
+              ],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "filled",
+                "addr": "x",
+                "meta": {
+                  "colour": "red"
+                }
+              }
+            },
+            "as": "o708"
+          },
+          "bind": "s1351",
+          "expect": {
+            "$document": {
+              "$id": "filled",
+              "addr": "x",
+              "meta": {
+                "colour": "red"
+              }
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o696"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "addresses",
+              "document": {
+                "$obj": "o708"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "filled",
+              "addr": "x",
+              "meta": {
+                "colour": "red"
+              },
+              "$collection": "addresses",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1",
+              "label": null
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "empty",
+                "addr": "y",
+                "meta": null
+              }
+            },
+            "as": "o709"
+          },
+          "bind": "s1353",
+          "expect": {
+            "$document": {
+              "$id": "empty",
+              "addr": "y",
+              "meta": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o696"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": "addresses",
+              "document": {
+                "$obj": "o709"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "empty",
+              "addr": "y",
+              "meta": null,
+              "$collection": "addresses",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "2",
+              "label": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "isNull",
+            "args": {
+              "attribute": "meta"
+            },
+            "as": "o710"
+          },
+          "bind": "s1355",
+          "expect": {
+            "$query": {
+              "method": "isNull",
+              "attribute": "meta",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o696"
+            },
+            "method": "find",
+            "args": {
+              "collection": "addresses",
+              "queries": [
+                {
+                  "$obj": "o710"
+                }
+              ]
+            }
+          },
+          "expect": [
+            {
+              "$document": {
+                "addr": "y",
+                "meta": null,
+                "$id": "empty",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$sequence": "2",
+                "label": null,
+                "$collection": "addresses"
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "addr": "y",
+                "meta": null,
+                "$id": "empty",
+                "$createdAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$updatedAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$permissions": [],
+                "$sequence": "2",
+                "label": null,
+                "$collection": "addresses"
+              }
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "empty"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Query",
+            "method": "isNotNull",
+            "args": {
+              "attribute": "meta"
+            },
+            "as": "o711"
+          },
+          "bind": "s1358",
+          "expect": {
+            "$query": {
+              "method": "isNotNull",
+              "attribute": "meta",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o696"
+            },
+            "method": "find",
+            "args": {
+              "collection": "addresses",
+              "queries": [
+                {
+                  "$obj": "o711"
+                }
+              ]
+            }
+          },
+          "expect": [
+            {
+              "$document": {
+                "addr": "x",
+                "meta": {
+                  "colour": "red"
+                },
+                "$id": "filled",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$sequence": "1",
+                "label": null,
+                "$collection": "addresses"
+              }
+            }
+          ]
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$document": {
+                "addr": "x",
+                "meta": {
+                  "colour": "red"
+                },
+                "$id": "filled",
+                "$createdAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$updatedAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$permissions": [],
+                "$sequence": "1",
+                "label": null,
+                "$collection": "addresses"
+              }
+            },
+            "method": "getId",
+            "args": {}
+          },
+          "expect": "filled"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o696"
+            },
+            "method": "skipValidation",
+            "args": {
+              "callback": {
+                "steps": [
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "class": "Query",
+                      "method": "lessThan",
+                      "args": {
+                        "attribute": "meta",
+                        "value": "x"
+                      },
+                      "as": "o712"
+                    }
+                  },
+                  {
+                    "op": "object.call",
+                    "args": {
+                      "this": {
+                        "$obj": "o696"
+                      },
+                      "method": "find",
+                      "args": {
+                        "collection": "addresses",
+                        "queries": [
+                          {
+                            "$obj": "o712"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "bind": "s1361",
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Query method lessThan not supported for object attributes"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

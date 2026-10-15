@@ -30,6 +30,10 @@ class RecordingSQLite extends \Utopia\Database\Adapter\SQLite
 {
 }
 
+class RecordingEmulatedSQLite extends \Tests\Compat\Database\Fixture\EmulatedSQLite
+{
+}
+
 class RecordingMemory extends \Utopia\Database\Adapter\Memory
 {
 }
@@ -59,6 +63,13 @@ class PeerDatabase extends RecordingDatabase
     public ?int $opened = null;
 }
 
+class RecordingProfiler extends \Utopia\Database\Profiler
+{
+    public function __construct(public readonly \Utopia\Database\Profiler $inner)
+    {
+    }
+}
+
 class RecordingPostgresTest extends \PHPUnit\Framework\TestCase
 {
     public function setUp(): void
@@ -79,4 +90,11 @@ class RecordingSharedTest extends \PHPUnit\Framework\TestCase
     public function tearDown(): void
     {
     }
+}
+
+// ops/core.php's unreachable Redis client, which Fixture\UnreachableRedisCommands::declare() declares.
+namespace Tests\Compat\Database\Fixture;
+
+class UnreachableRedis extends \Redis
+{
 }

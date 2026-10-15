@@ -3,562 +3,1936 @@
   "cases": [
     {
       "name": "Exception",
-      "op": "error.new",
-      "args": {
-        "class": "Utopia\\Database\\Exception",
-        "message": "base"
-      },
-      "expect": {
-        "class": "Utopia\\Database\\Exception",
-        "message": "base",
-        "code": 0,
-        "attribute": null,
-        "database": true
-      }
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Exception",
+            "args": {
+              "message": "base"
+            },
+            "as": "e366"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "base"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e366"
+            },
+            "method": "getMessage",
+            "args": {}
+          },
+          "expect": "base"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e366"
+            },
+            "method": "getCode",
+            "args": {}
+          },
+          "expect": 0
+        },
+        {
+          "op": "object.get",
+          "args": {
+            "this": {
+              "$obj": "e366"
+            },
+            "property": "state"
+          },
+          "expect": null
+        }
+      ]
     },
     {
       "name": "Exception\\Authorization",
-      "op": "error.new",
-      "args": {
-        "class": "Utopia\\Database\\Exception\\Authorization",
-        "message": "Authorization failed",
-        "code": 7
-      },
-      "expect": {
-        "class": "Utopia\\Database\\Exception\\Authorization",
-        "message": "Authorization failed",
-        "code": 7,
-        "attribute": null,
-        "database": true
-      }
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Exception\\Authorization",
+            "args": {
+              "message": "Authorization failed",
+              "code": 7
+            },
+            "as": "e367"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Authorization",
+              "message": "Authorization failed"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e367"
+            },
+            "method": "getMessage",
+            "args": {}
+          },
+          "expect": "Authorization failed"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e367"
+            },
+            "method": "getCode",
+            "args": {}
+          },
+          "expect": 7
+        },
+        {
+          "op": "object.get",
+          "args": {
+            "this": {
+              "$obj": "e367"
+            },
+            "property": "state"
+          },
+          "expect": null
+        }
+      ]
     },
     {
       "name": "Exception\\Character",
-      "op": "error.new",
-      "args": {
-        "class": "Utopia\\Database\\Exception\\Character",
-        "message": "Character failed",
-        "code": 7
-      },
-      "expect": {
-        "class": "Utopia\\Database\\Exception\\Character",
-        "message": "Character failed",
-        "code": 7,
-        "attribute": null,
-        "database": true
-      }
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Exception\\Character",
+            "args": {
+              "message": "Character failed",
+              "code": 7
+            },
+            "as": "e368"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Character",
+              "message": "Character failed"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e368"
+            },
+            "method": "getMessage",
+            "args": {}
+          },
+          "expect": "Character failed"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e368"
+            },
+            "method": "getCode",
+            "args": {}
+          },
+          "expect": 7
+        },
+        {
+          "op": "object.get",
+          "args": {
+            "this": {
+              "$obj": "e368"
+            },
+            "property": "state"
+          },
+          "expect": null
+        }
+      ]
     },
     {
       "name": "Exception\\Conflict",
-      "op": "error.new",
-      "args": {
-        "class": "Utopia\\Database\\Exception\\Conflict",
-        "message": "Conflict failed",
-        "code": 7
-      },
-      "expect": {
-        "class": "Utopia\\Database\\Exception\\Conflict",
-        "message": "Conflict failed",
-        "code": 7,
-        "attribute": null,
-        "database": true
-      }
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Exception\\Conflict",
+            "args": {
+              "message": "Conflict failed",
+              "code": 7
+            },
+            "as": "e369"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Conflict",
+              "message": "Conflict failed"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e369"
+            },
+            "method": "getMessage",
+            "args": {}
+          },
+          "expect": "Conflict failed"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e369"
+            },
+            "method": "getCode",
+            "args": {}
+          },
+          "expect": 7
+        },
+        {
+          "op": "object.get",
+          "args": {
+            "this": {
+              "$obj": "e369"
+            },
+            "property": "state"
+          },
+          "expect": null
+        }
+      ]
     },
     {
       "name": "Exception\\Dependency",
-      "op": "error.new",
-      "args": {
-        "class": "Utopia\\Database\\Exception\\Dependency",
-        "message": "Dependency failed",
-        "code": 7
-      },
-      "expect": {
-        "class": "Utopia\\Database\\Exception\\Dependency",
-        "message": "Dependency failed",
-        "code": 7,
-        "attribute": null,
-        "database": true
-      }
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Exception\\Dependency",
+            "args": {
+              "message": "Dependency failed",
+              "code": 7
+            },
+            "as": "e370"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Dependency",
+              "message": "Dependency failed"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e370"
+            },
+            "method": "getMessage",
+            "args": {}
+          },
+          "expect": "Dependency failed"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e370"
+            },
+            "method": "getCode",
+            "args": {}
+          },
+          "expect": 7
+        },
+        {
+          "op": "object.get",
+          "args": {
+            "this": {
+              "$obj": "e370"
+            },
+            "property": "state"
+          },
+          "expect": null
+        }
+      ]
     },
     {
       "name": "Exception\\Duplicate",
-      "op": "error.new",
-      "args": {
-        "class": "Utopia\\Database\\Exception\\Duplicate",
-        "message": "Duplicate failed",
-        "code": 7
-      },
-      "expect": {
-        "class": "Utopia\\Database\\Exception\\Duplicate",
-        "message": "Duplicate failed",
-        "code": 7,
-        "attribute": null,
-        "database": true
-      }
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Exception\\Duplicate",
+            "args": {
+              "message": "Duplicate failed",
+              "code": 7
+            },
+            "as": "e371"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Duplicate failed"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e371"
+            },
+            "method": "getMessage",
+            "args": {}
+          },
+          "expect": "Duplicate failed"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e371"
+            },
+            "method": "getCode",
+            "args": {}
+          },
+          "expect": 7
+        },
+        {
+          "op": "object.get",
+          "args": {
+            "this": {
+              "$obj": "e371"
+            },
+            "property": "state"
+          },
+          "expect": null
+        }
+      ]
     },
     {
       "name": "Exception\\Index",
-      "op": "error.new",
-      "args": {
-        "class": "Utopia\\Database\\Exception\\Index",
-        "message": "Index failed",
-        "code": 7
-      },
-      "expect": {
-        "class": "Utopia\\Database\\Exception\\Index",
-        "message": "Index failed",
-        "code": 7,
-        "attribute": null,
-        "database": true
-      }
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Exception\\Index",
+            "args": {
+              "message": "Index failed",
+              "code": 7
+            },
+            "as": "e372"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Index",
+              "message": "Index failed"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e372"
+            },
+            "method": "getMessage",
+            "args": {}
+          },
+          "expect": "Index failed"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e372"
+            },
+            "method": "getCode",
+            "args": {}
+          },
+          "expect": 7
+        },
+        {
+          "op": "object.get",
+          "args": {
+            "this": {
+              "$obj": "e372"
+            },
+            "property": "state"
+          },
+          "expect": null
+        }
+      ]
     },
     {
       "name": "Exception\\Limit",
-      "op": "error.new",
-      "args": {
-        "class": "Utopia\\Database\\Exception\\Limit",
-        "message": "Limit failed",
-        "code": 7
-      },
-      "expect": {
-        "class": "Utopia\\Database\\Exception\\Limit",
-        "message": "Limit failed",
-        "code": 7,
-        "attribute": null,
-        "database": true
-      }
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Exception\\Limit",
+            "args": {
+              "message": "Limit failed",
+              "code": 7
+            },
+            "as": "e373"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Limit",
+              "message": "Limit failed"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e373"
+            },
+            "method": "getMessage",
+            "args": {}
+          },
+          "expect": "Limit failed"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e373"
+            },
+            "method": "getCode",
+            "args": {}
+          },
+          "expect": 7
+        },
+        {
+          "op": "object.get",
+          "args": {
+            "this": {
+              "$obj": "e373"
+            },
+            "property": "state"
+          },
+          "expect": null
+        }
+      ]
     },
     {
       "name": "Exception\\NotFound",
-      "op": "error.new",
-      "args": {
-        "class": "Utopia\\Database\\Exception\\NotFound",
-        "message": "NotFound failed",
-        "code": 7
-      },
-      "expect": {
-        "class": "Utopia\\Database\\Exception\\NotFound",
-        "message": "NotFound failed",
-        "code": 7,
-        "attribute": null,
-        "database": true
-      }
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Exception\\NotFound",
+            "args": {
+              "message": "NotFound failed",
+              "code": 7
+            },
+            "as": "e374"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "NotFound failed"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e374"
+            },
+            "method": "getMessage",
+            "args": {}
+          },
+          "expect": "NotFound failed"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e374"
+            },
+            "method": "getCode",
+            "args": {}
+          },
+          "expect": 7
+        },
+        {
+          "op": "object.get",
+          "args": {
+            "this": {
+              "$obj": "e374"
+            },
+            "property": "state"
+          },
+          "expect": null
+        }
+      ]
     },
     {
       "name": "Exception\\Operator",
-      "op": "error.new",
-      "args": {
-        "class": "Utopia\\Database\\Exception\\Operator",
-        "message": "Operator failed",
-        "code": 7
-      },
-      "expect": {
-        "class": "Utopia\\Database\\Exception\\Operator",
-        "message": "Operator failed",
-        "code": 7,
-        "attribute": null,
-        "database": true
-      }
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Exception\\Operator",
+            "args": {
+              "message": "Operator failed",
+              "code": 7
+            },
+            "as": "e375"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Operator",
+              "message": "Operator failed"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e375"
+            },
+            "method": "getMessage",
+            "args": {}
+          },
+          "expect": "Operator failed"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e375"
+            },
+            "method": "getCode",
+            "args": {}
+          },
+          "expect": 7
+        },
+        {
+          "op": "object.get",
+          "args": {
+            "this": {
+              "$obj": "e375"
+            },
+            "property": "state"
+          },
+          "expect": null
+        }
+      ]
     },
     {
       "name": "Exception\\Order",
-      "op": "error.new",
-      "args": {
-        "class": "Utopia\\Database\\Exception\\Order",
-        "message": "Order failed",
-        "code": 7
-      },
-      "expect": {
-        "class": "Utopia\\Database\\Exception\\Order",
-        "message": "Order failed",
-        "code": 7,
-        "attribute": null,
-        "database": true
-      }
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Exception\\Order",
+            "args": {
+              "message": "Order failed",
+              "code": 7
+            },
+            "as": "e376"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Order",
+              "message": "Order failed"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e376"
+            },
+            "method": "getMessage",
+            "args": {}
+          },
+          "expect": "Order failed"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e376"
+            },
+            "method": "getCode",
+            "args": {}
+          },
+          "expect": 7
+        },
+        {
+          "op": "object.get",
+          "args": {
+            "this": {
+              "$obj": "e376"
+            },
+            "property": "state"
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e376"
+            },
+            "method": "getAttribute",
+            "args": {}
+          },
+          "expect": null
+        }
+      ]
     },
     {
       "name": "Exception\\Query",
-      "op": "error.new",
-      "args": {
-        "class": "Utopia\\Database\\Exception\\Query",
-        "message": "Query failed",
-        "code": 7
-      },
-      "expect": {
-        "class": "Utopia\\Database\\Exception\\Query",
-        "message": "Query failed",
-        "code": 7,
-        "attribute": null,
-        "database": true
-      }
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Exception\\Query",
+            "args": {
+              "message": "Query failed",
+              "code": 7
+            },
+            "as": "e377"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Query failed"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e377"
+            },
+            "method": "getMessage",
+            "args": {}
+          },
+          "expect": "Query failed"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e377"
+            },
+            "method": "getCode",
+            "args": {}
+          },
+          "expect": 7
+        },
+        {
+          "op": "object.get",
+          "args": {
+            "this": {
+              "$obj": "e377"
+            },
+            "property": "state"
+          },
+          "expect": null
+        }
+      ]
     },
     {
       "name": "Exception\\Relationship",
-      "op": "error.new",
-      "args": {
-        "class": "Utopia\\Database\\Exception\\Relationship",
-        "message": "Relationship failed",
-        "code": 7
-      },
-      "expect": {
-        "class": "Utopia\\Database\\Exception\\Relationship",
-        "message": "Relationship failed",
-        "code": 7,
-        "attribute": null,
-        "database": true
-      }
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Exception\\Relationship",
+            "args": {
+              "message": "Relationship failed",
+              "code": 7
+            },
+            "as": "e378"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Relationship",
+              "message": "Relationship failed"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e378"
+            },
+            "method": "getMessage",
+            "args": {}
+          },
+          "expect": "Relationship failed"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e378"
+            },
+            "method": "getCode",
+            "args": {}
+          },
+          "expect": 7
+        },
+        {
+          "op": "object.get",
+          "args": {
+            "this": {
+              "$obj": "e378"
+            },
+            "property": "state"
+          },
+          "expect": null
+        }
+      ]
     },
     {
       "name": "Exception\\Restricted",
-      "op": "error.new",
-      "args": {
-        "class": "Utopia\\Database\\Exception\\Restricted",
-        "message": "Restricted failed",
-        "code": 7
-      },
-      "expect": {
-        "class": "Utopia\\Database\\Exception\\Restricted",
-        "message": "Restricted failed",
-        "code": 7,
-        "attribute": null,
-        "database": true
-      }
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Exception\\Restricted",
+            "args": {
+              "message": "Restricted failed",
+              "code": 7
+            },
+            "as": "e379"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Restricted",
+              "message": "Restricted failed"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e379"
+            },
+            "method": "getMessage",
+            "args": {}
+          },
+          "expect": "Restricted failed"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e379"
+            },
+            "method": "getCode",
+            "args": {}
+          },
+          "expect": 7
+        },
+        {
+          "op": "object.get",
+          "args": {
+            "this": {
+              "$obj": "e379"
+            },
+            "property": "state"
+          },
+          "expect": null
+        }
+      ]
     },
     {
       "name": "Exception\\Structure",
-      "op": "error.new",
-      "args": {
-        "class": "Utopia\\Database\\Exception\\Structure",
-        "message": "Structure failed",
-        "code": 7
-      },
-      "expect": {
-        "class": "Utopia\\Database\\Exception\\Structure",
-        "message": "Structure failed",
-        "code": 7,
-        "attribute": null,
-        "database": true
-      }
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Exception\\Structure",
+            "args": {
+              "message": "Structure failed",
+              "code": 7
+            },
+            "as": "e380"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Structure",
+              "message": "Structure failed"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e380"
+            },
+            "method": "getMessage",
+            "args": {}
+          },
+          "expect": "Structure failed"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e380"
+            },
+            "method": "getCode",
+            "args": {}
+          },
+          "expect": 7
+        },
+        {
+          "op": "object.get",
+          "args": {
+            "this": {
+              "$obj": "e380"
+            },
+            "property": "state"
+          },
+          "expect": null
+        }
+      ]
     },
     {
       "name": "Exception\\Timeout",
-      "op": "error.new",
-      "args": {
-        "class": "Utopia\\Database\\Exception\\Timeout",
-        "message": "Timeout failed",
-        "code": 7
-      },
-      "expect": {
-        "class": "Utopia\\Database\\Exception\\Timeout",
-        "message": "Timeout failed",
-        "code": 7,
-        "attribute": null,
-        "database": true
-      }
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Exception\\Timeout",
+            "args": {
+              "message": "Timeout failed",
+              "code": 7
+            },
+            "as": "e381"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Timeout",
+              "message": "Timeout failed"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e381"
+            },
+            "method": "getMessage",
+            "args": {}
+          },
+          "expect": "Timeout failed"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e381"
+            },
+            "method": "getCode",
+            "args": {}
+          },
+          "expect": 7
+        },
+        {
+          "op": "object.get",
+          "args": {
+            "this": {
+              "$obj": "e381"
+            },
+            "property": "state"
+          },
+          "expect": null
+        }
+      ]
     },
     {
       "name": "Exception\\Transaction",
-      "op": "error.new",
-      "args": {
-        "class": "Utopia\\Database\\Exception\\Transaction",
-        "message": "Transaction failed",
-        "code": 7
-      },
-      "expect": {
-        "class": "Utopia\\Database\\Exception\\Transaction",
-        "message": "Transaction failed",
-        "code": 7,
-        "attribute": null,
-        "database": true
-      }
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Exception\\Transaction",
+            "args": {
+              "message": "Transaction failed",
+              "code": 7
+            },
+            "as": "e382"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Transaction",
+              "message": "Transaction failed"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e382"
+            },
+            "method": "getMessage",
+            "args": {}
+          },
+          "expect": "Transaction failed"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e382"
+            },
+            "method": "getCode",
+            "args": {}
+          },
+          "expect": 7
+        },
+        {
+          "op": "object.get",
+          "args": {
+            "this": {
+              "$obj": "e382"
+            },
+            "property": "state"
+          },
+          "expect": null
+        }
+      ]
     },
     {
       "name": "Exception\\Truncate",
-      "op": "error.new",
-      "args": {
-        "class": "Utopia\\Database\\Exception\\Truncate",
-        "message": "Truncate failed",
-        "code": 7
-      },
-      "expect": {
-        "class": "Utopia\\Database\\Exception\\Truncate",
-        "message": "Truncate failed",
-        "code": 7,
-        "attribute": null,
-        "database": true
-      }
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Exception\\Truncate",
+            "args": {
+              "message": "Truncate failed",
+              "code": 7
+            },
+            "as": "e383"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Truncate",
+              "message": "Truncate failed"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e383"
+            },
+            "method": "getMessage",
+            "args": {}
+          },
+          "expect": "Truncate failed"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e383"
+            },
+            "method": "getCode",
+            "args": {}
+          },
+          "expect": 7
+        },
+        {
+          "op": "object.get",
+          "args": {
+            "this": {
+              "$obj": "e383"
+            },
+            "property": "state"
+          },
+          "expect": null
+        }
+      ]
     },
     {
       "name": "Exception\\Type",
-      "op": "error.new",
-      "args": {
-        "class": "Utopia\\Database\\Exception\\Type",
-        "message": "Type failed",
-        "code": 7
-      },
-      "expect": {
-        "class": "Utopia\\Database\\Exception\\Type",
-        "message": "Type failed",
-        "code": 7,
-        "attribute": null,
-        "database": true
-      }
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Exception\\Type",
+            "args": {
+              "message": "Type failed",
+              "code": 7
+            },
+            "as": "e384"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Type",
+              "message": "Type failed"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e384"
+            },
+            "method": "getMessage",
+            "args": {}
+          },
+          "expect": "Type failed"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e384"
+            },
+            "method": "getCode",
+            "args": {}
+          },
+          "expect": 7
+        },
+        {
+          "op": "object.get",
+          "args": {
+            "this": {
+              "$obj": "e384"
+            },
+            "property": "state"
+          },
+          "expect": null
+        }
+      ]
     },
     {
       "name": "Exception\\Unique",
-      "op": "error.new",
-      "args": {
-        "class": "Utopia\\Database\\Exception\\Unique",
-        "message": "Unique failed",
-        "code": 7
-      },
-      "expect": {
-        "class": "Utopia\\Database\\Exception\\Unique",
-        "message": "Unique failed",
-        "code": 7,
-        "attribute": null,
-        "database": true
-      }
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Exception\\Unique",
+            "args": {
+              "message": "Unique failed",
+              "code": 7
+            },
+            "as": "e385"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Unique",
+              "message": "Unique failed"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e385"
+            },
+            "method": "getMessage",
+            "args": {}
+          },
+          "expect": "Unique failed"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e385"
+            },
+            "method": "getCode",
+            "args": {}
+          },
+          "expect": 7
+        },
+        {
+          "op": "object.get",
+          "args": {
+            "this": {
+              "$obj": "e385"
+            },
+            "property": "state"
+          },
+          "expect": null
+        }
+      ]
     },
     {
       "name": "string code \"12\"",
-      "op": "error.new",
-      "args": {
-        "class": "Utopia\\Database\\Exception",
-        "message": "m",
-        "code": "12"
-      },
-      "expect": {
-        "class": "Utopia\\Database\\Exception",
-        "message": "m",
-        "code": 12,
-        "attribute": null,
-        "database": true
-      }
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Exception",
+            "args": {
+              "message": "m",
+              "code": "12"
+            },
+            "as": "e386"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "m"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e386"
+            },
+            "method": "getMessage",
+            "args": {}
+          },
+          "expect": "m"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e386"
+            },
+            "method": "getCode",
+            "args": {}
+          },
+          "expect": 12
+        },
+        {
+          "op": "object.get",
+          "args": {
+            "this": {
+              "$obj": "e386"
+            },
+            "property": "state"
+          },
+          "expect": "12"
+        }
+      ]
     },
     {
       "name": "string code \" 12\"",
-      "op": "error.new",
-      "args": {
-        "class": "Utopia\\Database\\Exception",
-        "message": "m",
-        "code": " 12"
-      },
-      "expect": {
-        "class": "Utopia\\Database\\Exception",
-        "message": "m",
-        "code": 12,
-        "attribute": null,
-        "database": true
-      }
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Exception",
+            "args": {
+              "message": "m",
+              "code": " 12"
+            },
+            "as": "e387"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "m"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e387"
+            },
+            "method": "getMessage",
+            "args": {}
+          },
+          "expect": "m"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e387"
+            },
+            "method": "getCode",
+            "args": {}
+          },
+          "expect": 12
+        },
+        {
+          "op": "object.get",
+          "args": {
+            "this": {
+              "$obj": "e387"
+            },
+            "property": "state"
+          },
+          "expect": " 12"
+        }
+      ]
     },
     {
       "name": "string code \"12 \"",
-      "op": "error.new",
-      "args": {
-        "class": "Utopia\\Database\\Exception",
-        "message": "m",
-        "code": "12 "
-      },
-      "expect": {
-        "class": "Utopia\\Database\\Exception",
-        "message": "m",
-        "code": 12,
-        "attribute": null,
-        "database": true
-      }
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Exception",
+            "args": {
+              "message": "m",
+              "code": "12 "
+            },
+            "as": "e388"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "m"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e388"
+            },
+            "method": "getMessage",
+            "args": {}
+          },
+          "expect": "m"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e388"
+            },
+            "method": "getCode",
+            "args": {}
+          },
+          "expect": 12
+        },
+        {
+          "op": "object.get",
+          "args": {
+            "this": {
+              "$obj": "e388"
+            },
+            "property": "state"
+          },
+          "expect": "12 "
+        }
+      ]
     },
     {
       "name": "string code \"1.9\"",
-      "op": "error.new",
-      "args": {
-        "class": "Utopia\\Database\\Exception",
-        "message": "m",
-        "code": "1.9"
-      },
-      "expect": {
-        "class": "Utopia\\Database\\Exception",
-        "message": "m",
-        "code": 1,
-        "attribute": null,
-        "database": true
-      }
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Exception",
+            "args": {
+              "message": "m",
+              "code": "1.9"
+            },
+            "as": "e389"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "m"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e389"
+            },
+            "method": "getMessage",
+            "args": {}
+          },
+          "expect": "m"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e389"
+            },
+            "method": "getCode",
+            "args": {}
+          },
+          "expect": 1
+        },
+        {
+          "op": "object.get",
+          "args": {
+            "this": {
+              "$obj": "e389"
+            },
+            "property": "state"
+          },
+          "expect": "1.9"
+        }
+      ]
     },
     {
       "name": "string code \"1e3\"",
-      "op": "error.new",
-      "args": {
-        "class": "Utopia\\Database\\Exception",
-        "message": "m",
-        "code": "1e3"
-      },
-      "expect": {
-        "class": "Utopia\\Database\\Exception",
-        "message": "m",
-        "code": 1000,
-        "attribute": null,
-        "database": true
-      }
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Exception",
+            "args": {
+              "message": "m",
+              "code": "1e3"
+            },
+            "as": "e390"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "m"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e390"
+            },
+            "method": "getMessage",
+            "args": {}
+          },
+          "expect": "m"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e390"
+            },
+            "method": "getCode",
+            "args": {}
+          },
+          "expect": 1000
+        },
+        {
+          "op": "object.get",
+          "args": {
+            "this": {
+              "$obj": "e390"
+            },
+            "property": "state"
+          },
+          "expect": "1e3"
+        }
+      ]
     },
     {
       "name": "string code \"1e100\"",
-      "op": "error.new",
-      "args": {
-        "class": "Utopia\\Database\\Exception",
-        "message": "m",
-        "code": "1e100"
-      },
-      "expect": {
-        "class": "Utopia\\Database\\Exception",
-        "message": "m",
-        "code": 9223372036854775807,
-        "attribute": null,
-        "database": true
-      }
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Exception",
+            "args": {
+              "message": "m",
+              "code": "1e100"
+            },
+            "as": "e391"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "m"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e391"
+            },
+            "method": "getMessage",
+            "args": {}
+          },
+          "expect": "m"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e391"
+            },
+            "method": "getCode",
+            "args": {}
+          },
+          "expect": 9223372036854775807
+        },
+        {
+          "op": "object.get",
+          "args": {
+            "this": {
+              "$obj": "e391"
+            },
+            "property": "state"
+          },
+          "expect": "1e100"
+        }
+      ]
     },
     {
       "name": "string code \"-5\"",
-      "op": "error.new",
-      "args": {
-        "class": "Utopia\\Database\\Exception",
-        "message": "m",
-        "code": "-5"
-      },
-      "expect": {
-        "class": "Utopia\\Database\\Exception",
-        "message": "m",
-        "code": -5,
-        "attribute": null,
-        "database": true
-      }
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Exception",
+            "args": {
+              "message": "m",
+              "code": "-5"
+            },
+            "as": "e392"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "m"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e392"
+            },
+            "method": "getMessage",
+            "args": {}
+          },
+          "expect": "m"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e392"
+            },
+            "method": "getCode",
+            "args": {}
+          },
+          "expect": -5
+        },
+        {
+          "op": "object.get",
+          "args": {
+            "this": {
+              "$obj": "e392"
+            },
+            "property": "state"
+          },
+          "expect": "-5"
+        }
+      ]
     },
     {
       "name": "string code \"HY000\"",
-      "op": "error.new",
-      "args": {
-        "class": "Utopia\\Database\\Exception",
-        "message": "m",
-        "code": "HY000"
-      },
-      "expect": {
-        "class": "Utopia\\Database\\Exception",
-        "message": "m",
-        "code": 0,
-        "attribute": null,
-        "database": true
-      }
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Exception",
+            "args": {
+              "message": "m",
+              "code": "HY000"
+            },
+            "as": "e393"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "m"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e393"
+            },
+            "method": "getMessage",
+            "args": {}
+          },
+          "expect": "m"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e393"
+            },
+            "method": "getCode",
+            "args": {}
+          },
+          "expect": 0
+        },
+        {
+          "op": "object.get",
+          "args": {
+            "this": {
+              "$obj": "e393"
+            },
+            "property": "state"
+          },
+          "expect": "HY000"
+        }
+      ]
     },
     {
       "name": "string code \"\"",
-      "op": "error.new",
-      "args": {
-        "class": "Utopia\\Database\\Exception",
-        "message": "m",
-        "code": ""
-      },
-      "expect": {
-        "class": "Utopia\\Database\\Exception",
-        "message": "m",
-        "code": 0,
-        "attribute": null,
-        "database": true
-      }
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Exception",
+            "args": {
+              "message": "m",
+              "code": ""
+            },
+            "as": "e394"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "m"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e394"
+            },
+            "method": "getMessage",
+            "args": {}
+          },
+          "expect": "m"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e394"
+            },
+            "method": "getCode",
+            "args": {}
+          },
+          "expect": 0
+        },
+        {
+          "op": "object.get",
+          "args": {
+            "this": {
+              "$obj": "e394"
+            },
+            "property": "state"
+          },
+          "expect": ""
+        }
+      ]
     },
     {
       "name": "string code \"0x1A\"",
-      "op": "error.new",
-      "args": {
-        "class": "Utopia\\Database\\Exception",
-        "message": "m",
-        "code": "0x1A"
-      },
-      "expect": {
-        "class": "Utopia\\Database\\Exception",
-        "message": "m",
-        "code": 0,
-        "attribute": null,
-        "database": true
-      }
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Exception",
+            "args": {
+              "message": "m",
+              "code": "0x1A"
+            },
+            "as": "e395"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "m"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e395"
+            },
+            "method": "getMessage",
+            "args": {}
+          },
+          "expect": "m"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e395"
+            },
+            "method": "getCode",
+            "args": {}
+          },
+          "expect": 0
+        },
+        {
+          "op": "object.get",
+          "args": {
+            "this": {
+              "$obj": "e395"
+            },
+            "property": "state"
+          },
+          "expect": "0x1A"
+        }
+      ]
     },
     {
       "name": "string code \"23505\"",
-      "op": "error.new",
-      "args": {
-        "class": "Utopia\\Database\\Exception",
-        "message": "m",
-        "code": "23505"
-      },
-      "expect": {
-        "class": "Utopia\\Database\\Exception",
-        "message": "m",
-        "code": 23505,
-        "attribute": null,
-        "database": true
-      }
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Exception",
+            "args": {
+              "message": "m",
+              "code": "23505"
+            },
+            "as": "e396"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "m"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e396"
+            },
+            "method": "getMessage",
+            "args": {}
+          },
+          "expect": "m"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e396"
+            },
+            "method": "getCode",
+            "args": {}
+          },
+          "expect": 23505
+        },
+        {
+          "op": "object.get",
+          "args": {
+            "this": {
+              "$obj": "e396"
+            },
+            "property": "state"
+          },
+          "expect": "23505"
+        }
+      ]
     },
     {
       "name": "string code \"9223372036854775808\"",
-      "op": "error.new",
-      "args": {
-        "class": "Utopia\\Database\\Exception",
-        "message": "m",
-        "code": "9223372036854775808"
-      },
-      "expect": {
-        "class": "Utopia\\Database\\Exception",
-        "message": "m",
-        "code": 9223372036854775807,
-        "attribute": null,
-        "database": true
-      }
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Exception",
+            "args": {
+              "message": "m",
+              "code": "9223372036854775808"
+            },
+            "as": "e397"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "m"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e397"
+            },
+            "method": "getMessage",
+            "args": {}
+          },
+          "expect": "m"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e397"
+            },
+            "method": "getCode",
+            "args": {}
+          },
+          "expect": 9223372036854775807
+        },
+        {
+          "op": "object.get",
+          "args": {
+            "this": {
+              "$obj": "e397"
+            },
+            "property": "state"
+          },
+          "expect": "9223372036854775808"
+        }
+      ]
     },
     {
       "name": "Order getAttribute",
-      "op": "error.new",
-      "args": {
-        "class": "Utopia\\Database\\Exception\\Order",
-        "message": "Order attribute not found",
-        "attribute": "name"
-      },
-      "expect": {
-        "class": "Utopia\\Database\\Exception\\Order",
-        "message": "Order attribute not found",
-        "code": 0,
-        "attribute": "name",
-        "database": true
-      }
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Exception\\Order",
+            "args": {
+              "message": "Order attribute not found",
+              "attribute": "name"
+            },
+            "as": "e398"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Order",
+              "message": "Order attribute not found"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e398"
+            },
+            "method": "getMessage",
+            "args": {}
+          },
+          "expect": "Order attribute not found"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e398"
+            },
+            "method": "getCode",
+            "args": {}
+          },
+          "expect": 0
+        },
+        {
+          "op": "object.get",
+          "args": {
+            "this": {
+              "$obj": "e398"
+            },
+            "property": "state"
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e398"
+            },
+            "method": "getAttribute",
+            "args": {}
+          },
+          "expect": "name"
+        }
+      ]
     },
     {
       "name": "Order without an attribute",
-      "op": "error.new",
-      "args": {
-        "class": "Utopia\\Database\\Exception\\Order",
-        "message": "m"
-      },
-      "expect": {
-        "class": "Utopia\\Database\\Exception\\Order",
-        "message": "m",
-        "code": 0,
-        "attribute": null,
-        "database": true
-      }
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Exception\\Order",
+            "args": {
+              "message": "m"
+            },
+            "as": "e399"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Order",
+              "message": "m"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e399"
+            },
+            "method": "getMessage",
+            "args": {}
+          },
+          "expect": "m"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e399"
+            },
+            "method": "getCode",
+            "args": {}
+          },
+          "expect": 0
+        },
+        {
+          "op": "object.get",
+          "args": {
+            "this": {
+              "$obj": "e399"
+            },
+            "property": "state"
+          },
+          "expect": null
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e399"
+            },
+            "method": "getAttribute",
+            "args": {}
+          },
+          "expect": null
+        }
+      ]
     },
     {
       "name": "Order with a string code",
-      "op": "error.new",
-      "args": {
-        "class": "Utopia\\Database\\Exception\\Order",
-        "message": "m",
-        "code": "42",
-        "attribute": ""
-      },
-      "expect": {
-        "class": "Utopia\\Database\\Exception\\Order",
-        "message": "m",
-        "code": 42,
-        "attribute": "",
-        "database": true
-      }
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Exception\\Order",
+            "args": {
+              "message": "m",
+              "code": "42",
+              "attribute": ""
+            },
+            "as": "e400"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Order",
+              "message": "m"
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e400"
+            },
+            "method": "getMessage",
+            "args": {}
+          },
+          "expect": "m"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e400"
+            },
+            "method": "getCode",
+            "args": {}
+          },
+          "expect": 42
+        },
+        {
+          "op": "object.get",
+          "args": {
+            "this": {
+              "$obj": "e400"
+            },
+            "property": "state"
+          },
+          "expect": "42"
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "e400"
+            },
+            "method": "getAttribute",
+            "args": {}
+          },
+          "expect": ""
+        }
+      ]
     }
   ]
 }

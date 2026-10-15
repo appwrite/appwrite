@@ -1,0 +1,418 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/e2e/Adapter/Scopes/FeatureTests.php",
+    "vendor/utopia-php/database/tests/e2e/Adapter/SQLiteTest.php"
+  ],
+  "cases": [
+    {
+      "name": "FeatureTests::testSpatialFeatureIsWhetherAPointAttributeCanBeCreated",
+      "state": [
+        "sqlite"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "sqlite",
+            "emulate_mysql": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "users"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:x"
+          },
+          "expect": {
+            "$authorization": true
+          }
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "hasFeature",
+            "args": {
+              "feature": "Utopia\\Database\\Adapter\\Feature\\Spatial"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "database.profile",
+          "args": {},
+          "expect": {
+            "$value": "Adapter\\Profile",
+            "fields": {
+              "limits": {
+                "$value": "Adapter\\Limits",
+                "fields": {
+                  "string": 4294967295,
+                  "varchar": 16381,
+                  "integer": 4294967295,
+                  "bigInteger": 9223372036854775807,
+                  "attributes": 1017,
+                  "indexes": 64,
+                  "defaultAttributes": 7,
+                  "defaultIndexes": 6,
+                  "indexLength": 768,
+                  "uidLength": 36,
+                  "documentSize": 65535,
+                  "minDateTime": {
+                    "$datetime": "1000-01-01T00:00:00.000000+00:00"
+                  },
+                  "maxDateTime": {
+                    "$datetime": "9999-12-31T23:59:59.000000+00:00"
+                  },
+                  "idType": {
+                    "$enum": "Query\\Schema\\ColumnType::Integer"
+                  },
+                  "keywords": [
+                    "ABORT",
+                    "ACTION",
+                    "ADD",
+                    "AFTER",
+                    "ALL",
+                    "ALTER",
+                    "ALWAYS",
+                    "ANALYZE",
+                    "AND",
+                    "AS",
+                    "ASC",
+                    "ATTACH",
+                    "AUTOINCREMENT",
+                    "BEFORE",
+                    "BEGIN",
+                    "BETWEEN",
+                    "BY",
+                    "CASCADE",
+                    "CASE",
+                    "CAST",
+                    "CHECK",
+                    "COLLATE",
+                    "COLUMN",
+                    "COMMIT",
+                    "CONFLICT",
+                    "CONSTRAINT",
+                    "CREATE",
+                    "CROSS",
+                    "CURRENT",
+                    "CURRENT_DATE",
+                    "CURRENT_TIME",
+                    "CURRENT_TIMESTAMP",
+                    "DATABASE",
+                    "DEFAULT",
+                    "DEFERRABLE",
+                    "DEFERRED",
+                    "DELETE",
+                    "DESC",
+                    "DETACH",
+                    "DISTINCT",
+                    "DO",
+                    "DROP",
+                    "EACH",
+                    "ELSE",
+                    "END",
+                    "ESCAPE",
+                    "EXCEPT",
+                    "EXCLUDE",
+                    "EXCLUSIVE",
+                    "EXISTS",
+                    "EXPLAIN",
+                    "FAIL",
+                    "FILTER",
+                    "FIRST",
+                    "FOLLOWING",
+                    "FOR",
+                    "FOREIGN",
+                    "FROM",
+                    "FULL",
+                    "GENERATED",
+                    "GLOB",
+                    "GROUP",
+                    "GROUPS",
+                    "HAVING",
+                    "IF",
+                    "IGNORE",
+                    "IMMEDIATE",
+                    "IN",
+                    "INDEX",
+                    "INDEXED",
+                    "INITIALLY",
+                    "INNER",
+                    "INSERT",
+                    "INSTEAD",
+                    "INTERSECT",
+                    "INTO",
+                    "IS",
+                    "ISNULL",
+                    "JOIN",
+                    "KEY",
+                    "LAST",
+                    "LEFT",
+                    "LIKE",
+                    "LIMIT",
+                    "MATCH",
+                    "MATERIALIZED",
+                    "NATURAL",
+                    "NO",
+                    "NOT",
+                    "NOTHING",
+                    "NOTNULL",
+                    "NULL",
+                    "NULLS",
+                    "OF",
+                    "OFFSET",
+                    "ON",
+                    "OR",
+                    "ORDER",
+                    "OTHERS",
+                    "OUTER",
+                    "OVER",
+                    "PARTITION",
+                    "PLAN",
+                    "PRAGMA",
+                    "PRECEDING",
+                    "PRIMARY",
+                    "QUERY",
+                    "RAISE",
+                    "RANGE",
+                    "RECURSIVE",
+                    "REFERENCES",
+                    "REGEXP",
+                    "REINDEX",
+                    "RELEASE",
+                    "RENAME",
+                    "REPLACE",
+                    "RESTRICT",
+                    "RETURNING",
+                    "RIGHT",
+                    "ROLLBACK",
+                    "ROW",
+                    "ROWS",
+                    "SAVEPOINT",
+                    "SELECT",
+                    "SET",
+                    "TABLE",
+                    "TEMP",
+                    "TEMPORARY",
+                    "THEN",
+                    "TIES",
+                    "TO",
+                    "TRANSACTION",
+                    "TRIGGER",
+                    "UNBOUNDED",
+                    "UNION",
+                    "UNIQUE",
+                    "UPDATE",
+                    "USING",
+                    "VACUUM",
+                    "VALUES",
+                    "VIEW",
+                    "VIRTUAL",
+                    "WHEN",
+                    "WHERE",
+                    "WINDOW",
+                    "WITH",
+                    "WITHOUT"
+                  ],
+                  "internalIndexKeys": [
+                    "primary",
+                    "_created_at",
+                    "_updated_at",
+                    "_tenant_id"
+                  ]
+                }
+              },
+              "capabilities": [
+                {
+                  "$enum": "Capability::Aggregations"
+                },
+                {
+                  "$enum": "Capability::AttributeResizing"
+                },
+                {
+                  "$enum": "Capability::Caching"
+                },
+                {
+                  "$enum": "Capability::IndexArray"
+                },
+                {
+                  "$enum": "Capability::IndexFulltext"
+                },
+                {
+                  "$enum": "Capability::IndexFulltextMultiple"
+                },
+                {
+                  "$enum": "Capability::IndexIdentical"
+                },
+                {
+                  "$enum": "Capability::IndexKey"
+                },
+                {
+                  "$enum": "Capability::IndexUnique"
+                },
+                {
+                  "$enum": "Capability::IntegerBooleans"
+                },
+                {
+                  "$enum": "Capability::Joins"
+                },
+                {
+                  "$enum": "Capability::Operators"
+                },
+                {
+                  "$enum": "Capability::OrderRandom"
+                },
+                {
+                  "$enum": "Capability::SchemaIntrospection"
+                },
+                {
+                  "$enum": "Capability::TransactionNested"
+                },
+                {
+                  "$enum": "Capability::TransactionRetries"
+                }
+              ],
+              "features": [
+                "Utopia\\Database\\Adapter\\Feature\\Connection",
+                "Utopia\\Database\\Adapter\\Feature\\QueryBuilder",
+                "Utopia\\Database\\Adapter\\Feature\\RawQuery",
+                "Utopia\\Database\\Adapter\\Feature\\Relationships",
+                "Utopia\\Database\\Adapter\\Feature\\Upserts"
+              ],
+              "sharedTables": false,
+              "migrating": false
+            }
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "feature_spatial",
+                "name": "feature_spatial",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true
+              },
+              "$class": "Collection"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "feature_spatial",
+              "name": "feature_spatial",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            },
+            "$class": "Collection"
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "feature_spatial",
+            "attribute": {
+              "$value": "Attribute",
+              "fields": {
+                "key": "location",
+                "type": {
+                  "$enum": "Query\\Schema\\ColumnType::Point"
+                },
+                "size": null,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "format": null,
+                "filters": [
+                  "point"
+                ],
+                "relationship": null,
+                "side": null
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Spatial attributes are not supported"
+            }
+          }
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "collection": "feature_spatial"
+          },
+          "expect": null
+        }
+      ]
+    }
+  ]
+}

@@ -68,13 +68,15 @@ fn from_rusqlite(e: rusqlite::Error) -> Error {
 /// One database connection.
 pub(crate) struct Conn {
     conn: Connection,
+    /// `ATTR_STRINGIFY_FETCHES`.
+    stringify: bool,
 }
 
 impl Conn {
     /// `new PDO("sqlite:$path")`: opens (or creates) the file (`:memory:`
     /// for an in-memory database, `file:` for a URI), with `timeout` as the
     /// busy timeout (`ATTR_TIMEOUT`).
-    pub(crate) fn open(path: &str, timeout: Duration) -> Result<Conn> {
+    pub(crate) fn open(path: &str, timeout: Duration, stringify: bool) -> Result<Conn> {
         let mut flags =
             OpenFlags::SQLITE_OPEN_READ_WRITE | OpenFlags::SQLITE_OPEN_CREATE | OpenFlags::SQLITE_OPEN_NO_MUTEX;
         if path.starts_with("file:") {
@@ -94,7 +96,7 @@ impl Conn {
             PdoError::connect(sqlstate(code), i64::from(code), &message).into_error()
         })?;
         conn.busy_timeout(timeout).map_err(from_rusqlite)?;
-        Ok(Conn { conn })
+        Ok(Conn { conn, stringify })
     }
 
     /// `inTransaction()`: whether SQLite is outside autocommit mode.
@@ -150,7 +152,7 @@ impl Conn {
             while let Some(row) = rows.next().map_err(from_rusqlite)? {
                 let mut values = Vec::with_capacity(columns.len());
                 for i in 0..columns.len() {
-                    values.push(fetch(row.get_ref(i).map_err(from_rusqlite)?));
+                    values.push(fetch(row.get_ref(i).map_err(from_rusqlite)?, self.stringify));
                 }
                 out.push(values);
             }
@@ -203,10 +205,13 @@ fn udf_string(value: ValueRef<'_>) -> Option<Vec<u8>> {
     }
 }
 
-/// One fetched value (`pdo_sqlite_stmt_get_col`, then PDO's stringify).
-fn fetch(value: ValueRef<'_>) -> Value {
+/// One fetched value (`pdo_sqlite_stmt_get_col`, then PDO's stringify
+/// unless `stringify` is off: integers and floats then stay numbers).
+fn fetch(value: ValueRef<'_>, stringify: bool) -> Value {
     match value {
         ValueRef::Null => Value::Null,
+        ValueRef::Integer(i) if !stringify => Value::Int(i),
+        ValueRef::Real(f) if !stringify => Value::Float(f),
         ValueRef::Integer(i) => Value::Str(Str::from(i.to_string())),
         ValueRef::Real(f) => Value::Str(Str::from(php_std::number::to_string(f))),
         ValueRef::Text(t) | ValueRef::Blob(t) => Value::Str(Str::from(t.to_vec())),

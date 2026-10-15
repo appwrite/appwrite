@@ -17,9 +17,14 @@ use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Adapter\Postgres;
 use Utopia\Database\Adapter\Redis as RedisAdapter;
 use Utopia\Database\Adapter\SQLite;
+use Utopia\Database\Attribute;
+use Utopia\Database\Collection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Hook\Permissions;
+use Utopia\Database\Hook\Relationships;
+use Utopia\Database\Id;
+use Utopia\Database\Index;
 use Utopia\Database\PDO;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
@@ -68,22 +73,34 @@ final class Adapter implements Base, Benchmarks
 
     public function operations(): array
     {
-        $operations = [];
+        // core.php first: the other areas register through Core::operations().
+        $operations = require __DIR__ . '/ops/core.php';
         foreach (glob(__DIR__ . '/ops/*.php') ?: [] as $file) {
-            $operations += require $file;
+            if (basename($file) !== 'core.php') {
+                $operations += require $file;
+            }
         }
 
         return $operations;
     }
 
+    /**
+     * The benchmarks' collection, as Collection::create() builds it.
+     */
+    private static function collection(): Collection
+    {
+        return Collection::create(
+            id: 'users',
+            attributes: array_map(fn (array $a) => Attribute::fromArray($a), json_decode(self::ATTRIBUTES, true)),
+            indexes: array_map(fn (array $i) => Index::fromArray($i), json_decode(self::INDEXES, true)),
+            permissions: ['read("any")', 'create("any")', 'update("any")'],
+            documentSecurity: false,
+        );
+    }
+
     public function benchmarks(): array
     {
-        $collection = fn (): Document => new Document([
-            '$id' => 'users',
-            '$collection' => Database::METADATA,
-            'attributes' => array_map(fn (array $a) => new Document($a), json_decode(self::ATTRIBUTES, true)),
-            'indexes' => array_map(fn (array $i) => new Document($i), json_decode(self::INDEXES, true)),
-        ]);
+        $collection = fn (): Collection => self::collection();
         $document = fn (): Document => new Document(json_decode(self::DOCUMENT, true));
 
         $benchmarks = [
@@ -92,13 +109,15 @@ final class Adapter implements Base, Benchmarks
             }],
             'queries_validate' => ['Validate five parsed queries against a collection\'s attributes and indexes (Queries\\Documents)', function (Session $s) use ($collection) {
                 $c = $collection();
-                $validator = new DocumentsQueries($c->getAttribute('attributes'), $c->getAttribute('indexes'), Database::VAR_INTEGER);
+                [$db] = self::database($s, 'queries_validate', new \Utopia\Database\Adapter\Memory());
+                $validator = new DocumentsQueries($c->getAttribute('attributes'), $c->getAttribute('indexes'), $db->profile());
                 $queries = Query::parseQueries(self::QUERIES);
 
                 return fn () => $validator->isValid($queries);
             }],
             'structure_validate' => ['Validate a user document against its collection\'s structure', function (Session $s) use ($collection, $document) {
-                $validator = new Structure($collection(), Database::VAR_INTEGER);
+                [$db] = self::database($s, 'structure_validate', new \Utopia\Database\Adapter\Memory());
+                $validator = new Structure($collection(), $db->profile());
                 $doc = $document();
 
                 return fn () => $validator->isValid($doc);
@@ -119,13 +138,13 @@ final class Adapter implements Base, Benchmarks
                 [$db] = self::database($s, $name);
                 $doc = $document();
 
-                return fn () => $db->createDocument('users', (clone $doc)->setAttribute('$id', ID::unique()));
+                return fn () => $db->createDocument('users', (clone $doc)->setAttribute('$id', Id::unique()));
             }],
             'create_documents' => ['Create ten user documents in one batch (one INSERT round trip)', function (Session $s) use ($document) {
                 [$db] = self::database($s, 'create_documents');
                 $doc = $document();
 
-                return fn () => $db->createDocuments('users', array_map(fn () => (clone $doc)->setAttribute('$id', ID::unique()), range(1, 10)));
+                return fn () => $db->createDocuments('users', array_map(fn () => (clone $doc)->setAttribute('$id', Id::unique()), range(1, 10)));
             }],
             'get_document' => ['Read a user document by id, uncached (one SELECT round trip)', function (Session $s, string $name = 'get_document') use ($document) {
                 [$db] = self::database($s, $name);
@@ -232,7 +251,7 @@ final class Adapter implements Base, Benchmarks
                 [$db] = self::database($s, "{$engine}_create_document");
                 $doc = $document();
 
-                return fn () => $db->createDocument('users', (clone $doc)->setAttribute('$id', ID::unique()));
+                return fn () => $db->createDocument('users', (clone $doc)->setAttribute('$id', Id::unique()));
             }],
             "{$engine}_get_document" => [$descriptions['get_document'], function (Session $s) use ($engine, $document) {
                 [$db] = self::database($s, "{$engine}_get_document");
@@ -286,17 +305,17 @@ final class Adapter implements Base, Benchmarks
                 if (file_exists($path)) {
                     unlink($path);
                 }
-                $adapter = new SQLite(new PDO('sqlite:' . $path, null, null, SQLite::getPDOAttributes()));
+                $adapter = new SQLite(new PDO('sqlite:' . $path, null, null, Core::PDO_ATTRIBUTES));
             } elseif ($engine === 'memory') {
                 $adapter = new Memory();
             } elseif (self::$driver === 'postgres') {
                 $url = parse_url($s->service('database-postgres'));
                 $dsn = 'pgsql:host=' . ($url['host'] ?? '') . ';port=' . ($url['port'] ?? 5432) . ';dbname=' . ltrim($url['path'] ?? '', '/');
-                $adapter = new Postgres(new PDO($dsn, urldecode($url['user'] ?? ''), urldecode($url['pass'] ?? ''), Postgres::getPDOAttributes()));
+                $adapter = new Postgres(new PDO($dsn, urldecode($url['user'] ?? ''), urldecode($url['pass'] ?? ''), Core::PDO_ATTRIBUTES));
             } else {
                 $url = parse_url($s->service('database-' . self::$driver));
                 $dsn = 'mysql:host=' . ($url['host'] ?? '') . ';port=' . ($url['port'] ?? 3306) . ';charset=utf8mb4';
-                $pdo = new PDO($dsn, urldecode($url['user'] ?? ''), urldecode($url['pass'] ?? ''), MariaDB::getPDOAttributes());
+                $pdo = new PDO($dsn, urldecode($url['user'] ?? ''), urldecode($url['pass'] ?? ''), Core::PDO_ATTRIBUTES);
                 $adapter = self::$driver === 'mariadb' ? new MariaDB($pdo) : new MySQL($pdo);
             }
         }
@@ -304,14 +323,13 @@ final class Adapter implements Base, Benchmarks
         $authorization = new Authorization();
         $authorization->addRole('any');
         $db->setAuthorization($authorization);
+        $db->addHook(new Relationships())->addHook(new Permissions());
         $db->setDatabase("compat_bench_php_{$name}")->setNamespace('bench');
         if ($db->exists()) {
             $db->delete();
         }
         $db->create();
-        $attributes = array_map(fn (array $a) => new Document($a), json_decode(self::ATTRIBUTES, true));
-        $indexes = array_map(fn (array $i) => new Document($i), json_decode(self::INDEXES, true));
-        $collection = $db->createCollection('users', $attributes, $indexes, ['read("any")', 'create("any")', 'update("any")'], false);
+        $collection = $db->createCollection(self::collection());
 
         return [$db, $collection];
     }

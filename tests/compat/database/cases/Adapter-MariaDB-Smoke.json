@@ -6,128 +6,282 @@
       "steps": [
         {
           "op": "adapter.open",
-          "bind": "a",
           "args": {
             "driver": "mariadb"
           },
+          "bind": "a",
           "expect": {
             "$handle": "*"
           }
         },
         {
-          "op": "adapter.before",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "event": "*",
-            "name": "capture"
-          },
-          "expect": null
-        },
-        {
-          "op": "adapter.create",
-          "args": {
-            "adapter": {
-              "$ref": "a"
-            }
-          },
-          "expect": true
-        },
-        {
-          "op": "adapter.exists",
-          "args": {
-            "adapter": {
-              "$ref": "a"
-            }
-          },
-          "expect": true
-        },
-        {
-          "op": "adapter.create_collection",
-          "args": {
-            "adapter": {
-              "$ref": "a"
-            },
-            "name": "movies",
-            "attributes": [
-              {
-                "$document": {
-                  "$id": "title",
-                  "type": "string",
-                  "size": 128,
-                  "required": true,
-                  "signed": true,
-                  "array": false
-                }
-              },
-              {
-                "$document": {
-                  "$id": "year",
-                  "type": "integer",
-                  "size": 0,
-                  "signed": true,
-                  "array": false
-                }
-              },
-              {
-                "$document": {
-                  "$id": "tags",
-                  "type": "string",
-                  "size": 32,
-                  "array": true
-                }
+            "method": "addTransform",
+            "args": {
+              "name": "capture",
+              "transform": {
+                "$hook": "Transform",
+                "table": "",
+                "event": "*",
+                "append": "",
+                "as": "transform_capture"
               }
-            ],
-            "indexes": [
-              {
+            }
+          },
+          "expect": {
+            "$adapter": "MariaDB"
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "create",
+            "args": {
+              "name": "${ns}"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "exists",
+            "args": {
+              "database": "${ns}"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": 128,
+                "signed": true,
+                "array": false,
+                "required": true
+              }
+            },
+            "as": "a387"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "title",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 128,
+              "required": true,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "year",
+                "key": "year",
+                "type": "integer",
+                "size": 0,
+                "signed": true,
+                "array": false,
+                "required": false
+              }
+            },
+            "as": "a388"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "year",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::Integer"
+              },
+              "size": null,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": false,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Attribute",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "tags",
+                "key": "tags",
+                "type": "string",
+                "size": 32,
+                "array": true,
+                "required": false
+              }
+            },
+            "as": "a389"
+          },
+          "expect": {
+            "$value": "Attribute",
+            "fields": {
+              "key": "tags",
+              "type": {
+                "$enum": "Query\\Schema\\ColumnType::String"
+              },
+              "size": 32,
+              "required": false,
+              "default": null,
+              "signed": true,
+              "array": true,
+              "format": null,
+              "filters": [],
+              "relationship": null,
+              "side": null
+            }
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "class": "Index",
+            "method": "fromArray",
+            "args": {
+              "data": {
+                "$id": "byTitle",
+                "key": "byTitle",
+                "type": "key",
+                "attributes": [
+                  "title"
+                ],
+                "orders": [
+                  "ASC"
+                ]
+              }
+            },
+            "as": "i390"
+          },
+          "expect": {
+            "$value": "Index",
+            "fields": {
+              "key": "byTitle",
+              "type": {
+                "$enum": "Query\\Schema\\IndexType::Key"
+              },
+              "attributes": [
+                "title"
+              ],
+              "lengths": [],
+              "orders": [
+                {
+                  "$enum": "Query\\OrderDirection::Asc"
+                }
+              ],
+              "ttl": null
+            }
+          }
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "createCollection",
+            "args": {
+              "collection": "movies",
+              "attributes": [
+                {
+                  "$obj": "a387"
+                },
+                {
+                  "$obj": "a388"
+                },
+                {
+                  "$obj": "a389"
+                }
+              ],
+              "indexes": [
+                {
+                  "$obj": "i390"
+                }
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "collectionExists",
+            "args": {
+              "database": "${ns}",
+              "collection": "movies"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.call",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "method": "createDocument",
+            "args": {
+              "collection": {
+                "$id": "movies"
+              },
+              "document": {
                 "$document": {
-                  "$id": "byTitle",
-                  "type": "key",
-                  "attributes": [
-                    "title"
+                  "$id": "alien",
+                  "title": "Alien's \\ \"x\"",
+                  "year": 1979,
+                  "tags": [
+                    "scifi",
+                    "horror"
                   ],
-                  "orders": [
-                    "ASC"
-                  ]
+                  "$permissions": [
+                    "read(\"any\")",
+                    "update(\"user:1\")"
+                  ],
+                  "$createdAt": "2020-01-01 00:00:00.000",
+                  "$updatedAt": "2020-01-01 00:00:00.000"
                 }
-              }
-            ]
-          },
-          "expect": true
-        },
-        {
-          "op": "adapter.exists",
-          "args": {
-            "adapter": {
-              "$ref": "a"
-            },
-            "collection": "movies"
-          },
-          "expect": true
-        },
-        {
-          "op": "adapter.create_document",
-          "args": {
-            "adapter": {
-              "$ref": "a"
-            },
-            "collection": "movies",
-            "document": {
-              "$document": {
-                "$id": "alien",
-                "title": "Alien's \\ \"x\"",
-                "year": 1979,
-                "tags": [
-                  "scifi",
-                  "horror"
-                ],
-                "$permissions": [
-                  "read(\"any\")",
-                  "update(\"user:1\")"
-                ],
-                "$createdAt": "2020-01-01 00:00:00.000",
-                "$updatedAt": "2020-01-01 00:00:00.000"
               }
             }
           },
@@ -151,21 +305,26 @@
           }
         },
         {
-          "op": "adapter.get_document",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "collection": "movies",
-            "id": "alien"
+            "method": "getDocument",
+            "args": {
+              "collection": {
+                "$id": "movies"
+              },
+              "id": "alien"
+            }
           },
           "expect": {
             "$document": {
               "title": "Alien's \\ \"x\"",
               "year": "1979",
               "tags": "[\"scifi\",\"horror\"]",
-              "$sequence": "1",
               "$id": "alien",
+              "$sequence": "1",
               "$createdAt": "2020-01-01 00:00:00.000",
               "$updatedAt": "2020-01-01 00:00:00.000",
               "$permissions": [
@@ -176,23 +335,28 @@
           }
         },
         {
-          "op": "adapter.find",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "collection": "movies",
-            "queries": [
-              {
-                "$query": {
-                  "method": "equal",
-                  "attribute": "year",
-                  "values": [
-                    1979
-                  ]
+            "method": "find",
+            "args": {
+              "collection": {
+                "$id": "movies"
+              },
+              "queries": [
+                {
+                  "$query": {
+                    "method": "equal",
+                    "attribute": "year",
+                    "values": [
+                      1979
+                    ]
+                  }
                 }
-              }
-            ]
+              ]
+            }
           },
           "expect": [
             {
@@ -213,33 +377,46 @@
           ]
         },
         {
-          "op": "adapter.set_authorization",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "status": false
+            "method": "setAuthorization",
+            "args": {
+              "authorization": {
+                "roles": [],
+                "status": false
+              }
+            }
           },
-          "expect": null
+          "expect": {
+            "$adapter": "MariaDB"
+          }
         },
         {
-          "op": "adapter.find",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "collection": "movies",
-            "queries": [
-              {
-                "$query": {
-                  "method": "equal",
-                  "attribute": "year",
-                  "values": [
-                    1979
-                  ]
+            "method": "find",
+            "args": {
+              "collection": {
+                "$id": "movies"
+              },
+              "queries": [
+                {
+                  "$query": {
+                    "method": "equal",
+                    "attribute": "year",
+                    "values": [
+                      1979
+                    ]
+                  }
                 }
-              }
-            ]
+              ]
+            }
           },
           "expect": [
             {
@@ -260,37 +437,52 @@
           ]
         },
         {
-          "op": "adapter.count",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "collection": "movies"
+            "method": "count",
+            "args": {
+              "collection": {
+                "$id": "movies"
+              }
+            }
           },
           "expect": 1
         },
         {
-          "op": "adapter.sum",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "collection": "movies",
-            "attribute": "year"
+            "method": "sum",
+            "args": {
+              "collection": {
+                "$id": "movies"
+              },
+              "attribute": "year"
+            }
           },
           "expect": 1979
         },
         {
-          "op": "adapter.create_document",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
             },
-            "collection": "movies",
-            "document": {
-              "$document": {
-                "$id": "alien",
-                "title": "dup"
+            "method": "createDocument",
+            "args": {
+              "collection": {
+                "$id": "movies"
+              },
+              "document": {
+                "$document": {
+                  "$id": "alien",
+                  "title": "dup"
+                }
               }
             }
           },
@@ -302,60 +494,76 @@
           }
         },
         {
-          "op": "adapter.captured",
-          "args": {
-            "adapter": {
-              "$ref": "a"
-            }
-          },
+          "op": "db.log",
+          "args": {},
           "expect": [
-            [
-              "*",
-              "CREATE DATABASE `${ns}` /*!40100 DEFAULT CHARACTER SET utf8mb4 */;"
-            ],
-            [
-              "*",
-              "\n\t\t\tCREATE TABLE `${ns}`.`ns_movies` (\n\t\t\t\t_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,\n\t\t\t\t_uid VARCHAR(255) NOT NULL,\n\t\t\t\t_createdAt DATETIME(3) DEFAULT NULL,\n\t\t\t\t_updatedAt DATETIME(3) DEFAULT NULL,\n\t\t\t\t_permissions MEDIUMTEXT DEFAULT NULL,\n\t\t\t\tPRIMARY KEY (_id),\n\t\t\t\t`title` VARCHAR(128),  `year` INT,  `tags` JSON, \n\t\t\t\tkey `byTitle` (`title` ASC),\n\t\t\n\t\t\t\tUNIQUE KEY _uid (_uid),\n\t\t\t\tKEY _created_at (_createdAt),\n\t\t\t\tKEY _updated_at (_updatedAt)\n\t\t\t)"
-            ],
-            [
-              "*",
-              "\n            CREATE TABLE `${ns}`.`ns_movies_perms` (\n                _id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,\n                _type VARCHAR(12) NOT NULL,\n                _permission VARCHAR(255) NOT NULL,\n                _document VARCHAR(255) NOT NULL,\n                PRIMARY KEY (_id),\n        \n                UNIQUE INDEX _index1 (_document, _type, _permission),\n                INDEX _permission (_permission, _type)\n            )"
-            ],
-            [
-              "*",
-              "\n\t\t\t    INSERT INTO `${ns}`.`ns_movies` (`title`, `year`, `tags`, `_createdAt`, `_updatedAt`, `_permissions`,  _uid)\n\t\t\t    VALUES (:key_0, :key_1, :key_2, :key_3, :key_4, :key_5,  :_uid)\n\t\t\t"
-            ],
-            [
-              "*",
-              "\n\t\t    SELECT `main`.*\n            FROM `${ns}`.`ns_movies` AS `main`\n            WHERE `main`.`_uid` = :_uid \n            \n\t\t "
-            ],
-            [
-              "*",
-              "\n            SELECT `main`.*\n            FROM `${ns}`.`ns_movies` AS `main`\n            WHERE ((`main`.`year` = :<id>_0)) AND `main`.`_uid` IN (\n            SELECT _document\n            FROM `${ns}`.`ns_movies_perms`\n            WHERE _permission IN ('any')\n              AND _type = 'read'\n              \n        )\n            \n            LIMIT :limit;\n        "
-            ],
-            [
-              "*",
-              "\n            SELECT `main`.*\n            FROM `${ns}`.`ns_movies` AS `main`\n            WHERE ((`main`.`year` = :<id>_0))\n            \n            LIMIT :limit;\n        "
-            ],
-            [
-              "*",
-              "\n            SELECT COUNT(1) as sum\n\t\t\tFROM `${ns}`.`ns_movies` AS `main`\n\t\t\t\n        "
-            ],
-            [
-              "*",
-              "\n\t\t\tSELECT SUM(`year`) as sum\n\t\t\tFROM `${ns}`.`ns_movies` AS `main`\n\t\t\t\n        "
-            ],
-            [
-              "*",
-              "\n\t\t\t    INSERT INTO `${ns}`.`ns_movies` (`title`, `_createdAt`, `_updatedAt`, `_permissions`,  _uid)\n\t\t\t    VALUES (:key_0, :key_1, :key_2, :key_3,  :_uid)\n\t\t\t"
-            ]
+            {
+              "transform": "database_list",
+              "query": "SELECT SCHEMA_NAME FROM `INFORMATION_SCHEMA`.`SCHEMATA` WHERE `SCHEMA_NAME` IN (?)"
+            },
+            {
+              "transform": "database_create",
+              "query": "CREATE DATABASE `${ns}` /*!40100 DEFAULT CHARACTER SET utf8mb4 */"
+            },
+            {
+              "transform": "database_list",
+              "query": "SELECT SCHEMA_NAME FROM `INFORMATION_SCHEMA`.`SCHEMATA` WHERE `SCHEMA_NAME` IN (?)"
+            },
+            {
+              "transform": "collection_create",
+              "query": "CREATE TABLE `${ns}`.`ns_movies` (`_id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, `_uid` VARCHAR(255) NOT NULL, `_createdAt` DATETIME(3) NULL DEFAULT NULL, `_updatedAt` DATETIME(3) NULL DEFAULT NULL, `_permissions` MEDIUMTEXT NULL DEFAULT NULL, `title` VARCHAR(128), `year` INT, `tags` JSON, PRIMARY KEY (`_id`), INDEX `byTitle` (`title` ASC), UNIQUE INDEX `_uid` (`_uid`), INDEX `_created_at` (`_createdAt`), INDEX `_updated_at` (`_updatedAt`))"
+            },
+            {
+              "transform": "collection_create",
+              "query": "CREATE TABLE `${ns}`.`ns_movies_perms` (`_id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, `_type` VARCHAR(12) NOT NULL, `_permission` VARCHAR(255) NOT NULL, `_document` VARCHAR(255) NOT NULL, PRIMARY KEY (`_id`), UNIQUE INDEX `_index1` (`_document`, `_type`, `_permission`), INDEX `_permission` (`_permission`, `_type`))"
+            },
+            {
+              "transform": "collection_read",
+              "query": "SELECT TABLE_NAME FROM `INFORMATION_SCHEMA`.`TABLES` WHERE `TABLE_SCHEMA` IN (?) AND `TABLE_NAME` IN (?)"
+            },
+            {
+              "transform": "document_create",
+              "query": "INSERT INTO `${ns}`.`ns_movies` (`_uid`, `title`, `year`, `tags`, `_createdAt`, `_updatedAt`, `_permissions`) VALUES (?, ?, ?, ?, ?, ?, ?)"
+            },
+            {
+              "transform": "permissions_create",
+              "query": "INSERT INTO `${ns}`.`ns_movies_perms` (`_document`, `_type`, `_permission`) VALUES (?, ?, ?), (?, ?, ?)"
+            },
+            {
+              "transform": "document_read",
+              "query": "SELECT * FROM `${ns}`.`ns_movies` AS `table_main` WHERE `_uid` = :_uid"
+            },
+            {
+              "transform": "document_find",
+              "query": "SELECT * FROM `${ns}`.`ns_movies` AS `table_main` WHERE `year` IN (?) LIMIT ?"
+            },
+            {
+              "transform": "document_find",
+              "query": "SELECT * FROM `${ns}`.`ns_movies` AS `table_main` WHERE `year` IN (?) LIMIT ?"
+            },
+            {
+              "transform": "document_count",
+              "query": "SELECT COUNT(1) AS `sum` FROM `${ns}`.`ns_movies` AS `table_main`"
+            },
+            {
+              "transform": "document_sum",
+              "query": "SELECT SUM(`year`) AS `sum` FROM `${ns}`.`ns_movies` AS `table_main`"
+            },
+            {
+              "transform": "document_create",
+              "query": "INSERT INTO `${ns}`.`ns_movies` (`_uid`, `title`, `_createdAt`, `_updatedAt`, `_permissions`) VALUES (?, ?, ?, ?, ?)"
+            }
           ]
         },
         {
-          "op": "adapter.delete",
+          "op": "adapter.call",
           "args": {
             "adapter": {
               "$ref": "a"
+            },
+            "method": "delete",
+            "args": {
+              "name": "${ns}"
             }
           },
           "expect": true

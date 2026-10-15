@@ -44,5 +44,14 @@ fn main() -> std::io::Result<()> {
     // A child the console adapter started to observe stdio and exit().
     compat::libs::console::child();
     compat::driver::php_umask();
-    tokio::runtime::Builder::new_current_thread().enable_all().build()?.block_on(compat::driver::serve())
+    // A 64 MiB stack: unoptimized builds poll the database's document
+    // operations (writes through the relationships hook back into the
+    // database) many frames deep.
+    std::thread::Builder::new()
+        .stack_size(64 * 1024 * 1024)
+        .spawn(|| {
+            tokio::runtime::Builder::new_current_thread().enable_all().build()?.block_on(compat::driver::serve())
+        })?
+        .join()
+        .unwrap_or_else(|e| std::panic::resume_unwind(e))
 }

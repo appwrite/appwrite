@@ -291,12 +291,19 @@ impl Profile {
         Profile { limits, capabilities, features, shared_tables, migrating, defined_attributes }
     }
 
-    /// The profile of `adapter`, its schema mode asked on every check.
+    /// The profile of `adapter` (`Database::profile()`): the capabilities it
+    /// supports in the enum's order, its schema mode asked on every check.
     pub fn of(adapter: Arc<dyn Adapter>, migrating: bool) -> Self {
         let probe = adapter.clone();
+        // `Database::profile()`: every case the adapter supports, in the
+        // enum's order, but DefinedAttributes (asked on every check).
+        let capabilities = Capability::CASES
+            .into_iter()
+            .filter(|c| *c != Capability::DefinedAttributes && adapter.supports(*c))
+            .collect();
         Profile::new(
             adapter.limits(),
-            adapter.capabilities(),
+            capabilities,
             adapter.features(),
             adapter.state().shared_tables(),
             migrating,

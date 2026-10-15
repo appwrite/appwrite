@@ -1,0 +1,579 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Adapter/SQL/Hook/Tenant/OuterJoinTest.php"
+  ],
+  "cases": [
+    {
+      "name": "OuterJoinTest::testBothSidesAreScopedToTheTenantInsideOn#right join",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Filter",
+            "args": {
+              "tenant": 7,
+              "metadataCollection": "_metadata",
+              "collection": "orders",
+              "allowNullColumn": "table_main._uid"
+            },
+            "as": "o1404"
+          },
+          "bind": "s2681",
+          "expect": {
+            "$hook": "Filter"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\OuterJoin",
+            "args": {
+              "filter": {
+                "$obj": "o1404"
+              },
+              "source": "table_main"
+            },
+            "as": "o1405"
+          },
+          "bind": "s2682",
+          "expect": {
+            "$hook": "OuterJoin"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1405"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "j0",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Right"
+              }
+            },
+            "as": "o1406"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "(`table_main`._tenant IN (?) OR `table_main`.`_uid` IS NULL) AND `j0`._tenant IN (?)",
+                  "bindings": [
+                    7,
+                    7
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::On"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "OuterJoinTest::testBothSidesAreScopedToTheTenantInsideOn#full outer join",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Filter",
+            "args": {
+              "tenant": 7,
+              "metadataCollection": "_metadata",
+              "collection": "orders",
+              "allowNullColumn": "table_main._uid"
+            },
+            "as": "o1407"
+          },
+          "bind": "s2684",
+          "expect": {
+            "$hook": "Filter"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\OuterJoin",
+            "args": {
+              "filter": {
+                "$obj": "o1407"
+              },
+              "source": "table_main"
+            },
+            "as": "o1408"
+          },
+          "bind": "s2685",
+          "expect": {
+            "$hook": "OuterJoin"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1408"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "j0",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::FullOuter"
+              }
+            },
+            "as": "o1409"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "(`table_main`._tenant IN (?) OR `table_main`.`_uid` IS NULL) AND `j0`._tenant IN (?)",
+                  "bindings": [
+                    7,
+                    7
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::On"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "OuterJoinTest::testJoinsTenantFilterAlreadyScopesAreLeftToIt#inner join",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Filter",
+            "args": {
+              "tenant": 7,
+              "metadataCollection": "_metadata",
+              "collection": "orders"
+            },
+            "as": "o1410"
+          },
+          "bind": "s2687",
+          "expect": {
+            "$hook": "Filter"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\OuterJoin",
+            "args": {
+              "filter": {
+                "$obj": "o1410"
+              },
+              "source": "table_main"
+            },
+            "as": "o1411"
+          },
+          "bind": "s2688",
+          "expect": {
+            "$hook": "OuterJoin"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1411"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "j0",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Inner"
+              }
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "OuterJoinTest::testJoinsTenantFilterAlreadyScopesAreLeftToIt#left join",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Filter",
+            "args": {
+              "tenant": 7,
+              "metadataCollection": "_metadata",
+              "collection": "orders"
+            },
+            "as": "o1412"
+          },
+          "bind": "s2690",
+          "expect": {
+            "$hook": "Filter"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\OuterJoin",
+            "args": {
+              "filter": {
+                "$obj": "o1412"
+              },
+              "source": "table_main"
+            },
+            "as": "o1413"
+          },
+          "bind": "s2691",
+          "expect": {
+            "$hook": "OuterJoin"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1413"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "j0",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Left"
+              }
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "OuterJoinTest::testJoinsTenantFilterAlreadyScopesAreLeftToIt#cross join",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Filter",
+            "args": {
+              "tenant": 7,
+              "metadataCollection": "_metadata",
+              "collection": "orders"
+            },
+            "as": "o1414"
+          },
+          "bind": "s2693",
+          "expect": {
+            "$hook": "Filter"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\OuterJoin",
+            "args": {
+              "filter": {
+                "$obj": "o1414"
+              },
+              "source": "table_main"
+            },
+            "as": "o1415"
+          },
+          "bind": "s2694",
+          "expect": {
+            "$hook": "OuterJoin"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1415"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "j0",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Cross"
+              }
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "OuterJoinTest::testJoinsTenantFilterAlreadyScopesAreLeftToIt#natural join",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Filter",
+            "args": {
+              "tenant": 7,
+              "metadataCollection": "_metadata",
+              "collection": "orders"
+            },
+            "as": "o1416"
+          },
+          "bind": "s2696",
+          "expect": {
+            "$hook": "Filter"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\OuterJoin",
+            "args": {
+              "filter": {
+                "$obj": "o1416"
+              },
+              "source": "table_main"
+            },
+            "as": "o1417"
+          },
+          "bind": "s2697",
+          "expect": {
+            "$hook": "OuterJoin"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1417"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "j0",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Natural"
+              }
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "OuterJoinTest::testATenantlessMetadataRowStaysMatchable",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Filter",
+            "args": {
+              "tenant": 7,
+              "metadataCollection": "_metadata",
+              "collection": "_metadata"
+            },
+            "as": "o1418"
+          },
+          "bind": "s2699",
+          "expect": {
+            "$hook": "Filter"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\OuterJoin",
+            "args": {
+              "filter": {
+                "$obj": "o1418"
+              },
+              "source": "table_main"
+            },
+            "as": "o1419"
+          },
+          "bind": "s2700",
+          "expect": {
+            "$hook": "OuterJoin"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1419"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "j0",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::Right"
+              }
+            },
+            "as": "o1420"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "(`table_main`._tenant IN (?) OR `table_main`._tenant IS NULL) AND `j0`._tenant IN (?)",
+                  "bindings": [
+                    7,
+                    7
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::On"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "OuterJoinTest::testEveryTenantOfACrossTenantReadIsBoundOnBothSides",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Filter",
+            "args": {
+              "tenant": [
+                1,
+                2
+              ],
+              "metadataCollection": "_metadata",
+              "collection": "orders"
+            },
+            "as": "o1421"
+          },
+          "bind": "s2702",
+          "expect": {
+            "$hook": "Filter"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\OuterJoin",
+            "args": {
+              "filter": {
+                "$obj": "o1421"
+              },
+              "source": "table_main"
+            },
+            "as": "o1422"
+          },
+          "bind": "s2703",
+          "expect": {
+            "$hook": "OuterJoin"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1422"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "j0",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::FullOuter"
+              }
+            },
+            "as": "o1423"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "`table_main`._tenant IN (?, ?) AND `j0`._tenant IN (?, ?)",
+                  "bindings": [
+                    1,
+                    2,
+                    1,
+                    2
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::On"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "OuterJoinTest::testAFullOuterJoinTreatsOnlyAMissingJoinedRowAsUnmatched",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\SQL\\Hook\\Tenant\\Filter",
+            "args": {
+              "tenant": 7
+            },
+            "as": "o1424"
+          },
+          "bind": "s2705",
+          "expect": {
+            "$hook": "Filter"
+          }
+        },
+        {
+          "op": "object.call",
+          "args": {
+            "this": {
+              "$obj": "o1424"
+            },
+            "method": "filterJoin",
+            "args": {
+              "table": "j0",
+              "joinType": {
+                "$enum": "Query\\Builder\\JoinType::FullOuter"
+              }
+            },
+            "as": "o1425"
+          },
+          "expect": {
+            "$value": "Query\\Hook\\Join\\Condition",
+            "fields": {
+              "condition": {
+                "$value": "Query\\Builder\\Condition",
+                "fields": {
+                  "expression": "(`j0`._tenant IN (?) OR `j0`.`_uid` IS NULL)",
+                  "bindings": [
+                    7
+                  ]
+                }
+              },
+              "placement": {
+                "$enum": "Query\\Hook\\Join\\Placement::Where"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,201 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/unit/Documents/DocumentsValidatorCacheTest.php"
+  ],
+  "cases": [
+    {
+      "name": "DocumentsValidatorCacheTest::testValidatorIsReusedWithoutJoinedCollections",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "orders",
+                "attributes": [],
+                "indexes": []
+              }
+            },
+            "as": "o1902"
+          },
+          "expect": {
+            "$document": {
+              "$id": "orders",
+              "attributes": [],
+              "indexes": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "customers",
+                "attributes": [],
+                "indexes": []
+              }
+            },
+            "as": "o1903"
+          },
+          "expect": {
+            "$document": {
+              "$id": "customers",
+              "attributes": [],
+              "indexes": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o1904"
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        }
+      ]
+    },
+    {
+      "name": "DocumentsValidatorCacheTest::testJoinedCollectionsBypassTheCache",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "orders",
+                "attributes": [],
+                "indexes": []
+              }
+            },
+            "as": "o1905"
+          },
+          "expect": {
+            "$document": {
+              "$id": "orders",
+              "attributes": [],
+              "indexes": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "customers",
+                "attributes": [],
+                "indexes": []
+              }
+            },
+            "as": "o1906"
+          },
+          "expect": {
+            "$document": {
+              "$id": "customers",
+              "attributes": [],
+              "indexes": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o1907"
+          },
+          "expect": {
+            "$adapter": "Memory"
+          }
+        }
+      ]
+    },
+    {
+      "name": "DocumentsValidatorCacheTest::testMirrorForwardsJoinedCollectionsToTheSource",
+      "state": [],
+      "steps": [
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "orders",
+                "attributes": [],
+                "indexes": []
+              }
+            },
+            "as": "o1908"
+          },
+          "expect": {
+            "$document": {
+              "$id": "orders",
+              "attributes": [],
+              "indexes": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Document",
+            "args": {
+              "input": {
+                "$id": "customers",
+                "attributes": [],
+                "indexes": []
+              }
+            },
+            "as": "o1909"
+          },
+          "expect": {
+            "$document": {
+              "$id": "customers",
+              "attributes": [],
+              "indexes": []
+            }
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Adapter\\Memory",
+            "args": {},
+            "as": "o1910"
+          },
+          "bind": "s3300",
+          "expect": {
+            "$adapter": "Memory"
+          }
+        },
+        {
+          "op": "object.new",
+          "args": {
+            "class": "Database",
+            "args": {
+              "adapter": {
+                "$obj": "o1910"
+              },
+              "cache": "none"
+            },
+            "as": "o1911"
+          },
+          "expect": {
+            "$database": true
+          }
+        }
+      ]
+    }
+  ]
+}
