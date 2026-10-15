@@ -3,6 +3,20 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "announcing-apns-one-click-setup",
+    "href": "/blog/post/announcing-apns-one-click-setup",
+    "title": "Announcing one-click APNs setup with the Appwrite CLI",
+    "description": "Run appwrite init apns and the CLI creates your APNs providers, configures Xcode, checks your App ID with Apple, and can even create the APNs key for you.",
+    "date": "2026-10-15",
+    "lastUpdated": "2026-10-15",
+    "timeToRead": 6,
+    "author": "arnab-chatterjee",
+    "category": "announcements",
+    "featured": false,
+    "cover": "/images/blog/announcing-apns-one-click-setup/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "announcing-appwrite-helm-chart",
     "href": "/blog/post/announcing-appwrite-helm-chart",
     "title": "Announcing the official Appwrite Helm chart for Kubernetes",
