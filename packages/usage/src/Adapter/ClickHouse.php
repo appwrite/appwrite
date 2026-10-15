@@ -1382,6 +1382,8 @@ class ClickHouse extends SQL
 
     private const BASE_KEY_COLUMNS = ['id', 'metric', 'value', 'time', 'tenant'];
 
+    private const IDENTIFIER_CHARACTERS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_';
+
     private function ensureGaugeDimColumns(): void
     {
         $this->ensureDimColumns($this->getGaugesTableName(), Metric::GAUGE_COLUMNS, 'gauge');
@@ -1524,21 +1526,37 @@ class ClickHouse extends SQL
                 continue;
             }
 
-            $expression = str_replace('`', '', $row['expr']);
-            foreach ($columns as $column) {
-                if (preg_match('/(?<!\w)' . preg_quote($column, '/') . '(?!\w)/', $expression) === 1) {
-                    $indexes[] = [
-                        'name' => $row['name'],
-                        'expression' => $row['expr'],
-                        'type' => $row['type_full'],
-                        'granularity' => self::toInt($row['granularity'] ?? 1) ?: 1,
-                    ];
-                    break;
-                }
+            if (array_intersect($columns, $this->getIdentifiers($row['expr'])) === []) {
+                continue;
             }
+
+            $indexes[] = [
+                'name' => $row['name'],
+                'expression' => $row['expr'],
+                'type' => $row['type_full'],
+                'granularity' => self::toInt($row['granularity'] ?? 1) ?: 1,
+            ];
         }
 
         return $indexes;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function getIdentifiers(string $expression): array
+    {
+        $identifiers = [];
+        $length = strlen($expression);
+        $position = strcspn($expression, self::IDENTIFIER_CHARACTERS);
+        while ($position < $length) {
+            $size = strspn($expression, self::IDENTIFIER_CHARACTERS, $position);
+            $identifiers[] = substr($expression, $position, $size);
+            $position += $size;
+            $position += strcspn($expression, self::IDENTIFIER_CHARACTERS, $position);
+        }
+
+        return $identifiers;
     }
 
     /**
