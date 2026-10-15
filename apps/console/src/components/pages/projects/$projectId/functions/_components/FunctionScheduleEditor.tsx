@@ -172,7 +172,7 @@ export function FunctionScheduleEditor({
         )}
       </ToggleGroup>
 
-      {cronLocked && mode !== 'cron' && (
+      {cronLocked && (
         <p className="text-[12px] text-muted-foreground">
           {t('Cron schedules are available on paid plans.')}{' '}
           <UpgradePlanLink orgId={orgId} /> {t('to use cron.')}
@@ -385,7 +385,7 @@ export function FunctionScheduleEditor({
           <CronScheduleEditor
             value={schedule}
             onChange={onScheduleChange}
-            disabled={disabled || cronReadOnly}
+            disabled={disabled || !cronAllowed}
             allowDisabled={false}
           />
         </div>

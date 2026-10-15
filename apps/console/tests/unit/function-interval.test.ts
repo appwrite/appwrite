@@ -99,7 +99,11 @@ describe('isCronAllowed', () => {
   test('allows plans that turn cron on or predate the flag', () => {
     expect(isCronAllowed({ functionsAllowCron: true })).toBe(true)
     expect(isCronAllowed({ functionsIntervalMinimum: 0 })).toBe(true)
-    expect(isCronAllowed(null)).toBe(true)
+  })
+
+  test('refuses while the plan is still loading', () => {
+    expect(isCronAllowed(undefined)).toBe(false)
+    expect(isCronAllowed(null)).toBe(false)
   })
 })
 

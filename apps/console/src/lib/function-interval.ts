@@ -66,14 +66,12 @@ export function getFunctionIntervalMinimum(
 
 /**
  * Whether the plan allows cron schedules. Free and Education only allow
- * intervals; plans that predate `functionsAllowCron` allow cron.
+ * intervals; plans that predate `functionsAllowCron` allow cron. A plan that
+ * has not loaded yet allows nothing new, so cron cannot be picked in that window.
  */
 export function isCronAllowed(plan: object | null | undefined): boolean {
-  return !(
-    plan &&
-    'functionsAllowCron' in plan &&
-    plan.functionsAllowCron === false
-  )
+  if (!plan) return false
+  return !('functionsAllowCron' in plan && plan.functionsAllowCron === false)
 }
 
 /**
