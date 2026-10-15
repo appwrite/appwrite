@@ -1,14 +1,25 @@
 <svg width="482" height="340" viewBox="0 0 482 340" fill="none" xmlns="http://www.w3.org/2000/svg">
-<defs>
-<linearGradient id="nigeriaGrad" x1="241" y1="60" x2="241" y2="300" gradientUnits="userSpaceOnUse">
-<stop stop-color="#19191C"/>
-<stop offset="0.4" stop-color="#9F1D42"/>
-<stop offset="0.75" stop-color="#FD366E"/>
-<stop offset="1" stop-color="#FEAFC5"/>
-</linearGradient>
-</defs>
-<path d="M200 296 V160 C200 130 220 110 241 110 C262 110 282 130 282 160 V296" fill="url(#nigeriaGrad)"/>
-<path d="M170 296 H312 V276 H170 Z" fill="#FD366E" opacity="0.6"/>
-<path d="M241 80 L260 120 H222 Z" fill="#FD366E"/>
-<path d="M215 120 H267 V140 H215 Z" fill="#531A2C"/>
+  <title>Zuma Rock</title>
+  <defs>
+    <linearGradient id="zuma" x1="80" y1="100" x2="200" y2="210" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2F1820"/>
+      <stop offset="0.4" stop-color="#9F1D42"/>
+      <stop offset="1" stop-color="#FD366E"/>
+    </linearGradient>
+  </defs>
+  <path fill="#531A2C" opacity="0.4" d="M0 196 C80 186 160 184 240 192 V214 H0 Z"/>
+  <!-- Dome and cliffs sized for the banner crop. Crown is uneven, sides are sheer. -->
+  <path fill="url(#zuma)" d="M58 206
+    C56 170 60 140 72 118
+    C84 100 104 92 132 90
+    C160 88 184 94 200 106
+    C212 116 218 136 220 160
+    C222 182 218 198 214 206 Z"/>
+  <path fill="#19191C" opacity="0.45" d="M58 206
+    C56 170 60 140 72 118
+    C84 100 100 94 118 92
+    C104 112 98 146 100 176
+    C102 192 96 202 90 206 Z"/>
+  <path d="M108 94 C106 130 104 164 102 202" stroke="#19191C" stroke-opacity="0.4" stroke-width="3" fill="none"/>
+  <path d="M156 90 C158 128 160 164 162 204" stroke="#EDEDF0" stroke-opacity="0.2" stroke-width="2" fill="none"/>
 </svg>
