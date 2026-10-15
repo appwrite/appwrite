@@ -138,6 +138,7 @@ dependencies = [
  "utopia-domains",
  "utopia-emails",
  "utopia-http",
+ "utopia-query",
  "utopia-system",
  "utopia-validators",
 ]
@@ -179,6 +180,7 @@ dependencies = [
  "utopia-locale",
  "utopia-lock",
  "utopia-pools",
+ "utopia-query",
  "utopia-queue",
  "utopia-system",
  "utopia-user-agent",
@@ -217,6 +219,7 @@ dependencies = [
  "utopia-domains",
  "utopia-emails",
  "utopia-http",
+ "utopia-query",
  "utopia-validators",
 ]
 
@@ -236,6 +239,7 @@ dependencies = [
  "utopia-database",
  "utopia-emails",
  "utopia-http",
+ "utopia-query",
  "utopia-validators",
 ]
 

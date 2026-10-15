@@ -113,9 +113,9 @@ pub async fn create(ctx: &mut Context) -> Result<Response> {
 
     let user_id = if user_id == "unique()" { appwrite_core::database::unique_id() } else { user_id };
     let mut user = base::new_user(&user_id);
-    user.set("email", Value::from(email.as_str()));
-    user.set("password", Value::from(hashed.as_str()));
-    user.set(
+    user.put("email", Value::from(email.as_str()));
+    user.put("password", Value::from(hashed.as_str()));
+    user.put(
         "passwordHistory",
         if history > 0 {
             utopia_database::value::list([Value::from(hashed.as_str())])
@@ -123,15 +123,15 @@ pub async fn create(ctx: &mut Context) -> Result<Response> {
             utopia_database::value::list([])
         },
     );
-    user.set("passwordUpdate", datetime::value(&datetime::now()));
-    user.set("hash", Value::from(hash.name()));
-    user.set("hashOptions", base::hash_options(hash.as_ref()));
-    user.set("name", Value::from(name.as_str()));
-    user.set("mfa", Value::Bool(false));
-    user.set("authenticators", Value::Null);
-    user.set("search", Value::from(format!("{user_id} {email} {name}").as_str()));
+    user.put("passwordUpdate", datetime::value(&datetime::now()));
+    user.put("hash", Value::from(hash.name()));
+    user.put("hashOptions", base::hash_options(hash.as_ref()));
+    user.put("name", Value::from(name.as_str()));
+    user.put("mfa", Value::Bool(false));
+    user.put("authenticators", Value::Null);
+    user.put("search", Value::from(format!("{user_id} {email} {name}").as_str()));
     meta.apply(&mut user);
-    user.set("passwordPwned", pwned.map(Value::Bool).unwrap_or(Value::Null));
+    user.put("passwordPwned", pwned.map(Value::Bool).unwrap_or(Value::Null));
     let mut user = base::create_user(ctx, user).await?;
     base::act_as(ctx, &user);
 
@@ -139,7 +139,7 @@ pub async fn create(ctx: &mut Context) -> Result<Response> {
         user.targets.push(target);
     }
     let db = ctx.db()?;
-    db.purge_cached_document("users", Some(&user.id)).await?;
+    db.purge_cached_document("users", &user.id).await?;
 
     Ok(ctx.created(&AccountModel { user: &user, impersonator_user_id: None, render: ctx.render() }))
 }

@@ -9,7 +9,7 @@ use http::StatusCode;
 use serde_json::value::RawValue;
 use serde_json::{Map, Value};
 use utopia_database::value::to_text;
-use utopia_database::{Database, Document, Query};
+use utopia_database::{Document, PermissionType, Query};
 use utopia_queue::{Publisher as _, Queue};
 
 use super::context::{Context, Mode};
@@ -221,11 +221,17 @@ impl Job {
         let trimmed = project_payload.clone();
 
         super::guards::abuse_reset(&self.state, self.route.labels, self.status.as_u16(), &self.abuse_params).await;
-        self.session_limit().await;
+        // The session limit only deletes rows and purges their cache, which
+        // the work below neither reads nor orders against: it runs alongside.
+        tokio::join!(self.session_limit(), self.dispatch(&project_payload, &trimmed));
+    }
 
+    /// The messages, purges and records of the request, in PHP's order.
+    async fn dispatch(&self, project_payload: &Value, trimmed: &Value) {
+        let (project_payload, trimmed) = (project_payload.clone(), trimmed.clone());
         // `purge-function-events-cache`.
         if self.functions_changed
-            && let Some(key) = self.function_events_key()
+            && let Some(key) = self.function_events_key().await
         {
             let _ = self.state.cache.purge(&key, "").await;
         }
@@ -356,11 +362,11 @@ impl Job {
                 tracing::warn!(error = %e, "session limit delete failed");
             }
         }
-        let _ = db.purge_cached_document("users", Some(user_id)).await;
+        let _ = db.purge_cached_document("users", user_id).await;
     }
 
     /// The project's functions events cache key (none for the console).
-    fn function_events_key(&self) -> Option<String> {
+    async fn function_events_key(&self) -> Option<String> {
         if self.project.is_console() {
             return None;
         }
@@ -368,7 +374,7 @@ impl Job {
         Some(format!(
             "{}-cache-{}:{}:{}:project:{}:functions:events",
             db.cache_name(),
-            db.adapter().hostname(),
+            db.hostname().await.ok().flatten().unwrap_or_default(),
             db.namespace(),
             to_text(&db.tenant()),
             self.project.id
@@ -379,7 +385,7 @@ impl Job {
     /// hash PHP uses (`...:project:<id>:functions:events`), so PHP's purges
     /// drop it, under a field only Rust reads: a native entry.
     async fn function_events(&self) -> Vec<String> {
-        let Some(key) = self.function_events_key() else { return Vec::new() };
+        let Some(key) = self.function_events_key().await else { return Vec::new() };
         let Ok(db) = self.state.databases.project(&self.project, Databases::unchecked()) else { return Vec::new() };
         // `v2` held a PHP array; `v3` is a native `Vec<String>`.
         const FIELD: &str = "rust:functions:events:v3";
@@ -401,9 +407,9 @@ impl Job {
                         Query::select(["$id", "events"]),
                         Query::limit(limit),
                         Query::offset(offset),
-                        Query::order_asc("$sequence"),
+                        Query::order_asc("$sequence", None),
                     ],
-                    Database::PERMISSION_READ,
+                    PermissionType::Read,
                 )
                 .await;
             let functions = match page {
@@ -580,10 +586,11 @@ impl Job {
             .lock
             .try_with_key(&lock_key, async move {
                 let mut updates = Document::default();
-                updates.set("onboarding", utopia_database::Value::from(encoded.as_str()));
+                updates.put("onboarding", utopia_database::Value::from(encoded.as_str()));
                 let skipped = filters::names(filters::PROJECTS_SUBQUERIES);
-                let updated =
-                    db.skip_filters(|| db.update_document("projects", &project.id, updates), Some(&skipped)).await;
+                let updated = db
+                    .skip_filters(Some(skipped.as_slice()), db.update_document("projects", &project.id, updates))
+                    .await;
                 // A missing `onboarding` attribute must not break the request.
                 if updated.is_ok() {
                     state.projects.forget(&project.id);

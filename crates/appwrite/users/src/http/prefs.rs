@@ -26,7 +26,7 @@ pub async fn update(ctx: &mut Context) -> Result<Response> {
     let user = base::user_or_404(ctx, &user_id, &[]).await?;
     let mut updates = Document::default();
     // The request model's value: the `json` filter encodes it as PHP does.
-    updates.set("prefs", utopia_database::Value::from_json(&prefs));
+    updates.put("prefs", utopia_database::Value::from_json(&prefs));
     let updated = base::update_user(ctx, &user.id, updates, &[base::TARGETS]).await?;
     ctx.event_param("userId", updated.id.clone());
     let payload = base::user_payload(ctx, &updated);

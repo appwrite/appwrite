@@ -1416,17 +1416,15 @@ pub async fn redirect(ctx: &mut Context) -> Result<Response> {
         let platform = ctx.platform_db()?;
         let rules = platform
             .authorization()
-            .skip(|| {
-                platform.find(
-                    "rules",
-                    vec![
-                        Query::equal("domain", domains.iter().map(String::as_str).collect::<Vec<_>>()),
-                        Query::equal("projectInternalId", [ctx.project.sequence.as_str()]),
-                        Query::limit(2),
-                    ],
-                    utopia_database::Database::PERMISSION_READ,
-                )
-            })
+            .skip(platform.find(
+                "rules",
+                vec![
+                    Query::equal("domain", domains.iter().map(String::as_str).collect::<Vec<_>>()),
+                    Query::equal("projectInternalId", [ctx.project.sequence.as_str()]),
+                    Query::limit(2),
+                ],
+                utopia_database::PermissionType::Read,
+            ))
             .await?;
         for rule in rules {
             redirect.hosts.push(rule.string_or_empty("domain"));
@@ -1545,7 +1543,7 @@ pub async fn redirect(ctx: &mut Context) -> Result<Response> {
         .find_one(
             "identities",
             vec![
-                Query::equal("userInternalId", [documents::internal_id(user.sequence)]),
+                Query::equal("userInternalId", [user.sequence.to_string()]),
                 Query::equal("provider", [provider.as_str()]),
                 Query::equal("providerUid", [oauth_id.as_str()]),
             ],
@@ -1559,9 +1557,9 @@ pub async fn redirect(ctx: &mut Context) -> Result<Response> {
                     "identities",
                     vec![
                         Query::equal("providerEmail", [provider_email.as_str()]),
-                        Query::not_equal("userInternalId", documents::internal_id(user.sequence)),
+                        Query::not_equal("userInternalId", user.sequence.to_string()),
                     ],
-                    utopia_database::Database::PERMISSION_READ,
+                    utopia_database::PermissionType::Read,
                 )
                 .await?;
             if !others.is_empty() {
@@ -1569,24 +1567,24 @@ pub async fn redirect(ctx: &mut Context) -> Result<Response> {
             }
         }
         let mut document = Document::default();
-        document.set("$id", Value::from(appwrite_core::database::unique_id().as_str()));
-        document.set("$permissions", base::user_permissions(&user.id));
-        document.set("userInternalId", documents::internal_id(user.sequence));
-        document.set("userId", Value::from(user.id.as_str()));
-        document.set("provider", Value::from(provider.as_str()));
-        document.set("providerUid", Value::from(oauth_id.as_str()));
-        document.set("providerEmail", Value::from(provider_email.as_str()));
-        document.set("providerAccessToken", Value::from(access_token.as_str()));
-        document.set("providerRefreshToken", Value::from(refresh_token.as_str()));
-        document.set("providerAccessTokenExpiry", datetime::value(&token_expiry));
-        document.set("photo", Value::from(photo.as_str()));
+        document.put("$id", Value::from(appwrite_core::database::unique_id().as_str()));
+        document.set("$permissions", base::user_permissions(&user.id))?;
+        document.put("userInternalId", documents::internal_id(user.sequence));
+        document.put("userId", Value::from(user.id.as_str()));
+        document.put("provider", Value::from(provider.as_str()));
+        document.put("providerUid", Value::from(oauth_id.as_str()));
+        document.put("providerEmail", Value::from(provider_email.as_str()));
+        document.put("providerAccessToken", Value::from(access_token.as_str()));
+        document.put("providerRefreshToken", Value::from(refresh_token.as_str()));
+        document.put("providerAccessTokenExpiry", datetime::value(&token_expiry));
+        document.put("photo", Value::from(photo.as_str()));
         match db.create_document("identities", document).await {
             Ok(_) => {}
             Err(e) if e.is_a(utopia_database::Kind::Duplicate) => {
                 if let Some(new_user) = &new_user {
                     let _ = db
                         .authorization()
-                        .skip(|| async {
+                        .skip(async {
                             if let Some(target) = &new_target {
                                 db.delete_document("targets", target).await?;
                             }
@@ -1600,21 +1598,21 @@ pub async fn redirect(ctx: &mut Context) -> Result<Response> {
         }
     } else {
         let mut updates = Document::default();
-        updates.set("providerAccessToken", Value::from(access_token.as_str()));
-        updates.set("providerRefreshToken", Value::from(refresh_token.as_str()));
-        updates.set("providerAccessTokenExpiry", datetime::value(&token_expiry));
-        updates.set("photo", Value::from(photo.as_str()));
+        updates.put("providerAccessToken", Value::from(access_token.as_str()));
+        updates.put("providerRefreshToken", Value::from(refresh_token.as_str()));
+        updates.put("providerAccessTokenExpiry", datetime::value(&token_expiry));
+        updates.put("photo", Value::from(photo.as_str()));
         db.update_document("identities", identity.id(), updates).await?;
     }
 
     let mut updates = Document::default();
     if user.name.as_deref().is_none_or(|n| n.is_empty() || n == "0") {
         user.name = Some(oauth_name.clone());
-        updates.set("name", Value::from(oauth_name.as_str()));
+        updates.put("name", Value::from(oauth_name.as_str()));
     }
-    updates.set("status", Value::Bool(true));
-    updates.set("email", documents::text(user.email.as_deref()));
-    updates.set("emailVerification", Value::Bool(user.email_verification == Some(true)));
+    updates.put("status", Value::Bool(true));
+    updates.put("email", documents::text(user.email.as_deref()));
+    updates.put("emailVerification", Value::Bool(user.email_verification == Some(true)));
     let meta = Metadata {
         canonical: user.email_canonical.clone(),
         is_canonical: user.email_is_canonical,
@@ -1636,15 +1634,15 @@ pub async fn redirect(ctx: &mut Context) -> Result<Response> {
     if token {
         let secret = base::token_secret(64)?;
         let mut document = Document::default();
-        document.set("$id", Value::from(appwrite_core::database::unique_id().as_str()));
-        document.set("userId", Value::from(user.id.as_str()));
-        document.set("userInternalId", documents::internal_id(user.sequence));
-        document.set("type", Value::Int(token_type::OAUTH2));
-        document.set("secret", Value::from(base::token_hash(&secret)?.as_str()));
-        document.set("expire", datetime::value(&expire));
-        document.set("userAgent", Value::from(ctx.user_agent("UNKNOWN").as_str()));
-        document.set("ip", Value::from(ctx.ip.as_str()));
-        document.set("$permissions", base::owner_permissions(&user.id));
+        document.put("$id", Value::from(appwrite_core::database::unique_id().as_str()));
+        document.put("userId", Value::from(user.id.as_str()));
+        document.put("userInternalId", documents::internal_id(user.sequence));
+        document.put("type", Value::Int(token_type::OAUTH2));
+        document.put("secret", Value::from(base::token_hash(&secret)?.as_str()));
+        document.put("expire", datetime::value(&expire));
+        document.put("userAgent", Value::from(ctx.user_agent("UNKNOWN").as_str()));
+        document.put("ip", Value::from(ctx.ip.as_str()));
+        document.set("$permissions", base::owner_permissions(&user.id))?;
         let created = db.create_document("tokens", document).await?;
         ctx.events.event = Some("users.[userId].tokens.[tokenId].create".to_owned());
         ctx.event_param("userId", user.id.clone());
@@ -1672,10 +1670,10 @@ pub async fn redirect(ctx: &mut Context) -> Result<Response> {
     } else {
         let secret = base::token_secret(256)?;
         let mut session = base::new_session(ctx, &user, &provider, &secret, &["email", "oauth2"], &expire).await?;
-        session.set("providerUid", Value::from(oauth_id.as_str()));
-        session.set("providerAccessToken", Value::from(access_token.as_str()));
-        session.set("providerRefreshToken", Value::from(refresh_token.as_str()));
-        session.set("providerAccessTokenExpiry", datetime::value(&token_expiry));
+        session.put("providerUid", Value::from(oauth_id.as_str()));
+        session.put("providerAccessToken", Value::from(access_token.as_str()));
+        session.put("providerRefreshToken", Value::from(refresh_token.as_str()));
+        session.put("providerAccessTokenExpiry", datetime::value(&token_expiry));
         let mut session = Session::from(&db.create_document("sessions", session).await?);
         session.expire = Some(expire);
         let encoded = base::encode_store(&user.id, &secret)?;
@@ -1706,13 +1704,13 @@ pub async fn redirect(ctx: &mut Context) -> Result<Response> {
     if session_upgrade && let Some(session) = &session_created {
         for target in user.targets.iter().filter(|t| t.provider_type == "push") {
             let mut updates = Document::default();
-            updates.set("sessionId", Value::from(session.id.as_str()));
+            updates.put("sessionId", Value::from(session.id.as_str()));
             let sequence = db.get_document("sessions", &session.id, Vec::new(), false).await?;
-            updates.set("sessionInternalId", sequence.sequence().cloned().unwrap_or(Value::Null));
+            updates.put("sessionInternalId", sequence.sequence().cloned().unwrap_or(Value::Null));
             db.update_document("targets", &target.id, updates).await?;
         }
     }
-    db.purge_cached_document("users", Some(&user.id)).await?;
+    db.purge_cached_document("users", &user.id).await?;
     if let Some(state) = app_state.filter(|s| !s.is_empty()) {
         query.insert("state".into(), Json::String(state));
     }
@@ -1783,7 +1781,7 @@ async fn resolve_user(
     let mut upgrade = false;
     let fail = |ctx: &mut Context, e: Error| failure.fail(ctx, e).map(|r| Resolved::Redirect(Box::new(r)));
     if let Some(user) = &user {
-        let sequence = documents::internal_id(user.sequence);
+        let sequence = user.sequence.to_string();
         let taken = db
             .find_one(
                 "identities",
@@ -1811,7 +1809,7 @@ async fn resolve_user(
                 .find(
                     "users",
                     vec![Query::equal("email", [provider_email]), Query::not_equal("$id", user.id.as_str())],
-                    utopia_database::Database::PERMISSION_READ,
+                    utopia_database::PermissionType::Read,
                 )
                 .await?;
             if !others.is_empty() {
@@ -1832,7 +1830,7 @@ async fn resolve_user(
         if !document.is_empty() {
             db.delete_document("sessions", document.id()).await?;
             if let Some(u) = &user {
-                db.purge_cached_document("users", Some(&u.id)).await?;
+                db.purge_cached_document("users", &u.id).await?;
             }
         }
     }
@@ -1907,13 +1905,13 @@ async fn resolve_user(
             }
             let user_id = appwrite_core::database::unique_id();
             let mut document = base::new_user(&user_id);
-            document.set("email", if email.is_empty() { Value::Null } else { Value::from(email.as_str()) });
-            document.set("emailVerification", Value::Bool(!email.is_empty() && is_verified));
+            document.put("email", if email.is_empty() { Value::Null } else { Value::from(email.as_str()) });
+            document.put("emailVerification", Value::Bool(!email.is_empty() && is_verified));
             base::set_default_hash(&mut document);
-            document.set("name", Value::from(name));
-            document.set("mfa", Value::Bool(false));
-            document.set("authenticators", Value::Null);
-            document.set("search", Value::from(format!("{user_id} {email} {name}").as_str()));
+            document.put("name", Value::from(name));
+            document.put("mfa", Value::Bool(false));
+            document.put("authenticators", Value::Null);
+            document.put("search", Value::from(format!("{user_id} {email} {name}").as_str()));
             meta.apply(&mut document);
             let created = match base::create_user(ctx, document).await {
                 Ok(u) => u,
@@ -1956,7 +1954,7 @@ async fn resolve_user(
                     Query::equal("email", emails.iter().map(String::as_str).collect::<Vec<_>>()),
                     Query::not_equal("$id", user.id.as_str()),
                 ],
-                utopia_database::Database::PERMISSION_READ,
+                utopia_database::PermissionType::Read,
             )
             .await?;
         if !others.is_empty() {
@@ -1977,7 +1975,7 @@ async fn resolve_user(
             Err(e) if e.is_a(utopia_database::Kind::Duplicate) => {
                 let existing = db
                     .authorization()
-                    .skip(|| db.find_one("targets", vec![Query::equal("identifier", [email.as_str()])]))
+                    .skip(db.find_one("targets", vec![Query::equal("identifier", [email.as_str()])]))
                     .await?;
                 if existing.is_empty() || existing.string_or_empty("userInternalId") != user.sequence.to_string() {
                     return fail(ctx, Error::new(ErrorType::UserAlreadyExists));
@@ -2377,7 +2375,7 @@ pub async fn id_token_session(ctx: &mut Context) -> Result<Response> {
     let mut user = ctx.user.clone();
     let mut upgrade = false;
     if let Some(u) = &user {
-        let sequence = documents::internal_id(u.sequence);
+        let sequence = u.sequence.to_string();
         let taken = db
             .find_one(
                 "identities",
@@ -2408,7 +2406,7 @@ pub async fn id_token_session(ctx: &mut Context) -> Result<Response> {
                 .find(
                     "users",
                     vec![Query::equal("email", [provider_email.as_str()]), Query::not_equal("$id", u.id.as_str())],
-                    utopia_database::Database::PERMISSION_READ,
+                    utopia_database::PermissionType::Read,
                 )
                 .await?;
             if !others.is_empty() {
@@ -2484,17 +2482,17 @@ pub async fn id_token_session(ctx: &mut Context) -> Result<Response> {
             id_token_email_policy(ctx, &meta, &email, canonicalize)?;
             let user_id = appwrite_core::database::unique_id();
             let mut document = base::new_user(&user_id);
-            document.set("email", if email.is_empty() { Value::Null } else { Value::from(email.as_str()) });
-            document.set("emailVerification", Value::Bool(!email.is_empty() && is_verified));
+            document.put("email", if email.is_empty() { Value::Null } else { Value::from(email.as_str()) });
+            document.put("emailVerification", Value::Bool(!email.is_empty() && is_verified));
             base::set_default_hash(&mut document);
-            document.set("name", Value::from(name.as_str()));
-            document.set("mfa", Value::Bool(false));
-            document.set("authenticators", Value::Null);
+            document.put("name", Value::from(name.as_str()));
+            document.put("mfa", Value::Bool(false));
+            document.put("authenticators", Value::Null);
             let search: Vec<&str> = [user_id.as_str(), email.as_str(), name.as_str()]
                 .into_iter()
                 .filter(|p| !p.is_empty() && *p != "0")
                 .collect();
-            document.set("search", Value::from(search.join(" ").as_str()));
+            document.put("search", Value::from(search.join(" ").as_str()));
             meta.apply(&mut document);
             let created = base::create_user(ctx, document).await?;
             new_user = Some(created.id.clone());
@@ -2529,7 +2527,7 @@ pub async fn id_token_session(ctx: &mut Context) -> Result<Response> {
                     Query::equal("email", emails.iter().map(String::as_str).collect::<Vec<_>>()),
                     Query::not_equal("$id", user.id.as_str()),
                 ],
-                utopia_database::Database::PERMISSION_READ,
+                utopia_database::PermissionType::Read,
             )
             .await?;
         if !others.is_empty() {
@@ -2548,7 +2546,7 @@ pub async fn id_token_session(ctx: &mut Context) -> Result<Response> {
             Err(e) if e.is_a(utopia_database::Kind::Duplicate) => {
                 let existing = db
                     .authorization()
-                    .skip(|| db.find_one("targets", vec![Query::equal("identifier", [email.as_str()])]))
+                    .skip(db.find_one("targets", vec![Query::equal("identifier", [email.as_str()])]))
                     .await?;
                 if existing.is_empty() || existing.string_or_empty("userInternalId") != user.sequence.to_string() {
                     return Err(Error::new(ErrorType::UserAlreadyExists));
@@ -2565,7 +2563,7 @@ pub async fn id_token_session(ctx: &mut Context) -> Result<Response> {
         .find_one(
             "identities",
             vec![
-                Query::equal("userInternalId", [documents::internal_id(user.sequence)]),
+                Query::equal("userInternalId", [user.sequence.to_string()]),
                 Query::equal("provider", [provider.as_str()]),
                 Query::equal("providerUid", [sub.as_str()]),
             ],
@@ -2578,9 +2576,9 @@ pub async fn id_token_session(ctx: &mut Context) -> Result<Response> {
                     "identities",
                     vec![
                         Query::equal("providerEmail", [provider_email.as_str()]),
-                        Query::not_equal("userInternalId", documents::internal_id(user.sequence)),
+                        Query::not_equal("userInternalId", user.sequence.to_string()),
                     ],
-                    utopia_database::Database::PERMISSION_READ,
+                    utopia_database::PermissionType::Read,
                 )
                 .await?;
             if !others.is_empty() {
@@ -2588,25 +2586,25 @@ pub async fn id_token_session(ctx: &mut Context) -> Result<Response> {
             }
         }
         let mut document = Document::default();
-        document.set("$id", Value::from(appwrite_core::database::unique_id().as_str()));
-        document.set("$permissions", base::user_permissions(&user.id));
-        document.set("userInternalId", documents::internal_id(user.sequence));
-        document.set("userId", Value::from(user.id.as_str()));
-        document.set("provider", Value::from(provider.as_str()));
-        document.set("providerUid", Value::from(sub.as_str()));
-        document.set("providerEmail", Value::from(provider_email.as_str()));
-        document.set("providerAccessToken", Value::from(access_token.as_str()));
-        document.set("providerRefreshToken", Value::Null);
-        document.set("providerAccessTokenExpiry", expiry_value.clone());
-        document.set("providerIdToken", Value::from(id_token.as_str()));
-        document.set("photo", if photo.is_empty() { Value::Null } else { Value::from(photo.as_str()) });
+        document.put("$id", Value::from(appwrite_core::database::unique_id().as_str()));
+        document.set("$permissions", base::user_permissions(&user.id))?;
+        document.put("userInternalId", documents::internal_id(user.sequence));
+        document.put("userId", Value::from(user.id.as_str()));
+        document.put("provider", Value::from(provider.as_str()));
+        document.put("providerUid", Value::from(sub.as_str()));
+        document.put("providerEmail", Value::from(provider_email.as_str()));
+        document.put("providerAccessToken", Value::from(access_token.as_str()));
+        document.put("providerRefreshToken", Value::Null);
+        document.put("providerAccessTokenExpiry", expiry_value.clone());
+        document.put("providerIdToken", Value::from(id_token.as_str()));
+        document.put("photo", if photo.is_empty() { Value::Null } else { Value::from(photo.as_str()) });
         match db.create_document("identities", document).await {
             Ok(_) => {}
             Err(e) if e.is_a(utopia_database::Kind::Duplicate) => {
                 if let Some(new_user) = &new_user {
                     let _ = db
                         .authorization()
-                        .skip(|| async {
+                        .skip(async {
                             if let Some(target) = &new_target {
                                 db.delete_document("targets", target).await?;
                             }
@@ -2620,13 +2618,13 @@ pub async fn id_token_session(ctx: &mut Context) -> Result<Response> {
         }
     } else {
         let mut changes = Document::default();
-        changes.set("providerIdToken", Value::from(id_token.as_str()));
+        changes.put("providerIdToken", Value::from(id_token.as_str()));
         if !access_token.is_empty() {
-            changes.set("providerAccessToken", Value::from(access_token.as_str()));
-            changes.set("providerAccessTokenExpiry", expiry_value.clone());
+            changes.put("providerAccessToken", Value::from(access_token.as_str()));
+            changes.put("providerAccessTokenExpiry", expiry_value.clone());
         }
         if !photo.is_empty() {
-            changes.set("photo", Value::from(photo.as_str()));
+            changes.put("photo", Value::from(photo.as_str()));
         }
         db.update_document("identities", identity.id(), changes).await?;
     }
@@ -2634,11 +2632,11 @@ pub async fn id_token_session(ctx: &mut Context) -> Result<Response> {
     let mut updates = Document::default();
     if user.name.as_deref().is_none_or(|n| n.is_empty() || n == "0") {
         user.name = Some(name.clone());
-        updates.set("name", Value::from(name.as_str()));
+        updates.put("name", Value::from(name.as_str()));
     }
-    updates.set("status", Value::Bool(true));
-    updates.set("email", documents::text(user.email.as_deref()));
-    updates.set("emailVerification", Value::Bool(user.email_verification == Some(true)));
+    updates.put("status", Value::Bool(true));
+    updates.put("email", documents::text(user.email.as_deref()));
+    updates.put("emailVerification", Value::Bool(user.email_verification == Some(true)));
     let meta = Metadata {
         canonical: user.email_canonical.clone(),
         is_canonical: user.email_is_canonical,
@@ -2653,17 +2651,17 @@ pub async fn id_token_session(ctx: &mut Context) -> Result<Response> {
     let secret = base::token_secret(256)?;
     let expire = datetime::add_seconds(datetime::now(), duration);
     let mut session = base::new_session(ctx, &user, &provider, &secret, &["email", "oauth2"], &expire).await?;
-    session.set("providerUid", Value::from(sub.as_str()));
-    session.set("providerAccessToken", Value::from(access_token.as_str()));
-    session.set("providerRefreshToken", Value::Null);
-    session.set("providerAccessTokenExpiry", expiry_value);
+    session.put("providerUid", Value::from(sub.as_str()));
+    session.put("providerAccessToken", Value::from(access_token.as_str()));
+    session.put("providerRefreshToken", Value::Null);
+    session.put("providerAccessTokenExpiry", expiry_value);
     let created = db.create_document("sessions", session).await?;
     let session = Session::from(&created);
     if upgrade {
         for target in user.targets.iter().filter(|t| t.provider_type == "push") {
             let mut updates = Document::default();
-            updates.set("sessionId", Value::from(session.id.as_str()));
-            updates.set("sessionInternalId", created.sequence().cloned().unwrap_or(Value::Null));
+            updates.put("sessionId", Value::from(session.id.as_str()));
+            updates.put("sessionInternalId", created.sequence().cloned().unwrap_or(Value::Null));
             db.update_document("targets", &target.id, updates).await?;
         }
     }
@@ -2692,7 +2690,7 @@ pub async fn id_token_session(ctx: &mut Context) -> Result<Response> {
             db.delete_document("sessions", document.id()).await?;
         }
     }
-    db.purge_cached_document("users", Some(&user.id)).await?;
+    db.purge_cached_document("users", &user.id).await?;
     Ok(response)
 }
 

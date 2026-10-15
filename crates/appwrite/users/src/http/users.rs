@@ -2,7 +2,8 @@
 
 use serde_json::{Value, json};
 use utopia_auth::hashes::Plaintext;
-use utopia_database::{Database, Query};
+use utopia_database::PermissionType;
+use utopia_database::Query;
 use utopia_http::Response;
 use utopia_validators::{AllOf, Nullable, Text, Validator};
 
@@ -70,29 +71,23 @@ pub async fn list(ctx: &mut Context) -> Result<Response> {
     // Targets are loaded below for every user at once.
     let skipped = filters::names(filters::USERS_SUBQUERIES);
     let (users, total) = db
-        .skip_filters(
-            || async {
-                let users = db.find("users", queries.clone(), Database::PERMISSION_READ).await?;
-                let total =
-                    if include_total { db.count("users", queries.clone(), Some(LIMIT_COUNT)).await? } else { 0 };
-                Ok::<_, utopia_database::Error>((users, total))
-            },
-            Some(&skipped),
-        )
+        .skip_filters(Some(skipped.as_slice()), async {
+            let users = db.find("users", queries.clone(), PermissionType::Read).await?;
+            let total = if include_total { db.count("users", queries.clone(), Some(LIMIT_COUNT)).await? } else { 0 };
+            Ok::<_, utopia_database::Error>((users, total))
+        })
         .await?;
     let mut users: Vec<User> = documents::all(&users);
 
     if !users.is_empty() {
-        let sequences: Vec<_> = users.iter().map(|u| documents::internal_id(u.sequence)).collect();
+        let sequences: Vec<String> = users.iter().map(|u| u.sequence.to_string()).collect();
         let authorization = db.authorization();
         let targets = authorization
-            .skip(|| {
-                db.find(
-                    "targets",
-                    vec![Query::equal("userInternalId", sequences), Query::limit(i64::MAX)],
-                    Database::PERMISSION_READ,
-                )
-            })
+            .skip(db.find(
+                "targets",
+                vec![Query::equal("userInternalId", sequences), Query::limit(i64::MAX)],
+                PermissionType::Read,
+            ))
             .await?;
         for target in documents::all::<Target>(&targets) {
             if let Some(u) = users.iter_mut().find(|u| u.sequence.to_string() == target.user_internal_id) {
@@ -118,7 +113,7 @@ pub async fn delete(ctx: &mut Context) -> Result<Response> {
     let db = ctx.db()?;
     // The delete reads the user back; nothing reads its sub-queries.
     let skipped = filters::names(filters::USERS_SUBQUERIES);
-    db.skip_filters(|| db.delete_document("users", &user_id), Some(&skipped)).await?;
+    db.skip_filters(Some(skipped.as_slice()), db.delete_document("users", &user_id)).await?;
     base::delete_user_identities(&db, user.sequence).await?;
     base::delete_user_targets(&db, user.sequence).await?;
 

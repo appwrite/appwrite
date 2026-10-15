@@ -9,9 +9,9 @@ use serde_json::{Map, Value as Json, json};
 use utopia_auth::Hash;
 use utopia_auth::hashes::{Argon2, Sha};
 use utopia_auth::proofs::Password;
+use utopia_database::Permission;
+use utopia_database::Role;
 use utopia_database::database::Callback;
-use utopia_database::helpers::permission::Permission;
-use utopia_database::helpers::role::Role;
 use utopia_database::value::{from_plain, list, to_long};
 use utopia_database::{Database, Document, Kind, Query, Value};
 use utopia_emails::Email;
@@ -127,12 +127,12 @@ pub async fn pwned(ctx: &Context, password: &str) -> Result<Option<bool>> {
 /// The attributes a new password sets (`password`, `passwordHistory`, ...).
 pub fn password_updates(updates: &mut Document, hashed: &str, history: &[String], pwned: Option<bool>) {
     let proof = proof();
-    updates.set("password", Value::from(hashed));
-    updates.set("passwordHistory", documents::strings(history));
-    updates.set("passwordPwned", pwned.map(Value::Bool).unwrap_or(Value::Null));
-    updates.set("passwordUpdate", datetime::value(&datetime::now()));
-    updates.set("hash", Value::from(proof.name()));
-    updates.set("hashOptions", hash_options(proof.as_ref()));
+    updates.put("password", Value::from(hashed));
+    updates.put("passwordHistory", documents::strings(history));
+    updates.put("passwordPwned", pwned.map(Value::Bool).unwrap_or(Value::Null));
+    updates.put("passwordUpdate", datetime::value(&datetime::now()));
+    updates.put("hash", Value::from(proof.name()));
+    updates.put("hashOptions", hash_options(proof.as_ref()));
 }
 
 // ---- users ------------------------------------------------------------------
@@ -157,20 +157,20 @@ pub async fn user_document(db: &Database, id: &str, keep: &[&str]) -> Result<Doc
         // An empty list skips every filter.
         return Ok(db.get_document("users", id, Vec::new(), false).await?);
     }
-    Ok(db.skip_filters(|| db.get_document("users", id, Vec::new(), false), Some(&skipped)).await?)
+    Ok(db.skip_filters(Some(skipped.as_slice()), db.get_document("users", id, Vec::new(), false)).await?)
 }
 
 /// `updateDocument('users', $id, $updates)`: the user as stored, decoded
 /// with the sub-queries in `keep`.
 pub async fn update_user(db: &Database, id: &str, updates: Document, keep: &[&str]) -> Result<User> {
     let skipped = skipped(&[]);
-    let mut updated = db.skip_filters(|| db.update_document("users", id, updates), Some(&skipped)).await?;
+    let mut updated = db.skip_filters(Some(skipped.as_slice()), db.update_document("users", id, updates)).await?;
     if updated.is_empty() {
         return Err(Error::new(ErrorType::UserNotFound));
     }
     for filter in keep {
         let value = filters::sub_query(db, filter, &updated).await?;
-        updated.set(sub_query_attribute(filter), value);
+        updated.put(sub_query_attribute(filter), value);
     }
     Ok(User::from(&updated))
 }
@@ -238,11 +238,11 @@ impl Metadata {
     /// Sets the `emailCanonical` and `emailIs*` attributes.
     pub fn apply(&self, document: &mut Document) {
         let flag = |b: Option<bool>| b.map(Value::Bool).unwrap_or(Value::Null);
-        document.set("emailCanonical", text(self.canonical.as_deref()));
-        document.set("emailIsCanonical", flag(self.is_canonical));
-        document.set("emailIsCorporate", flag(self.is_corporate));
-        document.set("emailIsDisposable", flag(self.is_disposable));
-        document.set("emailIsFree", flag(self.is_free));
+        document.put("emailCanonical", text(self.canonical.as_deref()));
+        document.put("emailIsCanonical", flag(self.is_canonical));
+        document.put("emailIsCorporate", flag(self.is_corporate));
+        document.put("emailIsDisposable", flag(self.is_disposable));
+        document.put("emailIsFree", flag(self.is_free));
     }
 }
 
@@ -299,9 +299,8 @@ pub async fn invalidate_authentication(db: &Database, user: &User, keep: Option<
     }
     db.delete_documents(
         "challenges",
-        vec![Query::equal("userInternalId", [documents::internal_id(user.sequence)])],
-        Database::DELETE_BATCH_SIZE,
-        None,
+        vec![Query::equal("userInternalId", [user.sequence.to_string()])],
+        utopia_database::database::BATCH_SIZE,
         None,
     )
     .await?;
@@ -326,14 +325,14 @@ pub fn new_token(
     expire: &Value,
 ) -> Result<Document> {
     let mut token = Document::default();
-    token.set("$id", Value::from(appwrite_core::database::unique_id().as_str()));
-    token.set("userId", Value::from(user_id));
-    token.set("userInternalId", user_internal_id);
-    token.set("type", Value::Int(kind));
-    token.set("secret", Value::from(secret_hash(secret)?.as_str()));
-    token.set("expire", expire.clone());
-    token.set("userAgent", Value::from(ctx.user_agent("UNKNOWN").as_str()));
-    token.set("ip", Value::from(ctx.ip.as_str()));
+    token.put("$id", Value::from(appwrite_core::database::unique_id().as_str()));
+    token.put("userId", Value::from(user_id));
+    token.put("userInternalId", user_internal_id);
+    token.put("type", Value::Int(kind));
+    token.put("secret", Value::from(secret_hash(secret)?.as_str()));
+    token.put("expire", expire.clone());
+    token.put("userAgent", Value::from(ctx.user_agent("UNKNOWN").as_str()));
+    token.put("ip", Value::from(ctx.ip.as_str()));
     Ok(token)
 }
 
@@ -341,7 +340,7 @@ pub fn new_token(
 /// `createDocument('tokens', ...)` with the owner's permissions.
 pub async fn create_token(ctx: &mut Context, user_id: &str, mut token: Document) -> Result<Document> {
     ctx.authorization.add_role(&format!("user:{user_id}"));
-    token.set("$permissions", owner_permissions(user_id));
+    token.set("$permissions", owner_permissions(user_id))?;
     let db = ctx.db()?;
     Ok(db.create_document("tokens", token).await?)
 }
@@ -351,7 +350,7 @@ pub async fn create_token(ctx: &mut Context, user_id: &str, mut token: Document)
 pub fn token_verify(user: &Document, kind: i64, secret: &str) -> Option<Document> {
     let hashed = secret_hash(secret).ok()?;
     let now = datetime::now();
-    user.documents("tokens").into_iter().find_map(|token| {
+    user.nested("tokens").into_iter().find_map(|token| {
         let (Some(stored), Some(expire), Some(stored_kind)) =
             (token.string("secret"), token.datetime("expire"), token.get("type").map(to_long))
         else {
@@ -638,10 +637,9 @@ pub fn cookie_name(ctx: &Context) -> String {
 pub async fn delete_user_targets(db: &Database, user_sequence: i64) -> Result<()> {
     db.delete_documents(
         "targets",
-        vec![Query::equal("userInternalId", [documents::internal_id(user_sequence)]), Query::order_asc("")],
-        Database::DELETE_BATCH_SIZE,
+        vec![Query::equal("userInternalId", [user_sequence.to_string()]), Query::order_asc("", None)],
+        utopia_database::database::BATCH_SIZE,
         Some(&mut DeleteSubscribers { db }),
-        None,
     )
     .await?;
     Ok(())
@@ -653,19 +651,18 @@ struct DeleteSubscribers<'a> {
 }
 
 #[async_trait]
-impl Callback<(Document, Document)> for DeleteSubscribers<'_> {
-    async fn call(&mut self, (target, _): (Document, Document)) -> utopia_database::Result<()> {
+impl Callback<Document> for DeleteSubscribers<'_> {
+    async fn call(&mut self, target: Document) -> utopia_database::Result<()> {
         let mut topics = DecreaseTopic { db: self.db, provider_type: target.string_or_empty("providerType") };
         self.db
             .delete_documents(
                 "subscribers",
                 vec![
-                    Query::equal("targetInternalId", [target.sequence().cloned().unwrap_or(Value::Null)]),
-                    Query::order_asc(""),
+                    Query::equal("targetInternalId", [documents::query_value(target.sequence())]),
+                    Query::order_asc("", None),
                 ],
-                Database::DELETE_BATCH_SIZE,
+                utopia_database::database::BATCH_SIZE,
                 Some(&mut topics),
-                None,
             )
             .await?;
         Ok(())
@@ -679,21 +676,19 @@ struct DecreaseTopic<'a> {
 }
 
 #[async_trait]
-impl Callback<(Document, Document)> for DecreaseTopic<'_> {
-    async fn call(&mut self, (subscriber, _): (Document, Document)) -> utopia_database::Result<()> {
+impl Callback<Document> for DecreaseTopic<'_> {
+    async fn call(&mut self, subscriber: Document) -> utopia_database::Result<()> {
         let db = self.db;
         let topic_id = subscriber.string_or_empty("topicId");
-        let topic_internal_id = subscriber.get("topicInternalId").cloned().unwrap_or(Value::Null);
+        let topic_internal_id = documents::query_value(subscriber.get("topicInternalId"));
         let skipped = filters::names(filters::TOPICS_SUBQUERIES);
         let topic = db
             .skip_filters(
-                || {
-                    db.find_one(
-                        "topics",
-                        vec![Query::select(["$id", "$sequence"]), Query::equal("$sequence", [topic_internal_id])],
-                    )
-                },
-                Some(&skipped),
+                Some(skipped.as_slice()),
+                db.find_one(
+                    "topics",
+                    vec![Query::select(["$id", "$sequence"]), Query::equal("$sequence", [topic_internal_id])],
+                ),
             )
             .await?;
         if topic.is_empty() {
@@ -707,8 +702,8 @@ impl Callback<(Document, Document)> for DecreaseTopic<'_> {
         };
         let decreased = db
             .skip_filters(
-                || db.decrease_document_attribute("topics", &topic_id, total, Value::Int(1), Some(Value::Int(0))),
-                Some(&skipped),
+                Some(skipped.as_slice()),
+                db.decrease_document_attribute("topics", &topic_id, total, Value::Int(1), Some(Value::Int(0))),
             )
             .await;
         match decreased {
@@ -725,9 +720,8 @@ impl Callback<(Document, Document)> for DecreaseTopic<'_> {
 pub async fn delete_user_identities(db: &Database, user_sequence: i64) -> Result<()> {
     db.delete_documents(
         "identities",
-        vec![Query::equal("userInternalId", [documents::internal_id(user_sequence)]), Query::order_asc("")],
-        Database::DELETE_BATCH_SIZE,
-        None,
+        vec![Query::equal("userInternalId", [user_sequence.to_string()]), Query::order_asc("", None)],
+        utopia_database::database::BATCH_SIZE,
         None,
     )
     .await?;
@@ -747,17 +741,17 @@ mod tests {
     /// A token of `kind` expiring `seconds` from now.
     fn token(kind: i64, secret: &str, seconds: i64) -> Value {
         let mut token = Document::default();
-        token.set("$id", Value::from(format!("t{kind}{seconds}").as_str()));
-        token.set("type", Value::Int(kind));
-        token.set("secret", Value::from(secret_hash(secret).unwrap().as_str()));
-        token.set("expire", datetime::value(&datetime::add_seconds(datetime::now(), seconds)));
+        token.put("$id", Value::from(format!("t{kind}{seconds}").as_str()));
+        token.put("type", Value::Int(kind));
+        token.put("secret", Value::from(secret_hash(secret).unwrap().as_str()));
+        token.put("expire", datetime::value(&datetime::add_seconds(datetime::now(), seconds)));
         Value::from(token)
     }
 
     #[test]
     fn tokens_verify_by_kind_secret_and_expiry() {
         let mut user = Document::default();
-        user.set(
+        user.put(
             "tokens",
             list([
                 token(TOKEN_TYPE_RECOVERY, "old", -60),

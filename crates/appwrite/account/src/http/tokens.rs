@@ -158,19 +158,19 @@ async fn create_token(
     expire: &chrono::NaiveDateTime,
 ) -> Result<Token> {
     let mut token = Document::default();
-    token.set("$id", Value::from(appwrite_core::database::unique_id().as_str()));
-    token.set("userId", Value::from(user.id.as_str()));
-    token.set("userInternalId", documents::internal_id(user.sequence));
-    token.set("type", Value::Int(kind));
-    token.set("secret", Value::from(hash));
-    token.set("expire", datetime::value(expire));
-    token.set("userAgent", Value::from(ctx.user_agent("UNKNOWN").as_str()));
-    token.set("ip", Value::from(ctx.ip.as_str()));
-    token.set("$permissions", base::owner_permissions(&user.id));
+    token.put("$id", Value::from(appwrite_core::database::unique_id().as_str()));
+    token.put("userId", Value::from(user.id.as_str()));
+    token.put("userInternalId", documents::internal_id(user.sequence));
+    token.put("type", Value::Int(kind));
+    token.put("secret", Value::from(hash));
+    token.put("expire", datetime::value(expire));
+    token.put("userAgent", Value::from(ctx.user_agent("UNKNOWN").as_str()));
+    token.put("ip", Value::from(ctx.ip.as_str()));
+    token.set("$permissions", base::owner_permissions(&user.id))?;
     ctx.authorization.add_role(&format!("user:{}", user.id));
     let db = ctx.db()?;
     let token = Token::from(&db.create_document("tokens", token).await?);
-    db.purge_cached_document("users", Some(&user.id)).await?;
+    db.purge_cached_document("users", &user.id).await?;
     Ok(token)
 }
 
@@ -199,8 +199,8 @@ async fn email_sign_up(ctx: &mut Context, user_id: String, email: &str, identity
     let meta = Metadata::of(email)?;
     base::check_email_policy(ctx, &meta, false)?;
     let mut user = base::new_user(&user_id);
-    user.set("email", Value::from(email));
-    user.set("search", Value::from(format!("{user_id} {email}").as_str()));
+    user.put("email", Value::from(email));
+    user.put("search", Value::from(format!("{user_id} {email}").as_str()));
     meta.apply(&mut user);
     Ok(user)
 }
@@ -224,8 +224,8 @@ pub async fn magic_url(ctx: &mut Context) -> Result<Response> {
     } else {
         let mut user = email_sign_up(ctx, user_id, &email, ErrorType::UserEmailAlreadyExists).await?;
         base::set_default_hash(&mut user);
-        user.set("mfa", Value::Bool(false));
-        user.set("authenticators", Value::Null);
+        user.put("mfa", Value::Bool(false));
+        user.put("authenticators", Value::Null);
         base::create_user(ctx, user).await?
     };
     base::act_as(ctx, &user);
@@ -307,7 +307,7 @@ pub async fn email(ctx: &mut Context) -> Result<Response> {
         if let Some(target) = base::create_target(ctx, &user, "email", &email).await? {
             user.targets.push(target);
         }
-        ctx.db()?.purge_cached_document("users", Some(&user.id)).await?;
+        ctx.db()?.purge_cached_document("users", &user.id).await?;
         user
     };
     base::act_as(ctx, &user);
@@ -381,18 +381,18 @@ pub async fn phone(ctx: &mut Context) -> Result<Response> {
         base::check_user_limit(ctx, false).await?;
         let user_id = if user_id == "unique()" { appwrite_core::database::unique_id() } else { user_id };
         let mut user = base::new_user(&user_id);
-        user.set("email", Value::Null);
-        user.set("phone", Value::from(phone.as_str()));
-        user.set("phoneVerification", Value::Bool(false));
-        user.set("password", Value::Null);
-        user.set("passwordUpdate", Value::Null);
-        user.set("search", Value::from(format!("{user_id} {phone}").as_str()));
+        user.put("email", Value::Null);
+        user.put("phone", Value::from(phone.as_str()));
+        user.put("phoneVerification", Value::Bool(false));
+        user.put("password", Value::Null);
+        user.put("passwordUpdate", Value::Null);
+        user.put("search", Value::from(format!("{user_id} {phone}").as_str()));
         Metadata::default().apply(&mut user);
         let mut user = base::create_user(ctx, user).await?;
         if let Some(target) = base::create_target(ctx, &user, "sms", &phone).await? {
             user.targets.push(target);
         }
-        ctx.db()?.purge_cached_document("users", Some(&user.id)).await?;
+        ctx.db()?.purge_cached_document("users", &user.id).await?;
         user
     };
     base::act_as(ctx, &user);

@@ -41,10 +41,11 @@ utopia-locale.workspace = true
 utopia-pools.workspace = true
 utopia-abuse.workspace = true
 utopia-lock.workspace = true
+utopia-query.workspace = true
 utopia-queue.workspace = true
 utopia-system.workspace = true
 utopia-user-agent.workspace = true
 utopia-validators.workspace = true
 
 [dev-dependencies]
-utopia-database = { workspace = true, features = ["memory", "pool"] }
+utopia-database = { workspace = true, features = ["memory", "pool", "sqlite"] }

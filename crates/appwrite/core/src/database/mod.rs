@@ -17,7 +17,9 @@ use std::sync::Arc;
 
 use utopia_cache::Cache;
 use utopia_database::adapter::pool::{Pool, Pooled};
-use utopia_database::database::CollectionCache;
+use utopia_database::database::Hook;
+use utopia_database::event::Event;
+use utopia_database::hook::{Permissions, Tenancy};
 use utopia_database::{Adapter, Authorization, Database, Value};
 
 use crate::{Error, ErrorType, Result};
@@ -35,27 +37,26 @@ pub const LIMIT_COUNT: i64 = 5000;
 
 /// `ID::unique()`.
 pub fn unique_id() -> String {
-    utopia_database::helpers::id::unique().unwrap_or_default()
+    utopia_database::id::unique().unwrap_or_default()
 }
 
 /// The connections of one database server, as PHP's `pools` group holds
-/// them, with a connection its handles read capabilities from until they
-/// use one ([`Pool::with_fallback`]). Idle connections wait in a
-/// [`utopia_pools::Channel`], as in PHP's Swoole pool adapter: a request
-/// finding none waits for one to come back instead of polling for it.
+/// them. Idle connections wait in a [`utopia_pools::Channel`], as in PHP's
+/// Swoole pool adapter: a request finding none waits for one to come back
+/// instead of polling for it.
 #[derive(Clone)]
 pub struct Connections {
     pub pool: utopia_pools::Pool<Pooled, utopia_pools::Channel<Pooled>>,
-    pub fallback: Arc<dyn Adapter>,
 }
 
 impl Connections {
-    /// A database adapter drawing connections from this pool
-    /// (`new DatabasePool($pools->get($name))`). Its getters read any
-    /// connection: every one of a server answers them alike, and each
-    /// checkout puts a connection in the handle's settings anyway.
-    fn adapter(&self) -> Arc<dyn Adapter> {
-        Arc::new(Pool::new(self.pool.clone()).with_fallback(self.fallback.clone()).with_shared_reads())
+    /// A database adapter drawing connections from this pool, named after
+    /// the pool (`(new DatabasePool($pools->get($name)))->setHostname($name)`):
+    /// the hostname is part of the cache keys.
+    fn adapter(&self, name: &str) -> Arc<dyn Adapter> {
+        let adapter = Pool::new(self.pool.clone());
+        adapter.set_hostname(name);
+        Arc::new(adapter)
     }
 }
 
@@ -68,9 +69,6 @@ pub struct Databases {
     timeout: i64,
     /// `gethostname()`, the `host` of every database's metadata.
     hostname: String,
-    /// The collections every database reads, kept while their cache
-    /// entries' generations stay the same.
-    collections: Arc<CollectionCache>,
 }
 
 impl Databases {
@@ -89,47 +87,52 @@ impl Databases {
             shared_tables,
             timeout: timeout.as_millis() as i64,
             hostname: php_std::system::gethostname(),
-            collections: Arc::new(CollectionCache::new()),
         }
     }
 
     /// A database on pool `name`, with the settings every Appwrite database
-    /// has (`Factory::platform()` / `project()` before their scoping).
+    /// has (`Factory::platform()` / `project()` before their scoping):
+    /// `newDatabase()`, `setDatabase()`, `setAuthorization()`,
+    /// `setDropUnknownAttributes(true)`, `configureDocumentTypes()` and
+    /// `configureOptions()`.
     fn database(&self, name: &str, authorization: Arc<Authorization>, project: &str) -> Result<Database> {
         let connections =
             self.pools.get(name).ok_or_else(|| Error::internal(format!("Unknown database pool: {name}")))?;
-        let database = Database::new(connections.adapter(), self.cache.clone(), Vec::new());
-        database.set_database(SCHEMA)?;
+        let database = Database::new(connections.adapter(name), self.cache.clone());
+        database.set_database(SCHEMA);
         database.set_authorization(authorization);
         database.set_drop_unknown_attributes(true);
-        database.set_document_type("users", "Appwrite\\Utopia\\Database\\Documents\\User")?;
-        database.set_metadata("host", &self.hostname);
-        database.set_metadata("project", project);
+        database.set_document_type("users", "Appwrite\\Utopia\\Database\\Documents\\User");
+        database.set_metadata("host", Value::from(self.hostname.as_str()));
+        database.set_metadata("project", Value::from(project));
         if self.timeout > 0 {
-            database.set_timeout(self.timeout, Database::EVENT_ALL)?;
+            database.set_timeout(self.timeout, Event::All)?;
         }
         database.set_max_query_values(QUERY_MAX_VALUES);
-        // A handle lives for one request (or one background update): it
-        // reads the same few collections many times (a user's sub-queries
-        // read six), and none of its work changes a schema.
-        database.set_collection_memo(true);
-        database.set_collection_cache(self.collections.clone());
+        Ok(database)
+    }
+
+    /// `applyHooks()` (without relationships): permissions, and the tenant
+    /// of rows under shared tables.
+    fn hooks(database: Database) -> Result<Database> {
+        database.add_hook(Hook::write(Arc::new(Permissions::new())))?;
+        if database.shared_tables() && !matches!(database.tenant(), Value::Null) {
+            database.add_hook(Hook::write(Arc::new(Tenancy::default())))?;
+        }
         Ok(database)
     }
 
     /// An authorization that checks nothing, for work done outside a
     /// request's permissions (PHP wraps it in `$authorization->skip()`).
     pub fn unchecked() -> Arc<Authorization> {
-        let authorization = Authorization::new();
-        authorization.set_default_status(false);
-        Arc::new(authorization)
+        Arc::new(Authorization::new(false))
     }
 
     /// `dbForPlatform`.
     pub fn platform(&self, authorization: Arc<Authorization>) -> Result<Database> {
         let database = self.database("console", authorization, Project::CONSOLE)?;
-        database.set_namespace("_console")?;
-        Ok(database)
+        database.set_namespace("_console");
+        Self::hooks(database)
     }
 
     /// `dbForProject` (`getProjectDB`): the platform database for the
@@ -155,12 +158,12 @@ impl Databases {
                 .set_shared_tables(true)
                 .set_global_collections(&collections::project_global_collections())
                 .set_tenant(Value::Int(project.sequence_i64()));
-            database.set_namespace(&namespace)?;
+            database.set_namespace(&namespace);
         } else {
             database.set_shared_tables(false).set_tenant(Value::Null);
-            database.set_namespace(&format!("_{}", project.sequence))?;
+            database.set_namespace(&format!("_{}", project.sequence));
         }
-        Ok(database)
+        Self::hooks(database)
     }
 
     pub fn cache(&self) -> &Arc<Cache> {
@@ -169,5 +172,85 @@ impl Databases {
 
     pub fn pools(&self) -> impl Iterator<Item = (&String, &Connections)> {
         self.pools.iter()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Databases over pools of in-memory SQLite connections: the cache keys
+    /// name the pool, which a database reads once it knows its adapter has
+    /// a connection.
+    async fn databases() -> Databases {
+        use utopia_database::adapter::sql::{Engine, Sql};
+        let mut pools = HashMap::new();
+        for name in ["console", "database_db_main"] {
+            let pool = utopia_pools::Pool::new(
+                utopia_pools::Channel::new(),
+                name,
+                1,
+                || async {
+                    Ok::<_, utopia_database::Error>(Pooled::new(
+                        Sql::connect(Engine::Sqlite, "sqlite::memory:", None, None).await?,
+                    ))
+                },
+                1.0,
+            )
+            .unwrap();
+            Pool::new(pool.clone()).warm().await.unwrap();
+            pools.insert(name.to_owned(), Connections { pool });
+        }
+        let cache = Arc::new(Cache::from_dyn(Arc::new(utopia_cache::Memory::new())));
+        Databases::new(pools, cache, Vec::new(), std::time::Duration::from_secs(15))
+    }
+
+    /// The keys PHP's `Factory` databases give (`getCacheKeys()` and
+    /// `getQueryCacheKey()` printed by PHP 8.1.3 with Appwrite's filters):
+    /// the cache is shared, so they must be the same.
+    #[tokio::test]
+    async fn cache_keys_match_php() {
+        let databases = databases().await;
+        let authorization = Databases::unchecked();
+        let platform = databases.platform(authorization.clone()).unwrap();
+        let mut project = Project::empty();
+        project.id = "p1".to_owned();
+        project.sequence = "7".to_owned();
+        project.database = "database_db_main".to_owned();
+        let db = databases.project(&project, authorization).unwrap();
+
+        let keys = |k: (String, String, String)| [k.0, k.1, k.2];
+        assert_eq!(
+            keys(platform.cache_keys("projects", Some("p1"), &[]).await.unwrap()),
+            [
+                "default-cache-console:appwrite:_console::collection:projects",
+                "default-cache-console:appwrite:_console::collection:projects:p1",
+                "default-cache-console:appwrite:_console::collection:projects:p1:33cef9106fc54859d59ac2e4e64c3180",
+            ]
+        );
+        assert_eq!(
+            keys(db.cache_keys("users", Some("u1"), &[]).await.unwrap()),
+            [
+                "default-cache-database_db_main:appwrite:_7::collection:users",
+                "default-cache-database_db_main:appwrite:_7::collection:users:u1",
+                "default-cache-database_db_main:appwrite:_7::collection:users:u1:33cef9106fc54859d59ac2e4e64c3180",
+            ]
+        );
+        let selects = ["name".to_owned(), "$id".to_owned()];
+        assert_eq!(
+            db.cache_keys("users", Some("u1"), &selects).await.unwrap().2,
+            "default-cache-database_db_main:appwrite:_7::collection:users:u1:c18f23e260f01bcf88ac1ee872b6c741"
+        );
+        assert_eq!(
+            db.query_cache_key("users", None).await.unwrap(),
+            "default-cache-database_db_main:appwrite:_7::collection:users:query"
+        );
+        let skipped = filters::names(filters::USERS_SUBQUERIES);
+        let (_, _, hash) =
+            db.skip_filters(Some(skipped.as_slice()), db.cache_keys("users", Some("u1"), &[])).await.unwrap();
+        assert_eq!(
+            hash,
+            "default-cache-database_db_main:appwrite:_7::collection:users:u1:7e28cd740374d16a34075c661e11f5c5"
+        );
     }
 }
